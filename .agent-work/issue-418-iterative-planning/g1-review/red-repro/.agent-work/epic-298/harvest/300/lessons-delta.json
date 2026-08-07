@@ -1,0 +1,21 @@
+{
+  "work_id": "300",
+  "tick": false,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "cold-critic-mandatory-for-measurement-dependent-plans",
+      "grounding": ".agent-work/300/PLAN_CRITIC_DISPOSITION.md, findings B1 and B4: the cold plan critic found TWO postconditions that returned exit 0 at HEAD with nothing built. B1's `! A || B` bound the bash negation to the collection probe rather than to the lint, so the one condition whose stated purpose was 'prove the guard fires on bad input' was satisfied by never writing the guard; B4's `grep -qi 'context' docs/CHECKLIST_SCHEMA.md` already matched 10 lines. Both reproduced independently by the Commander before acting. This is a third convergent data point and the first with a directly-attributable counterfactual: without the critic, issue #300's plan would have frozen with two vacuous acceptance checks. The plan's acceptance depends on a cross-environment determinism measurement and on lint/parser tests -- exactly the class the lesson names."
+    },
+    {
+      "op": "confirm",
+      "id": "round-trip-tests-prove-artifacts-not-parsers",
+      "grounding": ".agent-work/300/PLAN_CRITIC_DISPOSITION.md finding S7 plus .agent-work/300/execute.json g2-implement.c3: the candidate plan had promoted a same-tree regenerate-and-compare round trip to a HARD postcondition while the discriminating cross-environment check was a `check: null` self-attestation -- check strength inverted against the plan's own stated evidence hierarchy, in a plan whose constraints array already quoted this very lesson. Third instance and a NEW failure mode: not a round-trip test that fails to catch a bug, but a round-trip test promoted ABOVE the discriminating evidence in the same plan that cites the lesson. Fixed by restating c3 as necessary-not-sufficient and making the cross-environment check mechanical."
+    },
+    {
+      "op": "confirm",
+      "id": "verify-launch-order-claims-against-code",
+      "grounding": ".agent-work/300/PROBLEM_STATEMENT.md section 'Baseline verified against code before planning': LAUNCH_ORDER-300 and the confirmed spec both describe 'the spine's existing gate-note loading' as the partially-grounded starting point to extend. Grepping first showed the grounding covers deterministic SELECTION only (engine `current` = render_human(state(cl)), spine-keyed, contract-versioned) and that ASSEMBLY does not exist at all -- canonical Markdown is named only inside imperative prose and opened by hand. Fourth data point, and a THIRD distinct failure mode alongside mechanism-already-shipped and named-but-nonexistent-edit-target: here the named baseline exists but is materially WEAKER than the order's framing implies, which would have produced an extension gate against a mechanism that was never there. Spec assumption 5 is correspondingly weaker than it reads."
+    }
+  ]
+}

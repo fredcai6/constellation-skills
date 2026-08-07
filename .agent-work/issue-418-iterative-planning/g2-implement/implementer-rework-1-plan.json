@@ -1,0 +1,213 @@
+{
+  "work_id": "issue-418-g2-rework-1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-adversarial-red",
+    "m2-contract-green",
+    "m3-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load rework evidence and frozen contract",
+      "imperative": "Read inherited doctrine, project deltas, rework handoff, reviewer result, frozen G2 packet, and current implementation. Verify the handoff is complete and the four P1 reproductions are bounded; attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context and reviewer evidence loaded; rework handoff complete and bounded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded inherited crew/everyone doctrine, project context/glossary, frozen G2 task, rework handoff, reviewer result, current verifier/contracts, and exact G1 verifier. The four P1 cases are reproducible, bounded to G2, and require no authority change because the singular escalation schema mandates refusal of multi-boundary packets."
+        }
+      ],
+      "constraints": [
+        "preserve singular escalation schema",
+        "no network writes or unrelated edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-adversarial-red": {
+      "id": "m1-adversarial-red",
+      "title": "Encode four reviewer adversarial cases",
+      "imperative": "Add all four reviewer reproductions to tests/test_replan.py before production edits and run the exact frozen focused command to capture a causal RED; attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Rework context and all four reviewer reproductions are loaded; handoff is complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "four adversarial tests were written first and exact focused command failed causally",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Added four public-interface regressions before production edits. Exact frozen command exited 1 with exactly four causal failures: multi-fixed-boundary packet accepted, launched/unlaunched collision accepted, exact-G1 duplicate parked values refused, and valid result-graph dependency refused; 4 failed, 133 passed, 407 subtests passed in 13.97s."
+        }
+      ],
+      "constraints": [
+        "TDD required",
+        "red must exercise the four reviewer findings"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-contract-green": {
+      "id": "m2-contract-green",
+      "title": "Harden the strict replanning contract",
+      "imperative": "Make the minimal verifier and contract prose changes: refuse multi-fixed-boundary packets, reject unlaunched/launched issue collisions, preserve G1 duplicate-string acceptance, and validate rewritten issues in the assembled applicable result graph. Re-run reviewer probe and registration rail.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "causal four-case RED captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Exact frozen command captured all four intended reviewer failures after tests-first edits."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "identical frozen focused command passes",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_replan.py tests/test_install_constellation.py tests/test_write_a_skill.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-contract-green-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer adversarial probe and registration rail pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Reviewer probe now refuses multi-fixed-boundary packets and launched/unlaunched collisions while accepting exact-G1 duplicate parked values and valid result-wave dependencies; all four boolean defect flags are false. Registration rail reports skill ok. Exact focused suite manually passed 137 tests and 410 subtests in 13.68s."
+        }
+      ],
+      "constraints": [
+        "do not loosen G1",
+        "one fixed boundary per packet",
+        "offline only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-contract-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_replan.py tests/test_install_constellation.py tests/test_write_a_skill.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-closeout": {
+      "id": "m3-closeout",
+      "title": "Refresh review identity and return rework",
+      "imperative": "Inspect scope, recompute the exact ordinal path+byte digest from the final inventory, refresh IMPLEMENTER_RESULT with rework RED/GREEN, digest, scope, and feedback, attest c1, advance, then release last.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "rework behavior and rails are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Four-case rework, reviewer adversarial probe, registration rail, and identical focused suite are green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result and reproducible digest are refreshed for G2 re-review",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT refreshed with causal four-case RED, identical 137-test GREEN, reviewer probe, registration, bounded three-file rework scope, workflow feedback, and reproducible 11-path digest sha256:0c8223f5d01de36dd476672f3bfb593e08f61bb0c7ee42895ba320b85b688aff. Diff check passed and generated bytecode is absent."
+        }
+      ],
+      "constraints": [
+        "result remains local-only",
+        "preserve unrelated dirty changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g2-rework-1-20260806",
+    "status": "released",
+    "claimed_at": "2026-08-06T18:00:17.437630+00:00",
+    "last_heartbeat": "2026-08-06T18:05:31.099740+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T18:05:35.615042+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The reviewer isolated four contract mismatches at the existing verifier seam; each has a direct adversarial public-interface regression and minimal bounded correction.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:00:59.158766+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-adversarial-red",
+      "why": "Each reviewer blocker now has a failing contract test at the public verifier interface, including positive assembled-graph behavior plus dangling/cyclic negative coverage.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:02:29.478113+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-contract-green",
+      "why": "The minimal verifier correction separates value-array shape from identity uniqueness, checks issue identity partitions, enforces the singular escalation cardinality, and validates all rewritten issues once in the assembled result graph; adversarial and corpus rails are green.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:04:05.197446+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-closeout",
+      "why": "G2 rework is ready for fresh independent review: all four P1 reproductions are test-led and corrected without changing the frozen schema, the final digest is reproducible, and exclusions remain intact.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:05:31.099731+00:00"
+    }
+  ]
+}

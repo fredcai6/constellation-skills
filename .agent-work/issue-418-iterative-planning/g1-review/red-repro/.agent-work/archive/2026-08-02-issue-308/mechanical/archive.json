@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "mechanical": {
+    "run": "issue-308",
+    "project": "constellation-skills",
+    "role": "agent",
+    "spine-step": "archive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-308-archive@25ab3704dd982987ee5f1bfa54754e0237151e49",
+    "artifact-ref": []
+  },
+  "refused": [
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-308",
+    "generated_at": "2026-08-03T00:31:36Z"
+  }
+}

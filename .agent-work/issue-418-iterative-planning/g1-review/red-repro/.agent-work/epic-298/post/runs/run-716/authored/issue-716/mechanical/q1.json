@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q1",
+  "mechanical": {
+    "run": "issue-716",
+    "project": "f1Brainz",
+    "role": "interrogator",
+    "refusals": 0,
+    "spine-step": "q1",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-716-q1@b6a02130c85bea7a0886931d16d0bc4460005629",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-716",
+    "generated_at": "2026-08-02T20:45:28Z"
+  }
+}

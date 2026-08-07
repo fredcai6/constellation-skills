@@ -1,0 +1,23 @@
+# .agent-work/ is TRACKED: run artifacts, verdicts, lessons and archives are
+# durable project history, not scratch. Transient bits stay excluded below.
+.agent-work/**/__pycache__/
+.agent-work/**/*.pyc
+.agent-work/**/.pytest_cache/
+# Live runtime state, not run history: per-session governor readings and the
+# active-session registry are rewritten constantly and are machine-specific.
+# Engine journals are NOT excluded - they are the tamper-evident audit trail.
+.agent-work/**/gauge.json
+.agent-work/**/gauge-skip.json
+.agent-work/.spine-rail-binding.json
+.agent-work/.spine-rail-nudges.json
+# Captured eval workspaces embed a full copy of another checkout's skills tree.
+# They are a copied checkout, not run history, and their nesting exceeds the
+# Windows path limit -- `git worktree add` fails with 'Filename too long'.
+.agent-work/**/constellation-eval-*/
+__pycache__/
+*.pyc
+.coverage
+junit*.xml
+# Defensive: eval run-dirs are fabricated under the system temp dir (never the
+# repo tree); this only fires if a run is ever redirected into evals/ (#106).
+evals/**/_runs/

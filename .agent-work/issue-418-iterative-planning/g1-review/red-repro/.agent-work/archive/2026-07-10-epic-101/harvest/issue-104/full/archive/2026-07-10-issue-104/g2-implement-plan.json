@@ -1,0 +1,139 @@
+{
+  "work_id": "g2-implement-104",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-skill",
+    "m2-fixture"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the handoff, curate_corpus.py, g1 result, and reference skills (scout, triage, admiral/commander-delegated frontmatter). Verify the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete; tool behavior + house style understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-skill": {
+      "id": "m1-skill",
+      "title": "Author skills/curator/SKILL.md",
+      "imperative": "Write skills/curator/SKILL.md (SKILL.md only, no references/ or templates/). Frontmatter: name, single-line third-person description with Use-when + scout/write-a-skill exclusion under budget, invoker: human. Body covers trigger/two invariants/mend/route/outputs/portfolio-dormant/error-modes in rule-plus-why register. Test-after/dogfood: the curator's own row must show invoker=ok, exclusion info, when-to-use present, size within budget.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "curator dogfood rows green (invoker ok, size ok, exclusion info, no when-to-use/length flags)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-wt-104 && py scripts/curate_corpus.py --root skills --json | py -c \"import sys,json; f=[r for r in json.load(sys.stdin)['findings'] if r['skill']=='curator']; bad=[r for r in f if r['status'] not in ('ok','info')]; print('curator findings:',[(r['check'],r['status']) for r in f]); sys.exit(1 if bad else 0)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-skill-1"
+        }
+      ],
+      "constraints": [
+        "no references/ or templates/ dir",
+        "single-line YAML description",
+        "third-person register"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-skill-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-wt-104 && py scripts/curate_corpus.py --root skills --json | py -c \"import sys,json; f=[r for r in json.load(sys.stdin)['findings'] if r['skill']=='curator']; bad=[r for r in f if r['status'] not in ('ok','info')]; print('curator findings:',[(r['check'],r['status']) for r in f]); sys.exit(1 if bad else 0)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fixture": {
+      "id": "m2-fixture",
+      "title": "Green-at-boundary SKILL_NAMES fix + full suite",
+      "imperative": "Add only \"constellation-curator\" to SKILL_NAMES in tests/test_install_constellation.py. Touch nothing else. Confirm the full suite is green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "curator SKILL.md exists (installed set now 16)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full test suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-wt-104 && py -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fixture-1"
+        }
+      ],
+      "constraints": [
+        "only add the one list entry; no bundle entries, no new install tests"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fixture-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-wt-104 && py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

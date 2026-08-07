@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m5-suite",
+  "files": [],
+  "repo_rev": {
+    "commit": "fba7faea081d7e15a0f6e9e8e1e238841cc01368"
+  },
+  "run": {
+    "work_id": "issue-305-g1-implement",
+    "generated_at": "2026-08-02T02:20:04Z",
+    "dirty": true,
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/e298-305",
+      "repo": "C:/Programs/constellation-skills-wt/e298-305",
+      "durable": "C:/Programs/constellation-skills-wt/e298-305"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-305"
+    }
+  }
+}

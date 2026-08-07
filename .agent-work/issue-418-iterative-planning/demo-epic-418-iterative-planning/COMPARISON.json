@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "metrics": {
+    "method": "word counts recurse over string values; edges sum issue.blocks; after issues are current-wave only",
+    "before_word_count": 4844,
+    "after_word_count": 767,
+    "before_issue_count": 5,
+    "after_issue_count": 3,
+    "before_edge_count": 3,
+    "after_edge_count": 2
+  },
+  "dispositions": [
+    {
+      "original_id": "A",
+      "original_title": "Why-capture + refresh primitives: engine schema (checklist_engine.py)",
+      "disposition": "current_wave",
+      "target": "CG-A",
+      "reason": "Independent AFK loop evidence"
+    },
+    {
+      "original_id": "B",
+      "original_title": "Gauge writer: Claude Code PostToolUse hook + golden-sample fixture",
+      "disposition": "wave_forecast",
+      "target": "Gauge writer: Claude Code PostToolUse hook + golden-sample fixture",
+      "reason": "Preserve stated HITL entry condition as nonbinding forecast"
+    },
+    {
+      "original_id": "C",
+      "original_title": "Gauge reader: plain read() -> Reading|None + model-keyed thresholds",
+      "disposition": "current_wave",
+      "target": "CG-C",
+      "reason": "Independent AFK loop evidence"
+    },
+    {
+      "original_id": "D",
+      "original_title": "Trip: two-band gate policy (SOFT stop-question + HARD refuse-advance)",
+      "disposition": "current_wave",
+      "target": "CG-D",
+      "reason": "Independent AFK loop evidence"
+    },
+    {
+      "original_id": "E",
+      "original_title": "Refresh: reach-up relaunch flow + job-file principle (skill/doctrine wiring)",
+      "disposition": "wave_forecast",
+      "target": "Refresh: reach-up relaunch flow + job-file principle (skill/doctrine wiring)",
+      "reason": "Preserve stated HITL entry condition as nonbinding forecast"
+    }
+  ],
+  "preservation_audit": [
+    {
+      "category": "intent",
+      "preserved": true,
+      "evidence": "Brief intent is derived from the frozen Intent section"
+    },
+    {
+      "category": "constraints",
+      "preserved": true,
+      "evidence": "Read-only history, fail-safe gauge, and offline boundaries are explicit"
+    },
+    {
+      "category": "decisions",
+      "preserved": true,
+      "evidence": "Single refresh signal, two bands, and gate-boundary-only policy remain fixed"
+    },
+    {
+      "category": "evidence",
+      "preserved": true,
+      "evidence": "Each current issue carries independent acceptance/falsification evidence"
+    },
+    {
+      "category": "completion",
+      "preserved": true,
+      "evidence": "Initial-wave exit criteria require one coherent public-interface loop"
+    }
+  ],
+  "deficiency_walkthrough": {
+    "signal": "HARD rollout can precede refresh wiring",
+    "classification": "blocks_current_wave_exit",
+    "decision": "repair",
+    "forecast_held": true,
+    "evidence_only_issue_created": false
+  },
+  "latitude_judgment": {
+    "materially_increased": true,
+    "judgment": "Yes: each AFK issue may choose internals and fixtures inside frozen interfaces, while HITL work is removed from the runnable queue rather than compressed into hidden obligations.",
+    "not_merely_shorter": true
+  }
+}

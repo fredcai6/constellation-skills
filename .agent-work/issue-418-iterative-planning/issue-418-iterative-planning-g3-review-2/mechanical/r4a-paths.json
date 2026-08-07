@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4a-paths",
+  "mechanical": {
+    "run": "issue-418-iterative-planning-g3-review-2",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4a-paths",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-g3-review-2-r4a-paths@7aa85ea20e1a609d7300d0127478cff5c1c1eae7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning-g3-review-2",
+    "generated_at": "2026-08-06T19:00:46Z"
+  }
+}

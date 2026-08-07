@@ -1,0 +1,1384 @@
+{
+  "work_id": "issue-102",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate",
+    "g6-implement",
+    "g6-review",
+    "g6-integrate",
+    "g7-implement",
+    "g7-review",
+    "g7-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope (issue #102, LAUNCH_ORDER, .agent-work/issue-102/UNDERSTAND.md + PLAN.md). Skill-source repo: baseline doctrine is skills/_shared/global-{everyone,orchestrator}.md; no docs/agents overlay, no packet map (sanctioned degradation). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed; baseline doctrine + bundling mechanism loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan intent/scope confirmed vs issue #102 + UNDERSTAND.md + PLAN.md + CRITIC_TRIAGE.md; baseline doctrine skills/_shared/global-{everyone,orchestrator}.md loaded; bundling mechanism confirmed (everyone->all skills, orchestrator->orchestrator tier only)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Move 1 (mandatory-compliance boilerplate to global-everyone): implement",
+      "imperative": "Move 1. FIRST emit the command-derived exact carrier list: grep -rl a DRIFT-ROBUST stem (not the pristine verbatim string \u2014 a drifted copy won't match an exact grep) over skills/*/SKILL.md, and paste that command + its output as the authoritative before-count (do not rely on the ~10 estimate). Then reconcile-then-cut the mandatory-compliance boilerplate (the 'this is mandatory / no exceptions / drive every step through the engine rigorously' compliance paragraph) into skills/_shared/global-everyone.md as one canonical rule; replace each carrier's copy with a one-line pointer naming global-everyone.md, keeping only a genuinely role-specific tail line where one exists. Fill IMPLEMENTER_HANDOFF from this gate + PLAN.md; dispatch constellation-implementer; integrate IMPLEMENTER_RESULT. Evidence: per-move before/after carrier-count grep (drift-robust stem over skills/*/SKILL.md) with pasted command output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with before/after carrier-count grep, no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "append into existing global-everyone.md only; never a new global-*.md filename",
+        "each carrier keeps a pointer naming the shared file",
+        "match register: agent-facing, rule-plus-why, dense"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/_shared/global-everyone.md",
+          "skills/*/SKILL.md carriers",
+          "install_constellation.py:94-113 bundle"
+        ],
+        "capability": [
+          "every role loads global-everyone at context read"
+        ],
+        "constraint": [
+          "test_install_constellation.py:196-208 bundle glob must stay green"
+        ],
+        "decision": [
+          "cross-tier rule -> global-everyone"
+        ],
+        "evidence": [
+          "before/after carrier-count grep pasted"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-102/crew-handoffs/g1-implement-result.md",
+            "summary": "Move 1: boilerplate single-sourced to global-everyone; 10 carriers->pointers; before=10/after=0; suite 442 passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Move 1: review",
+      "imperative": "Fill REVIEWER_HANDOFF from IMPLEMENTER_RESULT; dispatch constellation-reviewer. Verify: canonical boilerplate reads cleanly in global-everyone.md; every carrier reduced to a pointer (no residual full copy); no new global-*.md filename; before/after grep evidence reproduces; register matches. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-102/crew-handoffs/g1-review-result.md",
+            "summary": "Move 1 APPROVE: 11 files, 10 carriers->pointers, canonical once, suite 442 passed, no scope drift"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Move 1: integrate",
+      "imperative": "APPROVE: run the suite, confirm green, confirm before/after grep evidence present, advance. BLOCK: rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "boilerplate single-sourced to global-everyone with carrier pointers; suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Move 2 (engine-invocation string to global-everyone): implement",
+      "imperative": "Move 2. FIRST emit the command-derived exact carrier list with a DRIFT-ROBUST stem over skills/*/SKILL.md (paste command + output as the before-count; don't trust the ~11 estimate). Then reconcile-then-cut the drifted engine-invocation string ('drive/run the gated spine through the engine one step at a time') into one canonical statement in skills/_shared/global-everyone.md (canonical mechanism detail already lives in workbench references/checklist-engine.md; point at it, don't duplicate). Replace carrier copies with a pointer, KEEPING a genuinely role-specific invocation tail where one exists (e.g. workbench owns the engine; charter/explorer use survey vs gated checklists) \u2014 check for role-specific invocation detail before cutting. Fill IMPLEMENTER_HANDOFF; dispatch; integrate. Evidence: before/after carrier-count grep with pasted command output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with before/after carrier-count grep",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "append into existing global-everyone.md only",
+        "point at checklist-engine.md for mechanism detail, don't duplicate it",
+        "each carrier keeps a pointer"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/_shared/global-everyone.md",
+          "skills/workbench/references/checklist-engine.md",
+          "skills/*/SKILL.md carriers"
+        ],
+        "capability": [
+          "engine invocation described once"
+        ],
+        "constraint": [
+          "bundle glob stays green"
+        ],
+        "decision": [
+          "engine string -> global-everyone; detail stays in checklist-engine.md"
+        ],
+        "evidence": [
+          "before/after carrier-count grep"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-102/crew-handoffs/g2-implement-result.md",
+            "summary": "Move 2 subsumed by move 1; narrow completing edit = checklist-engine.md mechanism pointer added once to global-everyone; role-specific spine instructions preserved; suite 442 passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Move 2: review",
+      "imperative": "Fill REVIEWER_HANDOFF; dispatch constellation-reviewer. Verify canonical engine string reads cleanly, carriers reduced to pointers, no duplication of checklist-engine.md mechanism, grep evidence reproduces, suite green. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-102/crew-handoffs/g2-review-result.md",
+            "summary": "Move 2 APPROVE: subsumed by move1 + pointer once; role-specific spines preserved; suite green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Move 2: integrate",
+      "imperative": "APPROVE: run suite, confirm green + grep evidence, advance. BLOCK: rework. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "engine string single-sourced with carrier pointers; suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Move 3 (delete FOLLOW-THIS-SKILL-STRICTLY banners): implement",
+      "imperative": "Move 3. Delete the free-floating '**FOLLOW THIS SKILL STRICTLY. USE THE ENGINE RIGOROUSLY**' banner line (emphasis unattached to a mechanism) from all 6 carriers: charter, commander, explorer, implementer, interrogator, reviewer SKILL.md. Delete outright, do NOT relocate. Where deleting leaves a dangling heading/blank, tidy so the section still reads. Fill IMPLEMENTER_HANDOFF; dispatch; integrate. Evidence: grep -rc of the banner over skills/*/SKILL.md before (6) and after (0).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned; banner count 6->0",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "delete outright, do not relocate",
+        "do not remove adjacent mechanism-backed prose, only the free-floating banner line"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/{charter,commander,explorer,implementer,interrogator,reviewer}/SKILL.md"
+        ],
+        "capability": [
+          "skill body reads without the banner"
+        ],
+        "constraint": [
+          "suite stays green"
+        ],
+        "decision": [
+          "banners deleted (register rule: emphasis only at mechanism-backed gates)"
+        ],
+        "evidence": [
+          "grep -rc banner 6->0"
+        ],
+        "confidence_flags": [
+          "logged delta: order said 'charter twice'; grep found 6 total, one per file"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-102/crew-handoffs/g3-implement-result.md",
+            "summary": "Move 3: 6 banners deleted (6->0), suite 442 passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Move 3: review",
+      "imperative": "Fill REVIEWER_HANDOFF; dispatch constellation-reviewer. Verify banner gone from all 6 (grep 0), no mechanism-backed prose collaterally removed, sections still read, suite green. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-102/crew-handoffs/g3-review-result.md",
+            "summary": "Move 3 APPROVE: 6 files, -2 each, only banner removed, suite green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Move 3: integrate",
+      "imperative": "APPROVE: run suite, confirm green + banner grep 0, advance. BLOCK: rework. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all 6 banners deleted; suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "Moves 4,5,8 (three cross-tier rules to global-everyone): implement",
+      "imperative": "Three distinct cross-tier rules, each reconcile-then-cut into skills/_shared/global-everyone.md, carriers reduced to pointers. Move 4 scoped-nulls: move the GENERAL principle only (a negative is scoped to this test/condition, never 'X is impossible'; state what was NOT tested) from explorer/SKILL.md + prototyper/SKILL.md; KEEP prototyper's spike-domain applications in references/measurement.md and ui.md local (they are prototyper-specific, not cross-tier) \u2014 this is a partial move, not a full cut. Move 5 world-verification: 'confirm each claimed side-effect against the world, advance on what you observe not what the result claims' from commander + reviewer SKILL.md \u2014 RECONCILE CAREFULLY: commander's rule is verify-your-OWN-dispatch's side-effects, reviewer's is distrust-the-IMPLEMENTER'S-claimed side-effects; if on reconcile these prove semantically distinct (different object) rather than drifted, keep a role-specific tail line rather than force-merge to one line, and LOG it as a partial/honest-null (never force-merge semantically different rules). Move 8 delegate-not-replacement: 'a delegate is not a replacement; escalating/asking up is always sanctioned at every tier' from commander + admiral SKILL.md \u2014 note this destination (global-everyone) is a DELIBERATE scope-broadening ruled by the launch order (injects the principle into crew skills that did not carry it, because it applies at every tier); implement per the ruling, surfaced here as a decision not silent dedup. Each move = its own before/after carrier-count grep. Fill IMPLEMENTER_HANDOFF; dispatch; integrate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with three per-move before/after grep pairs",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "append into existing global-everyone.md only",
+        "move 4 keeps prototyper spike-domain applications local (partial move)",
+        "each of the 3 moves keeps its own carrier pointer + own grep evidence"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/_shared/global-everyone.md",
+          "skills/{explorer,prototyper,commander,reviewer,admiral}/SKILL.md",
+          "skills/prototyper/references/{measurement,ui}.md (stay local)"
+        ],
+        "capability": [
+          "scoped-null, world-verification, delegate-not-replacement each stated once"
+        ],
+        "constraint": [
+          "bundle glob green; prototyper spike applications not deleted"
+        ],
+        "decision": [
+          "these three are cross-tier -> global-everyone"
+        ],
+        "evidence": [
+          "three per-move before/after grep pairs"
+        ],
+        "confidence_flags": [
+          "move 4 semantic-vs-drift split resolved: general principle moves, applications stay"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-102/crew-handoffs/g4-implement-result.md",
+            "summary": "Moves 4,5,8: three cross-tier rules to global-everyone, carriers->pointer+tail, measurement/ui untouched, suite 442 passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "Moves 4,5,8: review",
+      "imperative": "Fill REVIEWER_HANDOFF; dispatch constellation-reviewer with an explicit PER-MOVE sub-checklist (do not rubber-stamp the batch): (move 4) general scoped-null principle reads once in global-everyone AND prototyper spike applications in measurement.md/ui.md are INTACT (partial move), explorer+prototyper SKILL.md are pointers; (move 5) world-verification single line OR a justified role-specific tail if commander/reviewer proved semantically distinct \u2014 confirm the reconcile decision was logged, not force-merged; (move 8) delegate-not-replacement reads once, carriers are pointers, and the scope-broadening into crew tier is deliberate. Verify 3 grep pairs reproduce, suite green. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-102/crew-handoffs/g4-review-result.md",
+            "summary": "Moves 4,5,8 APPROVE: per-move verified, no meaning dropped, move5 not force-merged, refs untouched, suite green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "Moves 4,5,8: integrate",
+      "imperative": "APPROVE: run suite, confirm green + 3 grep pairs, advance. BLOCK: rework. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scoped-nulls, world-verification, delegate-not-replacement single-sourced; suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1",
+          "attested": {
+            "evidence": "e-g4-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "Moves 6,7 (two orchestrator rules to global-orchestrator): implement",
+      "imperative": "Two orchestrator-tier rules, each reconcile-then-cut into skills/_shared/global-orchestrator.md, carriers reduced to pointers. Move 6 unchanged-tree shortcut (skip a redundant re-verify only when HEAD hash matches the recorded green run AND tree clean AND prior green output pasted) from commander + admiral SKILL.md. Move 7 crew-idle adjudication (an idle subagent with complete artifacts is done not stalled; judge from artifacts not the idle signal; still confirm dead before reusing its worktree) from commander + admiral SKILL.md; admiral/references/fleet-doctrine.md keeps only its epic-specific delta + a pointer. Each move = its own before/after grep. Fill IMPLEMENTER_HANDOFF; dispatch; integrate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4 integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with two per-move before/after grep pairs",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1"
+        }
+      ],
+      "constraints": [
+        "append into existing global-orchestrator.md only",
+        "fleet-doctrine.md keeps epic-specific delta only + pointer",
+        "each move keeps its own carrier pointer + grep"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/_shared/global-orchestrator.md",
+          "skills/{commander,admiral}/SKILL.md",
+          "skills/admiral/references/fleet-doctrine.md"
+        ],
+        "capability": [
+          "unchanged-tree shortcut + crew-idle adjudication stated once for the orchestrator tier"
+        ],
+        "constraint": [
+          "global-orchestrator bundles only to orchestrator tier; content-pin must assert on an orchestrator skill"
+        ],
+        "decision": [
+          "orchestrator-only rules -> global-orchestrator"
+        ],
+        "evidence": [
+          "two per-move before/after grep pairs"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-102/crew-handoffs/g5-implement-result.md",
+            "summary": "Moves 6,7: unchanged-tree + crew-idle to global-orchestrator; commander/admiral->pointer+tail; fleet-doctrine keeps epic delta; suite green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "Moves 6,7: review",
+      "imperative": "Fill REVIEWER_HANDOFF; dispatch constellation-reviewer. Verify both rules read once in global-orchestrator, carriers are pointers, fleet-doctrine keeps only epic delta, 2 grep pairs reproduce, suite green. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g5-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-102/crew-handoffs/g5-review-result.md",
+            "summary": "Moves 6,7 APPROVE: rules once, carriers pointer+tail, fleet-doctrine epic-only, recovery intact, suite green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "Moves 6,7: integrate",
+      "imperative": "APPROVE: run suite, confirm green + 2 grep pairs, advance. BLOCK: rework. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "unchanged-tree + crew-idle single-sourced to global-orchestrator; suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1",
+          "attested": {
+            "evidence": "e-g5-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-implement": {
+      "id": "g6-implement",
+      "title": "Moves 9,10 (single-home + pointer-cut): implement",
+      "imperative": "Two single-home relocations. Move 9 dedup-sibling-ids: single home is lessons-auditor/SKILL.md (the role that executes it \u2014 sibling lesson ids from different worktrees for one defect are confirm/amend of the existing lesson, never new adds); admiral/SKILL.md keeps a pointer naming the lessons-auditor home (reconcile wording first). IMPORTANT (do not strand admiral): admiral does NOT bundle lessons-auditor, and admiral's harvest substep 4 (admiral/SKILL.md:56) operationally applies this rule during sweep \u2014 so admiral keeps the MINIMAL decision-rule reminder inline (one sentence: sibling ids = confirm/amend not new add) plus the pointer to the full home; do not reduce admiral to a bare pointer that leaves the harvest step without its rule. Move 10 design-it-twice restatements: the canonical text already lives in global-orchestrator.md and design-it-twice-brief.md; cut commander/SKILL.md and explorer/SKILL.md restatements to ONE pointer line each. Each move = its own before/after grep. Fill IMPLEMENTER_HANDOFF; dispatch; integrate.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g5 integrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g5 integrated"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with two per-move before/after grep pairs",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-implement-1"
+        }
+      ],
+      "constraints": [
+        "sibling-ids single home = lessons-auditor; admiral points",
+        "design-it-twice canonical already in global-orchestrator + design-it-twice-brief; carriers cut to one pointer line each",
+        "do not delete the canonical design-it-twice text"
+      ],
+      "anchors": {
+        "structural": [
+          "skills/lessons-auditor/SKILL.md",
+          "skills/admiral/SKILL.md",
+          "skills/commander/SKILL.md",
+          "skills/explorer/SKILL.md",
+          "skills/_shared/{global-orchestrator,design-it-twice-brief}.md"
+        ],
+        "capability": [
+          "sibling-ids doctrine has one home; design-it-twice restated once via pointers"
+        ],
+        "constraint": [
+          "suite green; canonical design-it-twice text untouched"
+        ],
+        "decision": [
+          "sibling-ids -> lessons-auditor; design-it-twice restatements -> pointer lines"
+        ],
+        "evidence": [
+          "two per-move before/after grep pairs"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-102/crew-handoffs/g6-implement-result.md",
+            "summary": "Move 9 cut (admiral trimmed to reminder+pointer, lessons-auditor home intact); Move 10 subsumed by #99 (carriers already pointers); suite green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-review": {
+      "id": "g6-review",
+      "title": "Moves 9,10: review",
+      "imperative": "Fill REVIEWER_HANDOFF; dispatch constellation-reviewer. Verify sibling-ids lives once in lessons-auditor with admiral pointer; design-it-twice restatements cut to one pointer line each in commander+explorer with canonical text intact; 2 grep pairs reproduce; suite green. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g6-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-102/crew-handoffs/g6-review-result.md",
+            "summary": "Moves 9,10 APPROVE: admiral not stranded, home intact, move10 subsumed by #99, suite green"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-integrate": {
+      "id": "g6-integrate",
+      "title": "Moves 9,10: integrate",
+      "imperative": "APPROVE: run suite, confirm green + 2 grep pairs, advance. BLOCK: rework. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sibling-ids single-homed + design-it-twice pointer-cut; suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g6-review-1",
+          "attested": {
+            "evidence": "e-g6-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g7-implement": {
+      "id": "g7-implement",
+      "title": "Move 11 (mechanical regression net): implement",
+      "imperative": "Add the regression net to tests/test_install_constellation.py, modeled on test_deep_module_vocabulary_ships_into_installed_skill (line 679). (1) Content-pin test per relocated doctrine: a signature phrase of each moved doctrine present in the INSTALLED destination. everyone-moves (1,2,4,5,8) assert on any installed skill's bundled references/global-everyone.md; orchestrator-moves (6,7) assert on commander's bundled references/global-orchestrator.md; move 9 asserts on lessons-auditor's SKILL.md; ALSO add a content-pin that the design-it-twice canonical (move 10) still ships in the orchestrator bundle (commander's references/global-orchestrator.md or design-it-twice-brief.md) since its last local restatements were cut to pointers. (2) No-residual-duplicate test: for each retired inline signature, assert it does NOT reappear in SKILL.md BODIES ONLY. CRITICAL scoping (else false-fails): grep glob is **/SKILL.md ONLY \u2014 exclude ALL references/, both the bundled _shared copies (which legitimately carry the rule post-move) AND the deliberately-retained role references (workbench/references/checklist-engine.md keeps the engine mechanism, prototyper/references/{measurement,ui}.md keep spike applications, admiral/references/fleet-doctrine.md keeps the epic delta). Choose each residual signature so it does not overlap its retained role reference. Banner residual asserts 'FOLLOW THIS SKILL STRICTLY' count 0 across SKILL.md. Do NOT create a new global-*.md filename. Fill IMPLEMENTER_HANDOFF; dispatch; integrate. Evidence: full suite output + new-test names + the before/after per-skill word-count table (SKILL.md bodies AND _shared buckets, command-derived via wc -w; baseline is .agent-work/issue-102/wordcount-before.txt) with the honesty caveat that relocated always-read doctrine is relocated-not-removed from a role's installed total.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g6 integrated (all content moves done)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g6 integrated; all content moves done"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned; content-pin + no-residual tests added; full suite green",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-implement-1"
+        }
+      ],
+      "constraints": [
+        "model on the existing content-pin test",
+        "residual test scopes to SKILL.md bodies not bundled bucket copies",
+        "no new global-*.md filename",
+        "add tests only into tests/ (own the additions)"
+      ],
+      "anchors": {
+        "structural": [
+          "tests/test_install_constellation.py:679 (model)",
+          "install_constellation.py bundle map"
+        ],
+        "capability": [
+          "a dropped/mangled relocated doctrine now fails a test; a stale inline copy fails a test"
+        ],
+        "constraint": [
+          "do not weaken existing structural tests; no new global-* filename"
+        ],
+        "decision": [
+          "mechanical net added by cluster A itself"
+        ],
+        "evidence": [
+          "full suite green output + new-test names"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-102/crew-handoffs/g7-implement-result.md",
+            "summary": "Regression net: content-pin + no-residual tests added (2 tests); suite 444 passed; residual SKILL.md-scoped with move-9 admiral exception"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g7-review": {
+      "id": "g7-review",
+      "title": "Move 11: review",
+      "imperative": "Fill REVIEWER_HANDOFF; dispatch constellation-reviewer. Verify each moved doctrine has a content-pin asserting on the correct installed destination (everyone-moves on global-everyone; orchestrator-moves on commander's global-orchestrator; move 9 on lessons-auditor; move-10 canonical present); residual test globs **/SKILL.md ONLY (no references/). Because detector and fix share an author (T5), the reviewer MUST EXECUTE at least one falsification per test class in a scratch copy and report the observed red: (a) delete one bucket line -> its content-pin goes red; (b) re-insert one retired inline copy into a SKILL.md -> the residual test goes red; then restore. No new global-* filename; full suite green. Integrate REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "result received"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g7-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-102/crew-handoffs/g7-review-result.md",
+            "summary": "Regression net APPROVE: both falsifications executed+red+restored, correct-tier destinations, residual SKILL.md-scoped, suite 444 passed"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g7-integrate": {
+      "id": "g7-integrate",
+      "title": "Move 11: integrate",
+      "imperative": "APPROVE: run the FULL updated suite, confirm green (new tests included), confirm the before/after word-count table is captured (command-derived), advance. BLOCK: rework. Log triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "content-pin + no-residual tests present; before/after word-count table captured; full suite green",
+          "check": {
+            "kind": "command",
+            "command": "py -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g7-review-1",
+          "attested": {
+            "evidence": "e-g7-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g7-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

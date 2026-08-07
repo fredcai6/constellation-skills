@@ -1,0 +1,26 @@
+{
+  "work_id": "232",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "verify-launch-order-claims-against-code",
+      "grounding": "issue-232 understand step (232-commander session, 2026-07-25): independently re-grepped/re-read every PR-7 finding in LAUNCH_ORDER-232.md against current main@3283158 before planning -- _glob_to_regex line refs (:449/:496, zero test refs), _write_meta's direct write_text (:938), _adopt_existing_runs's break-vs-adjudicate gap (:1097-1098 vs :1099-1100), all 3 run_skill_eval.py doc-drift sites, and the one flagged line-number drift (install_constellation.py issue text ':430-431' actually at ':531-533' post-#228) -- all confirmed accurate exactly as the order stated; no honest null, no correction needed to the order's own findings."
+    },
+    {
+      "op": "confirm",
+      "id": "verify-harness-field-and-drive-real-writer",
+      "grounding": "issue-232 gate g2 (closes #205): the regression test (tests/test_run_skill_eval.py, test_adopt_existing_runs_routes_corrupt_meta_through_adjudicate_orphan_and_continues) calls the real post-fix _write_meta to produce an actual meta.json on disk, then truncates those real bytes -- not a hand-authored json.dumps fixture. Independently reproduced by g2's reviewer, who additionally reverted the fix in an isolated scratch tree to confirm the RED failure was genuine (see .agent-work/232/g2-reviewer-result.md, 'Evidence verdict')."
+    },
+    {
+      "op": "mention",
+      "id": "test-harness-concurrency-failsafe",
+      "note": "Not exercised this run -- issue-232 gate g2's regression test needed no concurrent writer/reader pair (a sequential write-then-truncate-then-adopt sequence was sufficient to reproduce the #205 defect), so this lesson's try/except+daemon-thread pattern was read and considered but not triggered."
+    },
+    {
+      "op": "mention",
+      "id": "observe-midprocess-state-not-via-end-output",
+      "note": "Not exercised this run -- no mid-process-death observation scenario was in scope for issue-232's 3 build items."
+    }
+  ]
+}

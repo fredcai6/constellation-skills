@@ -1,6 +1,6 @@
 # Lessons Inbox
 
-<!-- playbook-state: run-tick=42 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310 -->
+<!-- playbook-state: run-tick=43 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310,governor-262 -->
 
 Transitory inbox for between-audit workflow signal — **not** a playbook, and not a
 permanent home for any rule. Read the Active section at the Commander context step
@@ -37,7 +37,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:a-verdict-must-not-select-on-the-gap-it-escalates
 - scope: constellation
@@ -51,7 +51,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:grading-a-contested-claim-settled-launders-it
 - scope: constellation
@@ -65,7 +65,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:reasoning-gate-crew-waiver-can-be-wrong-for-synthesis
 - scope: constellation
@@ -78,5 +78,33 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - disconfirmed: 0
 - status: active
 - added: 2026-08-02 (issue-310)
+- last-confirmed: none
+- runs-since-confirmed: 2
+
+### lesson:name-scoped-test-filter-gates-are-strong-but-structurally-blind
+- scope: constellation
+- task-class: testing
+- statement: A gate postcondition scoped to a pytest -k name filter makes the gate STRUCTURALLY unable to close on an empty test set -- pytest exits 5 when -k matches nothing, and a non-zero exit fails an engine command check. That is stronger than requiring 'named new tests', which a future editor can weaken by renaming. But the same name-scoping makes the filter BLIND to any behaviour named otherwise, and the blindness is not hypothetical: in this run BOTH gates' only real defects were invisible to their -k filter and were caught solely by the whole-file/whole-suite run (g1's fourth source-resolution site in the test file; g2's entire verify_skill_registered fix, whose only tests live in a different test FILE the gate command never runs). So a -k gate must always be paired with an unfiltered suite check, and the filter's honesty depends on nothing unrelated drifting into matching it.
+- grounding: staged-feedback/governor-262/AGENT_FEEDBACK.md 'Lessons applied this run'; execute.json g1-integrate.c1b and g2-integrate.c1b; g1 implementer result (fourth site, -k hook structurally blind, caught only by the whole-file run); g2 reviewer result ('both gate commands are scoped to tests/test_install_constellation.py, so neither can see the verify_skill_registered fix at all'); Admiral verified at base commit b69e6c8 that -k hook and -k 'wire or wiring or detect' each collect 0 of 61, so neither could pass vacuously.
+- bank-reason: One run, but two independent confirmations of the blindness within it. Banking rather than promoting because the right REMEDY is not yet clear: it may be 'always pair -k with an unfiltered run' (cheap, what this run did), or 'require the gate to name the test FILE not just the filter', or 'drop -k gates in favour of an evidence artifact listing added test functions'. Re-observe on a gate whose new behaviour spans more than one test file to see which remedy actually catches it.
+- mentions: 1
+- confirmed: 0
+- disconfirmed: 0
+- status: active
+- added: 2026-08-05 (governor-262)
+- last-confirmed: none
+- runs-since-confirmed: 1
+
+### lesson:crew-blocked-on-a-commander-blocked-on-that-crew-has-no-exit
+- scope: constellation
+- task-class: dispatch-authoring
+- statement: The escalation model assumes the tier above is available to answer. It has no exit for the case where a crew needs a ruling from a Commander who is at that moment idle WAITING ON THAT CREW'S RESULT -- a genuine deadlock, not an unresponsive principal. In this run the g2 implementer hit exactly that, escalated twice, then used the engine's amend --op retext-check to align its own mis-authored check text with what the handoff actually required, and left one auditable entry rather than fabricating authority or abandoning. That was the right call, but it was judgement filling a structural gap. Either the handoff should pre-authorize a bounded self-amendment class, or the engine needs a way for a crew to hand a decision back without the Commander having already returned.
+- grounding: staged-feedback/governor-262/AGENT_FEEDBACK.md 'Crew self-amendment, ratified'; g2-implement result and its plan's amendments array (one retext-check entry); the crew's own two escalation messages naming the deadlock explicitly before it acted.
+- bank-reason: First observation of this specific deadlock shape in the fleet, and the crew's improvised exit happened to be sound. Needs re-observation to tell whether the right fix is a pre-authorized self-amendment class in the handoff template, an engine affordance, or simply better guidance -- and to see what a crew with WORSE judgement does in the same corner, which is the case that actually matters.
+- mentions: 1
+- confirmed: 0
+- disconfirmed: 0
+- status: active
+- added: 2026-08-05 (governor-262)
 - last-confirmed: none
 - runs-since-confirmed: 1

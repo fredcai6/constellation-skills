@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "mechanical": {
+    "run": "issue-418-iterative-planning",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 2,
+    "spine-step": "plan",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-plan@14e57509efe4b7f3f3329e618ee58d5a6f8870a8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning",
+    "generated_at": "2026-08-06T16:05:54Z"
+  }
+}

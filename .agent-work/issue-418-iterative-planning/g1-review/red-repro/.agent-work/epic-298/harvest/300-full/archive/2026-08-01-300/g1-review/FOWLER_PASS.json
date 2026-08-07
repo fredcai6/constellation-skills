@@ -1,0 +1,89 @@
+{
+  "work_id": "300-g1-review",
+  "diff_ref": "issue #300 gate g1: NEW scripts/context_manifest.py (302 lines), NEW tests/test_context_manifest.py, NEW tests/test_context_determinism.py, NEW tests/fixtures/context_declarations.json; MODIFIED skills/commander/templates/COMMANDER_SPINE.template.json (+8 lines, context_refs on the `context` task only)",
+  "repo_standards_ref": "This repo carries NO docs/agents/ overlay (skill-source repo; sanctioned degradation per the Commander spine's own `context` imperative). Standards applied: the installed reviewer skill's references/global-crew.md ('minimal change, no speculative abstraction', 'small composable units', 'match the surrounding code's in-file documentation conventions', 'no hidden fallback; fail visibly') and references/global-everyone.md ('one canonical path; no speculative abstraction', 'fail visibly rather than emit plausible wrong output', deep-module vocabulary), plus the frozen g1-implement HANDOFF's Authority section (settled: the identity function, the context_refs shape, no globs, one envelope with /run as the entire exclusion set, no CLI verb).",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "Longest function is resolve() at ~47 lines, of which ~30 are guard clauses that each fail visibly with a distinct message. Its intent does not blur: 'absolute filesystem path for one declaration entry, or raise'. build_manifest() is ~25 lines, rows() is ~12, rev() is 2. Nothing approaches the surrounding corpus's norm (checklist_engine.py runs to 120KB with far longer units).",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The producer defines no classes at all — 12 cohesive module-level functions over one data contract. The test modules' TestCase classes are small and each pins one property cluster.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "tests/test_context_determinism.py duplicates the whole second-checkout ritual twice: `git worktree add --detach ... HEAD`, the OVERLAY copy loop, the SkipTest-on-nonzero-returncode guard, and the `worktree remove --force` + `worktree prune` + rmtree cleanup all appear once in DeterministicAcrossEnvironments.setUpClass (lines ~132-167) and again inline in RealCheckoutSkew.test_a_clean_checkout_differs_only_in_rev_never_in_shape (lines ~269-286) — but only the first applies INSTALL_SHIM, so the two copies have already drifted. The `load()` importlib helper is also duplicated verbatim across both test modules. This matters beyond tidiness: the skip-guard behaviour under review is one of the duplicated fragments, so any fix to it must be made in two places or the second copy silently keeps the old behaviour. Extract one `_clean_checkout(overlay=..., shim=...)` contextmanager.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "rows() and resolve() index into `entry` and `roots`, but those are plain JSON records and injected mappings by contract, not objects with behaviour being reached around. There is no class whose data another unit is manipulating.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "Two clumps travel together throughout: the row triple (root, path, rev), and the producer signature (checklist, roots, reader). Both would classically be parameter/value objects.",
+      "override": {
+        "repo_standard": "g1-implement HANDOFF §Authority ('Settled, not yours to revisit: ... the `context_refs` shape and name ... one envelope') and §The manifest ('Row is exactly {root, path, rev}. Do not add `bytes`, `state`, `canon` or `tracked`'), plus §Producer ('One pure function of (checklist, roots, reader); the filesystem reader is a single injected impure edge').",
+        "reason": "Both clumps are the frozen public contract, not incidental co-travel. The row is a serialised JSON record whose exact key set is settled and whose stability is the point (constraint:no-foreclosure). The triple signature is the stated seam that lets a test point the whole producer at a fixture tree — introducing a parameter object would add an interface a caller must learn while delivering no behaviour, i.e. it would reduce depth. The standard subordinates the smell because the clump IS the interface here."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "`rev` is a bare hex str, `root` is a bare token str validated against a tuple rather than an Enum, and declared paths are str rather than PurePosixPath. A newtype/Enum refactor is the textbook move.",
+      "override": {
+        "repo_standard": "g1-implement HANDOFF §The manifest ('Serialise json.dumps(obj, indent=2, ensure_ascii=False)') and §Constraints ('Every manifest row must stay expressible later as an assertion with a subject and a source — do not add fields that would have to be re-litigated'); references/global-everyone.md 'One canonical path; no speculative abstraction'.",
+        "reason": "Every value in the envelope must round-trip through JSON as a primitive, so a wrapper type could only exist on one side of the boundary and would have to be unwrapped at the seam — buying nothing and creating a second representation of the same fact, which is exactly the drift the one-canonical-path rule forbids. ROOT_TOKENS is already the explicit validation surface an Enum would provide, and it is the value that gets serialised. The standard subordinates the smell."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Peak is 5 (build_manifest, produce), of which 3 are required and the rest are defaulted keyword hooks. Below the threshold where a parameter object earns its keep. The problem with two of those parameters is that they have no caller at all, which is speculative generality rather than list length — recorded there.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "Adding a declaration to a second spine is a single JSON edit; the producer is generic over any task object. The change touches exactly one existing file and adds one field. No change ripples.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The module could be said to hold two reasons to change (the identity function, and the envelope shape), but they are deliberately welded — the docstring's 'three properties carry the whole design' is the stated cohesion, and rev() is 2 lines. Splitting would create a module boundary with one implementer, i.e. a hypothetical seam.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "Deepest chain is `checklist.get('tasks', {}).get(selected)` — two hops on a JSON dict with a safe default. Nothing navigates an object graph.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "Three unused/near-unused extension points, in a module that explicitly holds itself to YAGNI elsewhere ('There is intentionally no CLI verb here ... cut deliberately'). (1) The `run=` parameter on build_manifest() AND on produce() has ZERO callers and ZERO tests — grep across scripts/ and tests/ finds only the internal pass-through at context_manifest.py:299. Pure dead generality. (2) The `step=` override on build_manifest() is exercised by exactly one test and is precisely the seam through which a second selection path could later grow — the thing constraint:extend-dont-parallel exists to prevent. If it is only there so a test can pin a step, the test can set task status instead (test_step_tracks_active_id_as_items_complete already does exactly that). (3) The guard `raise ValueError(f'step {selected!r} is not a task on this checklist')` at :247-248 is unreachable on the default path: I reproduced that active_id() raises KeyError('x') first for a checklist whose items name a missing task, so the friendly message never renders. Dead defensive code with a message that cannot be observed.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The module is unusually comment-dense: a 36-line module docstring, rationale docstrings on every function, and inline commentary on the ROOT_TOKENS iteration order, the belt-and-braces escape check, and the newline pin. On a normal codebase this density would read as compensating for unclear code.",
+      "override": {
+        "repo_standard": "references/global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions — the project's specific conventions are the local delta', and references/global-everyone.md 'Keep Constellation context and architecture docs current when their meaning changes' / the corpus-wide practice of recording WHY inline (checklist_engine.py, verify_skip_guard.py's 25-line rationale header, install_constellation.py's inline decision notes).",
+        "reason": "This repo's documented convention is that a script carries its own rationale inline because there is no docs/agents/ overlay to carry it, and g3 (not g1) owns the schema docs — so the docstring is currently the ONLY place the context_refs contract is written down. The comments explain invariants and rejected alternatives, not confusing code; the code they annotate is short and clear on its own. The standard subordinates the smell. NOTE, separately and NOT as a deodorant finding: two of these comments are factually wrong (rev()'s docstring understates the equality envelope, and resolve()'s 'belt and braces ... drive-relative forms' comment claims a guard it does not have). That is an accuracy defect raised as MAJOR-2 and MINOR-3 in REVIEW_RESULT, not a code-smell verdict."
+      }
+    }
+  ],
+  "rail_exception": null
+}

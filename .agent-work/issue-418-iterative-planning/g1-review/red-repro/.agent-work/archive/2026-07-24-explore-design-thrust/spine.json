@@ -1,0 +1,435 @@
+{
+  "work_id": "explore-design-thrust",
+  "type": "gated",
+  "config": {
+    "rework_cap": 99
+  },
+  "items": [
+    "init",
+    "context",
+    "explore",
+    "spec",
+    "review",
+    "confirm",
+    "route"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area and claim the lease",
+      "imperative": "Run: py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/init_work_area.py explore-design-thrust --spine C:/Users/fredc/.claude/skills/constellation-explorer/templates/EXPLORER_SPINE.template.json --skill-dir C:/Users/fredc/.claude/skills/constellation-explorer to scaffold .agent-work/explore-design-thrust/ and materialize spine.json with its placeholders resolved (do not hand-substitute). Then claim the engine session lease so a resumed or duplicated session cannot concurrently drive this spine: <engine> claim --session-id explore-design-thrust --claimed-by explorer --worktree . (if a stale prior lease blocks you, re-run with --force --reason \"resuming this run\"). From here on pass --session-id explore-design-thrust on every mutating engine call against this spine. Explorer is upstream-only and human-synchronous: it has NO delegated/autonomous mode, and convergence decisions belong to the human alone.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded and spine.json materialized",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/init_work_area.py explore-design-thrust"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-2"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine (explorer owns the state)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "lease claimed by this session"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/init_work_area.py explore-design-thrust",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-init-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/init_work_area.py explore-design-thrust",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context and seed the ideas board",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md, including the deep-module vocabulary), then the project deltas (docs/agents/ORCHESTRATOR_CONTEXT.md, GLOSSARY.md where they exist) and the current map for the area the idea touches, where architecture artifacts exist. Seed .agent-work/explore-design-thrust/IDEAS_BOARD.md from templates/IDEAS_BOARD.template.md: the living record of shared understanding (the point; current candidates; verdicts with the scope of what was tested; open threads; rejected ideas with reasons; cycle log). Every consolidation updates it; the spec crystallizes from it; a resumed session reads it instead of chat history. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "work area and lease ready",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "init complete: work area + lease"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + project deltas + map read where they exist; IDEAS_BOARD.md seeded from template",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global doctrine read (orchestrator+everyone); no docs/agents overlay or architecture map exists in this repo (#156 confirms never mapped); ideas board seeded from template with the four opening concerns + related issues"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "explore": {
+      "id": "explore",
+      "title": "Run exploration cycles until the human converges or shelves",
+      "imperative": "Run repeatable exploration cycles; this step stays in-progress across cycles. Each cycle is its own survey (cycle-<N>.json in the work-area root, from templates/CYCLE.template.json), driven with constellation-interrogator doctrine loaded (one question at a time, recommended answers, code-answers-over-questions). At cycle start the human picks a flavor (shotgun | compare | refine; the agent may recommend). Run point-questions, then dispatch excursions as BACKGROUND subagents via py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/run_crew.py (durable registry); run py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/recover_crews.py explore-design-thrust before EACH dispatch and before consolidation so an in-flight excursion is never lost to a crash. Every excursion answers one named question and obeys scoped-nulls doctrine (a failed excursion kills THAT test under those conditions, never the idea class). Consolidate: cluster and cull ideas (culls stay on the board with reasons), fold in excursion findings, update IDEAS_BOARD.md. PREMATURE CONVERGENCE IS THE FAILURE MODE THIS STEP EXISTS TO PREVENT: never initiate convergence. Present each cycle's consolidated ideas and open threads; only the human says 'converge to spec' or 'shelve'. You may flag ripeness only as a standalone message containing nothing else. Record the human's converge/shelve decision as a user-decision evidence artifact (attach explore --type user-decision --field decision=...). This step closes ONLY on that decision AND the verify_cycles.py check: at least one cycle-*.json exists and every one carries a non-null consolidation \u2014 explore cannot close having run zero cycles or with an unconsolidated cycle.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded and ideas board seeded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "board seeded, context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "human recorded a converge/shelve decision (convergence is the human's alone)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-explore-1"
+        },
+        {
+          "id": "c2",
+          "statement": "at least one consolidated exploration cycle exists in the work area",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/verify_cycles.py explore-design-thrust"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-explore-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Cycle 2 consolidated (verify_cycles green, both excursions harvested + registry-verified). Awaiting human direction: converge to spec / run cycle 3 / down-select differently \u2014 convergence is the human's alone.",
+        "authority_needed": "human",
+        "next_action": "Act on human's pick; if converge, attach user-decision and close explore",
+        "resume_reason": "human said converge: 'That sounds pretty speckworthy. Let's go ahead and work on that.'"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-explore-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "converge-to-spec",
+            "quote": "That sounds pretty speckworthy. Let's go ahead and work on that.",
+            "date": "2026-07-24"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-explore-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/verify_cycles.py explore-design-thrust",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "spec": {
+      "id": "spec",
+      "title": "Crystallize the design spec from the board",
+      "imperative": "Crystallize .agent-work/explore-design-thrust/DESIGN_SPEC.md from the ideas board using templates/DESIGN_SPEC.template.md. It ships with the loud 'UNCONFIRMED \u2014 DO NOT CUT' marker and a DRAFT Confirmation block \u2014 that is deliberate: verify_spec_confirmed.py refuses it until the confirm gate is genuinely met. Present the design for per-section approval (delta-based after the first pass: present what changed since the last confirmation, not the whole statement again). Run design-it-twice on EVERY load-bearing interface (3+ parallel agents each designing the same module's interface under a distinct constraint \u2014 minimal-interface / max-flexibility / common-caller-first / ports-and-adapters \u2014 compared on depth, locality, seam placement, testability; opinionated recommendation or hybrid); skip a trivial interface only with a stated reason. Describe interfaces in deep-module terms. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the human converged (explore closed)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "explore closed on human converge decision (e-explore-1) + verify_cycles green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DESIGN_SPEC.md crystallized from the board with per-section approval; load-bearing interfaces designed-it-twice or skipped with a stated reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DESIGN_SPEC.md crystallized from the board; human approved Intent, S1 scope, S2, S6, and the DIT skip list wholesale in chat 2026-07-24. Two load-bearing interfaces designed-it-twice (3-agent panels each, results dit-I*-RESULT.md, hybrids recommended and ratified); remaining sections skipped with stated reasons in-spec."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Both DIT panels synthesized into S2/S6 recommendations. Awaiting human per-section approval: Intent, S1 scope, S2 (answerability hybrid), S6 (grading hybrid), and the skip list \u2014 posed in chat.",
+        "authority_needed": "human",
+        "next_action": "On approvals: mark sections approved, attest spec c1, advance to review",
+        "resume_reason": "human approved all five sections wholesale (Intent, S1, S2, S6, skip list): 'all of this is pretty fantastic'; lint-loud-execute-safe ratified with register note: traceability aid, not high ceremony"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Cold adversarial critical review",
+      "imperative": "Dispatch a cold, full-adversary critic via templates/CRITIC_HANDOFF.template.md: the critic reads the spec with NO exploration record, nothing sacred, and may attack deliberate decisions; the human filters relitigation noise. Panel scaled by weight \u2014 default one critic; a spec that would spawn epics or touch architecture gets a 3-lens panel (intent-fit / testability / simplicity-YAGNI). When in doubt, panel. Every finding lands in the spec's structured findings table (fixed columns 'ID | Lens | Severity | Finding | Disposition | Reason'; Disposition in EDIT / RE-EXPLORE / REJECT) and the human triages each one. A RE-EXPLORE disposition is an engine reopen of the explore step: the inline rework cap is 99 so the critic->re-explore loop never hard-blocks, and the reopen cascade resets spec/review/confirm and supersedes their evidence \u2014 survivable because the ideas board is the source of truth and the spec re-crystallizes from it. This step closes only when every Disposition cell is filled, checked mechanically by verify_spec_confirmed.py --phase review.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "DESIGN_SPEC.md drafted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DESIGN_SPEC.md drafted and human-approved per-section"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "critic findings table present with no empty Disposition cell",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/verify_spec_confirmed.py explore-design-thrust --phase review"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "3-lens critic panel (intent-fit / testability / simplicity-YAGNI) dispatched cold as background crews, registry-recorded. Awaiting their findings; then the human triages every row (EDIT / RE-EXPLORE / REJECT).",
+        "authority_needed": "human",
+        "next_action": "On critic results: verify artifacts, land findings in the spec table, present to human for per-row disposition",
+        "resume_reason": "critic panel complete: 30 findings landed, human ratified all recommended dispositions in chat"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/verify_spec_confirmed.py explore-design-thrust --phase review",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "confirm": {
+      "id": "confirm",
+      "title": "Hard confirmation gate",
+      "imperative": "The hard gate: no work is cut from an unconfirmed design. Fill the spec's Confirmation block \u2014 Status CONFIRMED, Confirmed by, Date \u2014 and record assumptions exercised vs accepted untested (accepting an untested load-bearing assumption is a visible, human-signed choice, never a silent skip). Get the human's explicit confirmation and record it as a user-decision evidence artifact (attach confirm --type user-decision --field decision=confirmed). Trust model, stated honestly: the engine records a user-decision rather than cryptographically proving a human made it; explorer has no delegated mode, so fabricating one violates doctrine an agent has no sanctioned path around \u2014 verify_spec_confirmed.py and the downstream UNCONFIRMED refusal are the mechanical backstops. This step closes on the user-decision artifact AND verify_spec_confirmed.py (Confirmation block filled: Status CONFIRMED with confirmer and date, and no empty Disposition cell).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "critical review complete (every finding dispositioned)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review closed: all 30 findings dispositioned, verifier green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "human recorded an explicit confirmation decision",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-confirm-1"
+        },
+        {
+          "id": "c2",
+          "statement": "Confirmation block filled and no empty Disposition cell (verifier passes)",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/verify_spec_confirmed.py explore-design-thrust"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-confirm-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-confirm-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "confirmed",
+            "quote": "Yeah. It all sounds good. Let's go ahead and work this into issues... write the issues locally and do one more critic round",
+            "confirmer": "Fred",
+            "date": "2026-07-24"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-confirm-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/verify_spec_confirmed.py explore-design-thrust",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "route": {
+      "id": "route",
+      "title": "Route the confirmed spec, archive, release",
+      "imperative": "The human routes the confirmed spec \u2014 explorer NEVER cuts issues itself (to-issues owns cutting): (a) hand off to constellation-to-issues or directly to a Commander; (b) file one 'shaped design' issue holding the full spec body; or (c) shelve unconfirmed \u2014 file the ideas board as the shaped-design issue carrying a loud `UNCONFIRMED \u2014 DO NOT CUT` header so nothing downstream cuts it. Then archive the work area (move .agent-work/explore-design-thrust/ to .agent-work/archive/<date>-explore-design-thrust/) and release the engine session lease on this spine: <engine> release --session-id explore-design-thrust. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "spec confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "spec confirmed, gate closed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "confirmed spec routed (handed off / shaped-design issue filed / shelved with UNCONFIRMED header); work area archived; engine lease released",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Routing per human ruling: hand off CONFIRMED spec to constellation-to-issues in this session \u2014 write issues locally, supersede overlapping open issues (#217 #220 #224 #205 #198 + partial #172/#216/#225/#219 threads), one more cold critic round on the issue set, then admiral-ready. Work area archives to .agent-work/archive/2026-07-24-explore-design-thrust/ and lease releases immediately after this advance."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "explore-design-thrust",
+    "status": "released",
+    "claimed_at": "2026-07-24T20:15:07.930268+00:00",
+    "last_heartbeat": "2026-07-24T22:05:42.407204+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-07-24T22:05:42.512853+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-07-24T20:15:41.795592+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "context",
+      "why": "Context loaded: doctrine baseline + open-issue landscape. The idea touches the whole pipeline (explorer->to-issues->admiral->commander->implementer); no architecture map exists to read. Board seeded with 4 concerns and a waterfall-vs-iterative hypothesis.",
+      "mechanical": false,
+      "ts": "2026-07-24T20:16:47.996175+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "explore",
+      "why": "Human converged after 2 consolidated cycles (shotgun + human-directed refine). Board holds 4 packages (A quick-wins batch, B step-back, C slice-wise planning, D conductor-inversion arc) with excursion evidence x1-x4 harvested. Spec crystallizes from the board.",
+      "mechanical": false,
+      "ts": "2026-07-24T21:35:27.296865+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "spec",
+      "why": "Spec complete: package-A epic fully specified (S2-S10), B/C routed as threads, D constraints recorded. Both panels synthesized; human ratified the hybrids incl. lint-loud-execute-safe. Next: cold 3-lens critic panel (spec spawns an epic and touches engine architecture -> panel, not single).",
+      "mechanical": false,
+      "ts": "2026-07-24T21:48:07.881875+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "review",
+      "why": "3-lens cold panel returned 30 findings (1 BLOCKING: no reproducible over-read instrument -> EDIT added measure_overread.py + baseline). Human ratified all dispositions wholesale; 21 EDITs applied to the spec, 9 REJECTs recorded with reasons. verify --phase review green.",
+      "mechanical": false,
+      "ts": "2026-07-24T22:05:08.823982+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "confirm",
+      "why": "Human confirmed the spec after ratifying all 30 critic dispositions and directed routing: cut into issues locally, supersede overlapping open issues, run one more critic round on the issue set, then hand to an Admiral. Confirmation block filled; verifier green both phases.",
+      "mechanical": false,
+      "ts": "2026-07-24T22:05:22.482071+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "route",
+      "why": "Confirmed spec routed to constellation-to-issues per human direction; archive+release are the closing mechanical acts.",
+      "mechanical": false,
+      "ts": "2026-07-24T22:05:42.407204+00:00"
+    }
+  ]
+}

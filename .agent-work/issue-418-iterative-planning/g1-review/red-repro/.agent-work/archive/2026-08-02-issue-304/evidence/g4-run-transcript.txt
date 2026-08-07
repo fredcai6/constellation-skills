@@ -1,0 +1,248 @@
+=== g4 dogfood transcript: the MATERIALIZED spine, in a repo with docs/agents/ and NO docs/architecture/ ===
+$ date -u
+Sun Aug  2 04:40:54 UTC 2026
+
+$ ls -d docs/agents docs/architecture
+ls: cannot access 'docs/architecture': No such file or directory
+docs/agents
+### exit: 2
+
+$ git rev-parse --short HEAD
+4f9c6d1
+
+$ python scripts/init_work_area.py --spine skills/commander/templates/COMMANDER_SPINE.template.json --root C:/Programs/constellation-skills-wt/e298-304 g4-scratch-run
+work area ready: C:\Programs\constellation-skills-wt\e298-304\.agent-work\g4-scratch-run
+spine ready: C:\Programs\constellation-skills-wt\e298-304\.agent-work\g4-scratch-run\spine.json
+### exit: 0
+
+--- m1: placeholder resolution in the MATERIALIZED spine ---
+$ python .agent-work/issue-304/evidence/g4_assert_resolved.py
+unresolved resolver-family placeholder tokens in the materialized spine: 0 []
+materialized context.c2 command: python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-scratch-run
+--root value: C:/Programs/constellation-skills-wt/e298-304   absolute=True   exists=True
+--work-id value: g4-scratch-run
+other angle-bracket tokens (informational, not resolver-owned): ['<date>', '<engine>', '<file>', '<path>', '<spine-template>', '<what you checked>']
+PLACEHOLDERS-RESOLVED
+### exit: 0
+
+--- m2: driving the MATERIALIZED spine through the engine ---
+$ <engine> --file .agent-work/g4-scratch-run/spine.json claim --session-id commander-g4-scratch-run --claimed-by commander --worktree .
+
+claimed lease commander-g4-scratch-run -> active
+### exit: 0
+
+$ <engine> --file .agent-work/g4-scratch-run/spine.json start init --session-id commander-g4-scratch-run
+
+init -> in-progress
+### exit: 0
+
+$ <engine> --file .agent-work/g4-scratch-run/spine.json attest init --cond c2 --which postconditions --session-id commander-g4-scratch-run --note 'lease claimed'
+
+attested init.c2
+### exit: 0
+
+$ <engine> --file .agent-work/g4-scratch-run/spine.json advance init --session-id commander-g4-scratch-run --why '...'
+
+init -> complete
+### exit: 0
+
+--- m2 STAGE A: the context gate with NO orientation receipt (does it pass silently?) ---
+$ <engine> --file .agent-work/g4-scratch-run/spine.json start context --session-id commander-g4-scratch-run
+
+context -> in-progress
+### exit: 0
+
+$ <engine> --file .agent-work/g4-scratch-run/spine.json attest context --cond c1 --which postconditions --session-id commander-g4-scratch-run --note '...'
+
+attested context.c1
+### exit: 0
+
+$ <engine> --file .agent-work/g4-scratch-run/spine.json advance context --session-id commander-g4-scratch-run --why 'attempt the gate with no receipt'
+
+REFUSED: context: postconditions unmet ['c2'] Recovery: fix the underlying issue so postcondition c2 passes, then retry advance context. Do not edit the JSON — use the engine.
+### exit: 0
+
+NOTE ON EXIT CODES: the '### exit:' lines ABOVE this note reported the exit of a pipeline whose
+last element was grep, not the engine. Every '### exit:' line BELOW this note is the exit code of
+the named command itself, captured before any pipe. The stage-A REFUSED above is re-run here with
+the engine's own exit code, so nothing rests on the mis-scoped codes above.
+
+--- m2 STAGE A (re-run, honest exit codes): the gate with NO orientation receipt ---
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g4-scratch-run/spine.json advance context --session-id commander-g4-scratch-run --why attempt the gate with no orientation receipt on disk
+REFUSED: context: postconditions unmet ['c2'] Recovery: fix the underlying issue so postcondition c2 passes, then retry advance context. Do not edit the JSON — use the engine.
+### exit: 1
+
+The materialized check itself, run verbatim from the spine -- stdout is discarded by the engine,
+so its EXIT CODE is the only signal that reaches the spine:
+$ python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-scratch-run
+no receipt at C:/Programs/constellation-skills-wt/e298-304/.agent-work/g4-scratch-run/map-orientation.json -- run `orient` first
+RECEIPT-MISSING
+### exit: 12
+
+--- m2 STAGE B: run orient as the imperative instructs, WITHOUT discharging ---
+$ python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-scratch-run
+DEGRADED-NO-MAP
+root: C:/Programs/constellation-skills-wt/e298-304
+root proof: positive: .git entry present at root
+entrypoint: (none)
+anchor_count: 0
+candidates tried:
+  [1] generated-map: docs/architecture/generated/map.json -> absent (absent)
+  [2] index: docs/architecture/index.md -> absent (absent)
+  [3] packets-dir: docs/architecture -> absent (absent)
+receipt: .agent-work/g4-scratch-run/map-orientation.json
+degraded and NOT discharged -- still owed:
+  - substitutes (what you read INSTEAD of a map, each hash-pinned)
+  -     substitutes is empty -- a degraded run read SOMETHING instead of the map
+  - unmapped (what stayed unmapped, stated plainly)
+  - escalation (what you are escalating, and to whom)
+### exit: 10
+
+A bare DEGRADED receipt must NOT satisfy the gate -- retry the advance and see:
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g4-scratch-run/spine.json advance context --session-id commander-g4-scratch-run --why receipt now exists but is undischarged
+REFUSED: context: postconditions unmet ['c2'] Recovery: fix the underlying issue so postcondition c2 passes, then retry advance context. Do not edit the JSON — use the engine.
+### exit: 1
+
+$ python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-scratch-run
+DEGRADED-NO-MAP
+receipt: .agent-work/g4-scratch-run/map-orientation.json
+degraded record INCOMPLETE -- substitutes AND unmapped AND escalation
+problems: 4
+  - substitutes (what you read INSTEAD of a map, each hash-pinned)
+  -     substitutes is empty -- a degraded run read SOMETHING instead of the map
+  - unmapped (what stayed unmapped, stated plainly)
+  - escalation (what you are escalating, and to whom)
+### exit: 10
+
+--- m2 STAGE C: discharge honestly -- substitutes, the unmapped gap, an escalation. No --force, no waiver ---
+$ python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-scratch-run --substitute README.md --substitute docs/agents/ORCHESTRATOR_CONTEXT.md --unmapped skills/ and scripts/ have no structural map: this repo ships the Cartographer that builds docs/architecture/ and carries none itself, so the commander orientation contract has no map input for the role-template and orientation-tooling area this gate touches --escalation standing docs/architecture/ gap in constellation-skills, escalated to the issue-304 Commander and the epic-298 Admiral -- every Commander run in this repo is structurally degraded until a map exists
+DEGRADED-NO-MAP
+root: C:/Programs/constellation-skills-wt/e298-304
+root proof: positive: .git entry present at root
+entrypoint: (none)
+anchor_count: 0
+candidates tried:
+  [1] generated-map: docs/architecture/generated/map.json -> absent (absent)
+  [2] index: docs/architecture/index.md -> absent (absent)
+  [3] packets-dir: docs/architecture -> absent (absent)
+receipt: .agent-work/g4-scratch-run/map-orientation.json
+### exit: 0
+
+$ python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-scratch-run
+DEGRADED-NO-MAP
+receipt: .agent-work/g4-scratch-run/map-orientation.json
+orientation contract SATISFIED
+problems: 0
+substitute: README.md [known-fallback] -- found in the fixed fallback set and present on disk
+substitute: docs/agents/ORCHESTRATOR_CONTEXT.md [agent-declared] -- UNVERIFIED -- declared by the agent, not corroborated by the filesystem
+### exit: 0
+
+And now the gate the same run could not pass three commands ago:
+$ python C:/Users/fredc/.claude/skills/constellation-implementer/scripts/checklist_engine.py --file .agent-work/g4-scratch-run/spine.json advance context --session-id commander-g4-scratch-run --why degraded verdict discharged with two hash-pinned substitutes, a named unmapped gap and an escalation
+context -> complete
+### exit: 0
+
+--- m2 assertion: reported, discharged, no force, no waiver ---
+$ python .agent-work/issue-304/evidence/g4_assert_discharged.py
+context task status: complete
+receipt degraded: True   substitutes: 2   unmapped: 1   escalation: True
+  substitute README.md hash=e890012f0ab7448f source=known-fallback
+  substitute docs/agents/ORCHESTRATOR_CONTEXT.md hash=2f79929ecb85851b source=agent-declared
+spine journal verbs: ['advance', 'attest', 'start']
+verify-orientation re-run exit: 0
+DEGRADED-REPORTED-AND-DISCHARGED-WITHOUT-FORCE-OR-WAIVER
+### exit: 0
+
+--- m4: cleanup, verified rather than claimed ---
+$ rm -rf .agent-work/g4-scratch-run
+### exit: 0
+
+$ ls -d .agent-work/g4-scratch-run
+ls: cannot access '.agent-work/g4-scratch-run': No such file or directory
+### exit: 2
+
+$ python .agent-work/issue-304/evidence/g4_assert_closeout.py
+scratch work area C:\Programs\constellation-skills-wt\e298-304\.agent-work\g4-scratch-run exists: False
+.agent-work/issue-304/TRIPWIRE_OUTCOMES.md                 3ccd8b547fbb  UNCHANGED
+.agent-work/issue-304/TREND_SNAPSHOT.md                    ad2ee8361bcc  UNCHANGED
+.agent-work/issue-304/crew-handoffs/g3-result.md           6597f5c8d2fa  UNCHANGED
+.agent-work/issue-304/evidence/g3-run-transcript.txt       11254624da14  UNCHANGED
+.agent-work/issue-304/g3-implementer-plan.json             71875372f39f  UNCHANGED
+.agent-work/issue-304/spine.json                           183930008cf1  UNCHANGED
+TRIPWIRES.md                                               eab67aca3cc9  UNCHANGED
+TRIPWIRES.md vs pre-registration 1662b90: IDENTICAL
+result file g4-result.md exists: True
+CLEANUP-VERIFIED-PRIOR-GATES-UNTOUCHED-RESULT-WRITTEN
+### exit: 0
+
+--- m5: fix-now triage from the g4 review ---
+$ git diff --stat scripts/map_orient.py
+ scripts/map_orient.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+$ git diff scripts/map_orient.py
+diff --git a/scripts/map_orient.py b/scripts/map_orient.py
+index dbac779..bc1d79f 100644
+--- a/scripts/map_orient.py
++++ b/scripts/map_orient.py
+@@ -960,7 +960,7 @@ def render_verify_report(
+         if label == LABEL_KNOWN_FALLBACK:
+             note = "found in the fixed fallback set and present on disk"
+         else:
+-            note = "UNVERIFIED -- declared by the agent, not corroborated by the filesystem"
++            note = "UNVERIFIED -- declared by the agent, not in the fixed fallback set"
+         lines.append(f"substitute: {path if path else '(no path)'} [{label}] -- {note}")
+     return lines
+ 
+
+$ python .agent-work/issue-304/evidence/g4_assert_harness_discriminates.py
+OLD substring predicate on a RESOLVED receipt: True   <- the defect
+NEW structured predicate on the same receipt:  False   <- the repair
+NEW structured predicate on a DEGRADED receipt: True  <- no over-correction
+HARNESS-PREDICATE-DISCRIMINATES
+### exit: 0
+
+--- m5: the reworded line, live ---
+$ python scripts/init_work_area.py --root C:/Programs/constellation-skills-wt/e298-304 g4-fix-check
+work area ready: C:\Programs\constellation-skills-wt\e298-304\.agent-work\g4-fix-check
+### exit: 0
+
+$ python scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-fix-check --substitute README.md --substitute docs/agents/ORCHESTRATOR_CONTEXT.md --unmapped no docs/architecture/ in this repo --escalation standing map gap, escalated to the issue-304 Commander
+DEGRADED-NO-MAP
+root: C:/Programs/constellation-skills-wt/e298-304
+root proof: positive: .git entry present at root
+entrypoint: (none)
+anchor_count: 0
+candidates tried:
+  [1] generated-map: docs/architecture/generated/map.json -> absent (absent)
+  [2] index: docs/architecture/index.md -> absent (absent)
+  [3] packets-dir: docs/architecture -> absent (absent)
+receipt: .agent-work/g4-fix-check/map-orientation.json
+### exit: 0
+
+$ python scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-304 --work-id g4-fix-check
+DEGRADED-NO-MAP
+receipt: .agent-work/g4-fix-check/map-orientation.json
+orientation contract SATISFIED
+problems: 0
+substitute: README.md [known-fallback] -- found in the fixed fallback set and present on disk
+substitute: docs/agents/ORCHESTRATOR_CONTEXT.md [agent-declared] -- UNVERIFIED -- declared by the agent, not in the fixed fallback set
+### exit: 0
+
+$ rm -rf .agent-work/g4-fix-check
+### exit: 0
+
+$ ls -d .agent-work/g4-fix-check
+ls: cannot access '.agent-work/g4-fix-check': No such file or directory
+### exit: 2
+
+--- m5: the two required re-runs ---
+$ python scripts/map_orient.py --self-test
+self-test OK
+### exit: 0
+
+$ python -m pytest tests/test_map_orient.py -q
+.......................................................................................                   [100%]
+87 passed, 39 subtests passed in 11.96s
+### exit: 0
+

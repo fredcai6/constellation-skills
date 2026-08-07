@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "issue-308",
+    "project": "constellation-skills",
+    "role": "commander-308",
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-308-execute@72d1cf822e91ead3bd762ae0004f1f26d3e6f1f2",
+    "artifact-ref": []
+  },
+  "refused": [
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-308",
+    "generated_at": "2026-08-02T20:02:29Z"
+  }
+}

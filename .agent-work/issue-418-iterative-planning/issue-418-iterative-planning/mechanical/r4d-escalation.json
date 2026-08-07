@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4d-escalation",
+  "mechanical": {
+    "run": "issue-418-iterative-planning",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 0,
+    "spine-step": "r4d-escalation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-r4d-escalation@a1f5d1361b9d6e11147a683e1fac851ceca114d6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning",
+    "generated_at": "2026-08-06T17:56:58Z"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "work_id": "explore-post-phase1",
+  "cycle": "3",
+  "flavor": "refine",
+  "type": "survey",
+  "items": [
+    "c0-frame",
+    "q1",
+    "x8"
+  ],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame the cycle",
+      "imperative": "Set the cycle flavor; the human picks, you may recommend. Later cycles seed from the ideas board's open threads. Record pass when framed.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Flavor: refine, continuing mechanisms+cleanup. Human picked the content directly: exc-8 spine-instructions prototype + inline 12-disagreement adjudication overview.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "Overview of the 12 issue-verdict disagreements for Tommy's adjudication",
+      "imperative": "From exc-4 and exc-5 artifacts (no new dispatch), lay out each of the 12 disagreements: what each pass said, the evidence each cited, and a recommendation. Deliver to Tommy in plain language. Record the summary as the finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "12-disagreement adjudication overview built from exc-4 + exc-5 evidence, one conflict re-verified by hand (#239: templates DO carry @grade, landed by 7c8ff1b which cites #239 \u2014 cold read correct, exc-4 wrong at HEAD). Recommendations: CLOSE 10 (239 244 296 336 337 338 347 349 364 374 \u2014 each with cold-read tree evidence: fix landed/test-pinned/graduated/captured-in-episode/refiled-sharper); RESCOPE 1 (#208: doctrine half done at admiral SKILL.md:70, mechanized harvest-completeness check still unbuilt \u2014 matches mechanization direction); RESOLVE-AS-DUP 1 (#278 -> #409: defect real and growing, 6 root notes files, keep the better-evidenced issue and fold the template fix in). Net: the two passes disagreed mostly because exc-4 judged titles/clusters while cold agents read comments and re-verified the tree; where they conflicted on tree facts, the cold read was right in the one case hand-checked. Presented to Tommy for adjudication \u2014 his call.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "x8": {
+      "id": "x8",
+      "title": "Excursion exc-8-spine-instructions: prototype moving step-specific instructions into the spine",
+      "imperative": "Prototype excursion per EXCURSION_BRIEF exc-8-spine-instructions on the ideas board. Dispatches constellation-prototyper in a throwaway worktree; proof is a live demonstration that a relocated instruction reaches an agent through the engine's per-gate output while the always-loaded skill prose shrinks. Result lands at evidence/exc-8-spine-instructions-RESULT.md. Record the scoped verdict as the finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "exc-8 ANSWERED-YES with one hard boundary and one cost (evidence/exc-8-spine-instructions-RESULT.md): a relocated instruction rides the gate imperative through current verbatim and a cold sonnet agent that never saw the skill prose acted on it correctly \u2014 round 2 discriminated cleanly (spine arm ran the check and rebuilt the removed template section; no-instruction arm did not). Census: 54.2% of Commander's true always-loaded words are step-specific/relocatable; SKILL.md itself is already 100% kernel (the overhead is in commander-core.md, 57% step-specific); 84% of relocatable words concentrate on just execute+plan. Boundary: bootstrap floor \u2014 instantiate-and-claim text can never ride the channel it creates. Cost: engine RAIL echoes the imperative verbatim = exact 2x per current call \u2014 fix the echo first or relocation inverts its own goal. Bonus defect found: gate anchors/constraints blocks are INVISIBLE to agents driving from current (all 5 cold agents independently hit it) \u2014 tracker-worthy, bears on #393. NOT tested: bulk relocation (dose-response named as next variant), other roles, shared-across-roles text, n=1 per arm. Worktree kept: C:/Programs/.proto-exc8-spine-instructions commit 5a283ad.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "pass",
+    "findings": [],
+    "summary": "Cycle 3 complete: spine-instructions relocation PROVEN live (54% of Commander always-loaded words relocatable; bootstrap kernel + RAIL-echo fix + selective-not-wholesale are the design constraints; anchors-invisible defect discovered). 12-disagreement adjudication overview built and delivered: recommend close 10, rescope #208, resolve #278 as dup of #409; one contested tree fact hand-verified (cold read right). Both Arc-1 legs (governor, spine-instructions) now rest on live prototypes. Convergence remains Tommy's call."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

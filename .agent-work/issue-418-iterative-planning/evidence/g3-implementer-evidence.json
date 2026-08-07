@@ -1,0 +1,9 @@
+{
+  "gate_id": "g3",
+  "red_exit": 1,
+  "green_exit": 0,
+  "diff_digest": "sha256:e087a982015aa0796554604746f759532b616e9390df5bff1cb6acb5b59d6070",
+  "result_path": ".agent-work/issue-418-iterative-planning/g3-implement/IMPLEMENTER_RESULT.md",
+  "red_command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py",
+  "green_command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py"
+}

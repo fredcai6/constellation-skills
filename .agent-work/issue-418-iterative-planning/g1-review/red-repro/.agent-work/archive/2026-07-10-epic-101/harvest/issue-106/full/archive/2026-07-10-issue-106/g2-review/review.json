@@ -1,0 +1,18 @@
+{
+  "gate": "g2",
+  "session": "constellation/issue-106/g2/reviewer/attempt-1",
+  "verdict": "APPROVE",
+  "target": "uncommitted working tree (scripts/run_skill_eval.py, tests/test_run_skill_eval.py, .gitignore +1)",
+  "checks": [
+    {"id": "pure-logic-matches-contract", "result": "PASS", "evidence": "schema/N=2,M=3/infra-fence table/provenance/dry-run all present and match runner-contract.md"},
+    {"id": "tests-agent-free", "result": "PASS", "evidence": "no test executes a claude subprocess; only run_check uses sys.executable; autouse guard reproduced biting on 'claude' and 'claude.exe'"},
+    {"id": "known-bad-FAIL-known-good-PASS", "result": "PASS", "evidence": "--dry-run exit 0 PASS; --dry-run-fail (biting check) exit 1 FAIL; reproduced on CLI + unit tests"},
+    {"id": "verdict-math", "result": "PASS", "evidence": "2/3=>PASS, 1/3=>FAIL, 1completed+2fenced=>INCONCLUSIVE(2) all asserted and green"},
+    {"id": "infra-fence-excluded-not-fail", "result": "PASS", "evidence": "timeout/usage-marker=>inconclusive, excluded from tally; environment flake can only yield INCONCLUSIVE"},
+    {"id": "structural-T3", "result": "PASS", "evidence": "checks/*.py non-recursive glob; answer/ excluded; zero process checks => EvalConfigError at load and CLI exit 3"},
+    {"id": "full-suite-green", "result": "PASS", "evidence": "py -m pytest -q => 508 passed, 2 skipped, 152 subtests passed"},
+    {"id": "classify_run-exit0-completion-focus", "result": "APPROVE-as-intended", "evidence": "contract §(i) table explicitly classifies 'exit 0 with no spine terminal' as completed-fail decided by process checks; runner completion probe = liveness only; falsification floor is intentionally check-dependent (floor vs g5 live ceiling). Inbound constraint recorded for g4/g5."}
+  ],
+  "scope_ok": true,
+  "reopens_g1": false
+}

@@ -1,0 +1,379 @@
+{
+  "work_id": "301-g1-rework-2",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fix1-enumeration-seam",
+    "m2-fix2-write-seam",
+    "m3-fix3-section9-pointer",
+    "m4-sweep",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load round-2 BLOCK, prior rework doc, and current doc text",
+      "imperative": "Read .agent-work/301/crew-handoffs/g1-review-result-2.md (the round-2 BLOCK with findings 1-4) and docs/EPISODE_STORE.md (current state, the four rework-1 fixes already confirmed good) in full. Confirm the three concrete findings (1: base-enumeration half of retrieval unspecified; 2: no write-side seam for retire op; 3: SS9 relies on SS2's disclaimer with no local pointer) and their fix directions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "round-2 review-result + docs/EPISODE_STORE.md loaded; three findings and fix directions confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fix1-enumeration-seam": {
+      "id": "m1-fix1-enumeration-seam",
+      "title": "Fix 1: name the base-enumeration seam so g3's retrieval enumeration is layout-agnostic, not just the per-id filter",
+      "imperative": "Edit docs/EPISODE_STORE.md SS7 and SS8. Add a new named seam, iter_episode_ids(include_retired), parallel to the existing is_episode_in_ordinary_search seam and to SS2's already-worked id-sequence-scan treatment (do not edit SS2 itself): Option-A adapter unions episodes/active/*.md and, when include_retired, episodes/retired/*.md; Option-B adapter globs episodes/*.md unconditionally. State the composition rule explicitly: 'enumerate non-retired episodes' = iter_episode_ids(include_retired=False) then confirm each id via is_episode_in_ordinary_search() before including it -- scan then filter, both steps always, neither folded into the other, so correctness never depends on which adapter g4 binds. Rewrite SS8's primitive descriptions (fetch by id, enumerate non-retired, select by exact field value, neighbour enumeration) so each is explicitly built from named seams, not an inlined path/glob/grep. Do NOT choose the retirement layout.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "iter_episode_ids seam named in docs/EPISODE_STORE.md with Option A/B adapters and the scan-then-filter composition rule stated",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'iter_episode_ids' docs/EPISODE_STORE.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fix1-enumeration-seam-1"
+        },
+        {
+          "id": "c2",
+          "statement": "SS8's retrieval primitives are described as built from named seams (fetch by id, enumerate non-retired, select, neighbour enumeration), no inlined path/glob/grep",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "do not choose the retirement layout",
+        "prose-only, no executable code or tests",
+        "scope: docs/EPISODE_STORE.md only",
+        "do not rewrite SS2's already-accepted id-sequence-scan / query-primitive-glob text; reference it, don't edit it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fix1-enumeration-seam-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'iter_episode_ids' docs/EPISODE_STORE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-fix2-write-seam": {
+      "id": "m2-fix2-write-seam",
+      "title": "Fix 2: name a write-side seam for g2's retire op so the layout effect is bound at exactly one seam",
+      "imperative": "Edit docs/EPISODE_STORE.md SS7 (and SS10's g2 bullet). Add a new named seam, apply_retirement(episode_id, reason), placed after the Layout HELD OPEN paragraph and before the membership-predicate seam paragraph. State explicitly that the content update (the status/retired-reason/retired-at/consolidated-into field diff already shown in the worked example) is identical under both options and is NOT gated by layout; only the layout effect differs: Option-A adapter performs the field diff then moves the file between episodes/active/<id>.md and episodes/retired/<id>.md; Option-B adapter performs the field diff only, path unchanged. State g2's writer must call apply_retirement() for every retire op, never inline a file-move or in-place-only write at the call site. Update SS10's g2 bullet to name this seam. Do NOT choose the retirement layout.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Fix 1 done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "apply_retirement seam named in docs/EPISODE_STORE.md with Option A/B adapters, content/layout split stated, SS10's g2 bullet references it",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'apply_retirement' docs/EPISODE_STORE.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix2-write-seam-1"
+        }
+      ],
+      "constraints": [
+        "do not choose the retirement layout",
+        "prose-only, no executable code or tests",
+        "scope: docs/EPISODE_STORE.md only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix2-write-seam-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'apply_retirement' docs/EPISODE_STORE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-fix3-section9-pointer": {
+      "id": "m3-fix3-section9-pointer",
+      "title": "Fix 3: give SS9 a local pointer back to SS2's flat-path disclaimer",
+      "imperative": "Edit docs/EPISODE_STORE.md SS9 (cross-worktree sharing). Add one local sentence near the top of the section (before or alongside the numbered list using episodes/<id>.md) explicitly pointing back to SS2's disclaimer that the flat form episodes/<id>.md illustrates the id, not a settled path, and that nothing in SS9's argument depends on which layout option binds. Minimal edit, do not restructure the section.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Fix 2 done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "SS9 carries a local pointer sentence back to SS2's disclaimer, near its own episodes/<id>.md usages",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "do not choose the retirement layout",
+        "prose-only",
+        "scope: docs/EPISODE_STORE.md only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-sweep": {
+      "id": "m4-sweep",
+      "title": "Sweep the whole class across every section, and add the consolidated full-seam-set statement",
+      "imperative": "Re-read docs/EPISODE_STORE.md in full (SS2, SS3's worked example, SS6, SS7, SS8, SS9, SS10) and episodes/README.md, hunting for any other place where a MECHANISM is described concretely and silently assumes one layout, beyond the three named fixes. Specifically check: SS3's worked-example file header (`episodes/governor-268-003.md`) for a bare-path claim needing the same local-pointer treatment as SS9; SS8's 'fetch by id = a direct path read' claim, which is layout-dependent under Option A (which subdirectory?) and currently has no seam -- if found, name a fourth seam (e.g. resolve_episode_path(episode_id)) with Option-A (try active/, then retired/) and Option-B (fixed path) adapters, and wire SS7/SS8's fetch-by-id language through it. Fix every instance found using the same minimal-qualification / named-seam pattern as fixes 1-3. Then add ONE consolidated statement (a short table or bullet list, placed in SS7) naming the FULL seam set -- store root (SS1), retirement write (apply_retirement), per-id membership (is_episode_in_ordinary_search), base enumeration (iter_episode_ids), and any seam found during this sweep (e.g. resolve_episode_path) -- so a reader of g2/g3 knows exactly what to call and what never to inline. State plainly what g4 binds (adapter count) versus what stays fixed (the store root). Do NOT choose the retirement layout. Report exactly what the sweep found, including anything beyond the named list.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fixes 1-3 done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full sweep complete across SS2/SS3/SS6/SS7/SS8/SS9/SS10 + README; every additional single-layout-assumption instance found is fixed with a named seam or local pointer; sweep outcome (including anything beyond the 3 named fixes) reported",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "a single consolidated statement of the full seam set (store root, enumeration, membership, retirement write, plus any sweep-found seam) exists in docs/EPISODE_STORE.md",
+          "check": {
+            "kind": "command",
+            "command": "grep -qi 'full seam set' docs/EPISODE_STORE.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-sweep-1"
+        }
+      ],
+      "constraints": [
+        "do not choose the retirement layout",
+        "prose-only",
+        "scope: docs/EPISODE_STORE.md and episodes/README.md only",
+        "do not churn the partition, Stratum A mapping, per-field addressability, tracked-path decision, episode-id reasoning, mechanical-only statement, #300 obligation, cross-worktree-via-git, or the four rework-1 fixes -- only add/qualify, do not rewrite what already passed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-sweep-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -qi 'full seam set' docs/EPISODE_STORE.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Verify scope, run required checks, write IMPLEMENTER_RESULT",
+      "imperative": "Run: git status --short (confirm only episodes/README.md staged and docs/EPISODE_STORE.md untracked/modified -- no other files); python -m pytest tests/ -q (expect 1157 passed, 2 skipped -- use python, not py). Overwrite .agent-work/301/crew-handoffs/g1-result.md as IMPLEMENTER_RESULT with a literal 'VERDICT: COMPLETE' line, a per-fix account (fixes 1-3), the sweep results (including anything found beyond the 3 named fixes), and a non-empty Workflow Feedback section. Do not commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "sweep complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "git status shows only in-scope doc files modified (manually inspected)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "pytest suite unchanged: 1157 passed, 2 skipped",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-1"
+        },
+        {
+          "id": "c3",
+          "statement": "g1-result.md written with VERDICT: COMPLETE and non-empty Workflow Feedback",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'VERDICT: COMPLETE' .agent-work/301/crew-handoffs/g1-result.md && grep -qi 'Workflow Feedback' .agent-work/301/crew-handoffs/g1-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-2"
+        }
+      ],
+      "constraints": [
+        "do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'VERDICT: COMPLETE' .agent-work/301/crew-handoffs/g1-result.md && grep -qi 'Workflow Feedback' .agent-work/301/crew-handoffs/g1-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "implementer-301-g1-rework-2",
+    "status": "released",
+    "claimed_at": "2026-08-01T07:22:04.849223+00:00",
+    "last_heartbeat": "2026-08-01T07:28:53.834335+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T07:29:07.938464+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Round-2 BLOCK confirmed: finding 1 (enumeration seam missing, BLOCKER), finding 2 (no write-side apply_retirement seam, Moderate), finding 3 (SS9 lacks local pointer to SS2 disclaimer, Minor). Current EPISODE_STORE.md text re-read in full; the four rework-1 fixes (SS7 self-contradiction, is_episode_in_ordinary_search seam, SS2 path claim, two self-found SS2 instances) confirmed intact and not to be touched.",
+      "mechanical": false,
+      "ts": "2026-08-01T07:22:30.473879+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-fix1-enumeration-seam",
+      "why": "Fix 1 done: named iter_episode_ids(include_retired) base-enumeration seam in SS7 with Option A (directory union) / Option B (flat glob) adapters, plus the scan-then-filter composition rule tying it to is_episode_in_ordinary_search. Also found and fixed the fetch-by-id path gap (same class): named resolve_episode_path(episode_id) seam. Rewrote SS8's primitive list to route every primitive through named seams, none inlined. SS2's existing scan/glob text left untouched, only referenced.",
+      "mechanical": false,
+      "ts": "2026-08-01T07:23:36.985213+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix2-write-seam",
+      "why": "Fix 2 done: named apply_retirement(episode_id, reason) write-side seam in SS7, placed after Layout HELD OPEN and before the membership-predicate seam. Content update (field diff) stated as identical/layout-independent; Option A adapter adds the file move, Option B adapter is field-diff-only. SS10's g2 bullet updated to name the seam; g3 bullet also updated to name its three read-side seams.",
+      "mechanical": false,
+      "ts": "2026-08-01T07:24:13.238814+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-fix3-section9-pointer",
+      "why": "Fix 3 done: SS9 now carries a local pointer sentence back to SS2's basename-vs-path disclaimer, placed right before the numbered list that uses episodes/<id>.md, with a one-clause note that SS9's argument (git commit/merge/fetch mechanics) is unaffected by which layout option binds.",
+      "mechanical": false,
+      "ts": "2026-08-01T07:24:54.308108+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-sweep",
+      "why": "Full re-read of docs/EPISODE_STORE.md (all 10 sections, post fixes 1-3) and episodes/README.md. grep for 'episodes/' across the whole doc found exactly ONE remaining unqualified bare-path instance beyond the three named fixes: SS3's worked-example header 'episodes/governor-268-003.md:' -- fixed with the same local-pointer pattern as SS9 (Option B's path, basename is what's settled, points to SS2's disclaimer). Also found, during the SS8 rewrite for Fix 1, that 'fetch by id = a direct path read' (SS8) was itself layout-dependent under Option A (which subdirectory holds the file is unresolved) and had no seam -- fixed by naming a fourth seam, resolve_episode_path(episode_id), with Option-A (try active/, then retired/) / Option-B (fixed path) adapters, wired into SS7's fetch-by-id language and SS8's primitive list. SS2 (already-accepted scan/glob treatment), SS6 (Stratum A table, no path claims), README.md (basename-only notation, no bare full-path instance) all re-checked, no further instances found. Added the closing 'full seam set' table in SS7 naming all five mechanisms (store root, apply_retirement, is_episode_in_ordinary_search, iter_episode_ids, resolve_episode_path) and stating exactly what g4 binds (4 adapters) vs what stays fixed (store root, 0 adapters).",
+      "mechanical": false,
+      "ts": "2026-08-01T07:26:06.976464+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-verify",
+      "why": "Verification complete: git status --short shows exactly episodes/README.md (staged) and docs/EPISODE_STORE.md (untracked/modified) -- no scope drift. python -m pytest tests/ -q reproduces the exact baseline (1157 passed, 2 skipped, 260 subtests). g1-result.md overwritten with VERDICT: COMPLETE, per-fix account for fixes 1-3, sweep results (2 findings beyond the named 3: SS3 pointer, resolve_episode_path seam), and a non-empty Workflow Feedback section.",
+      "mechanical": false,
+      "ts": "2026-08-01T07:28:53.834315+00:00"
+    }
+  ]
+}

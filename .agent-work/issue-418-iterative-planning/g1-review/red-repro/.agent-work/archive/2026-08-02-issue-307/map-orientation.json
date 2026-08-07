@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "work_id": "issue-307",
+  "root": "C:/Programs/constellation-skills-wt/e298-307",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "2f79929ecb85851bd54ebf71145b2043547d6cdedc9eea9a91cb1c0786b1b496",
+      "source": "agent-declared"
+    },
+    {
+      "path": ".agent-work/LESSONS.md",
+      "content_hash": "34774cba14fc64ed66e040750c0a7ed33dca47dff7895b1f7c5e580ebefd2f95",
+      "source": "agent-declared"
+    },
+    {
+      "path": ".agent-work/epic-298/preb/PREB_RECORD.md",
+      "content_hash": "ddfa5900523a57d37965b544e9c4c251b4bfbf48ceaefeac88b2ec5cb501707d",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "e890012f0ab7448fc5ead29063664693147c268db3a5c1358bd0774d5a55ad89"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "constellation-skills carries no docs/architecture/ map at all: no generated/map.json, no index.md, no packets dir. The structural relationship between .agent-work/epic-298 measurement instruments (baselines/, preb/) and the skills/ corpus they measure is unmapped, as is the corpus install path (~/.claude/skills shadowing, issue #332)."
+  ],
+  "escalation": "Escalating to the Admiral (team-lead) that this repo -- the skills corpus's OWN repo -- has no architecture map, so its own map-first contract cannot be satisfied here except by declared substitution. This is the DEGRADED path and is a different question from the f1Brainz arm (f1Brainz HAS a map); per LAUNCH_ORDER-307 the two must not be mixed.",
+  "emitted_at": "2026-08-02T19:30:16.991441+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

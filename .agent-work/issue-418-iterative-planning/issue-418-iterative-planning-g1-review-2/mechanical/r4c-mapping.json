@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4c-mapping",
+  "mechanical": {
+    "run": "issue-418-iterative-planning-g1-review-2",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4c-mapping",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-g1-review-2-r4c-mapping@97538ae5c7ff2b0919c2b9390e2f7a51cf13ed73",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning-g1-review-2",
+    "generated_at": "2026-08-06T17:28:37Z"
+  }
+}

@@ -1,0 +1,228 @@
+{
+  "work_id": "690-grip-sigma-band-units",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-diagnose", "g1-close",
+    "g2-implement", "g2-review", "g2-integrate",
+    "g3-implement", "g3-review", "g3-integrate",
+    "g4-implement", "g4-review", "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited doctrine (references/global-orchestrator.md, references/global-everyone.md), the project deltas (docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md), and the relevant packet section (docs/architecture/packets/physics.md — the 'Grip-G baseline (#663, epic #659 — pipeline stage D)' and the stage-E utilization sections) plus docs/architecture/decisions/c1-driver-utilization-design.md. Read .agent-work/690-grip-sigma-band-units/MISSION_FRAME.md and PLAN_ALTERNATIVES_AND_CRITIC.md. NAMING: this lineage has a recorded naming collision — grip is pipeline stage D even though #663 files call it 'module G', while letter G is the driver FINGERPRINT. Say 'grip (stage D)' or 'fingerprint (stage G)', never bare 'G'. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "doctrine + project overlay + physics packet + c1 decision anchor + mission frame loaded; plan intent and scope confirmed", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g1-diagnose": {
+      "id": "g1-diagnose",
+      "title": "g1 Re-scope on evidence (REASONING GATE — no crew)",
+      "imperative": "CREW WAIVER (reasoning gate): the deliverable is a diagnosis, not code or an independently-verifiable change, and the planning context already holds it — a crew on a pure diagnosis is shallower, not safer. Because this gate closes on self-attestation with no independent reviewer, its checks are stated explicitly below and are held to HIGHER scrutiny than a crew-reviewed gate. This gate exists to satisfy the project planning invariant 'diagnose before fixing when the premise is uncertain': issue #690 inherits #664-T2's diagnosis and its issue text is known-stale. Write .agent-work/690-grip-sigma-band-units/DIAGNOSIS.md answering, with a cited command or file:line for each: (D1) does branch fix/721-grip-band-units still carry the abs(sigma) rewrite, and has it merged? Re-verify at execution time — do NOT trust the mission frame's snapshot; its worktree was LOCKED at planning time, i.e. possibly under active edit. (D2) with mu removed, is the residual defect still 'one session sigma fanned out to every per-class band'? Cite compute_class_utilization_observable's band construction. (D3) who READS format_version on driver_class_observables — grep the repo; does a bump break any read, or is it silently ignored? (D4) is the consumer set of g_sigma_onesided still exactly {builder script, store column, fingerprint/fit.py} plus docs — re-grep, do not trust the frame. (D5) confirm fingerprint/fit.py's aggregation grain is still (driver, class) so a per-class sigma needs no arithmetic change there. FALSIFICATION EXIT (this is what makes the gate real, not ceremony): if D1 shows #721 was reworked so that the residual defect is no longer a per-class GRAIN problem, or D2 shows the fan-out already fixed, then BLOCK this gate and float to the human — do not proceed into g2 on a dead premise. HONESTY CONSTRAINT: DIAGNOSIS.md must state plainly that #690 alone does NOT make the #712/#670 held-out diagnostic informative — #721 removes the ~90 s pace level and the ~1e9 magnitude; #690 removes the residual per-class over-width (a factor of roughly the class count). Any claim beyond that is out of bounds.",
+      "preconditions": [{"id": "p1", "statement": "execution context loaded", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "DIAGNOSIS.md answers D1-D5, each with a cited command output or file:line", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "the falsification exit was evaluated and explicitly NOT triggered (or the gate blocked)", "check": null, "satisfied": false},
+        {"id": "c3", "statement": "the format_version ruling (bump vs schema-comment fallback) is decided on D3's evidence and recorded, superseding the planning-time provisional grade", "check": null, "satisfied": false}
+      ],
+      "constraints": [
+        "Evidence-only: this gate writes NO source, test, or doc file outside .agent-work/.",
+        "Never claim #690 fixes the vacuous-log-score problem on its own."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.utilization — src/physics/utilization/class_utilization_observable.py, module-leaf", "struct:physics.fingerprint — src/physics/fingerprint/fit.py, module-leaf", "struct:physics.utilization — src/physics/utilization/reference_utilization_store.py, module-leaf"],
+        "capability": ["capability: per-class utilization observable — read-only this gate", "capability: driver-fingerprint sigma composition (stage G) — read-only this gate"],
+        "constraint": ["constraint: diagnose-before-fixing (ORCHESTRATOR_CONTEXT planning invariant) — an inherited diagnosis is re-verified before code", "constraint: cite seams AND consumer topology from source, never from memory"],
+        "decision": ["decision:690-base-on-721-branch — build on fix/721-grip-band-units, not main @grade: settled/measured · leans g1-diagnose,g2-implement · re-verified here at execution time", "decision pressure: the format_version ruling is deliberately left to this gate's evidence rather than assumed at planning time"],
+        "evidence": ["claim: the consumer topology of g_sigma_onesided is exactly {builder, store column, fingerprint/fit.py, docs}"],
+        "confidence_flags": ["fix/721-grip-band-units — UNMERGED and its worktree was LOCKED at planning time; re-verify state here rather than trusting the frame", "#690 issue text — STALE on both its premise and its priority framing; this gate re-states scope before any code"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g1-close": {
+      "id": "g1-close",
+      "title": "g1: close the re-scope (human confirms)",
+      "imperative": "Present DIAGNOSIS.md's re-scope to the human and get an explicit go/no-go before any code is written. Because g1 is a self-attested reasoning gate with no independent reviewer, this human read IS its second set of eyes — doctrine calls for a cold read on a load-bearing diagnosis, and this substitutes for it. Attach the ruling as a user-decision.",
+      "preconditions": [{"id": "p1", "statement": "DIAGNOSIS.md written and the falsification exit evaluated", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "human confirmed the re-scope and the format_version ruling; go/no-go recorded", "check": {"kind": "artifact", "evidence_type": "user-decision"}, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "g2 Per-class allocation law + width-shape tests: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. TASK: in src/physics/utilization/class_utilization_observable.py add ONE public pure function `allocate_sigma_to_classes(sigma_session: float, time_share_by_class: np.ndarray) -> np.ndarray` (export it in __all__, beside the existing onesided_sigma_from_grip / grip_band / grip_scale_from_store — this module already exposes exactly this kind of pure numeric helper, so the seam is the one already there, not a new one). It returns `sigma_session * time_share_by_class`, validating that the weights are finite, non-negative, and sum to 1.0 within the module's existing tolerance idiom, with a failure message naming field, expectation, and actual value. Then make compute_class_utilization_observable its single production caller: obtain the real lap's per-class shares by calling the EXISTING public class_ledger.class_time_ledger(segment_map, distance_m, v_real) — do NOT modify class_ledger.py or extend ClassDeficits (see the recorded untaken road: that would edit the frozen anti-circular core for a micro-optimisation). Replace the dataclass field g_sigma_onesided: float with TWO fields: g_sigma_onesided_by_class: np.ndarray (shape (2+k), W-column order) and g_sigma_session_s: float. RETIRE the old field name rather than re-pointing it, so any missed caller fails loudly with AttributeError instead of silently reading a scalar where an array is meant. Each band takes its OWN class's sigma. Update the module docstring's 'Binding pre-ruling' section, which currently asserts a single shared scale. TESTS in tests/unit/physics/test_class_utilization_observable.py — the width-shape unit test the issue's acceptance names, asserting on sigma_plus and NEVER on differences of upper_bound(): (T1) PARTITION IDENTITY sum_c sigma_plus_c == sigma_session (L2 invariant); (T2) MONOTONICITY a larger time share gets a strictly wider band; (T3) BOUND sigma_plus_c <= sigma_session for every class, equality only for a degenerate single-class lap; (T4) DEGENERATE sigma_session == 0 gives all-zero widths — this preserves today's empty-store behaviour exactly; (T5) DEGENERATE a zero-time-share class gets exactly zero width on its structurally-zero deficit; (T6) STRICT NARROWING every per-class width is <= the whole-lap width it replaces on the same inputs; (T7) the malformed-weights validation raises with a message naming field/expectation/actual.",
+      "preconditions": [{"id": "p1", "statement": "g1 re-scope confirmed; the premise was not falsified", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "Base the branch on fix/721-grip-band-units (or on main if #721 has landed by g1) — never on a main that still carries hypot(mu, sigma).",
+        "point_deficit stays BYTE-IDENTICAL with and without grip — the band's centre never moves (moving mu off zero is #678).",
+        "Do NOT re-fit, re-pool, or re-parameterise the grip curve; grip is consumed via get_grip_at only.",
+        "Do NOT modify class_ledger.py, the W attribution matrix, the energy channel, or class_utilization_validation.py.",
+        "No ratio of an observed quantity to a capability quantity anywhere (#628 anti-circularity).",
+        "Run the module's PRE-EXISTING guard tests, not only the new ones (lesson:consumed-frozen-module-run-guard-tests).",
+        "Run py -m src.utils.simplification_limits on every touched src/ and tests/ path."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.utilization — src/physics/utilization/class_utilization_observable.py, module-leaf (the change lands here)", "struct:physics.utilization — src/physics/utilization/class_ledger.py, module-leaf (CONSUMED READ-ONLY for class_time_ledger)"],
+        "capability": ["capability: per-class utilization observable — this gate changes the band WIDTH only, never its location", "capability: grip-baseline consumption (stage D to E) — consumed, never re-fit"],
+        "constraint": ["constraint: anti-circularity (#628) — the weight is map geometry plus one speed profile, so it cannot breach it", "constraint: mu stays at zero (#678 out of scope)", "constraint: G is consumed, never re-fit", "constraint: one canonical path — no compatibility shim, exactly one way to get a per-class width", "constraint: physics changes need L1-L4 evidence — the width-shape test is L2 (invariant) plus L3 (limit/degenerate)", "assumption: grip perturbs a lap uniformly per unit time — the substantive modelling assumption, stated because it is NOT measured"],
+        "decision": ["decision:690-per-class-sigma-allocation-law — sigma_plus_c = s_c * sigma_session with s_c = time_share_by_class, under the coherence identity sum_c sigma_plus_c = sigma_session; the identity holds on the SCALE PARAMETER of the underlying un-folded Student-t (which is what sigma_plus is), not on folded expectations @grade: guess · leans g2-implement,g4-implement · settle: recompute the #670 held-out coverage/log-score under linear vs sqrt-share weighting", "decision:690-shares-from-real-lap — weights come from the driver's real lap, because the band's location is that class's own real-lap transit-time deficit @grade: guess · leans g2-implement · settle: compare per-class shares from v_real vs v_ideal on one weekend; immaterial if max |delta s_c| < 0.01", "decision:690-observable-carries-both-grains — the observable exposes both g_sigma_onesided_by_class and g_sigma_session_s; the old scalar name is retired, not re-pointed @grade: settled/measured · leans g2-implement,g3-implement", "decision:class-attribution-membership-faithful — every class reduction goes through W, never an argmax collapse; the weight vector must come through the same W @grade: settled/human · leans g2-implement", "decision pressure: a grip-SENSITIVITY weighting (corners above straights) is physically better than a flat time share but mints a per-class weighting grip does not carry — surface as a triage candidate, do NOT take it here"],
+        "evidence": ["claim: point deficit is unchanged by grip — test_point_deficit_byte_identical_with_and_without_grip must still pass", "claim: the band is one-sided toward larger deficit — test_grip_band_is_one_sided_toward_larger_deficit must still pass", "claim: the band is heavy-tailed, not Gaussian — test_grip_band_is_heavy_tailed_not_gaussian must still pass", "claim: the module does not re-fit grip — test_module_does_not_refit_grip must still pass", "claim (new): per-class widths partition the session sigma — the width-shape test T1-T7"],
+        "confidence_flags": ["struct:physics.layer2 grip node — recorded HONEST MEASURED-NULL (g4 held-out regressed +155.5% RMS, g5 separability 31.9% FAIL). The gate must NOT present a narrower band as improved grip skill; it is a units/grain correction to a signal whose own separability has not cleared its bar."]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "g2: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Review emphasis specific to this gate: (a) grep the diff for any division of an observed quantity by a capability quantity (#628); (b) confirm point_deficit is byte-identical with and without grip by running the pre-existing guard test, not by reading the code; (c) confirm the width-shape test asserts on sigma_plus and NOT on upper_bound() differences — a folded-quantile assertion would be testing the wrong identity; (d) confirm class_ledger.py is untouched; (e) confirm the retired field name is genuinely gone (no alias, no property shim).",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g2-implement anchors — review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "g2: integrate",
+      "imperative": "Check the verdict. APPROVE: re-run the verification command yourself and confirm the IMPLEMENTER_RESULT is fresh (scripts/run_crew.py --verify-result), then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates — the grip-sensitivity weighting belongs there.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g2", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "per-class bands scale to their class time share and partition the session sigma; the observable module's own suite (new width-shape tests AND pre-existing band guard tests) passes", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/test_class_utilization_observable.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "g3 Builder, store vintage, and downstream reconciliation: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. TASK, three files plus their tests: (1) scripts/build_class_utilization_observables.py — at the DriverClassObservableRow construction, write obs.g_sigma_onesided_by_class[j] into each per-class row's g_sigma_onesided instead of the repeated scalar; update the per-driver log line to report the session scale AND the per-class spread (it currently prints one number that no longer exists under that name). NOTE the store schema needs NO column change: the row PK already includes 'class' and the builder already emits one row per class, so the per-class value drops into an existing per-class slot. (2) src/physics/utilization/reference_utilization_store.py — carry out g1's format_version ruling. If g1 ruled BUMP: bump the driver_class_observables format_version and update the schema comment block so the column's documented meaning is 'the per-CLASS one-sided grip sigma+ allocated from the session scale by class time share', not the whole-lap sigma. If g1 ruled the FALLBACK: update the schema comment only, and say explicitly in the comment that pre-existing rows carry the older whole-lap semantics and are NOT distinguishable by version. Either way the file must state, in the open, that existing persisted rows are a STALE VINTAGE and that regenerating them is a season-scale batch run owned outside this issue — do not silently leave a store mixing two semantics. (3) src/physics/fingerprint/fit.py — DOC-ONLY. Its sigma composition arithmetic and its (driver, class) aggregation grain are correct as they stand and must not change; update the module docstring's description of g_sigma_onesided so it names the per-class quantity it now receives. TESTS: extend tests/unit/physics/test_build_class_utilization_observables.py to assert distinct per-class sigma values reach distinct rows (a test that would pass under the old fan-out is not evidence), and tests/unit/physics/test_reference_utilization_store.py for whatever g1's ruling changed.",
+      "preconditions": [{"id": "p1", "statement": "g2 closed — the observable exposes g_sigma_onesided_by_class", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "fingerprint/fit.py is DOC-ONLY — no change to its sigma composition arithmetic or its aggregation grain.",
+        "No new store column and no change to the row PK.",
+        "Do NOT regenerate the store or re-run a season — that is out of scope and Admiral-owned (lesson:admiral-owns-long-batch-compute).",
+        "Scope the regression to the real import graph, not the whole physics suite (lesson:scope-self-authored-regression-to-import-graph): the nine files that import this lineage are the closing command.",
+        "Run py -m src.utils.simplification_limits on every touched src/ and tests/ path."
+      ],
+      "anchors": {
+        "structural": ["struct:physics.utilization — src/physics/utilization/reference_utilization_store.py, module-leaf (owns the driver_class_observables schema and format_version)", "struct:physics.fingerprint — src/physics/fingerprint/fit.py, module-leaf (the real downstream sigma consumer; doc-only touch)", "non-map node — scripts/build_class_utilization_observables.py (the CLI that writes the rows)"],
+        "capability": ["capability: driver-fingerprint sigma composition (stage G) — this gate changes the MAGNITUDE of its inputs, not its arithmetic"],
+        "constraint": ["constraint: producer + committed consumers + schema doc move together (project evidence requirement for a report/schema change)", "constraint: missingness and vintage are represented intentionally, never guessed away — a store mixing two column semantics is the project's named silent-wrongness failure mode", "constraint: one canonical path"],
+        "decision": ["decision:690-format-version-vintage-marker — mark the changed column meaning with the existing format_version mechanism rather than minting a new one; ruled on g1's D3 evidence @grade: guess · leans g3-implement · settle: grep readers of format_version on driver_class_observables — if nothing gates on it the bump is free and purely documentary", "decision:690-observable-carries-both-grains — the builder reads the per-class array and logs the session scalar @grade: settled/measured · leans g3-implement", "decision:grip_estimate_record_session_level_pk — grip's PK is the session, which is WHY its sigma is a common-mode quantity and why linear allocation is coherent @grade: settled/measured · leans g3-implement"],
+        "evidence": ["claim: distinct classes receive distinct sigma values in distinct rows — a test that would also pass under the old fan-out is not evidence of the fix", "claim: fingerprint/fit.py needs no arithmetic change because its cell grain is already (driver, class) — re-confirmed by its own suite passing unchanged"],
+        "confidence_flags": ["driver_class_observables existing rows — STALE VINTAGE after this gate; the plan deliberately does not rebuild them, so the gate must say so in the open and name who owns the rebuild"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "g3: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Review emphasis: (a) confirm fingerprint/fit.py's diff is docstring-only — any arithmetic or grain change is an automatic BLOCK; (b) confirm the builder test would FAIL under the old fan-out (ask for the demonstration, do not accept the assertion); (c) confirm the vintage hazard is stated in the open in the store module, not merely implied; (d) confirm no new column and no PK change.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g3-implement anchors — review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "g3: integrate",
+      "imperative": "Check the verdict. APPROVE: re-run the verification command yourself, confirm the result artifact is fresh, then advance. BLOCK: return for rework. The closing command is scoped to the nine test files that actually import this lineage — deliberately NOT the whole physics suite, which is numerics-heavy and has been reaped mid-run before.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g3", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "per-class sigma reaches distinct store rows and the whole import graph of this lineage is green", "check": {"kind": "command", "command": "py -m pytest tests/unit/physics/test_class_utilization_observable.py tests/unit/physics/test_build_class_utilization_observables.py tests/unit/physics/test_reference_utilization_store.py tests/unit/physics/fingerprint/test_fit.py tests/unit/physics/fingerprint/test_bounded_validation.py tests/unit/physics/fingerprint/test_heldout_diagnostic.py tests/unit/physics/fingerprint/test_join_bounded_validation.py tests/unit/physics/pilot/test_e_fallback.py tests/unit/physics/pilot/test_season_runner.py -q"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
+        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "g4 Documented rationale into the decision graph: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. DOC-ONLY GATE — the invariant chain below is PRE-AUTHORED as explicit postconditions so the crew verifies a frozen chain rather than inventing grep-shaped proxies for 'the document says what it should'. TASK: append a new Extension section to docs/architecture/decisions/c1-driver-utilization-design.md (that anchor already carries a '#628 Phase 3b' Extension, so follow its established shape: Extension heading with date and issue, Current Structural Consequence addendum, Review Trigger addendum). The section records the per-class allocation law as a graded decision. It MUST contain, and a reviewer checks each one by reading: (1) the law itself, sigma_plus_c = s_c * sigma_session with s_c the class time share; (2) the coherence identity sum_c sigma_plus_c = sigma_session, stated as holding on the SCALE PARAMETER of the underlying un-folded Student-t, not on folded expectations; (3) WHY linear and not quadrature — grip is a session-level common-mode effect with a session PK, so per-part uncertainties add linearly under perfect correlation, mirroring the point-side identity sum_c time_deficit_c = lap_time_deficit_s; (4) the three rejected alternatives with their reasons — sqrt-share (the independent-errors composition, wrong correlation model, over-widens small classes), deficit-proportional (makes the width depend on the quantity it bounds, a #628-flavoured circularity), and grip-sensitivity weighting (physically better but mints a per-class weighting grip does not carry, i.e. re-fitting grip, out of scope); (5) the stated, UNMEASURED assumption that grip perturbs a lap uniformly per unit time; (6) the honest scope limit — #690 alone does NOT make the #712/#670 held-out diagnostic informative; #721 removes the pace level and the ~1e9 magnitude, #690 removes the residual per-class over-width; (7) an @grade tag welded to each recorded decision line. Do NOT edit docs/architecture/packets/physics.md — the packet's two g_sigma_onesided lines are Cartographer's to reconcile at the spine's reconcile step, and a mid-run map edit violates the architecture bookend.",
+      "preconditions": [{"id": "p1", "statement": "g3 closed — the implemented behaviour the rationale describes actually exists", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "constraints": [
+        "Do NOT edit docs/architecture/packets/physics.md — that is reconcile-step work owned by Cartographer.",
+        "Do NOT restate the whole c1 anchor; append an Extension in the shape the anchor already uses.",
+        "Every recorded decision line carries a welded @grade tag on its own child line (grade_lint.py must pass).",
+        "No claim of improved grip skill or a fixed diagnostic — this is a units/grain correction."
+      ],
+      "anchors": {
+        "structural": ["struct:docs.architecture.decisions — docs/architecture/decisions/c1-driver-utilization-design.md (the governing anchor for this layer)"],
+        "capability": ["capability: per-class utilization observable — the rationale documents the law this capability now uses"],
+        "constraint": ["constraint: durable rationale lives in ADRs/agent context, not in command docs (project documentation-authority rule)", "constraint: decisions carry a welded @grade tag (lint loud, execute safe)"],
+        "decision": ["decision:c1_driver_utilization_design — the governing anchor being extended, not replaced @grade: settled/human · leans g4-implement", "decision:690-per-class-sigma-allocation-law — recorded here as the durable rationale the issue's acceptance criterion asks for @grade: guess · leans g4-implement · settle: recompute the #670 held-out coverage/log-score under linear vs sqrt-share weighting"],
+        "evidence": ["claim: the seven required content items are each present and each independently readable in the appended Extension"],
+        "confidence_flags": ["struct:physics.layer2 grip node — recorded HONEST MEASURED-NULL; the Extension must not read as a claim that grip now works"]
+      },
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "g4: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. This is a doc gate: verify the seven pre-authored content items by READING for each one, not by grepping for a marker string. Additionally verify the Extension does not overclaim (item 6 present and honest), that packets/physics.md is untouched, and that every decision line carries a welded @grade child line.",
+      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for g4", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "constraints": [],
+      "anchors": {"inherits": "g4-implement anchors — review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
+      "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "g4: integrate",
+      "imperative": "Check the verdict. APPROVE: attest the seven content items yourself by reading the appended Extension (the engine has no first-class inspection-attestation postcondition kind; this pre-authored chain is the working mitigation), run the grade lint, then advance. BLOCK: return for rework.",
+      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for g4", "check": null, "satisfied": false}],
+      "postconditions": [
+        {"id": "c1", "statement": "all seven pre-authored content items verified present by reading: the law, the scale-parameter coherence identity, the linear-not-quadrature reason, the three rejected alternatives, the unmeasured uniform-per-unit-time assumption, the honest #690-vs-#721 scope limit, and the welded @grade tags", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "every recorded decision line carries a welded @grade tag on the decision's own line or the next non-blank line (no wrap between bullet and tag), verified by reading. NOTE: doctrine names scripts/grade_lint.py for this, but that script is NOT present in the installed commander skill tree (verified at planning time) — so this is an attested manual check, not a command check. If grade_lint.py has shipped by execution time, convert this to a command postcondition.", "check": null, "satisfied": false},
+        {"id": "c3", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      ],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc-1",
+      "summary": "Grip-sensitivity weighting instead of a flat time share: a straight is power-limited and barely grip-limited, so allocating grip uncertainty to it by time share over-weights it. A physically-weighted allocation would be better but mints a per-class grip weighting the grip fit does not carry (i.e. re-fitting grip), which #690 excludes.",
+      "route": "recommend-and-defer"
+    },
+    {
+      "id": "tc-2",
+      "summary": "The persisted driver_class_observables rows written before this change carry whole-lap sigma semantics and are a stale vintage. Regenerating them is a season-scale batch run, out of scope here and Admiral-owned. Needs an owner and a trigger.",
+      "route": "recommend-and-defer"
+    },
+    {
+      "id": "tc-3",
+      "summary": "Settle decision:690-per-class-sigma-allocation-law from guess to settled/measured by recomputing the #670 held-out coverage and log-score under linear vs sqrt-share weighting once #721 and #690 have both landed.",
+      "route": "recommend-and-defer"
+    },
+    {
+      "id": "tc-4",
+      "summary": "Issue #690's own text is stale on two counts (its hypot(mu,sigma) premise and its 'low while the grip store is empty' priority framing). The issue body should be corrected so a future reader does not re-plan from it.",
+      "route": "filed"
+    }
+  ],
+  "blockers": []
+}

@@ -1,0 +1,67 @@
+{
+  "goal": "Settle the latitude contract for epic #418 (post-phase-1 mechanisms + cleanup: governor identity, engine channel, spine-carried instructions, wired checks, backlog consolidation, MCP front door) with Tommy before wave 0 dispatch.",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "fact",
+      "question": "What do the six workstreams deliver, what does done look like per workstream, and is a measured negative a complete deliverable?",
+      "status": "resolved",
+      "resolution": "A #419 governor per-agent identity, done = a trip fires from a per-agent reading on a live run (explicitly NOT merely 'readings appear'). B #420 engine channel: RAIL echo de-dup, render anchors/constraints, completeness property test. C #421 relocate Commander execute+plan gate text, >=40% commander-core.md shrink (placeholder), tracer 3/3 vs 0/3. D #422 wire #329 and #328's two record()-survey invariants as command checks plus an enumeration check. E #423 backlog consolidation + closeout-debt filings, HITL on batched confirms. F #424 MCP front door, ~7 tools, four acceptance tests. G #425 file the triage-candidate defects. Honest nulls are complete deliverables: B explicitly puts deleting the two vestigial fields on the table as a legitimate smaller fix.",
+      "code_evidence": "gh issue view 418 (epic body, DESIGN_SPEC inlined): 'Chosen design' sections A-F and the 'Waves' block; gh issue view 419 ('this issue is not done until that is observed'); gh issue view 420 ('if vestigial, deleting the two fields is the smaller fix and is on the table'); gh issue view 421 (census 54.2%/57%/84%, shrink target); gh issue view 422 (#329 grep -rln returns nothing); gh issue view 423 (HITL reason); gh issue view 424 (Tommy's four rulings); gh issue view 425 (three new filings + four comments)."
+    },
+    {
+      "id": "q2",
+      "kind": "fact",
+      "question": "What is the wave plan and which ordering constraints are hard?",
+      "status": "resolved",
+      "resolution": "Wave 0: A #419, B #420, D #422, G #425 (AFK) + E #423 (HITL). Wave 1: C #421, hard-blocked on B landing both fixes, else relocation doubles its own payload and relocated constraints stay invisible. Wave 2: F #424, depends on A (identity settlement reused), B (verbatim imperative pass-through) and C (ruling 2's net always-loaded delta spans C and F together). E splits: its tracker work executes in wave 0 on the batch confirm, but its closeout obligation check is the epic's terminal act, after every other issue lands.",
+      "code_evidence": "gh issue view 418 'Waves' block (Wave 0 / Wave 1 / Wave 2 listings); gh issue view 421 ('Ordering invariant: workstream B lands first, both fixes'); gh issue view 424 ('Depends on: A, B, C'); gh issue view 423 ('Wave constraint: this check is the epic's terminal act')."
+    },
+    {
+      "id": "q3",
+      "kind": "decision",
+      "question": "Stop-and-present at every wave boundary or cleared through? And how does the one HITL issue (#423 E) actually run — live at the keyboard, or evidence assembled and batched?",
+      "status": "resolved",
+      "resolution": "Stop-and-present at every wave boundary; run ahead freely between boundaries. #423 runs as one batched evidence package — the five uncontested closes with their evidence comments plus the proposed cluster boundaries — presented at the wave-0 checkpoint; Tommy's single confirm executes it. Nothing in E closes without that confirm.",
+      "human_answer": "Tommy, 2026-08-05: 'agree with your contracts.' Confirmed the drafted checkpoint protocol and the batched-confirm shape for #423 as written in LATITUDE_CONTRACT.md."
+    },
+    {
+      "id": "q4",
+      "kind": "decision",
+      "question": "Which decision classes are delegated to the Admiral and which must be surfaced to Tommy?",
+      "status": "resolved",
+      "resolution": "The epic-298 table carried forward, plus three new classes: spec-deviation always surfaced (the #308 shape); threshold-regrade delegated under the @grade doctrine except E's cluster boundaries and C's tranche boundary which are surfaced because the spec names both as costly to revert; pre-build branch points delegated to record and act on, except A's 'neither payload shape' outcome which is out-of-taxonomy and escalates. Issue filing and commenting delegated; issue closing surfaced and riding E's batch confirm.",
+      "human_answer": "Tommy, 2026-08-05: 'agree with your contracts.' Confirmed the class table as drafted, including the three added classes."
+    },
+    {
+      "id": "q5",
+      "kind": "decision",
+      "question": "Which external actions does each delegated class imply, and are they pre-cleared against the harness permission classifier?",
+      "status": "resolved",
+      "resolution": "Every row pre-cleared: tracker writes (create/comment/edit/close), merges and pushes on epic-418/*, A's live-fire mechanics including mutating the live gauge binding store with a dry-run first, C's corpus surgery on COMMANDER_SPINE.template.json and commander-core.md plus installer re-run, D's deliberate invariant breakage in a scratch worktree, F's .mcp.json write and server process with settings.json untouched, full test suite, and subagent dispatch at every tier. The dispatch grant resolves a blocker the Admiral had raised: its earlier reading of the session's no-AgentTool instruction as an absolute ban was wrong, since the instruction turns on 'unless the user requested it' and invoking /constellation-admiral is that request.",
+      "human_answer": "Tommy, 2026-08-05: 'yup, you and all your sub agents are officially allowed to use agents because im telling you to use skills that use agents.' Plus 'agree with your contracts' covering the remaining pre-clearance rows."
+    },
+    {
+      "id": "q6",
+      "kind": "decision",
+      "question": "What model tiers per issue, and how wide does wave 0 launch given the account usage pool?",
+      "status": "resolved",
+      "resolution": "Opus for A #419, C #421, F #424. Sonnet for B #420, D #422, and G #425 (G as an implementer-with-plan rather than a full Commander, per the right-size rule). No Fable at any tier. E #423 runs with Tommy, no Commander. Wave 0 launches four-wide (A, B, D, G concurrent).",
+      "human_answer": "Tommy, 2026-08-05: 'agree with your contracts.' Confirmed the tier table and four-wide wave 0 as drafted."
+    },
+    {
+      "id": "q7",
+      "kind": "decision",
+      "question": "Are the pre-rulings right, and when does the contract expire?",
+      "status": "resolved",
+      "resolution": "Pre-rulings confirmed as drafted: prototype lifts from exc6/exc8/exc9 then delete each worktree, honest-null clause, B's vestigial-field latitude, A's probe branch with the third outcome escalating, wave-0 four-wide, E's split. Expiry: the wave-1 checkpoint or 72 hours, whichever comes first. Tommy ADDED a standing pre-ruling that was not in the draft — scope discipline — which overrides the default rigor posture on breadth: build what needs to work, do not chase every corner case, note concerns in local comments and pass them up the chain. It leaves evidence standards on in-scope work untouched, and is a mandatory clause in every launch order this epic issues.",
+      "human_answer": "Tommy, 2026-08-05: 'agree with your contracts. one thing i want you and your subagents to be mindful of is scope growth. this is not a final step in a process. lets do what we need to do and no more. this doesn't mean be sloppy, but i am explicitly allowing you to not chase down every corner case. make the thing that needs to work, and if you have any concerns, just note it locally in comments and pass it up the chain.'"
+    }
+  ],
+  "signoff": {
+    "by": "Tommy",
+    "statement": "'agree with your contracts' (2026-08-05), given in direct response to the five presented decisions, together with the explicit subagent-dispatch grant and the added scope-discipline ruling. Questioning is complete and the contract is confirmed for wave 0 dispatch."
+  },
+  "consolidated": false
+}

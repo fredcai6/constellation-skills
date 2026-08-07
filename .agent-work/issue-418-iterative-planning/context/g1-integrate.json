@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "files": [],
+  "repo_rev": {
+    "commit": "990712fa516bb5601e29b646e6889f8487b1006c"
+  },
+  "run": {
+    "work_id": "issue-418-iterative-planning",
+    "generated_at": "2026-08-06T17:13:47Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills",
+      "repo": "C:/Programs/constellation-skills",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/constellation-skills"
+    }
+  }
+}

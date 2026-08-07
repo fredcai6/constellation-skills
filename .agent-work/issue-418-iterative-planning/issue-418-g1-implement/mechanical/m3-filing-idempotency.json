@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-filing-idempotency",
+  "mechanical": {
+    "run": "issue-418-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m3-filing-idempotency",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-g1-implement-m3-filing-idempotency@acf8fed4a859284496b8bcb3b52c0f4dbd6d82b9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-g1-implement",
+    "generated_at": "2026-08-06T16:55:20Z"
+  }
+}

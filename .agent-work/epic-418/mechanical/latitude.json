@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "latitude",
+  "mechanical": {
+    "run": "epic-418",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "refusals": 2,
+    "spine-step": "latitude",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-latitude@7d8f86f0beb14b7ea554444cc6919447da9ab260",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418",
+    "generated_at": "2026-08-05T22:25:01Z"
+  }
+}

@@ -1,0 +1,544 @@
+{
+  "work_id": "issue-304-g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4",
+    "m5"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (implementer references/global-crew.md + global-everyone.md), then project deltas if present (docs/agents/CREW_CONTEXT.md, GLOSSARY.md), plus the g1 implementer handoff. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Ground the resolver design against the real map at C:/Programs/f1Brainz/docs/architecture/ (READ-ONLY). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff loaded; handoff complete; f1Brainz map format inspected read-only",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "map_orient.py: resolver core, orient subcommand, receipt, self-test floor",
+      "imperative": "Write scripts/map_orient.py: frozen exit-code vocabulary ABOVE the argparse(2)/traceback(1)/no-shell(127) collision range, documented in the module docstring together with the receipt schema and honest limits. Pure decision functions (candidate scan, citable-anchor token scan, repo-root positive proof, mode determination) separated from impure edges (fs read, receipt write, git). `orient` emits a reserved-literal first stdout line and writes .agent-work/<work-id>/map-orientation.json. Include a --self-test falsification floor.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "module docstring states the frozen exit-code table, the reserved stdout literals, the receipt schema, and honest limits; decision functions are pure and separated from impure edges",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "--self-test falsification floor passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python scripts/map_orient.py --self-test"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "Windows: write every file with encoding='utf-8', newline='\\n'",
+        "avoid 3.13+-only APIs (CI is 3.12)",
+        "do NOT build verify-frame (g2)",
+        "do NOT couple to build_architecture_map.parse_packet"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python scripts/map_orient.py --self-test",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "verify-orientation gate check + tests/test_map_orient.py mutation floor",
+      "imperative": "Add the `verify-orientation` subcommand: exit 0 on RESOLVED with a well-formed receipt or on a COMPLETE degraded record (substitutes AND unmapped AND escalation, fillers rejected), semantic non-zero when incomplete. Hash-pin substitutes in the receipt. Write tests/test_map_orient.py: resolution matrix, every DEGRADED reason produced distinctly, candidates recorded even after a hit, the shipped-index-template test, the this-repo-degraded test, the three-arm partial-fill matrix plus positive control, the could-not-look/no-map discriminator pair, and cwd-independence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 module exists with a passing self-test floor",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red observed: the new floor was run against the module before verify-orientation/discharge logic existed and observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Rework red observed before the fix: the reviewer's repro reproduced independently -- orient --substitute docs/THIS_FILE_DOES_NOT_EXIST.md exited 0 and verify-orientation exited 0 with receipt content_hash='unreadable'. The new UnreadableSubstitute tests were written against that failing behavior, then went green after the two-part fix."
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_map_orient.py green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-3"
+        }
+      ],
+      "constraints": [
+        "RESOLVED requires citable content, never file existence",
+        "UNRESOLVABLE-ROOT requires POSITIVE repo-root proof, not an absence test",
+        "an empty substitutes list is a refusal, not a pass"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2",
+            "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+            "ts": "2026-08-01T23:08:06.920108+00:00"
+          }
+        },
+        {
+          "id": "e-m2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "m3": {
+      "id": "m3",
+      "title": "init_work_area.py: <repo-root> placeholder + guard",
+      "imperative": "Add <repo-root> resolution to resolve_spine() and add the token to the unresolved-placeholder guard regex so an unresolved token fails loudly at init. Justification comment must say ROBUSTNESS (command checks receive no cwd and inherit the launcher's, so relative checks are fragile, not broken) \u2014 do NOT claim it fixes a broken mechanism. Do NOT fix the five fragile relative checks (#341).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_init_work_area.py green including <repo-root> coverage",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_init_work_area.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-2"
+        }
+      ],
+      "constraints": [
+        "placeholder only \u2014 no other change to init_work_area.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m2"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_init_work_area.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2",
+            "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+            "ts": "2026-08-01T23:08:06.920121+00:00"
+          }
+        },
+        {
+          "id": "e-m3-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_init_work_area.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4": {
+      "id": "m4",
+      "title": "tests/test_mutation_floor.py: EXECUTED falsifiability, applied-before-red",
+      "imperative": "Mechanically apply each named mutation (all->any in the degraded-completeness check; UNRESOLVABLE-ROOT collapsed into DEGRADED-NO-MAP with exit 0; citable-content weakened to path.exists()) to a COPY of the module, then run the floor against the copy and assert RED. LOAD-BEARING: assert the mutation APPLIED first \u2014 post-mutation source differs from the original AND the intended replacement text is present \u2014 and fail loudly as a harness error if a substitution did not land, never reporting a killed mutant. Include an unmutated baseline positive control.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 floor is green so a red result is attributable to the mutation",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "each mutation asserts applied (source differs + replacement present) BEFORE asserting red; a non-matching substitution fails as a harness error; unmutated baseline asserted green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Applied-before-red harness unchanged and still enforced (count-delta form). Mutation set grown 3 -> 5. M4 verified SURVIVING before the fix and KILLED after."
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_mutation_floor.py green \u2014 every named mutation demonstrably killed by execution",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_mutation_floor.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-2"
+        }
+      ],
+      "constraints": [
+        "falsifiability demonstrated by execution, never asserted by the party being graded"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m2"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_mutation_floor.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2",
+            "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+            "ts": "2026-08-01T23:08:06.920126+00:00"
+          }
+        },
+        {
+          "id": "e-m4-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_mutation_floor.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5": {
+      "id": "m5",
+      "title": "Capture required evidence and write IMPLEMENTER_RESULT",
+      "imperative": "Run the handoff's verification commands verbatim, capture the live `orient --root <this repo> --work-id probe` DEGRADED-NO-MAP output, state the chosen exit-code table and why it avoids the collision, and write .agent-work/issue-304/crew-handoffs/g1-result.md from the IMPLEMENTER_RESULT template with all evidence pasted verbatim, deviations, and workflow feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-m4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "required-evidence suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-3"
+        },
+        {
+          "id": "c2",
+          "statement": "g1-result.md written with the required evidence pasted verbatim",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/crew-handoffs/g1-result.md && grep -q 'DEGRADED-NO-MAP' .agent-work/issue-304/crew-handoffs/g1-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-4"
+        }
+      ],
+      "constraints": [
+        "never fabricate evidence \u2014 paste actual output"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m2"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2",
+            "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+            "ts": "2026-08-01T23:08:06.920129+00:00"
+          }
+        },
+        {
+          "id": "e-m5-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/crew-handoffs/g1-result.md && grep -q 'DEGRADED-NO-MAP' .agent-work/issue-304/crew-handoffs/g1-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2",
+            "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+            "ts": "2026-08-01T23:08:06.920130+00:00"
+          }
+        },
+        {
+          "id": "e-m5-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/e298-304 && test -s .agent-work/issue-304/crew-handoffs/g1-result.md && grep -q 'DEGRADED-NO-MAP' .agent-work/issue-304/crew-handoffs/g1-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "impl-g1-304-rework",
+    "status": "released",
+    "claimed_at": "2026-08-01T23:08:06.725130+00:00",
+    "last_heartbeat": "2026-08-01T23:24:49.826045+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T23:25:00.840222+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete on all seven fields. No docs/agents/CREW_CONTEXT.md or GLOSSARY.md in this repo, so crew doctrine is global-only. Grounded read-only against C:/Programs/f1Brainz/docs/architecture/: the anchor token-scan regex yields 0 ids on skills/cartographer/templates/ARCHITECTURE_INDEX.template.md (so the shipped template correctly reads DEGRADED) and 76 unique ids on f1Brainz index.md / 58 on packets/physics.md. Independently confirmed the handoff's parse_packet claim: build_architecture_map.parse_packet raises MapBuildError 'missing required field: structural node' on all 16 f1Brainz packets (0 parsed / 16 failed) because f1Brainz uses YAML fences while this repo's template uses bold fields - so coupling to the strict parser would return zero nodes on the ONE repo with a real map.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:28:35.181567+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "scripts/map_orient.py written. Frozen exit table 0/10/11/12/13 sits strictly above argparse(2) and traceback(1) and strictly below 126/127, so no verdict can be confused with a mistyped flag, a crash, or a missing POSIX shell. Pure decision layer (scan_anchors, candidate_is_citable, candidate_outcome, prove_repo_root, determine_mode, build_orientation, classify_*, exit_code_for, build_receipt, render_orient_report) is separated from the impure edges (probe_root/git_toplevel/collect_candidates/write_receipt/pin_substitutes/_now_iso). --self-test = 45 checks, green. Live run against this repo prints DEGRADED-NO-MAP and exits 10 (reported, not silent). Grounded read-only against f1Brainz through the pure path: RESOLVED, entrypoint docs/architecture/index.md, 76 anchors, and the packets-dir candidate is STILL recorded after index.md hit, proving the delivery-record property. Gotcha found: importlib-loaded modules need sys.modules[name]=module before exec_module or frozen dataclasses raise on 3.14 - the test loader must do this.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:33:21.989883+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "TDD red genuinely observed: tests/test_map_orient.py written BEFORE verify-orientation and the discharge predicates existed, run gave '24 failed, 28 passed, 9 subtests passed' - every failure in the verify-orientation/partial-fill/hash-pin arms plus one wrong expected anchor count I then corrected (4 not 5). Then implemented is_filler/substitutes_declared/unmapped_declared/escalation_declared/degraded_record_is_complete (the pinned all)/missing_degraded_fields/receipt_problems/verify_verdict/render_verify_report + the verify-orientation subcommand + orient's --substitute/--unmapped/--escalation declaration flags with sha256 hash-pinning. Green: 42 passed, 22 subtests passed. One correction found while implementing: an UNRESOLVABLE-ROOT receipt legitimately has an EMPTY candidates_tried (we never looked), so the well-formedness check exempts that mode only - otherwise a truthful could-not-look receipt would verify as 12 receipt-unusable instead of 11.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:38:23.171269+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "<repo-root> added to resolve_spine and to _RESOLVER_OWNED_TOKEN_RE. DEVIATION from the handoff's literal 'str(Path(root).resolve())': emitted as Path(root).resolve().as_posix(). Evidence - a spine is JSON and instantiate_spine json.loads() its own output, so a Windows str(Path) value 'C:\\Programs\\...' makes that guard raise 'Invalid \\escape', proven by direct run; as_posix() parses fine and is also correct for the POSIX shell the engine runs command checks under. Justification comment says ROBUSTNESS (checks receive no cwd and inherit the launcher's; the five shipped relative checks are fragile, not broken, and are left alone per #341). SCOPE STRETCH: added a 5-test RepoRootPlaceholder class to tests/test_init_work_area.py, which the allowed-scope list did not name, because the handoff's required-evidence command runs that file and an untested placeholder is not shippable. tests/test_init_work_area.py 31 passed (26 before + 5 new). Falsifiability spot-checked: mutating the resolver back to str(Path(...)) makes the json-safe test go red.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:40:14.111364+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "tests/test_mutation_floor.py: 7 passed, 4 subtests. The applied-assertion runs FIRST and is a strict count delta, not an 'in' check: original.count(old)==1, mutated.count(old)==0, mutated.count(new)==original.count(new)+1. The delta form matters here concretely - mutation 2's replacement '    return EXIT_OK' ALREADY appears elsewhere in the module, so an 'assertIn' would have passed even if nothing was substituted. apply_mutation raises a dedicated HarnessError naming 'NOT a killed mutant' when an anchor matches 0 or >1 times, and two HarnessSelfCheck tests prove that path fires. Unmutated baseline asserted green first. Each kill additionally requires (a) passed_count>0 so a broken import cannot count as a kill and (b) a FAILED node in the class the mutation was supposed to break. Measured: all->any exit 1, 36 still passing, 9 killers incl. all six PartialFillMatrix arms; UNRESOLVABLE-ROOT collapse exit 1, 33 passing, 11 killers incl. both CouldNotLookDiscriminator tests; citability->existence exit 1, 32 passing, 10 killers incl. test_the_shipped_index_template_itself_does_not_resolve.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:43:18.603911+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5",
+      "why": "Required evidence captured verbatim into .agent-work/issue-304/crew-handoffs/g1-result.md: the 80-passed three-file suite, self-test OK, the live DEGRADED-NO-MAP orient run with exit 10 plus its receipt and the verify-orientation refusal, the per-mutation kill table, and the 1459-passed full-suite regression check. Exit table 0/10/11/12/13 stated with the collision argument. Three deviations declared: as_posix() instead of str(Path) for <repo-root> with the json.loads evidence; the additive scope stretch into tests/test_init_work_area.py; and orient's three declaration flags beyond the frozen synopsis. Three triage candidates and honest workflow feedback recorded.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:48:35.143899+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m2",
+      "reopen": true,
+      "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+      "ts": "2026-08-01T23:08:06.920133+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m3",
+      "reopen": true,
+      "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+      "ts": "2026-08-01T23:08:06.920136+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m4",
+      "reopen": true,
+      "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+      "ts": "2026-08-01T23:08:06.920137+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m5",
+      "reopen": true,
+      "reason": "Reviewer BLOCK on gate g1, rework B1/B2/B3. B1 (blocker, reproduced): pin_substitutes writes content_hash='unreadable' for an unreadable path and is_filler('unreadable') is False, so a NONEXISTENT substitute discharges the record at exit 0 - orient exit 0 and verify-orientation exit 0, confirmed by my own repro. That is the exact hole this contract exists to close. B2 (major, reproduced): reviewer's M4 mutation unmapped_declared 'not any'->'not all' applies cleanly and the floor stays GREEN (42 passed, 0 failed) because every filler test uses a single-element list where any and all coincide. B3: the result artifact asserted a cleanup I did not re-verify at write time.",
+      "ts": "2026-08-01T23:08:06.920139+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "m2",
+      "why": "REWORK B1 fixed. Root cause: pin_substitutes emitted the sentinel content_hash='unreadable' and substitutes_declared only asked 'is it non-filler', so a nonexistent substitute path discharged the record at exit 0 (reproduced independently before touching anything: orient exit 0, verify exit 0). Fix has two halves so neither alone can regress it: (1) pin_substitutes now records content_hash=null for an unreadable path, no sentinel; (2) new pure predicate is_content_hash validates the pin by SHAPE (64 hex chars), so no sentinel, typo or truncated digest can stand in for a pin. New substitute_problems() names the offending entry in stderr. Post-fix repro: orient exit 10, verify exit 10, receipt content_hash null, stderr names THIS_FILE_DOES_NOT_EXIST. New UnreadableSubstitute class, 6 tests incl. the reviewer's exact repro and a positive control that a real substitute still discharges at 0. B2 half-one done too: multi-element filler cases added, since single-element lists cannot tell 'not any' from 'not all'. tests/test_map_orient.py 51 passed / 32 subtests, was 42/22.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:19:07.687765+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "m3",
+      "why": "Cascade-reset by the m2 reopen; re-evidenced unchanged. The <repo-root> work was adjudicated ACCEPTED by commander and reviewer (as_posix confirmed necessary; the test addition confirmed 53 insertions / 0 deletions) and is out of rework scope, so no code change. Check re-run fresh: tests/test_init_work_area.py 31 passed.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:19:17.632052+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "m4",
+      "why": "REWORK B2 fixed. Reviewer's M4 (unmapped_declared 'not any'->'not all') independently confirmed SURVIVING the shipped floor: applied cleanly, floor exit 0, 42 passed, 0 failed. Cause confirmed as stated - every filler case in both self_test and PartialFillMatrix used a SINGLE-element list, where any and all are identical, so the floor could not distinguish them. Fixed by adding multi-element cases (['none', real], [real, 'n/a'], ['none','n/a'], [real,'',real]) plus an all-real positive control, and M4 is now pinned in the shipped set. Also pinned M5, the B1 blocker itself (is_content_hash shape check weakened to bool(value.strip())), so the blocker cannot silently return - flagged to commander as a judgment call since B2 asked only for M4. Post-fix, all 5 mutations killed with an in-target failure each: all->any exit 1 (42 passing, 10 in-target); UNRESOLVABLE-ROOT collapse exit 1 (39 passing, 2 in-target); citability->existence exit 1 (41 passing, 3 in-target); M4 exit 1 (50 passing, killed by exactly the new test_one_filler_poisons_a_multi_element_unmapped_list); M5 exit 1 (49 passing, 2 in-target). tests/test_mutation_floor.py 9 passed / 6 subtests.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:20:29.074516+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "m5",
+      "why": "REWORK complete, artifact updated in place. B1 fixed and pinned (UnreadableSubstitute, 6 tests, incl. the reviewer's exact repro and a positive control). B2 fixed: multi-element filler cases added at both levels, M4 pinned in the shipped set and now killed by exactly the new test; also pinned M5 guarding the B1 blocker, flagged as one item beyond the letter of B2's scope for commander to strike if unwanted. B3 accepted: the cleanup claim is WITHDRAWN, not defended - the artifact now states only what is verifiable and notes that the evidence command recreates the directory by design. Every revision-1 figure in the artifact re-measured and corrected rather than left stale: 91 passed (was 80), mutation floor 9 passed (was 7), full suite 1470 passed (was 1459), self-test 92 checks (was 77, recounted by instrumenting _check rather than guessed), map_orient.py 1137 lines. Close criteria green. No probe directories left on disk, verified at write time.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:24:49.826017+00:00"
+    }
+  ]
+}

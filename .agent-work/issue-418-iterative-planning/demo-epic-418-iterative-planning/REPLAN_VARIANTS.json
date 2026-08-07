@@ -1,0 +1,680 @@
+{
+  "advance": {
+    "schema_version": 1,
+    "decision": "advance",
+    "applicable": true,
+    "criteria_assessment": {
+      "wave_exit": "Blocked until rollout ordering is explicit",
+      "epic_done": "Not complete",
+      "good_enough": "Independent evidence remains intact"
+    },
+    "discrepancy_dispositions": [
+      {
+        "id": "D-block",
+        "action": "repair_current_wave",
+        "reason": "Make refresh wiring an explicit precondition before HARD enablement",
+        "issue_created": true
+      },
+      {
+        "id": "D-evidence",
+        "action": "record_evidence_only",
+        "reason": "One-writer scope is evidence, not present execution work",
+        "issue_created": false
+      }
+    ],
+    "current_wave": {
+      "objective": "Complete one coherent why-capture, gauge-read, and trip-policy execution-and-validation loop.",
+      "exit_criteria": [
+        "Why-capture, gauge-reader, and trip-policy acceptance evidence is independently observable.",
+        "The loop preserves the frozen design's fail-safe and human-authority boundaries."
+      ],
+      "issues": [
+        {
+          "id": "CG-A",
+          "title": "Why-capture + refresh primitives: engine schema (checklist_engine.py)",
+          "desired_outcome": "Foundational engine-schema change. See the governing epic for the full confirmed spec (Modules 1 & 4).",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item A"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "CG-D"
+          ]
+        },
+        {
+          "id": "CG-C",
+          "title": "Gauge reader: plain read() -> Reading|None + model-keyed thresholds",
+          "desired_outcome": "The engine-side gauge reader (Module 2, read side). See the governing epic for the full spec.",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item C"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "CG-D"
+          ]
+        },
+        {
+          "id": "CG-D",
+          "title": "Trip: two-band gate policy (SOFT stop-question + HARD refuse-advance)",
+          "desired_outcome": "The engine policy that consumes the gauge at gate boundaries (Module 3). Depends on A (engine primitives + predicate) and C (reader). See the epic for the full spec.",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item D"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "revised_forecast": [
+      {
+        "outcome": "Gauge writer: Claude Code PostToolUse hook + golden-sample fixture",
+        "why_likely": "Original B remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      },
+      {
+        "outcome": "Refresh: reach-up relaunch flow + job-file principle (skill/doctrine wiring)",
+        "why_likely": "Original E remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      }
+    ],
+    "revised_uncertainty": [
+      {
+        "unknown": "Whether the Claude Code gauge estimate is accurate at trip thresholds",
+        "affects": "Writer calibration and threshold selection",
+        "settle_by": "Live HITL gauge validation",
+        "current_evidence": "The frozen spec marks this assumption untested",
+        "next_probe": "Compare a golden transcript estimate with live harness accounting"
+      }
+    ],
+    "revised_parked": [
+      "Codex/pi gauge writers",
+      "Pre-emptive handoff at named gates",
+      "Self-calibrating thresholds"
+    ],
+    "unlaunched_dispositions": [
+      {
+        "id": "B",
+        "action": "keep",
+        "reason": "HITL writer remains forecast"
+      },
+      {
+        "id": "E",
+        "action": "keep",
+        "reason": "HITL refresh drill remains forecast"
+      },
+      {
+        "id": "threshold-accuracy",
+        "action": "keep",
+        "reason": "Live calibration remains unresolved"
+      }
+    ],
+    "material_changes": [],
+    "wave_review_comment": "## Wave review\n\nA blocking rollout-order deficiency triggered repair; portability stayed evidence-only and created no issue.",
+    "revised_epic_body": "## Current planning truth\n\nThe three-issue AFK loop remains current and the HITL outcomes remain nonbinding forecast.",
+    "escalation": null
+  },
+  "repair": {
+    "schema_version": 1,
+    "decision": "repair",
+    "applicable": true,
+    "criteria_assessment": {
+      "wave_exit": "Blocked until rollout ordering is explicit",
+      "epic_done": "Not complete",
+      "good_enough": "Independent evidence remains intact"
+    },
+    "discrepancy_dispositions": [
+      {
+        "id": "D-block",
+        "action": "repair_current_wave",
+        "reason": "Make refresh wiring an explicit precondition before HARD enablement",
+        "issue_created": true
+      },
+      {
+        "id": "D-evidence",
+        "action": "record_evidence_only",
+        "reason": "One-writer scope is evidence, not present execution work",
+        "issue_created": false
+      }
+    ],
+    "current_wave": {
+      "objective": "Complete one coherent why-capture, gauge-read, and trip-policy execution-and-validation loop.",
+      "exit_criteria": [
+        "Why-capture, gauge-reader, and trip-policy acceptance evidence is independently observable.",
+        "The loop preserves the frozen design's fail-safe and human-authority boundaries."
+      ],
+      "issues": [
+        {
+          "id": "CG-A",
+          "title": "Why-capture + refresh primitives: engine schema (checklist_engine.py)",
+          "desired_outcome": "Foundational engine-schema change. See the governing epic for the full confirmed spec (Modules 1 & 4).",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item A"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "CG-D"
+          ]
+        },
+        {
+          "id": "CG-C",
+          "title": "Gauge reader: plain read() -> Reading|None + model-keyed thresholds",
+          "desired_outcome": "The engine-side gauge reader (Module 2, read side). See the governing epic for the full spec.",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item C"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "CG-D"
+          ]
+        },
+        {
+          "id": "CG-D",
+          "title": "Trip: two-band gate policy (SOFT stop-question + HARD refuse-advance)",
+          "desired_outcome": "The engine policy that consumes the gauge at gate boundaries (Module 3). Depends on A (engine primitives + predicate) and C (reader). See the epic for the full spec.",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item D"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "revised_forecast": [
+      {
+        "outcome": "Gauge writer: Claude Code PostToolUse hook + golden-sample fixture",
+        "why_likely": "Original B remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      },
+      {
+        "outcome": "Refresh: reach-up relaunch flow + job-file principle (skill/doctrine wiring)",
+        "why_likely": "Original E remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      }
+    ],
+    "revised_uncertainty": [
+      {
+        "unknown": "Whether the Claude Code gauge estimate is accurate at trip thresholds",
+        "affects": "Writer calibration and threshold selection",
+        "settle_by": "Live HITL gauge validation",
+        "current_evidence": "The frozen spec marks this assumption untested",
+        "next_probe": "Compare a golden transcript estimate with live harness accounting"
+      }
+    ],
+    "revised_parked": [
+      "Codex/pi gauge writers",
+      "Pre-emptive handoff at named gates",
+      "Self-calibrating thresholds"
+    ],
+    "unlaunched_dispositions": [
+      {
+        "id": "B",
+        "action": "keep",
+        "reason": "HITL writer remains forecast"
+      },
+      {
+        "id": "E",
+        "action": "keep",
+        "reason": "HITL refresh drill remains forecast"
+      },
+      {
+        "id": "threshold-accuracy",
+        "action": "keep",
+        "reason": "Live calibration remains unresolved"
+      }
+    ],
+    "material_changes": [],
+    "wave_review_comment": "## Wave review\n\nA blocking rollout-order deficiency triggered repair; portability stayed evidence-only and created no issue.",
+    "revised_epic_body": "## Current planning truth\n\nThe three-issue AFK loop remains current and the HITL outcomes remain nonbinding forecast.",
+    "escalation": null
+  },
+  "replan": {
+    "schema_version": 1,
+    "decision": "replan",
+    "applicable": true,
+    "criteria_assessment": {
+      "wave_exit": "Blocked until rollout ordering is explicit",
+      "epic_done": "Not complete",
+      "good_enough": "Independent evidence remains intact"
+    },
+    "discrepancy_dispositions": [
+      {
+        "id": "D-block",
+        "action": "repair_current_wave",
+        "reason": "Make refresh wiring an explicit precondition before HARD enablement",
+        "issue_created": true
+      },
+      {
+        "id": "D-evidence",
+        "action": "record_evidence_only",
+        "reason": "One-writer scope is evidence, not present execution work",
+        "issue_created": false
+      }
+    ],
+    "current_wave": {
+      "objective": "Complete one coherent why-capture, gauge-read, and trip-policy execution-and-validation loop.",
+      "exit_criteria": [
+        "Why-capture, gauge-reader, and trip-policy acceptance evidence is independently observable.",
+        "The loop preserves the frozen design's fail-safe and human-authority boundaries."
+      ],
+      "issues": [
+        {
+          "id": "CG-A",
+          "title": "Why-capture + refresh primitives: engine schema (checklist_engine.py)",
+          "desired_outcome": "Foundational engine-schema change. See the governing epic for the full confirmed spec (Modules 1 & 4).",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item A"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "CG-D"
+          ]
+        },
+        {
+          "id": "CG-C",
+          "title": "Gauge reader: plain read() -> Reading|None + model-keyed thresholds",
+          "desired_outcome": "The engine-side gauge reader (Module 2, read side). See the governing epic for the full spec.",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item C"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "CG-D"
+          ]
+        },
+        {
+          "id": "CG-D",
+          "title": "Trip: two-band gate policy (SOFT stop-question + HARD refuse-advance)",
+          "desired_outcome": "The engine policy that consumes the gauge at gate boundaries (Module 3). Depends on A (engine primitives + predicate) and C (reader). See the epic for the full spec.",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item D"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "revised_forecast": [
+      {
+        "outcome": "Gauge writer: Claude Code PostToolUse hook + golden-sample fixture",
+        "why_likely": "Original B remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      },
+      {
+        "outcome": "Refresh: reach-up relaunch flow + job-file principle (skill/doctrine wiring)",
+        "why_likely": "Original E remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      }
+    ],
+    "revised_uncertainty": [
+      {
+        "unknown": "Whether the Claude Code gauge estimate is accurate at trip thresholds",
+        "affects": "Writer calibration and threshold selection",
+        "settle_by": "Live HITL gauge validation",
+        "current_evidence": "The frozen spec marks this assumption untested",
+        "next_probe": "Compare a golden transcript estimate with live harness accounting"
+      }
+    ],
+    "revised_parked": [
+      "Codex/pi gauge writers",
+      "Pre-emptive handoff at named gates",
+      "Self-calibrating thresholds"
+    ],
+    "unlaunched_dispositions": [
+      {
+        "id": "B",
+        "action": "keep",
+        "reason": "HITL writer remains forecast"
+      },
+      {
+        "id": "E",
+        "action": "keep",
+        "reason": "HITL refresh drill remains forecast"
+      },
+      {
+        "id": "threshold-accuracy",
+        "action": "keep",
+        "reason": "Live calibration remains unresolved"
+      }
+    ],
+    "material_changes": [],
+    "wave_review_comment": "## Wave review\n\nA blocking rollout-order deficiency triggered repair; portability stayed evidence-only and created no issue.",
+    "revised_epic_body": "## Current planning truth\n\nThe three-issue AFK loop remains current and the HITL outcomes remain nonbinding forecast.",
+    "escalation": null
+  },
+  "stop": {
+    "schema_version": 1,
+    "decision": "stop",
+    "applicable": true,
+    "criteria_assessment": {
+      "wave_exit": "Blocked until rollout ordering is explicit",
+      "epic_done": "Not complete",
+      "good_enough": "Independent evidence remains intact"
+    },
+    "discrepancy_dispositions": [
+      {
+        "id": "D-block",
+        "action": "repair_current_wave",
+        "reason": "Make refresh wiring an explicit precondition before HARD enablement",
+        "issue_created": true
+      },
+      {
+        "id": "D-evidence",
+        "action": "record_evidence_only",
+        "reason": "One-writer scope is evidence, not present execution work",
+        "issue_created": false
+      }
+    ],
+    "current_wave": null,
+    "revised_forecast": [
+      {
+        "outcome": "Gauge writer: Claude Code PostToolUse hook + golden-sample fixture",
+        "why_likely": "Original B remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      },
+      {
+        "outcome": "Refresh: reach-up relaunch flow + job-file principle (skill/doctrine wiring)",
+        "why_likely": "Original E remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      }
+    ],
+    "revised_uncertainty": [
+      {
+        "unknown": "Whether the Claude Code gauge estimate is accurate at trip thresholds",
+        "affects": "Writer calibration and threshold selection",
+        "settle_by": "Live HITL gauge validation",
+        "current_evidence": "The frozen spec marks this assumption untested",
+        "next_probe": "Compare a golden transcript estimate with live harness accounting"
+      }
+    ],
+    "revised_parked": [
+      "Codex/pi gauge writers",
+      "Pre-emptive handoff at named gates",
+      "Self-calibrating thresholds"
+    ],
+    "unlaunched_dispositions": [
+      {
+        "id": "B",
+        "action": "keep",
+        "reason": "HITL writer remains forecast"
+      },
+      {
+        "id": "E",
+        "action": "keep",
+        "reason": "HITL refresh drill remains forecast"
+      },
+      {
+        "id": "threshold-accuracy",
+        "action": "keep",
+        "reason": "Live calibration remains unresolved"
+      }
+    ],
+    "material_changes": [],
+    "wave_review_comment": "## Wave review\n\nA blocking rollout-order deficiency triggered repair; portability stayed evidence-only and created no issue.",
+    "revised_epic_body": "## Current planning truth\n\nThe three-issue AFK loop remains current and the HITL outcomes remain nonbinding forecast.",
+    "escalation": null
+  },
+  "inapplicable": {
+    "schema_version": 1,
+    "decision": "replan",
+    "applicable": false,
+    "criteria_assessment": {
+      "wave_exit": "Blocked until rollout ordering is explicit",
+      "epic_done": "Not complete",
+      "good_enough": "Independent evidence remains intact"
+    },
+    "discrepancy_dispositions": [
+      {
+        "id": "D-block",
+        "action": "repair_current_wave",
+        "reason": "Make refresh wiring an explicit precondition before HARD enablement",
+        "issue_created": true
+      },
+      {
+        "id": "D-evidence",
+        "action": "record_evidence_only",
+        "reason": "One-writer scope is evidence, not present execution work",
+        "issue_created": false
+      }
+    ],
+    "current_wave": {
+      "objective": "Complete one coherent why-capture, gauge-read, and trip-policy execution-and-validation loop.",
+      "exit_criteria": [
+        "Why-capture, gauge-reader, and trip-policy acceptance evidence is independently observable.",
+        "The loop preserves the frozen design's fail-safe and human-authority boundaries."
+      ],
+      "issues": [
+        {
+          "id": "CG-A",
+          "title": "Why-capture + refresh primitives: engine schema (checklist_engine.py)",
+          "desired_outcome": "Foundational engine-schema change. See the governing epic for the full confirmed spec (Modules 1 & 4).",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item A"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "CG-D"
+          ]
+        },
+        {
+          "id": "CG-C",
+          "title": "Gauge reader: plain read() -> Reading|None + model-keyed thresholds",
+          "desired_outcome": "The engine-side gauge reader (Module 2, read side). See the governing epic for the full spec.",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item C"
+          ],
+          "type": "AFK",
+          "blocks": [
+            "CG-D"
+          ]
+        },
+        {
+          "id": "CG-D",
+          "title": "Trip: two-band gate policy (SOFT stop-question + HARD refuse-advance)",
+          "desired_outcome": "The engine policy that consumes the gauge at gate boundaries (Module 3). Depends on A (engine primitives + predicate) and C (reader). See the epic for the full spec.",
+          "useful_now": "It contributes independently observable evidence to one governor execution-and-validation loop.",
+          "appetite": "One bounded implementation and public-interface validation pass.",
+          "acceptance_or_falsification_evidence": "The named original acceptance statements pass through the shipped public interfaces.",
+          "implementation_latitude": "Choose internal decomposition and fixtures; preserve the frozen module boundary and acceptance meaning.",
+          "hard_constraints_no_gos": [
+            "No tracker or network writes",
+            "Do not change frozen intent or fixed decisions"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "frozen ISSUE_SET item D"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "revised_forecast": [
+      {
+        "outcome": "Gauge writer: Claude Code PostToolUse hook + golden-sample fixture",
+        "why_likely": "Original B remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      },
+      {
+        "outcome": "Refresh: reach-up relaunch flow + job-file principle (skill/doctrine wiring)",
+        "why_likely": "Original E remains useful after the AFK loop but needs its stated HITL entry evidence.",
+        "entry_conditions": [
+          "Initial loop evidence is green",
+          "Human is reachable for the original HITL acceptance"
+        ]
+      }
+    ],
+    "revised_uncertainty": [
+      {
+        "unknown": "Whether the Claude Code gauge estimate is accurate at trip thresholds",
+        "affects": "Writer calibration and threshold selection",
+        "settle_by": "Live HITL gauge validation",
+        "current_evidence": "The frozen spec marks this assumption untested",
+        "next_probe": "Compare a golden transcript estimate with live harness accounting"
+      }
+    ],
+    "revised_parked": [
+      "Codex/pi gauge writers",
+      "Pre-emptive handoff at named gates",
+      "Self-calibrating thresholds"
+    ],
+    "unlaunched_dispositions": [
+      {
+        "id": "B",
+        "action": "keep",
+        "reason": "HITL writer remains forecast"
+      },
+      {
+        "id": "E",
+        "action": "keep",
+        "reason": "HITL refresh drill remains forecast"
+      },
+      {
+        "id": "threshold-accuracy",
+        "action": "keep",
+        "reason": "Live calibration remains unresolved"
+      }
+    ],
+    "material_changes": [
+      {
+        "surface": "intent_and_why",
+        "before": "Constellation agents cannot reliably sense their own context fill — self-report is confabulation — and the host harness only intervenes at ~90% with a lossy emergency auto-compaction. The governor gives the fleet a **proactive, portable way to hand off cleanly at a good work seam** before that point: a long-running agent, told by the engine that it is near-full, judges whether now is a good stopping point (biased toward yes) and hands off up its delegation chain to be re-instantiated fresh — carrying its reasoning, not just its mechanical state.\n\n\"Done\" feels like: an agent finishing a unit of work is told \"you've used most of your context\"; unless it is basically finished it hands off at that seam; its invoker (Commander → implementer/reviewer; Admiral → Commander; human at the top) starts a fresh agent from a handoff rich enough for a clean cold start, and the fresh agent resumes **without re-deriving the why**.\n\nThe load-bearing reframe: the handoff is a **byproduct of continuous why-logging**, not a special artifact generated under duress. So the same mechanism that enables intentional refresh also makes ordinary crash-recovery cheap — the design pays for itself even where the gauge is crude or a harness can't refresh well.\n\n**Kill condition:** if a clean handoff+refresh loses more effective continuity than auto-compaction preserves — i.e. the cold-start block can never be made good enough and every refresh is a productivity cliff — the governor is pointless.",
+        "after": "Replace the confirmed intent",
+        "reason": "Counterfactual authority test"
+      }
+    ],
+    "wave_review_comment": "## Wave review\n\nA blocking rollout-order deficiency triggered repair; portability stayed evidence-only and created no issue.",
+    "revised_epic_body": "## Current planning truth\n\nThe three-issue AFK loop remains current and the HITL outcomes remain nonbinding forecast.",
+    "escalation": {
+      "boundary": "intent_and_why",
+      "proposed_value": "Replace the confirmed intent",
+      "reason": "Human authority required",
+      "authority_required": "human"
+    }
+  }
+}

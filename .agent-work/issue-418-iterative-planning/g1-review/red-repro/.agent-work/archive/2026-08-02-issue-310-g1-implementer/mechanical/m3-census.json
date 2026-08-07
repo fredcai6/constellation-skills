@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-census",
+  "mechanical": {
+    "run": "issue-310-g1-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m3-census",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-310-g1-implementer-m3-census@c95c27516439f4e9d2b788dfb7f382c1f3d1a62d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-310-g1-implementer",
+    "generated_at": "2026-08-03T02:44:36Z"
+  }
+}

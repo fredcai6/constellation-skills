@@ -1,0 +1,17 @@
+g1-implement	c2	python -m pytest tests/test_context_manifest.py -q
+g1-implement	c3	python -m pytest tests/test_context_determinism.py -q
+g1-implement	c4	grep -q 'context_refs' skills/commander/templates/COMMANDER_SPINE.template.json
+g1-implement	c5	python -m pytest tests/test_checklist_engine.py -q
+g1-implement	c6	python -m pytest tests/test_context_manifest.py -q -k 'no_globs or newline_pinned or py312_compatible' --no-header
+g1-implement	c7	test -f .gitattributes && ! grep -nE '(^|[[:space:]])(-text|binary)([[:space:]]|$)' .gitattributes
+g1-integrate	c1	python -m pytest tests/ -q
+g3-implement	c2	python -m pytest tests/test_context_declaration_lint.py -q
+g3-implement	c3	python -m pytest tests/test_context_declaration_lint.py::test_divergent_declaration_is_rejected -q
+g3-implement	c4	grep -q 'substitute the closest repo doctrine' skills/commander/templates/COMMANDER_SPINE.template.json
+g3-implement	c5	grep -q 'sanctioned degradation' skills/commander/templates/COMMANDER_SPINE.template.json
+g3-implement	c6	grep -qE '^\| *`?context_refs`?' docs/CHECKLIST_SCHEMA.md
+g3-implement	c7	test -f .agent-work/300/OBLIGATIONS-301.md && grep -qi 'may rely' .agent-work/300/OBLIGATIONS-301.md && grep -qi 'may not' .agent-work/300/OBLIGATIONS-301.md
+g3-implement	c8	python -m pytest tests/test_context_manifest.py -q -k 'episode_context_field' --no-header
+g3-integrate	c1	python -m pytest tests/ -q
+g4-cold-panel	c1	test -s .agent-work/300/cold-panel/CRITIC-intent-fit.md && test -s .agent-work/300/cold-panel/CRITIC-testability.md && test -s .agent-work/300/cold-panel/CRITIC-simplicity.md
+g4-cold-panel	c2	py -c "import pathlib,sys,re; d=pathlib.Path('.agent-work/300'); p=d/'COLD_PANEL_DISPOSITION.md'; t=p.read_text(encoding='utf-8') if p.exists() else ''; n=len(re.findall(r'(?im)^\s*[-*|]?\s*disposition\s*[:|]', t)); sys.exit(0 if n>0 and 'UNTRIAGED: 0' in t else 1)"

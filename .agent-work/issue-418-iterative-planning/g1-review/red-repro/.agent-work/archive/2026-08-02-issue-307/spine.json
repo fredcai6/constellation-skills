@@ -1,0 +1,768 @@
+{
+  "work_id": "issue-307",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "feedback",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-307. This same script now ALSO optionally materializes spine.json from a spine template with its placeholders resolved, via --spine <spine-template> [--skill-dir <path>] (shipped in issue-73 g1) \u2014 use it to instantiate spine.json rather than hand-substituting placeholders, passing the commander skill directory to --skill-dir so the commander-skill-dir placeholder resolves to an absolute path (it auto-detects when omitted). Start the work branch per repo guidance. Claim the engine session lease on this spine so a resumed or duplicated parent cannot concurrently drive it: <engine> claim --session-id commander-issue-307 --claimed-by commander --worktree . (if a stale prior lease blocks you, re-run with --force --reason \"resuming this run\"). From here on, pass --session-id commander-issue-307 on every mutating engine call against this spine.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-307"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-2"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine (commander owns the state)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "lease claimed: session-id commander-307"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-307",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-init-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py issue-307",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution \u2014 do not treat those paths as guaranteed to exist. Read the Active section of .agent-work/LESSONS.md if it exists: these are distilled workflow lessons from prior runs \u2014 condition planning and handoff authoring on them, and note any lesson this run's evidence contradicts (it becomes a disconfirm op at the feedback step). Before you open any source file, resolve and read the map input: run py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/e298-307 --work-id issue-307. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map \u2014 it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order \u2014 README.md, AGENTS.md, CLAUDE.md, a docs/ index \u2014 and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly \u2014 that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded; current map read for the affected area where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read: global-orchestrator.md + global-everyone.md (commander-delegated refs), docs/agents/ORCHESTRATOR_CONTEXT.md (present; GLOSSARY.md and engine-config.json ABSENT in this repo - substitution recorded), .agent-work/LESSONS.md Active section. Lesson verify-launch-order-claims-against-code applies and was executed BEFORE planning: preb/ 125 files, baselines/, map_orient.py in installed corpus all CONFIRMED; C:/Programs/f1bwt/ CONFIRMED ABSENT (must recreate). Map: DEGRADED-NO-MAP, discharged with 3 hash-pinned substitutes."
+        },
+        {
+          "id": "c2",
+          "statement": "the orientation contract is satisfied -- RESOLVED, or a DEGRADED verdict discharged with hash-pinned substitutes AND the unmapped gap AND an escalation -- recorded at the context step, which precedes understand and plan. Ordering itself is NOT machine-verifiable from a receipt: nothing in a receipt distinguishes a run that resolved the map first from one that crawled fifty files and then wrote an identical receipt. Ordering lives in this step's imperative ('Before you open any source file') and in the report-only ordering audit, never in this check. This gate is a regression floor so map-IGNORING cannot silently return; it is NOT the fix for map-LATENESS (measured sensitivity 0/4, specificity 0/1). Gate-vs-report is a flag flip: adding --report-only to 'py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-307 --work-id issue-307' turns this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-307 --work-id issue-307"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-context-1"
+        }
+      ],
+      "context_refs": [
+        {
+          "root": "skill",
+          "path": "references/global-orchestrator.md",
+          "required": true
+        },
+        {
+          "root": "skill",
+          "path": "references/global-everyone.md",
+          "required": true
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/GLOSSARY.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/engine-config.json",
+          "required": false
+        },
+        {
+          "root": "durable",
+          "path": ".agent-work/LESSONS.md",
+          "required": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/e298-307 --work-id issue-307",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral \u2014 float a decision outside latitude, or query for missing context \u2014 per Stop Conditions. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Upstream verified: init complete (work area + lease), context complete (doctrine read, DEGRADED-NO-MAP discharged with 3 hash-pinned substitutes, verify-orientation gate passed). Launch-order claims checked against the tree BEFORE planning per lesson:verify-launch-order-claims-against-code."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER-307:Mission",
+            "decision": "Run the POST arm and compile the paired evidence package: manifest (map availability at a revision) paired with run-transcript tool-call ordering, against captured baselines. HITL - Tommy adjudicates the B3 verdict; I do not self-adjudicate.",
+            "resolved-by": "frozen LAUNCH_ORDER-307, no reachable human"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Map-first: BEFORE authoring execute.json, produce a mission frame from the map input the context step resolved, using templates/MISSION_FRAME.template.md (intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope). Write it to .agent-work/issue-307/MISSION_FRAME.md \u2014 that exact path is what the c6 gate reads, so a frame parked anywhere else reads as no frame at all. For a trivial local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent; c6 is waivable, so take that escape as a RECORDED waiver (<engine> waive plan --cond c6 --authority human --reason '...') rather than as a silent skip. The c6 gate runs map_orient.py verify-frame over that file: every anchor id the frame cites must exist in the map inventory the context step resolved, or \u2014 when context came back DEGRADED \u2014 must be one of the substitutes the receipt hash-pinned there, so the frame is compared against a committed prior declaration instead of a same-breath assertion. Know what that check is and is not, and do not overclaim it: it is a regression floor so map-IGNORING cannot silently return, not the fix for map-LATENESS. Measured against this epic's baseline five runs it has sensitivity 0/4 and specificity 0/1, and it inherits the late-anchor defect it was built next to, because anchors-in-a-late-frame is compliance without sequence. The load-bearing map-first anchor is at the context step ('before you open any source file'), which is why verify-orientation is gated there and verify-frame is gated only here. Do NOT 'fix' that asymmetry by also running verify-frame at context: no frame exists at context \u2014 the step runs before understand and plan \u2014 and the only way to make it pass there is to let an ABSENT frame pass, which is exactly the refusal the whole check is built on. If verify-frame ever has to be context-safe, give it a step-scoped mode; never a vacuous pass. For any low-confidence/stale/disputed map area the run depends on, alter the plan accordingly: add a scout/verification gate or surface it to the human as a decision \u2014 never author gates that silently trust an unverified map. Surface durable-structure choices as decision candidates per the skill's Decision candidates section rather than choosing alone. Then author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria, required evidence, and an anchors block cut from the frame. Before the plan-approved checkpoint run plan-alternatives (parallel gate-plan candidates under distinct constraints, via the references/design-it-twice-brief.md contract) and a cold plan critic (reads the candidate plan + mission frame only, no authoring context); both bias-to-yes \u2014 any skip is surfaced as a named untaken road \u2014 and the panel-vs-single choice is surfaced to the human at plan approval. Get the human to approve it. In delegated mode, satisfy c3 (plan approved) by attaching a user-decision evidence item citing the launch order's frozen plan and scope (attach plan --type user-decision --field cite='LAUNCH_ORDER:Mission'); surface a plan-invalidating discovery to the Admiral rather than blocking on the human. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "understand complete: problem statement written, launch order reconciled, three-way discrimination pre-registered."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mission frame produced from the current map (or explicitly skipped as trivial) where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MISSION_FRAME.md authored at .agent-work/issue-307/MISSION_FRAME.md from the DEGRADED receipt's three hash-pinned substitutes. verify-frame returns FRAME-OK."
+        },
+        {
+          "id": "c2",
+          "statement": "execute.json authored, one bounded issue, gates carry anchors cut from the frame",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json authored: 4 items (e0-context, g1-capture, g2-score, g3-pair), each gate's c1 a command-kind check against .agent-work/epic-298/post/verify_post_arm.py, anchors cut from the frame."
+        },
+        {
+          "id": "c3",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-2"
+        },
+        {
+          "id": "c4",
+          "statement": "plan-alternatives run BEFORE the plan freezes (parallel candidates under distinct constraints converging to one recommendation), or the skip surfaced as a named untaken road",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "PLAN_ALTERNATIVES.md: three candidates over the one open axis (how POST is measured without becoming its own confound) under distinct constraints - A change-nothing (rejected: every POST meta.json would assert it is PRE-B), B only-what-cannot-confound (chosen), C plus-a-trustworthy-new-measure (chosen, layered). Converged on B+C. Five untaken roads named."
+        },
+        {
+          "id": "c5",
+          "statement": "cold plan critic run on the converged candidate plan + mission frame (after alternatives, before plan approval), findings triaged by the human; panel-vs-single choice surfaced at plan approval",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Cold critic run AFTER alternatives, BEFORE approval. 24 findings; 5 blocking. Pre-launch fixes landed: issue-set assertion, status/exit/answer assertions, brief byte-identity vs PRE-B, per-run corpus deep digest, map_credit_suppressed reporting, harness version. Remaining blocking findings (6,7,14,15,18) touch SCORING and the RECORD, not capture, and are closed while the arm runs. Panel-vs-single: SINGLE critic, chosen for time - named as an untaken road, not hidden."
+        },
+        {
+          "id": "c6",
+          "statement": "the mission frame at .agent-work/issue-307/MISSION_FRAME.md cites anchors that resolve against the map the context step oriented on (or, when context degraded, against the substitutes the receipt hash-pinned) \u2014 an ABSENT frame REFUSES and never vacuously passes. A regression floor against map-ignoring, NOT a check for map-lateness; waive it for a genuinely trivial change so the escape is recorded. Gate-vs-report is a flag flip: append --report-only to turn this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills-wt/e298-307 --work-id issue-307"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-3"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "CRITIC-FINDINGS",
+            "source": "cold plan critic, no authoring context, read only MISSION_FRAME.md + execute.json + the instrument files",
+            "blocking": "6 (fingerprint compares shallow only, blind to templates/scripts where the contract lives); 7 (scores gate cannot tell POST rows from PRE-B rows); 14 (NO-SRC-READ is the CONTRACTS STRONGEST success and is not True - a perfect POST would show zero Trues); 15 (three-hop delivery: TREATMENT-VERIFIED proves hop 0; spine-never-materialized is a hidden third branch read as irrelevant); 18 (the audit counts Read/Grep of map_orient.py as an invocation)",
+            "rejected": "2 (brief bytes fetched live) - FALSE: capture_baseline.fetch_issue reads the FROZEN issues.frozen.json snapshot, never live; the critics own suggested byte-comparison was adopted anyway as it is stronger than the construction argument"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER-307:Mission + Method requirements + REUSE PRE-B INSTRUMENTS",
+            "decision": "Plan approved against the frozen launch order: POST on constellation-commander matching PRE-B, explicit Commander invocation, map_before_src as a boolean, orientation/use/citation kept distinct, degraded path not mixed in, PRE-B instruments reused rather than rebuilt.",
+            "approved-by": "frozen launch order (Admiral is the human delegate; no reachable human)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills-wt/e298-307 --work-id issue-307",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Before entering this step: ensure context headroom (run a harness compaction command if one is exposed, else rely on harness auto-compaction \u2014 either is fine) and reload the constellation-commander skill into this context, confirming it is active; this satisfies p1. Then, before this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/issue-307/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md, or the bundled skills/workbench/templates/STATE_NOTE.template.md when the project has no .agent-work/templates/ overlay \u2014 the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through py C:/Users/fredc/.claude/skills/constellation-commander/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run py C:/Users/fredc/.claude/skills/constellation-commander/scripts/recover_crews.py issue-307 and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. If a gate proves the plan wrong, surface the decision to the user before continuing. In delegated mode, surface a plan-invalidating discovery to the Admiral (float it) per the commander skill's Delegated/autonomous mode, rather than blocking on the human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "constellation-commander-delegated skill active in this context (loaded at call 0, 'Base directory for this skill: C:\\Users\\fredc\\.claude\\skills\\constellation-commander-delegated'); it drives the same COMMANDER_SPINE.template.json out of constellation-commander. Context headroom adequate."
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached dispatch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py issue-307"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json driven to terminal through the engine: e0-context, g1-capture, g2-score, g3-pair all complete, each gate's c1 a command-kind check re-run by the engine on advance. Evidence integrated: POST_RECORD.md, post-discriminated.json, post-map-orient-audit.json, spine-materialization.json, corpus fingerprints BEFORE/AFTER + 5 per-run, instrument-digests.json, VOID_CAPTURE_EVIDENCE.json."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "execute.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py issue-307",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture \u2014 this is the default path whenever a packet map exists. Where the run has no packet map (e.g. a skill-source repo with no docs/architecture map), reconcile the structural record directly instead: fold the change into the schema or design doc it actually touches, and where the change touched neither, record a reasoned no-op as compliant rather than blocking on an absent map.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute complete; all execute.json gates terminal"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects the implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REASONED NO-OP, recorded as compliant rather than blocked. This repo has NO packet map at all -- the context step oriented DEGRADED-NO-MAP against docs/architecture/{generated/map.json,index.md,} all absent, so there is no recorded architecture to fold into. The run also changed NO source, tests or docs: every artifact lands under .agent-work/epic-298/post/ (measurement evidence) and .agent-work/issue-307/ (this run's own spine), plus one additive label-only flag in .agent-work/epic-298/preb/capture_preb.py. The structural record this run DOES touch is the epic's own measurement record, and it is folded: POST_RECORD.md states the arm, its pairing, its instruments and its limitations, and PREB_RECORD.md sec 12's open questions are answered or explicitly carried forward in POST_RECORD.md sec 14. Five findings routed to the tracker (#393-#397) rather than into an absent map."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation \u2014 do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed. In delegated mode, satisfy c2 (user approved issue creation) by attaching a user-decision evidence item citing the launch order's issue-filing authority (attach triage --type user-decision --field cite='LAUNCH_ORDER:Inherited Latitude'), or float to the Admiral when filing falls outside inherited latitude. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reconcile complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Five findings triaged and FILED: #393 map-first contract reaches an agent only via spine materialization (SKILL.md has zero occurrences of 'map'; TREATMENT-VERIFIED is hop 0 of 3) -- the one with legs. #394 verify-frame refuses every typed anchor under DEGRADED while MISSION_FRAME.template.md mandates graded decision anchors. #395 corpus fingerprint's headline digest is blind to templates/ and scripts/ where the contract lives. #396 a backgrounded process survives a compound command that reports failure; meta-level checks cannot see the resulting corruption. #397 verify_treatment.py forbidden patterns match 'git merge-base' and search Write content. Carried forward NOT filed (already open, not mine to close): #333 rubric tolerance ambiguity, #352 PRE-B memory edit."
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER-307:Rules earned this epic, item 2 -- \"Issue filing is REQUIRED, not permitted. File findings directly; never bank them worktree-locally.\"",
+            "decision": "Filed all five findings directly to fredcai6/constellation-skills during the run, at the moment each was found, rather than batching them for approval.",
+            "rationale": "The launch order makes filing mandatory and pre-authorised; banking findings worktree-locally is the failure mode it names."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving. In delegated mode, satisfy c1 (run summary accepted) by attaching a user-decision evidence item citing the launch order (attach review --type user-decision --field cite='LAUNCH_ORDER:Return Shape'); the Admiral ratifies at the epic return boundary. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "triage complete; five findings filed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER-307:Reporting + Stop conditions",
+            "summary": "POST arm captured and paired. Gates: e0-context, g1-capture, g2-score, g3-pair all closed on command-kind checks. Result: map_before_src 0/4 PRE-B -> 4/4 POST; read_at_bootstrap unmoved at 0/4 both arms; mechanism confirmed at all three delivery hops. First capture set VOID (two racing drivers, my error) - preserved with evidence, re-run clean. Five issues filed #393-#397. Reconcile a recorded no-op (no packet map, no source change).",
+            "handoff": "Branch epic-298/307 declared PENDING, not FINAL: no PR is open so gh pr checks has nothing to read and CI has not run this branch. Merge handed up to the Admiral. HITL: the B3 verdict is compiled with both readings and left to Tommy."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "feedback": {
+      "id": "feedback",
+      "title": "Record workflow feedback",
+      "imperative": "Before committing, reflect honestly on how this run actually went: how closely you followed the skills, handoffs, and checklists; where you had to improvise or work around the instructions; what was ambiguous, missing, or contradictory; and what would have helped. Include the crew Workflow Feedback harvested at each gN-integrate. A 'none' answer requires a run-specific reason ('none \u2014 confirmed after review: <what you checked>'); bare 'none' entries fail the invariant check. Append one dated entry for this work-id to .agent-work/AGENT_FEEDBACK.md (create it from templates/AGENT_FEEDBACK.template.md if absent \u2014 prefer the project copy under .agent-work/templates/, fall back to the bundled workbench template). This log persists across runs and is never archived with the work-id. Adjudicate each lesson before banking it \u2014 the playbook holds open problems you are carrying forward, not a log of everything learned. If a lesson is understood and fixable now, APPLY it this run (make the bounded edit, record it in AGENT_FEEDBACK) and do not add a playbook entry at all; a lesson goes in the bank (an add) ONLY because it needs to be re-observed to be understood, and every add must carry a bank_reason saying what re-observation will clarify. Applying to project doctrine (a docs/agents/* delta or a template working copy \u2014 any .md / .template.*) is a human call: it needs authority=human on the apply op, and in delegated/autonomous mode you do NOT self-apply doctrine \u2014 surface it to your principal (who may rule 'apply', or 'wait, observe it again') and defer with 'needs human' until they do. Applying a code target (with its test suite as proof) stays autonomous. Then distill what remains into the playbook: write structured delta ops (add [with bank_reason]/confirm/disconfirm/mention/retire/apply/defer \u2014 every add/confirm/disconfirm cites a grounding artifact line; corroborate with engine telemetry like rework counts, BLOCK verdicts, waives where possible) to .agent-work/issue-307/lessons-delta.json with tick=true, and apply deterministically: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/apply_lessons_delta.py .agent-work/issue-307/lessons-delta.json --file .agent-work/LESSONS.md. Never edit LESSONS.md directly; if there are no lesson candidates, still apply a tick-only delta. Then settle every threshold-ripe lesson (py C:/Users/fredc/.claude/skills/constellation-commander/scripts/apply_lessons_delta.py --ripe --file .agent-work/LESSONS.md): for each, APPLY it (make the bounded edit to its target \u2014 a thin docs/agents/* delta or a project template working copy \u2014 confirmed by the human, then an apply op deletes it as paid), or for a constellation lesson EXPORT it (append to .agent-work/CONSTELLATION_FEEDBACK.md \u2014 carry the originating lesson id in that entry's Lesson field so the upstream sweep groups recurrences on stable identity, rewording a recurring finding via amend not a new slug \u2014 then an export op marks it exported and pinned), or RESOLVE it if you can confirm the upstream fix has already shipped (a resolve op citing the shipping PR/commit marks the constellation lesson fixed-upstream: no longer ripe, immune to re-confirmation, and it ages out of the playbook \u2014 this is how an already-fixed defect stops being re-exported every run), or DEFER it with a reason (a broad or contradictory doctrine shift routes to a Charter refresh; an autonomous run without that latitude defers 'needs human'). Lessons flagged charter-review go to a Charter refresh. Then run the feedback invariant check before advancing: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-307 --phase feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "review complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "durable feedback log exists, contains this work id, and is not inside the work area or archive",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-307 --phase feedback"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
+        },
+        {
+          "id": "c2",
+          "statement": "no threshold-ripe lesson left unpaid \u2014 each applied to its target, exported upstream, resolved (fixed upstream), or explicitly deferred with a reason",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-307 --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work, including the appended .agent-work/AGENT_FEEDBACK.md entry \u2014 where the repo tracks .agent-work/. Where .agent-work/ is gitignored, do not try to commit it: the durable copy is the work-area-root AGENT_FEEDBACK.md file itself, uncommitted; when this run is dispatched under an Admiral, the epic-level harvest at closeout is the durable record instead. Push the branch to remote. When you open a PR on Windows, write the body to a temp file and use gh pr create -F <file> \u2014 a bash heredoc and a PowerShell @'...'@ here-string both fail for gh pr create --body (here-strings work for git commit -m, not PR bodies). Move .agent-work/issue-307/ to .agent-work/archive/<date>-issue-307/, leaving the unified AGENT_FEEDBACK.md at the agent-work root. Run the archive-phase feedback invariant check before marking archive complete: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-307 --phase archive. Confirm the branch is clean and merge-ready per repo guidance. The engine mechanically refuses closeout (c4) when the staged diff includes suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); if any are intentional, a human waives c4 via <engine> waive archive --cond c4 --authority human --reason \"...\" rather than hand-editing the spine. Release the engine session lease only as your VERY LAST action, AFTER the archive postconditions pass and you have run the engine's final advance on archive (the advance that marks the spine done): <engine> release --session-id commander-issue-307. Release must come after that closing advance, never before it \u2014 the lease must cover every journaled action, so the release is the final journal entry; releasing earlier leaves archive's own closeout entries (attest/waive/advance) after the lease release and fails the terminal provenance check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "workflow feedback recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "feedback complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived and durable feedback log left at .agent-work root",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-307 --phase archive"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-archive-1"
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Branch epic-298/307 committed and pushed through f7eca8a; the archive move itself is staged for the closing commit. Six commits: setup, pre-registration, gate hardening, void-capture evidence, POST results, POST_RECORD, feedback."
+        },
+        {
+          "id": "c3",
+          "statement": "engine session lease released",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Lease release is the VERY LAST action, after the closing advance on archive, so the lease covers every journaled action and the release is the final journal entry."
+        },
+        {
+          "id": "c4",
+          "statement": "staged diff carries no suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); refuse closeout unless a human waives via the engine override path",
+          "check": {
+            "kind": "git-change-policy",
+            "mode": "staged",
+            "max_file_bytes": 1000000,
+            "deny_globs": [
+              "*.parquet",
+              "*.pkl",
+              "*.pickle",
+              "*.joblib",
+              "*.pt",
+              "*.onnx",
+              "*.bin",
+              "*.ckpt",
+              "data/generated/**",
+              "records/**",
+              ".agent-work/LESSONS.md",
+              ".agent-work/AGENT_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.collected.json"
+            ],
+            "allow_globs": [
+              "docs/**",
+              "src/**",
+              "tests/**",
+              "skills/**",
+              "scripts/**",
+              ".agent-work/**"
+            ],
+            "require_human_waiver_for_binary": true
+          },
+          "satisfied": true,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied_by": "e-archive-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py issue-307 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 34
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "commander-307",
+    "status": "released",
+    "claimed_at": "2026-08-02T19:27:24.746240+00:00",
+    "last_heartbeat": "2026-08-02T21:18:21.525735+00:00",
+    "claimed_by": "commander-307",
+    "worktree": "C:/Programs/constellation-skills-wt/e298-307",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-02T21:19:09.204660+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": "POST arm of the #298 map-first measurement. Work area + lease live in worktree e298-307. Instruments to be reused from PRE-B, not rebuilt; f1bwt worktrees must be recreated.",
+      "mechanical": false,
+      "ts": "2026-08-02T19:29:43.362040+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "context",
+      "why": "POST arm pairs with PRE-B, differing in exactly one variable: the installed corpus now carries #304. PRE-B measured 0/5 orientation with the map-first imperative anchored to execute.json (a late artifact); #304 re-anchors it to 'before you open any source file' at the context step. That re-anchoring is the untested variable this arm answers. Instruments reused unchanged; only an --arm label is added.",
+      "mechanical": false,
+      "ts": "2026-08-02T19:31:08.432813+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "understand",
+      "why": "POST = PRE-B with exactly one variable changed (corpus 74953936 -> 3595955, which git merge-base proves contains #304 and its post-archive fix). PRE-B diagnosed the pre-#304 imperative as anchored to a LATE artifact (execute.json); #304 re-anchors it to 'before you open any source file' at context. Declared hazard: the mandated map_orient call lives under .claude/skills and is therefore invisible to the frozen extractor by construction - handled by a supplementary audit run over BOTH arms, not by touching the extractor.",
+      "mechanical": false,
+      "ts": "2026-08-02T19:34:38.212642+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "Three command-checked gates over a measurement: capture five verified runs, score both arms with identical code, prove the corpus and compile the paired package. Cold critic found 5 blocking defects in the evidentiary layer around the reused instruments; capture-affecting ones closed before g1, scoring/record ones closed while the arm runs. The critic's most urgent finding (live issue text) is false against the tree - fetch_issue reads a frozen snapshot.",
+      "mechanical": false,
+      "ts": "2026-08-02T19:52:12.622387+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "map_before_src 0/4 -> 4/4 with the mechanism confirmed at all three delivery hops; read_at_bootstrap unmoved at 0/4 in both arms. Attribution bounded to a corpus delta rather than #304 alone. HITL: verdict compiled, not adjudicated.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:11:09.973218+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "No packet map exists in this repo and no source was changed; the structural record that applies is the epic measurement record, which POST_RECORD.md folds the arm into. Recorded as a compliant no-op, not a skip.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:11:30.133486+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Five findings filed at the moment of discovery per the launch order's mandatory-filing rule; two pre-existing open issues carried forward in POST_RECORD.md sec 14 rather than re-filed.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:11:47.743614+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary compiled and returned to the Admiral in full; the launch order is the ratifying authority in delegated mode and the human ratifies at the epic return boundary.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:12:04.028827+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Retrospective appended for issue-307 to the durable AGENT_FEEDBACK.md (worktree root; not inside the work area or archive). Lessons delta applied: confirm on verify-launch-order-claims-against-code (now 7) plus tick. TWO ADDS WERE REFUSED BY THE ACTIVE CAP (20 headings, --ripe reports nothing to settle); retiring another run's lesson is outside this delegated run's latitude, so both candidates were routed to the tracker instead (#396, #393) and are written up in AGENT_FEEDBACK. Escalated to the Admiral. Invariant check passes.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:16:22.541985+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Work area archived to .agent-work/archive/2026-08-02-issue-307/ with the durable AGENT_FEEDBACK.md left at the work-area root; archive-phase invariant passes. Branch committed and pushed through f7eca8a. Staged diff is 34 small artifacts, largest 50KB, no binaries or data files. Declaring the branch PENDING, not FINAL: no PR is open, so there is no check status to read, and the merge is handed up to the Admiral.",
+      "mechanical": false,
+      "ts": "2026-08-02T21:18:21.525710+00:00"
+    }
+  ]
+}

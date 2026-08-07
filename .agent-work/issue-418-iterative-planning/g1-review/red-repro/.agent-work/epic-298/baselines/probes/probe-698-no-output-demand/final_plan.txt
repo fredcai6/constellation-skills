@@ -1,0 +1,75 @@
+I have what I need. Two of the issue's stated premises are wrong, which changes the shape of the work.
+
+## Findings first — two corrections to the issue
+
+**H1's description doesn't match the code.** The store's three methods (`write_fingerprint`, `get_fingerprint`, `row_count`) all take `(driver, era, vocabulary, channel, what_measure)`. So `vocab` is *already* a value object (`ClassVocabulary`), and `class_id` is **not** a parameter at all — it spans `vocabulary.class_ids`. The key is a **slot** (5 fields), not a `CellAddress` (6 fields). A `CellAddress` therefore cannot literally be the parameter type as the acceptance criterion words it.
+
+But there **is** a real defect underneath, and it's narrower and sharper than "primitive obsession":
+
+- `write_fingerprint` already constructs a `CellAddress` per class (`store.py:233`), so writes are *incidentally* validated — a malformed `driver`/`era`/`what_measure` raises `ValueError` today.
+- `get_fingerprint` (`store.py:255`) and `row_count` (`store.py:298`) construct **no** address. A read with `driver="VER|X"`, `driver=""`, or `what_measure="garbage"` matches zero rows and **silently returns k synthesized `"unresolved"` cells** — indistinguishable from a legitimately-empty slot. That is the hole worth closing, and it's the failure the "malformed-address test" should pin.
+
+**H3's premise is false.** `.agent-work/` is *not* gitignored. `.gitignore` only ignores specific subpatterns (`.agent-work/**/*.pkl`, `*.npz`, `*.db`, `**/scratch/`, `**/ckpt/`, `**/backtests/`, plus a few named dirs). Proof: `.agent-work/archive/2026-07-26-666-driver-fingerprint/artifacts/bounded_fit_summary.json` and `coverage_675_verdict.json` are **tracked in git** — impossible if ignored. So the JSONs are deliberately committed as epic evidence, while the sibling `fp_slice_2023Q.db` *is* ignored by `.agent-work/**/*.db`. H3 is not a "confirm it's fine" item; it's a policy question.
+
+**H2 is confirmed as written.** `scripts/fingerprint_class_coverage_675.py` has no `sys.path` guard (imports `src.common.student_t`, `src.physics.fingerprint.frozen_constants`, `src.physics.layer2.pooling` bare at lines 99-101). Its sibling `scripts/fingerprint_bounded_validation.py:27-29` *does* have the guard — so the fix is a copy of an in-repo pattern, and the inconsistency is isolated to this one file.
+
+---
+
+## Plan
+
+### H1 — tighten the store's address surface
+
+**Design decision (needs your call, recommendation given).** Three options:
+
+- **A (recommended): introduce a `CellSlot` value object** in `address.py` holding the four loose strings (`driver`, `era`, `channel`, `what_measure`), validated by the same rules as `CellAddress` (non-empty `str`, no `|` delimiter, `what_measure` in the known set). Give it `CellSlot.address(vocabulary_version, class_id) -> CellAddress` and `CellAddress.slot -> CellSlot`, sharing one field-validator so the two can't drift. Store methods become `write_fingerprint(slot, vocabulary, observations, *, allow_unverified=False)` etc. This models the actual key honestly and makes the read path structurally unable to accept a bad address.
+- **B: keep signatures, add a private `_validate_slot(...)`** called at the top of all three methods. Zero call-site churn, closes the read hole — but leaves the primitive obsession the issue names.
+- **C: accept both** via a compatibility shim. Not worth it in a single-consumer repo.
+
+I recommend **A**. Two sub-decisions inside it:
+
+1. **Do not put `vocabulary_version` in the slot.** The `ClassVocabulary` stays the sole source of `vocabulary_id`, preserving today's semantics exactly and avoiding a new redundant-argument failure mode. (The existing `era` vs `vocabulary.rules_era` mismatch check stays exactly as-is — it's Protected Intent with tests at `test_store.py:129,137`.)
+2. **Don't add `channel in FINGERPRINT_CHANNELS` validation.** `CellAddress` deliberately doesn't enforce it today (only `what_measure` is enum-checked), and `fit.py:347` validates channel separately. Adding it in `CellSlot` alone would create drift between the two types, and adding it to both is a behavior change beyond this issue's scope. Note it as a separate candidate.
+
+**Two invariants to preserve carefully:**
+- `CellSlot` must **accept** reserved `what_measure` values (they're constructible per `address.py:41-48`); the store's `ReservedWhatMeasureError` refusal on *write* stays where it is. `test_store.py`'s reserved-slot test must still pass unchanged in spirit.
+- Check order shifts: address validity now fires *before* the era/vocab and reserved checks. That's the right order (you can't name a slot you can't spell), and no existing test asserts the old ordering — but it's a real change to note.
+
+**Call sites: 57 across 8 files.** Production is small — `fit.py:356` (one write) and `pilot/pipeline.py:257,325` (two duck-typed reads through an `Any`-typed store). The rest are tests (`test_store.py`, `test_fit.py`, `test_bounded_validation.py`) and two scripts (`fingerprint_bounded_validation.py`, `join_bounded_validation_667.py`). Mechanical but broad.
+
+**Leave `FingerprintCell` alone** — flattening it into a `CellAddress` would ripple into `join.py` and `pilot/pipeline.py:281-285`, which read `c.class_id`/`c.mean`/`c.status` directly. Out of scope.
+
+**New tests** (the acceptance criterion), targeting the *read* hole specifically:
+- `get_fingerprint` and `row_count` with a delimiter-bearing `driver` → `ValueError`, not k unresolved cells. This is the regression that would have shipped.
+- Same for empty-string and non-`str` components, and unknown `what_measure`.
+- Confirm reserved `what_measure` still reads fine and still refuses on write.
+
+### H2 — script path guard
+
+Add the guard from `build_class_utilization_observables.py:71-75` to `scripts/fingerprint_class_coverage_675.py`, above the `src.*` imports at lines 99-101.
+
+**Adjacent defect I'd fold in, flagging the tradeoff:** `DEFAULT_SLICE_DB` (line 122) and `VERDICT_PATH` (line 123) are **CWD-relative**, so running the script from anywhere but the repo root writes a stray artifact tree. Anchoring both on `_REPO_ROOT` fixes that in the same edit and isn't a fit/coverage behavior change. It *is* technically a default-path change, so say no if you want H2 strictly minimal.
+
+### H3 — gitignore: needs your decision
+
+The real question isn't "confirm no stray JSON" — it's **should these JSONs be tracked at all?** Right now the epic's committed evidence JSONs live at `.agent-work/archive/2026-07-26-666-driver-fingerprint/artifacts/`, but the scripts still write to the **unarchived** path `.agent-work/666-driver-fingerprint/artifacts/`. So a rerun today recreates that old directory and its `coverage_675_verdict.json` shows up as untracked in `git status` — noise, not a tracked-path leak.
+
+Options: (a) ignore `.agent-work/**/artifacts/*.json` and force-add epic evidence at closeout; (b) leave as-is and treat the `git status` noise as intentional — evidence *should* be visible; (c) narrowly ignore the two known regenerable filenames. I lean **(b) plus repointing the script defaults under H2**, since the tracked evidence is deliberate and option (a) risks silently dropping future closeout artifacts. Your call.
+
+### Verification
+
+- `py -m pytest tests/unit/physics/fingerprint/ -q` (10 test files) and `tests/unit/physics/pilot/ -q`.
+- Bare-run `py scripts/fingerprint_class_coverage_675.py --help` from a *worktree* and from a subdirectory — that's the H2 reproduction; it must not `ModuleNotFoundError`.
+- pyright baseline-diff CI gate (#545) — the new type touches typed signatures.
+- `py scripts/check_arch_map.py`.
+
+**Architecture map touch:** `docs/architecture/packets/physics.md:2706-2708` and `docs/architecture/index.md:664` both name `address.py`'s exports (`CellAddress`, non-NULL `cell_key`). Adding `CellSlot` warrants a one-phrase update in each. `check_arch_map.py` won't catch this omission (it's blind to content drift), so it has to be done deliberately.
+
+### Sequencing
+
+H2 and H3 are independent and small — do them first as one commit. H1 is the bulk: `address.py` (new type + shared validator) → `store.py` (three signatures) → `fit.py`/`pilot/pipeline.py` → tests → the two scripts → arch map. One commit, since the signature change can't be split without leaving the tree broken.
+
+### Open questions for you
+
+1. H1: option **A** (new `CellSlot` type, 57 call sites) or option **B** (internal validation only, ~0 call-site churn)? A matches the issue's intent; B closes the actual bug for a fraction of the churn.
+2. H3: which of (a)/(b)/(c)? I lean (b).
+3. H2: fold in the CWD-relative path anchoring, or keep it strictly to the `sys.path` guard?

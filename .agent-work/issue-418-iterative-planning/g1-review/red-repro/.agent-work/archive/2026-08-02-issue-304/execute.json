@@ -1,0 +1,951 @@
+{
+  "work_id": "issue-304",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read the inherited global doctrine and the project deltas that EXIST (docs/agents/ORCHESTRATOR_CONTEXT.md is present; GLOSSARY.md and engine-config.json are not - record the substitution). There is no Cartographer packet: this repo has no docs/architecture/ at all, so orientation is DEGRADED and the substitutes are named in .agent-work/issue-304/MISSION_FRAME.md. Read .agent-work/issue-304/PLAN_CRITIC_DISPOSITION.md - it carries five verified BLOCKERs against the first draft of this plan and the fixes are already folded into the gates below. Confirm intent and scope against LAUNCH_ORDER-304, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context loaded with the degraded-map substitution recorded; plan intent and scope confirmed against the launch order; critic dispositions read (DELIBERATE EXCEPTION: this is a check:null attestation in a plan that otherwise requires mutation-falsifiable checks - engine convention for a context step, stated rather than left silent)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context loaded; degraded-map substitution recorded in MISSION_FRAME.md; intent and scope confirmed against LAUNCH_ORDER-304; all 15 critic dispositions read and both Admiral amendments folded in."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "resolver, receipt, and reported degraded mode: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. Build scripts/map_orient.py with subcommands `orient` and `verify-orientation`: an ordered entrypoint candidate list where RESOLVED requires CITABLE CONTENT rather than mere file existence; a receipt at .agent-work/<work-id>/map-orientation.json with a stated schema; and an exit-code vocabulary that sits ABOVE the argparse/traceback/no-shell collision range (argparse uses 2, tracebacks 1, the engine can synthesize 127). Add the <repo-root> absolute placeholder to init_work_area.resolve_spine and its guard. REQUIRED: tests/test_map_orient.py carrying the mutation floor - the partial-fill matrix (each required degraded field omitted in turn, each asserting refusal, so an all->any mutation fails all three arms) and the could-not-look-versus-no-map discriminator pair differing in exactly one bit. ALSO REQUIRED: tests/test_mutation_floor.py, which mechanically APPLIES each named mutation to a copy of the module, runs the floor, and asserts it goes RED - falsifiability must be demonstrated by execution, not asserted by the party being graded (critic finding 3). ADMIRAL AMENDMENT 1, LOAD-BEARING: the harness MUST ASSERT THE MUTATION APPLIED **BEFORE** it asserts red. Assert the post-mutation source differs from the original (and that the intended replacement is present); if the substitution did not land, FAIL LOUDLY as a harness error rather than reporting a killed mutant. A mutation that silently fails to match produces a green baseline that is INDISTINGUISHABLE from a killed mutant - commander-299 hit exactly this with a non-matching sed this epic. Without the applied-assertion, the check that verifies falsifiability is ITSELF unfalsifiable. Prove you changed the thing, THEN compare (#337).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "none - first gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "none - first gate"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Windows: write every file with encoding='utf-8', newline='\\n'.",
+        "Run the suite with `python -m pytest` (py has no pytest; local python is 3.14 vs CI 3.12 - avoid 3.13+ only APIs such as Path.read_text(newline=...)).",
+        "Never hand-edit spine/survey JSON - the engine owns that state.",
+        "Two-bin rule: machinize the mechanizable; what is not mechanizable stays prose. No third bin.",
+        "A local green is NEVER the merge gate - merge gates on the CI check exit code read at source."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/map_orient.py (new) - `orient` + `verify-orientation`",
+          "scripts/init_work_area.py:resolve_spine - gains the <repo-root> placeholder and its unresolved-placeholder guard"
+        ],
+        "capability": [
+          "capability: resolve a canonical map entrypoint and REPORT resolved-vs-degraded through an exit-code vocabulary"
+        ],
+        "constraint": [
+          "constraint: command-check stdout is DISCARDED by the engine - the exit code is the only signal that reaches the spine (verified at checklist_engine.py _check_condition, payload is {cmd,exit,shell})",
+          "constraint (CORRECTED per critic finding 10): command checks receive no cwd and therefore INHERIT THE LAUNCHER'S cwd. Relative checks are FRAGILE, not broken - the 5 already-shipped relative checks work because the launcher is normally at the repo root. <repo-root> is a robustness fix, NOT a bug fix for a broken mechanism. Do not claim otherwise.",
+          "constraint (critic finding 13): exit codes 1 and 2 COLLIDE with argparse usage-error (2) and unhandled traceback (1), and the engine can synthesize 127. The semantic vocabulary MUST sit above the collision range.",
+          "assumption: degraded is the COMMON case, not the edge case",
+          "constraint (ADMIRAL AMENDMENT 1): a mutation harness must assert the mutation APPLIED before asserting red. A no-op mutation and a killed mutant both yield green; only the applied-assertion separates them."
+        ],
+        "decision": [
+          "decision:degraded-mode-is-the-common-case @grade: settled/human - now evidence-supported, this repo has no docs/architecture/",
+          "decision pressure: the candidate-path list and what counts as RESOLVED (citable content, never mere existence)"
+        ],
+        "evidence": [
+          "claim: a false RESOLVED on a scaffolded-but-empty index.md is strictly worse than an honest DEGRADED",
+          "claim: 'could not look' must be a different exit code from 'looked and found nothing' (#265)",
+          "claim: the mutation floor fails loudly when a substitution does not match, rather than reporting a killed mutant"
+        ],
+        "confidence_flags": [
+          "no map exists in this repo - every structural anchor here is source-derived, not map-derived"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g1-result.md",
+            "summary": "map_orient.py built with orient + verify-orientation, frozen exit vocabulary 0/10/11/12/13 clear of argparse(2) and traceback(1); repo-root placeholder added; mutation floor executes and asserts APPLIED before red. Verified independently by the commander: 80 passed, self-test OK, DEGRADED-NO-MAP exit 10 in this repo, RESOLVED against f1Brainz. Three deviations adjudicated and accepted."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "resolver, receipt, and reported degraded mode: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a subagent invoking constellation-reviewer. The handoff MUST ask the one question the #300 finding says handoffs never ask: CAN THIS CHECK FAIL? Require the reviewer to (a) devise at least one mutation of its own that is NOT in the shipped mutation floor, (b) apply it, (c) run the suite, and (d) report whether it went red. A reviewer that reports conformance-to-handoff without attempting a mutation has not completed this gate. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and independently verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned, including an independently-devised mutation and whether the suite caught it",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "path": ".agent-work/issue-304/crew-handoffs/g1-review-result.md",
+            "summary": "BLOCK on B1: pin_substitutes writes content_hash unreadable for an unreadable substitute and is_filler(unreadable) is False, so a nonexistent substitute path discharges the degraded record at exit 0. Reproduced independently by the commander. Reviewer's own mutation M4 (not any -> not all on filler detection) SURVIVED because every filler test uses single-element lists where any and all are identical."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "resolver, receipt, and reported degraded mode: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate - a command-kind postcondition is satisfied by `advance` (which re-runs the check), NOT by `attest`. BLOCK: send back for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map_orient resolves, reports degraded through a collision-free exit-code vocabulary, and its degraded check is demonstrated falsifiable by an executed mutation; init_work_area's existing tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-304/crew-handoffs/g1-review-result-2.md",
+            "summary": "Fresh APPROVE after rework, superseding the BLOCK. Reviewer re-ran M4 (now killed), devised a new mutation against the B1 fix itself, and confirmed the applied-before-red count delta still holds. 2 triage candidates, non-blocking."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_init_work_area.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-304/crew-handoffs/g1-review-result-2.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "wire the contract at context and plan: implement",
+      "imperative": "Fill the handoff and dispatch constellation-implementer. Add `verify-frame` to scripts/map_orient.py. WIRING IS EXPLICIT (critic finding 2): `verify-orientation` is wired at the CONTEXT step as new postcondition c2; `verify-frame` is wired at the PLAN step. verify-frame must NOT run at context - no frame exists there yet, and resolving that ambiguity the cheap way ('absent frame at context passes') would destroy the anti-vacuity property. An ABSENT frame at PLAN refuses. In DEGRADED, the frame's anchors are checked against the substitutes HASH-PINNED in the context receipt, so the common case is checked against a committed prior declaration rather than a same-breath assertion (critic finding 4). Register the script in install_constellation.py SKILL_SCRIPT_BUNDLES. Assert `orient` never prints an anchor id.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 integrated: the resolver, its receipt schema, and the executed mutation floor exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 integrated: resolver, receipt schema and executed mutation floor exist at commit 6d35fe2; re-review verdict 8/8 APPROVE, 0 blockers, in g1-review-2/review.json"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
+        }
+      ],
+      "constraints": [
+        "Windows: write every file with encoding='utf-8', newline='\\n'.",
+        "Run the suite with `python -m pytest` (py has no pytest; local python is 3.14 vs CI 3.12 - avoid 3.13+ only APIs such as Path.read_text(newline=...)).",
+        "Never hand-edit spine/survey JSON - the engine owns that state.",
+        "Two-bin rule: machinize the mechanizable; what is not mechanizable stays prose. No third bin.",
+        "A local green is NEVER the merge gate - merge gates on the CI check exit code read at source."
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander/templates/COMMANDER_SPINE.template.json tasks.context (new c2 -> verify-orientation) and tasks.plan (new check -> verify-frame)",
+          "scripts/install_constellation.py SKILL_SCRIPT_BUNDLES"
+        ],
+        "capability": [
+          "capability: prove the map INFORMED the plan by set-membership of frame anchors against an independently-derived inventory"
+        ],
+        "constraint": [
+          "constraint: wiring is at context and plan ONLY - reconcile is explicitly out of ratified scope",
+          "constraint: `orient` must NEVER print an anchor id, or the citation check becomes self-satisfying",
+          "constraint (critic finding 4): in DEGRADED the substitutes must be HASH-PINNED at context, so the plan-step check compares the frame against a COMMITTED PRIOR declaration rather than a same-breath assertion by the same agent. The common case must not get the weaker oracle."
+        ],
+        "decision": [
+          "decision:contract-at-context-and-plan @grade: settled/human"
+        ],
+        "evidence": [
+          "claim: a frame whose anchors are source paths is a frame cut from code and must be refused",
+          "claim: an ABSENT frame must REFUSE, never vacuously pass"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g2-result.md",
+            "verdict": "COMPLETE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "wire the contract at context and plan: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a subagent invoking constellation-reviewer. The handoff MUST ask the one question the #300 finding says handoffs never ask: CAN THIS CHECK FAIL? Require the reviewer to (a) devise at least one mutation of its own that is NOT in the shipped mutation floor, (b) apply it, (c) run the suite, and (d) report whether it went red. A reviewer that reports conformance-to-handoff without attempting a mutation has not completed this gate. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT at .agent-work/issue-304/crew-handoffs/g2-result.md, verified fresh via run_crew.py --verify-result; rework slice m7 appended and closed at 9d57e9b"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned, including an independently-devised mutation and whether the suite caught it",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g2-review-result-2.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "wire the contract at context and plan: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate - a command-kind postcondition is satisfied by `advance` (which re-runs the check), NOT by `attest`. BLOCK: send back for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT round 2 at .agent-work/issue-304/crew-handoffs/g2-review-result-2.md, verdict APPROVE, 0 findings; round 1 BLOCK at g2-review-result.md preserved as a separate file"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the contract is wired - verify-orientation at context, verify-frame at plan - as engine-checked command postconditions with an absolute root, and every test that PINS the edited template still passes (critic finding 8)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g2-review-result-2.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_map_orient.py tests/test_mutation_floor.py tests/test_context_manifest.py tests/test_context_declaration_lint.py tests/test_context_determinism.py tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "pre-register, delete, then RUN: implement",
+      "imperative": "STEP 1 - PRE-REGISTER. Write TRIPWIRES.md naming one falsifiable prediction per deletion, and COMMIT IT BEFORE any deletion. Git history is the timestamp proof: it is tamper-evident and needs no clock (the episode writer is deliberately clock-free). Do NOT file episodes yet - `create` requires all five agent-supplied kinds including observed-behavior, and inventing an observation before observing is exactly what this pathway forbids (critic finding 5). STEP 2 - DELETE, in a separate commit: the 86-word dead-path block in COMMANDER_SPINE tasks.context.imperative; the 86-word block in EXECUTE_PLAN tasks.e0-context.imperative; and retarget the pathless 'the current map' phrasing at context and plan. CRITICAL: the phrase 'no docs/agents/ overlay at all' occurs TWICE in tasks.context.imperative - the FIRST is the load-bearing substitute-and-record rule and MUST SURVIVE; delete only the second, inside the dead-path block. STEP 3 - RUN, concretely: materialize a fresh Commander spine in THIS repo via init_work_area.py under a scratch work-id, drive it through init and context with the engine, and capture the engine's own output. Record each observed outcome in .agent-work/issue-304/TRIPWIRE_OUTCOMES.md against the pre-registered prediction by name, citing the pre-registration commit SHA. STEP 4 - FILE the episodes via scripts/apply_episode_delta.py (the ONLY write path), each with expected-behavior = the pre-registered prediction and observed-behavior = what actually happened. STEP 5 - Add tests/test_prose_deletions.py asserting the deleted strings are ABSENT from the shipped templates AND that the surviving substitute-and-record rule is still PRESENT. STEP 6 - Write the corpus-size / per-role-surface trend snapshot to .agent-work/issue-304/TREND_SNAPSHOT.md, derived from git, with a stated schema. ADMIRAL AMENDMENT 2: the snapshot MUST NAME ITS CONSUMER and its successor. The consumer is THE NEXT SNAPSHOT - a baseline's whole purpose is a comparison that does not exist yet, which is legitimate unlike an unread report. State that explicitly, state WHEN the second snapshot is expected (at epic-298 close), and state the retire-if-unread rule: a baseline with no scheduled successor is decoration wearing a measurement's clothes. Same standard already applied to the REPORT-ONLY ordering audit, whose consumer is commander-299's rig during this epic and NOBODY after it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 integrated: the contract is wired, so the prose it supersedes can be deleted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 integrated: verify-orientation wired at context c2 and verify-frame at plan c6 on the absolute repo-root placeholder, reviewer APPROVE round 2, close criteria 312 passed 435 subtests plus self-test exit 0 re-run by the Commander"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
+        }
+      ],
+      "constraints": [
+        "Windows: write every file with encoding='utf-8', newline='\\n'.",
+        "Run the suite with `python -m pytest` (py has no pytest; local python is 3.14 vs CI 3.12 - avoid 3.13+ only APIs such as Path.read_text(newline=...)).",
+        "Never hand-edit spine/survey JSON - the engine owns that state.",
+        "Two-bin rule: machinize the mechanizable; what is not mechanizable stays prose. No third bin.",
+        "A local green is NEVER the merge gate - merge gates on the CI check exit code read at source."
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander/templates/COMMANDER_SPINE.template.json tasks.context.imperative",
+          "skills/commander/templates/EXECUTE_PLAN.template.json tasks.e0-context.imperative",
+          "TRIPWIRES.md (new, committed BEFORE the deletion commit) + episodes/active/ via scripts/apply_episode_delta.py"
+        ],
+        "capability": [
+          "capability: deletion PLUS run - predictions pre-registered by commit, then the affected workflows actually run and each outcome recorded against its prediction"
+        ],
+        "constraint": [
+          "constraint (critic finding 6): the phrase 'no docs/agents/ overlay at all' occurs TWICE in tasks.context.imperative. The FIRST occurrence is the load-bearing substitute-and-record rule and MUST SURVIVE. Only the second, inside the dead-path block, is deleted. A naive string delete removes degraded-mode intake from the Commander spine.",
+          "constraint (critic finding 7, CORRECTED): each dead-path block is 86 words; 172 total across the two templates. The earlier figures of 57/55/112 were wrong - they counted only sentences literally containing 'engine-config' and dropped each block's trailing sentence.",
+          "constraint: the bare config_ref LINE stays in all 11 templates; only the prose about it dies",
+          "constraint (critic finding 5): the episode store has NO 'confirmed' lifecycle-standing, so a held tripwire is indistinguishable from an unchecked one. Pre-registration is therefore carried by a COMMIT, not by the store.",
+          "constraint (ADMIRAL AMENDMENT 2): every measurement artifact names its consumer and its successor, or it is retired rather than left as decoration."
+        ],
+        "decision": [
+          "decision:tripwires-are-episodes @grade: settled/human - RATIONALE FALSIFIED, mechanism floated to the Admiral; see PLAN_CRITIC_DISPOSITION.md finding 5",
+          "decision:317-folds-in @grade: settled/human - resolves by SUBTRACTION, leaving Charter as the single statement; no Charter edit"
+        ],
+        "evidence": [
+          "claim: deleting Commander's dead-path prose removes the corpus contradiction with Charter without adding arbitration prose",
+          "claim (honest-null candidate): if the superseded prose was doing nothing, the run outcome shows no change - that is success, not failure"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g3-result.md",
+            "verdict": "COMPLETE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "pre-register, delete, then RUN: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a subagent invoking constellation-reviewer. The handoff MUST ask the one question the #300 finding says handoffs never ask: CAN THIS CHECK FAIL? Require the reviewer to (a) devise at least one mutation of its own that is NOT in the shipped mutation floor, (b) apply it, (c) run the suite, and (d) report whether it went red. A reviewer that reports conformance-to-handoff without attempting a mutation has not completed this gate. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT at g3-result.md verified fresh; deletion and T4 survivor verified by the Commander"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned, including an independently-devised mutation and whether the suite caught it",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g3-review-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "pre-register, delete, then RUN: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate - a command-kind postcondition is satisfied by `advance` (which re-runs the check), NOT by `attest`. BLOCK: send back for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT at g3-review-result.md, APPROVE, 0 blockers"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "predictions pre-registered in a commit that precedes the deletion commit; superseded prose deleted while the substitute-and-record rule survives; the affected workflow actually run and each outcome recorded against its named prediction; episodes filed with real observations; trend snapshot filed",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_prose_deletions.py tests/test_context_declaration_lint.py tests/test_context_manifest.py tests/test_explorer_templates.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g3-review-result.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_prose_deletions.py tests/test_context_declaration_lint.py tests/test_context_manifest.py tests/test_explorer_templates.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "dogfood the edited spine, then close out: implement",
+      "imperative": "Materialize the EDITED COMMANDER_SPINE template through scripts/init_work_area.py into a scratch work-id in THIS repo - which has no docs/architecture/ and is therefore the degraded common case - and drive it through the engine far enough to execute the new context command check end to end. Confirm it REPORTS degraded rather than silently passing, and that it does not deadlock. Capture the engine output as evidence. Then run the FULL suite (not a filtered subset) and record the result. Merge still gates on the CI check exit code read at source, never on this local green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 integrated: deletions made, workflows run, outcomes recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 integrated: 172 words deleted across both templates, T4 survivor intact at offset 262, 5 episodes filed, reviewer APPROVE, verification 111 passed 69 subtests re-run by the Commander"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
+        }
+      ],
+      "constraints": [
+        "Windows: write every file with encoding='utf-8', newline='\\n'.",
+        "Run the suite with `python -m pytest` (py has no pytest; local python is 3.14 vs CI 3.12 - avoid 3.13+ only APIs such as Path.read_text(newline=...)).",
+        "Never hand-edit spine/survey JSON - the engine owns that state.",
+        "Two-bin rule: machinize the mechanizable; what is not mechanizable stays prose. No third bin.",
+        "A local green is NEVER the merge gate - merge gates on the CI check exit code read at source."
+      ],
+      "anchors": {
+        "structural": [
+          "the edited COMMANDER_SPINE template, materialized through scripts/init_work_area.py into a scratch work-id IN THIS REPO"
+        ],
+        "capability": [
+          "capability: the contract survives a real end-to-end engine run in the degraded common case"
+        ],
+        "constraint": [
+          "constraint (critic finding 12): this repo IS the degraded case. Exercising the new checks here is free and is the highest-value integration test available.",
+          "constraint (critic finding 9): merge gates on the CI exit code read at source, never on a local green."
+        ],
+        "decision": [],
+        "evidence": [
+          "claim: a materialized spine carrying the new command checks advances in a repo with no map, and REPORTS degraded rather than silently passing"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g4-result.md",
+            "verdict": "COMPLETE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "dogfood the edited spine, then close out: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a subagent invoking constellation-reviewer. The handoff MUST ask the one question the #300 finding says handoffs never ask: CAN THIS CHECK FAIL? Require the reviewer to (a) devise at least one mutation of its own that is NOT in the shipped mutation floor, (b) apply it, (c) run the suite, and (d) report whether it went red. A reviewer that reports conformance-to-handoff without attempting a mutation has not completed this gate. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT at g4-result.md verified fresh"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned, including an independently-devised mutation and whether the suite caught it",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g4-review-result-2.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "dogfood the edited spine, then close out: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate - a command-kind postcondition is satisfied by `advance` (which re-runs the check), NOT by `attest`. BLOCK: send back for rework or raise a blocker. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT rounds 1 and 2 both APPROVE, 0 blockers"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the edited spine materializes and its new checks execute end-to-end in a real degraded repo, reporting degraded rather than passing silently; the FULL suite is green locally (which is evidence, not the merge gate)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-304/crew-handoffs/g4-review-result-2.md",
+            "verdict": "APPROVE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-01T22:50:46.487808+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer returned a complete result driven through its own engine plan. I re-verified rather than accepting: 80 passed on the required three-file suite, self-test OK, live orient in this repo returns DEGRADED-NO-MAP at exit 10, and it RESOLVES against f1Brainz's real map - both directions exercised. Exit vocabulary 10/11/12/13 sits clear of argparse 2 and traceback 1, confirmed by direct invocation. Amendment 1 was vindicated in fact: the implementer found assertIn would have passed with nothing substituted because mutation 2's replacement text already occurs elsewhere in the module, so the applied-assertion uses a strict count delta.",
+      "mechanical": false,
+      "ts": "2026-08-01T22:50:58.898864+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Reviewer completed the mutation requirement rather than checking conformance: it devised M4 outside the shipped three, applied it, and reported honestly that it SURVIVED. That is a real gap in the floor - single-element filler lists make any and all identical. It also verified the shipped three are behaviorally earned and confirmed the count-delta claim is stronger than reported (both of mutation 2's substitutions have pre-existing replacement text). Verdict BLOCK on a content-level defect I reproduced myself.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:06:07.804791+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Reviewer APPROVE after rework of B1/B2/B3, superseding its own BLOCK. I re-verified independently rather than on report: nonexistent substitute now exits 10 while a real substitute still exits 0 (positive control checked deliberately - a fix that refused everything would produce the first line too), M4 pinned with multi-element filler cases so any and all diverge, required suite 91 passed, self-test exit 0, FULL suite exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-01T23:28:34.002440+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "Attempt-1 died on a session usage limit; attempt-2 audited its unreviewed work rather than trusting it and found the m3 oracle was dead code - probe_fallbacks/classify_substitute/substitute_label existed, were self-tested, and were never called from cmd_orient, so every receipt was green while recording none of the independent fallback oracle. Fixed, plus a self-test that was pinning a lowercasing defect in the undeclared-substitute refusal. I reproduced the evidence myself: 303 passed, 433 subtests, self-test exit 0. Three of five TDD-red conditions were reconstructed against 6d35fe2 rather than observed in order - that proves the tests discriminate, not TDD authoring order, and the reviewer must devise a mutation outside the shipped set.",
+      "mechanical": false,
+      "ts": "2026-08-02T02:47:51.280585+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "Round 1 returned BLOCK on one finding - substitute_label reachable only from self_test - found by a reviewer-devised mutation plus an AST reachability pass with self_test blocked as a traversal node, which is the mechanism that had laundered the dead code as live. I adjudicated wire-it over delete-it and explicitly refused documenting it as a decoder. Round 2 APPROVE, 0 findings, on three further mutations of its own against the new output path, all red. Across both rounds the reviewer devised seven mutations outside the shipped set, attacked the absent-frame refusal with 12 variants for zero vacuous passes, reproduced all three reconstructed reds, and proved the no-3.13-API claim under py 3.12.13. I re-ran the close criteria in my own hands: 312 passed, 435 subtests, self-test exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:38:29.741686+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "Verified in my own hands, not on report: the asymmetric wiring reads verify-orientation at context c2 with no override policy and verify-frame at plan c6 with a human-authority override, both using the absolute repo-root placeholder rather than a relative path, read straight from the template JSON. Close criteria re-run by me at 312 passed, 435 subtests, self-test exit 0. The rework call site is at map_orient.py:958, outside its own def and outside self_test (which spans 1306-1637 after the edit), with tests asserting both provenance labels in real subprocess stdout including a negative case. Reviewer APPROVE round 2 after a correct BLOCK round 1.",
+      "mechanical": false,
+      "ts": "2026-08-02T03:42:08.200167+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "Deletion verified in my hands, not on report: the overlay phrase is down to ONE occurrence at offset 262, inside the load-bearing substitute-and-record sentence, and both dead-path blocks are gone from both templates. TRIPWIRES.md is byte-identical to its pre-registration - git diff 1662b90 HEAD on that path is empty - so the predictions did not move after the outcome was known. Five episodes filed. Three honest nulls came back rather than a clean sweep: T3's mapped-repo clause scored UNTESTED because no mapped repo was reachable, T5 NOT DETERMINABLE and recorded as the measurement gap the pre-registration explicitly asked for, and T1 held with a named near-miss. My own handoff was wrong about T3 - g2 had not retargeted the plan-side phrase - and the implementer verified byte-identity across all eight commits rather than concluding already-done. One deviation needs the reviewer: two out-of-scope test files pinned phrases OF the deleted block as sentinels and were re-pointed, which is the changed-a-test-to-green shape.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:10:15.091769+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "APPROVE, 0 blockers, 4 minor, 3 triage. The reviewer answered can-this-check-fail with four mutations of its own against the edited template - a class the shipped nine never touch, since those all target map_orient.py. The decisive one replaced the whole context imperative with a 53-char stub and showed the 5 absence tests stay GREEN while the 3 presence tests go RED, which is direct proof the deletion pin is two-directional rather than the one-directional pin this epic keeps finding. The sentinel re-point was ruled a forced re-point, not a test changed to green, by reconstructing the moment of decision: exactly 2 failures in 1538 tests, necessary and sufficient, assert totals unchanged at 154 and 33. Pre-registration intact by blob identity and 6 of 6 ancestry checks. All three honest nulls ruled honest and all five episodes ruled to have observed something.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:36:38.044047+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "Ran the verification myself: 111 passed, 69 subtests. Deletion verified independently - the overlay phrase is down to one occurrence at offset 262 inside the load-bearing sentence, both dead-path blocks gone, TRIPWIRES.md byte-identical to its pre-registration. One adjudication landed after the review: the trend snapshot bound its successor to the next epic that changes skills, while the ratified Admiral amendment names epic-298 close. I ruled for the ratified date and had the implementer keep its broader rule as the standing convention thereafter, committed at 4d95b6c. That divergence was my handoff under-specifying the amendment, not an implementer defect.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:37:06.574357+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-implement",
+      "why": "Dogfooded from the materialized template in the degraded common case, which is what g3 did not isolate. Exit path 12 then 10 then 10 then 0: no receipt refuses, a receipt present but UNDISCHARGED still refuses and enumerates all three absent map candidates by path, and one orient re-run with substitutes, unmapped and escalation discharges it. The scratch spine's journal verbs are advance, attest, start - no waive, no force - so the gate is dischargeable honestly rather than only bypassable. Full suite 1538 passed, 2 skipped, 481 subtests, exit 0, local only; CI pins 3.12 and remains the merge gate. Zero product-code changes. Two findings reported and deliberately not fixed, one of which - a hash-pinned on-disk substitute labelled not corroborated by the filesystem - undercuts this issue's own honest-reporting deliverable in its wording and goes to the reviewer for a severity.",
+      "mechanical": false,
+      "ts": "2026-08-02T04:57:21.060088+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g4-review",
+      "why": "APPROVE, no blockers, on two wiring mutations the reviewer devised itself - a seam neither the ten in the mutation floor nor g3's four prose mutations touch. R-A pointed the context check at a nonexistent subcommand against a FULLY DISCHARGED receipt and the engine refused at exit 1, then reverting that one token on the same spine with the same receipt reached context complete: one bit, opposite outcome. R-B neutered verify-orientation to always return OK and the spine sailed to context complete with NO receipt on disk at all, which is exactly what a contract that did nothing would have done and exactly what g4 did not do. Full suite reproduced independently at 1538 passed, 2 skipped, 481 subtests. I took the MAJOR wording finding as fix-now rather than deferring it, on the reviewer's own correction that zero tests pinned the sentence rather than three; re-confirmed clean.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:34:10.392259+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g4-integrate",
+      "why": "Full suite run in my own hands: 1538 passed, 2 skipped, 481 subtests, exit 0 - the same numbers the implementer and the reviewer each got independently. Local only; CI pins 3.12 and remains the merge gate. Both g4 review rounds APPROVE with no blockers. The scope gap is stated rather than papered over: g4 exercises the DEGRADED arm only, and T3's mapped-repo clause stays unfalsified because this repo has no docs/architecture and f1Brainz is off-limits since orient writes a receipt into its root.",
+      "mechanical": false,
+      "ts": "2026-08-02T05:41:28.057901+00:00"
+    }
+  ]
+}

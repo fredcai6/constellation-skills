@@ -1,0 +1,261 @@
+{
+  "work_id": "issue-418-g4-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2-demo",
+    "m3-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the relevant packet. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded implementer/inherited/project doctrine and complete frozen G4 handoff/execute imperative. Both frozen hashes matched before reading inputs; full archive hash inventory and initial dirty snapshot were persisted before verifier/demo mutation. Scope, exclusions, TDD mode, deny harness, acceptance evidence, stop conditions and return path are complete."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Build strict demo and acceptance verifiers",
+      "imperative": "TDD first: add focused tests and the two strict offline verifier scripts before any demo directory/artifact exists. Prove the exact demo-verifier command refuses missing artifacts. Cover schemas, derived metrics/dispositions, acceptance items, deny receipt, frozen hashes, and archive protection.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "frozen hashes match, before inventories captured, context and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Frozen hashes matched exactly; complete archive inventory and initial tracked/untracked snapshot persisted; complete G4 contract loaded."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/verifiers precede demo artifacts and exact missing-artifact command exits 1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Added both focused test modules before verifier scripts: initial run failed 7 tests because both scripts were absent. Added strict offline verifiers while demo directory remained absent; focused tests passed 7 tests/3 subtests. Exact command uv run python scripts/verify_epic_418_demo.py --work-id issue-418-iterative-planning then exited 1: REFUSED demo directory missing."
+        },
+        {
+          "id": "c2",
+          "statement": "focused verifier tests pass",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_epic_418_demo.py tests/test_iterative_planning_acceptance.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "strict fail-fast interfaces",
+        "no demo artifacts before verifier RED",
+        "no network/tracker writes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_epic_418_demo.py tests/test_iterative_planning_acceptance.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-demo": {
+      "id": "m2-demo",
+      "title": "Generate the offline Epic 418 demonstration",
+      "imperative": "Generate machine-readable packets, five required Markdown artifacts, and stamped zero-call deny receipt through shipped G1/G2 seams. Derive every comparison metric/disposition from frozen inputs and packets. Run the identical demo-verifier command GREEN plus iterative acceptance verifier.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "strict verifiers exist and missing-artifact RED captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Verifier tests and scripts precede demo artifacts; exact missing-demo RED captured with exit 1."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "identical demo-verifier command passes",
+          "check": {
+            "kind": "command",
+            "command": "uv run python scripts/verify_epic_418_demo.py --work-id issue-418-iterative-planning"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-demo-1"
+        },
+        {
+          "id": "c2",
+          "statement": "iterative acceptance verifier passes all ten items",
+          "check": {
+            "kind": "command",
+            "command": "uv run python scripts/verify_iterative_planning_acceptance.py --work-id issue-418-iterative-planning"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-demo-2"
+        }
+      ],
+      "constraints": [
+        "explicit deny harness",
+        "counterfactual initial cut",
+        "1-3 issues is hypothesis not quota",
+        "archive read-only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-demo-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python scripts/verify_epic_418_demo.py --work-id issue-418-iterative-planning",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-demo-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python scripts/verify_iterative_planning_acceptance.py --work-id issue-418-iterative-planning",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-closeout": {
+      "id": "m3-closeout",
+      "title": "Run corpus acceptance and seal evidence",
+      "imperative": "Run registration rails, installer/corpus validation, full tests, JSON/diff/live-reference/no-network audits, archive before-after comparison, and initial-final dirty preservation. Compute reproducible whole-change ordinal digest/inventory/helper and write G4 IMPLEMENTER_RESULT. Advance then release last.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "offline demo and both verifiers are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Demo and iterative acceptance verifiers pass; relevant suite 169/449 and full suite 1662/636 are green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "complete G4 result/digest and acceptance evidence ready for independent review",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "G4 result, 39-path whole-change digest, archive/dirty audits, demo/acceptance verifiers, registration rails, relevant 169/449, and full 1662/636 evidence are complete."
+        }
+      ],
+      "constraints": [
+        "no push, PR, commit, live issue, network write, or archive rewrite",
+        "preserve unrelated dirty changes",
+        "release final journal action"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g4-implement-20260806",
+    "status": "released",
+    "claimed_at": "2026-08-06T19:48:06.153373+00:00",
+    "last_heartbeat": "2026-08-07T01:48:27.968812+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T01:48:28.043443+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-06T19:50:09.811597+00:00",
+      "reason": "Instantiate the frozen G4 verifier-first demo, generation, and acceptance closeout gates under the user's confirmed epic authority.",
+      "authority": "human",
+      "ops": [
+        "rescoped m1",
+        "added m2-demo",
+        "added m3-closeout"
+      ]
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The proof must be artifact-driven and replayable: strict verifiers define the demo contract before generation, while frozen hashes and inventories isolate historical truth and inherited dirt.",
+      "mechanical": false,
+      "ts": "2026-08-06T19:50:23.518510+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "The verifier contract now owns frozen hashes, strict packets, derived comparison, archive preservation, deny receipt, and ten-item acceptance before any artifact can be accepted.",
+      "mechanical": false,
+      "ts": "2026-08-06T19:57:02.098809+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-demo",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-07T01:44:20.968635+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-closeout",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-07T01:48:27.968812+00:00"
+    }
+  ]
+}

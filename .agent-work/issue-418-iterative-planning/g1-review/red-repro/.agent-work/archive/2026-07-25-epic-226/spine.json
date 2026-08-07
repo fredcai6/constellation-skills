@@ -1,0 +1,355 @@
+{
+  "work_id": "epic-226",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "latitude",
+    "execute",
+    "closeout"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up epic work area",
+      "imperative": "Run: python scripts/init_work_area.py epic-226. Claim the engine session lease on this spine: <engine> claim --session-id admiral-epic-226 --claimed-by admiral --worktree . From here on, pass --session-id on every mutating engine call against this spine. Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/epic-226/ADMIRAL_LOG.md.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded and ADMIRAL_LOG created",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "latitude": {
+      "id": "latitude",
+      "title": "Confirm authorization and latitude with the human",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md and the Active section of .agent-work/LESSONS.md if present. In this context, load constellation-interrogator and settle the latitude contract with the human: epic intent and success shape (honest-null acceptability), checkpoint protocol (stop-and-present vs cleared-through), decision classes delegated vs surfaced, float-up routing for Commander user-decisions, comms style, budget/model parameters, pre-rulings, and contract expiry (time or event). Fill templates/LATITUDE_CONTRACT.template.md into .agent-work/epic-226/LATITUDE_CONTRACT.md. Decisions fitting no listed class are out-of-taxonomy and always escalate. Get explicit human confirmation of the contract.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "work area ready",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "latitude contract written with decision classes, float-up routing, and expiry",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "latitude contract confirmed by the human",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-latitude-1",
+          "attested": {
+            "evidence": "e-latitude-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Context Governor HARD trip (70%): engine REFUSES advance and instructs hand-off; all latitude conditions are already satisfied (p1/c1/c2 attested, user-decision evidence e-latitude-1). refresh-request e-latitude-2 filed. Not an authority blocker \u2014 a governed reach-up. Recorded via block ONLY because the Stop hook (spine_rail.py) does not recognize a pending refresh-request as an honest stop; see issue #235.",
+        "authority_needed": "human (Fred) \u2014 next actor is a FRESH Admiral session, not this one",
+        "next_action": "In a NEW session: py scripts/checklist_engine.py --file .agent-work/epic-226/spine.json current ; then claim --session-id admiral-epic-226-b --claimed-by admiral --worktree . --force --reason 'fresh Admiral after context-governor refresh' ; then resume latitude --reason 'fresh context' ; then advance latitude --why '<your understanding>' ; then drive execute per .agent-work/epic-226/STATE_NOTE.md (delegate the 4 remaining launch orders to subagents, provision 5 worktrees, gate isolation, dispatch wave 0).",
+        "resume_reason": "fresh Admiral, context reset"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-latitude-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "latitude contract confirmed",
+            "by": "Fred (human)",
+            "answer": "all good go. note my github actions are used up, so let's make the ci but only expect it to run locally",
+            "record": ".agent-work/epic-226-latitude/INTERROGATION_RECORD.json"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-latitude-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "latitude",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Run the epic",
+      "imperative": "Before entering this step and before EACH detached wave launch, (re)write the crash-resume state note at .agent-work/epic-226/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md \u2014 a wave dies to all three kill vectors, and the engine refuses to start execute until it is filled (precondition p2). Then do what the epic needs within the latitude contract: plan waves, dispatch one Commander per issue (each in an isolated worktree, each with a completed templates/LAUNCH_ORDER.template.md carrying pasted prior-wave verdicts, pre-rulings, honest-null clause, findings-file assignment, stop conditions, and inherited latitude), adjudicate what Commanders float (inside delegated classes as logged RULINGs, otherwise escalate), merge green reviewed PRs sequentially gated on check exit codes, and stop at wave checkpoints per the contract. Log every ruling, incident, wave launch, merge, and owned error in the ADMIRAL_LOG as it happens \u2014 an unlogged ruling didn't happen. Never run a Commander's issue yourself; never put two Commanders in one worktree. If the contract expires or the ground shifts under it, surface a contract-refresh decision before continuing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "latitude contract confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Latitude contract CONFIRMED by Fred 2026-07-24 at .agent-work/epic-226/LATITUDE_CONTRACT.md ('all good go' + PR-2b Actions amendment); interrogation record verified exit 0; latitude step advanced to complete."
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached wave launch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_state_note.py epic-226"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All 6 dispatchable issues dispositioned: #227 (PR 241), #228 (PR 240), #229 (PR 237), #230 (PR 238), #231 (PR 236), #232 (PR 246) all MERGED green. #233/#234 correctly never dispatched per contract. Plus #239 item 3 shipped (PR 245) on Fred's ruling. Zero PRs open."
+        },
+        {
+          "id": "c2",
+          "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, and errors logged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "ADMIRAL_LOG current through the last wave: every ruling, incident, wave launch, merge, admiral error, escalation and lesson signal logged as it happened, including two recovered incidents (cmd-228 stall, cmd-229 dropped verdict) and two self-owned errors (rev-229 wrongly stopped; cross-environment baseline quoted)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_state_note.py epic-226",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_state_note.py epic-226",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "closeout": {
+      "id": "closeout",
+      "title": "Lessons audit, reconcile, hygiene, acceptance",
+      "imperative": "The run cannot close with unrouted observations. 1) Compile a run brief (epic intent, project-customized templates per the TEMPLATES_MANIFEST diff, model tiers used) and dispatch a fresh-context subagent invoking constellation-lessons-auditor over the artifacts (ADMIRAL_LOG, AGENT_FEEDBACK entries, crew Workflow Feedback, closeout tables); give every returned candidate a routed disposition. LESSONS.md is a transitory inbox, not a playbook: an audit ends every lesson it reads \u2014 graduate its operative content into the permanent doc that owns it (a template, a skill doctrine section, a reference, or a code-fix issue) and then retire the lesson, or delete it with a reason; nothing audited stays active. Dispositions: graduate-and-retire to a named home, template delta, Charter nomination, constellation export (.agent-work/CONSTELLATION_FEEDBACK.md, carrying the originating lesson id in the entry's Lesson field for stable cross-run recurrence identity), lesson-inbox delta for between-audit staging, or drop-with-reason. Apply every lesson-inbox delta \u2014 including each graduation's paired retire op \u2014 only via python scripts/apply_lessons_delta.py with tick=true; never edit LESSONS.md directly. A lesson that graduates into project doctrine (.md / .template.*) needs authority=human on its apply op \u2014 reshaping doctrine is a human call. On an autonomous run with no reachable human, do NOT self-apply doctrine: surface it for the human's acceptance (they may say apply, or wait and re-observe) and defer with 'needs human' until then. Code-target graduations (test suite as proof) stay autonomous. Every banked lesson (add) carries a bank_reason \u2014 the reason it is worth re-observing rather than fixing now. When a graduation edits a shipped compact-format JSON template, edit the raw text surgically (never round-trip it through json.load/json.dump, which reflows the file and destroys blame) and re-validate with json.load afterward. 2) Append the epic retrospective to .agent-work/AGENT_FEEDBACK.md. 3) Hand the epic's net change to a constellation-cartographer subagent for architecture reconcile. 4) Hygiene: every branch merged or dispositioned, worktrees swept, ADMIRAL_LOG archived under .agent-work/archive/. 5) Present the epic summary and get user acceptance. Then release the lease: <engine> release --session-id admiral-epic-226.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute advanced to complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "lessons audit ran with fresh context; every candidate has a routed disposition (graduate-and-retire, template delta, Charter, export, inbox delta, or drop); lesson-inbox deltas applied via apply_lessons_delta.py only",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Fresh-context lessons auditor ran (consolidated APPROVE): 10 grounded candidates, ALL routed. Applied as 2 sequential deltas, both exit 0: Delta 1 = 19 ops (8 add, 7 confirm, 1 amend, 1 mention, 2 export); Delta 2 = the human-approved graduation of execute-the-advice-a-test-asserts-on into skills/_shared/global-crew.md. Sibling fork resolved as ONE lesson + a confirm, never two adds. 2 constellation lessons exported with recurrence-debt. 5 items queued for human review."
+        },
+        {
+          "id": "c2",
+          "statement": "epic retrospective recorded and feedback invariant passes",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_agent_feedback.py epic-226 --phase feedback"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-closeout-2"
+        },
+        {
+          "id": "c3",
+          "statement": "architecture reconciled for the epic's net change",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "constellation-cartographer subagent reconciled the epic's NET change across all 7 merged PRs (not per-issue). Reasoned map no-op UPHELD epic-wide (skill-source repo; it ships build_architecture_map.py rather than consuming it). All claimed capabilities/seams verified against merged code. Found 2 cross-PR drifts invisible to any single fenced Commander; BOTH FIXED and merged in PR #247."
+        },
+        {
+          "id": "c4",
+          "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "8 PRs all confirmed MERGED via gh. 7 local issue branches deleted. All 7 worktrees swept + pruned (git worktree list shows only main); wt-227's now-empty directory is held by a stale OS handle, git state clean. ADMIRAL_LOG, latitude contract, spine, verdicts and lesson candidates archived to .agent-work/archive/2026-07-25-epic-226/. Harvest MANIFEST.md written per the auditor's request."
+        },
+        {
+          "id": "c5",
+          "statement": "epic summary accepted by the human",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-closeout-1",
+          "attested": {
+            "evidence": "e-closeout-1",
+            "note": "Epic summary presented and accepted by Fred: 'good stuff, close it up' (2026-07-25), following a one-by-one walkthrough in which all five queued human-review items were dispositioned."
+          }
+        },
+        {
+          "id": "c6",
+          "statement": "no threshold-ripe lesson left unpaid across the epic (applied, exported, resolved-upstream, or deferred)",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-closeout-3"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-closeout-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "epic summary ACCEPTED",
+            "by": "Fred",
+            "quote": "good stuff, close it up",
+            "date": "2026-07-25",
+            "scope": "full epic-226 run: 8 PRs merged, wave 0 + wave 1 + closeout, plus all five queued human-review items dispositioned in a one-by-one walkthrough"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_agent_feedback.py epic-226 --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "latitude",
+      "statement": "Stop-hook spine_rail.py does not recognize a pending refresh-request as a sanctioned idle: it fires 'SPINE MID-FLIGHT ... do not end your turn' on a gate the engine itself has REFUSED to advance ('CONTEXT >= hard: refresh already requested -- hand off now; do not keep working'). Two mechanisms in the same system give opposite orders at the governed reach-up seam. Fix: spine_rail.py should treat has_pending_refresh_request(cl, active_gate) as an honest-stop state and emit the hand-off instruction instead of the mid-flight nag. Its offered exits (block/waive) are both semantically wrong for a context refresh."
+    }
+  ],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "admiral-epic-226-b",
+    "status": "active",
+    "claimed_at": "2026-07-24T22:47:31.767714+00:00",
+    "last_heartbeat": "2026-07-25T09:46:26.733820+00:00",
+    "claimed_by": "admiral",
+    "worktree": ".",
+    "previous_session_id": "admiral-epic-226",
+    "takeover_reason": "fresh Admiral after context-governor refresh at latitude"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": "epic-226 = 6 dispatchable AFK issues (#227 A engine-answerability, #228 B py-launcher, #229 C CI gate, #230 D grade-lint, #231 E prototyper, #232 F hardening) + 2 HITL design threads (#233 G, #234 H) that are never dispatched. Only encoded edge: C blocks F. Dogfood run against constellation-skills itself, so closeout must include the collect_feedback.py sweep. Work area + log + lease all live.",
+      "mechanical": false,
+      "ts": "2026-07-24T22:27:57.620236+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "latitude",
+      "why": "Latitude contract CONFIRMED by Fred 2026-07-24 ('all good go' + PR-2b Actions amendment); interrogation record verified exit 0; contract read and held in fresh context. 6 dispatchable issues #227-#232, C blocks F, #233/#234 never dispatched. Cleared autonomous through wave 0.",
+      "mechanical": false,
+      "ts": "2026-07-24T22:47:51.247923+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "execute",
+      "why": "Wave 0 (5 issues) and wave 1 (#232) both built, reviewed, merged green. Main 83a31b1 -> f0b5991, 7 PRs merged, 0 open. Suite 905 -> 1048 passing, zero regressions; skip-guard exit 0; coverage 94% vs 90% floor. PR-1 self-hosting probes passed. All triage routed to #239/#242/#243/#244.",
+      "mechanical": false,
+      "ts": "2026-07-25T05:26:26.597050+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "closeout",
+      "why": "epic-226 complete. 8 PRs merged (#236,#237,#238,#240,#241,#245,#246,#247) plus #250; main 83a31b1 -> 4f4df11; suite 905 -> 1048 passing, zero regressions, engine coverage 91% -> 94% against a newly-installed 90% floor. Lessons audit ran fresh-context: 10 candidates all routed, 2 deltas applied, sibling fork resolved as one lesson + a confirm, human-approved doctrine graduation landed in global-crew.md (hand-verified after apply_lessons_delta reported success without editing). Architecture reconciled epic-wide: reasoned map no-op upheld, 2 cross-PR drifts found and fixed. Harvest completed BEFORE sweep; all 7 worktrees swept, branches deleted, log archived. Triage fully routed: #239, #242, #243, #244, #248, #249. Human accepted.",
+      "mechanical": false,
+      "ts": "2026-07-25T09:46:26.733820+00:00"
+    }
+  ]
+}

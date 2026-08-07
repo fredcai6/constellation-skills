@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "review",
+  "mechanical": {
+    "run": "issue-310",
+    "project": "constellation-skills",
+    "role": "commander-310",
+    "refusals": 7,
+    "spine-step": "review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-310-review@c494c0ece3bcb8813900f238dc590e2ca756962d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-310",
+    "generated_at": "2026-08-03T03:13:10Z"
+  }
+}

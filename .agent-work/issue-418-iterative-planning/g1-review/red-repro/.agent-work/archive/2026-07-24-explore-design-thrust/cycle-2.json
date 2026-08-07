@@ -1,0 +1,68 @@
+{
+  "work_id": "explore-design-thrust",
+  "cycle": "2",
+  "flavor": "refine",
+  "type": "survey",
+  "items": [
+    "c0-frame",
+    "x3",
+    "x4"
+  ],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame the cycle",
+      "imperative": "Human-directed cycle: harden the four consolidated packages by (a) scanning the superpowers skill library (upcoming challenger to Pocock) for relevant adoptable ideas, and (b) settling how skills/engine work can be made testable near-term. Flavor labeled refine (hardening current candidates); content set by the human directly. Also fed into package A this cycle: the hardcoded 'py' launcher keyword is not portable and burns agent tokens \u2014 make launcher resolution robust.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "human-directed: two research excursions + py-hardcode item into package A",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "x3": {
+      "id": "x3",
+      "title": "Excursion: superpowers competitor scan",
+      "imperative": "ONE question: what has the superpowers skill library shipped recently that is relevant to the four packages (engine answerability, step-back phase, slice-wise planning, conductor inversion), and what is worth adopting on merit? House stance: superpowers is a competitor, never cited as authority \u2014 ideas adopted on merit only; consolidation yes, prevention machinery no. Brief at excursions/x3-superpowers-BRIEF.md; background dispatch via run_crew.py; scoped nulls.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Superpowers scanned on merit: 4 adoptables (batched plan-conflict pre-flight; capability-escalation loop primitive; return-thin/write-fat contract; task-sizing heuristic + inline file-growth smell), 1 honest fork surfaced for C (static-fine-grained vs rolling-wave/regenerate), D risk named (teams-API instability made competitor back off controller model) + D constraint (recursive-delegation guard), B validated as differentiator (their gate blind to test adequacy). Board ideas 29-32 added.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "x4": {
+      "id": "x4",
+      "title": "Excursion: skill/engine testability near-term",
+      "imperative": "ONE question: what is the cheapest robust near-term way to make constellation skills and the engine testable \u2014 inventory what exists (engine tests, run_skill_eval.py, #136, #205), survey how others test agent skills, and recommend. Human constraints: the engine itself must be extremely robust; if full skill-testing is impractical, the weekly iterative cleanup may be good enough \u2014 say so honestly. Brief at excursions/x4-testability-BRIEF.md; background dispatch; scoped nulls.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Engine already robust: 906 tests/30s, 91% coverage, every verb exercised (fear falsified; assertion quality not audited). Ranked recs: CI on existing suite (A, ~1hr); launcher resolve-at-install (A-); engine hardening residue git-collector+property tests (B+); full eval matrix declined honestly (D as gate) -> eval-on-change with scripted-principal seam on first need; #205 cheap fix (B). Field three-layer model matched; gap is enforcement not methodology.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": null,
+    "findings": [],
+    "summary": "Cycle 2 (refine, human-directed): x3+x4 landed and harvested. Ideas 29-32 added; C fork (static vs regenerate) and D risk/constraint on record; B validated as differentiator; testability constraint resolved near-term (CI + launcher-at-install + eval-on-change); package A grew to a well-evidenced ~10-item one-fell-swoop batch. Board updated; awaiting human converge/cycle-3/down-select decision."
+  },
+  "triage_candidates": [],
+  "blockers": []
+}

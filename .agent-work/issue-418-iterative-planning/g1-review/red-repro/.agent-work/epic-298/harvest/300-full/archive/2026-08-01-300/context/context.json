@@ -1,0 +1,51 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": "6241c56ccda9cda53422ab3cecc1edbf168caa9c"
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": "b10abd32711f4579509c80e7376e9ea79806866c"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": null
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": null
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    },
+    {
+      "root": "durable",
+      "path": ".agent-work/LESSONS.md",
+      "rev": null
+    }
+  ],
+  "run": {
+    "work_id": "300",
+    "session_id": null,
+    "generated_at": "2026-08-01T14:49:13Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/constellation-skills-wt/298-300",
+      "durable": "C:/Programs/constellation-skills-wt/298-300"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/298-300"
+    }
+  }
+}

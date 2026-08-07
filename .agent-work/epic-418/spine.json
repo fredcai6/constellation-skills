@@ -1,0 +1,293 @@
+{
+  "work_id": "epic-418",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "latitude",
+    "execute",
+    "closeout"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up epic work area",
+      "imperative": "Run: py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/init_work_area.py epic-418. Claim the engine session lease on this spine: <engine> claim --session-id admiral-epic-418 --claimed-by admiral --worktree . From here on, pass --session-id on every mutating engine call against this spine. Create the ADMIRAL_LOG from templates/ADMIRAL_LOG.template.md at .agent-work/epic-418/ADMIRAL_LOG.md.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded and ADMIRAL_LOG created",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "work area .agent-work/epic-418/ scaffolded by init_work_area.py; ADMIRAL_LOG.md created from template with plan draft and the epic-267 stale-lease ruling"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "lease admiral-epic-418 claimed, claimed-by admiral, worktree . (main checkout, clean at 990712f)"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "latitude": {
+      "id": "latitude",
+      "title": "Confirm authorization and latitude with the human",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then docs/agents/ORCHESTRATOR_CONTEXT.md if present. In this context, load constellation-interrogator and settle the latitude contract with the human: epic intent and success shape (honest-null acceptability), checkpoint protocol (stop-and-present vs cleared-through), decision classes delegated vs surfaced, float-up routing for Commander user-decisions, comms style, budget/model parameters, pre-rulings, and contract expiry (time or event). Fill templates/LATITUDE_CONTRACT.template.md into .agent-work/epic-418/LATITUDE_CONTRACT.md. Decisions fitting no listed class are out-of-taxonomy and always escalate. Get explicit human confirmation of the contract.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "work area ready",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "init complete: .agent-work/epic-418/ scaffolded, spine.json instantiated, ADMIRAL_LOG.md created, lease admiral-epic-418 active"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "latitude contract written with decision classes, float-up routing, and expiry",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Contract written to .agent-work/epic-418/LATITUDE_CONTRACT.md with decision classes (incl. spec-deviation, threshold-regrade, pre-build branch points), float-up routing for decisions/queries/refresh-requests, permission pre-clearances for every delegated class, model tiers, pre-rulings, and expiry (wave-1 checkpoint or 72h)."
+        },
+        {
+          "id": "c2",
+          "statement": "latitude contract confirmed by the human",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-latitude-1",
+          "attested": {
+            "evidence": "e-latitude-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Context governor HARD trip at 19% (>= 15% band) refuses 'advance latitude'. Both postconditions are MET (c1 attested; c2 satisfied via e-latitude-1, Tommy's confirmation) - the gate needs only its advance, and the trip is the sole thing preventing it. A refresh-request is filed (e-latitude-2, seam=latitude, why_ref=w-1) per global-everyone.md reach-up, but attaching it does not unblock in-session: a genuine context refresh is required, which means a FRESH Admiral. This block exists because the stop rail does not recognise a filed refresh-request as a sanctioned idle - the #235-shape blindness this epic's own spec carries as an open thread, and which #425 is tasked with recording. Logging this as another live occurrence.",
+        "authority_needed": "human",
+        "next_action": "Tommy starts a fresh session and invokes /constellation-admiral. It re-claims lease admiral-epic-418, reads current, and reads .agent-work/epic-418/STATE_NOTE.md - which carries the settled state because the spine DIGEST is frozen stale by this same trip. It then resumes this gate and runs: advance latitude --why '<its own understanding>'. Do NOT re-run the latitude interrogation; the contract is confirmed and consolidated.",
+        "resume_reason": "Context refresh delivered by session compaction. Tommy: 'admirals just get compacted. you can keep control and rollin along.' The blocker was a governor HARD trip at 19% refusing advance; the compaction is the context refresh the refresh-request asked for, and the Admiral keeps the lease rather than handing to a fresh agent."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-latitude-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "latitude contract confirmed",
+            "verbatim": "agree with your contracts. one thing i want you and your subagents to be mindful of is scope growth. this is not a final step in a process. lets do what we need to do and no more. this doesn't mean be sloppy, but i am explicitly allowing you to not chase down every corner case. make the thing that needs to work, and if you have any concerns, just note it locally in comments and pass it up the chain",
+            "who": "Tommy",
+            "date": "2026-08-05",
+            "added": "standing scope-discipline ruling + blanket subagent-dispatch grant at all tiers"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-latitude-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "latitude",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Run the epic",
+      "imperative": "Before entering this step and before EACH detached wave launch, (re)write the crash-resume state note at .agent-work/epic-418/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md, or the bundled skills/workbench/templates/STATE_NOTE.template.md when the project has no .agent-work/templates/ overlay \u2014 a wave dies to all three kill vectors, and the engine refuses to start execute until it is filled (precondition p2). Then do what the epic needs within the latitude contract: plan waves, dispatch one Commander per issue (each in an isolated worktree, each with a completed templates/LAUNCH_ORDER.template.md carrying pasted prior-wave verdicts, pre-rulings, honest-null clause, findings-file assignment, stop conditions, and inherited latitude), adjudicate what Commanders float (inside delegated classes as logged RULINGs, otherwise escalate), merge green reviewed PRs sequentially gated on check exit codes, and stop at wave checkpoints per the contract. Log every ruling, incident, wave launch, merge, and owned error in the ADMIRAL_LOG as it happens \u2014 an unlogged ruling didn't happen. Never run a Commander's issue yourself; never put two Commanders in one worktree. If the contract expires or the ground shifts under it, surface a contract-refresh decision before continuing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "latitude contract confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Latitude contract CONFIRMED by Tommy 2026-08-05 ('agree with your contracts' + explicit subagent-dispatch grant + the added scope-discipline standing ruling). Recorded at .agent-work/epic-418/LATITUDE_CONTRACT.md, evidence e-latitude-1 on the latitude step, interrogation consolidated RESOLVED (verify_interrogation.py exit 0). latitude step is 'complete'."
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached wave launch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/verify_state_note.py epic-418"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, and errors logged",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {
+        "blocker": "Wave 0 complete and merged four-of-four (A cbd9aee, B c33d421, D e74fe55, G nine tracker refs); merged main green at 1688 passed / exit 0. This is the CONTRACT-MANDATED wave-0 checkpoint: the latitude contract's stop-and-present protocol requires presenting at every wave boundary, and the contract's own expiry is 'the wave-1 checkpoint or 72 hours' -- which is now. Wave 1 (C #421) is unblocked by B landing both fixes but MUST NOT launch on an expired contract. Three decisions are with Tommy: (1) refresh the contract, (2) E #423's batch confirm for the five closes #131 #285 #289 #298 #322, (3) the K2 cluster call, where the spec says K2 is 'consumed by workstream A' but 14 of its 15 issues are still open. This is a governed human checkpoint, not an abandonment.",
+        "authority_needed": "human",
+        "next_action": "Tommy answers the three decisions. Then: resume execute --reason '<his answers>' --session-id admiral-epic-418, execute E's five closes if confirmed, and launch wave 1 (C #421, Opus, full Commander, own worktree, launch order carrying the scope-discipline clause and B's pasted verdict). Read .agent-work/epic-418/STATE_NOTE.md first -- it carries the full wave-0 result and the do-not-re-derive list.",
+        "resume_reason": "Tommy answered the wave-0 checkpoint. Contract refreshed with one re-scope he ruled directly: wave 1 is NOT C #421 -- it is #440, finishing workstream A, because the goal is a working governor as soon as possible and #440 is the last thing between the governor and firing on real Constellation runs. K2 confirmed as its own cluster. E's five closes still await his batch confirm and do not block wave 1."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/verify_state_note.py epic-418",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/verify_state_note.py epic-418",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "closeout": {
+      "id": "closeout",
+      "title": "Lessons audit, reconcile, hygiene, acceptance",
+      "imperative": "The run cannot close with unrouted observations. 1) Compile a run brief (epic intent, project-customized templates per the TEMPLATES_MANIFEST diff, model tiers used) and dispatch a fresh-context subagent invoking constellation-lessons-auditor over the artifacts (ADMIRAL_LOG, AGENT_FEEDBACK entries, crew Workflow Feedback, closeout tables); give every returned candidate a routed disposition. LESSONS.md is a transitory inbox, not a playbook: an audit ends every lesson it reads \u2014 graduate its operative content into the permanent doc that owns it (a template, a skill doctrine section, a reference, or a code-fix issue) and then retire the lesson, or delete it with a reason; nothing audited stays active. Dispositions: graduate-and-retire to a named home, template delta, Charter nomination, constellation export (.agent-work/CONSTELLATION_FEEDBACK.md, carrying the originating lesson id in the entry's Lesson field for stable cross-run recurrence identity), lesson-inbox delta for between-audit staging, or drop-with-reason. Apply every lesson-inbox delta \u2014 including each graduation's paired retire op \u2014 only via py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/apply_lessons_delta.py with tick=true; never edit LESSONS.md directly. A lesson that graduates into project doctrine (.md / .template.*) needs authority=human on its apply op \u2014 reshaping doctrine is a human call. On an autonomous run with no reachable human, do NOT self-apply doctrine: surface it for the human's acceptance (they may say apply, or wait and re-observe) and defer with 'needs human' until then. Code-target graduations (test suite as proof) stay autonomous. Every banked lesson (add) carries a bank_reason \u2014 the reason it is worth re-observing rather than fixing now. When a graduation edits a shipped compact-format JSON template, edit the raw text surgically (never round-trip it through json.load/json.dump, which reflows the file and destroys blame) and re-validate with json.load afterward. 2) Append the epic retrospective to .agent-work/AGENT_FEEDBACK.md. 3) Hand the epic's net change to a constellation-cartographer subagent for architecture reconcile. 4) Hygiene: every branch merged or dispositioned, worktrees swept, ADMIRAL_LOG archived under .agent-work/archive/. 5) Present the epic summary and get user acceptance. Then release the lease: <engine> release --session-id admiral-epic-418.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "lessons audit ran with fresh context; every candidate has a routed disposition (graduate-and-retire, template delta, Charter, export, inbox delta, or drop); lesson-inbox deltas applied via apply_lessons_delta.py only",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "epic retrospective recorded and feedback invariant passes",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/verify_agent_feedback.py epic-418 --phase feedback"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "architecture reconciled for the epic's net change",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c5",
+          "statement": "epic summary accepted by the human",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c6",
+          "statement": "no threshold-ripe lesson left unpaid across the epic (applied, exported, resolved-upstream, or deferred)",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-admiral/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 5,
+  "engine_session": {
+    "session_id": "admiral-epic-418",
+    "status": "active",
+    "claimed_at": "2026-08-05T22:23:56.099173+00:00",
+    "last_heartbeat": "2026-08-06T10:21:29.731048+00:00",
+    "claimed_by": "admiral",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": "Work area and audit trail exist and the engine holds the lease; nothing about the epic's substance is settled yet, so the next real question is how much rope Tommy grants \u2014 that is the latitude gate.",
+      "mechanical": false,
+      "ts": "2026-08-05T22:24:43.226410+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "latitude",
+      "why": "Tommy confirmed the latitude contract: stop-and-present at every wave boundary, the epic-298 decision-class table plus three new classes (spec deviation always surfaced, threshold regrade delegated except E's cluster boundaries and C's tranche boundary, pre-build branch points delegated except A's 'neither shape'), every permission row pre-cleared including subagent dispatch at all tiers, Opus for A/C/F and Sonnet for B/D/G with no Fable, wave 0 four-wide. He added a standing scope-discipline ruling that overrides the default rigor posture on breadth only: build what needs to work, do not chase corner cases, note concerns in local comments and pass them up. Contract expires at the wave-1 checkpoint or 72h. Rope is settled; the next real question is whether the four wave-0 workstreams land, so execute is next.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:04:04.410366+00:00"
+    }
+  ]
+}

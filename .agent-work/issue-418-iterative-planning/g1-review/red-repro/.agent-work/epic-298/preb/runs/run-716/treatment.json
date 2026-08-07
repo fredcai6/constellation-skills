@@ -1,0 +1,135 @@
+{
+  "run": "run-716",
+  "captured": true,
+  "transcript_complete": true,
+  "verdict": "TREATMENT-VERIFIED",
+  "treatment_verified": true,
+  "tool_call_count": 119,
+  "skill_invocations": 2,
+  "skill_calls": [
+    {
+      "index": 0,
+      "skill": "constellation-commander",
+      "input": {
+        "skill": "constellation-commander",
+        "args": "Issue #716 \u2014 constellation: work_id-with-slash parsing breaks run_crew.py + verify_agent_feedback.py. PLANNING ONLY: drive spine through `plan` (mission frame + execute.json), then stop. No human reachable \u2014 decide and record."
+      }
+    },
+    {
+      "index": 62,
+      "skill": "constellation-interrogator",
+      "input": {
+        "skill": "constellation-interrogator",
+        "args": "Issue #716 work_id-with-slash parsing. Commander run issue-716, no human reachable \u2014 record what would have been asked, decide, carry on."
+      }
+    }
+  ],
+  "commander_invocation_indices": [
+    0
+  ],
+  "commander_served_by": [
+    {
+      "base_dir": "C:\\Users\\fredc\\.claude\\skills\\constellation-commander",
+      "skill": "constellation-commander",
+      "after_call_index": 0
+    }
+  ],
+  "all_skill_loads": [
+    {
+      "base_dir": "C:\\Users\\fredc\\.claude\\skills\\constellation-commander",
+      "skill": "constellation-commander",
+      "after_call_index": 0
+    },
+    {
+      "base_dir": "C:\\Users\\fredc\\.claude\\skills\\constellation-interrogator",
+      "skill": "constellation-interrogator",
+      "after_call_index": 62
+    }
+  ],
+  "init_constellation_entries": 18,
+  "init_duplicated_names": 0,
+  "write_audit": {
+    "count": 13,
+    "calls": [
+      {
+        "index": 57,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\evidence\\repro_716.py"
+      },
+      {
+        "index": 65,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\interrogation.json"
+      },
+      {
+        "index": 72,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\evidence\\drive_interrogation.py"
+      },
+      {
+        "index": 74,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\interrogation-record.json"
+      },
+      {
+        "index": 76,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\evidence\\close_interrogation.py"
+      },
+      {
+        "index": 78,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\evidence\\drive_spine.py"
+      },
+      {
+        "index": 96,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\MISSION_FRAME.md"
+      },
+      {
+        "index": 97,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\PLAN_ALTERNATIVES.md"
+      },
+      {
+        "index": 103,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\evidence\\run_target_tests.py"
+      },
+      {
+        "index": 106,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\evidence\\time_full_suite.py"
+      },
+      {
+        "index": 108,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\execute.json"
+      },
+      {
+        "index": 112,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\evidence\\close_plan.py"
+      },
+      {
+        "index": 115,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\pb716\\.agent-work\\issue-716\\STATE_NOTE.md"
+      }
+    ],
+    "writes_outside_own_worktree": [],
+    "writes_inside_worktree_but_outside_agent_work": [],
+    "clean": true
+  },
+  "forbidden_operations": [],
+  "map_credit_suppressed_by_corpus_rule": [],
+  "tool_histogram": {
+    "Bash": 80,
+    "Read": 18,
+    "Write": 13,
+    "Glob": 4,
+    "Skill": 2,
+    "PowerShell": 2
+  },
+  "final_answer_chars": 5614
+}

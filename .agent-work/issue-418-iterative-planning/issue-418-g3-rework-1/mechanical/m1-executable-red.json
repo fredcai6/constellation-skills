@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-executable-red",
+  "mechanical": {
+    "run": "issue-418-g3-rework-1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-executable-red",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-g3-rework-1-m1-executable-red@6f7a9ae97ac535269aae95f62dc89da5d3d6eebb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-g3-rework-1",
+    "generated_at": "2026-08-06T18:41:55Z"
+  }
+}

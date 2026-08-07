@@ -1,0 +1,86 @@
+{
+  "work_id": "issue-308-g3-review",
+  "diff_ref": "git show 6a7dcbd -- scripts/apply_lessons_delta.py tests/test_apply_lessons_delta.py skills/workbench/templates/LESSONS.template.md (22+/22-, 62+/14-, 8+/5-)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, skills/_shared/global-crew.md, skills/_shared/global-everyone.md (no docs/agents/GLOSSARY.md in this worktree)",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "apply_delta() is 220 lines (measured by ast: scripts/apply_lessons_delta.py:425-644), comfortably a long-method smell. The diff touches it, but only to DELETE the 4-line cap-refusal branch, so it leaves the method 4 lines shorter than it found it.",
+      "override": {
+        "repo_standard": "global-crew.md Implementation discipline: 'Make the minimal change that satisfies the handoff; no speculative abstraction.' Reinforced by the g3 handoff, which scopes the gate to removing the cap and nothing else.",
+        "reason": "The smell is pre-existing and the change strictly reduces it. Decomposing apply_delta() here would be unrequested refactoring inside a gate whose whole point is a surgical removal, and it would enlarge the diff a reviewer must reason about for the cap question. Raising it as an in-diff defect would penalize the change for a condition it improved."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The only class touched is the Playbook dataclass, which the diff makes SMALLER (the cap field is deleted; 5 fields remain: run_tick, dormancy_runs, apply_recurrences, apply_confirmed, ticked_work_ids + preamble/active).",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The lessons-file preamble exists as TWO hand-maintained copies of the same prose, and this diff had to edit both: _default_preamble() in scripts/apply_lessons_delta.py:140-164 (seeds a playbook when none exists) and skills/workbench/templates/LESSONS.template.md (seeds one at install). The two now state the same no-cap retention story in DIFFERENT words, so they are already textually divergent and nothing checks them against each other. OBSERVATION, not a blocker: it is pre-existing structure and the diff keeps both in sync correctly (verified: neither renders a cap= header, probe_grammar.py case + grep 'cap=' skills/workbench/templates/LESSONS.template.md returns nothing).",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "No method in the diff reaches into another object's data. The deleted branch read book.active/book.cap from within the Playbook's own writer; removing it reduces coupling.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No repeated parameter group appears or is extended. The header fields travel as Playbook attributes, which is already the parameter object.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "flagged",
+      "finding": "The playbook-state grammar is parsed with POSITIONAL regex group indices (STATE_RE at scripts/apply_lessons_delta.py:51-55, consumed as state.group(1..5) in load_playbook:236-241). This diff had to hand-renumber five of them (group(2..6) -> group(2..5)) purely because one group changed capture-ness, and an off-by-one would have silently swapped two integers rather than raising. Python's re supports named groups ((?P<dormancy_runs>\\d+), state.group('dormancy_runs')), which makes the entire renumbering class impossible and would have reduced this edit to deleting one group. OBSERVATION / triage candidate, not a blocker: the renumbering as landed is CORRECT -- I verified all 16 presence combinations of the four optional fields bind to distinct sentinels, 0 failures, with a live negative control. The smell is about the next such edit, not this one.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "The diff removes a constructor argument (Playbook(cap=...)) and adds none. Longest signature touched is apply_delta(book, delta) at 2 params.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "One conceptual change -- 'there is no cap' -- required edits in three hand-maintained places plus six test fixtures: the writer's 8 cap sites, the writer's own _default_preamble() prose, skills/workbench/templates/LESSONS.template.md, and 6 playbook-state header string literals in tests/test_apply_lessons_delta.py that each spelled cap=20 inline. OBSERVATION, not a blocker: every site was actually caught (verified independently -- git grep -nIE '\\.cap\\b|DEFAULT_CAP' over scripts/ skills/ tests/ returns count=0 at HEAD against count=4 at 752a62f). The mitigation is the same one primitive-obsession names: the test fixtures spell the header as a raw literal instead of building it from the writer's own renderer, so the grammar's shape is duplicated once per fixture.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "apply_lessons_delta.py changes for one reason here (the retention policy). No second, unrelated axis of change is introduced.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation added; the diff deletes book.cap accesses rather than adding any.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Specifically hunted, because a 'tolerated' grammar field is the classic shape of it. The non-capturing (?:\\s+cap=\\d+)? group is NOT speculative: every lessons file in the repo carries cap=N today (.agent-work/LESSONS.md:3 confirmed), so the tolerance has a real, currently-live consumer, and the value is discarded rather than plumbed anywhere. No hook, flag, config key or extension point was added for a future cap.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "A 5-line comment block (scripts/apply_lessons_delta.py:46-50) explains a 1-line regex -- superficially a comment compensating for unclear code.",
+      "override": {
+        "repo_standard": "global-crew.md Implementation discipline: 'Match the surrounding code's naming, labeling, and in-file documentation conventions.' The file's existing convention is exactly this: TICKED_WORK_ID_RETENTION at :40-43 carries a 4-line why-comment on a single constant, and load_playbook:242-243 carries a 2-line one.",
+        "reason": "The comment records WHY the group must stay non-capturing -- an intent that the code cannot express and that the next editor would otherwise undo by 'fixing' it into a capture group. Fowler's deodorant smell is a comment standing in for code that should be clearer; this is a decision record on a deliberate non-obvious choice, which is the sanctioned use, and it matches the in-file convention the standard requires."
+      }
+    }
+  ],
+  "rail_exception": null
+}

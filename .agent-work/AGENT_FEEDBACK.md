@@ -1962,3 +1962,64 @@ rather than banked worktree-locally, per the launch order's standing instruction
 - **`verify-frame` vs `MISSION_FRAME.template.md` contradiction under DEGRADED** → disposition: `already filed as #394; confirming instance recorded, not re-filed`
 
 ---
+
+## `epic-267` — Context Governor liveness (retrospective, written at a late closeout)
+
+**Written 2026-08-05 by the epic-418 Admiral, on Tommy's instruction to close 267 out.** This
+retrospective is late by design and says so: the run died mid-`execute` on 2026-07-28 and left its
+lease active for eight days. Nobody wrote this at the time, which is itself the headline finding.
+
+**What shipped.** Five of eleven issues closed and merged — #261 (gauge blind in any session that
+did not run `claim`), #262 (ship and opt-in-wire the hook rail, PR #293), #202 (spine-rail binding
+single-slot per session), #263 (subagent gauging, an honest null that was later reopened and
+re-called), #265 (make non-reading visible). Six remain open: #264, #235, #257, #266, #214, #248.
+Wave 3 (#266/#214/#248) never launched.
+
+**How it died, and what that cost.** The last log entry is PR #293 cleared for merge and the
+harness permission classifier refusing `gh pr merge`. That was the *second* classifier refusal in
+the epic — `git push origin --delete` was the first — and correctly, neither was routed around.
+The run escalated and stopped. PR #293 did merge, 2026-07-28T14:16Z. But nothing after that point
+ran: no closeout, no retrospective, no lease release. **The escalation was correct and the run
+still died, because there was no mechanism to resume it after the human answered.** A refusal that
+is escalated but not *tracked as a resumption point* is indistinguishable from an abandonment.
+
+**The unpaid debt this closeout found.** Four of five commander harvests (`governor-261`, `-265`,
+`-268`, `-269`) had been applied and ticked. **`governor-262`'s had not** — it is missing from
+`ticked-work-ids` — and it is precisely the commander whose PR was blocked at the moment the run
+died. The harvest was collected and then stranded one step from being paid. Applying it today
+required correcting it first: its three `confirm` ops targeted lessons that later audits
+(`epic-226-lessons-audit`, `epic-298`) had already graduated and retired, and `apply_lessons_delta`
+is all-or-nothing, so the whole delta rejected on the first stale id. **A harvested delta has a
+shelf life, and nothing warns you when it expires.** Its third `add`
+(`sendmessage-name-...-not-the-reachable-address`) had meanwhile graduated to issue **#294** on its
+own, so re-adding it would have forked the identity of a lesson that already had a permanent home.
+Two adds survived and are banked at run 43.
+
+**What worked, and is worth keeping.** The mid-wave `ADMIRAL_CANDIDATES.md` — lesson candidates
+written *while the evidence was fresh*, explicitly marked "candidates, not proposals" — is the only
+reason this closeout could adjudicate from evidence rather than from an eight-day-old memory. Its
+C1 entry even names its own unmeasured quantity (cold-critic cost) instead of promoting a
+two-data-point pattern to a rule. That artifact did its job across an eight-day gap and an agent
+changeover, which is exactly what a durable artifact is for.
+
+**Improvement signals:**
+- **An escalation that stops a run needs a resumption point, or it is an abandonment with better
+  manners.** #293's refusal was handled correctly at every step and the epic still died there.
+  → disposition: `carried to the epic-418 lessons audit as a candidate; not banked here, because
+  the remedy plausibly belongs to the engine (a blocked-on-human state the rail can resume from)
+  rather than to doctrine, and that is not this closeout's call to make`
+- **A harvested lessons-delta expires, and the all-or-nothing apply turns one stale id into a total
+  rejection.** Four stranded ops rejected because three `confirm` targets had since been retired.
+  → disposition: `carried to the epic-418 lessons audit as a candidate — the fix shape (warn on
+  stale confirm targets, or apply-what-validates with a report) is a code change to
+  apply_lessons_delta.py, not a doctrine edit`
+- **A stale lease is invisible until it shadows someone.** epic-267's active lease sat for eight
+  days and only surfaced when it hijacked the epic-418 rail's spine discovery — the hook globs
+  `.agent-work/*/spine.json` and takes the first active match, and `epic-267` sorts before
+  `epic-418`. → disposition: `carried to the epic-418 lessons audit; a stale-lease sweep has no
+  owner today`
+
+**Hygiene at close.** `governor-262`'s worktree swept (PR #293 merged). **`governor-264`'s worktree
+and its three unmerged commits deliberately KEPT** — epic-418's confirmed spec names them as
+requiring #412's orphan-risk read before disposal, so sweeping them here would have violated a
+standing constraint from a live epic.

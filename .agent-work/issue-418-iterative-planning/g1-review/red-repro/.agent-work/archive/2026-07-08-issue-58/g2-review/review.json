@@ -1,0 +1,63 @@
+{
+  "gate": "g2-review",
+  "epic": "issue-58",
+  "commit": "a49c8a0",
+  "branch": "constellation/issue-58",
+  "verdict": "BLOCK",
+  "checks": [
+    {
+      "id": "spine-vs-spec-table",
+      "statement": "Spine steps init/context/explore/spec/review/confirm/route in order; explore closes on user-decision + verify_cycles.py; review runs verify_spec_confirmed.py --phase review; confirm on user-decision + default-phase verify_spec_confirmed.py; route covers 3 routes + archive + lease; inline config.rework_cap 99; every path <skill-dir>, zero <commander-skill-dir>",
+      "result": "PASS",
+      "evidence": "Read EXPLORER_SPINE.template.json line by line; matches DESIGN_SPEC spine table exactly. items=[init,context,explore,spec,review,confirm,route]. explore.c1 artifact/user-decision + c2 command verify_cycles.py; review.c1 command verify_spec_confirmed.py --phase review; confirm.c1 artifact/user-decision + c2 command verify_spec_confirmed.py (no --phase); route statement covers to-issues/Commander, shaped-design issue, shelve+UNCONFIRMED header, archive, release. config.rework_cap=99. grep: zero <commander-skill-dir>, all <skill-dir>/scripts/."
+    },
+    {
+      "id": "spine-actually-drives",
+      "statement": "Real init_work_area.py CLI instantiation resolves all tokens; engine claims + starts",
+      "result": "PASS",
+      "evidence": "Independently ran: python scripts/init_work_area.py explore-probe --spine .../EXPLORER_SPINE.template.json --skill-dir <repo>. Residual <skill-dir> count = 0. checklist_engine claim -> 'claimed lease explore-probe -> active'; start init -> 'init -> in-progress'."
+    },
+    {
+      "id": "cycle-template",
+      "statement": "Ships consolidation:null (as-shipped FAILS verify_cycles); consolidated copy passes; flavor field names shotgun|compare|refine",
+      "result": "PASS",
+      "evidence": "CYCLE.template.json type=survey, consolidation=null, flavor='<shotgun | compare | refine>'. Cross-check tests exercise unconsolidated fail, consolidated pass, zero-cycles fail, one-unconsolidated-among-consolidated fail against real verify_cycles. OBSERVATION: cycle carries config_ref=docs/agents/engine-config.json (not exercised by any g2 test; not driven through engine here) - out-of-scope note for g4 runtime."
+    },
+    {
+      "id": "design-spec-template",
+      "statement": "Shipped template FAILS --phase review and default; transformation to CONFIRMED passes both; each Confirmation field blank case independently refused",
+      "result": "PASS",
+      "evidence": "Ran verify_spec_confirmed.py on shipped template: confirm exit=1 (REFUSED marker), review exit=1 (REFUSED marker). Independent fixtures: confirmed-baseline confirm+review exit=0; blank-confirmed-by (date filled) -> 'Confirmed by is missing or empty' exit=1; blank-date (confirmer filled) -> 'Date is missing or empty' exit=1; whitespace-only confirmed-by -> refused. Exactly one standalone marker line (banner); Status line and prose mentions do not trip _unconfirmed_marker_hit (fullmatch)."
+    },
+    {
+      "id": "findings-table-header",
+      "statement": "Header exactly | ID | Lens | Severity | Finding | Disposition | Reason |",
+      "result": "PASS",
+      "evidence": "Present verbatim at DESIGN_SPEC.template.md line 49."
+    },
+    {
+      "id": "cross-check-genuine",
+      "statement": "Real subprocess/import behavior against template-derived fixtures; all mandated red cases present",
+      "result": "PASS",
+      "evidence": "test_explorer_templates.py imports real verifiers, runs real engine via subprocess, derives fixtures from shipped templates guarded by _require (drift -> loud assert). Red cases: marker both phases, incomplete-table review, each Confirmation field blank independently, zero cycles, one-unconsolidated-among-consolidated, engine claim/start. Genuine: a template/verifier format drift would trip _require or flip the pass/fail expectation."
+    },
+    {
+      "id": "targeted-suite-green",
+      "statement": "pytest tests/test_explorer_templates.py -q green",
+      "result": "PASS",
+      "evidence": "22 passed in 0.52s (ran independently)."
+    },
+    {
+      "id": "full-suite-transient-scoped",
+      "statement": "ALL full-suite failures attributable to missing SKILL.md (g4) / expected-skills-list (g5), zero failures in any other file",
+      "result": "BLOCK",
+      "evidence": "Ran pytest tests/ -q: 31 failed. Distribution: 26 in tests/test_install_constellation.py AND 5 in tests/test_feedback_tooling.py. Implementer's IMPLEMENTER_RESULT claims 'All 31 failures are in tests/test_install_constellation.py' -- FALSE. Root cause of all 31 is identical (install_constellation discovery refuses skills/explorer for missing SKILL.md; feedback_tooling setUp invokes installer.main). Independent diagnostic: added stub skills/explorer/SKILL.md -> full suite collapsed 31 -> 2 (both in test_install_constellation.py, both expected-skills-list assertions = g5), all 5 feedback_tooling failures pass; then removed stub, git status clean. So root cause truly reduces to the transient, BUT failures exist outside the install-test file the override_policy is scoped to, and the evidence misstates the distribution. Handoff Close Criterion + Stop Condition literally: 'any non-install-test failure exists in the full suite' -> BLOCK; broadening the waiver is a policy decision beyond reviewer authority."
+    },
+    {
+      "id": "scope",
+      "statement": "Diff touches only 4 allowed NEW files; no excluded paths; commit on constellation/issue-58",
+      "result": "PASS",
+      "evidence": "git show a49c8a0 --stat: only CYCLE.template.json, DESIGN_SPEC.template.md, EXPLORER_SPINE.template.json, tests/test_explorer_templates.py (all NEW, +468). git status clean. No scripts/, no other skills, no DESIGN_SPEC.md touched."
+    }
+  ]
+}

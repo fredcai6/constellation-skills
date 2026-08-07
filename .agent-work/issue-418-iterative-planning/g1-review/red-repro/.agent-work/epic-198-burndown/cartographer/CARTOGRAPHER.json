@@ -1,0 +1,156 @@
+{
+  "work_id": "epic-198-cartographer-reconcile",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "packets",
+    "index-overlays",
+    "map-compliance"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load map and context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the current map (index + touched packets). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context and current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "packets": {
+      "id": "packets",
+      "title": "Reconcile node packets",
+      "imperative": "Reconcile each touched node packet against the code with evidence; update wording, status/confidence, dependencies, and rationale.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "touched packets reflect current code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "index-overlays": {
+      "id": "index-overlays",
+      "title": "Update index and overlays",
+      "imperative": "Update the index and overlays to match the reconciled packets.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "index and overlays consistent with packets",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "map-compliance": {
+      "id": "map-compliance",
+      "title": "Verify map compliance",
+      "imperative": "Verify map compliance. Record unresolved structural questions; flag future work as triage candidates.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map compliant; open structural questions recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "map-compliance",
+      "statement": "Fold epic-198 structural deltas into #156 (initial self-map) seed scope: new struct scripts/stage_feedback.py, plus capability/claim material on checklist_engine (resume/why-refresh/lease), gauge_reader (abs-token caps), agent_work_root (worktree durable-root under epic lease), run_skill_eval (install-path-invariant corpus_id + process-death durability), and hooks/spine_rail (worktree subagent-attribution guard). No new issue; route to existing #156. Payload in CARTOGRAPHER_RECONCILE.md sec 4."
+    }
+  ],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "context",
+      "why": "No docs/architecture/ exists on current main (verified: no architecture dir, no packets/, no MAP_BUILD.md, no index/overlays anywhere in-tree). Repo has never been self-mapped; issue #156 tracks the initial build and records epic-138's ruling that a partial map seeded from one epic's diff is worse than none. So the 'current map' baseline is empty and this reconcile is honest-null by construction. No project deltas (docs/agents/*) exist either.",
+      "mechanical": false,
+      "ts": "2026-07-19T21:13:46.323829+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "packets",
+      "why": "No packets exist to reconcile: docs/architecture/ is absent, so the set of touched node packets is empty. Epic-198's net change (31 files, scripts/checklist_engine.py, gauge_reader.py, agent_work_root.py, run_skill_eval.py, hooks/spine_rail.py, init_work_area.py, new stage_feedback.py, curate_corpus.py + doctrine/docs) would map to scripts/ role components under a real map, but none exist yet. Per epic-138 ruling (recorded in #156), authoring packets for only these touched nodes would be a rejected partial map. Structural notes are folded into #156 instead. Vacuously satisfied.",
+      "mechanical": false,
+      "ts": "2026-07-19T21:14:05.782976+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "index-overlays",
+      "why": "No index or overlays exist and none are authored: an honest-null reconcile creates no map artifacts. docs/architecture/{index.md,overlays/,generated/} all absent. Consistent-with-packets is vacuously true because there are zero packets. Building index/overlays now would seed the rejected partial map.",
+      "mechanical": false,
+      "ts": "2026-07-19T21:14:14.844363+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "map-compliance",
+      "why": "Map is trivially compliant: no docs/architecture/ exists, so no duplicate IDs / missing parents / stale nodes / disallowed kinds possible. The one open structural question (where epic-198's touched components and the new stage_feedback.py struct belong) is routed to #156 as seed material via tc1, not resolved into a partial map. Honest-null reconcile complete; deliverable at CARTOGRAPHER_RECONCILE.md.",
+      "mechanical": false,
+      "ts": "2026-07-19T21:15:27.313049+00:00"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "mechanical": {
+    "run": "issue-418-iterative-planning-g1-review-2",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r5-reconciliation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-g1-review-2-r5-reconciliation@754064e61aee6f0a2c9658a9eec3dc7882a12b8e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning-g1-review-2",
+    "generated_at": "2026-08-06T17:27:33Z"
+  }
+}

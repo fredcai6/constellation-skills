@@ -1,0 +1,22 @@
+{
+  "work_id": "299",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "cold-critic-mandatory-for-measurement-dependent-plans",
+      "grounding": ".agent-work/299/PLAN_CRITIC_DISPOSITION.md \u2014 8 blocking + 9 serious findings on a frozen measurement rubric, 14 fixed before the freeze. FOURTH data point and the first where the critic caught a defect in the MEASURING INSTRUMENT rather than the plan: B4 (an absent source read recorded with the literal reserved for an absent map read, with the self-test asserting the defect) and B6 (field extraction exercised only against input.command while real transcripts use file_path/pattern) would together have turned total instrument failure into a clean-looking NO-MAP-READ finding across all five runs. Directly attributable counterfactual: without the critic this arm would have been captured, been unrecoverable, and read as a strong result."
+    },
+    {
+      "op": "confirm",
+      "id": "verify-launch-order-claims-against-code",
+      "grounding": ".agent-work/299/PROBLEM_STATEMENT.md 'Baseline verified against code before planning' + BASELINE_RECORD.md section 'What this arm is'. FIFTH data point, and a FOURTH distinct failure mode: not mechanism-already-shipped, not named-but-nonexistent-target, not weaker-than-framed, but a settled/human pre-ruling whose LABEL is contradicted by the corpus itself. f1Brainz CLAUDE.md:7 already names docs/architecture/index.md as the canonical entrypoint, so the order's 'no canonical entrypoint' arm label is false and what the epic is actually testing is a contract, not an entrypoint. Also corrected: corpus size 5928 -> 6435, and the ruling's stated evidence (both docs/architecture mentions in commander doctrine are the absent-map fallback at reconcile, not an instruction to read a map)."
+    },
+    {
+      "op": "confirm",
+      "id": "a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed",
+      "grounding": ".agent-work/epic-298/baselines/extract_ordering.py self_test (33 checks) plus two verified mutations. FOURTH instance in this epic and a NEW shape: the mutation test itself was the check that could not fail. My first mutation attempt was a sed that silently did not match, the suite stayed green, and I nearly recorded that as 'mutant killed'. Only verifying that the mutation had ACTUALLY APPLIED (assert mut != src) exposed it. Second shape, same run: the self-test's synthetic fixtures used only input.command, so the extractor's real field-extraction path was never exercised until a real stream-json excerpt was checked in as a fixture."
+    }
+  ],
+  "note": "Two add ops held out: the bank is at active cap 20 with NOTHING threshold-ripe, so banking either would have required evicting a lesson I have no grounds to retire. Both findings have a durable home as filed tracker issues (#331 corpus-declined, #333 rubric-tolerance-ambiguity), and the inbox is explicitly transitory and not a permanent home for any rule \u2014 so filing is the better home, not a lesser one. Held adds recorded verbatim in lessons-delta.held.json for the next audit to adjudicate."
+}

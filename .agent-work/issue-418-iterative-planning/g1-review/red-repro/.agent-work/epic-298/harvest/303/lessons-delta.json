@@ -1,0 +1,11 @@
+{
+  "work_id": "303",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "prove-command-fails-postcondition",
+      "grounding": "execute.json gate m2-fixtures: 3 command postconditions using `! py scripts/verify_spec_confirmed.py <fixture> --phase confirm`, all satisfied on first advance (no rework); notes-303.md 'm2' section records the verbatim commands/exit codes/stderr the wrapper mechanically re-verified."
+    }
+  ]
+}

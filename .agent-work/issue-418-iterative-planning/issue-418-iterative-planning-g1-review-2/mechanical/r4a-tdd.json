@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4a-tdd",
+  "mechanical": {
+    "run": "issue-418-iterative-planning-g1-review-2",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4a-tdd",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-g1-review-2-r4a-tdd@e39df67cc09af4decbde6919859bdcfd51cf617b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning-g1-review-2",
+    "generated_at": "2026-08-06T17:28:36Z"
+  }
+}

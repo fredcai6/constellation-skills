@@ -1,0 +1,42 @@
+{
+  "work_id": "epic-198-burndown",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "test-harness-concurrency-failsafe",
+      "grounding": "ADMIRAL_LOG PR#204 merge entry: #130 real-process-death test applied the concurrency-failsafe pattern again (kills a REAL runner process, concurrency-failsafe applied) on a new concurrent-I/O test — the lesson held and was needed a second time this epic."
+    },
+    {
+      "op": "add",
+      "id": "verify-launch-order-claims-against-code",
+      "scope": "project",
+      "task_class": "delegated-planning",
+      "statement": "A delegated commander must verify a launch order's NAMED defect/sub-fix against the current code (grep the named symbol/token) BEFORE planning — a headline mechanism already shipped becomes an honest-null, and the real live recurrence may be a different, unnamed sibling the prior fix never touched. Recurred across this epic: 152 heartbeat-on-mutate was already in #32 (honest-null caught by reconciling baseline vs code); 154's <epic-id> framing was already fixed by #173 while the real live defect was an unnamed token pair (<admiral-skill-dir>/<admiral-session-id>) found only by grepping the resolver vocabulary against shipped spine templates.",
+      "grounding": "staged-feedback/152-engine-verbs/lessons-delta.json (delegated-verify-subfix-against-code) + staged-feedback/154-init-placeholder/lessons-delta.json (verify-launch-order-defect-against-code-before-planning, which itself cites 152 as data point 1)",
+      "bank_reason": "Two data points this epic (waves 2 and 2B). Re-observe on a third delegated run whether launch-order baselines routinely overstate to-build work before promoting to a standing delegated-commander doctrine line."
+    },
+    {
+      "op": "mention",
+      "id": "verify-launch-order-claims-against-code"
+    },
+    {
+      "op": "add",
+      "id": "observe-midprocess-state-not-via-end-output",
+      "scope": "handoff",
+      "task_class": "test-authoring",
+      "statement": "When a handoff tells a crew to observe a MID-process state (e.g. a run stuck 'launched'), the observation channel must survive the very kill/hang being tested. Do NOT instruct discovery via END-of-process output (a stderr line printed in a finally / after the function returns): a hard tree-kill skips finally and a hanging subject never returns, so the channel never fires. Prefer a channel written before/independently of the death (a child-scoped TMP/TEMP dir, a pre-written meta path).",
+      "grounding": "staged-feedback/runner-durability-130/AGENT_FEEDBACK.md (implementer friction 2): handoff said discover the kept temp dir via a stderr line printed in finally; impossible under hang+tree-kill; crew pivoted to a child-scoped TMP/TEMP env.",
+      "bank_reason": "One occurrence (Windows hard tree-kill skipping the finally that prints the temp-dir line). Re-observe across other kill/detach/timeout test handoffs before hardening the handoff template."
+    },
+    {
+      "op": "add",
+      "id": "verify-harness-field-and-drive-real-writer",
+      "scope": "project",
+      "task_class": "testing",
+      "statement": "When a hook or decision depends on a harness-supplied payload field (e.g. a Stop-hook's cwd), verify the field's presence against the harness contract (docs) AND make the regression test drive the REAL writer path that populates it (run handle_post_tool_use to write the binding, then decide_stop), not a hand-injected fixture. A hand-set fixture asserts the field is present and passes green even if production never delivers it, hiding a silent no-op fix.",
+      "grounding": "staged-feedback/stop-rail-151/lessons-delta.json + plan-critic-disposition.md Finding 1 (cold critic: fix rode an unverified assumption that Stop carries cwd; injected-cwd unit tests pass green even if prod lacks it).",
+      "bank_reason": "Second testing-discipline data point this epic alongside test-harness-concurrency-failsafe (re-applied #204). Banked as staging for the pending needs-human graduation of both into a testing-conventions doc; if the human defers that graduation, re-observe a third harness-field-masked-by-fixture instance first."
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-418-iterative-planning-g4-review",
+  "diff_ref": "39-path whole-change digest sha256:251c48b0ae6308d01bbd813f037b06a4f2ad40e468e9cd90dda2baadff720355",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "scripts/verify_epic_418_demo.py::_build_packets is a long fixture-construction function; acceptable for this bounded deterministic demonstration, but extraction into named packet builders would improve review locality if the demo evolves.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {"repo_standard": "CREW_CONTEXT: strict portable serialized interfaces and fail-visible validation", "reason": "The JSON primitives are the intentional cross-skill contract surface and are exhaustively validated at the boundary."}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Global doctrine: one canonical path and keep Constellation context current when meaning changes", "reason": "The finite rename and lifecycle wiring necessarily updates public index, installer, role doctrine, role spine, tests, and coverage ledger together; the changes are one coordinated contract migration, not unrelated scattering."}},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

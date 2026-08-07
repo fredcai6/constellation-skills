@@ -1,0 +1,43 @@
+{
+  "repo": "fredcai6/f1Brainz",
+  "pin": "3541d2929b19de37107ae13e56776b7162d07255",
+  "frozen_at": "2026-08-01T13:35:03-0700",
+  "note": "Both arms of the epic-298 measurement MUST read briefs from this file, never live from gh, or the arms can diverge on their shared input.",
+  "issues": {
+    "690": {
+      "body": "From #664 triage T2 (recommend-and-defer). `class_utilization_observable` sets the one-sided σ⁺ = `hypot(mu,sigma)` from `get_grip_at`, whose (mu,sigma) are grip PACE-seconds (whole-lap scale), attached (coherently) only to the per-class TIME-deficit → a conservatively WIDE band (whole-lap pace σ into a per-class transit-time band). Refine so the band scales to the per-CLASS grip contribution, not the whole-lap pace swing. Low while the grip store is empty (σ⁺=0); matters once G is populated (#664-T4). **Acceptance:** per-class G σ⁺ scaling with documented rationale + a width-shape unit test. **Out of scope:** moving μ off zero (#678); re-fitting G. Flagged by both g3 reviewer + implementer; judged coherent-but-generous, non-blocking.",
+      "number": 690,
+      "state": "OPEN",
+      "title": "Reconcile #664 G σ⁺ band scale (whole-lap pace σ) with per-class deficit units",
+      "updatedAt": "2026-07-26T10:35:02Z"
+    },
+    "688": {
+      "body": "**Surfaced by the #678 G-pooling spike (read-only, 2026-07-25).** Coverage lever for grip identifiability.\n\nThe grip-fit rain exclusion uses an \"any wet sample in the session\" rule (`rain_flag_from_raw`, `src/physics/layer2/grip_baseline.py`). In the spike this dropped **20 of 36 candidate weekends** — a brief shower in an otherwise-dry session kills the whole weekend.\n\n**Why it matters:** the spike found that **session coverage (especially thin/missing Q), not model structure, is the crux** limiting cross-weekend grip identifiability. Over-aggressive rain exclusion throws away dry running we can't afford to lose when pooling across weekends/seasons.\n\n**Acceptance:** loosen to a fraction-of-wet-samples threshold, or exclude only sessions materially wet *during the timed running* (not a single stray sample), recovering usable dry coverage. Keep it conservative enough that genuinely wet running is still excluded (the monotone-grip assumption still needs dry).\n\nRelated: #678 (identifiability), #664, #663.",
+      "number": 688,
+      "state": "OPEN",
+      "title": "Grip-fit rain exclusion too aggressive: 'any wet sample' drops ~55% of weekends",
+      "updatedAt": "2026-07-26T04:34:12Z"
+    },
+    "698": {
+      "body": "Low-priority hardening carried out of #666 (DriverFingerprint), recommend-and-defer. None blocked the merge.\n\n**H1 — DriverFingerprintStore API takes loose primitives instead of `CellAddress` (tc3, Fowler primitive-obsession).** The store's read/write surface passes era/vocab/class as loose strings rather than the `CellAddress` value object the fit layer already uses. Tighten to accept `CellAddress` end-to-end so an ill-formed address can't reach the store. Acceptance: store API typed on `CellAddress`; a malformed-address test.\n\n**H2 — `scripts/fingerprint_class_coverage_675.py` lacks worktree-first `sys.path` insertion.** Bare-run in a git worktree hits the editable-install `.pth` trap — `from src.physics.fingerprint import ...` resolves to the MAIN checkout's `src/` (which lacks the unmerged module) and `ModuleNotFoundError`s. pytest is immune (own path insertion); the script is not. Add the `_REPO_ROOT = Path(__file__).resolve().parents[1]; sys.path.insert(0, str(_REPO_ROOT))` guard that `scripts/build_class_utilization_observables.py` already uses. Found during Admiral independent verify (worked once PYTHONPATH forced). Immaterial post-merge (main's `src/` has the module), but any future worktree run re-hits it.\n\n**H3 — gitignore local coverage/summary JSON artifacts (tc2).** The coverage/bounded-fit JSONs written under `.agent-work/.../artifacts/` are already ignored via `.agent-work/`, but confirm no stray JSON lands in a tracked path on a non-epic run.\n\nSource: cmdr-666 TRIAGE_RECOMMENDATIONS.md (tc2/tc3) + Admiral verify (H2). Out of scope: any behavior change to the fit/coverage.",
+      "number": 698,
+      "state": "OPEN",
+      "title": "#666 follow-on hardening: store-API primitive-obsession, script .pth path, gitignore",
+      "updatedAt": "2026-07-26T16:37:17Z"
+    },
+    "716": {
+      "body": "From #659 lessons audit (constellation shared-machinery bug, hit TWICE independently in one run — epic-659/665). Two constellation-commander scripts assume a work_id has no internal '/', which breaks this repo's nested Commander-under-Admiral convention (`epic-<N>/<issue>`):\n- `run_crew.py --verify-result`'s `load_registry_for_resume` parses `session.split('/')[1]` — drops everything after the first slash.\n- `verify_agent_feedback.py`'s `_current_run_archive_dirs` matches `path.name == work_id` — unsatisfiable when work_id contains '/'.\nBoth forced a waive/workaround in epic-659. Fix: a single shared work_id-safe parsing/matching helper both scripts import. NOTE: these scripts live in the constellation-skills install, not this repo — route to wherever constellation-commander's scripts are maintained. Also exported to the constellation upstream queue in the audit delta.",
+      "number": 716,
+      "state": "OPEN",
+      "title": "constellation: work_id-with-slash parsing breaks run_crew.py + verify_agent_feedback.py (nested Commander-under-Admiral)",
+      "updatedAt": "2026-07-27T12:32:26Z"
+    },
+    "704": {
+      "body": "From #668 triage tc2 (recommend-and-defer; cosmetic, non-blocking). `main_effect_margin_uncertainty()` and `_axis_means()` in `src/physics/instrument_panel/replication.py` share axis-grouping logic a small shared helper could de-duplicate (Fowler duplicated-code, non-blocking g6 review).\n\n**Acceptance:** a shared helper removes the duplication; all instrument_panel tests stay green, pyright-0, byte-identical behavior. **Out of scope:** any change to the signed frozen values or the double-centering method. Best as a deliberate simplify-pass (editing the load-bearing replication module re-triggers full review for a cosmetic gain).",
+      "number": 704,
+      "state": "OPEN",
+      "title": "#668 cleanup: dedup axis-grouping helper in instrument_panel/replication.py",
+      "updatedAt": "2026-07-27T05:02:57Z"
+    }
+  }
+}

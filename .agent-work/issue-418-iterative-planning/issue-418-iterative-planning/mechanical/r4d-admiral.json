@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4d-admiral",
+  "mechanical": {
+    "run": "issue-418-iterative-planning",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer",
+    "refusals": 0,
+    "spine-step": "r4d-admiral",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-r4d-admiral@565bc57e99b4ae0083e9bd9c0e147bcfc6f078d6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning",
+    "generated_at": "2026-08-06T18:36:18Z"
+  }
+}

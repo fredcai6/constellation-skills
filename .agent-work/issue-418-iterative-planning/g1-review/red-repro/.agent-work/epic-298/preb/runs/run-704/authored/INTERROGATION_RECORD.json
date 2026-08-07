@@ -1,0 +1,74 @@
+{
+  "goal": "#704 (#668 cleanup): de-duplicate the axis-grouping logic shared by main_effect_margin_uncertainty() and _axis_means() in src/physics/instrument_panel/replication.py behind a small shared helper, with instrument_panel tests green, pyright-0, and byte-identical behavior. Out of scope: any change to the signed frozen values or the double-centering method.",
+  "mode": "delegated",
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "fact",
+      "question": "What is the capability being changed, and is the claimed duplication real?",
+      "status": "resolved",
+      "resolution": "Real. Both functions make one pass over the (driver, class) -> value grid, accumulating a per-driver-row and a per-class-column aggregate of float(value) in grid-iteration order. _axis_means accumulates sums+counts into four dicts and divides; main_effect_margin_uncertainty accumulates full value lists into two dicts via setdefault. _axis_means additionally accumulates a grand total/count the margin function does not need. Grouped value lists are the strict superset shape: sums = sum(vals), counts = len(vals). per_driver_demean is a third consumer that already calls _axis_means and discards grand + class_mean.",
+      "code_evidence": "src/physics/instrument_panel/replication.py:111-128 (_axis_means accumulation), :425-433 (main_effect_margin_uncertainty driver_rows/class_cols setdefault accumulation), :140 and :155 (grand_two_way_center / per_driver_demean call sites)",
+      "human_answer": ""
+    },
+    {
+      "id": "q2",
+      "kind": "fact",
+      "question": "Who consumes this module, and does anything pin its internal shape or source text?",
+      "status": "resolved",
+      "resolution": "Importer graph is small and closed: two scripts plus the pilot (lazy). Nothing outside replication.py references _axis_means, so the helper seam is entirely private. One source-text guard test exists but reads scripts/run_season_panel_670.py, never replication.py, so a new private helper cannot trip it as long as it is not named one of the eight forbidden public names and is not defined in that script.",
+      "code_evidence": "scripts/instrument_panel_668_report.py:71-75; scripts/run_season_panel_670.py; src/physics/pilot/pipeline.py (lazy run_panel import); grep '_axis_means' -> 3 hits, all in src/physics/instrument_panel/replication.py; tests/unit/physics/instrument_panel/test_panel_corpus.py:243-267 (source-text guard, target = scripts/run_season_panel_670.py); tests/unit/physics/instrument_panel/test_replication_channel.py:50-56 (public imports only)",
+      "human_answer": ""
+    },
+    {
+      "id": "q3",
+      "kind": "fact",
+      "question": "Can a shared helper actually preserve byte-identical float output, or is 'byte-identical' aspirational?",
+      "status": "resolved",
+      "resolution": "Achievable, but conditional — it constrains the implementation. Bit-exactness holds iff (a) each per-axis accumulation still visits cell values in grid-iteration order, (b) the grand mean stays its own single left-to-right accumulation over grid values (never re-derived by concatenating driver rows, which reorders the addition; never math.fsum, a different algorithm), and (c) the per-axis value list order is preserved because _main_effect_se feeds it to np.std(ddof=1). sum(list_in_grid_order) is bit-identical to the existing 'total = 0.0; total += v' loop. setdefault-in-grid-order also preserves dict key insertion order, keeping downstream repr/report determinism.",
+      "code_evidence": "src/physics/instrument_panel/replication.py:115-128 (grand accumulation + mean comprehensions), :397-405 (_main_effect_se -> np.std(arr, ddof=1)), :425-433 (list accumulation feeding it)",
+      "human_answer": ""
+    },
+    {
+      "id": "q4",
+      "kind": "decision",
+      "question": "Should the shared helper return grouped value lists, or per-axis sums+counts?",
+      "status": "resolved",
+      "resolution": "Grouped value lists: _axis_groups(grid) -> (driver_rows: dict[object, list[float]], class_cols: dict[object, list[float]]), with _axis_means keeping its own separate single pass for the grand mean. Lists are the superset both callers can be served from; the sums+counts alternative fails the margin caller, which needs the values themselves for a std.",
+      "code_evidence": "",
+      "human_answer": "NO HUMAN REACHABLE. Resolved by citing the engagement's standing instruction, which is this run's frozen order: 'No human is reachable for this engagement, so wherever a step calls for a human decision, record what you would have asked, decide it yourself, and carry on rather than waiting.' Question recorded verbatim above; Commander decided grouped value lists. @grade: settled/human (standing instruction) — the owner may revisit at implementation."
+    },
+    {
+      "id": "q5",
+      "kind": "decision",
+      "question": "#704 warns that editing this load-bearing instrument re-triggers full review for a cosmetic gain, and it was filed recommend-and-defer. Proceed, or close as won't-do?",
+      "status": "resolved",
+      "resolution": "Proceed, with a deliberately surgical diff: one new private helper, two call-site rewrites, zero public-surface change, zero touch to REPLICATION_* frozen constants / thresholds / the double-centering formula, and a numerical-identity harness supplied as the reviewer's own evidence. The residual risk — a reviewer must still re-read a Protected-Intent module — stays named on the record.",
+      "code_evidence": "",
+      "human_answer": "NO HUMAN REACHABLE. Resolved by citing the engagement's standing instruction (see q4). The engagement explicitly directs planning this change, which settles the proceed/won't-do fork; the Commander chose the surgical-diff shape to answer the review-cost objection the issue raises."
+    },
+    {
+      "id": "q6",
+      "kind": "fact",
+      "question": "What verification evidence does this project require for a pure-Python refactor here, and what can actually run on this machine?",
+      "status": "resolved",
+      "resolution": "Required: py -m src.utils.simplification_limits on touched paths (strict), the focused region test suite, and pyright with no NEW errors vs base. Machine reality measured this run: the agent-shell 'py' is the codex runtime and has neither pytest nor radon — the strict simplification check dies on ModuleNotFoundError: radon, while --file-lines-only returns PASS. Pytest needs the pinned pythoncore interpreter or PowerShell 'py'. Both test-run attempts were blocked by harness permission this session, so the green baseline is NOT verified by me and must be captured as gate-0 evidence in the implementation engagement.",
+      "code_evidence": "docs/agents/ORCHESTRATOR_CONTEXT.md (Evidence Requirements table, 'Python refactor / new modules in src/ or tests/'); TESTING.md:225-235 (pyright, pyrightconfig.json, ~894-error baseline); scripts/pyright_baseline_diff.py:1-30; measured: 'py -m src.utils.simplification_limits --paths src/physics/instrument_panel/replication.py' -> RuntimeError radon required; '--file-lines-only' -> PASS (1 files checked)",
+      "human_answer": ""
+    },
+    {
+      "id": "q7",
+      "kind": "decision",
+      "question": "How wide is the regression scope — targeted importers, or a broader physics sweep?",
+      "status": "resolved",
+      "resolution": "All six files of tests/unit/physics/instrument_panel/ (the edited module's own pre-existing guard tests, not just the replication ones), plus tests/unit/physics/pilot/ as the transitive importer, plus a purpose-built before/after numerical-identity harness asserting EXACT equality on ragged, unbalanced and singleton-row grids. Not the full physics suite — the importer graph is enumerated and closed.",
+      "code_evidence": "",
+      "human_answer": "NO HUMAN REACHABLE. Resolved by citing the engagement's standing instruction (see q4). Commander decided the scope above, conditioned on .agent-work/LESSONS.md lesson:consumed-frozen-module-run-guard-tests (widen to the module's own guard tests) and lesson:scope-self-authored-regression-to-import-graph (do not blanket-run the suite)."
+    }
+  ],
+  "signoff": {
+    "by": "engagement standing instruction (frozen order for this run) — no human reachable",
+    "statement": "The dispatching instruction for this engagement states: 'No human is reachable for this engagement, so wherever a step calls for a human decision, record what you would have asked, decide it yourself, and carry on rather than waiting.' Questioning is complete against that order: every fact is resolved from code evidence, and each of the three decisions is recorded verbatim as asked, then decided by the Commander under that standing authority. This is a cited frozen-order sign-off, NOT a live human confirmation — the distinction is deliberate and is carried forward into the plan."
+  },
+  "consolidated": false
+}

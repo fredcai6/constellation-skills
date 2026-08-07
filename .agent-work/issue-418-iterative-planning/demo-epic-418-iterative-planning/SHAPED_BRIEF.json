@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "title": "Context Governor — iterative initial cut",
+  "source_path": ".agent-work/archive/2026-07-18-explore-context-governor/DESIGN_SPEC.md",
+  "confirmation": {
+    "status": "CONFIRMED",
+    "confirmed_by": "Fred",
+    "date": "2026-07-18"
+  },
+  "intent_and_why": "Constellation agents cannot reliably sense their own context fill — self-report is confabulation — and the host harness only intervenes at ~90% with a lossy emergency auto-compaction. The governor gives the fleet a **proactive, portable way to hand off cleanly at a good work seam** before that point: a long-running agent, told by the engine that it is near-full, judges whether now is a good stopping point (biased toward yes) and hands off up its delegation chain to be re-instantiated fresh — carrying its reasoning, not just its mechanical state.\n\n\"Done\" feels like: an agent finishing a unit of work is told \"you've used most of your context\"; unless it is basically finished it hands off at that seam; its invoker (Commander → implementer/reviewer; Admiral → Commander; human at the top) starts a fresh agent from a handoff rich enough for a clean cold start, and the fresh agent resumes **without re-deriving the why**.\n\nThe load-bearing reframe: the handoff is a **byproduct of continuous why-logging**, not a special artifact generated under duress. So the same mechanism that enables intentional refresh also makes ordinary crash-recovery cheap — the design pays for itself even where the gauge is crude or a harness can't refresh well.\n\n**Kill condition:** if a clean handoff+refresh loses more effective continuity than auto-compaction preserves — i.e. the cold-start block can never be made good enough and every refresh is a productivity cliff — the governor is pointless.",
+  "definition_of_done": [
+    "One coherent why-capture, gauge-read, and trip-policy loop is implemented and validated independently.",
+    "Future HITL writer and refresh work remains nonbinding until entry evidence supports launch."
+  ],
+  "good_enough": {
+    "mandatory_quality": "Preserve the confirmed governor interfaces, human boundaries, and fail-safe missing-gauge behavior.",
+    "sufficient_evidence": "Each current issue has independently observable public-interface acceptance evidence.",
+    "appetite": "Three independently testable AFK issues in one initial execution-and-validation loop."
+  },
+  "hard_constraints": [
+    "Historical design and issue-set inputs are read-only and hash-pinned.",
+    "No live tracker, GitHub, subprocess, or network write is permitted in the demonstration."
+  ],
+  "fixed_decisions": [
+    "One engine-native refresh-request mechanism serves every tier.",
+    "Gauge failures collapse to None and never force a handoff.",
+    "SOFT is advisory; HARD requires a refresh request at gate boundaries only."
+  ],
+  "initial_wave": {
+    "objective": "Complete one coherent why-capture, gauge-read, and trip-policy execution-and-validation loop.",
+    "exit_criteria": [
+      "Why-capture, gauge-reader, and trip-policy acceptance evidence is independently observable.",
+      "The loop preserves the frozen design's fail-safe and human-authority boundaries."
+    ]
+  },
+  "wave_forecast": [
+    {
+      "outcome": "Gauge writer: Claude Code PostToolUse hook + golden-sample fixture",
+      "why_likely": "Original B remains useful after the AFK loop but needs its stated HITL entry evidence.",
+      "entry_conditions": [
+        "Initial loop evidence is green",
+        "Human is reachable for the original HITL acceptance"
+      ]
+    },
+    {
+      "outcome": "Refresh: reach-up relaunch flow + job-file principle (skill/doctrine wiring)",
+      "why_likely": "Original E remains useful after the AFK loop but needs its stated HITL entry evidence.",
+      "entry_conditions": [
+        "Initial loop evidence is green",
+        "Human is reachable for the original HITL acceptance"
+      ]
+    }
+  ],
+  "uncertainty_register": [
+    {
+      "unknown": "Whether the Claude Code gauge estimate is accurate at trip thresholds",
+      "affects": "Writer calibration and threshold selection",
+      "settle_by": "Live HITL gauge validation",
+      "current_evidence": "The frozen spec marks this assumption untested",
+      "next_probe": "Compare a golden transcript estimate with live harness accounting"
+    }
+  ],
+  "parked_possibilities": [
+    "Codex/pi gauge writers",
+    "Pre-emptive handoff at named gates",
+    "Self-calibrating thresholds"
+  ],
+  "evidence_digest": [
+    {
+      "claim": "Frozen confirmed design",
+      "source": "DESIGN_SPEC.md",
+      "conclusion": "b2ef1b2a51268b2ee806541f625d7fd8c52b28179239ed7291308a140d2e9ddb"
+    },
+    {
+      "claim": "Frozen original five-item cut",
+      "source": "ISSUE_SET.json",
+      "conclusion": "17bb5086744f23956146cdff02b9cccf02116595be9ce93727a5fa12b002f1f6"
+    }
+  ]
+}

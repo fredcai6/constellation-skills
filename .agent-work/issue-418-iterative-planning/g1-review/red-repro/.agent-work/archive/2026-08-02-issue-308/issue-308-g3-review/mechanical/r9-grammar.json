@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r9-grammar",
+  "mechanical": {
+    "run": "issue-308-g3-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r9-grammar",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-308-g3-review-r9-grammar@14eb37b7c483e1ff0f9e0749e6857aa6549547ab",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-308-g3-review",
+    "generated_at": "2026-08-02T21:48:15Z"
+  }
+}

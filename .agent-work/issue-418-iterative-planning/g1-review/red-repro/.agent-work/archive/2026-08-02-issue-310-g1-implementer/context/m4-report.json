@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4-report",
+  "files": [],
+  "repo_rev": {
+    "commit": "9a90298f165bf41d7d88aef50ea430de262ed5bb"
+  },
+  "run": {
+    "work_id": "issue-310-g1-implementer",
+    "generated_at": "2026-08-03T02:54:08Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-workbench",
+      "repo": "C:/Programs/constellation-skills-wt/e298-310",
+      "durable": "C:/Programs/constellation-skills-wt/e298-310"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-310"
+    }
+  }
+}

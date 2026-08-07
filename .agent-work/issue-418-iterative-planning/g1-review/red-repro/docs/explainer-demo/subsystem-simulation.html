@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="docent-map-stamp" content="a28c107b2fe8be081ece13accf7280406c2e81e1f08c16d58ea28fa455137cd9">
+<meta name="docent-generated" content="2026-07-07">
+<title>Packet: src/simulation — Monte Carlo Simulation — F1Brainz Explainer</title>
+<style>
+:root{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}}
+:root[data-theme="light"]{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+:root[data-theme="dark"]{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px 80px}
+header.site{position:sticky;top:0;z-index:5;background:var(--bg);
+  border-bottom:1px solid var(--line);backdrop-filter:saturate(1.2) blur(4px)}
+header.site .wrap{padding:12px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+header.site .brand{font-weight:700;letter-spacing:.02em}
+header.site nav{display:flex;gap:16px;flex-wrap:wrap;font-size:.92rem}
+h1{font-size:1.9rem;line-height:1.2;margin:.6em 0 .2em}
+h2{font-size:1.3rem;margin:1.8em 0 .5em;padding-bottom:.2em;border-bottom:1px solid var(--line)}
+h3{font-size:1.05rem;margin:1.4em 0 .3em}
+p{margin:.6em 0}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+  font:0.86em/1.4 "SF Mono",SFMono-Regular,Consolas,"Liberation Mono",monospace}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:9px;overflow-x:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--chip)}
+blockquote{margin:.8em 0;padding:.2em 1em;border-left:3px solid var(--line);color:var(--muted)}
+.lede{font-size:1.12rem;color:var(--muted);max-width:70ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:.4em 0 1em}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;
+  padding:2px 11px;font-size:.8rem;color:var(--muted)}
+.chip.status-current{color:var(--ok)}
+.chip.status-stale{color:var(--warn)}
+.chip.status-partial{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:1.2em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px}
+.card h3{margin:.1em 0 .3em}
+.card .path{font-size:.8rem;color:var(--muted);font-family:"SF Mono",Consolas,monospace}
+.card p{font-size:.9rem;color:var(--muted);margin:.4em 0 0}
+.section-note{color:var(--muted);font-size:.92rem}
+.adj{margin:1em 0}
+.adj .row{padding:10px 0;border-bottom:1px solid var(--line)}
+.adj .src{font-weight:600}
+.adj .tgt{display:inline-block;background:var(--chip);border-radius:6px;padding:1px 8px;margin:2px 4px 2px 0;font-size:.85rem}
+.decision{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 20px;margin:1.1em 0}
+.decision .meta{font-size:.82rem;color:var(--muted);margin:.2em 0 .6em}
+details{margin:.6em 0}
+summary{cursor:pointer;color:var(--accent);font-size:.9rem}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 17px;margin:1.4em 0;font-size:.88rem}
+.badge .dig{font-family:"SF Mono",Consolas,monospace;font-size:.82rem;word-break:break-all;color:var(--muted)}
+.badge .age{color:var(--muted)}
+.stale-banner{display:none;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);
+  border-radius:10px;padding:12px 16px;margin:1em 0;font-weight:600}
+.stale-banner.show{display:block}
+.theme-toggle{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);
+  border-radius:8px;padding:3px 10px;cursor:pointer;font-size:.85rem}
+footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;margin-top:40px}
+footer.site .wrap{padding:20px}
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <span class="brand">F1Brainz Explainer</span>
+  <nav><a href="index.html">Overview</a><a href="boundaries.html">Boundaries &amp; Dependencies</a><a href="decisions.html">Decisions</a></nav>
+  <button id="theme-toggle" class="theme-toggle" type="button">light / dark</button>
+</div></header>
+<main class="wrap">
+<div id="stale-banner" class="stale-banner"></div>
+
+<p class="section-note"><a href="index.html">← Overview</a></p>
+<h1>Packet: src/simulation — Monte Carlo Simulation</h1>
+<div class="chips"><span class="chip status-stale">status: stale</span><span class="chip">level: container</span><span class="chip">src/simulation/</span><span class="chip">confidence: high</span><span class="chip">struct:simulation</span></div>
+
+
+<h2>Detail <span class="section-note">(from the Cartographer packet)</span></h2>
+<p><strong>Dead path.</strong> Implements the Phase 2B Monte Carlo simulation pipeline; superseded by the evo sampled runtime (<code>src/evo_predictor/sampled_runtime.py</code>). Code and tests remain in the repo but are not part of the live prediction flow.</p>
+<hr />
+<h2>Responsibility</h2>
+<p>Probabilistic race simulation. Generates qualifying position distributions and race finish position distributions via Monte Carlo sampling. Used by <code>src/publishing/</code> pipeline automation and <code>src/reporting/</code> reports.</p>
+<hr />
+<h2>Key Modules</h2>
+<p><strong><code>weekend_simulator.py</code></strong>
+End-to-end race weekend simulation. Drives qualifying and race simulators.</p>
+<p><strong><code>quali_simulator.py</code></strong>
+Qualifying simulation. Produces grid position distributions from driver strength ratings.</p>
+<p><strong><code>race_simulator.py</code></strong>
+Race outcome simulation. Produces finish position distributions, DNF modeling.</p>
+<p><strong><code>grid_analyzer.py</code></strong>
+Analysis of qualifying / grid position simulation outputs.</p>
+<p><strong><code>finish_analyzer.py</code></strong>
+Analysis of race finish position simulation outputs.</p>
+<hr />
+<h2>Inputs</h2>
+<p>Takes driver strength ratings (from <code>src/models/strength_calculator.py</code>) and simulation config (from <code>configs/simulation_config.yaml</code>). Does not depend on <code>src/evo_predictor/</code> or <code>src/latent_power/</code>.</p>
+<hr />
+<h2>Known Limits</h2>
+<ul>
+<li>Dead path relative to the live evo pipeline</li>
+<li>Uses strength-calculator driver ratings, not latent-power field solutions</li>
+<li>Tests still pass but are not part of the live verification regions</li>
+</ul>
+
+
+</main>
+<footer class="site"><div class="wrap">
+  Generated by <code>constellation-docent</code> from Cartographer map truth
+  (<code>docs/architecture/</code>). Read-only over the map. The embedded stamp records
+  <em>which map this site was built from</em>; the live gate is
+  <code>docent_freshness.py check</code>.
+</div></footer>
+<script>
+(function(){
+  var GEN="2026-07-07";
+  var banner=document.getElementById("stale-banner");
+  var params=location.search.toLowerCase();
+  var forced=/[?&]stale(=1|=true)?(&|$)/.test(params);
+  var days=Math.floor((Date.now()-Date.parse(GEN))/86400000);
+  var ageEl=document.getElementById("gen-age");
+  if(ageEl){ageEl.textContent="generated "+(isNaN(days)?"":days+" day"+(days===1?"":"s")+" ago")+" ("+GEN+")";}
+  if(forced){
+    banner.textContent="STALE: this explainer was flagged out of date against the current map. Regenerate it with the docent skill.";
+    banner.className="stale-banner show";
+  } else if(days>=30){
+    banner.textContent="This site was generated "+days+" days ago and may be stale. Verify with docent_freshness.py check before trusting it.";
+    banner.className="stale-banner show";
+  }
+  var t=document.getElementById("theme-toggle");
+  if(t){t.addEventListener("click",function(){
+    var cur=document.documentElement.getAttribute("data-theme");
+    var next=cur==="dark"?"light":(cur==="light"?"dark":(matchMedia("(prefers-color-scheme:dark)").matches?"light":"dark"));
+    document.documentElement.setAttribute("data-theme",next);
+  });}
+})();
+</script>
+</body>
+</html>

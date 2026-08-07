@@ -1,0 +1,100 @@
+{
+ "ops": [
+  {
+   "op": "rescope",
+   "id": "g1-implement",
+   "constraints": [
+    "constraint:stochastic-boundary - no LLM inference at assembly time; the record is a pure function of (canon, selector state).",
+    "constraint:markdown-in-git - no database, no query language, no new backend.",
+    "constraint:delivery-not-use - record what was made available at which revision. Access tracing and transcript analysis are OUT OF SCOPE by the issue's own words.",
+    "constraint:extend-dont-parallel - select via the engine's EXISTING active_id(); exactly one selector exists after this change.",
+    "constraint:windows-corpus - every file write pins newline='\\n'; never rely on text-mode translation. CRLF, filesystem ordering and locale are the named irreproducibility sources.",
+    "constraint:no-foreclosure - every manifest row must stay expressible as a Stratum A assertion (subject + source) later.",
+    "SHELL: all command postconditions assume cwd = the worktree root. Use `python -m pytest`; `py` resolves to a runtime with no pytest on this host (measured).",
+    "Project doctrine: a mechanism/workflow behaviour change requires targeted automated tests PLUS the relevant broader suite; both commands are named in the postconditions.",
+    "context_refs is OPTIONAL. A spine without it produces an EMPTY manifest and must NOT crash - every existing spine keeps working untouched.",
+    "No globs, no directory patterns, no os.listdir, no sorted() over paths anywhere in the producer. Declaration order is content.",
+    "Do NOT concatenate file contents. This is a manifest, not an archive.",
+    "Do NOT add a CLI verb (cut by the cold critic as YAGNI; it would touch the engine's persistence control flow for a convenience print).",
+    "INTERPRETER: CI pins python-version 3.12 (.github/workflows/ci.yml:34) while this host runs 3.14.3. Every test and script here must run green on 3.12. Do NOT use Path.read_text(newline=) or Path.write_text(newline=) - the newline kwarg on those is 3.13+. Use open(..., newline=...) instead. A sibling issue in this same epic shipped a red CI on exactly this defect, so this is a live trap, not a hypothetical.",
+    "GITATTRIBUTES: the in-process identity function equals git's blob OID only because .gitattributes is `* text=auto` with no exemption. If any path is ever marked -text or binary, git stops LF-normalising it and the in-process hash silently diverges from git hash-object for that path. c7 pins the invariant; do not remove it.",
+    "INTERPRETER: CI pins python-version 3.12 (.github/workflows/ci.yml:34) while this host is 3.14.3. Every test and script here must run green on 3.12. Do NOT use Path.read_text(newline=)/write_text(newline=) - the newline kwarg on those is 3.13+. Use open(..., newline=...) instead. A sibling issue in this same epic shipped a red CI on exactly this defect.",
+    "GITATTRIBUTES: the in-process identity function assumes git LF-normalises every file, which holds only because .gitattributes is  with no exemption. If any path is ever marked -text or binary, the in-process hash silently diverges from git hash-object for that path. c7 pins the invariant."
+   ],
+   "postconditions": [
+    {
+     "id": "c1",
+     "statement": "IMPLEMENTER_RESULT returned",
+     "check": {
+      "kind": "artifact",
+      "evidence_type": "implementer-result"
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c2",
+     "statement": "targeted tests green: the identity function equals git hash-object on a real tracked file; CRLF/LF twins of identical content produce the SAME rev; AND a manifest is produced by driving the REAL producer through the engine's active_id() selector, not a hand-built fixture",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest tests/test_context_manifest.py -q"
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c3",
+     "statement": "cross-environment determinism: a clean second checkout (git worktree add at the same commit, different path, mutated LC_ALL/LANG/PYTHONHASHSEED) yields byte-identical output. NOTE the honest limit: same OS and same filesystem - this exercises path/locale/hash-ordering, not a cross-OS rebuild.",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest tests/test_context_determinism.py -q"
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c4",
+     "statement": "the first real declaration exists on the Commander spine template (this check FAILS at HEAD today - verified before freezing)",
+     "check": {
+      "kind": "command",
+      "command": "grep -q 'context_refs' skills/commander/templates/COMMANDER_SPINE.template.json"
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c5",
+     "statement": "broader engine suite still green (mechanism change -> targeted PLUS broader)",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest tests/test_checklist_engine.py -q"
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c6",
+     "statement": "no filesystem enumeration, no unpinned text write, and no 3.13+-only API in the new producer - the three constraints the mission frame and CI call load-bearing are mechanically checked, not merely asserted in a constraints array",
+     "check": {
+      "kind": "command",
+      "command": "python -m pytest tests/test_context_manifest.py -q -k 'no_globs or newline_pinned or py312_compatible' --no-header"
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c7",
+     "statement": "INVARIANT - no path is exempted from git LF normalisation. The identity function equals git hash-object ONLY while .gitattributes carries no -text/binary rule; a future exemption would make the two silently diverge for that path. This check passes today and fails the moment an exemption is added - both directions verified before freezing.",
+     "check": {
+      "kind": "command",
+      "command": "test -f .gitattributes && ! grep -nE '(^|[[:space:]])(-text|binary)([[:space:]]|$)' .gitattributes"
+     },
+     "satisfied": false
+    },
+    {
+     "id": "c7",
+     "statement": "INVARIANT - no path is exempted from git LF normalisation. The identity function equals git hash-object ONLY while .gitattributes carries no -text/binary rule; a future exemption would make the two silently diverge for that path. Passes today, fails the moment an exemption is added (both directions verified before freezing).",
+     "check": {
+      "kind": "command",
+      "command": "test -f .gitattributes && ! grep -nE '(^|[[:space:]])(-text|binary)([[:space:]]|$)' .gitattributes"
+     },
+     "satisfied": false
+    }
+   ]
+  }
+ ]
+}

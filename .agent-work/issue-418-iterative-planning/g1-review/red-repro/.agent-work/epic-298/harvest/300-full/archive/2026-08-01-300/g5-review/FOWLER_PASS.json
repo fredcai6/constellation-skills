@@ -1,0 +1,86 @@
+{
+  "work_id": "300-g5-review",
+  "diff_ref": "issue #300 gate g5 (uncommitted working-tree diff, +259/-11 over 5 files): scripts/checklist_engine.py (+repo_revision), scripts/context_manifest.py (CONTENT_KEYS grows to 4; new default_repo_state; build_manifest/produce gain a repo_state edge), docs/CHECKLIST_ENGINE_DESIGN.md (+1 paragraph), tests/test_checklist_engine.py (+RepoRevision), tests/test_context_manifest.py (+RepoRevContent, envelope 4->5 keys)",
+  "repo_standards_ref": "No docs/agents/ overlay in this repo (skill-source, sanctioned degradation). Standards applied: installed reviewer skill references/global-crew.md ('minimal change, no speculative abstraction', 'no hidden fallback; fail visibly', 'match the surrounding code's in-file documentation conventions') and references/global-everyone.md ('one canonical path', 'fail visibly rather than emit plausible wrong output', deep-module vocabulary: one adapter = a hypothetical seam, two = a real one), plus the g5 gate imperative's own budget ('one field plus a dirty marker plus one doc line is the whole budget').",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "repo_revision() is 7 statements; default_repo_state() is 3. build_manifest() grew by one dict entry. Nothing lengthened meaningfully.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No classes added to either production module. The two new test classes (RepoRevision, 6 tests; RepoRevContent, 10 tests) are focused on one fact each.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "The opposite, in fact: repo_revision() reuses the existing _git() helper that _collect_changed_files already relies on, rather than opening a second ad-hoc subprocess path. That is the correct call and the docstring says why. The pre-existing three-fold duplication in test_context_determinism.py (my tc5) is untouched here and out of this gate's scope.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "default_repo_state() reads roots.get('repo') and delegates; it does not reach into another module's internals. repo_revision() operates on its own subprocess results.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "{commit, dirty} now travels as a pair through repo_revision -> default_repo_state -> build_manifest -> the envelope, and (checklist, roots, reader, repo_state) is now a four-element signature clump.",
+      "override": {
+        "repo_standard": "The frozen envelope contract (HANDOFF Authority: the row/envelope shape is settled; constraint:no-foreclosure - 'every manifest row must stay expressible later as an assertion with a subject and a source'), and the module's own stated injected-edge pattern which reader already established.",
+        "reason": "{commit, dirty} is a serialised JSON record whose exact key set is the deliverable, so a value object could only exist on one side of the boundary and would have to be unwrapped at the seam - the same reasoning that overrode this smell for the {root, path, rev} row in rework 1. The signature clump is the declared purity contract: build_manifest is documented as a pure function of exactly these four, and naming them is what makes the two impure edges visible rather than hidden. Bundling them would hide the second edge, which is the opposite of what this change needs."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "commit is a bare hex str and dirty a bare bool/None, rather than a RepoRevision value type with a tri-state 'unknown'.",
+      "override": {
+        "repo_standard": "The envelope is serialised with json.dumps and every field must round-trip as a JSON primitive; references/global-everyone.md 'One canonical path; no speculative abstraction'.",
+        "reason": "Identical to the rev-is-a-bare-str override already logged in rework 1 and unchanged in force. A wrapper type would need unwrapping at the serialisation seam, creating a second representation of the same fact. The tri-state is already expressed the way JSON expresses it (null), consistently with rev: null for an absent file."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "build_manifest goes from 3 to 4 parameters, produce from 4 to 5, all keyword-defaulted. Note this is a genuine RE-GROWTH after rework 2 deleted six zero-caller seams - but unlike those, repo_state has a real caller (build_manifest's own default) and a real test (the injection test), so it is not the speculative kind. Below the threshold where a parameter object pays.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "Adding the field touched exactly the places the design says it should: the allow-list, the envelope, one engine function, one doc paragraph, two test files. No caller outside the module had to change.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "flagged",
+      "finding": "Mild but worth naming. checklist_engine.py is the checklist state machine; repo_revision() is a general-purpose git fact with no checklist involvement at all, placed there for one reason only: to keep context_manifest.py's AST guard (banning the identifier `subprocess` in that file) literally true. So a module now hosts a function for a reason unrelated to its own responsibility, and the engine gains a second reason to change. The placement is defensible - _git() genuinely lives there already, so it is reuse rather than invention - but the DRIVER was a test's implementation detail, not a cohesion argument, and the docstring says so in as many words. If a third such git fact arrives, the honest move is a small git-facts module both import, rather than continuing to accrete them in the engine because of where an AST guard happens to point. Raised as an observation, not a blocker.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "Deepest is roots.get('repo') then Path(base). No graph navigation.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Checked specifically, because rework 2 had just deleted six zero-caller seams and a re-growth would be a regression. repo_state is not that: it has a real default caller and a real injection test (RepoRevContent's fake-callable test), and the injectability is what lets the existing non-git-tempdir fixtures keep working. base_dir=None on repo_revision() is exercised by its own test. No dead parameters introduced.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "Not density - the density matches the corpus convention already overridden in rework 1 and the new docstrings are genuinely explanatory. The flag is ACCURACY, which is the failure mode this issue keeps producing: ProducerGuards.test_producer_shells_out_to_nothing still carries the comment 'no `git` process, and no network or LLM call at assembly time. The manifest is a pure function of (canon, selector)' while build_manifest now spawns two git subprocesses per call by default. The guard passes (it scans only this file's AST for the identifier `subprocess`) so nothing is weakened, but the comment now asserts a property the code does not have, and it is the load-bearing explanation of why that guard exists. The module docstring was updated honestly in the same diff; this comment was missed. Raised in the review as MAJOR-2.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

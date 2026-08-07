@@ -1,0 +1,89 @@
+{
+  "work_id": "issue-304",
+  "diff_ref": "issue-304 gate g1 REWORK pass: the B1 substitute-readability fix in scripts/map_orient.py (new CONTENT_HASH_RE + is_content_hash + substitute_problems; substitutes_declared reduced to `not substitute_problems(receipt)`; pin_substitutes emits None instead of an 'unreadable' sentinel), the new UnreadableSubstitute class and multi-element filler arms in tests/test_map_orient.py, and two added mutations in tests/test_mutation_floor.py (3 -> 5).",
+  "repo_standards_ref": "references/global-crew.md, references/global-everyone.md, docs/agents/ORCHESTRATOR_CONTEXT.md, the g1 implementer handoff's house-style constraint for scripts/ and its two-bin rule. docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md do not exist in this repo.",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "self_test() grew from ~155 to ~180 lines with the new hash-pin block (map_orient.py:996-1006). Same Long Method shape as the first pass, now slightly longer.",
+      "override": {
+        "repo_standard": "The g1 implementer handoff's house-style constraint requires 'a --self-test falsification floor'; the module docstring documents it as such, and prior art (.agent-work/epic-298/baselines/extract_ordering.py) carries the same single-function shape.",
+        "reason": "The floor is deliberately one flat sequence of assertions with no control flow that could hide a skipped check -- the failure mode (#300) this gate exists to prevent. The rework extended it in place rather than adding indirection, which is the right call. Standard subordinates the smell."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The new UnreadableSubstitute class is six cohesive tests on exactly one property (a substitute that cannot be read must refuse), including its own positive control. No class exceeds its remit.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The rework ADDED a fourth copy of a rule rather than removing duplication. The bad-hash vocabulary is now written twice and has already drifted: map_orient.py:999 has (None, 'unreadable', '', 'n/a', 'a'*63, 'z'*64, 12345) while test_map_orient.py:513 has ('unreadable', 'n/a', '', None, 'a'*63, 'Z'*64) -- different case, and only self_test carries the non-string 12345. This is the same drift I flagged last pass on the filler lists ('<placeholder>' still present in self_test's list only). Directly consequential: NEITHER list contains an over-long digest, which is exactly the P2 mutation that survived this pass. Observation, not a blocker.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "substitute_problems and is_content_hash read only what they are handed. substitutes_declared reducing to `return not substitute_problems(receipt)` is a clean improvement -- one predicate, one problem-lister, no duplicated rule between them.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "(substitutes, unmapped, escalation) still travel together, and the substitute entry is still a bare {path, content_hash} dict rather than a value object.",
+      "override": {
+        "repo_standard": "The handoff freezes the receipt schema as a flat JSON document that g2's frame check reads as a cross-gate contract.",
+        "reason": "The clump is the frozen wire format; a value object would insert a mapping layer between the schema and the predicates that validate it, on a contract g2 depends on. Unchanged from the first pass and still correct."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Verdicts remain bare str constants and exit codes bare ints. The content hash is still a bare str -- though the rework materially improved this by adding a SHAPE check (is_content_hash) rather than a mere non-empty test, which is the substantive half of what a value object would have bought.",
+      "override": {
+        "repo_standard": "The handoff freezes both the reserved-literal vocabulary and the exit-code table as external contracts; the engine records only {cmd, exit, shell} and discards stdout.",
+        "reason": "These primitives are the serialized contract itself -- the string IS what crosses the process boundary. Values arrive from disk and from subprocess exit codes, so an Enum would add unwrapping at every boundary without making an illegal value less reachable. is_content_hash is now the validation seam that matters."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "flagged",
+      "finding": "build_receipt() still takes six positional parameters and self_test still calls it fully positionally on one line. Unchanged by the rework; minor, and a parameter object would collide with the frozen-schema reasoning under data-clumps. Noted, not worth churn.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Widened by the rework. Adding one rejected-hash case now requires edits in step across map_orient.py:999 and test_map_orient.py:513; adding a filler token still requires FILLER_VALUES (map_orient.py:~395) plus two more sites. The P2 survivor is the concrete cost: a single missing case in two hand-maintained tuples left the shape check's upper bound unpinned.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The rework touches exactly one axis -- substitute hash-pin validity. is_content_hash, CONTENT_HASH_RE, substitute_problems and pin_substitutes all change for the same reason, which is cohesion.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "Longest chain added is CONTENT_HASH_RE.match(value.strip().lower()) -- fluent calls on one str, not navigation across collaborators.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "The untested absolute-path branch in pin_substitutes SURVIVED the rework (map_orient.py:770 and 773, `if not Path(raw).is_absolute() else ...`). I flagged it last pass partly because it is the same function that produced the B1 sentinel; the sentinel is gone but the unexercised branch remains, and --substitute is still documented as repo-relative. Also still present: the dead `return EXIT_OK  # unreachable` after parser.error in main(). Both minor.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "Not deodorant -- the new docstrings on is_content_hash, substitutes_declared and pin_substitutes explain WHY (a sentinel would satisfy a non-empty test and let a typo discharge the contract) and are genuinely good. But the module docstring's 'Honest limits' section was NOT updated: it still says the module 'can only check the three fields are present and are not filler', which now understates what the code does (it also validates hash shape) and still omits the unreadable-substitute case entirely. I raised exactly this gap last pass. Documentation drift against a section whose whole purpose is to state the honest limits.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

@@ -1,0 +1,25 @@
+run #698: exit=0 timed_out=False elapsed=220s git_unchanged=True
+run #688: exit=0 timed_out=False elapsed=325s git_unchanged=True
+run #690: exit=0 timed_out=False elapsed=364s git_unchanged=True
+run #704: exit=0 timed_out=False elapsed=108s git_unchanged=True
+run #716: exit=0 timed_out=False elapsed=371s git_unchanged=True
+[corpus] installing PRE-#304 corpus from C:\Programs\constellation-skills-wt\e298-299 ...
+[corpus] id = sha256:3a30a64b02df4dfad896e68aba2c1e46d3f080caaaf6ab98d1fab284d91f0c2d
+[corpus] source_commit = a226642b4b2655b7167c84f625f1dffc8ae44181
+[#690] launching  (13:42:00)
+[#688] launching  (13:42:00)
+[#698] launching  (13:42:00)
+[#698] capture exited rc=0 (+225s)
+[#698] run-698: calls=35 first_map=28 first_src=0 corpus=NO-CORPUS-READ subagents=0 forbidden=0
+[#716] launching  (13:45:45)
+[#688] capture exited rc=0 (+330s)
+[#688] run-688: calls=35 first_map=23 first_src=0 corpus=NO-CORPUS-READ subagents=0 forbidden=0
+[#704] launching  (13:47:30)
+[#690] capture exited rc=0 (+365s)
+[#690] run-690: calls=43 first_map=5 first_src=2 corpus=NO-CORPUS-READ subagents=0 forbidden=0
+[#704] capture exited rc=0 (+440s)
+[#704] run-704: calls=10 first_map=4 first_src=0 corpus=NO-CORPUS-READ subagents=0 forbidden=0
+[#716] capture exited rc=0 (+600s)
+[#716] run-716: calls=61 first_map=51 first_src=NO-SRC-READ corpus=0 subagents=0 forbidden=0
+
+all captures done in 600s

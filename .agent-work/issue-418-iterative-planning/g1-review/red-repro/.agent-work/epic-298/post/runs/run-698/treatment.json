@@ -1,0 +1,122 @@
+{
+  "run": "run-698",
+  "captured": true,
+  "transcript_complete": true,
+  "verdict": "TREATMENT-VERIFIED",
+  "treatment_verified": true,
+  "tool_call_count": 141,
+  "skill_invocations": 2,
+  "skill_calls": [
+    {
+      "index": 0,
+      "skill": "constellation-commander",
+      "input": {
+        "skill": "constellation-commander",
+        "args": "#698"
+      }
+    },
+    {
+      "index": 45,
+      "skill": "constellation-interrogator",
+      "input": {
+        "skill": "constellation-interrogator",
+        "args": "cmdr-698 \u2014 issue #698 hardening (H1 store API CellAddress, H2 script sys.path, H3 gitignore)"
+      }
+    }
+  ],
+  "commander_invocation_indices": [
+    0
+  ],
+  "commander_served_by": [
+    {
+      "base_dir": "C:\\Users\\fredc\\.claude\\skills\\constellation-commander",
+      "skill": "constellation-commander",
+      "after_call_index": 0
+    }
+  ],
+  "all_skill_loads": [
+    {
+      "base_dir": "C:\\Users\\fredc\\.claude\\skills\\constellation-commander",
+      "skill": "constellation-commander",
+      "after_call_index": 0
+    },
+    {
+      "base_dir": "C:\\Users\\fredc\\.claude\\skills\\constellation-interrogator",
+      "skill": "constellation-interrogator",
+      "after_call_index": 45
+    }
+  ],
+  "init_constellation_entries": 18,
+  "init_duplicated_names": 0,
+  "write_audit": {
+    "count": 10,
+    "calls": [
+      {
+        "index": 73,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\interrogation.json"
+      },
+      {
+        "index": 100,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\INTERROGATION_RECORD.json"
+      },
+      {
+        "index": 107,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\PROBLEM_STATEMENT.md"
+      },
+      {
+        "index": 113,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\MISSION_FRAME.md"
+      },
+      {
+        "index": 115,
+        "tool": "Edit",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\MISSION_FRAME.md"
+      },
+      {
+        "index": 122,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\execute.json"
+      },
+      {
+        "index": 124,
+        "tool": "Edit",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\execute.json"
+      },
+      {
+        "index": 129,
+        "tool": "Edit",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\execute.json"
+      },
+      {
+        "index": 130,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\PLAN_DECISIONS.md"
+      },
+      {
+        "index": 140,
+        "tool": "Write",
+        "target": "C:\\Programs\\f1bwt\\post698\\.agent-work\\cmdr-698\\STATE_NOTE.md"
+      }
+    ],
+    "writes_outside_own_worktree": [],
+    "writes_inside_worktree_but_outside_agent_work": [],
+    "clean": true
+  },
+  "forbidden_operations": [],
+  "map_credit_suppressed_by_corpus_rule": [],
+  "tool_histogram": {
+    "Bash": 97,
+    "Read": 22,
+    "Grep": 7,
+    "Write": 7,
+    "Edit": 3,
+    "Skill": 2,
+    "PowerShell": 2,
+    "Glob": 1
+  },
+  "final_answer_chars": 5332
+}

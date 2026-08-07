@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-418-iterative-planning",
+  "diff_ref": "Exact seven-path G3 inventory at sha256:c3a48b776e9581b51f74125c72d05e536dac8cecf1e97da7d0afdc32602cbbca",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, reviewer references/global-crew.md/global-everyone.md, frozen G3 imperative",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Frozen G3 requires each live role's Markdown doctrine and parsed spine invariant to agree", "reason": "The concise Markdown/directive mirroring is deliberate dual representation for human role consumption and machine-parsed contract tests; removing either would lose an explicitly required surface."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Frozen G3 explicitly wires the three role boundaries Explorer, Commander, and Admiral", "reason": "The finite seven-file change follows the intended end-to-end role chain; it is not recurring accidental coupling."}},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "flagged", "finding": "The new directives objects look executable but no engine or role machinery consumes them; every new artifact/timing postcondition is check:null. Tests assert the metadata itself and separate canonical fixtures, so the structured layer currently adds an unused abstraction rather than an operative seam.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

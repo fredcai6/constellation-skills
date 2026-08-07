@@ -1,0 +1,9 @@
+scripts/install_constellation.py
+scripts/verify_iterative_role_artifacts.py
+skills/admiral/SKILL.md
+skills/admiral/templates/ADMIRAL_SPINE.template.json
+skills/commander/references/commander-core.md
+skills/commander/templates/COMMANDER_SPINE.template.json
+skills/explorer/SKILL.md
+skills/explorer/templates/EXPLORER_SPINE.template.json
+tests/test_iterative_planning_doctrine.py

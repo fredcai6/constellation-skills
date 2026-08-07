@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "feedback",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "python scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
+    }
+  ]
+}

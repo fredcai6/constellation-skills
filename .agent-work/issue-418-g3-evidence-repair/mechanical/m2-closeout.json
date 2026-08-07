@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-closeout",
+  "mechanical": {
+    "run": "issue-418-g3-evidence-repair",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-g3-evidence-repair-m2-closeout@0441c7dd884bb652e99188a24c515aeb594e9d63",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-g3-evidence-repair",
+    "generated_at": "2026-08-06T19:34:59Z"
+  }
+}

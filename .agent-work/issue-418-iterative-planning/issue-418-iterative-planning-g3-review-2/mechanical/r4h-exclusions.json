@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4h-exclusions",
+  "mechanical": {
+    "run": "issue-418-iterative-planning-g3-review-2",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4h-exclusions",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-g3-review-2-r4h-exclusions@73ad0dd0f306dd3030d1efd7ac9385eb46819e1a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning-g3-review-2",
+    "generated_at": "2026-08-06T19:00:49Z"
+  }
+}

@@ -1,0 +1,258 @@
+{
+  "work_id": "issue-418-g3-rework-1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-executable-red",
+    "m2-explorer-artifact",
+    "m3-wave-refusal",
+    "m4-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load G3 reviewer evidence",
+      "imperative": "Read inherited/project doctrine, rework handoff, reviewer result and probes, frozen G3 packet, current G3 diff, and existing installer/check mechanisms. Verify the rework is complete and bounded; attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "review evidence loaded and rework handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded inherited/project doctrine, complete G3 rework handoff, reviewer BLOCK/probe, frozen G3 packet, current role spines/doctrine, installer naming/rewrite/bundle mechanics, canonical G1/G2 public verifiers, and Admiral log grammar. Rework is bounded to installed resolution plus pure run-artifact/pre-launch checks; no engine/schema/authority change is needed."
+        }
+      ],
+      "constraints": [
+        "preserve G1/G2 schemas and authority",
+        "existing check mechanisms only",
+        "no network/unrelated edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-executable-red": {
+      "id": "m1-executable-red",
+      "title": "Encode executable reviewer regressions",
+      "imperative": "Add installed-layout, real Explorer run-artifact, and Commander/Admiral pre-launch refusal tests before production edits. Run the exact frozen command and capture a causal RED; attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "review context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Reviewer reproductions and existing install/check mechanisms loaded; handoff complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "executable tests written first and exact command failed causally",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Before production edits, added real installer-layout and run-artifact/pre-launch subprocess tests plus parsed command-postcondition expectations. Exact frozen command exited 1: 4 causal failures on three broken canonical installed paths/contracts and missing executable verifier; 28 passed, 4 artifact tests skipped until verifier exists, not import/setup failures."
+        }
+      ],
+      "constraints": [
+        "TDD required",
+        "red must not be marker/import/setup failure"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-explorer-artifact": {
+      "id": "m2-explorer-artifact",
+      "title": "Make canonical contract installed and run-verifiable",
+      "imperative": "Use existing installer/check mechanisms so every role installation can resolve the canonical G1/G2 contracts, and make Explorer confirmation refuse without a fresh exact SHAPED_BRIEF run artifact while preserving human confirmation. Prove the focused Explorer/artifact slice.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "causal executable RED captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Executable installed-layout/run-artifact RED captured before production changes."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "installed layout and Explorer run-artifact checks pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "The canonical installed Explorer directive now resolves constellation-to-initial-issues, the shared pure verifier is bundled, confirm.c3 is an engine command postcondition over the run's actual SHAPED_BRIEF.json, and the installed subprocess test refuses missing/malformed packets then passes exact G1; 2 focused tests passed."
+        }
+      ],
+      "constraints": [
+        "one canonical contract copy",
+        "no new engine mechanism",
+        "no G1 schema edit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-wave-refusal": {
+      "id": "m3-wave-refusal",
+      "title": "Enforce evidence return and pre-launch transition",
+      "imperative": "Wire existing checks so Commander cannot close with undispositioned observed evidence and Admiral cannot launch the next wave without a verified exact transition; preserve repair, tracker port, recovery, review, and human gates. Run reviewer probes/registration and exact frozen GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "canonical installed contract and Explorer artifact gate are working",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Install-safe shared verifier and Explorer command gate are proven in a real installed corpus."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Commander and Admiral executable refusals plus reviewer probes/registration pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Real five-skill install tests resolve all four canonical sibling paths; Commander refuses missing/malformed run REPLAN_INPUT; Admiral prelaunch refuses missing packets, repair drift, and duplicate audit exits, then renders both outputs on one verified transition. Installer bundle registration/install suite passed 108 tests and 379 subtests; G1/G2/init confirmatory suite passed 62 tests and 59 subtests. The mint-only verify_skill_registered rail flags pre-existing role frontmatter metadata outside this bounded rework, not bundle registration or installability."
+        },
+        {
+          "id": "c2",
+          "statement": "exact frozen command passes",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-wave-refusal-1"
+        }
+      ],
+      "constraints": [
+        "no tracker/network mutation",
+        "no engine redesign",
+        "authority gates remain"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-wave-refusal-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-closeout": {
+      "id": "m4-closeout",
+      "title": "Refresh G3 review identity",
+      "imperative": "Run final audits, recompute exact ordinal digest/inventory, refresh IMPLEMENTER_RESULT with rework RED/GREEN and workflow feedback, attest c1, advance, then release last.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all executable G3 role contracts are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Frozen suite green with 36 passed and 4 subtests; installer and canonical G1/G2 confirmatory suites also green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fresh G3 result/digest ready for independent re-review",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Rework result records causal RED and installed-runtime GREEN, confirmatory suites, bounded installer normalization, exact nine-path ordinal inventory, and sha256:136a4de0f775630e65726cc03e1967559e79650904925022efbbe98419cca758; JSON parse and scoped diff/no-network audits passed."
+        }
+      ],
+      "constraints": [
+        "local result only",
+        "preserve unrelated dirty changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g3-rework-1-20260806",
+    "status": "released",
+    "claimed_at": "2026-08-06T18:39:40.898409+00:00",
+    "last_heartbeat": "2026-08-06T18:53:03.571542+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T18:53:03.856118+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The four P1s share one missing executable seam: an install-bundled pure verifier can resolve canonical constellation-* siblings and turn the three role artifacts/timing claims into ordinary command checks.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:41:54.297029+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-executable-red",
+      "why": "The test surface now installs the five real skills, resolves canonical sibling paths, runs the shipped helper against actual work-area artifacts, and simulates Admiral next-launch refusal through malformed, duplicate-audit, and repair-drift states.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:43:35.477833+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-explorer-artifact",
+      "why": "Explorer keeps human confirmation as a separate artifact conjunct while an ordinary command check now proves the exact run output through the canonical installed G1 verifier.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:46:37.440908+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-wave-refusal",
+      "why": "Existing command checks now enforce actual Commander evidence return and one repair-safe, uniquely audited Admiral transition before the launch named by NEXT_WAVE; real installed-layout tests prove canonical G1/G2 resolution.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:51:19.150764+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-closeout",
+      "why": "The refreshed identity binds the executable verifier, existing installer wiring, three role contracts, and adversarial installed-run tests for independent G3 re-review.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:53:03.571533+00:00"
+    }
+  ]
+}

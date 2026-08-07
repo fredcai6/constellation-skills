@@ -1,0 +1,50 @@
+{
+  "work_id": "explore-memory-graph",
+  "cycle": "3",
+  "flavor": "refine",
+  "type": "survey",
+  "items": ["c0-frame", "q1-structure", "x4-deleuze-machines", "x5-algorithmic-derivation"],
+  "tasks": {
+    "c0-frame": {
+      "id": "c0-frame",
+      "title": "Frame cycle 3 as refine on structure",
+      "imperative": "Flavor refine. Cycle 2's consolidation closed, but the discussion that followed hardened the STRUCTURE of the thing: two-layer backend, address-as-identity, Wikidata statement shape, atomic storage with rendered article views, project-owned graphs. Those verdicts are already recorded on the board. This cycle holds that refinement plus any excursions it spawns.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "framed: refine on structure; discussion verdicts already on the board", "finding": null, "evidence": [], "rework_count": 0
+    },
+    "q1-structure": {
+      "id": "q1-structure",
+      "title": "Harden the structural model (address book + graph, layers, federation)",
+      "imperative": "Chase the structural open threads through discussion with the human: what the layer list is, whether the layer mask is the dial's primary suppression axis, how a cross-project jump decides without loading, how two projects converge on one subject under opaque ids, and whether the vector layer earns its complexity over properties+queries. Verdicts land on the board as they settle.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "closed by the split ruling: remaining opens allocated to the three descendant explorations via handoffs/",
+      "finding": "SETTLED SO FAR (see board Verdicts): two access paths (property/address store + graph); address is opaque identity, never classification; each project owns its graph, project qualifier is a storage location not a taxonomy segment; lift Wikidata's statement shape (qualifiers + references) and identity scheme, not Wikipedia's article model; keep the type vocabulary small and our own; atomic storage with article-shaped rendered views; one node per layer sharing subject identity; the argument/decision layer is first-class. OPEN: layer list, layer-mask-as-dial, cross-project jump economics, same-subject convergence, and whether the embedding/vector layer earns its cost over properties+queries (human pushback: 'that's really just defining properties per topic' - conceded for FCA, residue is graded similarity along undeclared axes, which is exactly the cross-project case). REFOCUS (human, this cycle): specifically a map FOR CODE - navigation surface as an alternative to reading the code. Three node types (containers=variables, transformers=functions, concepts), two layers (architectural + conceptual), collapsed functional/variable maps as derived views. New opens: container granularity, call modeling (data-mediated vs direct edge), concept-layer edge vocabulary.",
+      "evidence": [], "rework_count": 0
+    },
+    "x4-deleuze-machines": {
+      "id": "x4-deleuze-machines",
+      "title": "Excursion: Deleuze's machines/assemblages at the intersection with agent networks",
+      "imperative": "Research excursion, human-initiated one-off. One named question: is there prior art at the intersection of Deleuze's concept of machines (and the assemblage/rhizome apparatus) and agent networks / knowledge organization, and is any of it load-bearing rather than decorative? Brief at excursions/x4-brief.md, recorded on the board. Dispatch background via run_crew.py (external backend); result at excursions/x4-result.md. Scoped nulls apply.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "completed; registry verified fresh",
+      "finding": "Thin but not empty, and thinner than the citation volume suggests. Deleuze's MACHINES specifically produced zero operational prior art. One running system (Serrano et al. 2026 Rupture Protocol: edge-density concentration threshold triggers injection of heterodox material) with no quantitative evaluation and an uncalibrated threshold; one modelling discipline (DeLanda's parametrized assemblage theory, via Shults); everything else interpretive. Verified clean negative: the 'Rhizome' semantic wiki (Souzis, IEEE 2005) cites no Deleuze. ANT does most of the work Deleuze is credited for, and plainer. FOUR TRANSFERABLE: (1) centralization guard - measure edge-mass concentration and push back against hub formation, the one genuinely new pressure nothing in the design has; (2) orthogonal-isolation detection - same terminology, no connecting path, which is exactly the cross-project collision case; (3) relations of exteriority as a LINT RULE - a node must be interpretable outside its home graph, the only testable claim in the corpus, directly serving cross-project sharing; (4) a disagreement edge type plus traversal preference, exposed on the dial. FLAGGED not recommended: Simondon's concretization as a maturity criterion (parts serving several functions), which cuts against one-concern-per-component. SCOPED NULLS: no prior art for flow-interruption applied to read/write boundaries; no Deleuze-derived system in the RDF/KG engineering lineage; no Deleuze citations in swarm/self-organizing MAS engineering; no quantitative evaluation anywhere. Unsearched: ACM/IEEE/AAMAS direct, French-language agencement scholarship, paywalled Shults/Muller-Schurr/Tredinnick full texts.",
+      "evidence": [], "rework_count": 0
+    },
+    "x5-algorithmic-derivation": {
+      "id": "x5-algorithmic-derivation",
+      "title": "Excursion: deriving the code map algorithmically",
+      "imperative": "Research excursion, human-initiated after the cycle-3 refocus (map for code; containers/transformers/concepts). One named question: how can the three-node-type code map be derived algorithmically - what tooling and prior art extracts each layer, at what granularity, with what incremental-re-derivation support? Tests the hypothesis that the concept side is 'just flipping comments'. Brief at excursions/x5-brief.md; result at excursions/x5-result.md. Scoped nulls apply.",
+      "preconditions": [], "postconditions": [],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "complete", "status_detail": {}, "result": "completed; registry verified fresh",
+      "finding": "Architectural layer: close to solved. scip-python and scip-clang emit resolved-symbol occurrences with ReadAccess/WriteAccess roles - almost exactly the container<->transformer edge - at low adoption cost; gaps are no call edges (recover via LSP call hierarchy) and no incrementality. Joern/CPG is the only single artifact with the whole model (variable-level REACHING_DEF data dependence + CALL edges) but heavy, weak Python frontend. CodeQL strongest analysis / worst map. Glean is the design precedent for our storage model: derived predicates = projections-on-demand, stacked layers + fanout = re-derive/diff/supersede. CONCEPT LAYER: no surveyed tool derives it. 'Flipping comments' verdict: attachment is deterministic and free (doc-generator lineage) but coverage kills it as the whole layer (~19pct comment density; 60-75pct of entities uncommented; failure mode is ABSENCE not rot - comments co-move with code 90-97pct when touched, new code just goes uncommented) and the level mismatch (comment=one declaration, concept=spans several) is exactly unsolved feature-location. Model gap-filling works better grounded in the structural graph (CodeWiki) but errs ~46pct vs human summaries - store model-named concepts as confirmable statements with provenance. GRANULARITY: ecosystem splits at 'does the name cross a file boundary', not variables-vs-functions; navigation tools stop at declarations, execution-reasoning tools go to variable-at-program-point and pay with build integration + no incrementality. SCOPED NULLS: no tool combines variable-level + incremental + cheap (pairwise only); commercial arch tools, srcML, SVF/PhASAR, Soot/WALA, ctags lineage, and any hands-on run NOT surveyed.",
+      "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": "CLOSED BY SPLIT (human decision). The refine cycle hardened the structure (two access paths, Wikidata statement shape, atomic storage + rendered views, markdown-is-truth, current view, evidence classes, three postmortem questions, Soar-to-feedback), folded the roll-up as idea material, absorbed x4 (Deleuze thin; four transferables) and then REFOCUSED the whole exploration onto a map-for-code: three node types (containers/transformers/concepts), two layers, collapsed views as projections. x5 then showed the architectural layer is close to a solved extraction problem (SCIP read/write occurrences; Joern for the full model; Glean as the storage-design precedent) while concept IDENTITY needs judgment (comments cover only ~19-40pct of entities; level mismatch = unsolved feature location). The human ruled: split into three descendant explorations - mind map (LLM-heavy shared memory), code map (algorithmic derivation), recursive self-improvement (skills first, esp. Soar) - fundamentally different questions with different inputs and different maintainers, expected to grow interlinked. Handoffs written to handoffs/; q1-structure's remaining opens allocated to the descendants; this run routes and archives. All rulings recorded on the board.",
+  "triage_candidates": [],
+  "blockers": []
+}

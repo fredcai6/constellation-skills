@@ -1,0 +1,9 @@
+{
+  "gate_id": "g4",
+  "red_exit": 1,
+  "green_exit": 0,
+  "diff_digest": "sha256:251c48b0ae6308d01bbd813f037b06a4f2ad40e468e9cd90dda2baadff720355",
+  "result_path": ".agent-work/issue-418-iterative-planning/g4-implement/IMPLEMENTER_RESULT.md",
+  "red_command": "uv run python scripts/verify_epic_418_demo.py --work-id issue-418-iterative-planning",
+  "green_command": "uv run python scripts/verify_epic_418_demo.py --work-id issue-418-iterative-planning"
+}

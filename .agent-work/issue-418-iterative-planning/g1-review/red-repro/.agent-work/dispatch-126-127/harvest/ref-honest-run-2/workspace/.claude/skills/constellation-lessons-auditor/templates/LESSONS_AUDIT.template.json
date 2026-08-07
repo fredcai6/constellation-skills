@@ -1,0 +1,60 @@
+{
+  "work_id": "<run-or-epic-id>-lessons-audit",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["brief", "logs", "feedback", "crew", "telemetry", "playbook", "consolidate"],
+  "tasks": {
+    "brief": {
+      "id": "brief",
+      "title": "Verify the run brief",
+      "imperative": "Confirm the run brief is present and complete: run/epic intent, project-customized templates (TEMPLATES_MANIFEST diff), model tiers used, artifact paths. If missing or incomplete, stop and report — do not audit blind.",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "logs": {
+      "id": "logs",
+      "title": "Audit the run log",
+      "imperative": "Read the ADMIRAL_LOG (or the Commander spine state for a non-fleet run). Extract candidates from RULINGs, INCIDENTs, ADMIRAL ERRORs, and recoveries: what was improvised, what was relearned, what a template or skill should have carried. Cite the log line for each.",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "feedback": {
+      "id": "feedback",
+      "title": "Audit the feedback entries",
+      "imperative": "Read the AGENT_FEEDBACK entries for this run/epic. Extract candidates from friction, adherence deviations, and improvement signals. Weight friction the run worked around over friction merely asserted.",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "crew": {
+      "id": "crew",
+      "title": "Audit crew workflow feedback",
+      "imperative": "Read every crew Workflow Feedback section (IMPLEMENTER_RESULT / REVIEW_RESULT). Consolidate phrase-different duplicates. Handoff gaps reported by multiple crews are the strongest handoff-scope candidates.",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "telemetry": {
+      "id": "telemetry",
+      "title": "Corroborate with engine telemetry",
+      "imperative": "Cross-check candidates against telemetry: rework_count per task, BLOCK verdicts, waives/forced overrides, re-dispatches, incident counts. Mark each candidate corroborated or assertion-only; raise confidence only with corroboration.",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "playbook": {
+      "id": "playbook",
+      "title": "Reconcile against the existing playbook",
+      "imperative": "Read .agent-work/LESSONS.md (Active). Map candidates to existing lessons: re-validations become confirm ops, contradictions become disconfirm ops, near-duplicates merge. Flag Active lessons this run's evidence undermines even if no one complained.",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "consolidate": {
+      "id": "consolidate",
+      "title": "Consolidate scoped candidates",
+      "imperative": "Produce LESSON_CANDIDATES from templates/LESSON_CANDIDATES.template.md: every candidate scoped, grounded, routed, confidence-rated; discard anything without a citation; include the ready-to-apply lessons-delta.json block for playbook ops. You nominate — do not apply anything.",
+      "preconditions": [], "postconditions": [], "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

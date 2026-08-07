@@ -1,0 +1,7 @@
+{
+  "gate_id": "g3",
+  "verdict": "BLOCK",
+  "reviewer_identity": "/root/g1_reviewer",
+  "reviewed_diff_digest": "sha256:c3a48b776e9581b51f74125c72d05e536dac8cecf1e97da7d0afdc32602cbbca",
+  "result_path": ".agent-work/issue-418-iterative-planning/g3-review/REVIEW_RESULT.md"
+}

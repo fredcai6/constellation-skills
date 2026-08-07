@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "files": [],
+  "repo_rev": {
+    "commit": "dbd54142d4d46ef3791c5698f24fa0ce0f9f02cb"
+  },
+  "run": {
+    "work_id": "issue-310",
+    "generated_at": "2026-08-03T01:56:28Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/constellation-skills-wt/e298-310",
+      "durable": "C:/Programs/constellation-skills-wt/e298-310"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/e298-310"
+    }
+  }
+}

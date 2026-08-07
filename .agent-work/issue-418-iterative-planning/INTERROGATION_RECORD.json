@@ -1,0 +1,39 @@
+{
+  "goal": "Implement the smallest coherent iterative-planning workflow from the confirmed handoff and demonstrate it by counterfactually regenerating epic #418 without external tracker writes.",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "q1", "kind": "fact", "question": "What behavior changes?", "status": "resolved",
+      "resolution": "Only the current wave is runnable; later work is forecast or parked; evidence is classified before issue creation; every wave exits via advance, repair, replan, or stop; fixed epic boundaries require escalation.",
+      "code_evidence": "User-confirmed handoff decisions and target GitHub model in pasted-text.txt; current exhaustive behavior in skills/to-issues/SKILL.md and scripts/file_issue_set.py.",
+      "human_answer": ""
+    },
+    {
+      "id": "q2", "kind": "fact", "question": "Which current interfaces carry the change?", "status": "resolved",
+      "resolution": "Extend the manifest/verifier/filer and installer/index seams; add a lean replan contract; update Explorer and Admiral doctrine. Preserve tracker adapters, receipts, checklist engine, Commander, Cartographer, and episode store.",
+      "code_evidence": "skills/to-issues/, scripts/verify_issue_set.py, scripts/file_issue_set.py, scripts/install_constellation.py, skills/explorer/, skills/admiral/, and their current tests.",
+      "human_answer": ""
+    },
+    {
+      "id": "q3", "kind": "fact", "question": "What proves the #418 counterfactual?", "status": "resolved",
+      "resolution": "Use the archived confirmed Context Governor spec and original issue manifest; emit the five required local Markdown artifacts and exercise only the offline Markdown adapter.",
+      "code_evidence": ".agent-work/archive/2026-07-18-explore-context-governor/DESIGN_SPEC.md and ISSUE_SET.json: 5 issues, 3 dependency edges, 3,798 epic-body words under the repository-local word-count convention.",
+      "human_answer": ""
+    },
+    {
+      "id": "q4", "kind": "decision", "question": "Is the protected intent and recommended implementation boundary correctly understood?", "status": "resolved",
+      "resolution": "Proceed with the bounded extension/rename/replan/doctrine/demo approach.",
+      "code_evidence": "",
+      "human_answer": "Confirmed"
+    }
+  ],
+  "signoff": {
+    "by": "Fred",
+    "statement": "Confirmed"
+  },
+  "consolidated": true,
+  "rail_exception": {
+    "reviewer_cosign": "",
+    "log": ""
+  }
+}

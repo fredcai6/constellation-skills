@@ -1,0 +1,11 @@
+{
+  "work_id": "issue-309",
+  "tick": false,
+  "ops": [
+    {
+      "op": "export",
+      "id": "a-check-that-cannot-fail-is-indistinguishable-from-one-that-passed",
+      "grounding": ".agent-work/CONSTELLATION_FEEDBACK.md 2026-08-01 entry for issue-309 -- exported with the originating lesson id in its Lesson field so the upstream sweep groups recurrences on stable identity. Fifth+ recurrence, two new vacuous-check shapes (git status --porcelain silently omitting an ignored-and-unpopulated directory; a not-found-id test standing in for a guard-fired test), both caught pre-dispatch by the mandatory cold plan critic and fixed before any crew was dispatched or any recall/noise number was produced."
+    }
+  ]
+}

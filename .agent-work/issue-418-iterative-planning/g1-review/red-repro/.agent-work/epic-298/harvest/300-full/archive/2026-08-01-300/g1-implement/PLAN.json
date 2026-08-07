@@ -1,0 +1,491 @@
+{
+  "work_id": "300-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-rev",
+    "m2-producer",
+    "m3-engine-drive",
+    "m4-spine-decl",
+    "m5-adversarial",
+    "m6-determinism",
+    "m7-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (implementer skill references/global-crew.md, references/global-everyone.md, references/windows.md), the handoff at .agent-work/300/g1-implement/HANDOFF.md, and the settled design record .agent-work/300/DIT-COMPARISON.md including its ADDENDUM. Read the engine seam (scripts/checklist_engine.py active_id/state/_STATE_CONTRACT_VERSION) and the Commander spine template. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + DIT record + engine seam read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, windows.md, HANDOFF.md, DIT-COMPARISON.md+ADDENDUM, checklist_engine.py active_id/_STATE_CONTRACT_VERSION, agent_work_root.py docstring, COMMANDER_SPINE.template.json context step. Handoff complete: task, protected intent, test mode, settled design, close criteria, allowed scope, exclusions, constraints, map anchors, deliverable path check, required evidence, verification commands, authority, stop conditions, return format all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-rev": {
+      "id": "m1-rev",
+      "title": "Revision identity function (TDD required)",
+      "imperative": "TDD RED FIRST: write tests/test_context_manifest.py containing (a) rev() equality against a real `git hash-object` output for a tracked clean file in this repo and (b) a CRLF/LF twin equality test, run them, observe them FAIL (no module yet). Attest c1 with the observed failure. THEN implement scripts/context_manifest.py with rev(data: bytes) -> str = sha1(b'blob %d\\x00' % len(lf) + lf) over LF-normalised bytes, no git subprocess, no commit SHA. Run the green command for c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: rev equality + CRLF/LF twin tests written and observed failing before implementation (manual attest; check MUST be null)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed twice: (1) tests written before any module -> collection FileNotFoundError; (2) sharpened to a discriminating red by stubbing rev() WITHOUT LF normalisation -> 6 failed, 3 passed, incl. AssertionError '394a612b...' != '40224cde...' on the CRLF/LF twin and 4 SUBFAILs against git hash-object. GREEN after adding data.replace(b'\\r\\n', b'\\n'): 5 passed, 4 subtests passed."
+        },
+        {
+          "id": "c2",
+          "statement": "rev() equals git hash-object for a real tracked file and CRLF/LF twins agree; tests green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q -k 'rev' --no-header"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-rev-1"
+        }
+      ],
+      "constraints": [
+        "no git subprocess",
+        "no commit SHA anywhere",
+        "python -m pytest never py -m pytest",
+        "CI pins python 3.12 - no Path.read_text(newline=)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-rev-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q -k 'rev' --no-header",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-producer": {
+      "id": "m2-producer",
+      "title": "Pure producer: declaration -> manifest envelope",
+      "imperative": "Implement the pure producer in scripts/context_manifest.py: resolve an ordered context_refs declaration against an injected root mapping (skill|repo|durable) through a single injected filesystem reader edge, emitting {contract, step, files:[{root,path,rev}], run}. Absent file -> rev null, entry retained. Unreadable present file -> raise. Path escaping its declared root -> raise. No globs, no listdir, no sorted() over paths; declaration order emitted verbatim. Absolute roots never appear in content. Mirror the engine's _STATE_CONTRACT_VERSION idiom for contract. Serialise json.dumps(obj, indent=2, ensure_ascii=False)+chr(10), write with open(..., 'w', encoding='utf-8', newline='\\n'). Tests for each behavior.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "rev() green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "rev() green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "producer emits the one envelope with the {root,path,rev} row; null-on-absent, raise-on-unreadable, raise-on-traversal, order-verbatim all covered by green tests",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q --no-header"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-producer-1"
+        }
+      ],
+      "constraints": [
+        "no new CLI verb",
+        "metadata only, never file content",
+        "run subtree is the entire exclusion set"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-producer-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q --no-header",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-engine-drive": {
+      "id": "m3-engine-drive",
+      "title": "Drive the real producer through the engine's active_id()",
+      "imperative": "Wire the producer to select the active step via active_id imported from scripts/checklist_engine.py - never a second selector - and write the manifest to .agent-work/<work-id>/context/<step>.json. Prove with a test that drives the REAL producer through active_id() on a real checklist (not a hand-injected fixture selection), and a test that a real existing spine with NO context_refs yields an empty manifest and does not crash.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "producer green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "producer green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "manifest produced via the engine's own active_id(); no-declaration spine yields empty files list without crashing",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q -k 'active_id or no_declaration or empty' --no-header"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-engine-drive-1"
+        }
+      ],
+      "constraints": [
+        "engine edits limited to import surface; anything more is a stop condition"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-engine-drive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q -k 'active_id or no_declaration or empty' --no-header",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-spine-decl": {
+      "id": "m4-spine-decl",
+      "title": "First real declaration on the Commander spine context step",
+      "imperative": "Add an ordered context_refs list to the context step of skills/commander/templates/COMMANDER_SPINE.template.json ONLY, beside constraints/directives. Do not delete or reword the imperative prose. Verify the template still parses and existing template tests stay green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "producer drives through active_id",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "producer drives through active_id"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context step carries a real context_refs declaration; template parses",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/298-300 && grep -q 'context_refs' skills/commander/templates/COMMANDER_SPINE.template.json && python -c \"import json;d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8'));assert d['tasks']['context']['context_refs']\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-spine-decl-1"
+        }
+      ],
+      "constraints": [
+        "context step only",
+        "prose stays verbatim"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-spine-decl-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/298-300 && grep -q 'context_refs' skills/commander/templates/COMMANDER_SPINE.template.json && python -c \"import json;d=json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8'));assert d['tasks']['context']['context_refs']\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-adversarial": {
+      "id": "m5-adversarial",
+      "title": "Adversarial fixtures and guard assertions",
+      "imperative": "Ship fixtures authored to make the tool return a WRONG answer: CRLF/LF twins that must agree; a file whose bytes changed but whose recorded rev did not (must not silently pass); untracked-vs-absent must not make two environments disagree on content; a declaration-order permutation that MUST register as a difference. Plus the three named guard tests: test_no_globs..., test_..._newline_pinned..., test_..._py312_compatible... (the -k selector must match at least one each or pytest exits 5).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "spine declaration in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "spine declaration in place"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "adversarial fixtures green and the three named guard assertions exist and pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q -k 'no_globs or newline_pinned or py312_compatible' --no-header"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-adversarial-1"
+        }
+      ],
+      "constraints": [
+        "a -k matching nothing exits 5, which is a failure"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-adversarial-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_manifest.py -q -k 'no_globs or newline_pinned or py312_compatible' --no-header",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-determinism": {
+      "id": "m6-determinism",
+      "title": "Cross-environment determinism acceptance test",
+      "imperative": "Write tests/test_context_determinism.py: git worktree add a clean second checkout at the same commit into a temp dir; run the producer there with mutated LC_ALL, LANG and PYTHONHASHSEED; compare CONTENT - everything except the /run subtree - and assert byte identity. Exclude exactly /run and nothing else; if any other field must be masked, STOP and report (the design is wrong, not the test). Assert the locale mutation actually took effect inside the child (Windows env= does not shadow path resolution). Remove the temp worktree in a finally. State the same-OS/same-filesystem limit honestly in a comment.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "adversarial fixtures green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "adversarial fixtures green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "two distinct checkout paths produce byte-identical content outside /run; temp worktree cleaned up",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_determinism.py -q --no-header"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-determinism-1"
+        }
+      ],
+      "constraints": [
+        "exclude exactly /run and nothing else",
+        "no stray worktrees left behind"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-determinism-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/test_context_determinism.py -q --no-header",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-verify": {
+      "id": "m7-verify",
+      "title": "Run the handoff's verification commands and write IMPLEMENTER_RESULT",
+      "imperative": "Run every verification command from the handoff foreground to completion, including the full suite and the .gitattributes LF-normalisation invariant. Capture the required evidence transcripts verbatim (rev vs git hash-object, CRLF/LF twins, manifest via active_id, the determinism run showing two distinct checkout paths). Write .agent-work/300/g1-implement/IMPLEMENTER_RESULT.md from the skill's result template, including Map Impact and Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "determinism test green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "determinism test green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green and the .gitattributes LF invariant still holds",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/ -q --no-header && test -f .gitattributes && ! grep -nE '(^|[[:space:]])(-text|binary)([[:space:]]|$)' .gitattributes"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT.md written with the pasted evidence transcripts",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/298-300 && test -s .agent-work/300/g1-implement/IMPLEMENTER_RESULT.md && grep -q 'hash-object' .agent-work/300/g1-implement/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-verify-2"
+        }
+      ],
+      "constraints": [
+        "result artifact IS the task - write it before resting"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/298-300 && python -m pytest tests/ -q --no-header && test -f .gitattributes && ! grep -nE '(^|[[:space:]])(-text|binary)([[:space:]]|$)' .gitattributes",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/298-300 && test -s .agent-work/300/g1-implement/IMPLEMENTER_RESULT.md && grep -q 'hash-object' .agent-work/300/g1-implement/IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "engine_session": {
+    "session_id": "sess-300-g1",
+    "status": "released",
+    "claimed_at": "2026-08-01T14:31:25.422909+00:00",
+    "last_heartbeat": "2026-08-01T14:54:22.062536+00:00",
+    "claimed_by": "implementer",
+    "worktree": "C:/Programs/constellation-skills-wt/298-300",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-01T14:54:34.471176+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff verified complete against all nine required fields; the settled design (rev = LF-normalised blob OID, optional ordered context_refs, one envelope with /run as the entire exclusion set, no CLI verb, no committed artifact per Tommy's ruling) is understood and will be implemented as specified, not redesigned.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:31:37.900959+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-rev",
+      "why": "rev() is the LF-normalised blob OID and now provably equals git hash-object AND git rev-parse HEAD:<path> for four real tracked clean files (36b3f7c0... for scripts/checklist_engine.py), and CRLF/LF twins agree (fbbee861... for both). The discriminating red proves the tests catch the exact bug the design fears.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:34:03.323793+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-producer",
+      "why": "The producer is one pure function of (checklist, roots, reader) with the reader as the single injected impure edge. Row is exactly {root,path,rev}; required stays in the declaration; absent yields null with the row retained; unreadable and root-escaping paths raise; declaration order is emitted verbatim and a permutation registers as a content difference; no absolute root reaches content. 24 tests green.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:37:29.956847+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-engine-drive",
+      "why": "Selection is the engine's own active_id: the function the producer calls is compiled from scripts/checklist_engine.py (asserted via __code__.co_filename) and context_manifest.py defines no second selector. Step tracks active_id across a three-item run and raises when every item is terminal. All 13 real committed gated spine templates project without crashing and yield empty files when they carry no context_refs.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:39:16.367271+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-spine-decl",
+      "why": "The Commander spine template's context step now carries a six-entry ordered context_refs declaration in the imperative's own reading order (inherited global doctrine, then project deltas, then durable lessons), added beside constraints/directives. The imperative prose is untouched, verified by asserting the substitute-and-record and sanctioned-degradation clauses are still present. Only the context step carries a declaration; the template still parses and every other step is byte-identical (diff: 8 insertions, 0 deletions).",
+      "mechanical": false,
+      "ts": "2026-08-01T14:41:16.589279+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-adversarial",
+      "why": "Adversarial fixtures ship in tests/fixtures/context_declarations.json (12 rejected declarations, 4 accepted) and drive parameterized tests: order permutation registers as a content difference, changed bytes never revalidate a stale rev, untracked-vs-absent differs only in one honest rev, CRLF/LF twins agree. The three named guards are AST-precise rather than grep-based, so the module's own prose cannot false-positive: no enumeration/sorted names used, every text open() pins newline='\\n', no 3.13+ API in the producer or its tests. A decoy sibling file plus booby-trapped os.listdir/scandir/walk prove enumeration behaviourally, not just by inspection.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:45:03.779558+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-determinism",
+      "why": "Two clean git worktree checkouts of the same commit, at distinct absolute paths, each running the real producer in its own process under LC_ALL/LANG C vs tr_TR.UTF-8 and PYTHONHASHSEED 1 vs 4242. Content sha256 ece8363c... in BOTH; whole-file sha256 differs (62e1c3f8 vs 4df101e4) exactly because /run varies, which is the point. Locale and seed mutations are asserted to have reached the child (hash('constellation') differs, proving PYTHONHASHSEED was honoured, not merely set). Exclusion set is exactly {'run'} \u2014 nothing else masked. The first run passed vacuously (all revs null in a bare source checkout), so an install shim now materialises the two _shared doctrine files, making the projection non-trivial; a guard test now fails if the projection is empty. No stray worktrees: 5 before, 5 after.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:49:35.661030+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-verify",
+      "why": "All seven handoff verification commands exit 0, including the full suite (1209 passed, 2 pre-existing skips) and the .gitattributes LF-normalisation invariant that rev()'s equality with git hash-object depends on. IMPLEMENTER_RESULT.md is written with the four load-bearing evidence transcripts pasted verbatim (rev vs git hash-object AND git rev-parse, CRLF/LF twins, the manifest driven through active_id, and the two-checkout determinism run showing distinct paths, verified locale/seed mutation, and CONTENT sha256 equality with exactly ['run'] excluded). Two false-green traps were found and fixed rather than banked: the determinism test measured HEAD instead of the change, and the projection was vacuously all-null.",
+      "mechanical": false,
+      "ts": "2026-08-01T14:54:22.062517+00:00"
+    }
+  ]
+}

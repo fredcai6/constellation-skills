@@ -1,0 +1,83 @@
+{
+  "what": "CORRECTED re-derivation of the hop-1/hop-2 filesystem witness for the POST arm",
+  "why": "The original spine-materialization.json computed its booleans by rglob over the ENTIRE .agent-work/ of each pinned worktree. f1Brainz TRACKS .agent-work/, so at pin 3541d292 that tree already contains 113 spine.json, 98 execute.json and 35 MISSION_FRAME.md belonging to unrelated host issues. spine_materialized / frame_written / execute_json_written were therefore TRUE by construction on every run -- checks that could not fail. map_orientation_receipt was NOT affected: there are ZERO map-orientation.json at the pin, so that field could only have come from the subject.",
+  "recovery": "The vacuous BOOLEANS were recomputed from the PATH ARRAYS the same file already recorded, by filtering to each subject own work directory. No re-run was needed and no worktree was consulted -- the corrected verdict is derived from archived data, not re-asserted.",
+  "pin_baseline": {
+    "spine.json": 113,
+    "execute.json": 98,
+    "MISSION_FRAME.md": 35,
+    "map-orientation.json": 0
+  },
+  "rows": [
+    {
+      "issue": 690,
+      "subject_work_dir": "issue-690",
+      "spine_json_total_in_worktree": 81,
+      "spine_json_in_subject_dir": 1,
+      "spine_json_paths_in_subject_dir": [
+        ".agent-work/issue-690/spine.json"
+      ],
+      "map_orientation_receipt_in_subject_dir": [
+        ".agent-work/issue-690/map-orientation.json"
+      ],
+      "hop1_spine_materialized_by_subject": true,
+      "hop2_receipt_written_by_subject": true
+    },
+    {
+      "issue": 688,
+      "subject_work_dir": "issue-688",
+      "spine_json_total_in_worktree": 81,
+      "spine_json_in_subject_dir": 1,
+      "spine_json_paths_in_subject_dir": [
+        ".agent-work/issue-688/spine.json"
+      ],
+      "map_orientation_receipt_in_subject_dir": [
+        ".agent-work/issue-688/map-orientation.json"
+      ],
+      "hop1_spine_materialized_by_subject": true,
+      "hop2_receipt_written_by_subject": true
+    },
+    {
+      "issue": 698,
+      "subject_work_dir": "cmdr-698",
+      "spine_json_total_in_worktree": 81,
+      "spine_json_in_subject_dir": 1,
+      "spine_json_paths_in_subject_dir": [
+        ".agent-work/cmdr-698/spine.json"
+      ],
+      "map_orientation_receipt_in_subject_dir": [
+        ".agent-work/cmdr-698/map-orientation.json"
+      ],
+      "hop1_spine_materialized_by_subject": true,
+      "hop2_receipt_written_by_subject": true
+    },
+    {
+      "issue": 716,
+      "subject_work_dir": "issue-716",
+      "spine_json_total_in_worktree": 81,
+      "spine_json_in_subject_dir": 1,
+      "spine_json_paths_in_subject_dir": [
+        ".agent-work/issue-716/spine.json"
+      ],
+      "map_orientation_receipt_in_subject_dir": [
+        ".agent-work/issue-716/map-orientation.json"
+      ],
+      "hop1_spine_materialized_by_subject": true,
+      "hop2_receipt_written_by_subject": true
+    },
+    {
+      "issue": 704,
+      "subject_work_dir": "issue-704",
+      "spine_json_total_in_worktree": 81,
+      "spine_json_in_subject_dir": 1,
+      "spine_json_paths_in_subject_dir": [
+        ".agent-work/issue-704/spine.json"
+      ],
+      "map_orientation_receipt_in_subject_dir": [
+        ".agent-work/issue-704/map-orientation.json"
+      ],
+      "hop1_spine_materialized_by_subject": true,
+      "hop2_receipt_written_by_subject": true
+    }
+  ]
+}

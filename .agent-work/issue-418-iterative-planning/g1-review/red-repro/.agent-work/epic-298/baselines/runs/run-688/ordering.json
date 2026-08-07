@@ -1,0 +1,422 @@
+{
+  "captured": true,
+  "tool_call_count": 35,
+  "first_map_read_index": 23,
+  "first_src_read_index": 0,
+  "first_corpus_read_index": "NO-CORPUS-READ",
+  "map_files_read": [
+    "docs/architecture/packets/physics.md",
+    "docs/architecture/overlays/constraints.yml",
+    "docs/architecture/decisions",
+    "docs/architecture/"
+  ],
+  "map_before_src": false,
+  "subagent_dispatch_count": 0,
+  "forbidden_operations": [],
+  "calls": [
+    {
+      "index": 0,
+      "turn": 1,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "git log --oneline -3 && ls src/physics/layer2/",
+      "target": "git log --oneline -3 && ls src/physics/layer2/ Check branch state and layer2 contents"
+    },
+    {
+      "index": 1,
+      "turn": 2,
+      "tool": "Grep",
+      "buckets": [
+        "other"
+      ],
+      "map_paths": [],
+      "evidence": "rain_flag_from_raw|rain_flag|Rainfall|is_wet|wet_frac",
+      "target": "rain_flag_from_raw|rain_flag|Rainfall|is_wet|wet_frac"
+    },
+    {
+      "index": 2,
+      "turn": 5,
+      "tool": "Grep",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "src rain_flag_from_raw|rain_flag|rainfall",
+      "target": "src rain_flag_from_raw|rain_flag|rainfall"
+    },
+    {
+      "index": 3,
+      "turn": 6,
+      "tool": "Read",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "C:/Programs/f1bwt/b688/src/physics/layer2/grip_baseline.py",
+      "target": "C:/Programs/f1bwt/b688/src/physics/layer2/grip_baseline.py"
+    },
+    {
+      "index": 4,
+      "turn": 9,
+      "tool": "Read",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "C:/Programs/f1bwt/b688/src/physics/layer2/grip_batch.py",
+      "target": "C:/Programs/f1bwt/b688/src/physics/layer2/grip_batch.py"
+    },
+    {
+      "index": 5,
+      "turn": 10,
+      "tool": "Grep",
+      "buckets": [
+        "other"
+      ],
+      "map_paths": [],
+      "evidence": ".agent-work 678",
+      "target": ".agent-work 678"
+    },
+    {
+      "index": 6,
+      "turn": 12,
+      "tool": "Grep",
+      "buckets": [
+        "other"
+      ],
+      "map_paths": [],
+      "evidence": "36 candidate|20 of 36|candidate weekend|G-pooling|pooling spike",
+      "target": "36 candidate|20 of 36|candidate weekend|G-pooling|pooling spike"
+    },
+    {
+      "index": 7,
+      "turn": 13,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "ls .agent-work/ && echo \"---678---\" && ls -d .agent-work/*678* 2>/dev/null; ls -d .agent-work/*/*678* 2>/dev/null",
+      "target": "ls .agent-work/ && echo \"---678---\" && ls -d .agent-work/*678* 2>/dev/null; ls -d .agent-work/*/*678* 2>/dev/null List agent-work dirs, find 678 spike"
+    },
+    {
+      "index": 8,
+      "turn": 14,
+      "tool": "Grep",
+      "buckets": [
+        "other"
+      ],
+      "map_paths": [],
+      "evidence": ".agent-work/archive/2026-07-27-epic-659-closeout/ADMIRAL_LOG.md 678|rain|wet",
+      "target": ".agent-work/archive/2026-07-27-epic-659-closeout/ADMIRAL_LOG.md 678|rain|wet"
+    },
+    {
+      "index": 9,
+      "turn": 15,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue view 678 2>&1 | head -120",
+      "target": "gh issue view 678 2>&1 | head -120 View issue 678"
+    },
+    {
+      "index": 10,
+      "turn": 17,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue view 678 --comments 2>&1 | tail -150",
+      "target": "gh issue view 678 --comments 2>&1 | tail -150 View 678 comments"
+    },
+    {
+      "index": 11,
+      "turn": 18,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "gh issue view 688 --comments 2>&1 | tail -80; echo \"=== 680 ===\"; gh issue view 680 2>&1 | head -40",
+      "target": "gh issue view 688 --comments 2>&1 | tail -80; echo \"=== 680 ===\"; gh issue view 680 2>&1 | head -40 View 688 and 680"
+    },
+    {
+      "index": 12,
+      "turn": 20,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "ls scratchpad/g-pool-spike 2>/dev/null && ls scratchpad/g-pool-spike/*; echo \"=== schema weather/surface ===\"; sed -n '1,130p' src/data/schema.sql",
+      "target": "ls scratchpad/g-pool-spike 2>/dev/null && ls scratchpad/g-pool-spike/*; echo \"=== schema weather/surface ===\"; sed -n '1,130p' src/data/schema.sql Check spike artifacts and schema"
+    },
+    {
+      "index": 13,
+      "turn": 21,
+      "tool": "Grep",
+      "buckets": [
+        "other"
+      ],
+      "map_paths": [],
+      "evidence": "def session_wet_fraction",
+      "target": "def session_wet_fraction"
+    },
+    {
+      "index": 14,
+      "turn": 23,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "ls data/*.db 2>/dev/null | head; echo \"---\"; git log --oneline --all -- scratchpad/g-pool-spike | head -5; ls scratchpad 2>/dev/null | head",
+      "target": "ls data/*.db 2>/dev/null | head; echo \"---\"; git log --oneline --all -- scratchpad/g-pool-spike | head -5; ls scratchpad 2>/dev/null | head Locate DBs and spike artifacts"
+    },
+    {
+      "index": 15,
+      "turn": 24,
+      "tool": "Grep",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "src/data/weather_features.py wet_lap_fraction|wet_lap_count|def session_wet_lap_features",
+      "target": "src/data/weather_features.py wet_lap_fraction|wet_lap_count|def session_wet_lap_features"
+    },
+    {
+      "index": 16,
+      "turn": 27,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "py - <<'EOF'\nimport sqlite3, os\nfor yr in (2022, 2023, 2024):\n    p = f\"data/f1_data_{yr}.db\"\n    if not os.path.exists(p): continue\n    con = sqlite3.connect(f\"file:{p}?mode=ro\", uri=True)\n    n_w = ",
+      "target": "py - <<'EOF'\nimport sqlite3, os\nfor yr in (2022, 2023, 2024):\n    p = f\"data/f1_data_{yr}.db\"\n    if not os.path.exists(p): continue\n    con = sqlite3.connect(f\"file:{p}?mode=ro\", uri=True)\n    n_w = con.execute(\"SELECT COUNT(*) FROM weather\").fetchone()[0]\n    n_s = con.execute(\"SELECT COUNT(*) FROM sessions\").fetchone()[0]\n    n_sw = con.execute(\"SELECT COUNT(DISTINCT session_id) FROM weather\")."
+    },
+    {
+      "index": 17,
+      "turn": 29,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "py - <<'EOF'\nimport sqlite3\ncon = sqlite3.connect(\"file:data/f1_data_2023.db?mode=ro\", uri=True)\nprint(con.execute(\"SELECT time, rainfall, track_temp FROM weather LIMIT 3\").fetchall())\nprint(\"distinct",
+      "target": "py - <<'EOF'\nimport sqlite3\ncon = sqlite3.connect(\"file:data/f1_data_2023.db?mode=ro\", uri=True)\nprint(con.execute(\"SELECT time, rainfall, track_temp FROM weather LIMIT 3\").fetchall())\nprint(\"distinct rainfall vals:\", con.execute(\"SELECT DISTINCT rainfall FROM weather\").fetchall()[:10])\nrows = con.execute(\"\"\"\n SELECT s.id, s.gp_name, s.session_type, s.rainfall,\n        (SELECT COUNT(*) FROM weathe"
+    },
+    {
+      "index": 18,
+      "turn": 31,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "py - <<'EOF'\nimport sqlite3\ndef dec(raw):\n    if raw is None: return 0\n    if isinstance(raw,(bytes,bytearray)): return int.from_bytes(raw,'little',signed=True) if raw else 0\n    return int(raw)\ndef l",
+      "target": "py - <<'EOF'\nimport sqlite3\ndef dec(raw):\n    if raw is None: return 0\n    if isinstance(raw,(bytes,bytearray)): return int.from_bytes(raw,'little',signed=True) if raw else 0\n    return int(raw)\ndef load(yr):\n    con = sqlite3.connect(f\"file:data/f1_data_{yr}.db?mode=ro\", uri=True)\n    rows = con.execute(\"\"\"\n     SELECT s.gp_name, s.session_type, s.rainfall,\n        (SELECT COUNT(*) FROM weather w"
+    },
+    {
+      "index": 19,
+      "turn": 33,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "ls -d scratchpad 2>/dev/null || echo \"NO scratchpad dir\"; echo \"=== 687 ===\"; gh issue view 687 2>&1 | head -50",
+      "target": "ls -d scratchpad 2>/dev/null || echo \"NO scratchpad dir\"; echo \"=== 687 ===\"; gh issue view 687 2>&1 | head -50 Check spike dir and issue 687"
+    },
+    {
+      "index": 20,
+      "turn": 34,
+      "tool": "Grep",
+      "buckets": [
+        "other"
+      ],
+      "map_paths": [],
+      "evidence": ". grip_baseline|grip_store|GripStore|get_grip_at|rain_flag !*.md",
+      "target": ". grip_baseline|grip_store|GripStore|get_grip_at|rain_flag !*.md"
+    },
+    {
+      "index": 21,
+      "turn": 36,
+      "tool": "Grep",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "src/physics/utilization/class_utilization_observable.py rain_flag|grip",
+      "target": "src/physics/utilization/class_utilization_observable.py rain_flag|grip"
+    },
+    {
+      "index": 22,
+      "turn": 37,
+      "tool": "Grep",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "src/physics/layer2/grip_store.py def get_grip_at|def has|rain_flag",
+      "target": "src/physics/layer2/grip_store.py def get_grip_at|def has|rain_flag"
+    },
+    {
+      "index": 23,
+      "turn": 39,
+      "tool": "Grep",
+      "buckets": [
+        "map"
+      ],
+      "map_paths": [
+        "docs/architecture/packets/physics.md"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "docs/architecture/packets/physics.md rain|grip_baseline"
+    },
+    {
+      "index": 24,
+      "turn": 40,
+      "tool": "Grep",
+      "buckets": [
+        "map"
+      ],
+      "map_paths": [
+        "docs/architecture/overlays/constraints.yml"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "docs/architecture/overlays/constraints.yml grip"
+    },
+    {
+      "index": 25,
+      "turn": 42,
+      "tool": "Grep",
+      "buckets": [
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "WET_EXCLUDE_THRESHOLD src/**",
+      "target": "WET_EXCLUDE_THRESHOLD src/**"
+    },
+    {
+      "index": 26,
+      "turn": 43,
+      "tool": "Bash",
+      "buckets": [
+        "map",
+        "mention",
+        "src"
+      ],
+      "map_paths": [
+        "docs/architecture/packets/physics.md"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "grep -n \"grip_baseline/|grip_store/|grip_batch/|rain\" docs/architecture/packets/physics.md | sed -n '1,60p'; echo \"=== frozen_constants ===\"; head -60 src/physics/layer2/frozen_constants.py Find grip entries in packet and read frozen constants"
+    },
+    {
+      "index": 27,
+      "turn": 45,
+      "tool": "Bash",
+      "buckets": [
+        "map",
+        "mention",
+        "src"
+      ],
+      "map_paths": [
+        "docs/architecture/packets/physics.md"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "grep -n \"RAIN/|WET/|rain/|wet\" src/physics/layer2/frozen_constants.py | head -20; echo \"=== packet 1505-1530 ===\"; sed -n '1505,1535p' docs/architecture/packets/physics.md Check frozen constants for rain + read packet grip section"
+    },
+    {
+      "index": 28,
+      "turn": 46,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "grep -n \"rain/|Rain/|RAIN\" tests/unit/physics/layer2/test_grip_baseline.py",
+      "target": "grep -n \"rain/|Rain/|RAIN\" tests/unit/physics/layer2/test_grip_baseline.py Find rain tests in grip baseline tests"
+    },
+    {
+      "index": 29,
+      "turn": 48,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "py - <<'EOF'\nimport sqlite3\ndef dec(r):\n    if r is None: return 0\n    if isinstance(r,(bytes,bytearray)): return int.from_bytes(r,'little',signed=True) if r else 0\n    return int(r)\nCLEAN = \"\"\"SELECT",
+      "target": "py - <<'EOF'\nimport sqlite3\ndef dec(r):\n    if r is None: return 0\n    if isinstance(r,(bytes,bytearray)): return int.from_bytes(r,'little',signed=True) if r else 0\n    return int(r)\nCLEAN = \"\"\"SELECT COUNT(*) FROM lap_times l WHERE l.session_id=? AND l.valid_lap=1\n AND l.pit_in_time IS NULL AND l.pit_out_time IS NULL AND l.track_status='1'\n AND l.compound IN ('SOFT','MEDIUM','HARD') AND l.lap_tim"
+    },
+    {
+      "index": 30,
+      "turn": 50,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "py - <<'EOF'\nimport sqlite3\ndef dec(r):\n    if r is None: return 0\n    if isinstance(r,(bytes,bytearray)): return int.from_bytes(r,'little',signed=True) if r else 0\n    return int(r)\nfor yr in (2022,2",
+      "target": "py - <<'EOF'\nimport sqlite3\ndef dec(r):\n    if r is None: return 0\n    if isinstance(r,(bytes,bytearray)): return int.from_bytes(r,'little',signed=True) if r else 0\n    return int(r)\nfor yr in (2022,2023):\n    con = sqlite3.connect(f\"file:data/f1_data_{yr}.db?mode=ro\", uri=True)\n    rows = con.execute(\"\"\"SELECT s.gp_name,s.session_type,s.rainfall,\n        (SELECT COUNT(*) FROM weather w WHERE w.se"
+    },
+    {
+      "index": 31,
+      "turn": 52,
+      "tool": "Bash",
+      "buckets": [
+        "mention",
+        "src"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n '208,260p' src/data/weather_features.py; echo \"=== script ===\"; sed -n '1,60p' scripts/populate_wet_features.py 2>/dev/null; echo \"=== upsert ===\"; grep -n \"def upsert_session_wet_features\" -A ",
+      "target": "sed -n '208,260p' src/data/weather_features.py; echo \"=== script ===\"; sed -n '1,60p' scripts/populate_wet_features.py 2>/dev/null; echo \"=== upsert ===\"; grep -n \"def upsert_session_wet_features\" -A 25 src/data/database/_ingest.py Read wet-feature populator and upsert seam"
+    },
+    {
+      "index": 32,
+      "turn": 54,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n '1,50p' tests/unit/physics/layer2/test_grip_baseline.py; echo \"...\"; sed -n '295,325p' tests/unit/physics/layer2/test_grip_baseline.py",
+      "target": "sed -n '1,50p' tests/unit/physics/layer2/test_grip_baseline.py; echo \"...\"; sed -n '295,325p' tests/unit/physics/layer2/test_grip_baseline.py Read grip baseline test header and real-data tests"
+    },
+    {
+      "index": 33,
+      "turn": 56,
+      "tool": "Bash",
+      "buckets": [
+        "mention"
+      ],
+      "map_paths": [],
+      "evidence": "sed -n '140,185p' tests/unit/physics/layer2/test_grip_heldout.py",
+      "target": "sed -n '140,185p' tests/unit/physics/layer2/test_grip_heldout.py Read heldout harness session loader"
+    },
+    {
+      "index": 34,
+      "turn": 58,
+      "tool": "Bash",
+      "buckets": [
+        "map",
+        "mention"
+      ],
+      "map_paths": [
+        "docs/architecture/decisions",
+        "docs/architecture/"
+      ],
+      "evidence": "docs/architecture/",
+      "target": "ls docs/architecture/decisions/ | head -20; echo \"---\"; grep -rn \"decision:grip_estimate_record_session_level_pk\" docs/architecture/ | head Check decisions dir and anchor registration pattern"
+    }
+  ]
+}

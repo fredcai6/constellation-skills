@@ -1,0 +1,16 @@
+{
+  "work_id": "governor-269",
+  "tick": true,
+  "ops": [
+    {
+      "op": "confirm",
+      "id": "verify-harness-field-and-drive-real-writer",
+      "grounding": "notes-269.md 'Live evidence' section: this run's own ordinary tool calls fired real PostToolUse hooks during a live Commander dispatch into an isolation-verified worktree; the main checkout's .spine-rail-binding.json gained an entry for THIS session's own spine keyed to a main-checkout path, with 'worktree': the main checkout -- a fresh, non-fixture, independent reproduction of the CLAUDE_PROJECT_DIR pinning defect for #269 specifically (distinct from wave-1's #202/#261 cwd-based reproduction). Also confirmed directly: CLAUDE_PROJECT_DIR read as empty from this session's own Bash and PowerShell tool subprocess environments, live, not injected."
+    },
+    {
+      "op": "mention",
+      "id": "verify-launch-order-claims-against-code",
+      "grounding": "notes-269.md 'Understand' section: verified the order's CLAUDE_PROJECT_DIR-pinning claim against scripts/hooks/spine_rail.py:54 and gauge_writer_hook.py:384, and verified both named doc-edit targets (LAUNCH_ORDER.template.md, fleet-doctrine.md) exist at their named paths before planning. Practiced per the lesson's discipline; this run's claims held exactly as stated in the order (no mechanism-already-shipped or wrong-target surprise this time) -- recorded as a mention (discipline invoked, no discrepancy caught) rather than a confirm (which the lesson's prior history reserves for instances where verification actually caught an error)."
+    }
+  ]
+}

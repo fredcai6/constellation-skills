@@ -1,0 +1,91 @@
+{
+  "work_id": "g1-implement-104",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-build"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the handoff and inspect the corpus shape (SKILL.md frontmatter, references dirs, existing scripts style). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff complete; corpus shape and script style understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-build": {
+      "id": "m1-build",
+      "title": "Build scripts/curate_corpus.py (mechanical measurement pass, exit 0 always)",
+      "imperative": "Implement scripts/curate_corpus.py per the close criteria: five mechanical checks (size, description lint, invoker tag, reference TOC, duplication-signature clustering), a human findings table, a --json record, --root/positional arg, named heuristic constants with justifying comments, always exit 0 including on unparseable skill dirs. Standard library only. Test mode is test-after (no test file authored here) \u2014 collapse to a single observable green postcondition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "script runs over the real corpus and exits 0; --json emits valid JSON and exits 0",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-wt-104 && py scripts/curate_corpus.py >/dev/null && py scripts/curate_corpus.py --json | python -c \"import sys,json;json.load(sys.stdin)\" && py -m pytest tests/ -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-build-1"
+        }
+      ],
+      "constraints": [
+        "scripts/curate_corpus.py only; change no other file",
+        "mechanical-only (T7): no semantic verdicts",
+        "exit 0 always (flags-never-gates)",
+        "no baseline/drift-diff (S7)",
+        "stdlib only; from __future__ import annotations; main(argv)->int"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-build-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-wt-104 && py scripts/curate_corpus.py >/dev/null && py scripts/curate_corpus.py --json | python -c \"import sys,json;json.load(sys.stdin)\" && py -m pytest tests/ -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
