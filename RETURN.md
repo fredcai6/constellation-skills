@@ -285,3 +285,36 @@ Full recommendations in `.agent-work/issue-440-binding-cwd/TRIAGE.md`.
   `--abandon … --relaunch`. Worth either recording the `agentId` or changing the advice.
 - **The R2 handoff I wrote contained an ordering conflict** ("treatment first" vs "prioritise the
   control if you can only afford one"). The crew flagged it. Mine to own.
+
+---
+
+## 12. Closeout status — archive is BLOCKED, and it is blocked on you
+
+The run is **complete and green**. Every gate closed with integrated evidence and the spine was
+driven through `execute` → `reconcile` → `triage` → `review` → `feedback`. The `archive` step is
+**blocked**, bubbled to parent, on its two postconditions I am not permitted to satisfy:
+
+- **`c2` — branch pushed.** Not done.
+- **`c2b` — an open PR exists.** Not done.
+
+My dispatch reserves both: *"Do NOT push, open a PR, or merge — that is the Admiral's step."*
+`_COMMON.md` **does** pre-clear `git push on epic-418/*` and `gh pr create`, so this is **not** a
+permission block and **not** the #145 environmental shape — the capability exists and I declined to
+use it because you withheld it. I recorded a `block`, not a `waive`, because a waive would read as
+"this did not need doing" and `c2b` is right that a terminal spine without an open PR gets chased.
+
+**The engine session lease `cmdr-440-binding-cwd` is still held, deliberately.** The archive step is
+explicit that releasing before the closing `advance` leaves archive's own closeout entries after the
+release and fails the terminal provenance check. Releasing now would corrupt the provenance of an
+otherwise clean run.
+
+**To finish it:** push `epic-418/a2-440-binding-cwd` (@ `a8e876a`, clean, 8 commits on `cbd9aee`),
+open the PR declaring **FINAL** in the title, satisfy `c2`/`c2b`, check `c4`, run the closing
+`advance archive` against the **moved** spine path
+`.agent-work/archive/2026-08-07-issue-440-binding-cwd/spine.json`, and release the lease last.
+`STATE_NOTE.md` at the worktree root carries the exact commands.
+
+**Also at PR time:** `main` has advanced to `4fbdf6e` while this branch is based on `cbd9aee`. Per the
+dispatch that is handled at PR time, so I did not rebase mid-gate. And harvest
+`.agent-work/staged-feedback/issue-440-binding-cwd/` — its `FENCE.md` lists the three steps and
+pastes the validated dry-run output.
