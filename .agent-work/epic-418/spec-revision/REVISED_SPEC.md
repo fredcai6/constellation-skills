@@ -46,6 +46,23 @@ than the original spec's token argument.
 **The governor is the seam detector.** It is what says *now* is the moment to stop and hand
 off, which is what makes gate-local reveal enforceable rather than merely tidy.
 
+## Appetite (Tommy, 2026-08-07)
+
+This is a one-person project. A reversible mistake that a later run would surface again is not
+worth extensive up-front guarding — *"if there's an actual problem, we'll find it again."*
+Rigor scales with how costly a thing is to undo, not uniformly.
+
+This licenses lower ceremony on reversible calls. It does **not** license unevidenced claims,
+silent scope cuts, or checks that cannot register their own failure. The distinction is:
+cheap to reverse, move fast; a claim about what happened, still bring the evidence.
+
+## Standing obligation (new, cross-cutting)
+
+**Each workstream retires the findings it subsumes.** A section that dissolves a filed issue
+closes it with evidence naming why the finding no longer exists, as part of its own closeout —
+it does not leave it for a later consolidation pass. This is what replaces the epic's falsified
+issue-count done-condition, and it is why E can run last on a much smaller input.
+
 ---
 
 ## A. Context governor — per-agent identity
@@ -386,11 +403,89 @@ the first tranche stays deferred.
 
 ---
 
-## D, E — pending this conversation
+## D. Mechanize-over-prose wiring checks
 
-D is merged (#422) but carries an unpaid falsification debt: #436, the enumeration check that
-shipped without ever being proven able to fail. E's done-condition is the falsified one and is
-already escalated. Both are independent of the A → F → C chain.
+**Status: merged (#422), with one unpaid debt.** #329 and #328 refuse instead of hoping, and
+the deliberate-breakage test passes.
+
+The debt is #436. D's own testing pathway says: *"A check that still passes once the guard is
+deleted has the #392 shape, and fails review."* The enumeration check — the script that lists
+worktree-entering templates and asserts each carries the precondition — shipped without ever
+being shown able to fail. It is the guard against the omission shape that caused the defect,
+and it is itself unfalsified. Small, independent of the chain, and embarrassing to leave given
+what D is for.
+
+---
+
+## E. Backlog — re-cut, not consolidated (runs last)
+
+**Status: partly executed, and mis-designed at the root.**
+
+Executed, and well: the batch confirms (#131, #289, #298, #322 closed with evidence each;
+#285 correctly *held* when its stated rationale was measured false), the closeout debts filed
+(#448–#451), and theme classification (13 labels across 98 of 138 open issues).
+
+Never started: cluster consolidation into K1–K13 items. No cluster-level issues exist.
+
+**Why it stalled without anyone noticing.** E's *work* is "re-file the surviving singles as
+cluster-level items." E's *done-condition* is "every surviving open issue carries a label,
+verified by one `gh issue list` sweep." Those are different things. The done-condition tests
+the labelling and is silent on the consolidation, so it can be fully satisfied without the
+section's actual work happening — a check that cannot fail, sitting in the plan rather than in
+the code. Labelling was then substituted for consolidation: the same substitution #449 records
+against #308, recurring inside the epic that filed #449.
+
+Three guards were written into E and none were used:
+
+- the count of real work items "which relabeling cannot move" — never kept;
+- the closeout check comparing what shipped against each workstream's obligation, explicitly
+  named as guarding "the #308 failure shape" — never built;
+- the stated rule that consolidation re-files work rather than retiring it — stated, never
+  enforced.
+
+**Root mis-classification.** The section opens "Mechanical tracker work." Closing settled
+issues and filing debts are mechanical, and both went fine. Deciding that 138 findings are
+really about a dozen pieces of work is a design judgement — the spec itself flags cluster
+boundaries as one of only two costly-to-revert items in the whole document. Planning a design
+job as a batch job is why it did not happen.
+
+**Decision: re-cut, do not consolidate.** (Direction confirmed by Tommy, 2026-08-07.) The
+backlog is 138 findings with no shape, which is precisely the input the iterative-planning flow
+takes: a shaped brief in, one runnable current wave plus a nonbinding forecast out.
+"Consolidate the backlog" and "cut the backlog into a wave and a forecast" are the same job,
+and there is now a skill for the second. It also dogfoods the new flow on the hardest real
+input available.
+
+**E runs last, and that is not sequencing convenience — the redux is a filter on the backlog.**
+Large parts of it sit in the blast radius of A2, B, F and C: `theme:engine-mechanics` (11
+open), `theme:built-not-wired` (14), `theme:context-governor` (13),
+`theme:checks-that-cannot-fail` (6). Several named findings *dissolve* rather than get fixed —
+#431 by A2's redesign, #433 absorbed into B, and #427 / #439 / #442 / #446 all describe a CLI
+surface F replaces. Re-cutting before the redux would shape a wave around concerns the redux
+is about to invalidate.
+
+**This replaces the escalated fourth done-condition, and the count problem solves itself.**
+Each workstream retires the findings it subsumes, with evidence, as part of its own closeout —
+instead of leaving them for E to consolidate. That is checkable per workstream, controllable
+by the Commander doing the work, and does not depend on a count that the epic's own correct
+execution moves the wrong way. E's input becomes whatever survives the redux: a far smaller
+and more honest job than consolidating 138.
+
+Proposed wording for the epic's fourth done-condition:
+
+> Each workstream closes the findings it subsumes, with evidence naming why the finding no
+> longer exists. What survives the redux is re-cut through the iterative-planning flow into one
+> runnable wave plus a nonbinding forecast — not consolidated into cluster items.
+
+**Fixed.** Every close carries its evidence. Consolidation re-files work; it never retires it
+silently. Wave and cluster boundaries stay Tommy's call and remain costly-to-revert. Episodes
+are not touched here — #447 owns that surface. #264's three commits stay put pending #412's
+orphan-risk read.
+
+**Open (Commander's call).** Whether the survivors cut as one wave or several. Whether the
+theme labels survive as the cut's input or are superseded by the shaped brief's own structure.
+Whether any label group turns out to be empty after the redux, which would be the cleanest
+possible evidence that the filter worked.
 
 ---
 
@@ -402,7 +497,18 @@ already escalated. Both are independent of the A → F → C chain.
 | 2 | **A2 trip semantics** | F cannot type a verb whose meaning is unsettled |
 | 3 | **F** | Verbs go where verbs belong, before content is written around them |
 | 4 | **C** | Relocate into a surface that has stopped moving |
+| 5 | **E** | Runs on what *survives* the redux, not on today's backlog |
 
 Independent of the chain, runnable at any point: **A's remainder** (#440 merge, multi-spine
-attribution, #180 wiring), **D's falsification debt** (#436), **E reworked** (pending Tommy's
-ruling on the escalated done-condition).
+attribution, #180 wiring) and **D's falsification debt** (#436).
+
+The chain is a dependency order, not a schedule. Each link is a real constraint — B before
+everything because all of it reads through the projection; A2 before F because F types the
+verbs; F before C because C should not write content against a surface that is still moving;
+E last because the redux decides what the findings mean. Nothing else here is ordering, and a
+Commander that finds a link is not real should say so rather than honour it.
+
+**What the Admiral is not given:** a wave plan, a per-issue dispatch script, or a prescribed
+interface for any section. The order above plus each section's fixed boundaries is the whole
+course. Wave composition is the Admiral's call under the standing latitude contract, and the
+iterative-planning flow is how it revises between waves.
