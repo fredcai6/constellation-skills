@@ -10,11 +10,11 @@ candidate stays visible in sweep reports until resolved). Just append entries;
 never edit the sidecar by hand. Never archived with a run.
 
 Recurrence is the validator, so a finding's **identity must be stable across
-runs**. When this export derives from a `constellation`-scoped lesson, carry that
-lesson's id in the **Lesson** field — the sweep fingerprints on it, so the same
-finding groups even as its prose/slug drift. Reword a recurring finding by
-`amend`-ing the lesson (its id is preserved), not by inventing a new slug. Only
-when there is no originating lesson does the sweep fall back to the candidate
+runs**. When this export derives from a recorded episode, carry that episode's id
+in the **Episode** field — the sweep fingerprints on whatever id sits there, so the
+same finding groups even as its prose/slug drift. An episode id is stable once
+written, so a reworded finding keeps its id rather than getting a new slug. Only
+when there is no originating episode does the sweep fall back to the candidate
 slug.
 
 ## Cleared 2026-07-27 by the constellation-curator weekly sweep
