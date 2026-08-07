@@ -158,6 +158,21 @@ class VerifySpecConfirmedTests(unittest.TestCase):
             self.m.verify_spec_confirmed(text, "review")
         self.assertIn("no findings table", str(ctx.exception))
 
+    def test_unconfirmed_marker_still_fails_review_when_table_is_incomplete(self):
+        # #428: dropping the marker refusal from `review` must not soften
+        # review's real job. A marked draft whose Disposition cells are not all
+        # filled is still refused -- the marker is simply not the reason.
+        text = "# UNCONFIRMED — DO NOT CUT\n\n" + spec(DRAFT_BLOCK, TABLE_EMPTY_DISPOSITION)
+        with self.assertRaises(self.m.SpecVerificationError) as ctx:
+            self.m.verify_spec_confirmed(text, "review")
+        self.assertIn("Disposition", str(ctx.exception))
+
+    def test_unconfirmed_marker_still_fails_review_when_table_is_absent(self):
+        text = f"# UNCONFIRMED — DO NOT CUT\n\n# Design Spec\n\n{DRAFT_BLOCK}\n\nNo table here.\n"
+        with self.assertRaises(self.m.SpecVerificationError) as ctx:
+            self.m.verify_spec_confirmed(text, "review")
+        self.assertIn("no findings table", str(ctx.exception))
+
     def test_live_design_spec_passes_default_phase(self):
         # .agent-work is untracked local state: the issue-58 spec may still be
         # live, already archived, or absent entirely (fresh clone) — skip then.
@@ -170,6 +185,75 @@ class VerifySpecConfirmedTests(unittest.TestCase):
             self.skipTest("issue-58 DESIGN_SPEC.md not present in this checkout (untracked artifact)")
         text = live.read_text(encoding="utf-8")
         self.m.verify_spec_confirmed(text, "confirm")  # no raise
+
+
+class ReviewPhaseIsPassableByAConformantDraft(unittest.TestCase):
+    """Issue #428: `--phase review` was unpassable BY CONSTRUCTION.
+
+    The `UNCONFIRMED — DO NOT CUT` marker may only come off at confirm, so a
+    conformant draft at review time still carries it. The marker refusal ran in
+    EVERY phase, which meant review refused precisely the drafts it exists to
+    check. A check that cannot succeed is the mirror of one that cannot fail,
+    and just as useless: an agent whose review step can only ever refuse learns
+    to route around the step, not to fix the draft.
+
+    The marker refusal is therefore a CONFIRM-phase rule ("no work is cut from
+    an unconfirmed design"). Review keeps the checks that are actually its job:
+    a findings table exists, and every Disposition cell is filled.
+
+    Pinned in both directions -- review must PASS the conformant marked draft
+    and must still REFUSE a genuinely bad one (see the two
+    `..._still_fails_review_...` tests above), and confirm must be untouched.
+    """
+
+    MARKER = "# UNCONFIRMED — DO NOT CUT"
+
+    def setUp(self):
+        self.m = load()
+
+    def test_marked_draft_with_complete_table_passes_review(self):
+        # The conformant-draft case: exactly what an explorer hands its review
+        # step. This is the assertion that was impossible before the fix.
+        text = f"{self.MARKER}\n\n" + spec(DRAFT_BLOCK, FULL_TABLE)
+        self.m.verify_spec_confirmed(text, "review")  # no raise
+
+    def test_marked_draft_hyphen_variant_passes_review(self):
+        text = "# UNCONFIRMED - DO NOT CUT\n\n" + spec(DRAFT_BLOCK, FULL_TABLE)
+        self.m.verify_spec_confirmed(text, "review")  # no raise
+
+    def test_marker_refusal_survives_at_confirm(self):
+        # The rule is relocated, not removed: cutting work from a marked spec
+        # is still refused, by name.
+        text = f"{self.MARKER}\n\n" + spec(CONFIRMED_BLOCK, FULL_TABLE)
+        with self.assertRaises(self.m.SpecVerificationError) as ctx:
+            self.m.verify_spec_confirmed(text, "confirm")
+        self.assertIn("UNCONFIRMED", str(ctx.exception))
+
+
+class ConfirmPhaseRegressionOnALiveSpec(unittest.TestCase):
+    """The #428 fix must not move the confirm gate at all.
+
+    `.agent-work/epic-418/spec-revision/REVISED_SPEC.md` is a real spec confirmed
+    through `--phase confirm` (exit 0) on 2026-08-07, used here as the regression
+    fixture. `.agent-work` is untracked local state, so skip when absent.
+    """
+
+    def setUp(self):
+        self.m = load()
+
+    def _fixture(self):
+        path = ROOT / ".agent-work" / "epic-418" / "spec-revision" / "REVISED_SPEC.md"
+        if not path.is_file():
+            self.skipTest("epic-418 REVISED_SPEC.md not present in this checkout (untracked artifact)")
+        return path.read_text(encoding="utf-8")
+
+    def test_live_revised_spec_still_passes_confirm(self):
+        self.m.verify_spec_confirmed(self._fixture(), "confirm")  # no raise
+
+    def test_live_revised_spec_also_passes_review(self):
+        # A spec good enough to confirm is good enough to review; before the fix
+        # this held only because the marker had already been removed at confirm.
+        self.m.verify_spec_confirmed(self._fixture(), "review")  # no raise
 
 
 if __name__ == "__main__":

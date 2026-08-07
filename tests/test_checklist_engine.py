@@ -4343,7 +4343,12 @@ class NextVerbsAreLegalFromHere(unittest.TestCase):
         self.assertEqual(
             E.advance(copy.deepcopy(cl), "g1", why="test understanding"), "g1 -> complete")  # no raise
 
-    # --- resume() / record() carry no condition gate at all ------------------ #
+    # --- resume()/record() hints are never suppressed by open conditions ----- #
+    # resume() genuinely carries no condition gate. record() DOES carry one
+    # since #422/#328 (`--result pass` vs `command`-kind postconditions), but it
+    # is command-kind only -- the class _blocking_conditions() excludes under
+    # INV-2 -- and `--result fail` is ungated, so the hint stands either way.
+    # See tests/test_next_verbs_record_gate_comment.py (#437).
     def test_blocked_resume_hint_runs(self):
         cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
         E.block(cl, "g1", "waiting on x1 result", "parent agent", "escalate; do not re-dispatch")
@@ -4354,8 +4359,9 @@ class NextVerbsAreLegalFromHere(unittest.TestCase):
             "g1 resumed -> in-progress (blocker resolved: blocker cleared)")  # no raise
 
     def test_survey_in_progress_record_hint_runs_even_with_open_null_postcondition(self):
-        # record() carries no gate at all (unlike advance()) -- confirm the
-        # hint is present AND runnable despite an open null postcondition.
+        # A `null`-kind postcondition is one record() does not evaluate at all
+        # (#422/#328 scoped its check to `command`-kind), so unlike advance()
+        # the hint is present AND runnable despite this condition being open.
         cl = survey(v1=survey_item("v1", "in-progress"))
         cl["tasks"]["v1"]["postconditions"] = [{"id": "c1", "statement": "checked", "check": None, "satisfied": False}]
         verbs = self._next(cl, "v1")

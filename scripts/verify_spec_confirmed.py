@@ -8,13 +8,19 @@ DESIGN_SPEC.md, headline doctrine 3.
 
 Phases:
   review  -- PASS iff a findings table exists and no Disposition cell is
-             empty. Status may still be DRAFT.
+             empty. Status may still be DRAFT, and the spec may still carry
+             the `UNCONFIRMED -- DO NOT CUT` marker (it is SUPPOSED to at this
+             point -- see below).
   confirm -- (default) PASS iff Status is CONFIRMED, Confirmed-by and Date
              are non-empty, AND no Disposition cell is empty.
 
-Any phase: a loud `UNCONFIRMED -- DO NOT CUT` marker line (em-dash or hyphen)
-FAILs with a named refusal. A spec with no findings table FAILs both phases
--- a critical review is mandatory; absence must not pass silently.
+Confirm phase only: a loud `UNCONFIRMED -- DO NOT CUT` marker line (em-dash or
+hyphen) FAILs with a named refusal. It is NOT checked at review, because the
+marker only comes off at confirm -- checking it in every phase made `review`
+unpassable by construction (#428).
+
+A spec with no findings table FAILs both phases -- a critical review is
+mandatory; absence must not pass silently.
 """
 
 from __future__ import annotations
@@ -138,11 +144,24 @@ def _unconfirmed_marker_hit(text: str) -> str | None:
 
 
 def verify_spec_confirmed(text: str, phase: str) -> None:
-    marker_line = _unconfirmed_marker_hit(text)
-    if marker_line is not None:
-        raise SpecVerificationError(
-            f"REFUSED: shaped-design spec is marked UNCONFIRMED -- DO NOT CUT: {marker_line!r}"
-        )
+    # #428: the marker refusal is a CONFIRM-phase rule, not an any-phase one.
+    # `UNCONFIRMED -- DO NOT CUT` may only come off AT confirm, so a conformant
+    # draft still carries it when `review` runs. Enforcing it in every phase made
+    # `--phase review` unpassable by construction -- it refused exactly the
+    # drafts it exists to check. A check that cannot succeed is the mirror of one
+    # that cannot fail: the agent learns to route around the step, not to fix the
+    # draft. Review's job is the findings table; "no work is cut from an
+    # unconfirmed design" is what confirm is for.
+    #
+    # Deliberately left BEFORE the table checks (not folded into the confirm
+    # block below) so the confirm phase's refusal ordering and messages are
+    # byte-identical to before this change.
+    if phase != "review":
+        marker_line = _unconfirmed_marker_hit(text)
+        if marker_line is not None:
+            raise SpecVerificationError(
+                f"REFUSED: shaped-design spec is marked UNCONFIRMED -- DO NOT CUT: {marker_line!r}"
+            )
 
     dispositions = find_findings_table(text)
     if dispositions is None:

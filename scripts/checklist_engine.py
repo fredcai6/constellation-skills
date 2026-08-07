@@ -1528,8 +1528,11 @@ def _next_verbs(aid: str, t: dict, kind: str) -> list[str]:
     null/artifact condition for it is resolved — see `_blocking_conditions()`.
     The gate is ASYMMETRIC: `start()` refuses on unmet PREconditions, `advance()`
     on unmet POSTconditions, so each is checked against its own list only.
-    `resume`/`record` carry no precondition/postcondition gate at all (see
-    `resume()`/`record()`), so they are never suppressed.
+    `resume` carries no precondition/postcondition gate at all (see `resume()`),
+    so it is never suppressed. `record` is NOT ungated -- since #422/#328 a
+    `record --result pass` refuses on an unmet `command`-kind postcondition (see
+    `record()`) -- yet its hint is never suppressed either, for the INV-2 reason
+    spelled out at the hint itself below.
 
     Placeholders (`<...>`) mark free text only the agent can supply; every
     other token is a real id read off THIS task."""
@@ -1559,9 +1562,20 @@ def _next_verbs(aid: str, t: dict, kind: str) -> list[str]:
         if not _blocking_conditions(preconds):
             verbs.append(f"start {aid}")
     elif kind == SURVEY:
-        # record() carries no precondition/postcondition gate at all (see
-        # record()) -- unlike advance(), it is ALWAYS legal from in-progress,
-        # so it is never suppressed by open conditions.
+        # Never suppressed -- but NOT because record() is ungated (it was when
+        # this hint was written; #422/#328 changed that). record()'s only
+        # condition gate is on `command`-kind postconditions, and only for
+        # `--result pass`. Two things make the hint legal anyway:
+        #   1. That gate is `command`-kind ONLY, which is exactly the class
+        #      _blocking_conditions() excludes -- INV-2 forbids state() probing
+        #      a command, so an [unmet] one must not suppress the hint; it may
+        #      well pass when record actually runs.
+        #   2. `--result fail` is never gated by it at all (recording an honest
+        #      failure must not be blocked by the check that is failing), so the
+        #      <pass|fail> hint always offers at least one legal move.
+        # `null`/`artifact`-kind postconditions on a survey item remain
+        # unevaluated by record() (#422/#328's declared scope), so unlike
+        # advance() there is no _blocking_conditions() test to apply here.
         verbs.append(f'record {aid} --result <pass|fail> [--finding "<text>"]')
     elif not _blocking_conditions(postconds):
         if t.get("why_exempt"):
