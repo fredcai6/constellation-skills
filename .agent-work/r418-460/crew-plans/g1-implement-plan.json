@@ -269,7 +269,8 @@
             "kind": "command",
             "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-rework1-1"
         },
         {
           "id": "c2",
@@ -278,7 +279,8 @@
             "kind": "command",
             "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python .agent-work/r418-460/evidence/mutate_probe_m4.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-rework1-2"
         },
         {
           "id": "c3",
@@ -287,7 +289,8 @@
             "kind": "command",
             "command": "cd /c/Programs/constellation-skills-wt/r418-460 && grep -q '## Rework 1' .agent-work/r418-460/crew-handoffs/g1-implement-result.md && test \"$(ls .agent-work/r418-460/crew-handoffs/ | grep -c 'implement-result')\" -eq 1"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-rework1-3"
         }
       ],
       "constraints": [
@@ -298,11 +301,45 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-rework1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-rework1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python .agent-work/r418-460/evidence/mutate_probe_m4.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-rework1-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && grep -q '## Rework 1' .agent-work/r418-460/crew-handoffs/g1-implement-result.md && test \"$(ls .agent-work/r418-460/crew-handoffs/ | grep -c 'implement-result')\" -eq 1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -318,13 +355,14 @@
   "refusals": 0,
   "engine_session": {
     "session_id": "impl-460-g1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-07T23:33:34.568964+00:00",
-    "last_heartbeat": "2026-08-07T23:33:41.964552+00:00",
+    "last_heartbeat": "2026-08-07T23:51:13.771861+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-07T23:51:33.756247+00:00"
   },
   "why_trail": [
     {
@@ -361,6 +399,13 @@
       "why": "IMPLEMENTER_RESULT written to .agent-work/r418-460/crew-handoffs/g1-implement-result.md with real exit codes for the pre-change baseline (1721/4/643, EXIT=0), the post-change full suite (1742/4/672, EXIT=0), the targeted file, both mutation probes and the CLI spot-check; per-letter evidence table for cases (a)-(g); wiring-grep call-site counts; one triage candidate; workflow feedback filled.",
       "mechanical": false,
       "ts": "2026-08-07T23:15:57.088127+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-rework1",
+      "why": "Rework 1 done. RESTATE_ALLOWED_FIELDS pinned by three tests (tuple pin + behavioural refusal of any original-carrying field + exact-equality on the quoted original). _restatement_history_line docstring corrected to last-marker-wins; format and code unchanged, no escaping added. M4 probe: 21 passed exit 0 with the three new tests deselected (the reviewer's finding reproduced) vs 6 failed exit 1 with them in; source restored byte-for-byte. Full suite 1745 passed, 4 skipped, 677 subtests, EXIT=0 \u2014 +3/+5 against post-g1, skips unchanged. Rework 1 section appended to the existing result file.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:51:13.771832+00:00"
     }
   ],
   "amendments": [
