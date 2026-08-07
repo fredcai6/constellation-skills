@@ -1,57 +1,84 @@
 # Crash-resume state note — epic-418-redux
 
-**Wave 2 ("B extended") is LAUNCHED, four-wide. If this session died, the four agents below may
-still be working in their own worktrees — inspect their worktrees before assuming anything.**
+**Wave 2 is MID-FLIGHT. Two agents are still working. Read the replant recipe below before
+touching any wave-2 PR — every one of them will report CONFLICTING, and it is not their fault.**
 
-- **step:** `execute` — in progress, wave 2 launched. Remaining after `execute`: `closeout` only.
-- **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · branch `main`
-  · latitude CONFIRMED · boundary `w1-to-w2` decided **replan**, prelaunch verifier exit 0
+- **step:** `execute` — in progress, wave 2 partly landed. Remaining after `execute`: `closeout`.
+- **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` at
+  **`7bc3f8c2`** (= `origin/main`, pushed)
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
-  — then poll the four worktrees below for PRs and adjudicate
-- **pid:** four background subagent dispatches (harness-managed, no OS pids). Poll by worktree
-  state and by `gh pr list`, never by waiting on a completion signal alone.
-- **expected artifact:** four PRs against `main`, one per issue, each with a notes file at
-  `.agent-work/epic-418-redux/notes-<issue>.md`
+  — then replant PR #471 per the recipe below, and poll `r418-433` / `r418-460` for their PRs
+- **pid:** two live background subagents (`cmd-433b`, `cmd-460b`), harness-managed, no OS pids.
+  Poll by worktree writes and `gh pr list`, never by waiting on a completion signal alone.
+- **expected artifact:** PRs from #433 and #460; a replanted PR for #464
 
-## Wave 2, launched 2026-08-07
+## Landed so far
 
-| Issue | Dispatch | Tier | Worktree | Branch |
-|---|---|---|---|---|
-| #433 render `directives` + completeness property | Commander (delegated) | Opus | `C:/Programs/constellation-skills-wt/r418-433` | `epic-418/b-433-render-directives` |
-| #460 episode records read as prescriptions | Commander (delegated) | Opus | `C:/Programs/constellation-skills-wt/r418-460` | `epic-418/b-460-episodes-observations` |
-| #436 enumeration check must be seen refusing | implementer-with-plan | Sonnet | `C:/Programs/constellation-skills-wt/r418-436` | `epic-418/d-436-enumeration-falsification` |
-| #464 rename the `Lesson:` field | implementer-with-plan | Sonnet | `C:/Programs/constellation-skills-wt/r418-464` | `epic-418/b-464-lesson-field-rename` |
+| PR | Issue | State |
+|---|---|---|
+| #470 | Admiral's own fixture-path breakage | **MERGED** `e8c735af` |
+| #472 | #436 enumeration falsification | **MERGED** `7bc3f8c2` |
+| #469 | #436, original | closed — superseded by #472 (squash-orphan, not rework) |
+| #471 | #464 rename | **OPEN, CONFLICTING** — needs the replant below |
+| — | #433, #460 | agents still working in their worktrees |
 
-Launch orders: `.agent-work/epic-418-redux/launch-orders/LO-<issue>.md`.
-Isolation gate passed before launch: 4 distinct worktrees, exit 0.
+## THE REPLANT RECIPE — read this before touching any wave-2 PR
 
-**Held to the wave's second half, deliberately, by file overlap — not forgotten:**
+**Every wave-2 branch is based on `73b4517`, which is NOT an ancestor of main.** Squash-merging
+#470 collapsed `8de91de`+`73b4517`+`fb7edfd` into one commit, orphaning that base. So
+`gh pr update-branch` reports CONFLICTING on all of them. **The work is fine; only its base moved.**
+Do not ask the agent to redo anything.
+
+```bash
+# 1. fresh branch off current main
+git checkout -b epic-418/<slug>-replant origin/main
+# 2. take ONLY that branch's own delta, against its real base
+git diff 73b4517 origin/<their-branch> -- <their changed paths> > /tmp/x.patch
+git apply --3way /tmp/x.patch
+# 3. verify, commit, push, PR, then close the original as superseded
+```
+Get the changed-path list with `git diff --name-only 73b4517 origin/<their-branch>`.
+Worked cleanly for #436 → #472.
+
+**Never use an ancestry test to decide whether a wave-2 branch merged** — under squash-merge it
+returns the same answer for merged and abandoned. Ask the forge (`gh pr view <n> --json state`).
+
+## Settled — do NOT re-derive
+
+- **Green baseline is now `7bc3f8c2`.** Expect **1726 passed, 2 skipped** (1723/2 after #470's fix,
+  plus #436's 3 new tests). The earlier "1721 passed, 4 skipped" was **my own breakage**, not
+  environment-conditional: archiving the run moved `REVISED_SPEC.md` out from under a hardcoded
+  fixture path. Fixed in #470 (fixture now found by glob).
+- `FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests` — **never `py` for pytest** (#454).
+- **The installed corpus was stale and is now SYNCED.** Remaining diffs are the installer's own
+  `python`→`py` rewrite and path resolution — verified benign, zero non-launcher differences.
+- **#468 (filed):** the repo's vendored `verify_iterative_role_artifacts.py` cannot run from this
+  repo — its installed-skill guard passes by accident because the repo is named
+  `constellation-skills`. **Use the installed copy** under
+  `C:/Users/fredc/.claude/skills/constellation-admiral/scripts/`.
+- **`verify_worktree_isolation.py` has two modes.** Bare paths = Admiral pre-wave gate;
+  `--here <path>` = the Commander's check and it tests **cwd**.
+- **`git cat-file -e origin/main:<path>` is broken in Git Bash here** — it path-converts to
+  `origin\main;<path>` and reports MISSING for files that exist. Compare trees with
+  `git diff --name-only` instead. This nearly made me believe a merge had eaten the work area.
+- **The governor HARD-trips agents at ~17–21% context fill.** All three wave-2 agents tripped at the
+  plan seam and were relaunched fresh from `current` alone. Budget **two dispatches per issue**.
+  Open question for Tommy: whether that band is where we want it. Not retuned mid-wave.
+- **#447 CLOSED** with a per-done-condition accounting; condition 4 recorded **partial**, not done.
+  **#418's body pointer corrected** to `.agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md`.
+- **#457 — never obey a spine rail naming a spine another agent drives.**
+
+## Still held to the wave's second half, deliberately
+
 - **#461** (episode-store negative control) — sits in #460's area
 - **#465** (reviewer r6-fowler placeholder + CRLF) — touches `checklist_engine.py`, #433's area
 
-## Settled this session — do NOT re-derive
+## Owed to Tommy at the next checkpoint
 
-- **Green baseline: `ca0e36a` → 1721 passed, 4 skipped, 643 subtests, exit 0.** The predecessor's
-  note carries two other figures (1723/2 and 1764); they are not reconciled and this one governs.
-- **The installed corpus was stale and is now SYNCED** (12 skills diverged, 6 in `SKILL.md`,
-  including `commander-delegated` and `workbench`). Seven paths still differ and all seven are the
-  installer's own transformations — path resolution plus a `python`→`py` rewrite. Verified benign:
-  zero non-launcher differences. `py` is Python 3.12.13 and runs corpus scripts fine.
-  **`py` is still wrong for pytest** (#454) — that is a separate, still-true rule.
-- **The installed Admiral spine is unusable as-is** — its closeout calls `apply_lessons_delta.py`
-  and `verify_agent_feedback.py`, both deleted by #447. This spine was built from the repo template.
-- **#468 (filed today):** the repo's vendored `verify_iterative_role_artifacts.py` cannot run from
-  this repo — its installed-skill guard passes by accident because the repo is named
-  `constellation-skills`. **Use the installed copy** at
-  `C:/Users/fredc/.claude/skills/constellation-admiral/scripts/`.
-- **`verify_worktree_isolation.py` has two modes.** Bare paths = the Admiral's pre-wave gate;
-  `--here <path>` = the Commander's in-worktree check and it tests **cwd**. I ran `--here` from the
-  main checkout and got four false failures.
-- **#447 is CLOSED** with a per-done-condition accounting. Condition 4 was recorded **partial**, not
-  done — #460 is that remainder, and it is in this wave.
-- **#418's body pointer is corrected** to `.agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md`.
-- **#457 — never obey a spine rail naming a spine another agent drives.** With four agents live this
-  is now a live hazard, not a theoretical one: the rail attributes a descendant's gate to its
-  ancestor, and a productive descendant resets its ancestor's strike counter forever.
+1. The governor trip band at 17–21% — observation, not a decision I took.
+2. Two reviewer dispatches stalled with no artifacts; #470 merged on self-verified falsification
+   evidence instead of independent review. He should know the review never landed.
+3. #460 will return **doctrine candidates** — records that look like real rules. Promoting any of
+   them into `docs/agents/*` is his call, always.
 
-_Updated: 2026-08-07T21:45:00Z_
+_Updated: 2026-08-07T23:40:00Z_

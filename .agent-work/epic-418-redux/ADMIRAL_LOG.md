@@ -103,7 +103,31 @@ What carries forward, and must not be re-derived:
   baseline any wave-1 PR is judged against is **this** one, at this SHA. Skips are environment-
   conditional, which is the likely cause and is cheap to confirm if a wave-1 review ever leans on it.
 
-- `2026-08-07` — `ADMIRAL ERROR`: I deleted the `## Merges` heading while appending the baseline
+- `2026-08-07` — `ADMIRAL ERROR`: I deleted the `
+- `2026-08-07` — **PR #472 merged** (`7bc3f8c2`), squash. #436's enumeration falsification, replanted
+  onto current main after the squash orphaned its base. Gated on the check exit code (0 non-SUCCESS)
+  and verified at the forge (`state=MERGED`). #469 closed as superseded, with a comment making clear
+  it was my squash and not their work.
+
+  **What #436 actually proved**, which is the point of the issue: it introduced a genuinely new
+  second worktree-entering entry and observed the check **refuse** — `1 of 2 worktree-entering
+  template(s) checked failed`, exit 1 — then reverted it. The discrimination logic needed no fix,
+  which is an **honest null on the "does it work" question**, and the debt is closed by evidence
+  rather than argued closed. It also found and fixed one real gap test-first: the failure path
+  listed offenders without stating what it had enumerated. *A guard that loops must assert what it
+  looped over* — that is the doctrine, and the check was violating it on its own failure path.
+
+- `2026-08-07` — `RULING`: **the squash-orphan now costs a replant per wave-2 PR, and that cost is
+  mine.** #471 (#464) is CONFLICTING for the same reason #469 was. The replant recipe is written
+  into the STATE_NOTE so it is mechanical rather than rediscovered. No commander is asked to redo
+  anything — their diffs are taken verbatim against their real base and replanted onto main.
+
+  Root cause worth carrying to closeout as an episode: I cut four worktrees from a commit, then
+  squash-merged a branch containing that commit. Squash-merge does not preserve the base, so every
+  branch cut from it is orphaned at once. The cheaper order was to merge the fix first and cut the
+  worktrees from the result.
+
+## Merges` heading while appending the baseline
   ruling — my replacement text dropped the heading it was anchored on. Caught when the next edit
   could not find it. No data lost (the section was empty); heading restored below. Cost: one
   round-trip. The lesson is the ordinary one about anchored edits, not worth doctrine.
