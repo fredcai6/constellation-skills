@@ -84,6 +84,17 @@ A map for code: make a codebase easier to traverse **as an alternative to readin
 | x7a | Extractor fork candidate A: SCIP + AST sidecar emits statement lines for the src/utils slice — what does the glue cost? | prototype (logic, design-it-twice A) | **complete** (cycle 2) | `excursions/x7a-brief.md` → `excursions/x7a-result.md` |
 | x7b | Extractor fork candidate B: pure-AST extractor, same slice, resolution accuracy measured vs SCIP ground truth | prototype (logic, design-it-twice B) | **complete** (cycle 2) | `excursions/x7b-brief.md` → `excursions/x7b-result.md` |
 
+## Key findings — cycle 3, x12: prior art on giving agents maps (human-commissioned)
+
+- **The evidence splits by shape, and we're on the right side:** machine-built, symbol-or-finer structure the agent pulls on demand has repeated measured gains (RepoGraph +8.6–100% relative on SWE-bench-Lite across 4 frameworks; LocAgent's ablation isolates the graph tool; ARISE +58% relative line recall). Prose overviews pushed into context measured *harmful* (ETH: LLM-written AGENTS.md −0.5 to −2% success, +20–23% cost).
+- **Bite-sized measured directly:** RepoGraph's 1-hop flattened (~2.3k tokens) beat 2-hop (~10.5k) — context explosion is real. Our 5–10 pages × ~200 tokens converges with aider's 1k budget and RepoGraph's optimal window from three independent directions.
+- **The contradiction (surfaced, not smoothed):** "an overview helps the agent orient" is now refuted by two independent lines — ETH ("context files do not provide effective overviews") and our own #298 (orientation unmoved in both arms). A map changes *what an agent reads*, not *how it orients*.
+- **The redundancy constraint (sharpest design input):** generated context helps exactly when it is NOT cheaply recoverable from source (docs-removed arm: +2.7%, beating developer-written docs). Our pages must lead with cross-file facts (referenced-by, blast radius, tombstones) and never restate what grep-plus-one-read gives.
+- **Pull nuance:** RepoGraph's deterministic push-into-workflow variants beat its agent-invoked-tool variants — a fixed insertion step at a workflow point is a live alternative to pure skill-taught pull. Our #298 Tool-Skip result is the field's named normal case (ToolFailBench; best models 86% clean tool use).
+- **Guards for cycle 4:** hold answer *quality* first-class (Codebase-Memory: 10× cheaper but 83% vs 92% quality); the localization prize is huge (+39pp oracle ceiling) but repro tests outrank every map.
+- **Unconsidered shapes filed:** def-use dataflow edges (ARISE's line-recall machinery), runtime call edges (on par with edit location). `llms.txt`: do not borrow — no measured effect.
+- Full result with citations: `excursions/x12-result.md`.
+
 ## Key findings — cycle 2, x7a+x7b: the extractor fork, prototyped both ways
 
 *Design-it-twice pair, run independently on the same slice with the same statement-line target. Agent comparison and recommendation below — the convergence decision is the human's. Full results: `excursions/x7a-result.md`, `excursions/x7b-result.md`.*

@@ -152,10 +152,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "Prior art on agent maps: answered with one real contradiction. CONFIRMED (measured): per-entity-and-finer granularity is the field's trend (RepoGraph line-level +8.6-100pct rel on SWE-bench-Lite across 4 frameworks; ARISE statement-level +58pct rel line recall; LocAgent function-level, TraverseGraph ablation isolates the graph); small units beat dumps (1-hop flattened 29.67pct beat 2-hop flattened 26.00pct -- context explosion measured); machine-derived beats hand-written prose (LLM-written AGENTS.md files measured HARMFUL: -0.5 to -2pct success, +20-23pct cost, ETH 2602.11988); ids.jsonl matches LocAgent's name-to-node index; pull-taught-by-loaded-skill matches field answer (ToolFailBench names our #298 zero-invocation as Tool-Skip, best models 86pct clean tool use). Our 5-10 pages x ~200 tokens converges with aider's 1k budget and RepoGraph's optimal ~2.3k 1-hop window. CONTRADICTED: 'overview helps orientation' -- ETH: context files do not provide effective overviews; our #298 orientation-unmoved agrees; two independent lines say maps change WHAT agents read, not how they orient. ESCAPE HATCH = design constraint: generated context helps exactly when NOT cheaply recoverable from source (docs-removed arm: +2.7pct, beats developer-written) -- pages must lead with cross-file structure (referenced-by, blast radius, tombstones), never restate what grep+one-read gives. NUANCE on pull: RepoGraph's deterministic push-into-workflow variants beat agent-invoked-tool variants -- a fixed insertion step is a live alternative arm. GUARD: Codebase-Memory was 10x cheaper but 83pct vs 92pct quality -- hold answer quality first-class in any cycle-4 measurement. PRIZE SIZE: perfect edit-location oracle = +39pp (ORACLE-SWE) -- and repro tests outrank every map. Unconsidered shapes: def-use dataflow edges, runtime call edges. llms.txt: do not borrow (no measured effect). Full: excursions/x12-result.md",
       "evidence": [],
       "rework_count": 0
     }
