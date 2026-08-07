@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": null
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": null
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "10c0027e40163ceebbaf0eaa5c9560c60df641c9"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "763806a49efae8694ef73539376d8927acb917f1"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "73b45174980820af97480d177032a6ceb43f1398"
+  },
+  "run": {
+    "work_id": "r418-460",
+    "generated_at": "2026-08-07T21:37:40Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/r418-460",
+      "repo": "C:/Programs/constellation-skills-wt/r418-460",
+      "durable": "C:/Programs/constellation-skills-wt/r418-460"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/r418-460"
+    }
+  }
+}

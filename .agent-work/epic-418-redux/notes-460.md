@@ -1,0 +1,120 @@
+# notes-460 — issue #460, episode records read as prescriptions
+
+Commander `r418-460`, delegated under `LO-460.md`. Worktree
+`C:/Programs/constellation-skills-wt/r418-460`, branch `epic-418/b-460-episodes-observations`.
+
+## Isolation proof (first command, before any git operation)
+
+```
+$ python scripts/verify_worktree_isolation.py --here C:/Programs/constellation-skills-wt/r418-460
+worktree OK: in C:/Programs/constellation-skills-wt/r418-460
+EXIT=0
+```
+
+## Pre-declared subsumption candidate set — DECLARED BEFORE THE FIRST CHANGE
+
+Standing obligation from the confirmed spec: name the candidates up front so an empty
+subsumption set is visible rather than silent. Drawn from the open tracker under
+`theme:episode-store`, `theme:checks-that-cannot-fail`, and `theme:built-not-wired`, plus the
+four issues `LO-460` names as "in this neighbourhood".
+
+| # | Issue | Why it is a candidate | Prior call |
+|---|---|---|---|
+| 1 | #400 | `LESSONS.md`'s preamble instructs agents to read an empty bank — the same read-as-rule inversion, at the retired playbook | named in LO-460 |
+| 2 | #403 | the lessons read-path cut is unverifiable; downstream AGENT_GUIDEs still instruct the read | named in LO-460 |
+| 3 | #404 | the lessons feedback loop lost its observer — the spine still says "bank for re-observation" | named in LO-460 |
+| 4 | #277 | lessons-delta id grammar mismatch (`lesson:foo`) | named in LO-460 |
+| 5 | #285 | (LO-460 names it; HITL batch-confirm item) | named in LO-460 |
+| 6 | #399 | the store STRUCTURALLY FORCES local diagnosis and FORBIDS honest gaps | K3, issue says out of scope |
+| 7 | #342 | no `confirmed` lifecycle-standing | K3, issue says out of scope |
+| 8 | #392 | consolidation candidate: "a check that cannot register its own failure" | theme:checks-that-cannot-fail |
+
+Report of what was actually closed is at the end of this file.
+
+## Problem statement (reconciled against LO-460, no human reachable)
+
+**Protected intent.** `episodes/` is a store of *things that happened*. A record that tells a
+future agent what to do is the retired learning playbook growing back inside the store that
+replaced it.
+
+**The defect.** Of the 32 pre-#447 records in `episodes/active/`, most carry a `workaround`
+assertion written in imperative mood, second person, or with a forward-aimed modal. They read
+as instructions. The 16 `issue-447-*` records honour the constraint.
+
+**Three things must be true when this run ends.**
+
+1. Every `workaround` in `episodes/active/` reads as a record of what was done.
+2. Something that **can fail** keeps it true — or an honest, measured null saying no command can.
+3. Records that state a genuine rule are collected as **doctrine candidates for the human**.
+   They are not written into `docs/agents/*` and are not parked in a new file. That is the hard
+   boundary.
+
+## Baseline reconciliation — where the launch order's assumed baseline is not true
+
+`LO-460` and issue #460 both assume the rewrite can be applied with the writer as it stands:
+
+> "Rewrites go through `scripts/apply_episode_delta.py`'s `amend-assertion` op only ... and each
+> amendment appends its history line."
+
+**That is not true of the code.** `_apply_amend_assertion` (`scripts/apply_episode_delta.py:1227`)
+changes exactly one thing — the assertion's `lifecycle-standing` — and appends one history line.
+Its own comment is explicit: *"kind/strength/statement, every sibling assertion, every mechanical
+line, and the retirement block are all left exactly as parsed."* `_validate_amend_assertion`
+(`:970`) accepts no `statement` field at all. **There is no write path that can change an
+assertion's statement text.**
+
+This is not an oversight in the writer. `docs/EPISODE_STORE.md` §5 is deliberate: its worked
+amendment changes only `lifecycle-standing` and explicitly leaves `statement` untouched, and its
+prose says an episode *"never needs rewriting later."* Stated precisely, because a cold critic
+caught an earlier draft of this note leaning on §5 as if it endorsed restatement: §5 is the
+**constraint a restatement has to answer to**, not support for one.
+
+So the issue's acceptance criteria and the store's own design are in genuine tension, and it has
+to be resolved rather than papered over. **Departure, applied under inherited latitude** ("how the
+rewrite is applied through `apply_episode_delta.py`" is explicitly mine to decide): add one new op
+to the writer, `restate-assertion`, which replaces a single assertion's `statement` **and appends
+a history line carrying the original wording verbatim**. Nothing is destroyed — the prescriptive
+text stays visible in the record's own history, which is what keeps the store honest about what it
+used to say. Using `amend-assertion` alone would leave every prescription standing as the live
+statement and fail acceptance criterion 1.
+
+## Plan-step rigor mechanisms
+
+**Cold plan critic — RUN.** One critic with no authoring context, reading only `MISSION_FRAME.md`,
+`execute.json`, and the code they point at. It returned 12 findings, 2 of them BLOCK. All 12 were
+accepted and the plan was re-authored before freezing. The two that mattered:
+
+1. **The naive detector does not survive the corpus.** Measured over all 253 assertion statements
+   in `episodes/active/`: 41 imperative hits, 30 deontic-modal hits, 2 second-person hits — about
+   65 flags against ~24 real defects. 31 of the 41 imperative hits are `task-intent`, which is
+   bare-infinitive *by house convention* — `docs/EPISODE_STORE.md:171`, the store's own canonical
+   worked record, is in that form. The naive detector flags the document that defines the format.
+   Plan now scopes the imperative rule to `workaround` and `proposed-remedy`, drops bare-modal
+   matching entirely (measured: `must`/`should` here are overwhelmingly descriptive), and requires
+   the numbers be re-measured after narrowing.
+2. **The guard's pass requirement punished the honest outcome.** g2 correctly leaves an ungrounded
+   prescriptive record alone; a guard demanding a clean store then goes red on exactly that, and
+   the only escapes are to fabricate a rewrite or file the lexicon down until the corpus passes.
+   Plan now carries an exception list keyed by (episode id, assertion id) with a required reason
+   per entry, seeded only from g2's ungrounded list, and the guard fails on a stale entry too.
+
+Also accepted: two writer dispatch sites, not one (`--dry-run` would silently skip a new op);
+real command postconditions at g3-integrate that run the guard green against the real store and
+red against a fixture; a second red case not drawn from the corpus; `--strict` so the honest-null
+branch does not contradict the red-proof; a test that runs the guard over the real `episodes/` so
+it does not run once and never again; g4 retargeted off §10 and given an invariant that §5 be
+reconciled; g4 bounded so the doc edit cannot become quiet doctrine promotion.
+
+**The one finding I overrode.** The critic argued the cheaper route was `amend-assertion` with
+`lifecycle-standing: superseded` plus a history line — no writer change at all. Rejected, on the
+record: that leaves the prescriptive sentence standing as the live statement, so an agent opening
+the file still finds an instruction, and the issue's first acceptance criterion is that every
+workaround *reads* as an observation. The critic was right on one connected point and the frame
+was corrected for it: `docs/EPISODE_STORE.md` §5 is **not** support for restating a statement — its
+worked example deliberately leaves `statement` untouched. §5 is the constraint the new op has to
+answer to, which it does by preserving the original verbatim in history, and g4 reconciles §5.
+
+**Plan-alternatives (design-it-twice) — NAMED UNTAKEN ROAD.** Not run. The one live design fork
+here is restate-vs-annotate, and the cold critic surfaced it and forced it onto the record, which
+is what a second plan candidate would have produced. Running a panel to rediscover the same fork
+was not worth the budget under the launch order's scope ruling. Recorded as skipped, not silent.
