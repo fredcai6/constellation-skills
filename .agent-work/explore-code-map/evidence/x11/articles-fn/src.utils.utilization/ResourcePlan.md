@@ -1,41 +1,27 @@
-[map index](../INDEX.md) / [`src.utils.utilization`](INDEX.md)
-
-# `ResourcePlan`
-*class* [s] · [`src/utils/utilization.py:52`](C:/Programs/f1Brainz/src/utils/utilization.py#L52) · 14 lines [s]
+# src.utils.utilization:ResourcePlan
+class, src/utils/utilization.py:52, 14 lines
 
 ```python
+@dataclass(frozen=True)
 class ResourcePlan
 ```
-**Decorators** [s]: `@dataclass(frozen=True)`
 
-> An immutable, fully resolved plan for one run.
->
-> Attributes:
->     level: the requested utilization level (one of ``UTILIZATION_LEVELS``).
->     n_workers: number of worker processes (>= 1).
->     threads_per_worker: intra-worker thread cap (>= 1).
->     priority: OS scheduling priority label (one of ``_PRIORITIES``).
+An immutable, fully resolved plan for one run.
 
-*(everything after the first line above is [s] — the store keeps only the summary line.)*
+Attributes:
+    level: the requested utilization level (one of ``UTILIZATION_LEVELS``).
+    n_workers: number of worker processes (>= 1).
+    threads_per_worker: intra-worker thread cap (>= 1).
+    priority: OS scheduling priority label (one of ``_PRIORITIES``).
 
-**Fields**
+```python
+level: str
+n_workers: int
+threads_per_worker: int
+priority: str
+```
 
-| name | annotation [s] | value [s] | line | in store? |
-| --- | --- | --- | --- | --- |
-| `level` | `str` | — | 62 | name only |
-| `n_workers` | `int` | — | 63 | name only |
-| `threads_per_worker` | `int` | — | 64 | name only |
-| `priority` | `str` | — | 65 | name only |
+reads stdlib: builtins.int x2, builtins.str x2
+writes internal: ResourcePlan.level, ResourcePlan.n_workers, ResourcePlan.priority, ResourcePlan.threads_per_worker
 
-**Uses**
-
-| relation | scope | targets |
-| --- | --- | --- |
-| reads | stdlib | `builtins.int` x2, `builtins.str` x2 |
-| writes | internal | `ResourcePlan.level`, `ResourcePlan.n_workers`, `ResourcePlan.priority`, `ResourcePlan.threads_per_worker` |
-
-**Referenced by**: 12 site(s) across 5 module(s) — src.evo_predictor.gold_cycle.runner x3, src.evo_predictor.gold_cycle.runner_support x2, src.evo_predictor.sampled_backtest, src.evo_predictor.sampled_backtest_scoring
-
-
----
-*Generated from the statement store by `evidence/x11/render_fn.py`. Unmarked facts = `x7b` statements; `[a]` = `x7a`; `[s]` = fetched from source (a logged vocabulary gap). Source-link lines are the store's `q.line` + 1 (defect D1: the store is 0-based and does not say so).*
+referenced by: 12 sites in 5 modules (src.evo_predictor.gold_cycle.runner, src.evo_predictor.gold_cycle.runner_support, src.evo_predictor.sampled_backtest, src.evo_predictor.sampled_backtest_scoring)
