@@ -1,0 +1,444 @@
+{
+  "work_id": "h-447-g1-implementer-rework",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-intake",
+    "r1-self-exclusion",
+    "r2-path-string",
+    "r3-visible-decode",
+    "r4-narrow-notes",
+    "r5-rework-evidence",
+    "r6-rework-result"
+  ],
+  "tasks": {
+    "r0-intake": {
+      "id": "r0-intake",
+      "title": "Read the BLOCK, confirm every finding against the tree",
+      "imperative": "Read the Commander's rework message in full. Reproduce BLOCKING-1 independently against a staged throwaway index before changing anything, so the fix is aimed at a measured defect rather than a described one. Confirm the scope is still the same three files. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all three blocking findings reproduced or confirmed against the real tree; scope unchanged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "use python NEVER py",
+        "still CREATE ONLY the same three files",
+        "do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-self-exclusion": {
+      "id": "r1-self-exclusion",
+      "title": "BLOCKING-1 \u2014 a guard cannot be inside the set it guards",
+      "imperative": "Exclude scripts/verify_retirement.py from the shipped surface, with the reason written at the code site \u2014 the same principle the test module docstring already applies to tests/. Verify against a STAGED throwaway index, never the working tree: the staged run must report 121 / 5 / 5 across exactly 3 legs, with unapproved-store-mention back to 0. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "BLOCKING-1 reproduced against a staged index",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the self-exclusion carries its reason at the code site",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "staged index reports exactly 121/5/5 across 3 legs and zero unapproved-store-mention",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && rm -f /tmp/rw-index && cp \"$(git rev-parse --git-dir)/index\" /tmp/rw-index && GIT_INDEX_FILE=/tmp/rw-index git add scripts/verify_retirement.py tests/test_retirement_guard.py tests/data/store_mentions.approved.txt && GIT_INDEX_FILE=/tmp/rw-index python scripts/verify_retirement.py > /tmp/rw-staged.txt; test $? -eq 1 && test \"$(cut -f1 /tmp/rw-staged.txt | sort | uniq -c | awk '{print $1\":\"$2}' | tr '\\n' ' ')\" = \"5:replacement-absent 121:retired-name-on-shipped-surface 5:retired-path-still-tracked \""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r1-self-exclusion-1"
+        }
+      ],
+      "constraints": [
+        "verify against the index, not the working tree"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r1-self-exclusion-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && rm -f /tmp/rw-index && cp \"$(git rev-parse --git-dir)/index\" /tmp/rw-index && GIT_INDEX_FILE=/tmp/rw-index git add scripts/verify_retirement.py tests/test_retirement_guard.py tests/data/store_mentions.approved.txt && GIT_INDEX_FILE=/tmp/rw-index python scripts/verify_retirement.py > /tmp/rw-staged.txt; test $? -eq 1 && test \"$(cut -f1 /tmp/rw-staged.txt | sort | uniq -c | awk '{print $1\":\"$2}' | tr '\\n' ' ')\" = \"5:replacement-absent 121:retired-name-on-shipped-surface 5:retired-path-still-tracked \"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r2-path-string": {
+      "id": "r2-path-string",
+      "title": "BLOCKING-2 \u2014 the retired-name leg must test the PATH string",
+      "imperative": "Test each shipped path string against RETIRED_NAMES, so re-adding skills/lessons-auditor/ is caught rather than missed. Add a decoy red-proof asserting leg AND path. This closes the gap between the code comment claiming coverage of 'a skill directory' and what the leg actually did. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "r1 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the comment at the constant now matches what the leg does",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the lessons-auditor path decoy passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py -q -k retired_name"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r2-path-string-1"
+        }
+      ],
+      "constraints": [
+        "exactly four legs, no more"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r2-path-string-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py -q -k retired_name",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r3-visible-decode": {
+      "id": "r3-visible-decode",
+      "title": "BLOCKING-3 \u2014 an unreadable file must not read as a clean file",
+      "imperative": "Make a decode failure visible instead of a silent continue. Raise, naming the file and what to do about it, mirroring apply_episode_delta._require_store_layout's refuse-rather-than-answer posture. Keep exactly one named, documented skip: a path staged for deletion has no working-tree content. Add a test. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "r2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the hidden fallback is gone; the one surviving skip is named and documented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the decode-failure test passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py -q -k undecodable"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r3-visible-decode-1"
+        }
+      ],
+      "constraints": [
+        "fail visibly \u2014 no silent skip"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r3-visible-decode-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py -q -k undecodable",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4-narrow-notes": {
+      "id": "r4-narrow-notes",
+      "title": "ADVISORY \u2014 narrow the notes exclusion; record the unchased bypasses",
+      "imperative": "Replace the unbounded notes-*.md glob with an explicit enumeration of the 7 tracked files, and correct the count in the comment (it said 3). Add ONE comment listing the accepted, unchased bypasses: lowercase lessons.md, a new root notes-999.md, a prescription split across two lines. Do not build for them. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "r3 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the exclusion is bounded and the comment's count is correct; the unchased bypasses are recorded in one comment",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the census stays green by construction and the guard suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py -q && ! python scripts/verify_retirement.py | grep -q '^unapproved-store-mention'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r4-narrow-notes-1"
+        }
+      ],
+      "constraints": [
+        "record the limits, do not build for them"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r4-narrow-notes-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py -q && ! python scripts/verify_retirement.py | grep -q '^unapproved-store-mention'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r5-rework-evidence": {
+      "id": "r5-rework-evidence",
+      "title": "Re-capture evidence: working-tree AND staged transcripts, plus the full suite",
+      "imperative": "Re-run every evidence command capturing its REAL exit code by redirecting then echoing $? \u2014 never piping to tail. Put BOTH the working-tree and the staged-index transcripts in evidence/g1-guard-red.txt, labelled, since the staged one is what describes the repo after the Commander commits. Re-run the full suite against the 1688 passed / 2 skipped baseline. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all three blocking fixes landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite re-run and compared to baseline; no new failures",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the evidence file carries both transcripts",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && grep -q 'STAGED INDEX' .agent-work/epic418-h-447/evidence/g1-guard-red.txt && grep -q 'WORKING TREE' .agent-work/epic418-h-447/evidence/g1-guard-red.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r5-rework-evidence-1"
+        }
+      ],
+      "constraints": [
+        "redirect then echo $? \u2014 never pipe to tail"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r5-rework-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && grep -q 'STAGED INDEX' .agent-work/epic418-h-447/evidence/g1-guard-red.txt && grep -q 'WORKING TREE' .agent-work/epic418-h-447/evidence/g1-guard-red.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r6-rework-result": {
+      "id": "r6-rework-result",
+      "title": "Append the REWORK section to the IMPLEMENTER_RESULT",
+      "imperative": "Append a REWORK section to .agent-work/epic418-h-447/results/g1-IMPLEMENTER_RESULT.md covering each blocking finding, the fix, and the evidence with real exit codes. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "evidence re-captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every blocking finding answered with its fix and evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the REWORK section is present in the result",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && grep -q '^## REWORK' .agent-work/epic418-h-447/results/g1-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-rework-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-r6-rework-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && grep -q '^## REWORK' .agent-work/epic418-h-447/results/g1-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "sess-rw",
+    "status": "released",
+    "claimed_at": "2026-08-06T10:01:23.166052+00:00",
+    "last_heartbeat": "2026-08-06T10:14:19.514208+00:00",
+    "claimed_by": "implementer",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-h-447",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T10:14:20.190519+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "r0-intake",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:01:24.402846+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "r1-self-exclusion",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:02:35.438898+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "r2-path-string",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:04:23.280066+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "r3-visible-decode",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:04:26.512574+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "r4-narrow-notes",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:04:31.522633+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "r5-rework-evidence",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:12:32.554208+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "r6-rework-result",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T10:14:19.514180+00:00"
+    }
+  ]
+}

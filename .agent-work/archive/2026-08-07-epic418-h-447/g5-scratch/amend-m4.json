@@ -1,0 +1,4 @@
+{"ops": [
+  {"op": "retext-check", "id": "m4-records", "which": "postconditions", "cond": "c1",
+   "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && git diff --numstat docs/RECURSIVE_IMPROVEMENT_DESIGN.md | awk '{exit ($2==0)?0:1}' && test \"$(git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md | sed 's/.*://')\" = \"$(git grep -c 'LESSONS.md' HEAD -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md | sed 's/.*://')\" && ! grep -q -e 'LESSONS.md' -e 'apply_lessons_delta' docs/EPISODE_STORE.md && test -z \"$(git diff --stat docs/superpowers/ tests/fixtures/)\""}
+]}

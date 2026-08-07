@@ -1,0 +1,21 @@
+=== Commander's own reproduction, g5-integrate (2026-08-07), commit fd7ef60 ===
+
+$ python scripts/verify_retirement.py ; echo EXIT=$?
+EXIT=0   printed bytes: 0
+
+$ pytest tests/test_retirement_guard.py -q
+EXIT=1  -> 1 failed, 15 passed in 1.20s
+   the single failure is test_canon_is_clean XPASS(strict): the tree went CLEAN, which is the deliverable. g6 removes the marker.
+
+$ git diff --stat 77e428d..HEAD -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md
+   1 file changed, 16 insertions(+)
+
+$ git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md
+  now:      docs/RECURSIVE_IMPROVEMENT_DESIGN.md:12
+  at 77e428d: 77e428d:docs/RECURSIVE_IMPROVEMENT_DESIGN.md:12   -> UNCHANGED: the record was frozen, not rewritten
+
+$ git diff --stat 77e428d..HEAD -- docs/superpowers/ tests/fixtures/ episodes/active/ episodes/retired/ RETURN.md scripts/hooks/ scripts/gauge_reader.py docs/GAUGE_WRITER_HOOK.md
+  (empty - survivors and fenced files untouched)
+
+$ FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q
+  1621 passed, 2 skipped, 1 failed (test_canon_is_clean XPASS-strict, g6's)

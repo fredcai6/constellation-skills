@@ -1,0 +1,11 @@
+=== g6 fresh-store smoke check: the corpus installs onto OTHER repos ===
+scratch repo: a fresh git repo holding an EMPTY episodes/{active,retired}
+
+empty store, --phase feedback   EXIT=1  (want 1: BLOCKED, behaves - does not crash)
+    episode capture: BLOCKED — no episode in C:\Users\fredc\.claude\jobs\cdcd8db2\tmp\h447_freshrepo\episodes\active records run 'some-run' (0 episode(s) scanned). Capture one with scripts/apply_episode_delta.py before advancing.
+empty store, --phase archive    EXIT=1  (want 1)
+    episode capture: BLOCKED — no episode in C:\Users\fredc\.claude\jobs\cdcd8db2\tmp\h447_freshrepo\episodes\active records run 'some-run' (0 episode(s) scanned). Capture one with scripts/apply_episode_delta.py before advancing.
+missing store root              EXIT=2  (want 2: REFUSED, not answered)
+    episode capture: REFUSED — missing store: C:\Users\fredc\.claude\jobs\cdcd8db2\tmp\h447_freshrepo\nope is not a directory. Enumerating a store that is not there returns an empty candidate set, which reads exactly like an empty store — so this is refused rather than answered. Check --store-root.
+store root present, active/ REMOVED   EXIT=2  (want 2: refused, not answered as zero)
+    episode capture: REFUSED — missing store layout: C:\Users\fredc\.claude\jobs\cdcd8db2\tmp\h447_freshrepo\episodes\active is absent. An absent directory is not an empty one; git does not track empty directories, so a layout that was never committed arrives here. Refused rather than answered.

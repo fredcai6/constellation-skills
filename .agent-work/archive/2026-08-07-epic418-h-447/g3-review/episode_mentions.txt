@@ -1,0 +1,29 @@
+==================== commander
+  [feedback/imperative] Then record what happened as EPISODES: one episode per distinct thing that happened — not one per run, and not a summary — each stating its task-intent, expected-behavior, observed-behavior, impact-cost and workaround.
+  [feedback/imperative] An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow — a rule to follow belongs in docs/agents/* and is a human's call.
+  [feedback/imperative] agent-work/<work-id>/episode-delta.
+  [feedback/imperative] json and apply it deterministically: python <commander-skill-dir>/scripts/apply_episode_delta.
+  [feedback/imperative] agent-work/<work-id>/episode-delta.
+  [feedback/imperative] json --store-root episodes.
+  [feedback/imperative] claude/skills/constellation-commander/episodes — outside the repo — while every gate reported green.
+  [feedback/imperative] Never hand-edit a file under episodes/: that writer is the only write path into it.
+  [feedback/imperative] Then run the capture gate before advancing: python <commander-skill-dir>/scripts/verify_episode_captured.
+  [feedback/imperative] py <work-id> --store-root episodes --phase feedback.
+  [feedback/feedback.c1.check] {"kind": "command", "command": "python <commander-skill-dir>/scripts/verify_episode_captured.
+  [archive/imperative] Commit all remaining work, including this run's episodes under episodes/.
+  [archive/imperative] That is a tracked repo-root path, so the committed episode IS the durable record: it survives `git worktree remove` and lands in a fresh clone.
+  [archive/imperative] Run the archive-phase capture gate before marking archive complete — it additionally requires git to TRACK the episode, which is what proves the record outlived this worktree: python <commander-skill-dir>/scripts/verify_episode_captured.
+  [archive/imperative] py <work-id> --store-root episodes --phase archive.
+  [archive/archive.c1.check] {"kind": "command", "command": "python <commander-skill-dir>/scripts/verify_episode_captured.
+==================== admiral
+  [closeout/imperative] 1) Write the epic retrospective as EPISODES: one episode per distinct thing that happened across the epic — not one per wave, and not a summary — each stating its task-intent, expected-behavior, observed-behavior, impact-cost and workaround, and each harvesting what the ADMIRAL_LOG, the crew Workflow Feedback and the Commander returns actually recorded.
+  [closeout/imperative] An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow — a rule to follow belongs in docs/agents/* and is a human's call.
+  [closeout/imperative] agent-work/<work-id>/episode-delta.
+  [closeout/imperative] json and apply it deterministically: python <admiral-skill-dir>/scripts/apply_episode_delta.
+  [closeout/imperative] agent-work/<work-id>/episode-delta.
+  [closeout/imperative] json --store-root episodes.
+  [closeout/imperative] claude/skills/constellation-admiral/episodes — outside the repo — while every gate reported green.
+  [closeout/imperative] Never hand-edit a file under episodes/: that writer is the only write path into it.
+  [closeout/imperative] Then run the capture gate before advancing: python <admiral-skill-dir>/scripts/verify_episode_captured.
+  [closeout/imperative] py <work-id> --store-root episodes --phase feedback.
+  [closeout/closeout.c2.check] {"kind": "command", "command": "python <admiral-skill-dir>/scripts/verify_episode_captured.

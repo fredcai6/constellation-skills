@@ -1,0 +1,496 @@
+{
+  "work_id": "epic418-h-447-g3-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-baseline",
+    "m2-commander-spine",
+    "m3-admiral-spine",
+    "m4-installer",
+    "m5-install-test",
+    "m6-census",
+    "m7-suite"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the g3 handoff. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff read in full: task, protected intent, allowed scope, exclusions, fenced paths, constraints, required evidence with real-exit-code discipline, close criteria, report-back format all present; global-crew.md + global-everyone.md + docs/agents/CREW_CONTEXT.md + GLOSSARY.md read"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-baseline": {
+      "id": "m1-baseline",
+      "title": "Capture the BEFORE measurements",
+      "imperative": "Record the verify_retirement.py leg distribution before any edit, and run the already-installed C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py epic418-h-447 --phase feedback capturing its REAL exit code (redirect to a file, then echo $?). These are the before-halves of two required evidence pairs; without them the after-halves prove nothing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "before-leg census recorded (4 replacement-absent, 130 retired-name, 5 retired-path, 9 unapproved-store-mention) and verify_agent_feedback.py before-exit-code captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "before legs: 4 replacement-absent, 130 retired-name-on-shipped-surface, 5 retired-path-still-tracked, 9 unapproved-store-mention (verify_retirement exit 1); installed verify_agent_feedback.py reachable, exit 1 (runs and reports no work-id entry yet)"
+        }
+      ],
+      "constraints": [
+        "real exit codes only: redirect to a file, never pipe to tail"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-commander-spine": {
+      "id": "m2-commander-spine",
+      "title": "Rewire COMMANDER_SPINE feedback + archive onto episode capture",
+      "imperative": "Surgical raw-text edits to skills/commander/templates/COMMANDER_SPINE.template.json ONLY: rewrite the feedback imperative (keep honest reflection + crew Workflow Feedback harvest + run-specific none; delete ALL apply-or-defer / ripeness / bank_reason / dormancy / export-resolve-defer vocabulary; add the verbatim record-not-a-rule sentence and the apply_episode_delta.py --store-root episodes write path); retarget feedback.c1 in place onto verify_episode_captured.py --phase feedback; DELETE the terminal feedback.c2; update the archive imperative's commit + invariant sentences onto the committed episode; retarget archive.c1 in place onto --phase archive. KEEP both retired paths in archive.c4 deny_globs. Preserve CRLF line endings. Never round-trip through json.load/json.dump.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline measurements captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "baseline captured"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "commander spine still parses as JSON after the surgical edit",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import json;json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8'))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-commander-spine-1"
+        },
+        {
+          "id": "c2",
+          "statement": "diff is surgical (a handful of lines, not a whole-file reflow), CRLF preserved, feedback.c2 gone, c1 ids intact, deny_globs unchanged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git diff --numstat: 4 insertions 5 deletions on a 136-line file; CRLF 135->134 with zero bare LF (the one lost line is feedback.c2); feedback conds now [c1] only, archive conds [c1,c2,c2b,c3,c4] unchanged; archive.c4 deny_globs byte-identical and still carries both retired paths; verbatim record-not-a-rule sentence present"
+        }
+      ],
+      "constraints": [
+        "raw text only",
+        "encoding='utf-8', newline='' on writes so CRLF survives",
+        "never delete a c1"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-commander-spine-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import json;json.load(open('skills/commander/templates/COMMANDER_SPINE.template.json',encoding='utf-8'))\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-admiral-spine": {
+      "id": "m3-admiral-spine",
+      "title": "Rewire ADMIRAL_SPINE closeout onto episode capture",
+      "imperative": "Surgical raw-text edits to skills/admiral/templates/ADMIRAL_SPINE.template.json ONLY: delete the lessons-auditor dispatch and the whole disposition-routing paragraph from the closeout imperative (delete, never repoint at episodes/); keep steps 2-5, the lease release, and the surgical-raw-text-JSON warning; rewrite step 2 onto apply_episode_delta.py --store-root episodes carrying the record-not-a-rule sentence; rewrite closeout.c1's statement (check stays null); retarget closeout.c2 onto verify_episode_captured.py --phase feedback; DELETE the terminal closeout.c6; leave c3/c4/c5 alone.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "commander spine rewired",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "commander spine rewired"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "admiral spine still parses as JSON after the surgical edit",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import json;json.load(open('skills/admiral/templates/ADMIRAL_SPINE.template.json',encoding='utf-8'))\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-admiral-spine-1"
+        },
+        {
+          "id": "c2",
+          "statement": "diff surgical, CRLF preserved, closeout.c6 gone, c1/c3/c4/c5 ids intact, no lesson vocabulary and no read-the-store instruction remains in either spine",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "admiral numstat 4/5 on a 67-line file; CRLF 66->65, zero bare LF; closeout conds [c1,c2,c3,c4,c5] with c6 gone; grep over both spines finds no lessons-auditor, bank_reason, apply_lessons_delta, verify_lessons_applied, verify_agent_feedback, threshold-ripe or graduate; the only surviving 'disposition' words are about epic issues and branches; neither spine instructs an agent to READ episodes -- every store mention is write, apply, or capture-gate"
+        }
+      ],
+      "constraints": [
+        "raw text only",
+        "delete the auditor dispatch, never repoint it at episodes/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-admiral-spine-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import json;json.load(open('skills/admiral/templates/ADMIRAL_SPINE.template.json',encoding='utf-8'))\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-installer": {
+      "id": "m4-installer",
+      "title": "Rewire the install bundles",
+      "imperative": "In scripts/install_constellation.py SKILL_SCRIPT_BUNDLES: drop apply_lessons_delta.py / verify_lessons_applied.py / verify_agent_feedback.py from admiral and commander, add apply_episode_delta.py and verify_episode_captured.py. Delete the lessons-auditor entry from SKILL_SCRIPT_BUNDLES and from SKILL_REFERENCE_BUNDLES. Do NOT bundle query_episodes.py, and leave a comment at the bundle stating the omission is a DEFAULT not a boundary, naming the four measured routes around it (repo-relative execution, plain Read/Grep on a tracked path, the unfiltered copytree, SCRIPT_RUNTIME_COMPANIONS).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both spines rewired",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "both spines rewired"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_retirement.py's replacement-absent leg is GONE (both spines name the capture command in an imperative, both bundles carry it, the script exists on disk)",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import sys,pathlib;sys.path.insert(0,'scripts');import verify_retirement as v;legs=sorted({x.leg for x in v.scan(pathlib.Path('.'))});print(legs);sys.exit(1 if 'replacement-absent' in legs else 0)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-installer-1"
+        }
+      ],
+      "constraints": [
+        "do not bundle query_episodes.py",
+        "overclaiming the omission as a boundary is worse than no claim"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-installer-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import sys,pathlib;sys.path.insert(0,'scripts');import verify_retirement as v;legs=sorted({x.leg for x in v.scan(pathlib.Path('.'))});print(legs);sys.exit(1 if 'replacement-absent' in legs else 0)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-install-test": {
+      "id": "m5-install-test",
+      "title": "General install-time assertion: no spine command names an unshipped script",
+      "imperative": "Add to tests/test_install_constellation.py a GENERAL assertion: every kind:'command' postcondition (and precondition) in both installed spine templates must name a script that exists in that skill's installed scripts/ directory. Parse the script filename out of the command string; do NOT enumerate names. Red-prove it first by temporarily pointing a spine command at a nonexistent script and watching the new test go red, then restore. Also repair the existing tests this rewiring deliberately invalidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "installer bundles rewired",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "installer rewired"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red observed: the new general test fails when a spine command is pointed at a nonexistent script (manual attest \u2014 a command check here would run the by-design-failing state)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED PROVED: pointed commander execute.p2 at scripts/verify_no_such_script.py; test_every_spine_command_names_an_installed_script went red with 'commander spine execute.p2 runs verify_no_such_script.py, which SKILL_SCRIPT_BUNDLES does not install' (exit 1, evidence/g3-redproof.txt). Decoy reverted from a byte backup; CRLF 134, zero bare LF, numstat back to 4/5"
+        },
+        {
+          "id": "c2",
+          "statement": "tests/test_install_constellation.py passes green with the spine restored",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-install-test-1"
+        }
+      ],
+      "constraints": [
+        "general, not per-name",
+        "python never py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-install-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-census": {
+      "id": "m6-census",
+      "title": "Work the unapproved-store-mention leg to zero",
+      "imperative": "Re-derive the current unapproved-store-mention sites (do not trust the handoff's line numbers). Append to tests/data/store_mentions.approved.txt, each entry under its own honest one-line reason: the verify_episode_captured.py capture-gate lines (reason: a write-side capture check that emits ids and counts and never statement text), and every site the g3 edits themselves added (write path / re-staging block). Approve NOTHING that instructs an agent to read the store.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "install test green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "install tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "unapproved-store-mention is at ZERO",
+          "check": {
+            "kind": "command",
+            "command": "python -c \"import sys,pathlib;sys.path.insert(0,'scripts');import verify_retirement as v;n=[x for x in v.scan(pathlib.Path('.')) if x.leg=='unapproved-store-mention'];print(len(n));sys.exit(1 if n else 0)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-census-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the retirement guard's own tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_retirement_guard.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-census-2"
+        }
+      ],
+      "constraints": [
+        "a reason that names a READ instruction is the defect, not an approval"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-census-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -c \"import sys,pathlib;sys.path.insert(0,'scripts');import verify_retirement as v;n=[x for x in v.scan(pathlib.Path('.')) if x.leg=='unapproved-store-mention'];print(len(n));sys.exit(1 if n else 0)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-census-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_retirement_guard.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-suite": {
+      "id": "m7-suite",
+      "title": "Full suite, reachability re-check, and IMPLEMENTER_RESULT",
+      "imperative": "Run the full suite with FORCE_COLOR=0 NO_COLOR=1 and account for every delta against the 1715-passed/0-failed baseline by name. Re-run the installed verify_agent_feedback.py reachability check and confirm the exit code is unchanged from m1. Capture git diff --stat proving the spine edits are surgical. Write the IMPLEMENTER_RESULT to .agent-work/epic418-h-447/results/g3-IMPLEMENTER_RESULT.md covering every item the handoff's Report back section names, saying 'none' explicitly if there are no blockers.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "census at zero",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "census at zero"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite run with colour off; every failure delta from baseline explained by name",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q -x --ignore=tests/test_mutation_floor.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-suite-1"
+        },
+        {
+          "id": "c2",
+          "statement": "verify_agent_feedback.py reachability exit code unchanged; git diff --stat shows a surgical spine diff; IMPLEMENTER_RESULT written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "verify_agent_feedback.py reachability exit 1 before and 1 after, same message, run not assumed; git diff --stat = 5 files all in allowed scope, spines at 4 insertions / 5 deletions each on 136- and 67-line files with CRLF preserved and zero bare LF; IMPLEMENTER_RESULT written to .agent-work/epic418-h-447/results/g3-IMPLEMENTER_RESULT.md"
+        }
+      ],
+      "constraints": [
+        "do not commit; the Commander commits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q -x --ignore=tests/test_mutation_floor.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "g3-impl-447",
+    "status": "released",
+    "claimed_at": "2026-08-07T15:48:25.983163+00:00",
+    "last_heartbeat": "2026-08-07T16:09:32.860340+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T16:09:42.272090+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The gate is a delete-not-repoint job: every playbook read/adjudicate/ripeness instruction retires outright, and the episode store only ever gains WRITE mentions. Two shipped compact-JSON spines are fully CRLF (135/135 and 66/66), so edits must be raw-text and newline-preserving. Both apply_episode_delta.store_root() and verify_episode_captured.main() carry an explicit comment naming g3 as the place that must pass --store-root explicitly, which resolves the handoff's own #308-shaped hazard.",
+      "mechanical": false,
+      "ts": "2026-08-07T15:49:03.919982+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-baseline",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-07T15:49:29.913374+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-commander-spine",
+      "why": "Both c1s retargeted in place onto verify_episode_captured.py with an explicit --store-root episodes (the writer and the gate each carry a code comment naming g3 as the place that must pass it; without it an installed copy resolves the store under ~/.claude/skills/ and the gate exits 2 on every run). feedback.c2 deleted as terminal. One extra edit beyond the handoff: the archive imperative's 'leaving the unified AGENT_FEEDBACK.md at the agent-work root' clause was trimmed because it contradicted the archive.c1 I had just retargeted; the work-area move itself is untouched.",
+      "mechanical": false,
+      "ts": "2026-08-07T15:53:20.002920+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-admiral-spine",
+      "why": "The auditor dispatch and its whole disposition-routing paragraph are DELETED, not repointed: the closeout now writes episodes and stops. Numbering 1-5 is preserved with episode capture as step 1 (the auditor that was step 1 is gone) and the surgical-JSON-edit rule kept as step 2; steps 3/4/5 and the lease release are byte-identical.",
+      "mechanical": false,
+      "ts": "2026-08-07T15:54:58.096202+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-installer",
+      "why": "replacement-absent is GONE (4 -> 0). The last one to fall needed a real fix, not a bundle edit: verify_retirement._spine_names_replacement reads task IMPERATIVES, not check commands, so naming the capture gate only in admiral closeout.c2 left it 'wired but unspoken'. The admiral imperative now tells the agent to run the gate, matching the commander's. query_episodes.py is deliberately unbundled with a comment saying the omission is a default and naming the four routes around it.",
+      "mechanical": false,
+      "ts": "2026-08-07T15:56:13.534160+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-install-test",
+      "why": "The general test walks BOTH condition lists of both installed spines, pulls every *.py token out of each kind:'command' check, and asserts the skill installs it \u2014 plus a checked>0 assertion so an empty walk cannot read as a pass. The red proof landed on a PRECONDITION (execute.p2), which is the half a postconditions-only walk would have missed. apply_episode_delta.py is named only in an imperative, so no command check can see it; a per-name pin covers that half explicitly.",
+      "mechanical": false,
+      "ts": "2026-08-07T15:59:13.748889+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-census",
+      "why": "unapproved-store-mention 9 -> 19 -> 0. The 19 sites were re-derived through the guard's OWN store_mention_sites/normalize, never retyped, so an approval cannot be written in a form the guard would not recognize. Four reasons, all write-side: capture gate (ids and counts, never statements), install bundle, the bundle's default-not-a-boundary note, and the two spine imperatives. GAP FOUND, not mine to fix: the handoff's SS4 asks me to approve archive.c4's deny_globs entries too, but the guard has NO approval census for the retired-name leg -- only unapproved-store-mention has one -- so after g4 untracks the files those two deny_globs entries stay permanently red and test_canon_is_clean can never XPASS. scripts/verify_retirement.py is outside my allowed scope.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:00:35.901704+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-suite",
+      "why": "Full suite green with colour off: 1716 passed, 2 skipped, 1 xfailed, 0 failed. Baseline at dbf9a23 was 1715 passed / 0 failed, so the only delta is +1 -- the new general spine-command test. Three existing install assertions were deliberately changed and each is named in the result; no other test file needed touching, which is the evidence that the bundle edit did not reach past its own callers. Blockers: none. One escalation: the handoff asks me to approve two deny_globs entries on a guard leg that has no approval census, so retired-name can never reach zero and test_canon_is_clean cannot XPASS -- verify_retirement.py is outside my scope.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:09:32.860322+00:00"
+    }
+  ]
+}

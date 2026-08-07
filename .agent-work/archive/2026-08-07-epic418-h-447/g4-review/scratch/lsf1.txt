@@ -1,0 +1,2 @@
+error: pathspec '.agent-work/LESSONS.md' did not match any file(s) known to git
+Did you forget to 'git add'?

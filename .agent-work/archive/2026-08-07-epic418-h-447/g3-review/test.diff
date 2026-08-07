@@ -1,0 +1,119 @@
+diff --git a/tests/test_install_constellation.py b/tests/test_install_constellation.py
+index 4c283d2..c1b7f26 100644
+--- a/tests/test_install_constellation.py
++++ b/tests/test_install_constellation.py
+@@ -72,7 +72,7 @@ class InstallConstellationTests(unittest.TestCase):
+                     target_root
+                     / "constellation-commander"
+                     / "scripts"
+-                    / "verify_agent_feedback.py"
++                    / "verify_episode_captured.py"  # #447: replaced verify_agent_feedback.py
+                 ).exists()
+             )
+             self.assertTrue(
+@@ -299,11 +299,11 @@ class InstallConstellationTests(unittest.TestCase):
+                 spine["tasks"]["init"]["postconditions"][0]["check"]["command"],
+             )
+             self.assertIn(
+-                (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
++                (commander_root / "scripts" / "verify_episode_captured.py").as_posix(),
+                 spine["tasks"]["feedback"]["postconditions"][0]["check"]["command"],
+             )
+             self.assertIn(
+-                (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
++                (commander_root / "scripts" / "verify_episode_captured.py").as_posix(),
+                 spine["tasks"]["archive"]["postconditions"][0]["check"]["command"],
+             )
+             # the state-note precondition on execute is bundled and its token rewritten
+@@ -626,15 +626,88 @@ class InstallConstellationTests(unittest.TestCase):
+             self.assertEqual(0, exit_code)
+             self.assertTrue((home / ".claude" / "skills" / "constellation-triage" / "SKILL.md").exists())
+ 
+-    def test_lessons_gate_verifier_bundled_into_commander_and_admiral(self):
++    def test_episode_write_path_bundled_into_commander_and_admiral(self):
++        # #447: the playbook's apply/verify pair retired; what replaces it is the episode
++        # store's WRITE side. The writer is named only in the spine IMPERATIVE (no check
++        # runs it), so `test_every_spine_command_names_an_installed_script` below cannot
++        # see it -- this per-name pin is what covers that half. The retired trio is
++        # asserted ABSENT in the same breath, so a revert shows up here rather than as a
++        # mid-run gate failure.
+         installer = load_installer()
+         with tempfile.TemporaryDirectory() as tmp:
+             target_root = Path(tmp) / "skills"
+             installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                             "--skills", "commander", "admiral"], env={}, out=lambda _: None)
+             for skill in ("constellation-commander", "constellation-admiral"):
+-                self.assertTrue(
+-                    (target_root / skill / "scripts" / "verify_lessons_applied.py").exists())
++                scripts_root = target_root / skill / "scripts"
++                for script in ("apply_episode_delta.py", "verify_episode_captured.py"):
++                    with self.subTest(skill=skill, script=script):
++                        self.assertTrue((scripts_root / script).is_file(), scripts_root / script)
++                for retired in ("apply_lessons_delta.py", "verify_lessons_applied.py",
++                                "verify_agent_feedback.py"):
++                    with self.subTest(skill=skill, retired=retired):
++                        self.assertFalse((scripts_root / retired).exists(),
++                                         f"{skill} still ships the retired {retired}")
++
++    #: Every spine template the installer ships, paired with the skill that serves it.
++    #: Derived from the two roles that own a spine rather than globbed, because a spine
++    #: only means anything alongside the skill whose scripts/ its commands resolve into.
++    SPINE_TEMPLATES = {
++        "commander": "COMMANDER_SPINE.template.json",
++        "admiral": "ADMIRAL_SPINE.template.json",
++    }
++
++    def test_every_spine_command_names_an_installed_script(self):
++        # GENERAL, deliberately not per-name. A test that asserts "commander installs
++        # verify_episode_captured.py" protects the #447 rewiring and nothing after it; this
++        # asserts that NO spine command names a script its own skill does not install, which
++        # protects every future rewiring the same way. A spine that names an unshipped script
++        # fails mid-run at the gate that needed it, with the run already half-done -- catching
++        # it at install time is the whole point.
++        #
++        # Both condition lists are walked: a precondition command (execute.p2's state-note
++        # check) can strand a run exactly as a postcondition command can.
++        #
++        # Not every command names a script -- archive.c2b shells out to `gh pr list`. A
++        # command with no `.py` token is legitimately skipped; the assertion is about the
++        # ones that DO name one.
++        installer = load_installer()
++        with tempfile.TemporaryDirectory() as tmp:
++            target_root = Path(tmp) / "skills"
++            exit_code = installer.main(
++                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
++                 "--skills", *self.SPINE_TEMPLATES],
++                env={}, out=lambda _: None)
++            self.assertEqual(0, exit_code)
++
++            checked = 0
++            for skill, template in self.SPINE_TEMPLATES.items():
++                skill_root = target_root / f"constellation-{skill}"
++                spine_path = skill_root / "templates" / template
++                self.assertTrue(spine_path.is_file(), spine_path)
++                spine = json.loads(spine_path.read_text(encoding="utf-8"))
++                for task_id, task in spine["tasks"].items():
++                    for which in ("preconditions", "postconditions"):
++                        for cond in task.get(which) or ():
++                            check = cond.get("check")
++                            if not isinstance(check, dict) or check.get("kind") != "command":
++                                continue
++                            for named in re.findall(r"[\w.\-]+\.py",
++                                                    check.get("command", "")):
++                                script = Path(named).name
++                                checked += 1
++                                with self.subTest(skill=skill, task=task_id,
++                                                  cond=cond["id"], script=script):
++                                    self.assertTrue(
++                                        (skill_root / "scripts" / script).is_file(),
++                                        f"{skill} spine {task_id}.{cond['id']} runs "
++                                        f"{script}, which SKILL_SCRIPT_BUNDLES does not "
++                                        f"install into {skill_root / 'scripts'}",
++                                    )
++            # A loop that reported clean without examining anything is the failure this
++            # guard is here to catch, so the count is asserted rather than trusted.
++            self.assertGreater(checked, 0, "no spine command named a script -- the walk "
++                                           "found nothing to check, which is not a pass")
+ 
+     def test_bundled_scripts_carry_their_sibling_imports(self):
+         # Every bundled script that does `from X import ...` on a sibling

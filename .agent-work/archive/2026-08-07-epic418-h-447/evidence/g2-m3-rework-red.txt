@@ -1,0 +1,6 @@
+RED PROOF (m3 rework) - fix line `path = path.resolve()` removed
+pytest exit: 1
+E       AssertionError: 0 != 1 : episode capture: BLOCKED — 1 of 1 episode(s) for run 'issue-447' are not tracked by git, so they do not survive this worktree. Run `git add episodes/`.
+FAILED tests/test_verify_episode_captured.py::ArchivePhaseTests::test_archive_phase_accepts_a_relative_store_root
+1 failed in 0.33s
+RESTORED: bytes identical

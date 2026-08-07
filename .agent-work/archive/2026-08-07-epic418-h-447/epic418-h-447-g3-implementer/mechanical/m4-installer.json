@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-installer",
+  "mechanical": {
+    "run": "epic418-h-447-g3-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m4-installer",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-g3-implementer-m4-installer@703447e5ae288a860aff5dde605146eec1940149",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447-g3-implementer",
+    "generated_at": "2026-08-07T15:55:39Z"
+  }
+}

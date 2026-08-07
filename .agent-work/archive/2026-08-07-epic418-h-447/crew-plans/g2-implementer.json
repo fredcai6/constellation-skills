@@ -1,0 +1,583 @@
+{
+  "work_id": "h-447-g2-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-capture-gate",
+    "m2-refuse-missing-store",
+    "m3-archive-phase",
+    "m4-valve-sentinel",
+    "m5-store-root-comment",
+    "m6-evidence-and-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff",
+      "imperative": "Read the inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the g2 handoff, and the writer's read seams (scripts/apply_episode_delta.py store_root/_require_store_layout, episodes/README.md, one real episode record). Verify the handoff is complete: task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions, return format. Block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + crew context + handoff + store read seams read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "use python NEVER py",
+        "CREATE ONLY the two named files; COMMENT ONLY in apply_episode_delta.py",
+        "do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-capture-gate": {
+      "id": "m1-capture-gate",
+      "title": "Capture gate: match episodes by their `- run:` line",
+      "imperative": "TDD. Write tests/test_verify_episode_captured.py covering the capture legs first and observe them RED: a seeded temp store with an episode for the work id exits 0 and prints ids + count; an empty store exits 1; a store holding only other runs' episodes exits 1. Then write scripts/verify_episode_captured.py: CLI `<work-id> [--store-root PATH] [--phase feedback|archive]`, enumerating <store-root>/active/*.md and parsing ONLY the `<!-- episode-state: -->` header line and the `- run:` mechanical line. No ripeness, no apply-or-defer, no dormancy, no counters. Attest c1 (red observed), then advance for green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: capture-leg tests written and observed failing before the script existed \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "capture legs green: seeded store passes, empty store fails, other-runs-only store fails",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_verify_episode_captured.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-capture-gate-1"
+        }
+      ],
+      "constraints": [
+        "never import query_episodes",
+        "never emit assertion statement text",
+        "seed temp stores only, never episodes/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-capture-gate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_verify_episode_captured.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-refuse-missing-store": {
+      "id": "m2-refuse-missing-store",
+      "title": "A missing active/ directory is refused, not answered",
+      "imperative": "TDD. Add the refusal tests and observe them RED: a store root that does not exist, and a store root whose active/ is absent, both exit NON-ZERO with a message naming the missing path \u2014 never exit 0 'no episodes'. Then implement the refusal in the verifier, distinct from the ordinary no-match exit. Attest c1 (red observed), then advance for green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "capture legs green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: refusal tests written and observed failing \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "missing store root and missing active/ both refused with non-zero exit and a clear message",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_verify_episode_captured.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-refuse-missing-store-1"
+        }
+      ],
+      "constraints": [
+        "refusal exit code must be non-zero and distinguishable from the no-match exit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-refuse-missing-store-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_verify_episode_captured.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-archive-phase": {
+      "id": "m3-archive-phase",
+      "title": "--phase archive additionally requires the episode to be tracked by git",
+      "imperative": "TDD. Add tests and observe them RED: under --phase archive, a matched episode in a temp git repo that has been `git add`ed passes; the same episode untracked fails. Then implement the archive leg with `git ls-files --error-unmatch <path>` per matched episode. Attest c1 (red observed), then advance for green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "refusal legs green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: archive-phase tests written and observed failing \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "archive phase passes for a tracked episode and fails for an untracked one",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_verify_episode_captured.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-archive-phase-2"
+        }
+      ],
+      "constraints": [
+        "the archive leg must have BOTH a green and a red proof, not just a red one"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "DEFECT found by the handoff's own evidence command: _git_tracked passes a possibly-RELATIVE path as the pathspec while running git with cwd=path.parent, so with --store-root episodes git looks for episodes/active/episodes/active/<id>.md and reports every committed episode as untracked (25 of 25 false BLOCK). The m3 tests only ever passed absolute tmp paths, so the leg had no relative-root coverage."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-archive-phase-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_verify_episode_captured.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m3-archive-phase",
+            "reason": "DEFECT found by the handoff's own evidence command: _git_tracked passes a possibly-RELATIVE path as the pathspec while running git with cwd=path.parent, so with --store-root episodes git looks for episodes/active/episodes/active/<id>.md and reports every committed episode as untracked (25 of 25 false BLOCK). The m3 tests only ever passed absolute tmp paths, so the leg had no relative-root coverage.",
+            "ts": "2026-08-07T14:50:12.960648+00:00"
+          }
+        },
+        {
+          "id": "e-m3-archive-phase-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_verify_episode_captured.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "m4-valve-sentinel": {
+      "id": "m4-valve-sentinel",
+      "title": "THE VALVE: prove no assertion statement text reaches stdout or stderr",
+      "imperative": "Seed a temp store where EVERY assertion statement is the literal SENTINEL-DO-NOT-LEAK-9f2a. Run the verifier capturing stdout AND stderr; assert the sentinel appears in neither. Give that test its own red proof: patch the verifier so it echoes the record body, run the SAME assertion path, and assert the sentinel IS then found. Also assert statically that the script never imports query_episodes. Attest c1 with the red-proof transcript, then advance for green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "archive legs green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "red proof observed: with the leak patched in, the sentinel IS found \u2014 the leak test can fail \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "sentinel absent from stdout and stderr; query_episodes never imported",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_verify_episode_captured.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-valve-sentinel-2"
+        }
+      ],
+      "constraints": [
+        "a leak test that cannot fail is worth nothing \u2014 the red proof is mandatory"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m3-archive-phase"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-valve-sentinel-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_verify_episode_captured.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m3-archive-phase",
+            "reason": "DEFECT found by the handoff's own evidence command: _git_tracked passes a possibly-RELATIVE path as the pathspec while running git with cwd=path.parent, so with --store-root episodes git looks for episodes/active/episodes/active/<id>.md and reports every committed episode as untracked (25 of 25 false BLOCK). The m3 tests only ever passed absolute tmp paths, so the leg had no relative-root coverage.",
+            "ts": "2026-08-07T14:50:12.960664+00:00"
+          }
+        },
+        {
+          "id": "e-m4-valve-sentinel-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_verify_episode_captured.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-store-root-comment": {
+      "id": "m5-store-root-comment",
+      "title": "Name the installed-copy store_root() hazard in a comment, change nothing",
+      "imperative": "Add a comment at scripts/apply_episode_delta.py store_root() naming the measured hazard: on an installed skill copy the parent-of-parent resolves to the skill install directory, not the project repo, so a caller without an explicit --store-root silently creates a store outside the repo while every gate reads green. State that callers on an installed copy must pass --store-root. Do NOT change store_root()'s semantics or its docstring ruling. Prove no behaviour changed by running the store's own suite.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "valve proven",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "comment added at store_root(); no behaviour change \u2014 the episode store suite still passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_episode_store.py tests/test_episode_fields.py tests/test_episode_negative_control.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-store-root-comment-2"
+        }
+      ],
+      "constraints": [
+        "COMMENT ONLY \u2014 no semantic edit, no docstring rewrite"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m3-archive-phase"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-store-root-comment-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py tests/test_episode_fields.py tests/test_episode_negative_control.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m3-archive-phase",
+            "reason": "DEFECT found by the handoff's own evidence command: _git_tracked passes a possibly-RELATIVE path as the pathspec while running git with cwd=path.parent, so with --store-root episodes git looks for episodes/active/episodes/active/<id>.md and reports every committed episode as untracked (25 of 25 false BLOCK). The m3 tests only ever passed absolute tmp paths, so the leg had no relative-root coverage.",
+            "ts": "2026-08-07T14:50:12.960669+00:00"
+          }
+        },
+        {
+          "id": "e-m5-store-root-comment-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_episode_store.py tests/test_episode_fields.py tests/test_episode_negative_control.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-evidence-and-result": {
+      "id": "m6-evidence-and-result",
+      "title": "Run every handoff evidence command for its real exit code and write the result",
+      "imperative": "Run each of the handoff's five evidence commands, redirecting output to a file and echoing the real exit code (never through a pipe). Run the full suite and compare against the pre-change baseline. Write .agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md: diff summary, every evidence command with its real exit code, the sentinel red-proof transcript, corner cases not chased with their comment file:line, blockers (explicitly 'none' if none), and Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all implementation slices green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite run; failure set identical to the pre-change baseline (10 pre-existing tests/test_mutation_floor.py failures, evidence/g2-baseline-failures.txt)",
+          "check": {
+            "kind": "command",
+            "command": "E=.agent-work/epic418-h-447/evidence; python -m pytest -q --color=no > $E/g2-final-suite.txt 2>&1; grep '^FAILED' $E/g2-final-suite.txt | sed 's/ - .*//' | sort > $E/g2-final-failures.txt; diff $E/g2-baseline-failures.txt $E/g2-final-failures.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-evidence-and-result-3"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written with real exit codes and the red-proof transcript",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md && grep -q 'SENTINEL-DO-NOT-LEAK-9f2a' .agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-evidence-and-result-4"
+        }
+      ],
+      "constraints": [
+        "redirect to a file then echo $? \u2014 a pipe reports the pipe's exit code",
+        "do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m3-archive-phase"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-evidence-and-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "E=.agent-work/epic418-h-447/evidence; python -m pytest -q --color=no > $E/g2-final-suite.txt 2>&1; grep '^FAILED' $E/g2-final-suite.txt | sed 's/ - .*//' | sort > $E/g2-final-failures.txt; diff $E/g2-baseline-failures.txt $E/g2-final-failures.txt",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-evidence-and-result-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md && grep -q 'SENTINEL-DO-NOT-LEAK-9f2a' .agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-evidence-and-result-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "E=.agent-work/epic418-h-447/evidence; python -m pytest -q --color=no > $E/g2-final-suite.txt 2>&1; grep '^FAILED' $E/g2-final-suite.txt | sed 's/ - .*//' | sort > $E/g2-final-failures.txt; diff $E/g2-baseline-failures.txt $E/g2-final-failures.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-evidence-and-result-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md && grep -q 'SENTINEL-DO-NOT-LEAK-9f2a' .agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "g2-impl-447",
+    "status": "released",
+    "claimed_at": "2026-08-07T14:41:50.279213+00:00",
+    "last_heartbeat": "2026-08-07T15:05:06.437608+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T15:05:51.940927+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "handoff complete: task, protected intent, allowed scope + exclusions, constraints, five evidence commands, five close criteria, report format all present; test mode is implied test-first (red proofs demanded) but never named as a field",
+      "mechanical": false,
+      "ts": "2026-08-07T14:42:00.762393+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-capture-gate",
+      "why": "red observed at evidence/g2-m1-red.txt (4 failed, script absent), green at evidence/g2-m1-green.txt (4 passed); gate parses only the episode-state header and the - run: line",
+      "mechanical": false,
+      "ts": "2026-08-07T14:44:35.513285+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-refuse-missing-store",
+      "why": "refusal branch was authored in the same file-create as m1, so the honest red is a MUTATION proof: 3 of 3 guards disabled (assertion-checked), 4 refusal tests went red (evidence/g2-m2-mutation-red.txt), restored to sha 333601670c94 and re-verified 8 passed",
+      "mechanical": false,
+      "ts": "2026-08-07T14:45:52.148411+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-archive-phase",
+      "why": "archive leg proven both ways by mutation (evidence/g2-m3-mutation-red.txt): disabling the archive branch reds the untracked-fails test; forcing git-untracked reds the tracked-passes test; bytes restored",
+      "mechanical": false,
+      "ts": "2026-08-07T14:46:55.202034+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-valve-sentinel",
+      "why": "red proof recorded at evidence/g2-m4-sentinel-red.txt: a print(path.read_text()) injected into scan_episode() reds the sentinel test on 3 of 4 outcome paths with 'SENTINEL-DO-NOT-LEAK-9f2a unexpectedly found'; script bytes restored; the suite also carries an in-test red proof (test_the_leak_assertion_can_fail)",
+      "mechanical": false,
+      "ts": "2026-08-07T14:48:28.261741+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-store-root-comment",
+      "why": "12 added lines, all comment lines (git diff -U0: 0 non-comment additions, 0 deletions); store_root() body and docstring untouched",
+      "mechanical": false,
+      "ts": "2026-08-07T14:49:29.892919+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m3-archive-phase",
+      "reopen": true,
+      "reason": "DEFECT found by the handoff's own evidence command: _git_tracked passes a possibly-RELATIVE path as the pathspec while running git with cwd=path.parent, so with --store-root episodes git looks for episodes/active/episodes/active/<id>.md and reports every committed episode as untracked (25 of 25 false BLOCK). The m3 tests only ever passed absolute tmp paths, so the leg had no relative-root coverage.",
+      "ts": "2026-08-07T14:50:12.960675+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m4-valve-sentinel",
+      "reopen": true,
+      "reason": "DEFECT found by the handoff's own evidence command: _git_tracked passes a possibly-RELATIVE path as the pathspec while running git with cwd=path.parent, so with --store-root episodes git looks for episodes/active/episodes/active/<id>.md and reports every committed episode as untracked (25 of 25 false BLOCK). The m3 tests only ever passed absolute tmp paths, so the leg had no relative-root coverage.",
+      "ts": "2026-08-07T14:50:12.960678+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m5-store-root-comment",
+      "reopen": true,
+      "reason": "DEFECT found by the handoff's own evidence command: _git_tracked passes a possibly-RELATIVE path as the pathspec while running git with cwd=path.parent, so with --store-root episodes git looks for episodes/active/episodes/active/<id>.md and reports every committed episode as untracked (25 of 25 false BLOCK). The m3 tests only ever passed absolute tmp paths, so the leg had no relative-root coverage.",
+      "ts": "2026-08-07T14:50:12.960680+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m6-evidence-and-result",
+      "reopen": true,
+      "reason": "DEFECT found by the handoff's own evidence command: _git_tracked passes a possibly-RELATIVE path as the pathspec while running git with cwd=path.parent, so with --store-root episodes git looks for episodes/active/episodes/active/<id>.md and reports every committed episode as untracked (25 of 25 false BLOCK). The m3 tests only ever passed absolute tmp paths, so the leg had no relative-root coverage.",
+      "ts": "2026-08-07T14:50:12.960682+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "m3-archive-phase",
+      "why": "rework 1: git pathspec now resolved; new regression test test_archive_phase_accepts_a_relative_store_root, red-proved by deleting the fix line (evidence/g2-m3-rework-red.txt); real store re-run: --store-root episodes --phase archive now EXIT=0 for 25 issue-308 episodes",
+      "mechanical": false,
+      "ts": "2026-08-07T14:51:20.994121+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "m4-valve-sentinel",
+      "why": "fresh post-rework red proof at evidence/g2-m4-sentinel-red.txt: injecting print(path.read_text()) into scan_episode reds the sentinel test on 3 of 4 outcome paths (the refusal path reads no file, so it stays green by construction); bytes restored, 15 passed after",
+      "mechanical": false,
+      "ts": "2026-08-07T14:52:00.925341+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "m5-store-root-comment",
+      "why": "unchanged by the rework: 12 comment lines at store_root(), 0 non-comment additions, 0 deletions (git diff -U0); episode store suites re-run by this gate's own check",
+      "mechanical": false,
+      "ts": "2026-08-07T14:52:35.929274+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "m6-evidence-and-result",
+      "why": "first run of this check showed one extra failure, tests/test_crew_launcher.py::LaunchTests::test_records_entry_before_launch_and_completes (fake_launch returned 0, launch_crew returned 1); it passes in isolation (74 passed) and neither new file is imported by run_crew.py, so it reads as a load-related flake \u2014 re-running the whole suite to confirm the failure set matches baseline",
+      "mechanical": false,
+      "ts": "2026-08-07T15:05:06.437577+00:00"
+    }
+  ]
+}

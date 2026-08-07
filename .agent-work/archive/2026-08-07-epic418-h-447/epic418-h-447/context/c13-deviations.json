@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "c13-deviations",
+  "files": [],
+  "repo_rev": {
+    "commit": "77e428dce4581406d897d8f6be714fb89789232e"
+  },
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T19:12:05Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-reviewer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    }
+  }
+}

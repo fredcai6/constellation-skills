@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-archive-phase",
+  "mechanical": {
+    "run": "h-447-g2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-archive-phase",
+    "rework-count": 1,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-h-447-g2-implementer-m3-archive-phase@26c79f2b8b98f1792b1723c8e2946bd5a90b5c44",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "h-447-g2-implementer",
+    "generated_at": "2026-08-07T14:50:12Z"
+  }
+}

@@ -1,0 +1,331 @@
+{
+ "work_id": "issue-447",
+ "ops": [
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "issue-447",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@f2dd40a",
+    "refusals": 0,
+    "reopens": 1,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic418-h-447/results/g1-REVIEW_RESULT.md",
+     "scripts/verify_retirement.py",
+     "commit:bf8819a"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Ship a regression guard that keeps a retirement true, authored before any retirement work so it could be falsified against the real disease."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "The guard would go red on the untouched tree and green once the retirement landed."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "Once the guard itself was tracked it fired on ITSELF: 12 retired-name hits and 6 store-mention hits, because its own constants are the forbidden strings. The clean tree could then never go green."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "One full rework round-trip inside g1, caught by review as a BLOCK and reproduced independently against a throwaway index. Had it shipped, the strict-xfail marker could never have XPASSed and would have outlived the work."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The guard's own module was excluded from the scanned surface, and the staged and working-tree scans were made to agree at zero self-hits. The test module had already applied the same principle to tests/."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "issue-447",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@f2dd40a",
+    "refusals": 0,
+    "reopens": 1,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md",
+     "scripts/verify_episode_captured.py",
+     "commit:dbf9a23"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Verify under --phase archive that captured episodes are tracked by git and therefore survive the worktree."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "The 25 committed issue-308 episodes would report tracked."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "All 25 reported UNTRACKED. The tracking helper passed a relative pathspec to git while running git with cwd set to the path's parent, so a relative --store-root asked about episodes/active/episodes/active/<id>.md. Every unit test had used an absolute temp path, so nothing covered the shape."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "A false BLOCK that would have failed every real archive gate. Found at the last gate of the crew plan by running the handoff's own evidence command, not at the gate that built the branch."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The path was resolved before being handed to git, and a regression test was added that uses a RELATIVE --store-root against a real temp git repo, which is the invocation shape the unit tests had all avoided."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "issue-447",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@f2dd40a",
+    "refusals": 0,
+    "reopens": 1,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic418-h-447/results/g2-REVIEW_RESULT.md",
+     "tests/test_verify_episode_captured.py"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Prove that no episode statement text can reach stdout or stderr from the capture gate."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "The implementer's red proof established that the whole leak assertion could fire."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The implementer's injected leak went to stdout only, so the STDERR half of the assertion had never been shown able to fire. The reviewer leaked from a different call site to stderr and got the red that established it."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "None realised, caught in review. Had it not been, the valve would have shipped with half its guarantee unproven while reading as fully proven."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The reviewer wrote four leak mutations of its own rather than replaying the implementer's, exercising both streams and every outcome path."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "issue-447",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@f2dd40a",
+    "refusals": 0,
+    "reopens": 1,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic418-h-447/evidence/g2-mutation-floor-nocolor.txt",
+     "tests/test_mutation_floor.py:255",
+     "issue:459"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Confirm a crew's claim that 10 tests/test_mutation_floor.py failures were a pre-existing baseline rather than a regression it introduced."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "The failures would be either a genuine pre-existing red or a regression the crew caused."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "Neither. FORCE_COLOR=3 in the session environment makes pytest emit an ANSI reset between FAILED and the node id, defeating the harness regex at line 255, so ten killed mutants were reported as HARNESS ERROR. With FORCE_COLOR=0 NO_COLOR=1 the same file is 14 passed, exit 0."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "Two agents, the crew and the pre-crash session before it, reasoned from a failure count that was an artifact of their own terminal, and one carried it into a handoff as a baseline. It is fail-loud rather than fail-green, so nothing shipped wrong, but while red it masks any real regression in that file."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "Every subsequent suite run in the run was prefixed FORCE_COLOR=0 NO_COLOR=1, and the mechanism was filed as issue 459 rather than fixed, being outside the retirement's scope."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "issue-447",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@f2dd40a",
+    "refusals": 0,
+    "reopens": 1,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic418-h-447/results/g3-IMPLEMENTER_RESULT.md",
+     "scripts/verify_retirement.py",
+     "tests/data/retired_names.approved.txt",
+     "commit:fd7ef60"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Drive the guard's retired-name leg to zero so the acceptance test could go green."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "The planned prose sweep would remove every remaining finding."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "It could not. Roughly 51 of 85 findings sat on surfaces the plan REQUIRED to survive: a frozen design record of 33 sites, a deny-glob re-staging block naming both retired paths, and a survivor script. The leg had no approval mechanism at all, its exclusions covering only the test directory and the guard itself."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "The strict-xfail acceptance test could never have XPASSed, so the scaffolding would have outlived the work, which is the same defect this run's own g1 review had already caught once."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "A reason-carrying approval census was added for the leg, reusing the existing census parser rather than forking it, and the residual sites were approved with a per-line reason each."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "issue-447",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@f2dd40a",
+    "refusals": 0,
+    "reopens": 1,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic418-h-447/results/g4-REVIEW_RESULT.md",
+     ".agent-work/epic418-h-447/crew-handoffs/g4-REVIEWER_HANDOFF.md"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Prove that eight newly written episodes came from the store's writer rather than from a hand edit."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "Comparing the files' blob OIDs against HEAD would settle it, which is what the handoff asked for."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "It could not. A newly added file has no HEAD blob to compare against, so the check is vacuous exactly where it is needed. The reviewer instead replayed the episode delta into a scratch store and got the eight staged blobs back byte-identically."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "None realised. The defect was in the handoff the Commander wrote, not in the work being graded."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "Two different questions were separated: an OID comparison against HEAD proves the EXISTING records were untouched, and a delta replay proves the NEW ones came from the writer."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "issue-447",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@f2dd40a",
+    "refusals": 0,
+    "reopens": 1,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     ".agent-work/epic418-h-447/results/g5-REVIEW_RESULT.md",
+     ".gitattributes"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Verify a doc sweep had not flipped CRLF files to LF, having been warned that a grep-based check is unreliable on this machine."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "Comparing worktree bytes against the git blob at the base revision would settle it."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "That check reported all 23 changed files as corrupted. The repository sets text=auto in .gitattributes, so blobs are stored LF by design; the baseline was wrong, not the files. Against unmodified worktree files, all 23 were 100 percent CRLF with none mixed."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "None realised, caught before the verdict, but the wrong baseline was about to produce a BLOCK on advice the Commander had given in the handoff."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The comparison was re-founded on unmodified worktree files rather than on git blobs."
+    }
+   }
+  },
+  {
+   "op": "create",
+   "mechanical": {
+    "run": "issue-447",
+    "project": "constellation-skills",
+    "role": "commander",
+    "spine-step": "feedback",
+    "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@f2dd40a",
+    "refusals": 0,
+    "reopens": 1,
+    "rework-count": 1,
+    "failed-commands": 0,
+    "artifact-ref": [
+     "docs/CONSTELLATION_OVERVIEW.md",
+     "tests/data/store_mentions.approved.txt",
+     "commit:fd7ef60"
+    ]
+   },
+   "agent_supplied": {
+    "task-intent": {
+     "strength": "strong",
+     "statement": "Remove a phrase from a doc table's audience column that named a consumer with no implementation anywhere in the corpus."
+    },
+    "expected-behavior": {
+     "strength": "strong",
+     "statement": "A one-column prose edit with no mechanical consequence."
+    },
+    "observed-behavior": {
+     "strength": "strong",
+     "statement": "The retirement guard went from exit 0 printing nothing to exit 1, and the census verbatim-match test failed. The approval census records approved lines verbatim and had been measured exactly-covering, so editing an approved line orphaned its approval."
+    },
+    "impact-cost": {
+     "strength": "strong",
+     "statement": "One cycle, inside the same gate that had just turned the guard green. The guard caught the person who commissioned it."
+    },
+    "workaround": {
+     "strength": "strong",
+     "statement": "The census entry was updated in the same edit as the prose, and the guard was re-run to zero before the commit."
+    }
+   }
+  }
+ ]
+}

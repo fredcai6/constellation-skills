@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4-implement",
+  "files": [],
+  "repo_rev": {
+    "commit": "100a33cffe431af5db9269171d546a60c8bea504"
+  },
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T16:43:31Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+warning: in the working copy of 'tests/data/store_mentions.approved.txt', LF will be replaced by CRLF the next time Git touches it
+ scripts/install_constellation.py                   | 25 ++++++-
+ .../admiral/templates/ADMIRAL_SPINE.template.json  |  9 +--
+ .../templates/COMMANDER_SPINE.template.json        |  9 +--
+ tests/data/store_mentions.approved.txt             | 63 ++++++++++++++++
+ tests/test_install_constellation.py                | 85 ++++++++++++++++++++--
+ 5 files changed, 171 insertions(+), 20 deletions(-)

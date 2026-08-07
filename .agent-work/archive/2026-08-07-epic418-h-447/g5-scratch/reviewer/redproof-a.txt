@@ -1,0 +1,16 @@
+A0 census IN PLACE  -> total violations: 0
+A1 census REPOINTED -> total: 53  retired-name leg: 53
+   per-path distribution of the suppressed set:
+      33  docs/RECURSIVE_IMPROVEMENT_DESIGN.md
+       8  scripts/stage_feedback.py
+       3  scripts/apply_episode_delta.py
+       2  RETURN.md
+       2  scripts/verify_episode_captured.py
+       1  docs/CONSTELLATION_OVERVIEW.md
+       1  docs/agents/ORCHESTRATOR_CONTEXT.md
+       1  scripts/init_work_area.py
+       1  scripts/install_constellation.py
+       1  skills/commander/templates/COMMANDER_SPINE.template.json
+A2 census entries: 53  fired content-hits: 53  fired path-hits: 0
+   approvals NOT matching any fired line (dead approvals): 0
+   fired lines with NO approval (would remain red): 0

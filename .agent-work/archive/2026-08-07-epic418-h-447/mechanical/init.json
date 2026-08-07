@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "init",
+  "mechanical": {
+    "run": "epic418-h-447",
+    "project": "constellation-skills",
+    "role": "cmdr-447-episodes-retirement",
+    "refusals": 0,
+    "spine-step": "init",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-init@9afece0dbeae9fdd3944f45b4a8c8c87762d6e16",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-06T08:38:08Z"
+  }
+}

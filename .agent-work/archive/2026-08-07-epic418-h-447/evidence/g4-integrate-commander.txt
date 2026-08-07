@@ -1,0 +1,15 @@
+=== Commander's own reproduction, g4-integrate (2026-08-07), commit 77e428d ===
+
+delta --dry-run (delta VALIDATES; NOT a no-op claim -  EXIT=0
+  the writer mints new ids per run, so re-applying would create 009-016. Not measured, not asserted.)
+query_episodes run=issue-447                        COUNT=8 (verified separately)
+verify_episode_captured issue-447 --phase feedback  EXIT=0
+verify_episode_captured issue-447 --phase archive   EXIT=0
+git ls-files --error-unmatch .agent-work/LESSONS.md        EXIT=1  (want non-zero)
+git ls-files --error-unmatch .agent-work/AGENT_FEEDBACK.md EXIT=1 (want non-zero)
+test -f both retired paths                          EXIT=0  (still on disk)
+installed verify_agent_feedback.py --phase feedback EXIT=1 (UNCHANGED from before g4: 1)
+pytest test_episode_store.py test_episode_fields.py EXIT=0
+pytest tests/test_episode_negative_control.py       EXIT=0  (15 passed - the commit closed it)
+FORCE_COLOR=0 NO_COLOR=1 pytest -q                  EXIT=0  1618 passed, 2 skipped, 1 xfailed, 0 failed
+verify_retirement.py legs                           retired-path-still-tracked GONE; 85 retired-name remain (g5)

@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "c4-tombstone",
+  "mechanical": {
+    "run": "epic418-h-447",
+    "project": "constellation-skills",
+    "role": "cmdr-447-episodes-retirement-reviewer",
+    "refusals": 1,
+    "spine-step": "c4-tombstone",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-c4-tombstone@f0e5a345f08e8a67620ef36a237b939f7268bd9f",
+    "artifact-ref": [
+      "tests/data/retired_names.approved.txt"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T19:12:02Z"
+  }
+}

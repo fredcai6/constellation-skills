@@ -1,0 +1,30 @@
+pre-mutation sha256: bd90bb29521e0fb1d101805ba175b5aa6f6d4e43ce7ceb1be5e2b13a6af73b90
+
+[A_leak_what_scan_reads_stderr] MUTATION APPLIED (expect_red=False)
+      3 passed, 4 subtests passed in 0.21s
+      exit=0 red=False matches-expectation=True
+      RESTORED byte-identical: True
+
+[B_leak_whole_body_from_matched_episodes_stderr] MUTATION APPLIED (expect_red=True)
+      E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in '<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: i
+      E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in "<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: i
+      E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in "<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: i
+      E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in '<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: i
+      FAILED tests/test_verify_episode_captured.py::ValveTests::test_no_statement_text_reaches_stdout_or_stderr
+      FAILED tests/test_verify_episode_captured.py::ValveTests::test_the_leak_assertion_can_fail
+      5 failed, 1 passed, 1 subtests passed in 0.26s
+      exit=1 red=True matches-expectation=True
+      RESTORED byte-identical: True
+
+[C_widen_scan_episode_remove_breaks] MUTATION APPLIED (expect_red=True)
+      3 passed, 4 subtests passed in 0.20s
+      exit=0 red=False matches-expectation=False
+      RESTORED byte-identical: True
+
+post-all-restores sha256: bd90bb29521e0fb1d101805ba175b5aa6f6d4e43ce7ceb1be5e2b13a6af73b90
+FINAL RESTORE byte-identical: True
+GREEN RUN exit=0
+  ...............                                                      [100%]
+  15 passed, 4 subtests passed in 0.67s
+
+RED-PROOF SUITE VALID: False

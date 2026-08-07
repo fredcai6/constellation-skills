@@ -1,0 +1,18 @@
+=== Commander's own reproduction, g2-integrate (2026-08-07) ===
+
+$ python -m pytest tests/test_verify_episode_captured.py -q
+...............                                                      [100%]
+15 passed, 4 subtests passed in 0.89s
+EXIT=0
+
+$ python scripts/verify_episode_captured.py no-such-run --store-root episodes ; echo EXIT=$?
+EXIT=1   # MUST be 1
+
+--- c1 legs, all in the Commander's hands, temp stores only ---
+seeded store (feedback)          EXIT=0
+empty store                      EXIT=1
+store holding only other runs    EXIT=1
+archive phase, uncommitted       EXIT=1  (git pathspec did not match)
+archive phase, after git commit  EXIT=0
+missing store root               EXIT=2  (refused, not answered)
+leak check: my own probe statement 'COMMANDER PROBE ONLY' -> grep -c = 0 in all three outputs

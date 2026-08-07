@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": "2e6be4d6e162d34f41335b36586565c39c5cbb6b"
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": "9d34d8be6e74007724c60a537001e119f5576ffc"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "2a5ed203936c1dbd7703ad98dd546c87cec1c004"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "5f181215b36a64f9dc1246ea3041414db34970f4"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "cbd9aee86c54e612b148dc7220b262c5bef03aa4"
+  },
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-06T08:39:06Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    }
+  }
+}

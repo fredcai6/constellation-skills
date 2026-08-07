@@ -1,0 +1,11 @@
+pre-mutation sha256: bd90bb29521e0fb1d101805ba175b5aa6f6d4e43ce7ceb1be5e2b13a6af73b90
+MUTATION APPLIED: stderr leak injected into scan_episode() read loop
+RED RUN exit=0
+  3 passed, 4 subtests passed in 0.27s
+post-restore sha256: bd90bb29521e0fb1d101805ba175b5aa6f6d4e43ce7ceb1be5e2b13a6af73b90
+RESTORE byte-identical: True
+GREEN RUN exit=0
+  ...............                                                      [100%]
+  15 passed, 4 subtests passed in 0.69s
+
+RED-PROOF VALID: False
