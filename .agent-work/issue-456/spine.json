@@ -188,12 +188,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": "interrogation.json",
-      "status": "in-progress",
+      "status": "blocked",
       "status_detail": {
-        "blocker": "Interactive run, blocked on the human. Interrogation survey driven: 3 facts RESOLVED with code evidence (repo conventions + CI shape; build_architecture_map.py is a complement not a competitor; this repo self-maps -- 233 py files, all parse, 5232 entities). 4 decision-kind items BLOCKED and bubbled -- d1 run scope, d2 tool home/name, d3 crew-dispatch authority, d4 skills-diff cherry-pick + push/PR pre-approval. verify_interrogation.py refuses a self-answered decision and refuses consolidation without a joint-understanding sign-off, so understand CANNOT close without Tommy's ruling. Recommendations put to him for all four.",
+        "blocker": "HARD context trip (governor: CONTEXT 16% >= hard). The engine BLOCKS advance and instructs 'hand off now; do not keep working'; refresh-request e-understand-2 is filed against seam=understand (why_ref w-2). The gate's own work is COMPLETE -- both postconditions satisfied, c1 attested via e-understand-1, interrogation consolidated RESOLVED and rail-verified. Nothing remains but the advance itself, which the trip forbids. This is the sanctioned reach-up idle, not an abandoned run: the next actor is a fresh Commander the human relaunches, not a background job to poll.",
         "authority_needed": "human",
-        "next_action": "Tommy rules the four (or says 'go with your recommendations'); then: resume understand, write the interrogation record with his answers as human_answer, verify exit 0, consolidate, advance to plan.",
-        "resume_reason": "Tommy ruled all four decisions; interrogation consolidated RESOLVED"
+        "next_action": "Tommy relaunches a fresh Commander in C:/Programs/constellation-skills/.claude/worktrees/issue-456. It re-claims lease commander-issue-456 idempotently (same id, not a takeover), cold-starts from current, then: resume understand --reason 'fresh agent after context refresh', advance understand, and proceed to plan (ten gates: gate 0 CLI/discovery + the nine issue gates, critic-reordered).",
+        "prior_status": "in-progress"
       },
       "result": null,
       "finding": null,
@@ -582,13 +582,20 @@
       "statement": "ENGINE DEFECT (reach-up contract): a HARD context trip blocks 'advance', but 'advance --why' is the ONLY verb that appends a why-record, and the DIGEST line is the latest why-record. So an agent tripped at HARD is forced to hand off carrying a digest that predates the entire step it just completed -- here the digest still describes the context step while understand's four human rulings are absent from it. Doctrine states 'the digest is the brief' for a cold-starting fresh agent (global-everyone.md, reach-up), so the brief is stale exactly when it matters most. Observed live on this run at understand. Candidate fixes: let attest/attach take --why, or add a why-only verb, or have the trip permit a digest-updating advance-in-place. Workaround used: the substance was committed to git and lives in evidence e-understand-1 plus .agent-work/issue-456/interrogation-record.json."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "understand",
+      "blocker": "HARD context trip (governor: CONTEXT 16% >= hard). The engine BLOCKS advance and instructs 'hand off now; do not keep working'; refresh-request e-understand-2 is filed against seam=understand (why_ref w-2). The gate's own work is COMPLETE -- both postconditions satisfied, c1 attested via e-understand-1, interrogation consolidated RESOLVED and rail-verified. Nothing remains but the advance itself, which the trip forbids. This is the sanctioned reach-up idle, not an abandoned run: the next actor is a fresh Commander the human relaunches, not a background job to poll.",
+      "authority_needed": "human",
+      "next_action": "Tommy relaunches a fresh Commander in C:/Programs/constellation-skills/.claude/worktrees/issue-456. It re-claims lease commander-issue-456 idempotently (same id, not a takeover), cold-starts from current, then: resume understand --reason 'fresh agent after context refresh', advance understand, and proceed to plan (ten gates: gate 0 CLI/discovery + the nine issue gates, critic-reordered)."
+    }
+  ],
   "refusals": 1,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T17:41:47.550158+00:00",
+    "last_heartbeat": "2026-08-07T17:42:52.873592+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
