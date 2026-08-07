@@ -10,14 +10,14 @@ it resolved, so there is no resolved state — collected entries stay visible in
 every report until the consuming repo deletes them.
 
 A finding's identity (fingerprint) is derived, in order of preference, from:
-(1) the originating **lesson id** carried in the export's `Lesson` field — the
-stable id the lessons playbook already curates (unique ids, `amend` to reword
-without forking identity); (2) the **candidate slug**, with parenthetical
-annotations/cross-refs stripped (those drift run-to-run but are not identity);
-(3) the legacy observed+proposal **content hash**. Slugs drift even when humans
-mean the same finding (`spine-lease-stale-on-long-crew` vs `...-step` vs one with
-a trailing "(CORROBORATES …)"), so a stable lesson id is the durable handle;
-the slug is the fallback when no lesson id is present. Recurrence is counted by
+(1) the originating **episode id** carried in the export's `Episode` field
+(falling back to the legacy `Lesson` field for un-upgraded external exports) —
+a stable id, set once, that does not change on reword; (2) the **candidate slug**,
+with parenthetical annotations/cross-refs stripped (those drift run-to-run but are
+not identity); (3) the legacy observed+proposal **content hash**. Slugs drift even
+when humans mean the same finding (`spine-lease-stale-on-long-crew` vs `...-step`
+vs one with a trailing "(CORROBORATES …)"), so a stable episode id is the durable
+handle; the slug is the fallback when no episode id is present. Recurrence is counted by
 how many entries share a fingerprint — including repeats within a single
 project — and a finding is promoted to validated/recurring once it reaches
 RECURRENCE_THRESHOLD occurrences. Cross-project recurrence remains a distinct,
@@ -224,16 +224,19 @@ def _raw_slug(text: str) -> str:
 def fingerprint(entry: dict[str, str]) -> str:
     """Stable identity for a finding, in order of preference.
 
-    1. the originating lesson id (`Lesson` field) — the identity the lessons
-       playbook curates and keeps stable across rewording via `amend`;
+    1. the originating episode id (`Episode` field, falling back to the legacy
+       `Lesson` field for un-upgraded external exports) — a stable id, set once,
+       that does not change on rewording;
     2. the candidate slug with annotations stripped — the fallback when an entry
-       has no lesson id;
+       has no episode id;
     3. the legacy observed+proposal content hash — last resort.
-    Always 12 hex chars so the sidecar/ledger shape is unchanged.
+    Always 12 hex chars so the sidecar/ledger shape is unchanged; the hash prefix
+    stays the literal `lesson:` string (an opaque identity-scheme tag, decoupled
+    from the display label) so fingerprints already recorded keep matching.
     """
-    lesson = _slugify(entry.get("lesson", ""))
-    if lesson:
-        return _hash12("lesson:" + lesson)
+    episode = _slugify(entry.get("episode") or entry.get("lesson", ""))
+    if episode:
+        return _hash12("lesson:" + episode)
     slug = _slugify(entry.get("candidate", ""))
     if slug:
         return _hash12("candidate:" + slug)
@@ -243,9 +246,10 @@ def fingerprint(entry: dict[str, str]) -> str:
 def fingerprints(entry: dict[str, str]) -> list[str]:
     """Every key an entry may be recorded under, newest scheme first.
 
-    Includes the lesson-id fingerprint, the annotation-stripped slug fingerprint,
-    the prior raw-slug fingerprint (pre-stripping), and the legacy content hash —
-    so collected/resolved/filed state recorded under ANY earlier scheme still
+    Includes the episode-id fingerprint (`Episode` field, falling back to the
+    legacy `Lesson` field), the annotation-stripped slug fingerprint, the prior
+    raw-slug fingerprint (pre-stripping), and the legacy content hash — so
+    collected/resolved/filed state recorded under ANY earlier scheme still
     matches after an identity change.
     """
     out: list[str] = []
@@ -254,9 +258,9 @@ def fingerprints(entry: dict[str, str]) -> list[str]:
         if fp and fp not in out:
             out.append(fp)
 
-    lesson = _slugify(entry.get("lesson", ""))
-    if lesson:
-        add(_hash12("lesson:" + lesson))
+    episode = _slugify(entry.get("episode") or entry.get("lesson", ""))
+    if episode:
+        add(_hash12("lesson:" + episode))
     candidate = entry.get("candidate", "")
     if _slugify(candidate):
         add(_hash12("candidate:" + _slugify(candidate)))

@@ -1,0 +1,220 @@
+{
+  "work_id": "issue-464",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-rename",
+    "m2-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff LO-464.md and the checklist-engine reference. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context",
+            "why_ref": "pending"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-rename": {
+      "id": "m1-rename",
+      "title": "Rename the Lesson: field to Episode: together with collect_feedback.py",
+      "imperative": "Rename the CONSTELLATION_FEEDBACK field that carries an episode id from `Lesson` to `Episode` in one change with its collector: skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md (field line + header prose), .agent-work/CONSTELLATION_FEEDBACK.md (header prose only -- the 3 pre-#447 narrative '**Lesson:**' lines at 140/173/216 hold OLD lesson slugs, not episode ids, and stay untouched as historical record), and scripts/collect_feedback.py (fingerprint()/fingerprints() read entry['episode'] first, fall back to entry['lesson'] for un-upgraded external exports and the network_elo/story_time legacy prose shapes which are deliberately NOT renamed since they are other projects' literal file content; the internal hash prefix stays the literal 'lesson:' string -- an opaque identity-scheme tag, not the display name -- so existing sidecar/inbox fingerprints keep matching). TDD: first attest c1 (new/renamed tests using '- **Episode:**' and an {'episode':...} entry, observed failing against the pre-rename collector), then implement, then satisfy c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: tests/test_feedback_tooling.py updated (test_lesson_id_groups_across_slug_drift -> test_episode_id_groups_across_slug_drift using '- **Episode:**'; test_lesson_id_takes_precedence_over_slug -> test_episode_id_takes_precedence_over_slug using entry['episode']; plus new test_legacy_lesson_field_format_still_fingerprints and test_episode_field_takes_precedence_over_legacy_lesson_field) and observed FAILING against the pre-rename collect_feedback.py -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "template + doctrine header + collector renamed; the 4 named tests pass",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_feedback_tooling.py -k 'episode_id_groups_across_slug_drift or episode_id_takes_precedence_over_slug or legacy_lesson_field_format_still_fingerprints or episode_field_takes_precedence_over_legacy_lesson_field'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-rename-3"
+        }
+      ],
+      "constraints": [
+        "one change together with the collector",
+        "no lesson-vocabulary revival",
+        "do not edit scripts/checklist_engine.py, episodes/, scripts/apply_episode_delta.py, scripts/verify_worktree_precondition_coverage.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-rename-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-rename",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-rename-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_feedback_tooling.py -k 'episode_id_groups_across_slug_drift or episode_id_takes_precedence_over_slug or legacy_lesson_field_format_still_fingerprints or episode_field_takes_precedence_over_legacy_lesson_field'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-rename-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_feedback_tooling.py -k 'episode_id_groups_across_slug_drift or episode_id_takes_precedence_over_slug or legacy_lesson_field_format_still_fingerprints or episode_field_takes_precedence_over_legacy_lesson_field'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-verify": {
+      "id": "m2-verify",
+      "title": "Enumerate readers by command (after) and run the full suite",
+      "imperative": "Re-run the same enumeration command used before the change and confirm zero readers of the old field NAME remain among the must-fix set (code + live docs); state which residual hits are deliberately-excluded historical/external-format content and why. Run the full test suite and confirm the real exit code plus a count strictly greater than the 1721-passed baseline.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-rename complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green with count > 1721 passed baseline, real exit code captured",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verify-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-verify-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-verify",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "impl-464",
+    "status": "active",
+    "claimed_at": "2026-08-07T21:48:15.954955+00:00",
+    "last_heartbeat": "2026-08-07T23:22:32.323404+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "#464 rename design settled. NEW FIELD NAME: 'Episode' (was 'Lesson'), matching the doctrine vocabulary in docs/agents/GLOSSARY.md ('episode' = one stored record) and the CONSTELLATION_FEEDBACK.template.md's own already-updated prose ('originating episode id from episodes/'). MUST-CHANGE (3 files, one change): (1) skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md line 23 field list '- **Lesson:**' -> '- **Episode:**' plus header prose lines 12-19 (drop the now-false 'field keeps its old name' parenthetical). (2) .agent-work/CONSTELLATION_FEEDBACK.md header prose lines 1-19: resync to match the template's corrected episode-based wording (this file's header is STALE pre-#447 text -- still says 'constellation-scoped lesson' and 'amend-ing the lesson', a retired-playbook verb episodes do not have -- bring it in line with the template, same field rename). Its 3 narrative '**Lesson:**' lines at 140/173/216 are pre-#447 lesson-slug values (not episode ids, not machine-parsed -- no '### ' subheading wraps them so parse_prose_findings finds nothing there) and are LEFT UNTOUCHED as historical record, matching how RETURN.md/docs/RECURSIVE_IMPROVEMENT_DESIGN.md are treated elsewhere in this repo ('reconciling a record would falsify history'). (3) scripts/collect_feedback.py: fingerprint()/fingerprints() read entry.get('episode') first, fall back to entry.get('lesson') -- the fallback is REQUIRED, not cosmetic: it keeps parsing (a) any not-yet-upgraded external project's field-format export still spelling 'Lesson', and (b) the network_elo prose-heading shape ('### Lesson: <slug>') and story_time inline-prose shape ('**Lesson:** <id>' inside a '### ...' sub-block) -- both are OTHER repos' literal file content via _PROSE_LABELS/PROSE_HEADING_RE, deliberately NOT renamed since we cannot rename what another project's file literally says. The internal hash prefix stays the literal string 'lesson:' (an opaque identity-scheme tag, decoupled from the display label) so every fingerprint already recorded in CONSTELLATION_FEEDBACK.collected.json / CONSTELLATION_INBOX.json keeps matching -- renaming that prefix would silently orphan every previously-filed finding's identity and cause duplicate re-filing. TESTS (tests/test_feedback_tooling.py): rename test_lesson_id_groups_across_slug_drift -> test_episode_id_groups_across_slug_drift (field line '- **Episode:**'); rename test_lesson_id_takes_precedence_over_slug -> test_episode_id_takes_precedence_over_slug (entry key 'episode'); ADD test_legacy_lesson_field_format_still_fingerprints (old '- **Lesson:**' field-format doc still fingerprints -- backward-compat guard for un-upgraded external projects); ADD test_episode_field_takes_precedence_over_legacy_lesson_field (entry carrying BOTH keys -> episode wins, proves the new fallback order). Leave test_prose_finding_surfaced_network_elo_shape / test_prose_finding_fingerprints_on_inline_lesson_id / test_field_and_prose_not_double_counted untouched (external-format tests, not this repo's field). ENUMERATION already run: grep -rn -e '\\*\\*Lesson\\[:*\\]' -e '\"lesson\"' -e \\'lesson\\' -e 'Lesson field' scripts/ .agent-work/CONSTELLATION_FEEDBACK.md skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md tests/test_feedback_tooling.py -> 12 hits: 3 in collect_feedback.py (code, change), 1 in CONSTELLATION_FEEDBACK.md:14 (header, change), 3 in CONSTELLATION_FEEDBACK.md:140/173/216 (historical narrative, leave), 2 in template.md:14+23 (change), 2 in test file (rename), 3 in test file (external-shape tests, leave). A broader unscoped repo grep for the same tokens returns 117 hits total, ~20 outside .agent-work archive dirs -- the rest are archived/historical run snapshots (RETURN.md, docs/superpowers/*, .agent-work/archive|epic-*/harvest|staged-feedback|harvest-*|dispatch-*) that are frozen closed-run records, git-tracked on purpose, out of scope (rewriting them would misrepresent history, same principle RETURN.md itself states for docs/RECURSIVE_IMPROVEMENT_DESIGN.md). NOT YET DONE: none of the above edits have been made yet -- this is pure design captured before implementation, filed here because a HARD context trip (gauge 19% fill, hard cap 150K tokens for claude-sonnet-5) blocked advancing past m0-context. Next actor: attach the refresh-request is already done (e-m0-context-1); start m1-rename and execute exactly the file list above.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:53:03.441279+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-rename",
+      "why": "m1-rename executed exactly as designed in w-1: renamed the field to Episode in the 3 files (template.md field+header, CONSTELLATION_FEEDBACK.md header only, collect_feedback.py fingerprint()/fingerprints() reading entry['episode'] first with entry['lesson'] fallback kept). Hash prefix stayed literal 'lesson:'. The 3 historical narrative Lesson: lines (140/173/216) and the network_elo/story_time prose-shape handling (_PROSE_LABELS['lesson']) were left untouched per design. TDD: attested c1 red (3 of 4 named tests failed pre-rename, the legacy-Lesson-field test already passed since that path was unchanged), then implemented, then the 4 named tests + the full test_feedback_tooling.py suite (33 tests) went green. No scope creep beyond the 3 files + tests.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:53:45.024341+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-verify",
+      "why": "m2-verify: re-ran the same enumeration command; zero readers of the OLD FIELD NAME remain in the must-fix set (template.md, CONSTELLATION_FEEDBACK.md header, collect_feedback.py primary read path). Residual hits are all deliberately-excluded: _PROSE_LABELS['lesson'] mapping + the required lesson-fallback in fingerprint()/fingerprints() (kept per design), the 3 pre-#447 narrative Lesson: lines at 140/173/216 (historical record), and untouched/new tests exercising legacy-format compatibility. Full suite first surfaced 2 self-inflicted retirement-guard failures from my own docstring wording ('episode store' tripped unapproved-store-mention) plus a stale census entry for the template.md line I renamed; fixed by rewording the docstring (collect_feedback.py:15,229) and updating the one legitimate census entry (tests/data/store_mentions.approved.txt). Re-ran test_retirement_guard.py (16 passed) and vr.scan() directly (0 violations), then the full suite: 1723 passed, 4 skipped, 643 subtests passed, real exit code 0 -- strictly greater than the 1721-passed baseline.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:22:32.323373+00:00"
+    }
+  ]
+}
