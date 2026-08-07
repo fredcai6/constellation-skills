@@ -551,7 +551,7 @@
     "session_id": "g0-impl-9febe0be",
     "status": "active",
     "claimed_at": "2026-08-07T20:48:13.953663+00:00",
-    "last_heartbeat": "2026-08-07T21:16:52.436079+00:00",
+    "last_heartbeat": "2026-08-07T21:24:35.428791+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
