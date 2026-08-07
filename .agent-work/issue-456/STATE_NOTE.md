@@ -11,11 +11,14 @@ dispatch (the PID changes every time).
   (`e-g0-review-3`). **THE ONLY THING LEFT AT THIS GATE IS A FOCUSED RE-REVIEW
   OF THE DELTA** — `git diff b14ff3ff~1..HEAD -- scripts/ tests/`, 2 files,
   +191. Scope it to: are B1 and B2 actually closed, did anything regress, and is
-  there a third sibling of the same defect shape. **Do the re-review — do not
-  skip it.** The original reviewer found a blocker that three implementer passes
-  AND my own re-verification all walked past, so self-verification is
-  demonstrably insufficient here. Then `advance g0-review` → `g0-integrate`.
-  11 gates: g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs
+  there a third sibling of the same defect shape. **THAT RE-REVIEW IS ALREADY
+  DISPATCHED AND IN FLIGHT** — registry `constellation/issue-456/g0/reviewer/attempt-2`,
+  handoff `crew-handoffs/g0-rereview.md`, expected artifact
+  `crew-handoffs/g0-rereview-RESULT.md`. **Do not re-dispatch it; harvest it.**
+  If the artifact exists, attach it as evidence and act on the verdict; if the
+  crew died, `run_crew.py --abandon <id> --relaunch` against the same handoff.
+  Then `advance g0-review` → `g0-integrate`. 11 gates:
+  g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs
 - **slug:** work-id `issue-456` · branch `issue-456/code-map` (pushed to origin)
   · worktree `C:/Programs/constellation-skills/.claude/worktrees/issue-456`
 - **next command:** `python C:/Users/fredc/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/issue-456/spine.json current` — then re-claim lease `commander-issue-456` idempotently (same id, NOT a takeover), read the DIGEST, and drive `.agent-work/issue-456/execute.json` from `current`. Before any crew: `python scripts/recover_crews.py issue-456`, then dispatch only via `python scripts/run_crew.py --dispatch external --verify-result`.
