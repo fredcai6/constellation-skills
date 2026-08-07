@@ -582,6 +582,11 @@
       "id": "tc1",
       "from": "understand",
       "statement": "ENGINE DEFECT (reach-up contract): a HARD context trip blocks 'advance', but 'advance --why' is the ONLY verb that appends a why-record, and the DIGEST line is the latest why-record. So an agent tripped at HARD is forced to hand off carrying a digest that predates the entire step it just completed -- here the digest still describes the context step while understand's four human rulings are absent from it. Doctrine states 'the digest is the brief' for a cold-starting fresh agent (global-everyone.md, reach-up), so the brief is stale exactly when it matters most. Observed live on this run at understand. Candidate fixes: let attest/attach take --why, or add a why-only verb, or have the trip permit a digest-updating advance-in-place. Workaround used: the substance was committed to git and lives in evidence e-understand-1 plus .agent-work/issue-456/interrogation-record.json."
+    },
+    {
+      "id": "tc2",
+      "from": "plan",
+      "statement": "SPEC GAP for the plan checkpoint: DESIGN_SPEC section 2 (Storage layout) ends with 'Build the named guards FIRST' and names three -- (a) the empty-diff determinism assertion, (b) the mis-pairing guard on auto-supersession, (c) the C++ colon collision fix in the relative-id rule. The ranked build queue carries only (a), inside gate 1. (b) attaches to tombstone/auto-supersession machinery the critic panel DEFERRED (SY6); (c) attaches to C++ adapters explicitly OUT OF SCOPE. Both are most likely correctly dropped with the machinery they guard -- but that is the Commander's inference, not a recorded disposition, and 'build first' is strong language to leave dangling. Confirm with Tommy at plan approval: dropped-with-their-machinery, or added to gate 1."
     }
   ],
   "blockers": [],
@@ -590,7 +595,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T17:54:44.999927+00:00",
+    "last_heartbeat": "2026-08-07T18:03:36.337730+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
