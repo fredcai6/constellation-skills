@@ -11,7 +11,8 @@
     "q2-articles-ruling",
     "q3-agent-lean",
     "q4-id-syntax",
-    "q5-rulings"
+    "q5-rulings",
+    "x12"
   ],
   "tasks": {
     "c0-frame": {
@@ -139,6 +140,22 @@
       "status_detail": {},
       "result": "pass",
       "finding": "HUMAN RULINGS 2026-08-07: (1) map-model.md amendment SIGNED OFF and applied -- explained-by target widened to decision|claim (grammar line 109 + semantics bullet 119), resolving the x9-found contradiction with the doc's own claim-routing prose. (2) Comment-writing adoption is NOT a culture gamble: 'the commenting is a function of our skills' -- agents write tagged comments because the skills direct it; kills the open adoption unknown as a skills-layer design task. (3) Regen/maintenance-loop test folded into the cycle-4 real-issue trial, agreed. (4) 'let's talk skills so we unlock cycle 4' -- consumption+maintenance skill design is the gating work item; discussion opened this turn.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "x12": {
+      "id": "x12",
+      "title": "Excursion: prior art \u2014 giving coding agents maps",
+      "imperative": "Research excursion: artifact taxonomy, measured usefulness evidence, granularity/token-budget findings, push-vs-pull uptake, freshness, delta to our design. Brief: excursions/x12-brief.md; result: excursions/x12-result.md. Human-commissioned to inform the consumption-skill design gating cycle 4.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
       "evidence": [],
       "rework_count": 0
     }
