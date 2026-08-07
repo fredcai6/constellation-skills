@@ -20,6 +20,8 @@ exercising the filter.
 
 import contextlib
 import io
+import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -53,6 +55,172 @@ def _make_repo(tmp: Path):
     _git("init", "-q", cwd=tmp)
     _git("add", "src/a.py", "b.py", "README.md",
          ".agent-work/scratch.py", ".agent-work/issue-1/deep.py", cwd=tmp)
+
+
+_ENTITY_SOURCE = '''"""A module that actually defines things."""
+
+
+class Widget:
+    """A widget."""
+
+    def spin(self):
+        """Spin the widget."""
+        return 1
+
+
+def helper():
+    """Do the small thing."""
+    return 2
+'''
+
+
+def _make_entity_repo(tmp: Path):
+    """A repo whose modules define real entities, so the renderer emits entity
+    pages at all. `_make_repo`'s modules are bare assignments — they produce no
+    entity page, so a page-format assertion over that tree would scan nothing
+    and pass without ever reading a header."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "thing.py").write_text(_ENTITY_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/thing.py", cwd=tmp)
+
+
+_COLLIDING_SOURCE = '''"""A module whose entity page collides with its own index page."""
+
+
+class INDEX:
+    """Named INDEX, so its page path is the module index's page path."""
+
+    def go(self):
+        """Do it."""
+        return 1
+'''
+
+
+def _make_collision_repo(tmp: Path):
+    """A repo where two pages resolve to ONE output path.
+
+    The renderer names an entity page `<qualified name>.md` inside the module's
+    directory, and names the module's own index page `INDEX.md` in that same
+    directory. So a class called `INDEX` lands on the module index: two writes,
+    one file.
+
+    This is the same failure mode as the real repo's `Verdict` class versus
+    `verdict` function, but reachable on every platform. That one collides only
+    because Windows and macOS filesystems are case-insensitive; on a
+    case-sensitive filesystem the two are separate files and nothing diverges,
+    so a fixture built on it would prove nothing on Linux."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "thing.py").write_text(_COLLIDING_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/thing.py", cwd=tmp)
+
+
+#: A source position in a rendered page: a Python file path with a line number
+#: welded to it. The confirmed ruling is that nothing committed carries one.
+POSITION = re.compile(r"\.py:\d+")
+
+
+class RenderReportTests(unittest.TestCase):
+    """`pages` in the render report has to be a number that can be WRONG.
+
+    Counting `write_text()` calls cannot be wrong: it reports what the renderer
+    tried to do, so a page silently overwriting another is invisible in it. The
+    count has to come from the tree."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_collision_repo(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        self.report = json.loads(
+            (self.repo / ".code-map" / "render_report.json").read_text(encoding="utf-8"))
+        self.on_disk = sorted((self.repo / "map").rglob("*.md"))
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _write_calls(self):
+        """What a per-write counter would report: the top index, one index per
+        module, and one page per entity."""
+        supp = json.loads(
+            (self.repo / ".code-map" / "supplement.json").read_text(encoding="utf-8"))
+        return 1 + len(supp["modules"]) + len(supp["entities"])
+
+    def test_render_report_page_count_equals_the_files_on_disk(self):
+        self.assertGreater(
+            self._write_calls(), len(self.on_disk),
+            "input precondition: the fixture must make two pages resolve to one "
+            "path, or a write-call count and a file count agree by luck and this "
+            "test cannot fail")
+
+        self.assertEqual(self.report["pages"], len(self.on_disk))
+
+
+class RenderedPageFormatTests(unittest.TestCase):
+    """The page header format, against the confirmed ruling that nothing
+    committed carries a source position.
+
+    The ruling splits three things that look alike:
+
+    - a **line number** churns. A 3-line edit near the top of a file shifts
+      every entity below it and rewrites hundreds of unrelated pages. It goes.
+    - a **file path** does not churn — it changes only when the file moves. It
+      stays.
+    - an entity's **own size** changes only that entity's own page, which is a
+      page changing when its own subject changed. It stays.
+
+    So there are two tests here, not one: removing too much fails the ruling as
+    surely as removing too little.
+
+    The fixture is synthetic on purpose. A blunt scan of the REAL page tree
+    still reports two hits — both from one authored docstring in
+    `tests/test_checklist_engine.py` that names `scripts/checklist_engine.py:449`
+    in its own prose, echoed onto the entity page and its module index line.
+    That is source text the renderer copied through, not a position the renderer
+    emitted, and it churns only when its own docstring changes. Scanning a
+    controlled tree is what keeps this test about the renderer."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_entity_repo(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        self.pages = sorted((self.repo / "map").rglob("*.md"))
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _headers(self):
+        """The second line of every entity page — the one `loc()` writes."""
+        return [(p, p.read_text(encoding="utf-8").splitlines()[1])
+                for p in self.pages if p.name != "INDEX.md"]
+
+    def test_no_rendered_page_carries_a_source_line_number(self):
+        headers = self._headers()
+        self.assertTrue(headers, "input precondition: the tree must contain entity "
+                                 "pages, or this scan reads nothing and cannot fail")
+
+        offenders = [(str(p.relative_to(self.repo)), n, line)
+                     for p in self.pages
+                     for n, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1)
+                     if POSITION.search(line)]
+
+        self.assertEqual(offenders, [], "rendered pages carry a source position")
+
+    def test_page_header_keeps_the_file_path_and_the_entity_size(self):
+        """The other half of the ruling: stripping the path or the size is
+        over-stripping, and this is what catches it."""
+        headers = self._headers()
+        self.assertTrue(headers, "input precondition: the tree must contain entity pages")
+        for page, header in headers:
+            with self.subTest(page=page.name):
+                self.assertIn("pkg/thing.py", header)
+                self.assertRegex(header, r", \d+ lines\b")
 
 
 class DiscoveryTests(unittest.TestCase):

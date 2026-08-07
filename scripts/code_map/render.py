@@ -169,8 +169,19 @@ def mod_summary_of(mod):
 
 
 def loc(key, e):
-    """file:line, N lines. Supplement lines are 1-based already (D1 applied at load)."""
-    head = f"{mod_supp[modof(key)]['file']}:{e['line']}"
+    """file, N lines -- a page header carries no source position.
+
+    The line number is deliberately absent. It churned: a 3-line edit near the
+    top of a file shifts every entity below it, rewriting hundreds of unrelated
+    pages. The file path stays because it is not a position -- it changes only
+    when the file moves -- and the entity's own size stays because it changes
+    only that entity's own page, which is a page changing when its own subject
+    changed. `.code-map/statements.jsonl` already carries per-statement
+    {file, line, col} and is gitignored, so the positions remain available to
+    anything that needs them; they are simply not committed.
+
+    Supplement lines are 1-based already (D1 applied at load)."""
+    head = mod_supp[modof(key)]["file"]
     if e.get("end_line"):
         head += f", {e['end_line'] - e['line'] + 1} lines"
     return head
@@ -392,21 +403,17 @@ def run(root, artifacts, out):
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
-    npages = 0
     sizes = []
     for mod in MODULES:
         d = out / mod
         d.mkdir(exist_ok=True)
         (d / "INDEX.md").write_text(module_index(mod), encoding="utf-8", newline="\n")
-        npages += 1
 
         def emit(key):
-            nonlocal npages
             page = entity_page(key, mod)
             (d / (key.split(":", 1)[1] + ".md")).write_text(
                 page, encoding="utf-8", newline="\n")
             sizes.append((page.count("\n"), key))
-            npages += 1
             for _, kid in children.get(key, []):
                 emit(kid)
 
@@ -414,10 +421,19 @@ def run(root, artifacts, out):
             emit(k)
     (out / "INDEX.md").write_text(top_index(repo_name(root)),
                                   encoding="utf-8", newline="\n")
-    npages += 1
     # ids.jsonl: id -> symbol path. This repo carries no anchor comments yet, so
     # the file is empty by construction; it establishes the well-known location.
     (out / "ids.jsonl").write_text("", encoding="utf-8", newline="\n")
+
+    # Count the tree, not the writes. A per-write counter reports what the
+    # renderer TRIED to do, so two pages resolving to one path -- a name
+    # colliding with the module's own INDEX.md, or two names differing only by
+    # case on a case-insensitive filesystem -- reads as two pages while one
+    # file exists. Counting the files makes the number incapable of disagreeing
+    # with the tree it describes. Deduplicating resolved path strings would NOT
+    # do: two strings differing only by case are distinct strings and the same
+    # file.
+    npages = sum(1 for _ in out.rglob("*.md"))
 
     holes = sum(1 for k in ent_supp if not summary_of(k))
     sizes.sort(reverse=True)

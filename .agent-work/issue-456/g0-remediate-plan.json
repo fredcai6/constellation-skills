@@ -1,0 +1,291 @@
+{
+  "work_id": "issue-456-g0-remediate",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the remediation handoff .agent-work/issue-456/crew-handoffs/g0-remediate.md, and the code under change (scripts/code_map/render.py, tests/test_code_map.py). Verify the handoff is complete: task, intent, scope, exclusions, required evidence, test mode, stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew doctrine + handoff + target code loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff complete: task, intent, scope, exclusions (Verdict collision=tc17/g1; no position cache; keep path and N lines; D1 stays g3), evidence bar (RED+GREEN mutation proofs, before/after page figure, full-suite number), test mode test-first, stop conditions. Project delta CREW_CONTEXT.md line 19: use python NOT py -- py has no pytest and reads as a silently green run; confirmed by running both. Corrected my own plan's three check commands py->python before starting any gate."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "B1 - strip the :<line> position from rendered page headers",
+      "imperative": "Vertical slice 1. Write tests/test_code_map.py::test_no_rendered_page_carries_a_source_line_number first: build a synthetic repo into a temp tree, run the full pipeline, and assert no rendered .md matches a '.py:<digits>' position pattern. Assert the input precondition too - the tree must actually contain entity pages with a ', N lines' header, or the scan filters nothing and cannot fail. Run it against UNCHANGED render.py and observe RED; capture the real output; attest c1. Then remove the ':<line>' component from render.py loc() ONLY - KEEP the bare file path, KEEP ', N lines'. Do not remove the path. Do not touch the line base (D1 is g3's). Do not build a position cache.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the new position test written and observed FAILING against unchanged render.py, real output captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed against unchanged render.py: 3 offenders, e.g. ('map/pkg.thing/helper.md', 2, 'function, pkg/thing.py:12, 3 lines'); 1 failed, 1 passed. GREEN after removing the :<line>: 16 passed, 13 subtests. Over-strip guard also proved load-bearing: mutating loc() head to '' produced \"AssertionError: 'pkg/thing.py' not found in 'method, , 3 lines'\" on all 3 pages; probe removed, grep -c = 0, back to 16 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "no rendered page carries a .py:<line> position; the file path and ', N lines' survive; code_map tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "build into a temp tree, never the real map/",
+        "keep the file path and the ', N lines' count"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "B2 - make the render report's page count incapable of disagreeing with the tree",
+      "imperative": "Vertical slice 2. Write tests/test_code_map.py::test_render_report_page_count_equals_the_files_on_disk first. The fixture MUST force a real path collision, or the assertion is a check that cannot fail: a synthetic module carrying an entity whose page path collides with a page already written. Run against UNCHANGED render.py and observe RED; capture the real output; attest c1. Then change render.py run() so 'pages' counts distinct .md files actually present under the output tree, not write_text() calls. Do NOT fix the Verdict/verdict collision - that is tc17, assigned to g1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed; position stripping is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete: position stripping green, 16 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the new page-count test written and observed FAILING against unchanged render.py counting, real output captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED twice. (1) Natural RED against unchanged render.py: 'AssertionError: 5 != 4' -- report pages=5, tree holds 4 .md files; 1 failed, 16 deselected. (2) Explicit port-back of the write-call counter (npages = 1 + len(MODULES) + len(sizes), byte-identical in result to the old per-write increments): same 'AssertionError: 5 != 4'; 1 failed, 16 passed. Mutation asserted applied by grep -n before each run and grep -c = 0 after removal. GREEN both times after restoring the tree count: 17 passed, 13 subtests."
+        },
+        {
+          "id": "c2",
+          "statement": "render_report.json 'pages' equals the .md files on disk even when pages collide; code_map tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "no timings in the run report",
+        "do not fix the Verdict/verdict collision"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3": {
+      "id": "m3",
+      "title": "Verify at the boundary - full suite plus the real-repo page figure",
+      "imperative": "Run the full suite with PYTHONIOENCODING cleared and --color=no; it must match or beat 1706 passed, 2 skipped, 0 failed. Then render the REAL repo's artifacts into a TEMP output tree (copy the artifacts too, so .code-map/render_report.json is not disturbed) and record the before/after 'pages' figure against the on-disk .md count. Attest c2 with both figures.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 and m2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 and m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green at the boundary",
+          "check": {
+            "kind": "command",
+            "command": "unset PYTHONIOENCODING && python -m pytest tests -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-1"
+        },
+        {
+          "id": "c2",
+          "statement": "real-repo render into a temp tree: 'pages' before and after recorded against the on-disk .md count; the real map/ and .code-map/ untouched",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Real artifacts rendered into a temp tree (statements.jsonl + supplement.json copied, so .code-map was never written). BEFORE: .code-map/render_report.json pages=3636 vs 3635 .md under the real map/ -- disagreed by 1. AFTER: report pages=3635, temp tree .md=3635, agree=True; the write-call count would have been 1+112+3523=3636. The Verdict page is still lost, as required (tc17, g1's). Real map/ and .code-map/ verified untouched: report still reads 3636, tree still 3635, git status shows only render.py and tests/test_code_map.py modified. B1 over the real corpus: 0 of 3522 entity-page headers carry a .py:<line>; 3522 kept the file path; 3522 kept ', N lines'."
+        }
+      ],
+      "constraints": [
+        "do not disturb the real map/ or .code-map/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset PYTHONIOENCODING && python -m pytest tests -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4": {
+      "id": "m4",
+      "title": "Commit with explicit paths and write IMPLEMENTER_RESULT",
+      "imperative": "Stage ONLY the explicit paths changed - never `git add -A`, because the untracked 3,635-page map/ tree is staged at gate gs. Commit. Then write .agent-work/issue-456/crew-handoffs/g0-remediate-RESULT.md from the IMPLEMENTER_RESULT template: file:line changes, both mutation proofs with real RED and GREEN output, the before/after page figure against the on-disk count, the full-suite number, out-of-scope findings, and Workflow Feedback. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "verification complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete: full suite green, real-repo figure recorded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "committed with explicit paths (no map/ tree staged) and IMPLEMENTER_RESULT written",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/issue-456/crew-handoffs/g0-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "never git add -A",
+        "explicit paths only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g0-remediate-impl-1",
+    "status": "active",
+    "claimed_at": "2026-08-07T22:46:26.484084+00:00",
+    "last_heartbeat": "2026-08-07T23:08:47.747354+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Two blockers, both in scripts/code_map/render.py. B1: loc() line 173 builds 'file:line' and is the ONLY position emitter -- render.py:306 (module index) already emits 'file, N lines' with no line number, so the handoff's claim that 306 does the same is wrong and 306 needs no change. loc() has exactly one call site, entity_page line 262. B2: run() lines 395-417 increments npages per write_text call. Key realisation: a set of distinct resolved path STRINGS would NOT fix this repo's real divergence, because Verdict.md vs verdict.md are distinct strings that collide only on a case-insensitive filesystem -- so pages must be counted from the files actually on disk. Test fixtures must force a collision or the assertion cannot fail; a class named INDEX collides with the module's own INDEX.md by exact path, which diverges on every platform, unlike the case collision which is invisible on Linux.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:47:54.397558+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "B1 landed at render.py loc() (now lines 171-188). One line of behaviour: head is the bare file path, no ':<line>'. The ', N lines' suffix and the path both survive, and a second test enforces that -- proved by mutating head to '' and watching it fail on all 3 pages. render.py:306, which the handoff said also emits a position, does NOT: it already emits 'file, N lines'. loc() has exactly one caller (entity_page). The stripped line number is not lost, only uncommitted: .code-map/statements.jsonl already carries per-statement {file,line,col} and is gitignored, so no new cache was needed or built.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:49:52.297938+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "B2 landed at render.py run(): the npages counter is gone from the write loop entirely and 'pages' is now sum(1 for _ in out.rglob('*.md')) at render.py:436 -- read off the tree, so it cannot disagree with the tree. Rejected the obvious alternative of deduplicating resolved path strings: Verdict.md and verdict.md are distinct strings and one file, so a set would still have reported 3636. The fixture had to force a collision or the assertion could not fail, and it uses a class named INDEX colliding with its own module's INDEX.md -- an exact-path collision that diverges on EVERY platform, unlike the real repo's case collision which is invisible on Linux. Out of scope but noted: 'entity_pages' in the same report still counts emit() calls and carries the identical defect.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:51:50.528280+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "Boundary verified. Full suite 1709 passed / 2 skipped / 0 failed with PYTHONIOENCODING cleared -- exactly the 1706/2/0 baseline plus the 3 tests this pass adds. Real-repo figure moved 3636 -> 3635 against an unchanged on-disk 3635, with the Verdict page still lost, which is the stated correct outcome. One finding the handoff did not anticipate: a blunt position scan of the real tree still returns 2 hits, both from ONE authored docstring in tests/test_checklist_engine.py that names scripts/checklist_engine.py:449 in its own prose (echoed onto the entity page and its module index line). That is copied source text, not a renderer-emitted position, and it churns only when its own docstring changes -- but a reviewer grepping the committed map/ at gs will hit it, so it is recorded in the test docstring and reported up.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:08:33.969299+00:00"
+    }
+  ]
+}
