@@ -780,6 +780,15 @@ def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
         return bool(cond.get("satisfied"))
     kind = chk.get("kind")
     if kind == "command":
+        # ISSUE #454, corner case NOT chased (deliberate): the engine's own verdict
+        # here is returncode-only, and an exit code carries no ANSI, so this site is
+        # immune to the forced-colour defect that broke the mutation floor. What is
+        # NOT immune is an author who writes a check that pipes a colour-capable
+        # tool into a text matcher (`pytest ... | grep -c passed`): under the
+        # harness's FORCE_COLOR=3 that grep runs against escape-laden text inside
+        # the shell, where this engine cannot see it. No shipped template does this,
+        # so nothing is fixed here. If check text ever starts parsing tool output,
+        # the check itself must clear FORCE_COLOR / pass --color=no.
         proc, shell_marker = _run_check_command(chk["command"])
         cond["satisfied"] = proc.returncode == 0
         eid = _new_evidence_id(t)

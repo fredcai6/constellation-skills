@@ -136,6 +136,37 @@ class CliDriftHintTests(unittest.TestCase):
         self.assertIsNone(RC.cli_drift_hint("Traceback (most recent call last):\nRuntimeError: crew died\n"))
         self.assertIsNone(RC.cli_drift_hint(""))
 
+    # -- ISSUE #454 regression guard ------------------------------------------
+    # The harness exports FORCE_COLOR=3, so the agent CLI colourizes even into the
+    # captured stderr file this reads. Every drift marker is a two-word phrase, so
+    # one escape between the words silences the hint entirely.
+
+    def test_a_colourized_drift_line_still_yields_the_hint(self):
+        hint = RC.cli_drift_hint("\x1b[31merror\x1b[0m: \x1b[1munknown\x1b[0m option '--session'\n")
+        self.assertIsNotNone(
+            hint,
+            "#454 REGRESSION: a colourized flag-drift line produced no hint, so plain "
+            "CLI drift would read as an unexplained crew failure.",
+        )
+        self.assertIn("--backend external", hint)
+
+    def test_the_quoted_line_in_the_hint_is_plain_text(self):
+        """A hint that echoes escape bytes back at a human is half a hint.
+
+        The hint interpolates `line.strip()!r`, so an uncleaned escape arrives in
+        the message as the four visible characters `\\x1b` -- which is why this
+        asserts on that literal rather than on the ESC byte, whose repr would
+        never survive to be found.
+        """
+        hint = RC.cli_drift_hint("\x1b[31munrecognized arguments: --role\x1b[0m\n")
+        self.assertIsNotNone(hint)
+        self.assertNotIn("\\x1b", hint, "#454 REGRESSION: escape junk reached the human-facing hint.")
+        self.assertIn("'unrecognized arguments: --role'", hint)
+
+    def test_colour_stripping_does_not_invent_drift(self):
+        """The guard must not have been bought by making the sniff trigger-happy."""
+        self.assertIsNone(RC.cli_drift_hint("\x1b[31mRuntimeError: crew died\x1b[0m\n"))
+
 
 class LaunchTests(unittest.TestCase):
     def test_missing_handoff_is_refused(self):

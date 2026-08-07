@@ -37,6 +37,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -318,10 +319,33 @@ def run_check(script_path, run_dir, *, is_answer: bool = False) -> CheckResult:
 # --------------------------------------------------------------------------- #
 # is_infra_marker / classify_run — PURE infra-fence + pass/fail classification
 # --------------------------------------------------------------------------- #
+# ISSUE #454. Every marker above is a MULTI-WORD phrase matched by substring, and
+# the text being matched is a colour-capable CLI's captured stderr/transcript. If
+# the child colourizes -- and it will, because the Claude Code harness exports
+# FORCE_COLOR=3, which forces colour even into a captured pipe -- an escape lands
+# between the words ("\x1b[31musage\x1b[0m limit") and the phrase stops matching.
+# The consequence is silent and it is the dangerous direction: the infra fence
+# would not fire, and a run that was only rate-limited would be recorded as a real
+# FAIL against a good corpus. Normalise to plain text before matching, at the two
+# pure predicates -- the single funnel for BOTH the stderr tail and the transcript.
+#
+# DECLINED, deliberately (scope): the child environment is NOT altered here.
+# Setting NO_COLOR on the spawned agent CLI would fix this at the source too, but
+# that is a production-behavior change to what a live eval run launches, which is
+# the Admiral's call, not this fix's. Stripping at the parse site closes the defect
+# without touching what the child does. Floated up with #454.
+_ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+
+
+def strip_ansi(text) -> str:
+    """Captured output as plain text. PURE. See the #454 note above."""
+    return _ANSI_RE.sub("", text or "")
+
+
 def is_infra_marker(text) -> bool:
     """Whether `text` carries a transient-environment marker (usage/rate limit,
     quota, overloaded, 429). PURE. A hit fences the run as inconclusive."""
-    low = (text or "").lower()
+    low = strip_ansi(text).lower()
     return any(marker in low for marker in INFRA_MARKERS)
 
 
@@ -329,7 +353,7 @@ def is_permission_denial(text) -> bool:
     """Whether `text` carries a permission-sandbox refusal marker (issue #115 tc3).
     PURE. A hit is only load-bearing when the workspace was ALSO left byte-unchanged
     (see classify_run), so it can never mis-fence a run that legitimately did work."""
-    low = (text or "").lower()
+    low = strip_ansi(text).lower()
     return any(marker in low for marker in PERMISSION_MARKERS)
 
 
