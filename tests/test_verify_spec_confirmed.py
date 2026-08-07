@@ -233,19 +233,26 @@ class ReviewPhaseIsPassableByAConformantDraft(unittest.TestCase):
 class ConfirmPhaseRegressionOnALiveSpec(unittest.TestCase):
     """The #428 fix must not move the confirm gate at all.
 
-    `.agent-work/epic-418/spec-revision/REVISED_SPEC.md` is a real spec confirmed
-    through `--phase confirm` (exit 0) on 2026-08-07, used here as the regression
-    fixture. `.agent-work` is untracked local state, so skip when absent.
+    The epic-418 `REVISED_SPEC.md` is a real spec confirmed through
+    `--phase confirm` (exit 0) on 2026-08-07, used here as the regression fixture.
+
+    It is located by glob, not by a hardcoded work-area path. The path was
+    hardcoded to `.agent-work/epic-418/spec-revision/` until the epic-418 relaunch
+    archived that run and moved the spec to `.agent-work/epic-418-redux/`; both
+    tests then skipped, and the skip guard — correctly — refused the build. A
+    work-area path is not a stable address: work areas get archived, and a fixture
+    that skips when its file moves is a test that disarms itself exactly when
+    someone reorganizes around it.
     """
 
     def setUp(self):
         self.m = load()
 
     def _fixture(self):
-        path = ROOT / ".agent-work" / "epic-418" / "spec-revision" / "REVISED_SPEC.md"
-        if not path.is_file():
-            self.skipTest("epic-418 REVISED_SPEC.md not present in this checkout (untracked artifact)")
-        return path.read_text(encoding="utf-8")
+        matches = sorted((ROOT / ".agent-work").glob("*/spec-revision/REVISED_SPEC.md"))
+        if not matches:
+            self.skipTest("no epic REVISED_SPEC.md under .agent-work/*/spec-revision/")
+        return matches[0].read_text(encoding="utf-8")
 
     def test_live_revised_spec_still_passes_confirm(self):
         self.m.verify_spec_confirmed(self._fixture(), "confirm")  # no raise
