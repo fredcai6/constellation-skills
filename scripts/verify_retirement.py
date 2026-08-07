@@ -292,6 +292,21 @@ def normalize(line: str) -> str:
 
 
 def _leg_retired_path(root: Path, tracked: set[str]) -> list[Violation]:
+    """WHY THIS LEG ASKS THE INDEX AND NOT THE FILESYSTEM — the measurement, recorded at
+    the place that enforces it (#447 g4).
+
+    The retirement untracks with `git rm --cached` and deliberately leaves both files in
+    the working tree. That is not a preference; it was measured. `scripts/agent_work_root.py`
+    (`durable_root()`, lines 136-140) redirects the durable root to the WORKTREE whenever an
+    active Admiral epic lease exists, and epic #418 held one while this retirement ran — so
+    the retiring run's OWN `feedback`/`archive` closeout gate read the copy of
+    `.agent-work/AGENT_FEEDBACK.md` sitting in its own worktree. Deleting the working-tree
+    copy would have stranded that closeout, whose only two exits are recreating a retired
+    file — literally #308's failure shape, the one this whole guard exists to catch — or a
+    human override in a run with no reachable human.
+
+    Untracking removes the path from the INDEX, and the index is what "shipped" means. The
+    on-disk copies survive the run and die with the worktree, which is the whole design."""
     return [
         Violation(
             LEG_RETIRED_PATH,

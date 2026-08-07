@@ -32,8 +32,9 @@ def load_stage_feedback():
     return _load("stage_feedback", "scripts/stage_feedback.py")
 
 
-def load_verify_agent_feedback():
-    return _load("verify_agent_feedback", "scripts/verify_agent_feedback.py")
+# PRUNED (#447 g4): load_verify_agent_feedback() loaded scripts/verify_agent_feedback.py,
+# which this retirement deleted. Its only callers were the four tests of
+# VerifyAgentFeedbackAcceptsStagedOutputTests, pruned with it at the foot of this file.
 
 
 class StageFeedbackTests(unittest.TestCase):
@@ -178,82 +179,14 @@ class StageFeedbackTests(unittest.TestCase):
                 )
 
 
-class VerifyAgentFeedbackAcceptsStagedOutputTests(unittest.TestCase):
-    """The whole point of the script: what it writes must pass
-    `verify_agent_feedback.py --phase feedback` and `--phase archive`, exactly
-    as a fenced Commander will invoke it, without any hand-patching."""
-
-    def _stage(self, root: Path, work_id: str = "issue-154"):
-        sf = load_stage_feedback()
-        return sf.stage_feedback(
-            root,
-            work_id,
-            feedback_body=SAMPLE_BODY,
-            launch_order="launch-orders/W2-154-init-placeholder.md",
-            ownership="scripts/init_work_area.py, scripts/stage_feedback.py, tests/",
-            return_shape="stage the fenced trio; dogfood stage_feedback.py",
-            entry_date="2026-07-19",
-        )
-
-    def test_phase_feedback_passes_against_staged_output(self):
-        va = load_verify_agent_feedback()
-        with tempfile.TemporaryDirectory() as d:
-            root = Path(d)
-            self._stage(root, "issue-154")
-            # No durable AGENT_FEEDBACK.md exists at all in this bare tempdir; the
-            # FENCE.md marker must route verification onto the staged-trio branch
-            # rather than failing for a missing durable log.
-            va.verify_agent_feedback(root, "issue-154", "feedback", durable=root)
-
-    def test_phase_archive_passes_when_work_area_already_swept(self):
-        va = load_verify_agent_feedback()
-        with tempfile.TemporaryDirectory() as d:
-            root = Path(d)
-            self._stage(root, "issue-154")
-            # Archive-phase negative checks additionally require the work area to be
-            # gone and an archived run package to exist -- unrelated to the staged
-            # trio itself, but part of the same gate.
-            archived = root / ".agent-work" / "archive" / "2026-07-19-issue-154"
-            archived.mkdir(parents=True)
-            (archived / "spine.json").write_text("{}", encoding="utf-8")
-            va.verify_agent_feedback(root, "issue-154", "archive", durable=root)
-
-    def test_missing_member_of_trio_still_fails(self):
-        # A FENCE.md citation without the complete trio must still fail the gate --
-        # learning cannot be silently dropped by staging only the fence.
-        va = load_verify_agent_feedback()
-        with tempfile.TemporaryDirectory() as d:
-            root = Path(d)
-            staged = self._stage(root, "issue-154")
-            (staged / "lessons-delta.json").unlink()
-            with self.assertRaises(va.FeedbackVerificationError) as ctx:
-                va.verify_agent_feedback(root, "issue-154", "feedback", durable=root)
-            self.assertIn("lessons-delta.json", str(ctx.exception))
-
-    def test_boilerplate_only_feedback_body_still_fails(self):
-        # A feedback body whose signal sections are all bare "none" must still
-        # trip the content-free rejection -- stage_feedback.py does not launder
-        # boilerplate past the gate.
-        sf = load_stage_feedback()
-        va = load_verify_agent_feedback()
-        with tempfile.TemporaryDirectory() as d:
-            root = Path(d)
-            boilerplate_body = (
-                "**Friction / unclear:**\n- none\n\n**Improvement signals:**\n- none\n"
-            )
-            sf.stage_feedback(
-                root,
-                "issue-154",
-                feedback_body=boilerplate_body,
-                launch_order="lo.md",
-                ownership="x",
-                return_shape="y",
-                entry_date="2026-07-19",
-            )
-            with self.assertRaises(va.FeedbackVerificationError) as ctx:
-                va.verify_agent_feedback(root, "issue-154", "feedback", durable=root)
-            self.assertIn("content-free", str(ctx.exception))
-
+# CLASS PRUNED (#447 g4): VerifyAgentFeedbackAcceptsStagedOutputTests and all four of its
+# tests -- test_phase_feedback_passes_against_staged_output,
+# test_phase_archive_passes_when_work_area_already_swept,
+# test_missing_member_of_trio_still_fails, test_boilerplate_only_feedback_body_still_fails.
+# Every one asserted that scripts/verify_agent_feedback.py accepts stage_feedback.py's
+# staged trio; this retirement deleted that verifier, so the whole class lost its subject
+# and became empty. stage_feedback.py itself is UNTOUCHED and still fully covered by the
+# classes above -- nothing in it broke, only the gate it used to be graded against is gone.
 
 if __name__ == "__main__":
     unittest.main()
