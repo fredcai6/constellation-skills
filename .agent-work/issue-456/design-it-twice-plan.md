@@ -58,8 +58,28 @@ the fan-out rather than waiting on it:
 
 ## Output — a recommendation, never a menu
 
-`<filled at convergence: the opinionated pick or named hybrid, plus the
-axis-by-axis reason it won>`
+**Status: the panel was RUN but has not DELIVERED.** All three candidates were
+dispatched under their named constraints and were sent two rounds of corrections
+mid-flight (the corpus baseline, and the retraction of the collision figures).
+None has returned a candidate. This is recorded as a fact rather than smoothed
+over: the mechanism fired, the deliverable did not arrive.
+
+What that costs, stated plainly: the comparison — which *is* the deliverable of
+this contract — did not happen across three independently-generated candidates.
+It happened instead between the Commander's own draft and a **cold plan critic**
+that did return, in full, with 15 findings of which 4 were blocking and several
+were verified against the repo rather than asserted. That is a real adversarial
+pass, but it is a critique of one candidate, not a comparison of three.
+
+**The recommendation carried to the approval checkpoint is therefore Shape B**
+(see `plan-shape-options.md`), on one axis: it is the only shape in which g1's
+checks stay falsifiable through the end of the run. That recommendation comes
+from the critic's F1 plus the Commander's own verification, not from a
+three-way convergence.
+
+**The human should know the panel arm is missing when weighing it**, and may
+reasonably choose to re-run the panel before freezing. If the candidates land
+late they will be folded in and this section updated rather than left stale.
 
 ## Untaken-road record — loud skips
 
