@@ -36,10 +36,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "Full map BUILT: 1,224 files (1 BOM parse failure), 515,678 statements, 14,998 entities, 16,222 pages, 38s cold rebuild, deterministic (double-build diff clean), ASCII-clean templates, ids.jsonl established empty. Entry-point page verified: split_half_boundary_drift referenced-by = 3 sites / 3 modules, matches independent AST scan. DEFECT FIXED (D4): function-scoped imports dropped edges to local \u2014 2,046 calls/reads lost across 315 files, including the trial's own entry-point call from pipeline.py; fixed in x13 copy. DEFECTS NAMED NOT FIXED: D2 contains-symbol truncates nesting chain (251 entities, 87 colliding definition sites \u2014 store cannot distinguish them; renderer joins on file+line, 14,998/14,998 resolved); D3 wrapped docstring summary renders split (cosmetic, inherited from x11). Resolution 9.26pct unresolved vs 7.55 on the slice (gentle at 180x; 95pct of it dispatch-unknown-base). SCALE FINDINGS: tests hold 61pct of entities and 85pct of test pages carry 'referenced by: none' (true but useless \u2014 a noise class needing a rendering policy); src orphan rate 13pct is now REAL signal (window closed); top INDEX at 1,233 lines is NOT a routing surface \u2014 needs a second grouping level; entity pages hold their size at scale (median 15 lines, p90 25).",
       "evidence": [],
       "rework_count": 0
     },
