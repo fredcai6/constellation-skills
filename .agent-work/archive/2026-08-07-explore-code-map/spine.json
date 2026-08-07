@@ -276,7 +276,8 @@
           "id": "p1",
           "statement": "critical review complete (every finding dispositioned)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review step complete: 3-lens cold panel run, 26 findings in the spec's structured table, every Disposition cell filled, verify_spec_confirmed.py --phase review passes. All EDIT dispositions applied to the design before asking for confirmation."
         }
       ],
       "postconditions": [
@@ -287,7 +288,8 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-confirm-1"
         },
         {
           "id": "c2",
@@ -296,17 +298,43 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/verify_spec_confirmed.py explore-code-map"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-confirm-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-confirm-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "confirmed",
+            "who": "Tommy",
+            "date": "2026-08-07",
+            "quote": "confirmed. im hoping this is a single issue, not an epic. id like this to be run as a single commander",
+            "cut_shape": "one issue, one commander"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-confirm-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-explorer/scripts/verify_spec_confirmed.py explore-code-map",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "route": {
@@ -318,7 +346,8 @@
           "id": "p1",
           "statement": "spec confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "confirm step complete: Confirmation block filled (Status CONFIRMED, Tommy, 2026-08-07), assumptions exercised and accepted-untested both recorded, all 26 dispositions filled; verify_spec_confirmed.py --phase confirm passes; human decision recorded as e-confirm-1 including the cut shape ruling (one issue, one Commander, not an epic)."
         }
       ],
       "postconditions": [
@@ -326,13 +355,14 @@
           "id": "c1",
           "statement": "confirmed spec routed (handed off / shaped-design issue filed / shelved with UNCONFIRMED header); work area archived; engine lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "ROUTED as ONE issue per the human's ruling (not an epic): constellation-skills #456 'Productionize the derived code map: pipeline, page format, and the skills that consume it' \u2014 https://github.com/fredcai6/constellation-skills/issues/456, labels enhancement + theme:checks-that-cannot-fail. The issue carries the operative spec inline: the point with its honest scoping, the prototype-as-reference-implementation table with measured numbers, a 9-gate suggested plan in the critic-reordered sequence (check-stage-that-can-fail and D2 first), the rulings that constrain the build, the falsifier table with the 3x churn ceiling and the control-arm consumption criterion, the human-signed accepted-untested list, and provenance. Branch worktree-explore-code-map PUSHED to origin so every referenced artifact resolves from GitHub; a follow-up comment tells the Commander to branch from origin/main and lift the prototype rather than work in place. ARCHIVED to .agent-work/archive/2026-08-07-explore-code-map/: DESIGN_SPEC.md, IDEAS_BOARD.md, cycle-1..4.json, excursions/ (15 excursion briefs+results plus the 3 critic panels). Working artifacts (spine, journals, registry, evidence trees) stay in place for the lease release, which is the last action."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -343,16 +373,17 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 8,
+  "refusals": 10,
   "engine_session": {
     "session_id": "explore-code-map",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-05T22:26:12.939354+00:00",
-    "last_heartbeat": "2026-08-07T17:14:25.061985+00:00",
+    "last_heartbeat": "2026-08-07T17:21:11.674276+00:00",
     "claimed_by": "explorer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-07T17:21:18.530605+00:00"
   },
   "why_trail": [
     {
@@ -389,6 +420,20 @@
       "why": "The panel earned its cost: one real defect found three ways (the check stage asserts nothing, so no regression can go red), one live data bug (D2 merges caller sets today, corrupting the exact line the trial nearly shipped a bug on), and a genuine unspecified choice (which representation is committed). It also cut machinery with no consumer yet \u2014 the redirect table, the tombstone build, the coverage report. Nothing needed re-exploration: the design held, its claims did not, and they are now narrowed to what the evidence carries. All 26 dispositions recorded as agent recommendations; the human's own sign-off remains required at confirm.",
       "mechanical": false,
       "ts": "2026-08-07T17:14:25.061985+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "confirm",
+      "why": "Human confirmed in person (e-confirm-1: 'confirmed. im hoping this is a single issue, not an epic. id like this to be run as a single commander'). Confirmation block filled with the assumptions actually exercised and, separately, the five accepted untested \u2014 consumption value across dispatches being the load-bearing one, which production answers faster than another cycle would. Cut shape is his ruling: one issue, one Commander, not an epic.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:18:25.046469+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "route",
+      "why": "Cut shape follows the human's ruling exactly: one issue, one Commander. The 9 build items are gates inside that issue rather than separate tickets, which is what a Commander run is for \u2014 and the critic panel's reordering is baked into the gate sequence so the check stage and the live D2 corruption land before anything builds on them. The spec ships inline in the issue rather than by reference alone, per the full-spec-in-issue lesson, with the branch pushed so the prototype and evidence resolve.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:21:11.674276+00:00"
     }
   ]
 }

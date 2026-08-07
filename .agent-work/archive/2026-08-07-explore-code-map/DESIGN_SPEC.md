@@ -1,16 +1,15 @@
 # Design Spec — the code map: a derived, agent-facing map of a codebase
 
 
-_Draft state. This spec has not passed the confirm gate._
-
 ## Confirmation
 
-- **Status: DRAFT — UNCONFIRMED — DO NOT CUT**
-- Confirmed by:
-- Date:
-- Critic findings dispositioned: NO
-- Assumptions exercised:
-- Assumptions accepted untested:
+- **Status: CONFIRMED**
+- Confirmed by: Tommy (Fred / fredcai6), repo owner
+- Date: 2026-08-07
+- Critic findings dispositioned: YES — all 26 (25 EDIT, 1 partial-accept; zero RE-EXPLORE), applied to the design before confirm
+- Assumptions exercised: extraction correctness (SCIP oracle, x7a/x7b); derivation cost at real-repo scale (38s cold, 1,224 files); determinism (double-build byte-identical); churn boundedness on a local edit (98 map lines vs 84 source lines); consumption on one real issue (f1Brainz #708, merged as e3d6b542); comment grammar first contact (6 authored tags); prior-art fit (x12)
+- Assumptions accepted untested: consumption value across many dispatches (one 5-page use trace only, no control arm — gated in Testing pathways); churn under a widely-referenced-symbol rename; authored-layer staleness detection (detector designed, unbuilt); non-Python languages; the mind-map interface end to end (zero anchor ids exist)
+- Cut shape: **ONE issue, one Commander** (human ruling 2026-08-07: "im hoping this is a single issue, not an epic. id like this to be run as a single commander")
 
 ## Intent
 
