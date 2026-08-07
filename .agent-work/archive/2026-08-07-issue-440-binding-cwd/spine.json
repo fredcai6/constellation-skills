@@ -531,7 +531,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -542,7 +543,8 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills-wt/epic418-a2-440/scripts/verify_agent_feedback.py issue-440-binding-cwd --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         },
         {
           "id": "c2",
@@ -551,17 +553,41 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills-wt/epic418-a2-440/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/epic418-a2-440/scripts/verify_agent_feedback.py issue-440-binding-cwd --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/epic418-a2-440/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -573,7 +599,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -662,12 +689,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 10,
+  "refusals": 12,
   "engine_session": {
     "session_id": "cmdr-440-binding-cwd",
     "status": "active",
     "claimed_at": "2026-08-06T08:10:18.656284+00:00",
-    "last_heartbeat": "2026-08-07T16:13:59.762081+00:00",
+    "last_heartbeat": "2026-08-07T16:19:52.667612+00:00",
     "claimed_by": "commander-delegated",
     "worktree": ".",
     "previous_session_id": null,
@@ -729,6 +756,13 @@
       "why": "Run summary written to RETURN.md before going idle, because an idle notification with no artifact reads as stalled rather than done. The summary is shaped around the two questions the launch order said it would check first, in that order: the fired trip with both arms and the reason the reading is the dispatched agent's rather than the parent's, and how I know the green is real given that the mechanism under repair is the same mechanism that makes an in-worktree validation lie. On the second, the strongest item in the return is not mine - the reviewer moved the engine script token out of the worktree entirely and the hook still resolved to the worktree, which kills the hand-injection hypothesis on evidence rather than on argument. I deliberately did not write this as an unconditionally clean return. Three things are surfaced rather than absorbed: the run crashed mid-g2 on an account weekly limit and was resumed on a durable lease, with the arms re-run unchanged rather than trimmed to fit under the limit; the launch order's recorded cbd9aee baseline of exit 0 cannot be reproduced, and the reason is a FORCE_COLOR false-red that affects every Commander dispatched into this repo, which is the Admiral's to fold into _COMMON.md; and #452 may need the gauge binding key shape changed, which is explicitly outside my latitude. I also flagged the one place I chose fix-now over the default triage route - closing the verifier hole that let it pass while the bug was present - so the Admiral can overturn it cheaply if he disagrees. Accepted in delegated mode by citing the launch order's Return Shape; no human is reachable and the Admiral ratifies at the epic return boundary.",
       "mechanical": false,
       "ts": "2026-08-07T16:13:59.762064+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Feedback is STAGED, not written to the shared logs, and that is the sanctioned fenced path rather than a dodge: the launch order names LESSONS.md and AGENT_FEEDBACK.md as the only merge conflict in all of wave 0 and asks me to stage, and my dispatch adds that a second Commander holds that surface concurrently with no commander-to-commander coordination permitted. The complete trio is present with a FENCE.md citing the authority, so nothing is dropped, and verify_agent_feedback.py exits 0. I validated the delta with --dry-run and deliberately did NOT apply it to this worktree's LESSONS.md, then pasted the dry-run output into FENCE.md so the Admiral is not asked to apply something unvalidated. The adjudication that mattered was what NOT to bank. The FORCE_COLOR false-red and the backtick-in---why hazard are both fully understood and fixable, so they went to an issue and to the feedback entry rather than into the playbook; a lesson is banked only when re-observation is what will clarify it. One add earned that bar - a dispatched subagent declining a protocol because of the prompt's own defensive reassurances - because n=1 cannot separate the specific phrasing from defensive framing generally, and those two have opposite remedies. The important op is the export. falsify-a-check-against-a-decoy-before-trusting-it recurred a third time and I exported it rather than confirming it again, because for a constellation lesson a confirm accrues debt rather than trust. It is worth reading rather than mechanically applying: the first two instances were gate postconditions written from the spine template, which is the discriminator that lesson's own bank-reason named and issue-419 already settled. This one was not from the template at all. It was a hand-written acceptance verifier, produced by a crew whose handoff stated the hazard twice in bold, which shipped its own five-mutation selftest and still left its central assertion unwritten - the check that would have caught the defect the run existed to fix. So the sharper upstream shape is that a decoy suite tests the checks you thought of and cannot surface the fact you never asserted, and the fix is to enumerate the load-bearing facts from the evidence schema first. The reviewer's Fowler pass reached the same place independently by flagging the undeclared schema as the mechanism behind five of the eight holes. No threshold-ripe lesson was left unpaid; --ripe reported none.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:19:13.852361+00:00"
     }
   ]
 }
