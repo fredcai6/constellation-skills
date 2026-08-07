@@ -326,6 +326,25 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-plan-3",
+          "type": "note",
+          "payload": {
+            "digest": "HANDOFF DIGEST (written as a note because of defect tc1: a hard context trip blocks advance, and advance --why is the ONLY verb that writes the digest a fresh agent cold-starts from -- so the brief goes stale exactly at handoff. Read THIS, not the DIGEST line, which still describes the context step). PLAN IS APPROVED AND COMPLETE: all six postconditions met. Tommy ruled both open questions. (1) Lock thresholds LATE -- Shape B: the baseline gate sits after the last render-changing gate, because thresholds committed early get edited whenever a later gate reddens them. His governing rule: a tripwire must be USEFUL -- it earns its place only if tripping means something is actually wrong, must not fire on ordinary healthy change, and must state what a human should DO when it fires. Few sharp, not many twitchy. (2) GENERATE AND COMMIT the map tree, owned by the final gate with the skills cherry-pick. KNOWN DEFICIENCY he named: most real connections here are in how skills are used, not in code; a pure AST pass cannot see them. Not now, not a blocker; do not overclaim coverage, do not widen scope. THE ONLY REMAINING ACTION ON plan IS THE ADVANCE ITSELF. Then: start execute at e0-context. Crews dispatch via scripts/run_crew.py --dispatch external --verify-result, after scripts/recover_crews.py issue-456 reports clean (it did). execute.json has 34 items across 11 gates and regenerates from gate-spec.json via gen_execute.py in seconds. Branch issue-456/code-map is pushed through 671e0a2, working tree clean. Push and full PR are pre-approved; MERGE TO MAIN IS NOT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-4",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "plan",
+            "why_ref": "e-plan-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -632,7 +651,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T19:58:02.019948+00:00",
+    "last_heartbeat": "2026-08-07T19:59:06.585491+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
