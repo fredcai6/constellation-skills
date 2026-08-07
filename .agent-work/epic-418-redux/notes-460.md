@@ -118,3 +118,68 @@ answer to, which it does by preserving the original verbatim in history, and g4 
 here is restate-vs-annotate, and the cold critic surfaced it and forced it onto the record, which
 is what a second plan candidate would have produced. Running a panel to rediscover the same fork
 was not worth the budget under the launch order's scope ruling. Recorded as skipped, not silent.
+
+## Execution log — commander-r418-460-b (second commander on this spine)
+
+Took over the lease at the `plan` seam after the first commander's context trip. Discharged
+its refresh-request by advancing `plan` (c3 attested against `LAUNCH_ORDER:Mission`, c6's
+`verify-frame` run by the engine), then entered `execute`.
+
+### g1 — the `restate-assertion` write path: DONE
+
+Shipped in `scripts/apply_episode_delta.py`: a fourth op kind taking `id`, `assertion`,
+`statement`, `history`. It replaces one assertion's statement and appends one history line
+carrying the **original verbatim**, built inside the writer from the parsed original so no
+caller-supplied field can reach the quoted text. Registered in `OP_KINDS` and at **both**
+dispatch sites (`apply_delta`, `_dry_run_log`), each now ending in `else: raise` — the
+cold critic's silent-`--dry-run`-skip defect, confirmed against the code and closed.
+
+`tests/test_episode_store.py`: 24 new tests.
+
+**Evidence in the Commander's own hands** (not taken from the crew):
+- `FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_episode_store.py` → `130 passed,
+  1 skipped, 50 subtests`, **EXIT=0**.
+- Crew-run full suite `1745 passed, 4 skipped, 677 subtests`, EXIT=0 (branch baseline was
+  1721/4/643; +24 passed is exactly the added tests).
+- Mutation probe M4 re-run by me: widen the field allowlist with `original` and prefer it
+  over the parsed statement → **pre-rework suite GREEN (exit 0), post-rework suite RED
+  (exit 1)**, source restored byte-for-byte. The guard on this gate can fail.
+
+Reviewer verdict **APPROVE**, load-bearing property verified by code reading *and* by
+experiment in an isolated tree copy.
+
+**Rework 1**, commanded after the APPROVE, on the reviewer's first triage candidate: the
+field allowlist was not test-pinned, so a later widening could silently reopen the
+evidence-destruction hole the op exists to close. Three tests added; the docstring's
+"unambiguous tail" overclaim corrected to state that the marker is not unique on the line
+and the original is the **last** occurrence.
+
+### Triage candidates logged this run (engine `flag-candidate`)
+
+- `tc1` — `apply_delta` and `_dry_run_log` carry two near-identical dispatch chains; a
+  `_dispatch_op` helper would make single-site registration unrepresentable rather than
+  merely guarded.
+- `tc2` — `_apply_amend_assertion` and `_apply_restate_assertion` share an identical
+  four-line prologue; extracting it would touch `amend-assertion`, which #460 has no
+  mandate over.
+- `tc3` — the engine's survey-mode `r6-fowler` postcondition ships a literal
+  `<fowler-pass-record-path>` placeholder and its imperative says to fill it in, but no
+  engine verb can: `amend` is refused on surveys, `attest` cannot satisfy a `command`
+  postcondition, and `record` refuses with "Do not edit the JSON — use the engine."
+  Belongs to **#433**, which owns `scripts/checklist_engine.py` this wave.
+
+### Second context trip, at the g1-integrate seam
+
+HARD trip at 153K against the calibrated 150K cap for `claude-opus-5` (gauge
+`fill_fraction` 0.153, observed fresh — not a stale reading from the predecessor). The
+engine refused `advance g1-integrate` and a `refresh-request` is filed on that gate
+(`e-g1-integrate-2`, `why_ref` `w-3` in `execute.json`).
+
+**What the successor does first:** `advance g1-integrate` (its `review-result` evidence is
+already attached with verdict APPROVE; its command postcondition re-runs the store tests).
+Then g2. The **g2 implementer handoff is already written** at
+`.agent-work/r418-460/crew-handoffs/g2-implement-handoff.md`.
+
+**One thing the successor needs that is not yet in a handoff:** g3 requires a `<pre-g2-sha>`
+— the commit that holds the 32 canon records *before* the rewrite — so the detector can be
+measured against the corpus as it was. The commit this note lands in is that sha.

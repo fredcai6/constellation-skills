@@ -1,0 +1,182 @@
+........F.....F...F..                       [100%]
+================================== FAILURES ===================================
+_ RestateAssertionTests.test_a_restate_under_dry_run_logs_the_op_and_writes_nothing _
+
+self = <test_episode_store.RestateAssertionTests testMethod=test_a_restate_under_dry_run_logs_the_op_and_writes_nothing>
+
+    def test_a_restate_under_dry_run_logs_the_op_and_writes_nothing(self):
+        """The defect this exists to prevent: apply_delta() and _dry_run_log() dispatch on
+        op kind through SEPARATE if/elif chains. Registering the op in only the first left
+        --dry-run silently skipping it -- no log line, no error, exit 0, and a cheerful
+        "DRY RUN — no write". A caller would read that as "your op is fine" when the op had
+        never been looked at, in the store's only write path."""
+        self._seed()
+        before = self._snapshot()
+    
+        rc, out = self._main({"work_id": "i1", "ops": [self._restate_op()]}, "--dry-run")
+    
+>       self.assertEqual(rc, 0)
+E       AssertionError: 1 != 0
+
+.agent-work\r418-460\g1-review\mutant\tests\test_episode_store.py:1058: AssertionError
+---------------------------- Captured stdout call -----------------------------
+created episode:governor-268-001
+---------------------------- Captured stderr call -----------------------------
+error: internal: op kind 'restate-assertion' is in OP_KINDS but has no branch in _dry_run_log() — an op must be registered at BOTH dispatch sites (apply_delta and _dry_run_log), or it is silently skipped at the one that missed it
+_ RestateAssertionTests.test_every_op_kind_is_dispatched_at_both_sites (kind='restate-assertion', site='_dry_run_log') _
+
+self = <test_episode_store.RestateAssertionTests testMethod=test_every_op_kind_is_dispatched_at_both_sites>
+
+    def test_every_op_kind_is_dispatched_at_both_sites(self):
+        """Define the guard by the consumer's own behaviour rather than a hand-kept list:
+        drive EVERY member of the shipped OP_KINDS through both dispatch chains and assert
+        none of them reaches the else. A future op added to OP_KINDS and wired into only
+        one chain fails here without anyone remembering to extend this test."""
+        minimal = {
+            "create": create_op(run="probe-run"),
+            "amend-assertion": {
+                "op": "amend-assertion",
+                "id": "governor-268-001",
+                "assertion": "a5",
+                "lifecycle-standing": "disputed",
+                "history": "probe",
+            },
+            "restate-assertion": self._restate_op(),
+            "retire": {"op": "retire", "id": "governor-268-001", "reason": "probe"},
+        }
+        # The list above is checked against the shipped tuple rather than trusted: an op
+        # added to OP_KINDS with no entry here fails right now, instead of this loop
+        # quietly probing three of four kinds.
+        self.assertEqual(sorted(minimal), sorted(self.m.OP_KINDS))
+    
+        probed = 0
+        for kind, op in minimal.items():
+            for site, call in (
+                ("apply_delta", self.m.apply_delta),
+                ("_dry_run_log", self.m._dry_run_log),
+            ):
+                with self.subTest(kind=kind, site=site):
+                    # A fresh store per probe so the ops cannot interfere with each other.
+                    with tempfile.TemporaryDirectory() as tmp:
+                        root = Path(tmp) / "episodes"
+                        self.m.ensure_store_layout(root)
+                        seed = create_op()
+                        seed["agent_supplied"]["workaround"]["statement"] = self.PRESCRIPTIVE
+                        self.m.apply_delta(root, {"work_id": "seed", "ops": [seed]})
+>                       log = call(root, {"work_id": "probe", "ops": [op]})
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.agent-work\r418-460\g1-review\mutant\tests\test_episode_store.py:1152: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = WindowsPath('C:/Users/fredc/AppData/Local/Temp/tmp8_4deajm/episodes')
+delta = {'ops': [{'assertion': 'a5', 'history': 'restated as an observation (issue #460, gate g2)', 'id': 'governor-268-001', 'op': 'restate-assertion', ...}], 'work_id': 'probe'}
+
+    def _dry_run_log(root: Path, delta: dict) -> list[str]:
+        """Validate and compute the write-plan, but never call commit().
+    
+        Runs the same store pre-flight as apply_delta() so a dry run answers about the store
+        that is really there — but never creates the layout, because a dry run writes
+        nothing at all, including a directory."""
+        work_id, ops = validate_delta(delta)
+        tx = _Transaction(root)
+        tx.known_ids()
+        log: list[str] = []
+        for op in ops:
+            kind = op["op"]
+            if kind == "create":
+                log.append(_apply_create(tx, op))
+            elif kind == "amend-assertion":
+                log.append(_apply_amend_assertion(tx, op))
+            elif kind == "retire":
+                log.append(_apply_retire(tx, op))
+            else:
+>               raise EpisodeDeltaError(_unhandled_op_kind_message(kind, "_dry_run_log"))
+E               apply_episode_delta.EpisodeDeltaError: internal: op kind 'restate-assertion' is in OP_KINDS but has no branch in _dry_run_log() — an op must be registered at BOTH dispatch sites (apply_delta and _dry_run_log), or it is silently skipped at the one that missed it
+
+.agent-work\r418-460\g1-review\mutant\scripts\apply_episode_delta.py:1435: EpisodeDeltaError
+____ RestateAssertionTests.test_every_op_kind_is_dispatched_at_both_sites _____
+
+self = <test_episode_store.RestateAssertionTests testMethod=test_every_op_kind_is_dispatched_at_both_sites>
+
+    def test_every_op_kind_is_dispatched_at_both_sites(self):
+        """Define the guard by the consumer's own behaviour rather than a hand-kept list:
+        drive EVERY member of the shipped OP_KINDS through both dispatch chains and assert
+        none of them reaches the else. A future op added to OP_KINDS and wired into only
+        one chain fails here without anyone remembering to extend this test."""
+        minimal = {
+            "create": create_op(run="probe-run"),
+            "amend-assertion": {
+                "op": "amend-assertion",
+                "id": "governor-268-001",
+                "assertion": "a5",
+                "lifecycle-standing": "disputed",
+                "history": "probe",
+            },
+            "restate-assertion": self._restate_op(),
+            "retire": {"op": "retire", "id": "governor-268-001", "reason": "probe"},
+        }
+        # The list above is checked against the shipped tuple rather than trusted: an op
+        # added to OP_KINDS with no entry here fails right now, instead of this loop
+        # quietly probing three of four kinds.
+        self.assertEqual(sorted(minimal), sorted(self.m.OP_KINDS))
+    
+        probed = 0
+        for kind, op in minimal.items():
+            for site, call in (
+                ("apply_delta", self.m.apply_delta),
+                ("_dry_run_log", self.m._dry_run_log),
+            ):
+                with self.subTest(kind=kind, site=site):
+                    # A fresh store per probe so the ops cannot interfere with each other.
+                    with tempfile.TemporaryDirectory() as tmp:
+                        root = Path(tmp) / "episodes"
+                        self.m.ensure_store_layout(root)
+                        seed = create_op()
+                        seed["agent_supplied"]["workaround"]["statement"] = self.PRESCRIPTIVE
+                        self.m.apply_delta(root, {"work_id": "seed", "ops": [seed]})
+                        log = call(root, {"work_id": "probe", "ops": [op]})
+                    self.assertTrue(
+                        [line for line in log if line != "DRY RUN — no write"],
+                        f"{kind} produced no log line at {site} — it was silently skipped",
+                    )
+                    probed += 1
+>       self.assertEqual(probed, 2 * len(self.m.OP_KINDS))
+E       AssertionError: 7 != 8
+
+.agent-work\r418-460\g1-review\mutant\tests\test_episode_store.py:1158: AssertionError
+---------------------------- Captured stdout call -----------------------------
+uuuuuuuu
+_ RestateAssertionTests.test_the_dry_run_log_line_matches_the_one_a_real_apply_emits _
+
+self = <test_episode_store.RestateAssertionTests testMethod=test_the_dry_run_log_line_matches_the_one_a_real_apply_emits>
+
+    def test_the_dry_run_log_line_matches_the_one_a_real_apply_emits(self):
+        # Otherwise a dry run could "log the op" with text no real apply would ever
+        # produce, and still read as registered.
+        self._seed()
+        _, dry = self._main({"work_id": "i1", "ops": [self._restate_op()]}, "--dry-run")
+        wet_rc, wet = self._main({"work_id": "i2", "ops": [self._restate_op()]})
+        self.assertEqual(wet_rc, 0)
+        dry_lines = [line for line in dry.splitlines() if line != "DRY RUN — no write"]
+>       self.assertEqual(dry_lines, wet.splitlines())
+E       AssertionError: Lists differ: [] != ['restated governor-268-001.a5']
+E       
+E       Second list contains 1 additional elements.
+E       First extra element 0:
+E       'restated governor-268-001.a5'
+E       
+E       - []
+E       + ['restated governor-268-001.a5']
+
+.agent-work\r418-460\g1-review\mutant\tests\test_episode_store.py:1071: AssertionError
+---------------------------- Captured stdout call -----------------------------
+created episode:governor-268-001
+---------------------------- Captured stderr call -----------------------------
+error: internal: op kind 'restate-assertion' is in OP_KINDS but has no branch in _dry_run_log() — an op must be registered at BOTH dispatch sites (apply_delta and _dry_run_log), or it is silently skipped at the one that missed it
+=========================== short test summary info ===========================
+FAILED .agent-work/r418-460/g1-review/mutant/tests/test_episode_store.py::RestateAssertionTests::test_a_restate_under_dry_run_logs_the_op_and_writes_nothing
+SUBFAILED(kind='restate-assertion', site='_dry_run_log') .agent-work/r418-460/g1-review/mutant/tests/test_episode_store.py::RestateAssertionTests::test_every_op_kind_is_dispatched_at_both_sites
+FAILED .agent-work/r418-460/g1-review/mutant/tests/test_episode_store.py::RestateAssertionTests::test_every_op_kind_is_dispatched_at_both_sites
+FAILED .agent-work/r418-460/g1-review/mutant/tests/test_episode_store.py::RestateAssertionTests::test_the_dry_run_log_line_matches_the_one_a_real_apply_emits
+4 failed, 18 passed, 107 deselected, 28 subtests passed in 1.41s

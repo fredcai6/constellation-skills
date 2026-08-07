@@ -269,7 +269,12 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-2",
+          "attested": {
+            "evidence": "e-plan-2",
+            "note": "delegated mode: plan approved against the frozen LO-460 Mission and scope; the one departure (add restate-assertion) is inside the order's Inherited Latitude and was ratified by the Admiral in this commander's dispatch"
+          }
         },
         {
           "id": "c4",
@@ -297,13 +302,14 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-4"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -338,6 +344,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-plan-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills-wt/r418-460 --work-id r418-460",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -351,7 +368,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "constellation-commander-delegated loaded and commander-core.md gate-execution + crew-dispatch doctrine read into this context; fresh commander with full headroom after the predecessor's context trip"
         },
         {
           "id": "p2",
@@ -360,7 +378,8 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py r418-460"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
         }
       ],
       "postconditions": [
@@ -402,11 +421,23 @@
         }
       },
       "child_checklist": "execute.json",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py r418-460",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -644,14 +675,14 @@
   "blockers": [],
   "refusals": 6,
   "engine_session": {
-    "session_id": "commander-r418-460",
+    "session_id": "commander-r418-460-b",
     "status": "active",
-    "claimed_at": "2026-08-07T21:37:14.892668+00:00",
-    "last_heartbeat": "2026-08-07T22:05:28.516898+00:00",
+    "claimed_at": "2026-08-07T22:35:04.179603+00:00",
+    "last_heartbeat": "2026-08-07T22:36:26.711819+00:00",
     "claimed_by": "commander",
     "worktree": ".",
-    "previous_session_id": "cmdr-460-a",
-    "takeover_reason": "align session id with spine imperative"
+    "previous_session_id": "commander-r418-460",
+    "takeover_reason": "predecessor commander-r418-460 tripped the context governor at the plan seam and filed a refresh-request (e-plan-3); this is its Admiral-dispatched replacement resuming the same spine"
   },
   "why_trail": [
     {
@@ -674,6 +705,13 @@
       "why": "The order's assumed baseline is false: amend-assertion cannot change statement text (writer :970/:1227), and EPISODE_STORE.md \u00a75 says records grow rather than get rewritten. Resolution under inherited latitude: add a restate-assertion op that replaces the statement and preserves the original verbatim in history.",
       "mechanical": false,
       "ts": "2026-08-07T21:40:44.302938+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "Plan frozen and approved under LO-460: four gates (add restate-assertion to the writer; restate the prescriptive records; ship a guard that can fail or an honest null; reconcile EPISODE_STORE.md). The order's assumption that amend-assertion could rewrite statement text is false, and the Admiral ratified the departure. Fresh commander resuming after the predecessor's context trip; the refresh-request at this seam is discharged by advancing it.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:35:28.864973+00:00"
     }
   ]
 }

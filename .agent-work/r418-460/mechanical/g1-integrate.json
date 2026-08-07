@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "mechanical": {
+    "run": "r418-460",
+    "project": "constellation-skills",
+    "spine-step": "g1-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-r418-460-g1-integrate@1c563642f9d1192ea5d2f69ba14f9e9641ca200e",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "r418-460",
+    "generated_at": "2026-08-07T23:45:17Z"
+  }
+}

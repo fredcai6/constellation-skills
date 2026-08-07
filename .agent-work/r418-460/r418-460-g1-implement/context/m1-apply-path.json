@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-apply-path",
+  "files": [],
+  "repo_rev": {
+    "commit": "48076441ced5b79c3f0bf9d69af97aa8024b4a25"
+  },
+  "run": {
+    "work_id": "r418-460-g1-implement",
+    "generated_at": "2026-08-07T22:48:26Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/r418-460",
+      "durable": "C:/Programs/constellation-skills-wt/r418-460"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/r418-460"
+    }
+  }
+}

@@ -28,7 +28,8 @@
           "id": "c1",
           "statement": "orchestrator context + store doctrine + mission frame loaded; plan intent and scope confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Read docs/agents/ORCHESTRATOR_CONTEXT.md 'The Retired Learning Playbook' (record-not-rule, no successor playbook, docs/agents promotion is the human's call), docs/EPISODE_STORE.md sections 3 and 5 (record grammar; per-field assertion addressability; the record grows), episodes/README.md (active/retired layout, only write path), and MISSION_FRAME.md. Frozen plan intent and scope confirmed: four gates, restate-assertion departure ratified."
         }
       ],
       "constraints": [
@@ -43,7 +44,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -59,7 +60,8 @@
           "id": "p1",
           "statement": "none -- first gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "none -- first gate; e0-context complete and the frozen plan's intent confirmed"
         }
       ],
       "postconditions": [
@@ -70,7 +72,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
         }
       ],
       "constraints": [
@@ -112,11 +115,24 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/r418-460/crew-handoffs/g1-implement-result.md",
+            "session": "constellation/r418-460/g1-implement/implementer/attempt-1",
+            "verified": "fresh",
+            "note": "restate-assertion shipped: OP_KINDS + validator + applier + writer-built history line, registered at both dispatch sites with else-raise at each; 21 new tests; suite 1742 passed 4 skipped exit 0; nine mutation probes each drive the new tests red; no unresolved blockers"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-review": {
@@ -128,7 +144,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g1",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1-implement complete; IMPLEMENTER_RESULT verified fresh by run_crew.py --verify-result"
         }
       ],
       "postconditions": [
@@ -139,7 +156,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
         }
       ],
       "constraints": [
@@ -157,11 +175,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/r418-460/crew-handoffs/g1-review-result.md",
+            "verdict": "APPROVE",
+            "session": "constellation/r418-460/g1-review/reviewer/attempt-1",
+            "verified": "fresh",
+            "note": "reviewer reproduced the suite (1742 passed, 4 skipped, exit 0), re-ran the mutations in an isolated tree copy, and confirmed the load-bearing property by code and by experiment: no caller-supplied field reaches the quoted-original text. Three non-blocking triage candidates returned."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-integrate": {
@@ -173,7 +205,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g1",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1-review complete, verdict APPROVE"
         }
       ],
       "postconditions": [
@@ -216,11 +249,34 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/r418-460/crew-handoffs/g1-review-result.md",
+            "note": "carried from g1-review (e-g1-review-1). Rework 1 landed after the reviewer's APPROVE and was verified by the Commander instead: the M4 probe re-run here shows the pre-rework suite GREEN under the widened-allowlist mutation and the post-rework suite RED, restored byte-for-byte; tests/test_episode_store.py 130 passed 1 skipped exit 0 in the Commander's own hands"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3",
+            "note": "HARD context trip at 153K against the calibrated 150K cap for claude-opus-5 (gauge fill_fraction 0.153, observed fresh). Second commander on this spine to trip at a gate seam. g1 is DONE and verified in the Commander's own hands -- reviewer APPROVE, Rework 1 mutation re-run by me (pre-rework GREEN, post-rework RED, source restored byte-for-byte), tests/test_episode_store.py 130 passed 1 skipped exit 0. Only the g1-integrate advance itself is outstanding; the successor re-runs it first. Gate handoffs for g2 are already written."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-implement": {
@@ -804,6 +860,45 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
-  "blockers": []
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "scripts/apply_episode_delta.py: apply_delta and _dry_run_log carry two near-identical op-dispatch chains. A _dispatch_op helper would make single-site registration unrepresentable rather than merely guarded by the else-raise this gate added. Out of scope for #460."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-implement",
+      "statement": "scripts/apply_episode_delta.py: _apply_amend_assertion and _apply_restate_assertion now share an identical four-line prologue differing only in the op name in the error message. Extracting a shared helper would touch amend-assertion's path, which #460 has no mandate over."
+    },
+    {
+      "id": "tc3",
+      "from": "g1-review",
+      "statement": "checklist_engine survey mode: the r6-fowler postcondition ships a literal <fowler-pass-record-path> placeholder and its imperative says to fill it in, but no engine verb can -- amend is refused on surveys, attest cannot satisfy a command postcondition, and record refuses with 'Do not edit the JSON -- use the engine.' The instruction and the refusal contradict each other. Belongs to issue #433, which owns scripts/checklist_engine.py this wave."
+    }
+  ],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution context loaded: the store's grammar, the only write path, and the doctrine that binds the rewrite. The restate-assertion departure answers EPISODE_STORE section 5 by preserving the original statement verbatim in the assertion's own history rather than destroying it.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:37:15.327022+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer returned a fresh, verified IMPLEMENTER_RESULT with no unresolved blockers. The two-dispatch-site defect the cold critic named was confirmed against the code and closed with an else-raise at both sites, and a mutation probe shows the new tests actually catch the single-site registration.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:17:00.863745+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Independent reviewer verdict APPROVE with the load-bearing property verified by code reading and by mutation, not taken on the implementer's word. Its first triage candidate -- the allowlist is not test-pinned, so a later widening could silently reopen the evidence-destruction hole -- is being closed by a bounded rework before integrate; the other two are logged as candidates.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:32:55.157733+00:00"
+    }
+  ]
 }
