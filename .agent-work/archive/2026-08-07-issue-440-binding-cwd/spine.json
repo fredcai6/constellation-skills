@@ -678,8 +678,13 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "PUSH AND PR WITHHELD BY THE DISPATCHING PRINCIPAL \u2014 c2 (branch pushed) and c2b (open PR) cannot be satisfied by this Commander. My dispatch states verbatim: 'Do NOT push, open a PR, or merge \u2014 that is the Admiral's step.' That is the most recent instruction from my reachable tier and it is unambiguous. _COMMON.md does pre-clear 'git push on epic-418/*' and 'gh pr create', so this is NOT a permission block and NOT the #145 environmental shape \u2014 the capability exists and I am declining to use it because my principal reserved it. Pushing a branch and opening a PR are outward-facing and effectively irreversible from my side, so the standing rule is to confirm rather than assume. I am recording this as a BLOCK rather than a waive: a waive would read as 'this did not need doing', and c2b's own text is right that a terminal spine without an open PR gets chased. The work IS reachable, just not yet as a ref: branch epic-418/a2-440-binding-cwd, HEAD 9dd21c9, 7 commits on top of cbd9aee, clean tree, full suite green (1723 passed, exit 0), RETURN.md at the worktree root.",
+        "authority_needed": "admiral",
+        "next_action": "Admiral: push epic-418/a2-440-binding-cwd and open the PR, declaring FINAL in the title \u2014 the run is complete and green, not partial. Body should draw on RETURN.md. Before merging, note that main has advanced to 4fbdf6e (to-issues -> to-initial-issues plus the replan skill) while this branch is based on cbd9aee; the dispatch said that gets handled at PR time, and this Commander did not rebase mid-gate. Also harvest .agent-work/staged-feedback/issue-440-binding-cwd/ into the shared logs \u2014 FENCE.md there lists the three steps and pastes the validated dry-run output. Two items need adjudication, both in RETURN.md section 7: the FORCE_COLOR false-red that invalidates the recorded cbd9aee baseline and affects every Commander dispatched into this repo (filed #454, belongs in _COMMON.md beside the py warning), and issue #452 whose fix may require changing the gauge binding key shape, which is outside Commander latitude.",
+        "prior_status": "pending"
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -688,13 +693,20 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
-  "refusals": 12,
+  "blockers": [
+    {
+      "item": "archive",
+      "blocker": "PUSH AND PR WITHHELD BY THE DISPATCHING PRINCIPAL \u2014 c2 (branch pushed) and c2b (open PR) cannot be satisfied by this Commander. My dispatch states verbatim: 'Do NOT push, open a PR, or merge \u2014 that is the Admiral's step.' That is the most recent instruction from my reachable tier and it is unambiguous. _COMMON.md does pre-clear 'git push on epic-418/*' and 'gh pr create', so this is NOT a permission block and NOT the #145 environmental shape \u2014 the capability exists and I am declining to use it because my principal reserved it. Pushing a branch and opening a PR are outward-facing and effectively irreversible from my side, so the standing rule is to confirm rather than assume. I am recording this as a BLOCK rather than a waive: a waive would read as 'this did not need doing', and c2b's own text is right that a terminal spine without an open PR gets chased. The work IS reachable, just not yet as a ref: branch epic-418/a2-440-binding-cwd, HEAD 9dd21c9, 7 commits on top of cbd9aee, clean tree, full suite green (1723 passed, exit 0), RETURN.md at the worktree root.",
+      "authority_needed": "admiral",
+      "next_action": "Admiral: push epic-418/a2-440-binding-cwd and open the PR, declaring FINAL in the title \u2014 the run is complete and green, not partial. Body should draw on RETURN.md. Before merging, note that main has advanced to 4fbdf6e (to-issues -> to-initial-issues plus the replan skill) while this branch is based on cbd9aee; the dispatch said that gets handled at PR time, and this Commander did not rebase mid-gate. Also harvest .agent-work/staged-feedback/issue-440-binding-cwd/ into the shared logs \u2014 FENCE.md there lists the three steps and pastes the validated dry-run output. Two items need adjudication, both in RETURN.md section 7: the FORCE_COLOR false-red that invalidates the recorded cbd9aee baseline and affects every Commander dispatched into this repo (filed #454, belongs in _COMMON.md beside the py warning), and issue #452 whose fix may require changing the gauge binding key shape, which is outside Commander latitude."
+    }
+  ],
+  "refusals": 13,
   "engine_session": {
     "session_id": "cmdr-440-binding-cwd",
     "status": "active",
     "claimed_at": "2026-08-06T08:10:18.656284+00:00",
-    "last_heartbeat": "2026-08-07T16:19:52.667612+00:00",
+    "last_heartbeat": "2026-08-07T16:21:02.622811+00:00",
     "claimed_by": "commander-delegated",
     "worktree": ".",
     "previous_session_id": null,
