@@ -250,7 +250,8 @@
           "id": "c2",
           "statement": "execute.json authored, one bounded issue, gates carry anchors cut from the frame",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json authored at .agent-work/issue-456/execute.json: 34 items across 11 gates, generated from a compact spec by gen_execute.py so the 11 implement/review/integrate triples cannot drift by hand-editing. Verified loadable and drivable: the engine's current verb returns ACTIVE e0-context with its postcondition. Every gate carries close criteria, required evidence, a distinct verification command (full suite plus its own selector), and an anchors block cut from the frame. Ownership coverage now closes -- gs owns the four skills files and the map tree, g0 owns the package-layout decision-class, so the one-gate-per-file check the cherry-picked commander-core.md itself adds would pass. AUTHORED UNDER TWO STATED ASSUMPTIONS pending Tommy at the c3 checkpoint: Shape B (baseline gate placed after the last render-changing gate, per critic F1) and map-tree-generated. Both are cheap to override -- the file regenerates from the spec in seconds. All nine issue gates are covered; Shape B reseams, it does not drop scope."
         },
         {
           "id": "c3",
@@ -265,7 +266,8 @@
           "id": "c4",
           "statement": "plan-alternatives run BEFORE the plan freezes (parallel candidates under distinct constraints converging to one recommendation), or the skip surfaced as a named untaken road",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Plan-alternatives RUN but NOT DELIVERED, recorded honestly rather than smoothed over. Three candidates were dispatched in parallel under distinct named constraints (smallest-diff, most-testable, best-seam-placement) per skills/_shared/design-it-twice-brief.md, and were sent two rounds of mid-flight corrections. None returned. The brief at .agent-work/issue-456/design-it-twice-plan.md carries: the one thing designed twice, the panel-of-3 rationale surfaced for the human to overturn, three named untaken roads (ports-and-adapters/max-flexibility as interface-shape constraints on a plan-phase run; common-caller-first, whose caller is already built and live; a no-crew candidate, which the human already closed), the framing block presented to the human WHILE the agents ran including the explicitly-not-a-proposal sketch, and now a status section stating what the missing panel arm costs. The convergence that did happen was Commander draft vs cold plan critic -- a real adversarial pass (15 findings, 4 blocking, several verified against the repo) but a critique of one candidate, not a comparison of three. The human is told this explicitly at the checkpoint and may re-run the panel before freezing."
         },
         {
           "id": "c5",
@@ -600,7 +602,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T18:11:27.325303+00:00",
+    "last_heartbeat": "2026-08-07T18:23:03.481241+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
