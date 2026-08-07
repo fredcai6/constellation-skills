@@ -1,0 +1,83 @@
+{
+  "goal": "Settle the latitude contract for epic-418-redux: the relaunch of epic #418 against the REVISED_SPEC confirmed 2026-08-07, after waves 0 and 1 merged.",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "i0-context",
+      "kind": "fact",
+      "question": "What baseline governs this relaunch?",
+      "status": "resolved",
+      "resolution": "REVISED_SPEC.md (CONFIRMED 2026-08-07) is the spec of record; the predecessor epic-418 run's artifacts are the provenance. Tracker states verified directly rather than taken from the predecessor's state note.",
+      "code_evidence": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md; docs/agents/ORCHESTRATOR_CONTEXT.md; gh issue view on #419 #420 #422 #425 #440 #447",
+      "human_answer": ""
+    },
+    {
+      "id": "q1",
+      "kind": "fact",
+      "question": "What is the epic relaunch actually being asked to do, and under what appetite?",
+      "status": "resolved",
+      "resolution": "Finish epic #418's remaining course in dependency order B extended -> A2 -> F -> C -> E, plus off-chain #452/#458/#436. The spec deliberately withholds a wave plan and hands wave composition to the Admiral, with the iterative-planning flow as the between-wave revision mechanism. Appetite: rigor scales with cost-to-undo, not uniformly.",
+      "code_evidence": "REVISED_SPEC.md 'Execution order' (lines 771-802) and 'What the Admiral is not given' (lines 817-820); 'Appetite (Tommy, 2026-08-07)' (lines 83-91)",
+      "human_answer": ""
+    },
+    {
+      "id": "q2",
+      "kind": "decision",
+      "question": "Re-run install_constellation.py to sync the stale installed skill corpus before wave 1? It writes to the human's global ~/.claude/skills/.",
+      "status": "resolved",
+      "resolution": "Yes — sync before wave 1. Evidence that made it a correctness question rather than tidiness: 12 skills diverge between repo skills/ and the installed copies, 6 of them in SKILL.md itself, including commander-delegated (loaded by every Commander this epic dispatches) and workbench (the engine reference and spine templates). The installed Admiral closeout additionally calls apply_lessons_delta.py and verify_agent_feedback.py, both deleted by #447.",
+      "code_evidence": "",
+      "human_answer": "Tommy, 2026-08-07, in session: 'yup, agree all.' — confirming the recommendation to sync."
+    },
+    {
+      "id": "q3",
+      "kind": "decision",
+      "question": "What is wave 1's composition and width?",
+      "status": "resolved",
+      "resolution": "Wave 1 is B extended: #433 and #460 as full Commanders on Opus; #461, #464, #465 as implementer-with-plan dispatches on Sonnet. #436 (off-chain falsification debt) rides along as an optional sixth at the Admiral's discretion if the usage pool holds.",
+      "code_evidence": "",
+      "human_answer": "Tommy, 2026-08-07, in session: 'yup, agree all.' — confirming the proposed shape including #436 as the discretionary sixth."
+    },
+    {
+      "id": "q4",
+      "kind": "decision",
+      "question": "Checkpoint protocol: run ahead through wave boundaries reporting as I go, or stop and wait at each boundary?",
+      "status": "resolved",
+      "resolution": "Run ahead. At each boundary the Admiral writes the replan transition, presents a plain-English summary, and proceeds. It stops only for a surfaced decision class or on contract expiry.",
+      "code_evidence": "",
+      "human_answer": "Tommy, 2026-08-07, in session: 'yup, agree all.' — confirming run-ahead over stop-and-wait."
+    },
+    {
+      "id": "q5",
+      "kind": "decision",
+      "question": "When does this contract expire and force a refresh?",
+      "status": "resolved",
+      "resolution": "The wave-2 boundary (after the B-extended wave's PRs merge), or 72 hours, whichever comes first.",
+      "code_evidence": "",
+      "human_answer": "Tommy, 2026-08-07, in session: 'yup, agree all.' — confirming the proposed expiry."
+    },
+    {
+      "id": "q6",
+      "kind": "decision",
+      "question": "Two surfaced tracker actions: close #447 with evidence, and correct epic #418's body pointer to the spec's new path?",
+      "status": "resolved",
+      "resolution": "Both authorized. #447's core obligation is met (LESSONS.md, AGENT_FEEDBACK.md, apply_lessons_delta.py, verify_agent_feedback.py all gone; episodes/ ships 51 tracked files) with its four carried findings tracked independently as #460 #461 #464 #465. #418's body pointer is corrected to .agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md.",
+      "code_evidence": "",
+      "human_answer": "Tommy, 2026-08-07, in session: 'yup, agree all.' — authorizing both tracker actions, which are 'surfaced' by decision class."
+    },
+    {
+      "id": "q7",
+      "kind": "decision",
+      "question": "May the Admiral commit directly to main to keep the tree clean, given the harness default is to commit only when asked?",
+      "status": "resolved",
+      "resolution": "Yes — commit as needed for workbench hygiene. This matches docs/agents/ORCHESTRATOR_CONTEXT.md ('Local commits: allowed') and the predecessor run's own practice. Pushes and merges to main still require explicit approval per that same overlay.",
+      "code_evidence": "",
+      "human_answer": "Tommy, 2026-08-07, in session: 'you can commit as needed to keep things clean.'"
+    }
+  ],
+  "signoff": {
+    "by": "Tommy",
+    "statement": "'yup, agree all. you can commit as needed to keep things clean.' — 2026-08-07, in session, in response to the five open decisions presented verbatim alongside the drafted LATITUDE_CONTRACT.md. Explicit confirmation that questioning is complete and the contract as drafted is the shared understanding."
+  },
+  "consolidated": false
+}

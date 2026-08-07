@@ -1,0 +1,1442 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="docent-map-stamp" content="a28c107b2fe8be081ece13accf7280406c2e81e1f08c16d58ea28fa455137cd9">
+<meta name="docent-generated" content="2026-07-07">
+<title>Decisions — F1Brainz Explainer</title>
+<style>
+:root{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}}
+:root[data-theme="light"]{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+:root[data-theme="dark"]{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px 80px}
+header.site{position:sticky;top:0;z-index:5;background:var(--bg);
+  border-bottom:1px solid var(--line);backdrop-filter:saturate(1.2) blur(4px)}
+header.site .wrap{padding:12px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+header.site .brand{font-weight:700;letter-spacing:.02em}
+header.site nav{display:flex;gap:16px;flex-wrap:wrap;font-size:.92rem}
+h1{font-size:1.9rem;line-height:1.2;margin:.6em 0 .2em}
+h2{font-size:1.3rem;margin:1.8em 0 .5em;padding-bottom:.2em;border-bottom:1px solid var(--line)}
+h3{font-size:1.05rem;margin:1.4em 0 .3em}
+p{margin:.6em 0}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+  font:0.86em/1.4 "SF Mono",SFMono-Regular,Consolas,"Liberation Mono",monospace}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:9px;overflow-x:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--chip)}
+blockquote{margin:.8em 0;padding:.2em 1em;border-left:3px solid var(--line);color:var(--muted)}
+.lede{font-size:1.12rem;color:var(--muted);max-width:70ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:.4em 0 1em}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;
+  padding:2px 11px;font-size:.8rem;color:var(--muted)}
+.chip.status-current{color:var(--ok)}
+.chip.status-stale{color:var(--warn)}
+.chip.status-partial{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:1.2em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px}
+.card h3{margin:.1em 0 .3em}
+.card .path{font-size:.8rem;color:var(--muted);font-family:"SF Mono",Consolas,monospace}
+.card p{font-size:.9rem;color:var(--muted);margin:.4em 0 0}
+.section-note{color:var(--muted);font-size:.92rem}
+.adj{margin:1em 0}
+.adj .row{padding:10px 0;border-bottom:1px solid var(--line)}
+.adj .src{font-weight:600}
+.adj .tgt{display:inline-block;background:var(--chip);border-radius:6px;padding:1px 8px;margin:2px 4px 2px 0;font-size:.85rem}
+.decision{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 20px;margin:1.1em 0}
+.decision .meta{font-size:.82rem;color:var(--muted);margin:.2em 0 .6em}
+details{margin:.6em 0}
+summary{cursor:pointer;color:var(--accent);font-size:.9rem}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 17px;margin:1.4em 0;font-size:.88rem}
+.badge .dig{font-family:"SF Mono",Consolas,monospace;font-size:.82rem;word-break:break-all;color:var(--muted)}
+.badge .age{color:var(--muted)}
+.stale-banner{display:none;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);
+  border-radius:10px;padding:12px 16px;margin:1em 0;font-weight:600}
+.stale-banner.show{display:block}
+.theme-toggle{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);
+  border-radius:8px;padding:3px 10px;cursor:pointer;font-size:.85rem}
+footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;margin-top:40px}
+footer.site .wrap{padding:20px}
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <span class="brand">F1Brainz Explainer</span>
+  <nav><a href="index.html">Overview</a><a href="boundaries.html">Boundaries &amp; Dependencies</a><a href="decisions.html" style=color:var(--fg)>Decisions</a></nav>
+  <button id="theme-toggle" class="theme-toggle" type="button">light / dark</button>
+</div></header>
+<main class="wrap">
+<div id="stale-banner" class="stale-banner"></div>
+
+<h1>Decisions</h1>
+<p class="lede">Durable architecture decisions and their rationale, from
+<code>decisions/</code> (10 records). Each links back to the subsystems it governs.</p>
+
+<div class="decision" id="decision-burn_rate_calibration_design">
+  <h3>Fuel Burn-Rate Calibration Design</h3>
+  <div class="meta">decision:burn_rate_calibration_design · `current`
+    · `2026-07-02` · `user decision`</div>
+  <div>Governs: <a href="subsystem-physics.html"><code>struct:physics</code></a> <a href="subsystem-physics.html"><code>struct:physics.layer2</code></a> <a href="subsystem-data.html"><code>struct:data</code></a></div>
+  <h4>Question</h4><p>How should a per-race fuel burn rate be measured and delivered to the physics
+race-stint mass model, given that (a) the existing <code>mass_model.py</code> must stay pure
+and DB-free, (b) a calibration must not become a fitted/tunable knob that drifts,
+and (c) rain-affected races contaminate any burn baseline?</p>
+
+  <h4>Decision</h4><p>The burn rate is a <strong>regulation-anchored, zero-fit, per-(season, circuit)</strong>
+estimate, <strong>DB-stored</strong> in a derived table and <strong>injected</strong> into the mass model
+through an optional override seam; wet races are <strong>excluded</strong> from the baseline.</p>
+<ul>
+<li><strong>Regulation-anchored, zero-fit.</strong> <code>burn_rate_calibration.per_lap_burn_kg</code> =
+<code>flow_rate_cap_kg_per_s * mean_throttle_fraction * lap_duration_s</code>, where the
+flow cap is a literal cited FIA constant from <code>FUEL_REGULATIONS</code>
+(100 kg/h flat 2014-2025; energy-based ~70 kg/h-equivalent from 2026). Nothing
+is fitted — the only measured input is the throttle integral from telemetry.</li>
+<li><strong>Per-(season, circuit), no pooling.</strong> <code>season_burn_rate_estimate(year, gp)</code>
+aggregates clean-lap estimates for one race; there is no cross-season or
+cross-circuit pooling.</li>
+<li><strong>DB-stored + injected via the <code>mass_model</code> override seam.</strong> The calibrated
+rate is written to the derived <code>session_fuel_features</code> table (data region) by
+<code>fuel_features.populate_fuel_features_for_db</code>, read back by
+<code>fuel_features.resolve_race_burn_rate(year, gp, db_path)</code> with a fail-safe
+fallback chain (session → season-mean → <code>DEFAULT_BURN_PER_LAP_KG</code>), and passed
+into <code>mass_model.race_mass(..., burn_per_lap_kg=&lt;resolved&gt;)</code>. <code>mass_model.py</code>
+stays <strong>pure and DB-free</strong> — it only gained optional <code>burn_per_lap_kg</code> /
+<code>max_fuel_kg</code> override arguments whose <code>None</code> defaults reproduce prior behavior
+exactly; the DB read lives in <code>fuel_features</code>, and <code>layer2/session_race.py</code>
+(which already reads the DB) does the injection.</li>
+<li><strong>Wet-excluded.</strong> A race with stored <code>session_surface_features.wet_lap_fraction</code>
+≥ <code>WET_EXCLUDE_THRESHOLD</code> (0.05) is recorded <code>source='wet_skipped'</code> with a NULL
+estimate and never contributes to the dry baseline. The wet signal is computed
+and stored by the <strong>data region</strong> (compound-based, DB-only); physics only reads
+it via <code>session_wet_fraction</code>.</li>
+<li><strong>Primary validation is the compound-free ceiling check.</strong> Confidence is
+measured by <code>race_fuel_ceiling_check</code> (per-race total vs the regulated max
+fuel), decoupled from tyres/compounds. The lap-time-slope cross-check is
+retained only as a <strong>reference-confounded</strong> independent view, not ground truth.</li>
+</ul>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:burn_rate_calibration_design</code><br />
+<strong>Status:</strong> <code>current</code><br />
+<strong>Date decided:</strong> <code>2026-07-02</code><br />
+<strong>Authority:</strong> <code>user decision</code><br />
+<strong>Structural anchors:</strong> <code>struct:physics</code>, <code>struct:physics.layer2</code>, <code>struct:data</code></p>
+<h2>Question Resolved</h2>
+<p>How should a per-race fuel burn rate be measured and delivered to the physics
+race-stint mass model, given that (a) the existing <code>mass_model.py</code> must stay pure
+and DB-free, (b) a calibration must not become a fitted/tunable knob that drifts,
+and (c) rain-affected races contaminate any burn baseline?</p>
+<h2>Decision</h2>
+<p>The burn rate is a <strong>regulation-anchored, zero-fit, per-(season, circuit)</strong>
+estimate, <strong>DB-stored</strong> in a derived table and <strong>injected</strong> into the mass model
+through an optional override seam; wet races are <strong>excluded</strong> from the baseline.</p>
+<ul>
+<li><strong>Regulation-anchored, zero-fit.</strong> <code>burn_rate_calibration.per_lap_burn_kg</code> =
+<code>flow_rate_cap_kg_per_s * mean_throttle_fraction * lap_duration_s</code>, where the
+flow cap is a literal cited FIA constant from <code>FUEL_REGULATIONS</code>
+(100 kg/h flat 2014-2025; energy-based ~70 kg/h-equivalent from 2026). Nothing
+is fitted — the only measured input is the throttle integral from telemetry.</li>
+<li><strong>Per-(season, circuit), no pooling.</strong> <code>season_burn_rate_estimate(year, gp)</code>
+aggregates clean-lap estimates for one race; there is no cross-season or
+cross-circuit pooling.</li>
+<li><strong>DB-stored + injected via the <code>mass_model</code> override seam.</strong> The calibrated
+rate is written to the derived <code>session_fuel_features</code> table (data region) by
+<code>fuel_features.populate_fuel_features_for_db</code>, read back by
+<code>fuel_features.resolve_race_burn_rate(year, gp, db_path)</code> with a fail-safe
+fallback chain (session → season-mean → <code>DEFAULT_BURN_PER_LAP_KG</code>), and passed
+into <code>mass_model.race_mass(..., burn_per_lap_kg=&lt;resolved&gt;)</code>. <code>mass_model.py</code>
+stays <strong>pure and DB-free</strong> — it only gained optional <code>burn_per_lap_kg</code> /
+<code>max_fuel_kg</code> override arguments whose <code>None</code> defaults reproduce prior behavior
+exactly; the DB read lives in <code>fuel_features</code>, and <code>layer2/session_race.py</code>
+(which already reads the DB) does the injection.</li>
+<li><strong>Wet-excluded.</strong> A race with stored <code>session_surface_features.wet_lap_fraction</code>
+≥ <code>WET_EXCLUDE_THRESHOLD</code> (0.05) is recorded <code>source='wet_skipped'</code> with a NULL
+estimate and never contributes to the dry baseline. The wet signal is computed
+and stored by the <strong>data region</strong> (compound-based, DB-only); physics only reads
+it via <code>session_wet_fraction</code>.</li>
+<li><strong>Primary validation is the compound-free ceiling check.</strong> Confidence is
+measured by <code>race_fuel_ceiling_check</code> (per-race total vs the regulated max
+fuel), decoupled from tyres/compounds. The lap-time-slope cross-check is
+retained only as a <strong>reference-confounded</strong> independent view, not ground truth.</li>
+</ul>
+<h2>Rationale</h2>
+<ul>
+<li>A zero-fit estimate anchored to a cited regulation cannot silently overfit or
+drift the way a tuned parameter would; it is auditable against the FIA rule.</li>
+<li>Keeping <code>mass_model.py</code> DB-free preserves its role as pure arithmetic reusable
+by the many quali-path consumers; putting the DB read in a separate seam
+(<code>fuel_features</code>) keeps <code>physics → data</code> the only new coupling and respects the
+allowed layering direction (data is the bottom layer; data never imports
+physics).</li>
+<li>The optional-override design makes the wiring a byte-identical no-op on
+unpopulated DBs (the resolver fails safe to <code>DEFAULT_BURN_PER_LAP_KG</code>), so the
+change is invisible to synthetic-DB tests and only moves numerics against real
+populated season DBs.</li>
+<li>Wet races are structurally different (rain pace, safety-car neutralisations);
+excluding them by a stored, named threshold keeps the baseline a clean dry
+measurement without a magic literal.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li>New burn-rate consumers must resolve through <code>fuel_features.resolve_race_burn_rate</code>
+and inject via the <code>mass_model</code> override args — do NOT reintroduce a DB read
+inside <code>mass_model.py</code>, and do NOT hardcode a burn rate.</li>
+<li>The estimate is deliberately zero-fit: adding a fitted correction (e.g. the
+experimental <code>throttle_response_fraction</code>) requires re-opening this decision —
+that shape is currently off by default and kept only as a documented negative
+result.</li>
+<li>Because the rate is now wired into the live W3 mass path, the stored artifacts
+<code>physics_estimates.db</code> / <code>race_stint_estimates.db</code> are <strong>STALE</strong> vs the wired
+rate; a re-batch is a deferred follow-up (Triage), not silently assumed done.</li>
+</ul>
+<h2>Constraint Impact</h2>
+<ul>
+<li>Bound by <code>constraint:physics_region_no_evo_import</code> — <code>burn_rate_calibration.py</code>
+and <code>fuel_features.py</code> import no evo-region package (verified).</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>Fitting a burn-rate parameter (or wiring the experimental
+<code>throttle_response_fraction</code> saturating shape).</strong> Rejected: it did not improve
+the cross-check, and a fitted knob loses the regulation-anchored auditability.
+Kept off by default as a negative result so it is not re-reached for.</li>
+<li><strong>A DB read inside <code>mass_model.py</code>.</strong> Rejected: would break the module's
+pure/DB-free contract and its reuse across the quali path. The read lives in
+<code>fuel_features</code>; <code>mass_model</code> only exposes an injection seam.</li>
+<li><strong>Cross-season/circuit pooling of the burn rate.</strong> Rejected for now: the
+per-(season, circuit) estimate is the unit that maps to a race; pooling is not
+needed for the mass channel and would blur the regulation-anchored per-race
+quantity.</li>
+<li><strong>Revising <code>SC_BURN_FRACTION=0.5</code> from the measured SC/VSC ratio (~0.82-1.01).</strong>
+Deferred, not adopted here — routed to Triage.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li>Any move to fit/tune the burn rate, enable <code>throttle_response_fraction</code> on a
+production path, or add cross-season/circuit pooling.</li>
+<li>A change to <code>mass_model.py</code> that reintroduces a DB dependency, or removal of the
+<code>burn_per_lap_kg</code> / <code>max_fuel_kg</code> override seam.</li>
+<li>Revising <code>SC_BURN_FRACTION</code> or <code>DEFAULT_BURN_PER_LAP_KG</code> from measured data.</li>
+<li>A re-batch of the physics/race-stint stores against the wired rate (clears the
+STALE-artifacts consequence above).</li>
+</ul>
+</details>
+</div>
+
+<div class="decision" id="decision-c1_driver_utilization_design">
+  <h3>C1 driver-utilization layer design choices</h3>
+  <div class="meta">decision:c1_driver_utilization_design · current
+    · 2026-06-24 · user decision (C1 #510 design session)</div>
+  <div>Governs: <a href="subsystem-physics.html"><code>struct:physics.utilization</code></a></div>
+  <h4>Question</h4><p>How should the car/driver split be defined, and what is the denominator for driver
+utilization? What defines the &quot;ideal lap&quot; for comparison, and who owns the car frontier?</p>
+
+  <h4>Decision</h4><p>Four interlocking design choices for <code>src/physics/utilization/</code> (C1 #510):</p>
+<ol>
+<li><p><strong>Denominator = causal cross-session constructor prior, not season-average and not the driver's own fit.</strong>
+<code>car_prior.build_car_ceiling</code> uses only ok-status sessions at or before the target
+round W (<code>round_idx &lt;= W</code>), via a one-sided causal kernel. The existing symmetric
+<code>DriftFit.predict</code> (which leaks future sessions) is explicitly not used here. This
+makes the car prior a week-to-week-updated through-W estimate — predictive-safe.</p>
+</li>
+<li><p><strong>Both teammates, including the measured driver, define the frontier.</strong>
+The G1 car ceiling is inferred from the cross-session <code>EstimateStore</code>, which pools
+both constructor cars' sessions. The driver being evaluated contributed to the
+frontier estimate. This is the deliberate choice: the frontier reflects the best
+observed capability of the car as a physical object, not just the other driver.</p>
+</li>
+<li><p><strong>Car/driver split is acknowledged impure; covariance owns the uncertainty.</strong>
+The car and driver are only ever observed together. <code>regime_utilization.py</code> carries
+<code>split_is_impure=True</code> on every <code>RegimeUtilization</code> result. Callers must not
+over-claim separation. The propagated sigma (via MC over ceiling params) quantifies
+how much of the utilization signal is ceiling uncertainty, not driver skill.</p>
+</li>
+<li><p><strong>Single canonical ideal-lap path: EstimateStore → car_prior → CapabilityEnvelope → PhysicsSimulator.</strong>
+The inline quasi-static <code>sim_lap</code> / <code>_params</code> prototype in
+<code>scripts/ideal_lap_compare.py</code> and <code>scripts/ideal_vs_actual.py</code> has been retired
+(both scripts, and the <code>scripts/ver_monza_kde.py</code> one-off that consumed them, were
+removed). There is exactly one ideal-lap code path.</p>
+</li>
+</ol>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:c1_driver_utilization_design</code>
+<strong>Status:</strong> current
+<strong>Date decided:</strong> 2026-06-24
+<strong>Authority:</strong> user decision (C1 #510 design session)
+<strong>Structural anchors:</strong> <code>struct:physics.utilization</code>
+<strong>Capability anchors:</strong> per-regime driver utilization</p>
+<h2>Question Resolved</h2>
+<p>How should the car/driver split be defined, and what is the denominator for driver
+utilization? What defines the &quot;ideal lap&quot; for comparison, and who owns the car frontier?</p>
+<h2>Decision</h2>
+<p>Four interlocking design choices for <code>src/physics/utilization/</code> (C1 #510):</p>
+<ol>
+<li><p><strong>Denominator = causal cross-session constructor prior, not season-average and not the driver's own fit.</strong>
+<code>car_prior.build_car_ceiling</code> uses only ok-status sessions at or before the target
+round W (<code>round_idx &lt;= W</code>), via a one-sided causal kernel. The existing symmetric
+<code>DriftFit.predict</code> (which leaks future sessions) is explicitly not used here. This
+makes the car prior a week-to-week-updated through-W estimate — predictive-safe.</p>
+</li>
+<li><p><strong>Both teammates, including the measured driver, define the frontier.</strong>
+The G1 car ceiling is inferred from the cross-session <code>EstimateStore</code>, which pools
+both constructor cars' sessions. The driver being evaluated contributed to the
+frontier estimate. This is the deliberate choice: the frontier reflects the best
+observed capability of the car as a physical object, not just the other driver.</p>
+</li>
+<li><p><strong>Car/driver split is acknowledged impure; covariance owns the uncertainty.</strong>
+The car and driver are only ever observed together. <code>regime_utilization.py</code> carries
+<code>split_is_impure=True</code> on every <code>RegimeUtilization</code> result. Callers must not
+over-claim separation. The propagated sigma (via MC over ceiling params) quantifies
+how much of the utilization signal is ceiling uncertainty, not driver skill.</p>
+</li>
+<li><p><strong>Single canonical ideal-lap path: EstimateStore → car_prior → CapabilityEnvelope → PhysicsSimulator.</strong>
+The inline quasi-static <code>sim_lap</code> / <code>_params</code> prototype in
+<code>scripts/ideal_lap_compare.py</code> and <code>scripts/ideal_vs_actual.py</code> has been retired
+(both scripts, and the <code>scripts/ver_monza_kde.py</code> one-off that consumed them, were
+removed). There is exactly one ideal-lap code path.</p>
+</li>
+</ol>
+<h2>Rationale</h2>
+<ul>
+<li>A season-average denominator would blend pre- and post-upgrade capability, obscuring
+within-season driver-vs-car signals. A causal through-W prior preserves the temporal
+structure that matters for race-weekend prediction.</li>
+<li>Excluding the measured driver from the frontier would under-estimate the car's
+capability if that driver is the faster of the pair on some circuits. Both cars
+belong to the same physical vehicle concept; the frontier is a car property.</li>
+<li>Acknowledging the impurity explicitly (rather than claiming it is solved) prevents
+downstream misuse. Covariance propagation gives an honest uncertainty bound.</li>
+<li>A single canonical path prevents the <code>sim_lap</code> / <code>_params</code> pattern from being
+revived: future contributors should use <code>PhysicsSimulator</code>, not a new inline sim.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li><code>car_prior.causal_predict</code> is the one-sided kernel; do not substitute <code>DriftFit.predict</code>.</li>
+<li><code>car_prior.build_car_ceiling</code> <code>lateral.ceiling</code> is always <code>None</code> — rely on the
+<code>CapabilityEnvelope</code> Gsat fallback (<code>decision:ideal_lap_sim_two_sided_evaluator</code>),
+not a fabricated ceiling.</li>
+<li><code>regime_utilization.RegimeUtilization.split_is_impure</code> is always <code>True</code>; never
+suppress or strip it.</li>
+<li><code>scripts/ideal_lap_compare.py</code>, <code>scripts/ideal_vs_actual.py</code>, and
+<code>scripts/ver_monza_kde.py</code> were removed (inline sim retired); use the canonical path.</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>Driver's own fit as the denominator:</strong> rejected — conflates car capability with
+driver performance, making utilization trivially ~1.0 for the best driver.</li>
+<li><strong>Season-average frontier:</strong> rejected — blends upgrade steps; the causal through-W
+prior preserves the temporal structure needed for round-W prediction.</li>
+<li><strong>Excluding the measured driver from the frontier:</strong> rejected — produces systematic
+under-estimation of car capability for the stronger driver of a pair.</li>
+<li><strong>A second inline scalar sim:</strong> rejected — maintains two diverging code paths;
+the canonical <code>PhysicsSimulator</code> path is the single authoritative source.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li>A ceiling recalibration of the five-view estimator (#496 reachback) that
+changes what <code>U_braking</code>/<code>U_fast_corner</code> values are trustworthy.</li>
+<li>A change to the <code>EstimateStore</code> schema that alters which sessions are pooled into
+the constructor prior.</li>
+<li>Any change that makes <code>split_is_impure</code> conditionally <code>False</code> (would require
+resolving the joint-observation problem — a fundamental physical constraint).</li>
+</ul>
+</details>
+</div>
+
+<div class="decision" id="decision-decoupled_1d_longitudinal">
+  <h3>decoupled 1D longitudinal estimator design</h3>
+  <div class="meta">decision:decoupled_1d_longitudinal · current
+    · 2026-06-24 · user decision (#496/#507 VERDICT.md GO + G3 two-candidate adjudication)</div>
+  <div>Governs: <a href="subsystem-physics.html"><code>struct:physics.layer2</code></a></div>
+  <h4>Question</h4><p>Should longitudinal <code>a_long</code> (the braking-capability input for <code>BrakingView</code> and
+downstream physics parameters) come from the 2D position smoother's <code>acc_at</code> output,
+or from a dedicated decoupled 1D physics filter fed by the raw-onset force anchor?</p>
+
+  <h4>Decision</h4><p>Longitudinal <code>a_long</code> comes from a <strong>decoupled 1D physics filter</strong> (<code>decoupled_longitudinal.py</code>)
+fed by the TV-denoised raw <code>a_long</code> as a tight soft-force anchor on the full braking arc
+(including the onset sample). The 2D position smoother's output is NOT the source for
+longitudinal parameters.</p>
+<p>The filter works in <strong>total mechanical energy / gravity-free vehicle-force coordinates</strong>:
+state <code>[E_total, F_vehicle]</code> over arc-length <code>s</code>, where <code>E_total = ½mv² + mgz(s)</code> and
+<code>d(E_total)/ds = F_vehicle</code>. A constant-force braking event is a straight line in
+<code>E_total(s)</code>; the brake-onset knee is a benign slope change (kink) rather than a sharp
+<code>v(t)</code> second-derivative spike that the Matérn prior rounds away. Force is the
+friction-circle-bounded quantity, so the physics constraints live naturally in this state.</p>
+<p>Output: <code>a_long = F_vehicle/m − g sinθ</code> (what the raw sensor measures) + per-sample
+<code>sigma_a = σ_F/m</code> from the RTS posterior (honest covariance, first-class).</p>
+<p><strong>WIRED</strong> as of #518 G3 (2026-06-25): <code>session_braking.prepare_braking_frontier</code> now
+calls <code>build_decoupled_braking_input</code> (the Variant-A adapter) as the ONE canonical
+braking-frontier input — gravity counted once inside the estimator's z-map; <code>BrakingView</code>'s
+<code>-g sin(theta)</code> term is zero (theta=0 passed in). HP calibration basis: defaults
+<code>tv_lambda=0.10</code>, <code>sig_a_soft_brake=0.10</code> swept on 2023-Q VER across Bahrain/Monaco/Belgium
+and confirmed season-stable across 2023-Q full multi-driver validation (G1); per-session
+calibration not required at this gate (season-confirmed defaults used).</p>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:decoupled_1d_longitudinal</code>
+<strong>Status:</strong> current
+<strong>Date decided:</strong> 2026-06-24
+<strong>Authority:</strong> user decision (#496/#507 VERDICT.md GO + G3 two-candidate adjudication)
+<strong>Structural anchors:</strong> <code>struct:physics.layer2</code>
+<strong>Capability anchors:</strong> (none promoted; behavior is local to <code>layer2/decoupled_longitudinal.py</code>)</p>
+<h2>Question Resolved</h2>
+<p>Should longitudinal <code>a_long</code> (the braking-capability input for <code>BrakingView</code> and
+downstream physics parameters) come from the 2D position smoother's <code>acc_at</code> output,
+or from a dedicated decoupled 1D physics filter fed by the raw-onset force anchor?</p>
+<h2>Decision</h2>
+<p>Longitudinal <code>a_long</code> comes from a <strong>decoupled 1D physics filter</strong> (<code>decoupled_longitudinal.py</code>)
+fed by the TV-denoised raw <code>a_long</code> as a tight soft-force anchor on the full braking arc
+(including the onset sample). The 2D position smoother's output is NOT the source for
+longitudinal parameters.</p>
+<p>The filter works in <strong>total mechanical energy / gravity-free vehicle-force coordinates</strong>:
+state <code>[E_total, F_vehicle]</code> over arc-length <code>s</code>, where <code>E_total = ½mv² + mgz(s)</code> and
+<code>d(E_total)/ds = F_vehicle</code>. A constant-force braking event is a straight line in
+<code>E_total(s)</code>; the brake-onset knee is a benign slope change (kink) rather than a sharp
+<code>v(t)</code> second-derivative spike that the Matérn prior rounds away. Force is the
+friction-circle-bounded quantity, so the physics constraints live naturally in this state.</p>
+<p>Output: <code>a_long = F_vehicle/m − g sinθ</code> (what the raw sensor measures) + per-sample
+<code>sigma_a = σ_F/m</code> from the RTS posterior (honest covariance, first-class).</p>
+<p><strong>WIRED</strong> as of #518 G3 (2026-06-25): <code>session_braking.prepare_braking_frontier</code> now
+calls <code>build_decoupled_braking_input</code> (the Variant-A adapter) as the ONE canonical
+braking-frontier input — gravity counted once inside the estimator's z-map; <code>BrakingView</code>'s
+<code>-g sin(theta)</code> term is zero (theta=0 passed in). HP calibration basis: defaults
+<code>tv_lambda=0.10</code>, <code>sig_a_soft_brake=0.10</code> swept on 2023-Q VER across Bahrain/Monaco/Belgium
+and confirmed season-stable across 2023-Q full multi-driver validation (G1); per-session
+calibration not required at this gate (season-confirmed defaults used).</p>
+<h2>Rationale</h2>
+<ul>
+<li><code>decision:smoother_rounds_braking_knee</code> establishes that the 2D position-smoothness
+Matérn prior is the wrong tool for the longitudinal transient: speed/energy is the
+only good longitudinal observable (speed shows the ~5.3 g raw peak; position is
+jitter-dominated; the smoother rounds the braking knee from ~5 g to ~4 g).</li>
+<li>A decoupled 1D filter (M3) structurally eliminates 2D-coupling ringing (Monaco
+<code>roc=-0.09 ≤ 0</code> vs baselines at <code>+7.5</code>/<code>+7.7</code>). The 2D Matérn prior introduces
+this ringing because the non-throttle phases are coupled through the joint
+position/velocity/acceleration state.</li>
+<li>The M7 raw-onset force anchor (TV/IRLS-denoised raw <code>a_long</code> as a tight soft-force
+obs on the braking arc) recovers the deep braking knee: Bahrain <code>−50.98 m/s²</code>
+vs raw <code>−52.13</code> (gap <code>+1.15</code>, down from the <code>+12.7</code> baseline gap). The onset
+sample is included (not trimmed as in the plateau-only #498 design) because the
+raw signal already carries the onset transient and TV preserves rather than invents it.</li>
+<li>The energy/force reframe is physically sounder: force is the bounded quantity;
+the brake-onset is a benign kink in energy space, not a spike in acceleration space
+that the prior must resist. Single canonical path: only the <code>[E_total, F_vehicle]</code>
+version exists (no <code>[v,a]</code> shim).</li>
+<li>Scoreboard acceptance simultaneous on both required circuit types (Bahrain hard-braking
+AND Monaco short-straight ringing) without regressing Belgium — the <code>[v,a]</code> and
+energy/force formulations are score-equivalent on the <code>a_long</code> metric, so the
+physically-sounder framing was chosen at no scoreboard cost.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li><code>decoupled_longitudinal.py</code> is the designated producer of <code>a_long</code> for the braking
+capability input once wiring (#518) is complete. It must receive terrain <code>θ</code>/<code>z</code>
+from the #497 z-map (fallback: FLAT with <code>altitude_assumed_flat=True</code>).</li>
+<li>The anchor magnitude must be the TV-denoised raw <code>a_long</code>, never re-read from any
+smoothed trajectory (anchor-source invariant from <code>decision:two_cycle_external_anchor_design</code>,
+extended here).</li>
+<li><code>clean_longitudinal_from_raw</code> in <code>braking_view.py</code> is retired as the DIRECT
+braking-frontier input (#518 G3). It is NOT deleted: it remains the estimator's raw
+speed-sensor anchor INSIDE <code>decoupled_braking_input</code>, the #498 refinement anchor in
+<code>_refine_lap_processed</code>, and the throttle/coast views' raw input. Do not delete it;
+only the direct frontier read is retired.</li>
+<li>The <code>a_long</code> scoreboard metric is invariant to the terrain/PE term by construction
+(the <code>+mgz</code> energy correction and <code>−g sinθ</code> output correction cancel). The terrain
+payoff is in <code>F_vehicle</code>; validating it requires a gravity-corrected braking-frontier
+metric, deferred to #518.</li>
+<li><code>scoreboard.py</code> is the measurement harness for this and future longitudinal estimator
+variants; new variants register as <code>VariantFn</code> callables via <code>run_scoreboard</code>.</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>2D smoother <code>acc_at</code> output as the braking input</strong>: proven to round the braking knee
+from ~5 g to ~4 g (wrong-sign <code>b_b</code>); flattening is structural in the position-smoothness
+prior, not a tuning artifact. This is the root cause <code>decision:smoother_rounds_braking_knee</code>
+records.</li>
+<li><strong>Plateau-only anchor extension (#498 trajectory_refine)</strong>: proven Spa-specific (#505).
+Fails on Bahrain heavy-onset (knee <code>−39 m/s²</code> vs raw <code>−52</code>) and Monaco short-straight
+ringing (<code>roc +7.7</code>). A future agent proposing &quot;just tighten the plateau anchor&quot; should
+consult these numbers.</li>
+<li><strong>Full process-model replacement (M2/M6)</strong>: rejected by user decision (2026-06-23/24,
+PROBLEM_STATEMENT.md) — evolutionary-not-revolutionary scope. M6 (collocation/joint
+trajectory+param fit) is out; M2 (longitudinal process-model swap) demoted. Implement
+only if the 1D filter fails multi-session/multi-driver validation in #518.</li>
+</ul>
+<h2>#523 Throttle/Coast Verdict: Measured-and-Held (2026-06-28)</h2>
+<p><strong>Outcome:</strong> HONEST-NULL — all three throttle/coast views (TractionView, PowerDragView, CoastView) measured and HELD. <code>decision:decoupled_1d_longitudinal</code> stays WIRED for braking only; throttle/coast views remain on <code>clean_longitudinal_from_raw</code>.</p>
+<p><strong>Evidence (RBR 2023-Q Spa/Monaco/Bahrain, <code>scripts/characterize_decoupled_views.py</code>):</strong></p>
+<table>
+<thead>
+<tr>
+  <th>View</th>
+  <th>Belgium</th>
+  <th>Monaco</th>
+  <th>Bahrain</th>
+  <th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>TractionView</td>
+  <td>a_t +0.73σ, b_t -0.30σ</td>
+  <td>a_t +10.3σ, b_t=0 (wrong-sign)</td>
+  <td>a_t -7.1σ, b_t +11.5σ (swap)</td>
+  <td>HOLD</td>
+</tr>
+<tr>
+  <td>PowerDragView</td>
+  <td>P_max -1.02σ, CdA +1.63σ</td>
+  <td>degenerate=True (CdA=0, 20σ+)</td>
+  <td>P_max -17.7σ, CdA -7.9σ</td>
+  <td>HOLD</td>
+</tr>
+<tr>
+  <td>CoastView</td>
+  <td>theta_R -1.54σ, CdA +2.53σ</td>
+  <td>theta_R -2.78σ, CdA +3.39σ</td>
+  <td>theta_R -3.35σ, CdA +1.38σ</td>
+  <td>HOLD</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Root cause (throttle/drag views) — initial hypothesis:</strong> v-source discrepancy (smoothed <code>s.speed</code> vs raw <code>spd_d[&quot;V&quot;]</code> for the frontier v-axis).</p>
+<p><strong>Config C parity round (2026-06-28):</strong> A second characterization (Config C) controlled for the v-source by pairing decoupled <code>a_long</code> with the incumbent's raw v-axis (<code>v_at</code> from <code>clean_longitudinal_from_raw</code>). Results confirm the honest-null: shifts are structurally in the <code>a_long</code> estimator, not the v-source.</p>
+<table>
+<thead>
+<tr>
+  <th>View</th>
+  <th>Circuit</th>
+  <th>Config B (confounded)</th>
+  <th>Config C (parity: raw v)</th>
+  <th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>TractionView</td>
+  <td>Belgium</td>
+  <td>+0.73σ / -0.30σ</td>
+  <td><strong>+0.37σ / +0.15σ (passes)</strong></td>
+  <td>—</td>
+</tr>
+<tr>
+  <td>TractionView</td>
+  <td>Monaco</td>
+  <td>+10.3σ / -8.4σ</td>
+  <td>+4.0σ / -2.74σ (still significant)</td>
+  <td>HOLD</td>
+</tr>
+<tr>
+  <td>TractionView</td>
+  <td>Bahrain</td>
+  <td>-7.1σ / +11.5σ</td>
+  <td>-6.2σ / +9.4σ (virtually unchanged)</td>
+  <td>HOLD</td>
+</tr>
+<tr>
+  <td>PowerDragView</td>
+  <td>Belgium</td>
+  <td>-1.02σ / +1.63σ</td>
+  <td>-0.98σ / +1.62σ (same — all from a_long)</td>
+  <td>notable</td>
+</tr>
+<tr>
+  <td>PowerDragView</td>
+  <td>Monaco</td>
+  <td>degenerate=True, 20σ+</td>
+  <td>degenerate=False, -13.4σ / -8.4σ</td>
+  <td>HOLD</td>
+</tr>
+<tr>
+  <td>PowerDragView</td>
+  <td>Bahrain</td>
+  <td>-17.7σ / -7.9σ</td>
+  <td>-11.3σ / -5.3σ</td>
+  <td>HOLD</td>
+</tr>
+</tbody>
+</table>
+<p>Belgium TractionView is the only view×circuit that passes Config C (negligible shifts). The Monaco/Bahrain pathologies are confirmed as being in the decoupled <code>a_long</code> itself (Kalman-RTS LOOSE coupling at throttle-on produces systematically different frontier shapes from the raw FD).</p>
+<p><strong>Root cause (confirmed):</strong> The Kalman-RTS estimator with <code>sig_a_soft_other=30.0</code> (LOOSE) at throttle-on regimes does not preserve the frontier's acceleration structure. The energy channel integration diverges from the per-sample FD in ways that are circuit-topology-dependent: circuits with complex speed profiles (Monaco, Bahrain) show large frontier shifts; Belgium (simple high-speed layout) passes. The issue is not tunable without tighter soft-obs for throttle-on regimes.</p>
+<p><strong>Root cause (coast):</strong> The Kalman-RTS filter produces positive <code>a_long</code> for 22-28% of coast samples that the FD gives as negative, causing systematic sample loss before CoastView's lower-quantile fit. The coast comparison was already parity by construction (both paths use raw CAN speed for v). Confirmed: coast shifts are from <code>a_long</code>, not the v-source.</p>
+<p><strong>Fix-or-hold follow-on:</strong> See issue #546 (now closed HONEST-NULL). Results recorded in section below.</p>
+<h2>#546 Throttle HP Retune + Coast Boundary-Lag Investigation: HONEST-NULL (2026-06-28)</h2>
+<p><strong>Outcome:</strong> HONEST-NULL for BOTH sub-investigations. No view is wired; throttle/coast remain on <code>clean_longitudinal_from_raw</code>.</p>
+<h3>Throttle HP sweep (G1)</h3>
+<p><strong>Question:</strong> Does introducing a separate <code>sig_a_soft_throttle</code> HP (range 1.0–5.0, tighter than coast LOOSE 30.0) rescue the throttle-on view failures?</p>
+<p><strong>Method:</strong> Config-C parity sweep — decoupled <code>a_long</code> + incumbent raw <code>v_at</code> (controls v-source). Swept HP ∈ {1.0, 2.0, 3.0, 5.0, 30.0} on Belgium/Monaco/Bahrain 2023-Q RBR.</p>
+<p><strong>TractionView Config-C shifts per HP (d/σ on <code>a_t</code>):</strong></p>
+<table>
+<thead>
+<tr>
+  <th>HP</th>
+  <th>Belgium</th>
+  <th>Monaco</th>
+  <th>Bahrain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1.0</td>
+  <td>+2.57σ</td>
+  <td>+1.88σ</td>
+  <td>-9.03σ</td>
+</tr>
+<tr>
+  <td>2.0</td>
+  <td>+1.98σ</td>
+  <td>+2.65σ</td>
+  <td>-8.42σ</td>
+</tr>
+<tr>
+  <td>3.0</td>
+  <td>+1.29σ</td>
+  <td>+3.48σ</td>
+  <td>-8.05σ</td>
+</tr>
+<tr>
+  <td>5.0</td>
+  <td><strong>+0.62σ</strong></td>
+  <td>+3.63σ</td>
+  <td>-6.84σ</td>
+</tr>
+<tr>
+  <td>30.0 (incumbent)</td>
+  <td>+0.37σ</td>
+  <td>+4.00σ</td>
+  <td>-6.19σ</td>
+</tr>
+</tbody>
+</table>
+<p><strong>PowerDragView Config-C shifts per HP (d/σ on <code>CdA</code>):</strong></p>
+<table>
+<thead>
+<tr>
+  <th>HP</th>
+  <th>Belgium</th>
+  <th>Monaco</th>
+  <th>Bahrain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1.0</td>
+  <td>+1.75σ</td>
+  <td>-4.34σ</td>
+  <td>-2.92σ</td>
+</tr>
+<tr>
+  <td>2.0</td>
+  <td>+1.76σ</td>
+  <td>-7.37σ</td>
+  <td>-5.60σ</td>
+</tr>
+<tr>
+  <td>3.0</td>
+  <td>+1.71σ</td>
+  <td>-7.71σ</td>
+  <td>-5.00σ</td>
+</tr>
+<tr>
+  <td>5.0</td>
+  <td>+1.58σ</td>
+  <td>-7.78σ</td>
+  <td>-5.08σ</td>
+</tr>
+<tr>
+  <td>30.0 (incumbent)</td>
+  <td>+1.62σ</td>
+  <td>-8.45σ</td>
+  <td>-5.27σ</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Finding:</strong> No HP in [1.0–30.0] passes the &lt;1σ acceptance bar on all three circuits. Tightening the throttle HP makes Bahrain WORSE (−9.03σ at 1.0 vs −6.19σ at 30.0). Belgium TractionView approaches acceptance at HP=5.0 (+0.62σ) but Monaco and Bahrain remain large-HOLD regardless. The root cause is in the energy-channel structure (circuit-topology-dependent divergence between Kalman-RTS and per-sample FD), not in the soft-obs magnitude.</p>
+<p><strong>Implication:</strong> <code>sig_a_soft_throttle</code> is now a first-class kwarg in <code>estimate_longitudinal</code> and <code>make_synthesis_variant</code> (committed in feat(physics): add sig_a_soft_throttle HP, 2026-06-28) for future use, but HOLD applies: throttle-on views are not wired.</p>
+<h3>Coast boundary-lag investigation (G2)</h3>
+<p><strong>Question:</strong> Is the 22–28% coast sample loss caused by Kalman initialization lag (F=0 → positive <code>a_long</code> at segment boundaries)? Can a boundary fix recover samples to &lt;10% loss?</p>
+<p><strong>Method:</strong> Post-clamp fix <code>a_long_dec = np.minimum(res.a_long, a_long_raw_seg)</code> applied in <code>run_decoupled_coast()</code>. Characterized on Belgium/Monaco/Bahrain 2023-Q RBR.</p>
+<p><strong>Sample counts before/after fix:</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Circuit</th>
+  <th>n_incumbent</th>
+  <th>n_decoupled (before)</th>
+  <th>n_decoupled (after)</th>
+  <th style="text-align:right">loss before</th>
+  <th style="text-align:right">loss after</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Belgium</td>
+  <td>1407</td>
+  <td>1020</td>
+  <td>1045</td>
+  <td style="text-align:right">27.5%</td>
+  <td style="text-align:right">25.7%</td>
+</tr>
+<tr>
+  <td>Monaco</td>
+  <td>1502</td>
+  <td>1128</td>
+  <td>1156</td>
+  <td style="text-align:right">24.9%</td>
+  <td style="text-align:right">23.0%</td>
+</tr>
+<tr>
+  <td>Bahrain</td>
+  <td>1265</td>
+  <td>991</td>
+  <td>994</td>
+  <td style="text-align:right">21.7%</td>
+  <td style="text-align:right">21.4%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Coast shifts after fix:</strong></p>
+<table>
+<thead>
+<tr>
+  <th>Circuit</th>
+  <th>d_theta_R/σ</th>
+  <th>d_CdA/σ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Belgium</td>
+  <td>+2.70σ</td>
+  <td>+2.44σ</td>
+</tr>
+<tr>
+  <td>Monaco</td>
+  <td>+0.24σ</td>
+  <td>+4.50σ</td>
+</tr>
+<tr>
+  <td>Bahrain</td>
+  <td>+0.38σ</td>
+  <td>+2.86σ</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Finding:</strong> Boundary-lag (F=0 init) accounts for only 3–11 samples per circuit (0.1–1.0% of loss). The post-clamp fix recovers these but simultaneously distorts 1,972–5,886 interior samples where raw FD is more negative than the filter estimate — inflating all CdA shifts to 2.4–4.5σ. The 21–26% loss is structural:</p>
+<ol>
+<li>Speed filter (v &gt; 12 m/s) eliminates most off-mask samples (pit lane, slow corners at low speed)</li>
+<li>Short coast segments (3–15 samples) with LOOSE coupling (<code>sig_a_soft_other=30.0</code>) cannot converge F_vehicle before the RTS smooths it out; only long-segment coast is well-estimated</li>
+<li>Incumbent <code>prepare_coast_samples</code> uses full-session-stream smoothing — stable even for 3-sample blips; per-segment estimation cannot match this for short events</li>
+</ol>
+<p><strong>Implication:</strong> Coast decoupled path is NOT fixable with a boundary clamp. Production wiring requires either (a) tighter coast coupling (sig_a_soft_coast ≈ 2–5 m/s²), or (b) minimum segment length filter (≥ 30 samples), or (c) accept the incumbent full-stream coast path. <strong>Do NOT wire</strong>; keep <code>prepare_coast_samples</code> incumbent.</p>
+<h2>Review Trigger</h2>
+<ul>
+<li><del>#518 wiring</del> <strong>FIRED — G3 wired 2026-06-25.</strong> Updated: MEASURED→WIRED; HP calibration
+basis recorded; <code>clean_longitudinal_from_raw</code> direct retire confirmed.</li>
+<li><del>#523 throttle/coast measurement</del> <strong>FIRED — HONEST-NULL 2026-06-28.</strong> See section above.
+Throttle/coast remain on <code>clean_longitudinal_from_raw</code>.</li>
+<li><del>#546 throttle HP retune + coast boundary-lag</del> <strong>FIRED — HONEST-NULL 2026-06-28.</strong> See section above.
+Coast path requires structural redesign; throttle HP is installed but not wired.</li>
+<li>Multi-session/multi-driver validation: if season-confirmed HP defaults fail a new
+circuit/era, revisit the anchor-placement or per-session HP-calibration strategy.</li>
+<li>Any change that derives the soft-force anchor from a smoothed trajectory rather than the
+TV-denoised raw <code>a_long</code>.</li>
+<li>Threading <code>altitude_assumed_flat</code> honestly through <code>SessionEstimate</code> (currently hardcoded
+False in <code>session_estimator</code>) — the wired braking path now genuinely uses terrain.</li>
+</ul>
+</details>
+</div>
+
+<div class="decision" id="decision-gold_lifecycle_provenance">
+  <h3>gold is a single-provenance, slug-free interface with an atomic promotion lifecycle</h3>
+  <div class="meta">decision:gold_lifecycle_provenance · current
+    · 2026-06-10 · user decision (#440; post-mortem of the #335 leak)</div>
+  <div>Governs: <a href="subsystem-evo_predictor.html"><code>struct:evo.gold_cycle</code></a> <a href="subsystem-evo_predictor.html"><code>struct:evo</code></a></div>
+  <h4>Question</h4><p>How is the committed gold model interface structured so a superseded/leaked artifact cannot silently survive a promotion, and how is a candidate promoted?</p>
+
+  <h4>Decision</h4><p>Gold is a <strong>stable, single-provenance interface</strong> with an <strong>intentional, atomic promotion lifecycle</strong>. Three physical locations:</p>
+<pre><code>params/gold/            LIVE      committed; constant (slug-free) names only; git history IS the lineage
+params/gold_candidate/  POTENTIAL gitignored; a freshly built candidate in full gold layout
+params/gold_archive/    ARCHIVE   gitignored; superseded golds under &lt;slug&gt;/, time-bounded
+</code></pre>
+<p>Binding rules:</p>
+<ul>
+<li><strong>Constant filenames in <code>params/gold/</code></strong> — best-known truth is swapped underneath stable names (<code>sampled_runtime_manifest.json</code>, <code>fusion/fusion.json</code>, <code>uncertainty_calibration/unc_cal.json</code>, <code>runtime_bundles/&lt;module&gt;/</code>). The slug stays on the build/candidate/archive side only.</li>
+<li><strong><code>gold_provenance.json</code></strong> is the single source of provenance (slug, model arch, train_years, eval_year, promotion sha, supersedes, backtest evidence).</li>
+<li><strong>Hard invariant <code>eval_year ∉ train_years</code></strong>, asserted at build, promote, and validation.</li>
+<li><strong>Promotion is an atomic physical move</strong> (<code>scripts/promote_gold.py</code>): stage to a temp sibling then <code>os.replace</code>; current gold → <code>gold_archive/&lt;old_slug&gt;/</code>, candidate → <code>params/gold/</code>; rollback on failure; <code>--dry-run</code> prints the plan. The script never auto-commits — the operator commits the new <code>params/gold/</code>.</li>
+<li><strong>Candidate evaluation never reads <code>params/gold/</code></strong> — pre-promotion eval takes an explicit <code>--gold-root</code> (default <code>gold_candidate</code>) and raises if it resolves to the live gold.</li>
+<li><strong><code>pipeline_validation</code> provenance gate</strong> — <code>params/gold/</code> must contain <strong>exactly</strong> the gold artifact set with no extras; a stray <code>per_race_predictions/</code> fails here.</li>
+</ul>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:gold_lifecycle_provenance</code>
+<strong>Status:</strong> current
+<strong>Date decided:</strong> 2026-06-10
+<strong>Authority:</strong> user decision (#440; post-mortem of the #335 leak)
+<strong>Structural anchors:</strong> <code>struct:evo.gold_cycle</code>, <code>struct:evo</code>
+<strong>Capability anchors:</strong> probabilistic race prediction (the live model interface)</p>
+<h2>Question Resolved</h2>
+<p>How is the committed gold model interface structured so a superseded/leaked artifact cannot silently survive a promotion, and how is a candidate promoted?</p>
+<h2>Decision</h2>
+<p>Gold is a <strong>stable, single-provenance interface</strong> with an <strong>intentional, atomic promotion lifecycle</strong>. Three physical locations:</p>
+<pre><code>params/gold/            LIVE      committed; constant (slug-free) names only; git history IS the lineage
+params/gold_candidate/  POTENTIAL gitignored; a freshly built candidate in full gold layout
+params/gold_archive/    ARCHIVE   gitignored; superseded golds under &lt;slug&gt;/, time-bounded
+</code></pre>
+<p>Binding rules:</p>
+<ul>
+<li><strong>Constant filenames in <code>params/gold/</code></strong> — best-known truth is swapped underneath stable names (<code>sampled_runtime_manifest.json</code>, <code>fusion/fusion.json</code>, <code>uncertainty_calibration/unc_cal.json</code>, <code>runtime_bundles/&lt;module&gt;/</code>). The slug stays on the build/candidate/archive side only.</li>
+<li><strong><code>gold_provenance.json</code></strong> is the single source of provenance (slug, model arch, train_years, eval_year, promotion sha, supersedes, backtest evidence).</li>
+<li><strong>Hard invariant <code>eval_year ∉ train_years</code></strong>, asserted at build, promote, and validation.</li>
+<li><strong>Promotion is an atomic physical move</strong> (<code>scripts/promote_gold.py</code>): stage to a temp sibling then <code>os.replace</code>; current gold → <code>gold_archive/&lt;old_slug&gt;/</code>, candidate → <code>params/gold/</code>; rollback on failure; <code>--dry-run</code> prints the plan. The script never auto-commits — the operator commits the new <code>params/gold/</code>.</li>
+<li><strong>Candidate evaluation never reads <code>params/gold/</code></strong> — pre-promotion eval takes an explicit <code>--gold-root</code> (default <code>gold_candidate</code>) and raises if it resolves to the live gold.</li>
+<li><strong><code>pipeline_validation</code> provenance gate</strong> — <code>params/gold/</code> must contain <strong>exactly</strong> the gold artifact set with no extras; a stray <code>per_race_predictions/</code> fails here.</li>
+</ul>
+<h2>Rationale</h2>
+<ul>
+<li>The #335 leak was structural, not a one-off: an implicit promotion left March's <code>per_race_predictions/</code> (trained on the 2025 eval year) in <code>params/gold/</code>; a downstream reuse produced a leaked &quot;707&quot; fantasy score that beat the best human (711). Constant names + single provenance + atomic swap + the no-extra-files gate make that leak class <strong>structurally impossible</strong>.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li>Read the live model from the constant <code>params/gold/</code> paths; never hardcode a slug into a gold consumer.</li>
+<li>Run a candidate build/eval against <code>params/gold_candidate/</code>, never the live gold; promote with <code>promote_gold.py</code>; the multi-season fantasy backtest is the promotion evidence, and its numbers travel in <code>gold_provenance.backtest_evidence</code>.</li>
+<li>The operational how-to is <code>docs/evo/analysis_refresh.md</code> (the runbook); this anchor is the why/invariants.</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>Slugged gold filenames + implicit promotion</strong> (write straight into <code>params/gold/</code>, nothing removes superseded files): the original scheme; it is exactly what let the #335 leak survive. Do not reintroduce slugs into the live gold or write candidates straight to <code>params/gold/</code>.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li>Any change to the gold artifact set (§4 of the archived design) or to <code>promote_gold.py</code> / the <code>pipeline_validation</code> provenance section.</li>
+<li>A new schema generation that adds files under <code>params/gold/</code> (update the exact-set gate together).</li>
+</ul>
+</details>
+</div>
+
+<div class="decision" id="decision-ideal_lap_sim_two_sided_evaluator">
+  <h3>(untitled)</h3>
+  <div class="meta">decision:ideal_lap_sim_two_sided_evaluator · current
+    · 2026-06-18 · user decision (P1 sim-evaluator design session, #492)</div>
+  <div>Governs: <a href="subsystem-physics.html"><code>struct:physics</code></a> <a href="subsystem-physics.html"><code>struct:physics.utilization</code></a></div>
+  <h4>Question</h4><p>What is the ideal-lap simulator <em>for</em>, and how is a sim run judged trustworthy?</p>
+
+  <h4>Decision</h4><p>The ideal-lap sim (<code>physics_simulator.py</code>, evaluated by <code>sim_evaluator.py</code>) is a <strong>two-sided evaluator of car capability</strong>, not a quali-regression predictor. The ideal lap is a CEILING — a perfect-driver, max-grip lap — so it must neither <em>underestimate</em> acceleration in any direction nor produce <em>aphysical runaways</em>.</p>
+<ul>
+<li>A <strong>small</strong> sim-vs-human gap (a couple of percent) is the <strong>suspicious</strong> signal — it means the sim is under-calling capability. Large gaps (gut ~10%) are expected and healthy. The gap between the ceiling and the actual lap is the driver-utilisation signal, not an error to minimise.</li>
+<li><strong>Per-point Δv-vs-position is the primary read</strong> (<code>delta_v_profile</code>), not the single lap-time number: <em>where</em> the sim under/over-shoots is the diagnosis.</li>
+<li><strong>Runaway is a separate physics-implausibility check</strong> (<code>runaway_flags</code>: impossible speeds, uncapped corners, integral blow-ups), NOT inferred from a large gap.</li>
+</ul>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><p>﻿# Architecture Decision: the ideal-lap sim is a two-sided evaluator, not a predictor</p>
+<h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:ideal_lap_sim_two_sided_evaluator</code>
+<strong>Status:</strong> current
+<strong>Date decided:</strong> 2026-06-18
+<strong>Authority:</strong> user decision (P1 sim-evaluator design session, #492)
+<strong>Structural anchors:</strong> <code>struct:physics</code>, <code>struct:physics.utilization</code>
+<strong>Capability anchors:</strong> ideal-lap simulation; two-sided fit evaluation; per-regime driver utilization</p>
+<h2>Question Resolved</h2>
+<p>What is the ideal-lap simulator <em>for</em>, and how is a sim run judged trustworthy?</p>
+<h2>Decision</h2>
+<p>The ideal-lap sim (<code>physics_simulator.py</code>, evaluated by <code>sim_evaluator.py</code>) is a <strong>two-sided evaluator of car capability</strong>, not a quali-regression predictor. The ideal lap is a CEILING — a perfect-driver, max-grip lap — so it must neither <em>underestimate</em> acceleration in any direction nor produce <em>aphysical runaways</em>.</p>
+<ul>
+<li>A <strong>small</strong> sim-vs-human gap (a couple of percent) is the <strong>suspicious</strong> signal — it means the sim is under-calling capability. Large gaps (gut ~10%) are expected and healthy. The gap between the ceiling and the actual lap is the driver-utilisation signal, not an error to minimise.</li>
+<li><strong>Per-point Δv-vs-position is the primary read</strong> (<code>delta_v_profile</code>), not the single lap-time number: <em>where</em> the sim under/over-shoots is the diagnosis.</li>
+<li><strong>Runaway is a separate physics-implausibility check</strong> (<code>runaway_flags</code>: impossible speeds, uncapped corners, integral blow-ups), NOT inferred from a large gap.</li>
+</ul>
+<h2>Rationale</h2>
+<ul>
+<li>Conflating &quot;small gap = good fit&quot; would reward exactly the under-estimation failure the evaluator exists to catch.</li>
+<li>The sim is the yardstick the rest of Epic 2 (#492) is judged against; it has to be honest about both failure directions before any capability number is trusted.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li><code>sim_evaluator.is_under_call_suspect</code> flags small gaps as suspect, not as success.</li>
+<li>Two finite, telemetry-derived guards keep the ceiling physical, both with injection hooks for the later pooled per-car posterior:<ul>
+<li><strong>Per-car Gsat fallback ceiling</strong> — when a fit has no tyre ceiling (~29% of P0 fits), corner speed would be <code>inf</code>; fall back to the car's own measured peak lateral grip × headroom, clamped by a per-era population max.</li>
+<li><strong>DRS-zone mask is telemetry-pooled, not a curated zone file</strong> (<code>ribbon.drs_zone_mask</code>): mark a track segment a DRS zone where the FastF1 <code>DRS</code> channel is open across many cars/laps, so it self-adapts across all seasons (and to DRS-disabled wet sessions) with no per-season upkeep.</li>
+</ul>
+</li>
+<li>Do not wire the sim or its gap as a prediction feature into evo (<code>constraint:physics_region_no_evo_import</code>); it is a measurement/evaluation surface.</li>
+<li><strong>Review trigger fired (C1 #510, 2026-06-24):</strong> the driver-utilization layer (<code>src/physics/utilization/</code>) has landed and consumes the sim-vs-actual gap as per-regime signal. The gap is now decomposed into four tiling regimes (braking / slow_corner / fast_corner / straight) rather than a single scalar. <code>car_prior.py</code> <code>lateral.ceiling=None</code> continues to rely on the Gsat fallback path as intended. The C1 design choices are captured in <code>decision:c1_driver_utilization_design</code>.</li>
+<li><strong>G5 units fix (#518, 2026-06-25):</strong> <code>car_prior._build_longitudinal</code> now converts the store's total-watts <code>max_power_w</code> to specific power (W/kg) for <code>specific_power_w_kg</code> (= <code>max_power_w/MASS_KG</code>; covariance <code>/ MASS_KG²</code>). Prior to G5 the ideal lap received total watts in a W/kg slot, producing an aphysical top speed of ~745 km/h. Post-fix the ideal lap is physical (~333 km/h, drag-limited). The store's <code>max_power_w</code> column stays in watts; the conversion is at the <code>car_prior</code> param-assembly boundary.</li>
+<li><strong>Updated characterization finding (#518 G6 superseded by #522 G3 — lateral units fix):</strong> The #518 G6 &quot;phase misalignment binding constraint&quot; conclusion was superseded by a lateral units bug: the five-view <code>lateral_view</code> store carries A0/A2 in g-unit coefficients, but <code>car_prior._assemble_lateral</code> was not converting them to the consumer's m/s² convention, making the ideal-lap corner caps ~10× too low (Monaco tunnel ~17 m/s vs physical ~63 m/s). Fixed in #522 G2 (commit 33c56214, Jacobian <code>J=diag(G, G/ρ)</code> applied at the <code>car_prior</code> boundary). Post-fix run (2026-06-26, MC samples=50, seed=42, 4 cases 2023-Q RBR/VER): u_braking=0.891–1.018, u_slow_corner=0.889–0.955, u_fast_corner=0.917–0.972, u_straight=0.898–1.012 — all physically plausible. Overall verdict: <strong>CONTEXTUAL</strong> (all regimes). A small straight under-call persists at Italy (0.987) and Singapore (0.958) — the lateral fix does not touch the power-drag path (triage to #525-adjacent). The point-aligned phase confound for corner regimes remains a secondary concern but values are now ~0.9–1.0, not the ~3.3–3.8× the bug was causing. See <code>.agent-work/522-phase-align-utilization/VERDICT.md</code> and <code>reports/physics/driver_util_subset_2023.csv</code>.</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>Curated per-season DRS-zone file:</strong> rejected — needs per-season upkeep and silently rots; the telemetry-pooled mask self-adapts.</li>
+<li><strong>Treating the ideal lap as a regression-to-quali target / small gap as success:</strong> rejected — inverts the evaluator's purpose.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li><del>The driver-utilisation layer (capability-vs-actual decomposition) landing, which consumes the gap as signal.</del> <strong>FIRED — C1 #510 landed 2026-06-24.</strong></li>
+<li><del><code>car_prior</code> units fix</del> <strong>FIRED — G5 (#518) landed 2026-06-25; ideal lap now physical (~333 km/h).</strong></li>
+<li>Any change that lets the sim return non-finite corner speeds, or that sources DRS zones from a curated file.</li>
+<li><del><code>car_prior</code> lateral units fix (g-unit A0/A2 → m/s²)</del> <strong>FIRED — G2 (#522) landed 2026-06-26; corner regimes now 0.9–1.0 (CONTEXTUAL), 2.0 clip eliminated.</strong></li>
+<li><del><code>car_prior._assemble_lateral</code>/<code>_build_longitudinal</code> sanctioned as the ONE conversion seams; parameter rename to <code>&lt;what&gt;_&lt;unit&gt;</code> (<code>lateral_mech_grip_g</code>, <code>max_power_w</code>, <code>brake_decel_ms2</code>, etc.)</del> <strong>FIRED — #525 landed 2026-06-27; TODO(#525) retired; <code>_g</code>/<code>_ms2</code> suffix naming makes boundary visible; durable unit table at <code>docs/architecture/reference/physics-unit-conventions.md</code>.</strong></li>
+<li>Phase-alignment fix landing (phase-aligned or per-regime capability-frontier comparison replacing the current point-aligned <code>v_real/v_ideal</code> method) — will refine corner-regime trustworthiness further; the point-aligned confound remains secondary concern post-#522 (values ~0.9–1.0, not ~3.3–3.8×).</li>
+</ul>
+</details>
+</div>
+
+<div class="decision" id="decision-regime_readiness_rubric">
+  <h3>Regime-Readiness Rubric Thresholds</h3>
+  <div class="meta">decision:regime_readiness_rubric · `current`
+    · `2026-06-27` · `user decision`</div>
+  <div>Governs: <a href="subsystem-physics.html"><code>struct:physics.layer2</code></a></div>
+  <h4>Question</h4><p>What pass/fail thresholds should govern GO/CONTEXTUAL/NO-GO readiness verdicts for
+regime-capability vector axes, and where should these live so they are tunable without
+editing the core computation?</p>
+
+  <h4>Decision</h4><p>The GO/CONTEXTUAL/NO-GO thresholds are named injectable constants
+(<code>DEFAULT_THRESHOLDS = ReadinessThresholds()</code>) in
+<code>src/physics/layer2/regime_readiness.py</code>:</p>
+<ul>
+<li><code>frac_team_go = 0.15</code> — car-vs-car separability: axis passes the GO bar</li>
+<li><code>frac_team_nogo = 0.05</code> — below this the car signal is noise-level (NO-GO)</li>
+<li><code>coverage_go = 0.70</code> — coverage fraction: axis passes the GO bar</li>
+<li><code>zstd_go = 1.3</code> — LOO z-std: calibrated up to here (pass)</li>
+<li><code>zstd_nogo = 2.0</code> — LOO z-std: clearly over-claiming above this (NO-GO)</li>
+<li><code>param_corr_alias = 0.9</code> — |corr| ≥ this means params are collinear/aliased</li>
+<li><code>separation_ratio_manageable = 2.0</code> (G4 static-latent) — <strong>REFERENCE LINE, NOT A
+PASS/FAIL GATE.</strong> F1 quali is decided in hundredths; car capabilities are genuinely
+fine-margin, so a clean ≥2σ static car-separation is not the success bar. The
+<code>separation_ratio</code> (static car-spread / the estimate's own σ_μ) is read as a
+<strong>continuous &quot;how much recoverable signal&quot;</strong> measure; the real question is downstream
+usability of the covariance-bearing relative feature (Phase-P A/B), not a binary gate.
+(User direction, #512 G4: &quot;these cars are within hundredths… fine margins… see what we
+can do with it.&quot;)</li>
+</ul>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:regime_readiness_rubric</code><br />
+<strong>Status:</strong> <code>current</code><br />
+<strong>Date decided:</strong> <code>2026-06-27</code><br />
+<strong>Authority:</strong> <code>user decision</code><br />
+<strong>Structural anchors:</strong> <code>struct:physics.layer2</code></p>
+<h2>Question Resolved</h2>
+<p>What pass/fail thresholds should govern GO/CONTEXTUAL/NO-GO readiness verdicts for
+regime-capability vector axes, and where should these live so they are tunable without
+editing the core computation?</p>
+<h2>Decision</h2>
+<p>The GO/CONTEXTUAL/NO-GO thresholds are named injectable constants
+(<code>DEFAULT_THRESHOLDS = ReadinessThresholds()</code>) in
+<code>src/physics/layer2/regime_readiness.py</code>:</p>
+<ul>
+<li><code>frac_team_go = 0.15</code> — car-vs-car separability: axis passes the GO bar</li>
+<li><code>frac_team_nogo = 0.05</code> — below this the car signal is noise-level (NO-GO)</li>
+<li><code>coverage_go = 0.70</code> — coverage fraction: axis passes the GO bar</li>
+<li><code>zstd_go = 1.3</code> — LOO z-std: calibrated up to here (pass)</li>
+<li><code>zstd_nogo = 2.0</code> — LOO z-std: clearly over-claiming above this (NO-GO)</li>
+<li><code>param_corr_alias = 0.9</code> — |corr| ≥ this means params are collinear/aliased</li>
+<li><code>separation_ratio_manageable = 2.0</code> (G4 static-latent) — <strong>REFERENCE LINE, NOT A
+PASS/FAIL GATE.</strong> F1 quali is decided in hundredths; car capabilities are genuinely
+fine-margin, so a clean ≥2σ static car-separation is not the success bar. The
+<code>separation_ratio</code> (static car-spread / the estimate's own σ_μ) is read as a
+<strong>continuous &quot;how much recoverable signal&quot;</strong> measure; the real question is downstream
+usability of the covariance-bearing relative feature (Phase-P A/B), not a binary gate.
+(User direction, #512 G4: &quot;these cars are within hundredths… fine margins… see what we
+can do with it.&quot;)</li>
+</ul>
+<h2>Rationale</h2>
+<ul>
+<li>Bounds were user-ratified at #512 G3 against the 2023-Q five-view estimate store
+(10 constructors, 22 rounds, 216 ok sessions), where circuit-conditional variance
+(<code>frac_circuit</code> 0.44–0.65) dominated car-separability (<code>frac_team</code> 0–4%) across
+all headline capability axes.</li>
+<li>The <code>frac_team_go = 0.15</code> floor targets meaningful car discrimination; the 0.05
+NO-GO floor (below which car variance is noise-level) matches the #492-era
+&quot;constructors not separable, <code>frac_team ≤ 3%</code>&quot; benchmark.</li>
+<li><code>zstd_go = 1.3</code> was the empirical boundary at which the single calibrated axis
+(<code>max_power_w</code> at 1.28) sits; <code>zstd_nogo = 2.0</code> marks clearly optimistic σ.</li>
+<li>Named injectable constants mean future runs can explore alternative rubrics by
+passing a modified <code>ReadinessThresholds</code> without editing the core — the verdict
+synthesis lives in the caller (currently <code>scripts/regime_capability_dashboard.py</code>),
+not in <code>compute_readiness</code> itself.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li>Agents extending <code>regime_readiness.py</code> should treat <code>DEFAULT_THRESHOLDS</code> as the
+user-ratified baseline and modify it by injection, not by editing the constant in
+place.</li>
+<li><code>compute_readiness</code> emits metrics and boolean flags only; GO/CONTEXTUAL/NO-GO
+synthesis belongs in the caller.</li>
+<li>Future regime-vector axes that exceed <code>frac_team_go = 0.15</code> are candidates for
+Phase-P (#450) composition; axes that only pass <code>frac_circuit</code> are circuit-conditional,
+not car-constants, and must be circuit-conditioned/normalised before use.</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>Hard-coded thresholds inside <code>compute_readiness</code></strong>: would require editing the core
+to re-evaluate with different rubrics; injectable default avoids that coupling.</li>
+<li><strong>Higher GO floor (<code>frac_team_go = 0.25</code>)</strong>: would flag all axes NO-GO including
+<code>coast_rolling_decel_ms2</code> (44%), losing the PU-diagnostic CONTEXTUAL signal that is
+informative for #502.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li>If a production store covering 3+ seasons shows headline capability axes
+(<code>slow_corner_grip</code>, <code>fast_corner_grip</code>, <code>braking</code>) regularly exceed
+<code>frac_team_go = 0.15</code>, the thresholds may need upward revision.</li>
+<li>If the physics fit methodology changes (e.g., circuit-indexed pooling, within-circuit
+normalisation, or multi-session averaging), the decomposition basis changes and these
+thresholds should be re-evaluated from scratch.</li>
+</ul>
+</details>
+</div>
+
+<div class="decision" id="decision-smoother_rounds_braking_knee">
+  <h3>the trajectory smoother rounds the braking knee</h3>
+  <div class="meta">decision:smoother_rounds_braking_knee · current
+    · 2026-06-18 · user decision (P1/P1b design sessions, #492) + repo artifact (validated then superseded)</div>
+  <div>Governs: <a href="subsystem-preprocessing.html"><code>struct:preprocessing</code></a> <a href="subsystem-physics.html"><code>struct:physics.layer2</code></a></div>
+  <h4>Question</h4><p>Why does the de-conflated braking frontier under-read braking capability, and can the peak be recovered by post-processing the smoothed trajectory?</p>
+
+  <h4>Decision</h4><p>The windowless Matern Kalman-RTS smoother (<code>src/preprocessing/trajectory/smoother.py</code>) <strong>flattens acceleration (the derivative) while preserving speed (the integral)</strong>. Fitting the braking frontier <code>a_brake(v) = a_b + b_b·v²</code> from the smoothed <code>a_long</code> series therefore flattens the decel spike — measured peak ~3.9 g vs ~5 g real, and single-session <code>b_b</code> even comes out the wrong sign.</p>
+<p>The peak <strong>cannot be recovered by post-processing the smoothed trajectory</strong>, because the smoother rounds the <em>speed knee</em> too, not just <code>a_long</code>. A time-kernel that fits the kernel's derivative to the preserved speed trace (P1b, #492) was implemented and validated on synthetic data, then <strong>superseded</strong>: the rounded speed knee no longer constrains a sharp peak. The real fix is a physics-aware filter that un-rounds the knee at the estimator (#496/#498); the interim capability read is the raw car-speed sensor's high-quantile frontier.</p>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:smoother_rounds_braking_knee</code>
+<strong>Status:</strong> current
+<strong>Date decided:</strong> 2026-06-18
+<strong>Authority:</strong> user decision (P1/P1b design sessions, #492) + repo artifact (validated then superseded)
+<strong>Structural anchors:</strong> <code>struct:preprocessing</code>, <code>struct:physics.layer2</code>
+<strong>Capability anchors:</strong> windowless full-stint trajectory estimation</p>
+<h2>Question Resolved</h2>
+<p>Why does the de-conflated braking frontier under-read braking capability, and can the peak be recovered by post-processing the smoothed trajectory?</p>
+<h2>Decision</h2>
+<p>The windowless Matern Kalman-RTS smoother (<code>src/preprocessing/trajectory/smoother.py</code>) <strong>flattens acceleration (the derivative) while preserving speed (the integral)</strong>. Fitting the braking frontier <code>a_brake(v) = a_b + b_b·v²</code> from the smoothed <code>a_long</code> series therefore flattens the decel spike — measured peak ~3.9 g vs ~5 g real, and single-session <code>b_b</code> even comes out the wrong sign.</p>
+<p>The peak <strong>cannot be recovered by post-processing the smoothed trajectory</strong>, because the smoother rounds the <em>speed knee</em> too, not just <code>a_long</code>. A time-kernel that fits the kernel's derivative to the preserved speed trace (P1b, #492) was implemented and validated on synthetic data, then <strong>superseded</strong>: the rounded speed knee no longer constrains a sharp peak. The real fix is a physics-aware filter that un-rounds the knee at the estimator (#496/#498); the interim capability read is the raw car-speed sensor's high-quantile frontier.</p>
+<h2>Rationale</h2>
+<ul>
+<li>The information is <em>in</em> the session; the blind Gaussian-smoothness filter discards it (phase-lag ringing fighting the longitudinal transient).</li>
+<li>Any recovery that reads from the smoothed trajectory inherits the rounded knee — the bias has to be fixed <em>at</em> the estimator, not downstream.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li><code>struct:physics.layer2</code> braking capability is read as a cantilever frontier over a kernel local-upper-quantile ridge, and <code>braking_view.clean_longitudinal_from_raw</code> exists precisely to read decel from the raw signal rather than the over-smoothed <code>a_long</code>. <strong>This raw-speed interim read is NOT yet retired</strong> — see below.</li>
+<li>Do not &quot;just fit a kernel to the smoothed speed&quot; to recover braking peaks — it was tried and fails.</li>
+<li><strong>#498 has LANDED</strong> (Student-t jerk prior <code>nu_proc</code> + <code>kind=3</code> acceleration anchor, both default-off / byte-identical when disabled; committed 2026-06-19). The estimator-side fix is in place. Real-session validation on Spa 2023 Q VER: the refinement un-rounds the knee toward raw truth — blind Gaussian peak −34.93, Student-t alone −38.10, +kind=3 −37.41 vs raw −38.84. The kind=3 channel adds zero ringing.</li>
+<li><strong>Caveat — regime-dependent benefit:</strong> the plateau-only anchor constrains the magnitude on the SUSTAINED braking plateau, NOT the transition peak (the speed-knee inflection). On a lap where cycle-1 Student-t alone does not over-correct, kind=3 adds only a small correction. The over-correction-guard value of <code>kind=3</code> is therefore regime-dependent. Whether the kind=3 plateau anchor constrains the transition peak depends on the session geometry.</li>
+<li>The raw-speed interim read in <code>braking_view.clean_longitudinal_from_raw</code> is NOT yet retired: cross-circuit validation (e.g. Monaco) and per-session <code>nu_proc</code>/<code>sigma</code> calibration are pending (tracked as #498 triage tc4/tc5). Treat single-session smoothed <code>b_b</code> and absolute braking-peak from the smoothed series as still uncertain until calibration lands.</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>P1b braking time-kernel</strong> (<code>a(τ)=A·g(τ;θ)</code> fit to per-event Δv, kernel-derivative recovers the peak): superseded — the smoother rounds the speed knee the kernel would need. Preserved here because it is the obvious thing to re-propose (&quot;fit the integral the smoother preserves&quot;) and it does not work.</li>
+<li><strong>Trusting smoothed <code>a_long</code> peaks directly:</strong> the original path; under-reads by ~1 g and can sign-flip <code>b_b</code>.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li><strong>#498 has landed</strong> (2026-06-19): Student-t jerk prior (<code>nu_proc</code>) + <code>kind=3</code> acceleration anchor built, tested, validated on Spa 2023 Q VER. The review trigger has fired; caveat updated above — raw-speed interim NOT yet retired because cross-circuit validation and per-session calibration are outstanding (tc4/tc5).</li>
+<li>Retire <code>braking_view.clean_longitudinal_from_raw</code> and this decision's remaining caveats when: (a) cross-circuit validation (Monaco + others) confirms the kind=3 plateau anchor generalizes, and (b) per-session <code>nu_proc</code>/<code>sigma</code> calibration is in place. Track via #498 triage items tc4/tc5.</li>
+<li>Any subsequent change to <code>smoother.py</code>'s process-noise / jerk model or <code>nu_proc</code> default.</li>
+</ul>
+<hr />
+<h2>#505 Cross-Circuit Validation Findings (2026-06-22)</h2>
+<p><strong>Status of retire decision: NOT retired. See recommendation below.</strong><br />
+<strong>Script:</strong> <code>scripts/validate_refine_505.py</code> | Evidence: <code>.agent-work/505_validation_findings.md</code></p>
+<h3>Evidence table (Belgium / Monaco / Bahrain 2023 Q VER)</h3>
+<table>
+<thead>
+<tr>
+  <th>Circuit</th>
+  <th>Gaussian (m/s²)</th>
+  <th>Student-t (m/s²)</th>
+  <th>+kind=3 (m/s²)</th>
+  <th>raw sensor (m/s²)</th>
+  <th>ringing ok?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Belgium (Spa)</td>
+  <td>−34.93</td>
+  <td>−38.10</td>
+  <td>−37.41</td>
+  <td>−38.84</td>
+  <td>YES</td>
+</tr>
+<tr>
+  <td>Monaco</td>
+  <td>−38.07</td>
+  <td>−37.60</td>
+  <td>−37.60</td>
+  <td>−37.51</td>
+  <td>SPURIOUS (13.4 vs 5.6 ceiling)</td>
+</tr>
+<tr>
+  <td>Bahrain</td>
+  <td>−39.50</td>
+  <td>−39.42</td>
+  <td>−39.42</td>
+  <td>−52.13</td>
+  <td>SPURIOUS (0.4 vs −2.9 ceiling)</td>
+</tr>
+</tbody>
+</table>
+<p>Belgium matches and extends the #498 Spa finding (the lap numbers are identical — lap 21 at 106.2s). <strong>Monaco</strong> exhibits pre-existing smoother ringing that kind=3 neither causes nor cures — 13 m/s² positive a_long in non-throttle (vs a ~5.6 ceiling), from corner-entry bleed into braking transitions on short straights, not from the kind=3 anchor. <strong>Bahrain is a different failure</strong>: the raw sensor reads ~5.3 g (−52.13) — a <em>real</em> F1 peak-braking value consistent with #496's documented p99 5.3 g / max 5.5 g — which the blind smoother under-reads to ~4.0 g (−39.5) and kind=3 does not recover. Both failure modes are tracked for the full filter rebuild as <strong>#507</strong>.</p>
+<p><strong>Monaco coast phase</strong>: 1 coast sample on the fastest lap; kind=3 max_a = −3.46 vs raw = −4.77 m/s² — no ringing in the coast phase. The ringing is confined to braking transitions.</p>
+<h3>Over-correction rescue (AC2)</h3>
+<p>Searched all flying laps on each circuit:</p>
+<ul>
+<li>Belgium: no over-correction on any lap.</li>
+<li>Monaco lap #23: Student-t over-corrects to −34.48 m/s² vs raw −30.42 (delta = 4.06 m/s²). kind=3 rescue: <strong>+0.01 m/s²</strong> — effectively zero rescue.</li>
+<li>Bahrain lap #11: delta = 1.28 m/s². kind=3 rescue not separately measured (Bahrain smoother unaffected by kind=3 generally).</li>
+</ul>
+<p><strong>The cycle-2 guard does NOT rescue the Monaco over-correction.</strong> The plateau-only anchor requires a sustained braking plateau (≥ <code>2×plateau_margin = 6</code> samples past transitions). Monaco's short braking zones do not provide this plateau or anchor at a lower value than the Student-t peak estimate.</p>
+<h3>Calibration decision (AC3)</h3>
+<p><strong>nu_proc (Q#4): Keep fixed at 4.0.</strong></p>
+<ul>
+<li>Belgium: nu=4.0 exactly optimal (gap=0 vs sweep grid).</li>
+<li>Monaco/Bahrain: the ringing problem pre-dates nu_proc; no valid sweep result possible.</li>
+<li>Per-session calibration would add complexity without payoff on circuits where the fundamental issue is smoother architecture, not nu_proc mis-specification.</li>
+</ul>
+<p><strong>kind=3 sigma_floor (Q#3): Keep fixed at 0.5.</strong></p>
+<ul>
+<li>Belgium: sigma=2.0 yields −38.41 vs sigma=0.5 at −37.41 (1.0 m/s² gain), both still 0.4–1.4 m/s² below raw.</li>
+<li>Monaco/Bahrain: sigma sweep has no effect (kind=3 is ineffective on these circuits).</li>
+<li>Benefit of per-session sigma calibration is &lt; 1 m/s² and insufficient to close the gap to raw truth.</li>
+</ul>
+<h3>Retire/keep recommendation (AC4)</h3>
+<p><strong>KEEP <code>braking_view.clean_longitudinal_from_raw</code> as the primary braking input.</strong></p>
+<p>Deciding numbers:</p>
+<ol>
+<li>Belgium: best smoothed knee with kind=3 = −38.41 m/s² vs raw −38.84 → 0.43 m/s² remaining gap (refinement recovered ~90% of the rounding).</li>
+<li>Monaco: kind=3 adds zero improvement over Gaussian; raw-speed braking frontier is the ONLY reliable Monaco input.</li>
+<li>Bahrain: raw sensor at −52.13 m/s² (~5.3 g) is a real heavy-braking peak (matching #496's documented p99 5.3 g), which the smoother under-reads to −39.5 (~4.0 g) and kind=3 does not recover — the raw-speed frontier is what preserves the real peak (tracked: #507).</li>
+<li>Cycle-2 rescue failed on Monaco (4.06 m/s² over-correction not fixed). <code>clean_longitudinal_from_raw</code> is needed as the raw-truth ceiling for the cantilever.</li>
+<li>Monaco ringing (13 m/s² in non-throttle) pre-exists kind=3 and will contaminate any smoothed braking read until the ringing root-cause is fixed.</li>
+</ol>
+<p>Revised retire condition (replacing tc4/tc5; tracked as #507): fix the Monaco non-throttle ringing AND the Bahrain heavy-braking under-read — both likely require the full physics-aware filter rebuild (#496), not just the plateau anchor — then confirm the smoothed braking frontier tracks the raw-speed frontier on BOTH circuits within acceptable tolerance (&lt; 1 m/s² of the frontier's A coefficient).</p>
+<p><strong>This validation finding does NOT close #505 — the retire decision is ratified by the main thread and user.</strong></p>
+</details>
+</div>
+
+<div class="decision" id="decision-traction_own_measured_frontier">
+  <h3>traction gets its own measured frontier, not a fraction of lateral</h3>
+  <div class="meta">decision:traction_own_measured_frontier · current
+    · 2026-06-17 · user decision + repo artifact (Epic 1 #485/#488 envelope work)</div>
+  <div>Governs: <a href="subsystem-physics.html"><code>struct:physics</code></a> <a href="subsystem-physics.html"><code>struct:physics.layer2</code></a></div>
+  <h4>Question</h4><p>How is corner-exit traction (longitudinal grip under power) bounded in the capability envelope — derived from the lateral grip cap, or measured on its own?</p>
+
+  <h4>Decision</h4><p>Traction has its <strong>own measured frontier</strong> (<code>traction_fit.py::fit_traction_frontier</code> → <code>TractionFrontier</code>; <code>layer2/traction_view.py</code> as the ascent of the throttle-on hump), fed into the anisotropic gg-v <code>CapabilityEnvelope</code> (<code>capability_envelope.py</code>, #488). It is <strong>not</strong> a fixed fraction of the lateral grip cap.</p>
+<p>The earlier envelope used a <code>0.30 × lateral</code> traction cap; that was wrong — traction and lateral grip are different physical limits (tyre+drivetrain longitudinal capability vs cornering capability) and do not track at a fixed ratio across cars or circuits. #488 replaced the fraction with a measured traction frontier.</p>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:traction_own_measured_frontier</code>
+<strong>Status:</strong> current
+<strong>Date decided:</strong> 2026-06-17
+<strong>Authority:</strong> user decision + repo artifact (Epic 1 #485/#488 envelope work)
+<strong>Structural anchors:</strong> <code>struct:physics</code>, <code>struct:physics.layer2</code>
+<strong>Capability anchors:</strong> anisotropic gg-v capability envelope</p>
+<h2>Question Resolved</h2>
+<p>How is corner-exit traction (longitudinal grip under power) bounded in the capability envelope — derived from the lateral grip cap, or measured on its own?</p>
+<h2>Decision</h2>
+<p>Traction has its <strong>own measured frontier</strong> (<code>traction_fit.py::fit_traction_frontier</code> → <code>TractionFrontier</code>; <code>layer2/traction_view.py</code> as the ascent of the throttle-on hump), fed into the anisotropic gg-v <code>CapabilityEnvelope</code> (<code>capability_envelope.py</code>, #488). It is <strong>not</strong> a fixed fraction of the lateral grip cap.</p>
+<p>The earlier envelope used a <code>0.30 × lateral</code> traction cap; that was wrong — traction and lateral grip are different physical limits (tyre+drivetrain longitudinal capability vs cornering capability) and do not track at a fixed ratio across cars or circuits. #488 replaced the fraction with a measured traction frontier.</p>
+<h2>Rationale</h2>
+<ul>
+<li>Tying traction to lateral grip bakes in an unmeasured anisotropy ratio and silently mis-attributes power-down capability.</li>
+<li>The gg-v envelope is explicitly <em>anisotropic</em>; each axis must carry its own measured limit for the envelope to mean anything.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li>The capability envelope reads a measured traction frontier per car; do not reintroduce a <code>k × lateral</code> traction cap as a &quot;reasonable default.&quot;</li>
+<li>Traction (ascent) and power-minus-drag (descent) are the two halves of the throttle-on frontier hump; the descent shape is what deconfounds drag (CdA) from downforce (<code>layer2/power_drag_view.py</code>).</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong><code>0.30 × lateral</code> traction cap:</strong> the original envelope's approach; rejected by #488. Preserved here because a fixed fraction is the obvious cheap default a future agent will reach for when traction data is thin — and it is measurably wrong.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li>Any change to <code>capability_envelope.py</code> or <code>traction_fit.py</code> that couples the traction limit to the lateral cap.</li>
+</ul>
+</details>
+</div>
+
+<div class="decision" id="decision-two_cycle_external_anchor_design">
+  <h3>two-cycle external-anchor trajectory refinement design</h3>
+  <div class="meta">decision:two_cycle_external_anchor_design · current
+    · 2026-06-19 (extended 2026-06-24 for the 1D-filter context) · user decision (#498 design sessions + repo artifact `explore_cycles.py`); extended (#496/#507 G3 VERDICT.md)</div>
+  <div>Governs: <a href="subsystem-physics.html"><code>struct:physics.layer2</code></a> <a href="subsystem-preprocessing.html"><code>struct:preprocessing</code></a></div>
+  <h4>Question</h4><p>What are the inviolable design invariants of the #498 two-cycle trajectory refinement,
+and which choices protect against the proven overfitting failure mode? Extended (#496/#507):
+does the same anchor-source discipline apply when the longitudinal estimator is a decoupled
+1D filter rather than a 2D trajectory refinement?</p>
+
+  <h4>Decision</h4><p>Four invariants govern <code>src/physics/layer2/trajectory_refine.py</code> and
+<code>src/physics/layer2/accel_obs.py</code>:</p>
+<ol>
+<li><p><strong>The anchor is ALWAYS external and un-biased.</strong> The acceleration magnitude
+(<code>inp.a_long</code>) is the raw-sensor total longitudinal acceleration passed in from
+outside — it is never re-derived from ANY smoothed trajectory (cycle-1 or
+cycle-2). The heading <code>(vx, vy)</code> from cycle 1 is a geometric frame only; it
+does not supply the magnitude.</p>
+</li>
+<li><p><strong>Plateau-only observation placement.</strong> <code>emit_accel_obs</code> selects only the
+established frontier plateau (<code>plateau_margin</code> trims transition samples from
+each contiguous braking/throttle run). This prevents the kind=3 anchor from
+pulling against the regime transitions, where acceleration is changing rapidly
+and ringing would be introduced.</p>
+</li>
+<li><p><strong>Two cycles only.</strong> <code>refine_trajectory</code> runs exactly two cycles. Cycle 3+
+with a fixed external anchor buy nothing — the anchor does not change, so
+additional re-smooths converge at cycle 2. Hard-coding two cycles prevents
+future scope creep adding a third cycle that could silently re-read a
+trajectory.</p>
+</li>
+<li><p><strong>Student-t jerk prior is the cycle-1 foundation.</strong> Cycle 1 (nu_proc) retires
+the Gaussian smoothness assumption before cycle 2 adds the external anchor. The
+ordering matters: a Gaussian cycle-1 followed by a kind=3 cycle-2 still carries
+the Gaussian-rounded knee into the heading frame used to project the anchor.</p>
+</li>
+</ol>
+<h3>Extension to the 1D-filter context (#496/#507 G3)</h3>
+<p>The <strong>anchor-source discipline</strong> (invariant 1 above: external, un-biased, raw-derived)
+is consciously extended to <code>src/physics/layer2/decoupled_longitudinal.py</code>:</p>
+<ul>
+<li><strong>Anchor magnitude</strong> = the TV/IRLS-denoised RAW <code>a_long</code> (gravity-corrected to
+vehicle force: <code>m(a_tv + g sinθ)</code> where <code>a_tv</code> is an edge-preserving transform of
+the raw signal only, never re-read from a smoothed trajectory; the gravity term uses
+the external #497 z-map gradient, not the trajectory).</li>
+<li><strong>Anchor placement</strong> extended from plateau-only to the <strong>full braking arc including
+the onset sample</strong> (the raw signal already carries the onset transient; TV preserves
+it rather than inventing it; the onset is the capability sample, not noise). This
+extends invariant 2 for the 1D context where the onset sample is the target.</li>
+<li>The &quot;two cycles&quot; structure does not literally apply here (this is a single-pass 1D
+Kalman-RTS, not a 2D re-smooth loop), but the core invariant — the anchor must be
+re-derived from an INDEPENDENT measurement source, not a prior cycle's output — is
+preserved exactly.</li>
+</ul>
+<p>Evidence: <code>src/physics/layer2/decoupled_longitudinal.py</code> docstring + g3-implement
+extension statement (<code>.agent-work/496-physics-aware-estimator/crew-handoffs/g3-implement-result.md</code>).</p>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:two_cycle_external_anchor_design</code>
+<strong>Status:</strong> current
+<strong>Date decided:</strong> 2026-06-19 (extended 2026-06-24 for the 1D-filter context)
+<strong>Authority:</strong> user decision (#498 design sessions + repo artifact <code>explore_cycles.py</code>); extended (#496/#507 G3 VERDICT.md)
+<strong>Structural anchors:</strong> <code>struct:physics.layer2</code>, <code>struct:preprocessing</code>
+<strong>Capability anchors:</strong> (none promoted; behavior is local to <code>layer2/trajectory_refine.py</code> and <code>layer2/decoupled_longitudinal.py</code>)</p>
+<h2>Question Resolved</h2>
+<p>What are the inviolable design invariants of the #498 two-cycle trajectory refinement,
+and which choices protect against the proven overfitting failure mode? Extended (#496/#507):
+does the same anchor-source discipline apply when the longitudinal estimator is a decoupled
+1D filter rather than a 2D trajectory refinement?</p>
+<h2>Decision</h2>
+<p>Four invariants govern <code>src/physics/layer2/trajectory_refine.py</code> and
+<code>src/physics/layer2/accel_obs.py</code>:</p>
+<ol>
+<li><p><strong>The anchor is ALWAYS external and un-biased.</strong> The acceleration magnitude
+(<code>inp.a_long</code>) is the raw-sensor total longitudinal acceleration passed in from
+outside — it is never re-derived from ANY smoothed trajectory (cycle-1 or
+cycle-2). The heading <code>(vx, vy)</code> from cycle 1 is a geometric frame only; it
+does not supply the magnitude.</p>
+</li>
+<li><p><strong>Plateau-only observation placement.</strong> <code>emit_accel_obs</code> selects only the
+established frontier plateau (<code>plateau_margin</code> trims transition samples from
+each contiguous braking/throttle run). This prevents the kind=3 anchor from
+pulling against the regime transitions, where acceleration is changing rapidly
+and ringing would be introduced.</p>
+</li>
+<li><p><strong>Two cycles only.</strong> <code>refine_trajectory</code> runs exactly two cycles. Cycle 3+
+with a fixed external anchor buy nothing — the anchor does not change, so
+additional re-smooths converge at cycle 2. Hard-coding two cycles prevents
+future scope creep adding a third cycle that could silently re-read a
+trajectory.</p>
+</li>
+<li><p><strong>Student-t jerk prior is the cycle-1 foundation.</strong> Cycle 1 (nu_proc) retires
+the Gaussian smoothness assumption before cycle 2 adds the external anchor. The
+ordering matters: a Gaussian cycle-1 followed by a kind=3 cycle-2 still carries
+the Gaussian-rounded knee into the heading frame used to project the anchor.</p>
+</li>
+</ol>
+<h3>Extension to the 1D-filter context (#496/#507 G3)</h3>
+<p>The <strong>anchor-source discipline</strong> (invariant 1 above: external, un-biased, raw-derived)
+is consciously extended to <code>src/physics/layer2/decoupled_longitudinal.py</code>:</p>
+<ul>
+<li><strong>Anchor magnitude</strong> = the TV/IRLS-denoised RAW <code>a_long</code> (gravity-corrected to
+vehicle force: <code>m(a_tv + g sinθ)</code> where <code>a_tv</code> is an edge-preserving transform of
+the raw signal only, never re-read from a smoothed trajectory; the gravity term uses
+the external #497 z-map gradient, not the trajectory).</li>
+<li><strong>Anchor placement</strong> extended from plateau-only to the <strong>full braking arc including
+the onset sample</strong> (the raw signal already carries the onset transient; TV preserves
+it rather than inventing it; the onset is the capability sample, not noise). This
+extends invariant 2 for the 1D context where the onset sample is the target.</li>
+<li>The &quot;two cycles&quot; structure does not literally apply here (this is a single-pass 1D
+Kalman-RTS, not a 2D re-smooth loop), but the core invariant — the anchor must be
+re-derived from an INDEPENDENT measurement source, not a prior cycle's output — is
+preserved exactly.</li>
+</ul>
+<p>Evidence: <code>src/physics/layer2/decoupled_longitudinal.py</code> docstring + g3-implement
+extension statement (<code>.agent-work/496-physics-aware-estimator/crew-handoffs/g3-implement-result.md</code>).</p>
+<h2>Rationale</h2>
+<ul>
+<li>The overfitting failure mode was proven in <code>explore_cycles.py</code> (commit history,
+issue #498): a cycle-2 anchor re-derived from the cycle-1 smoothed trajectory
+amplifies the residual bias rather than correcting it. The multi-cycle external
+anchor experiments confirmed that only an anchor held fixed outside the loop
+converges.</li>
+<li>Plateau-only placement is needed because the regime transitions are exactly
+where the raw sensor contains the largest transient force (the braking knee);
+anchoring there without trimming causes ringing in the adjacent states.</li>
+<li>The two-cycle limit is a simplicity/correctness trade-off, not an arbitrary
+cap: the anchor is static after cycle 1, so the filter converges after one
+anchored pass.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li><code>accel_obs.py</code>'s <code>emit_accel_obs</code> must receive <code>a_long</code> from the RAW sensor
+(as in <code>BrakingFrontierData.a_long</code> or <code>RefineInputs.a_long</code>) — never from
+<code>sm.acc_at(...)</code> / the smoothed <code>m_s</code> state array or any other smoothed-state
+field.</li>
+<li><code>trajectory_refine.py</code>'s <code>refine_trajectory</code> uses <code>inp.a_long</code> for the
+anchor (not a <code>sm1.acc_at(...)</code> re-read): this is explicit and must remain so.</li>
+<li>If a third cycle is ever proposed, consult this anchor first: the invariant is
+that the anchor must be re-derived from an INDEPENDENT measurement source, not
+the prior cycle's output.</li>
+<li><code>nu_proc</code> must be injected via the smoother factory (<code>make_smoother(nu_proc=...)</code>)
+because the <code>StintSmoother.__init__</code> order&gt;=4 guard must run. Do NOT set
+<code>sm.nu_proc</code> after construction (reviewer I5, issue #498).</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>Re-deriving the anchor from the cycle-1 trajectory</strong> (<code>sm1.acc_at(...)</code> /
+<code>m_s</code> smoothed state): proven overfitting failure in <code>explore_cycles.py</code>. The
+smoothed trajectory already carries the bias being corrected; using it as the
+anchor amplifies rather than corrects.</li>
+<li><strong>Three or more cycles with a static anchor</strong>: buying nothing after cycle 2
+(the anchor does not update). Adds code surface and the risk that a future
+modification quietly makes the anchor update again.</li>
+<li><strong>Anchoring across ALL samples</strong> (not just the frontier plateau): causes ringing
+at transition points; plateau trimming is load-bearing.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li>Any change to <code>trajectory_refine.py</code> that adds a cycle, changes the anchor
+source, or relaxes the plateau-only constraint.</li>
+<li>Any change to <code>accel_obs.py</code> that derives <code>a</code> from a smoothed state rather
+than the passed-in raw <code>a_long</code>.</li>
+<li>Any change to <code>decoupled_longitudinal.py</code> that derives the soft-force anchor
+from a smoothed trajectory rather than the TV-denoised raw <code>a_long</code>.</li>
+<li>Cross-circuit validation (#498 triage tc4/tc5) completing: if the plateau
+anchor is confirmed to generalize, the design can be simplified; if not,
+per-session calibration of <code>nu_proc</code>/<code>sigma</code> may change the cycle structure.</li>
+<li>#518 wiring: if <code>decoupled_longitudinal.py</code> is wired into <code>braking_view</code>, the
+1D extension above should be reviewed to confirm it still matches the wired form.</li>
+</ul>
+</details>
+</div>
+
+<div class="decision" id="decision-tyre_age_g_track_design">
+  <h3>Tyre-age grip separation — per-circuit g_track partial pooling</h3>
+  <div class="meta">decision:tyre_age_g_track_design · `current`
+    · 2026-06-29 · `delegated` (Commander-decided; ratified in #511 W3 G3 handoff)</div>
+  <div>Governs: <a href="subsystem-physics.html"><code>struct:physics.layer2</code></a></div>
+  <h4>Question</h4><p>Within the tyre-age grip separation model (<code>tyre_separation.py</code>), how should within-weekend track evolution (<code>g_track</code>) be modelled and pooled? The open question was: use the existing cross-session <code>pooling.py</code> random-effects machinery (which pools across constructor × circuit × season), or introduce a new, independent per-circuit slope on <code>cumulative_track_laps</code> with its own partial-pooling?</p>
+
+  <h4>Decision</h4><p><code>g_track(gp, cumulative_track_laps)</code> is modelled as a <strong>per-circuit linear slope</strong>, partial-pooled across circuits via DerSimonian-Laird τ² (shrinking towards a global mean slope), with a 5× σ inflation for thin circuits (<code>&lt; THIN_MIN = 10</code> stints). All identifiability and stability checks are leave-one-circuit-out (LOO), so the separation is not self-diagnostic. The existing <code>pooling.py</code> cross-session random-effects machinery is NOT used for <code>g_track</code>.</p>
+
+  <details><summary>Full record (rationale, alternatives, review triggers)</summary><p>Use only when the decision materially explains current structure and would be costly to rediscover. Prefer <code>claim:&lt;id&gt;</code> overlays for short rationale. Omit optional sections when empty.</p>
+<h2>Status</h2>
+<p><strong>Decision id:</strong> <code>decision:tyre_age_g_track_design</code>
+<strong>Status:</strong> <code>current</code>
+<strong>Date decided:</strong> 2026-06-29
+<strong>Authority:</strong> <code>delegated</code> (Commander-decided; ratified in #511 W3 G3 handoff)
+<strong>Structural anchors:</strong> <code>struct:physics.layer2</code></p>
+<h2>Question Resolved</h2>
+<p>Within the tyre-age grip separation model (<code>tyre_separation.py</code>), how should within-weekend track evolution (<code>g_track</code>) be modelled and pooled? The open question was: use the existing cross-session <code>pooling.py</code> random-effects machinery (which pools across constructor × circuit × season), or introduce a new, independent per-circuit slope on <code>cumulative_track_laps</code> with its own partial-pooling?</p>
+<h2>Decision</h2>
+<p><code>g_track(gp, cumulative_track_laps)</code> is modelled as a <strong>per-circuit linear slope</strong>, partial-pooled across circuits via DerSimonian-Laird τ² (shrinking towards a global mean slope), with a 5× σ inflation for thin circuits (<code>&lt; THIN_MIN = 10</code> stints). All identifiability and stability checks are leave-one-circuit-out (LOO), so the separation is not self-diagnostic. The existing <code>pooling.py</code> cross-session random-effects machinery is NOT used for <code>g_track</code>.</p>
+<h2>Rationale</h2>
+<ul>
+<li><code>pooling.py</code> cross-session pooling is designed for <em>car-parameter</em> random effects (team × circuit × season drift) — it treats the circuit as an exchangeable blocking variable, not an axis of interest. <code>g_track</code> is the WITHIN-WEEKEND track evolution axis; <code>cumulative_track_laps</code> is not a car parameter and has no meaningful pool across constructors or seasons.</li>
+<li>The separation model requires LOO to be non-trivially testable: a self-inclusive <code>g_track</code> diagnostic over a self-weighted fit would be structurally blind to base↔track aliasing. The per-circuit LOO makes the tyre and track effects genuinely separable (rather than just self-validating).</li>
+<li>Per-circuit partial pooling (not full pooling) is correct because track-rubbering rates differ by circuit type (abrasive vs smooth; permanent vs street). Full pooling would erase real heterogeneity; no pooling at all would over-fit thin circuits (e.g. Mexico with &lt; 10 stints). The τ² shrinkage is the right middle ground.</li>
+<li>Thin-circuit σ inflation (5×) is conservative engineering: few stints means weak identification of the per-circuit slope, so the prior is deliberately widened to avoid over-confident separation on poor data.</li>
+</ul>
+<h2>Current Structural Consequence</h2>
+<ul>
+<li><code>tyre_separation.py</code> carries its own independent pooling logic (WLS + DerSimonian-Laird τ² over circuits), <strong>separate from</strong> <code>pooling.py</code>'s random-effects/two-way/drift machinery.</li>
+<li>Agents working on tyre-age or circuit-evolution modelling must NOT substitute <code>pooling.py</code> for the <code>g_track</code> term — the grain and axis are different.</li>
+<li>The LOO structure of <code>AxisSeparation.loo</code> (<code>LooResult</code>) is the trust evidence for the separation. If LOO RMSE greatly exceeds in-sample RMSE, the base↔track aliasing is active and the separation verdict should be downgraded.</li>
+<li>Car envelope from the quali store is used RELATIVE (centred within each quali session) so the absolute quali-vs-race grip offset is absorbed by the per-circuit intercept — this is a companion design choice, captured as packet prose in <code>packets/physics.md</code>.</li>
+</ul>
+<h2>Rejected Alternatives</h2>
+<ul>
+<li><strong>Use <code>pooling.py</code> cross-session random effects for <code>g_track</code>:</strong> pooling.py groups by constructor × circuit; the cumulative-track-lap axis is a within-weekend covariate, not a cross-session car parameter. Substituting it would conflate within-session rubbering with between-session car development.</li>
+<li><strong>No <code>g_track</code> term (omit track evolution):</strong> without a <code>g_track</code> absorber, circuit-specific rubbering leaks into the <code>f_tyre</code> compound k estimates — circuits that rubber in fast would show artificially high k, circuits that don't would show low k, contaminating the compound ladder.</li>
+<li><strong>Full cross-circuit pooling (single global slope):</strong> erases the real heterogeneity in rubbering rates across circuit types (abrasive high-deg circuits vs smooth street circuits); the τ² estimate from the partial-pooling fit reveals this heterogeneity is real.</li>
+</ul>
+<h2>Review Trigger</h2>
+<ul>
+<li>If <code>tyre_separation.py</code> <code>g_track</code> LOO shows systematic over-fit (oos_rmse &gt;&gt; in_sample_rmse) for a new season or circuit, revisit whether the partial-pooling τ² prior is well-calibrated.</li>
+<li>If the race-stint store adds new <code>session_type</code> values beyond <code>'R'</code>, confirm the <code>g_track</code> slope is still meaningful for those session types before reusing it.</li>
+<li>If <code>pooling.py</code> is extended to support within-session covariate axes, evaluate whether the two implementations should be unified.</li>
+</ul>
+</details>
+</div>
+
+
+</main>
+<footer class="site"><div class="wrap">
+  Generated by <code>constellation-docent</code> from Cartographer map truth
+  (<code>docs/architecture/</code>). Read-only over the map. The embedded stamp records
+  <em>which map this site was built from</em>; the live gate is
+  <code>docent_freshness.py check</code>.
+</div></footer>
+<script>
+(function(){
+  var GEN="2026-07-07";
+  var banner=document.getElementById("stale-banner");
+  var params=location.search.toLowerCase();
+  var forced=/[?&]stale(=1|=true)?(&|$)/.test(params);
+  var days=Math.floor((Date.now()-Date.parse(GEN))/86400000);
+  var ageEl=document.getElementById("gen-age");
+  if(ageEl){ageEl.textContent="generated "+(isNaN(days)?"":days+" day"+(days===1?"":"s")+" ago")+" ("+GEN+")";}
+  if(forced){
+    banner.textContent="STALE: this explainer was flagged out of date against the current map. Regenerate it with the docent skill.";
+    banner.className="stale-banner show";
+  } else if(days>=30){
+    banner.textContent="This site was generated "+days+" days ago and may be stale. Verify with docent_freshness.py check before trusting it.";
+    banner.className="stale-banner show";
+  }
+  var t=document.getElementById("theme-toggle");
+  if(t){t.addEventListener("click",function(){
+    var cur=document.documentElement.getAttribute("data-theme");
+    var next=cur==="dark"?"light":(cur==="light"?"dark":(matchMedia("(prefers-color-scheme:dark)").matches?"light":"dark"));
+    document.documentElement.setAttribute("data-theme",next);
+  });}
+})();
+</script>
+</body>
+</html>

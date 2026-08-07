@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "init",
+  "mechanical": {
+    "run": "epic-418-redux",
+    "project": "constellation-skills",
+    "role": "admiral",
+    "refusals": 0,
+    "spine-step": "init",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-redux-init@5dcdb6b3e7dddae481b77fc98e10fdda48002669",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-redux",
+    "generated_at": "2026-08-07T20:54:28Z"
+  }
+}
