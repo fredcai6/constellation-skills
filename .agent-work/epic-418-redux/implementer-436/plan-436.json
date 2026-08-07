@@ -1,0 +1,226 @@
+{
+  "work_id": "issue-436-enumeration-falsification",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-count-and-discrimination-tests",
+    "m2-live-demo-and-revert",
+    "m3-artifact-and-pr"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the launch order LO-436.md (already read in full), global-crew.md and global-everyone.md, and scripts/verify_worktree_precondition_coverage.py + tests/test_worktree_precondition_wiring.py (already read). Verify the handoff (LO-436) is complete: task, intent, scope, exclusions, required evidence, test mode, stop conditions all present. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "launch order + doctrine + target script + existing tests loaded; handoff confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "LO-436 read in full: task, intent, prior-wave verdicts, pre-rulings, latitude, fences, test command, budget, stop conditions, return shape all present. Target script + existing test file read. Empirical probe already run (see notes) confirming enumeration loop generalizes to N=2."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-count-and-discrimination-tests": {
+      "id": "m1-count-and-discrimination-tests",
+      "title": "Add failure-path count + permanent second-template discrimination test",
+      "imperative": "Two additions to tests/test_worktree_precondition_wiring.py and scripts/verify_worktree_precondition_coverage.py, both scoped to files this wave owns: (1) TDD: add a test asserting the coverage script's FAILURE output states the enumerated count (e.g. 'N of M worktree-entering template(s)'), observe it RED against current code (which only states the count on the success path), then add the count to CoverageError's message in verify_worktree_precondition_coverage.py and observe GREEN. (2) Evidence-only (no production defect found, see probe): add a permanent regression test (in-process, importlib-loaded module, WORKTREE_ENTERING_GATES monkeypatched to two entries: the real fixed Commander entry plus a genuinely new second (template, gate) pair -- a different path and gate id, never previously enumerated -- with the isolation precondition omitted) proving verify_coverage() refuses and names the NEW template/gate specifically while NOT naming the already-known, still-fixed Commander entry. Attest c1 for the red observation; c2 is the command-check for both new tests plus the full suite green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded per m0"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: failure-path count test written and observed failing against pre-change script (manual attest, must stay check:null so the by-design-failing run isn't gated)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: 5 new/existing tests run, 4 pass (incl. both new second-entry discrimination tests -- proving the loop already generalizes to a genuinely new N=2 entry with no code defect), 1 fails as designed: EnumerationStatesCountOnFailure.test_failure_output_states_enumerated_count -- AssertionError: '1 of 1 worktree-entering template' not found in stderr. Command: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_worktree_precondition_wiring.py -v; exit 1."
+        },
+        {
+          "id": "c2",
+          "statement": "both new tests pass and full suite is green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-436 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-count-and-discrimination-tests-1"
+        }
+      ],
+      "constraints": [
+        "own scripts/verify_worktree_precondition_coverage.py and its tests only; do not touch checklist_engine.py, episodes/, apply_episode_delta.py, collect_feedback.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-count-and-discrimination-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-436 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-live-demo-and-revert": {
+      "id": "m2-live-demo-and-revert",
+      "title": "Live deliberate-breakage demonstration against the real repo, then revert",
+      "imperative": "In the real worktree (not a tmp fixture): add a genuinely new worktree-entering fixture template file (clearly scratch, e.g. under a throwaway path) lacking the isolation precondition, add its (path, gate) pair to WORKTREE_ENTERING_GATES in the real script, run `python scripts/verify_worktree_precondition_coverage.py --root .` via CLI, capture the actual stdout/stderr and real exit code showing refusal naming the missing precondition on the new template. Then revert both the WORKTREE_ENTERING_GATES edit and delete the fixture file, confirm `git status`/`git diff` show no residual change, and re-run the CLI command to confirm it exits 0 again. Record both captures verbatim in notes-436.md. Attest c1 for the captured refusal evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "permanent tests landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "permanent tests landed and full suite green per m1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "refusal output + real exit code captured verbatim in notes-436.md; revert confirmed via clean git status and re-passing CLI run",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Live demo captured verbatim in .agent-work/epic-418-redux/notes-436.md: new fixture skills/scoutbot/templates/SCOUTBOT_SPINE.template.json added as 2nd WORKTREE_ENTERING_GATES entry; refusal 'worktree-precondition coverage FAILED: 1 of 2 worktree-entering template(s) checked failed: skills/scoutbot/templates/SCOUTBOT_SPINE.template.json: gate ...init... does not wire...verify_worktree_isolation.py', exit 1. Reverted (entry removed, fixture deleted); git diff on the coverage script shows only the m1 count-message fix; re-run confirms 'worktree-precondition coverage OK: 1 worktree-entering template(s) checked', exit 0."
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green after revert",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-436 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-live-demo-and-revert-1"
+        }
+      ],
+      "constraints": [
+        "breakage must be reverted in the same change that induces it -- no defect left behind"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-live-demo-and-revert-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-436 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-artifact-and-pr": {
+      "id": "m3-artifact-and-pr",
+      "title": "Write result artifact and open PR",
+      "imperative": "Write .agent-work/epic-418-redux/notes-436.md (working notes) and the IMPLEMENTER_RESULT per template, commit, push branch, and open a PR against main with `gh pr create -F <file>` (no heredoc). Attest c1 once PR URL is captured.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "live demo captured and reverted, suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "live demo captured+reverted, suite green per m2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "notes + result written, branch pushed, PR opened",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "notes-436.md + IMPLEMENTER_RESULT.md written; branch epic-418/d-436-enumeration-falsification pushed; PR #469 opened: https://github.com/fredcai6/constellation-skills/pull/469"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "implementer-436",
+    "status": "released",
+    "claimed_at": "2026-08-07T21:40:06.769299+00:00",
+    "last_heartbeat": "2026-08-07T22:14:29.752673+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T22:14:41.624401+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "LO-436 confirmed complete; issue #436's gap is that WORKTREE_ENTERING_GATES has only ever had one entry (Commander init), so the enumeration loop has never been observed discriminating a second, genuinely new entry. Probe already shows the loop generalizes correctly to N=2 and names the right offender -- so the deliverable is proving this durably (permanent test) plus the missing failure-path count, then a live CLI demo for the required evidence.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:40:50.500204+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-count-and-discrimination-tests",
+      "why": "Both new tests written and driven through TDD: red observed (count-on-failure test failing against pre-change script, 4/5 already green -- proving the enumeration loop already generalizes to a genuinely new N=2 entry with no code defect), then implemented the failure-path count in verify_worktree_precondition_coverage.py and observed green (5/5, full suite 1724/4/643 exit 0, baseline was 1721/4/643).",
+      "mechanical": false,
+      "ts": "2026-08-07T22:04:31.167831+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-live-demo-and-revert",
+      "why": "Live demo executed and reverted in the real repo: added a genuinely new scoutbot fixture template + gate to WORKTREE_ENTERING_GATES, observed a real refusal naming the exact template/gate/missing-precondition with exit 1 and the m1 count fix showing '1 of 2', then removed both the tuple entry and the fixture file, confirmed via git diff only the intentional m1 change remains, and re-ran the CLI to confirm exit 0. Evidence captured verbatim in notes-436.md.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:12:28.372036+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-artifact-and-pr",
+      "why": "Artifacts written (notes-436.md with verbatim evidence, IMPLEMENTER_RESULT.md), commit 7a8ad181 pushed to epic-418/d-436-enumeration-falsification, PR #469 opened against main with the full verdict, evidence, and test plan.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:14:29.752660+00:00"
+    }
+  ]
+}
