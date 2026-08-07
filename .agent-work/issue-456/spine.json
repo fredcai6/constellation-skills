@@ -293,18 +293,19 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-5"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "HARD CONTEXT TRIP AT 32%, refresh requested (e-plan-4). This is NOT unfinished work: plan is COMPLETE with all six postconditions met -- c1 mission frame (FRAME-OK), c2 execute.json (34 items, 11 gates, verified drivable), c3 plan approved by Tommy (e-plan-2), c4 plan-alternatives (panel delivered 2 of 3), c5 critic findings triaged, c6 command check passing. The ONLY forbidden action is the advance itself, which the governor blocks by design so work hands off at a seam rather than being lost to a runaway. Handoff digest is attached as e-plan-3 by hand, because defect tc1 means advance --why is the only verb that writes a digest and it is exactly the verb a hard trip blocks -- so the DIGEST line still describes the context step and must NOT be trusted. All work committed and pushed to origin/issue-456/code-map through f9c0739; working tree clean.",
         "authority_needed": "parent agent",
         "next_action": "Tommy starts a fresh Commander in C:/Programs/constellation-skills/.claude/worktrees/issue-456. It re-claims lease commander-issue-456 idempotently (same id, NOT a takeover), cold-starts from current, and READS e-plan-3 for the real digest. Then: resume plan --reason 'fresh agent after context refresh', advance plan, and start execute at e0-context. Crews dispatch through scripts/run_crew.py --dispatch external --verify-result after scripts/recover_crews.py issue-456 reports clean. execute.json regenerates from gate-spec.json via gen_execute.py if a gate needs reshaping. Push and a full non-draft PR are pre-approved; MERGE TO MAIN IS NOT.",
-        "prior_status": "in-progress"
+        "resume_reason": "context refreshed by compaction: gauge fell 33% -> 5.8% (.agent-work/issue-456/gauge.json, observed 2026-08-07T20:14:29Z); refresh-request e-plan-4 satisfied, digest handed over in e-plan-3"
       },
       "result": null,
       "finding": null,
@@ -345,6 +346,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-plan-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills/.claude/worktrees/issue-456 --work-id issue-456",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -358,7 +370,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Context headroom restored: harness compaction ran; gauge.json fell 33% -> 5.8% (observed 2026-08-07T20:14:29Z). Commander doctrine reloaded into this context: references/commander-core.md (146 lines, incl. Executing a gate + Mission frame + Architecture bookend) and references/crew-dispatch.md (26 lines, run_crew.py wrapper + external backend + recovery vocabulary) both read this turn; SKILL.md is resident. Plan approved at e-plan-2 (Tommy, two rulings)."
         },
         {
           "id": "p2",
@@ -367,7 +380,8 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_state_note.py issue-456"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
         }
       ],
       "postconditions": [
@@ -381,11 +395,33 @@
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_state_note.py issue-456",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "note",
+          "payload": {
+            "topic": "tc3 disposition: FIXED NOW",
+            "detail": "tc3 is PROVEN and FIXED on this branch. PROOF (not hypothesis): same tree, same commit, only the environment differs -- with FORCE_COLOR=3 set, tests/test_mutation_floor.py gives 10 failed / 4 passed, every one a spurious HARNESS ERROR; with FORCE_COLOR removed, 14 passed. MECHANISM: run_floor() spawns an INNER pytest inheriting the caller's env; pytest honours FORCE_COLOR, so an ANSI colour code lands between 'FAILED' and the node id, and failed_nodes()'s regex at line 255 matches nothing -- so every KILLED mutant is misreported as a harness error. The check inverts: it goes red precisely when the mutation floor is working. Note --color=no on the OUTER pytest does NOT help, because the inner subprocess is a separate process that re-reads the env. FIX (2 lines, tests/test_mutation_floor.py:run_floor): pop FORCE_COLOR from the child env and pass --color=no to the inner argv, belt and braces. VERIFIED by re-running the failing command in the failing condition -- FORCE_COLOR=3 still set, 14 passed. WHY FIXED NOW rather than filed: the constraint 'the FULL suite must be green at this gate boundary' (critic F6) applies at all 11 gate boundaries, so a false red would have cost every crew a diagnostic detour into another issue's test file, 11 times. That is exactly the rabbit hole Tommy's tripwire ruling forbids. Scope is 2 lines in tests/, no production code. SURFACE TO TOMMY at review: this was a fix-now on a file outside issue-456's feature scope."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -645,20 +681,13 @@
       "statement": "REPO DEFECT (not this issue's scope, found while establishing a baseline): tests/test_mutation_floor.py reports 10 spurious HARNESS ERROR failures for any developer whose environment sets FORCE_COLOR. failed_nodes() at tests/test_mutation_floor.py:255 parses pytest output with the regex '(?:SUB)?FAILED(?:\\([^)]*\\))? (tests[/\\]test_map_orient\\.py::\\S+)', which requires a literal space between FAILED and the path. With FORCE_COLOR set, the inner pytest subprocess emits ANSI codes ('\\x1b[31mFAILED\\x1b[0m tests/...'), the regex matches nothing, and the harness reports 'non-zero exit with no FAILED test node' -- i.e. it misreports a CORRECTLY killed mutant as a broken harness. PROVEN: regex vs colored line -> [], vs plain line -> match; FORCE_COLOR=3 is set in this session. test_0_unmutated_baseline_is_green PASSES, so the module under test is fine. CI is unaffected (no FORCE_COLOR, no TTY), so main is genuinely green. Fix: strip ANSI from proc.stdout before parsing, or pass --color=no / PY_COLORS=0 to the inner run_floor subprocess. Worth a ticket: a falsifiability harness that cannot parse its own evidence fails OPEN in exactly the direction it exists to prevent."
     }
   ],
-  "blockers": [
-    {
-      "item": "plan",
-      "blocker": "HARD CONTEXT TRIP AT 32%, refresh requested (e-plan-4). This is NOT unfinished work: plan is COMPLETE with all six postconditions met -- c1 mission frame (FRAME-OK), c2 execute.json (34 items, 11 gates, verified drivable), c3 plan approved by Tommy (e-plan-2), c4 plan-alternatives (panel delivered 2 of 3), c5 critic findings triaged, c6 command check passing. The ONLY forbidden action is the advance itself, which the governor blocks by design so work hands off at a seam rather than being lost to a runaway. Handoff digest is attached as e-plan-3 by hand, because defect tc1 means advance --why is the only verb that writes a digest and it is exactly the verb a hard trip blocks -- so the DIGEST line still describes the context step and must NOT be trusted. All work committed and pushed to origin/issue-456/code-map through f9c0739; working tree clean.",
-      "authority_needed": "parent agent",
-      "next_action": "Tommy starts a fresh Commander in C:/Programs/constellation-skills/.claude/worktrees/issue-456. It re-claims lease commander-issue-456 idempotently (same id, NOT a takeover), cold-starts from current, and READS e-plan-3 for the real digest. Then: resume plan --reason 'fresh agent after context refresh', advance plan, and start execute at e0-context. Crews dispatch through scripts/run_crew.py --dispatch external --verify-result after scripts/recover_crews.py issue-456 reports clean. execute.json regenerates from gate-spec.json via gen_execute.py if a gate needs reshaping. Push and a full non-draft PR are pre-approved; MERGE TO MAIN IS NOT."
-    }
-  ],
+  "blockers": [],
   "refusals": 4,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T19:59:39.632768+00:00",
+    "last_heartbeat": "2026-08-07T20:40:52.663124+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
@@ -685,6 +714,13 @@
       "why": "UNDERSTOOD. Build: productionize the derived code map (extract/render pipeline + agent-lean page format + consuming skills) from the CONFIRMED explore-code-map DESIGN_SPEC and its prototype. FACTS: (1) repo vendors tools as scripts/<tool>.py + tests/test_<tool>.py, CI installs only pytest+coverage so the tool MUST be stdlib-only; (2) build_architecture_map.py is a schema compiler over AUTHORED packets, no ast import -- a complement, but it owns the name 'architecture map'; (3) this repo self-maps (233 py files, all parse, 5232 entities) so checks need no external repo, BUT .agent-work/ must be excluded (1821 scratch entities) and zero BOM files exist so gate 9 needs a fixture. The prototype has NO CLI -- hardcodes ROOT=f1Brainz -- hence a gate 0. TOMMY'S FOUR RULINGS: all 9 issue gates ship this run plus gate 0 (my narrower gate0+1-4 recommendation was put to him and NOT taken); tool lands at scripts/code_map/ as a package; crews ON (explicit override of the standing no-Agent instruction, for this run); cherry-pick the 5-file/9-line skills diff onto this branch, push and full non-draft PR PRE-APPROVED -- merge to main NOT approved. Branch cut from origin/main deliberately (local main is 21 commits ahead with unpushed epic-418 work). NEXT: plan authors execute.json with TEN gates in critic-reordered sequence, then the plan-approved human checkpoint.",
       "mechanical": false,
       "ts": "2026-08-07T17:48:22.395941+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "PLAN COMPLETE AND APPROVED. execute.json carries 34 items across 11 gates (g0 CLI layer, g1 checks-that-can-fail, g2 D2 symbol collisions, g3 D1 line base, g4 schema/top-index, g5 determinism, gb churn-under-rename, g6 redundancy rule, g7 authored-layer staleness, g8 tag-vocabulary cull, gs skills integration + full map tree staged LAST). Regenerate any gate from .agent-work/issue-456/gate-spec.json via gen_execute.py. RECOMMENDATION ADOPTED: most-testable's port-defective-then-fix mechanism (port the defect, capture RED, fix, commit a mutation entry proving the test kills it), reusing tests/test_mutation_floor.py's idiom; every falsifier graded A (reproduces on real input today) or B (red-by-absence, negative control IS the falsifier). From smallest-diff: thresholds as annotated module constants not a committed JSON file (scripts/curate_corpus.py precedent); check stage reaches CI as a test not a workflow step; do NOT stage the ~3500-file map tree until the final gate so intermediate diffs stay reviewable. CORPUS NUMBERS every threshold must be sized against: 103 mappable files, 3411 entities (3077 fn / 334 cls), 52292 source lines, AFTER excluding .agent-work/. D2 = exactly 4 real collisions on this repo, all closure-in-method (mod:Class.<closure> drops the METHOD name), listed individually in d2_collisions.txt -- 'all N resolve' is a vacuous close criterion, the fix must name the method. D2 arm 2 (class-in-function) is 0 occurrences here: fixture-only, same standing as BOM, and a gate closing on 4->0 would ship it unwritten. g4's top-index falsifier CANNOT fire at 103 modules (~115-line flat index) -- recorded as a stated non-firing falsifier, do not invent a threshold that would have passed before the change. TOMMY'S TWO RULINGS AT APPROVAL: (1) lock threshold numbers later, and the tripwires must be USEFUL -- no rabbit holes, no unnecessary speed bumps; (2) build the map, long overdue -- and a large share of this repo's real connections are NOT in code, they are in how skills get used (which skill loads which reference, which gate dispatches which crew). That is a KNOWN DEFICIENCY, recorded in the frame, explicitly not now and not a blocker: 'if we can just get the actual code mapped, that's a win good enough for now'. Consequence the run must honor: do not overclaim coverage -- a page saying 'referenced by: none' for a script three skills invoke is wrong in the way that matters, so the run report must say plainly that skill-usage edges are outside what this map sees. And do not widen scope to chase it. OPEN TRIAGE: tc1 (advance --why is the only verb writing the cold-start digest and is exactly the verb a HARD context trip blocks), tc2 (spec says build the named guards first, names three, queue carries one), tc3 (test_mutation_floor.py:255 FAILED-line regex defeated by FORCE_COLOR=3 -- 10 local failures are ENVIRONMENTAL, not a regression; baseline test is green and CI has no FORCE_COLOR). AUTHORITY: push and a full non-draft PR are PRE-APPROVED; MERGE TO MAIN IS NOT. NEXT: execute starts at e0-context.",
+      "mechanical": false,
+      "ts": "2026-08-07T20:15:26.101390+00:00"
     }
   ]
 }

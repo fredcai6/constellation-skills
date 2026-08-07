@@ -242,8 +242,16 @@ def run_floor(module_path: Path) -> subprocess.CompletedProcess:
     """Run the whole floor with the module under test pointed at `module_path`."""
     env = dict(os.environ)
     env["MAP_ORIENT_MODULE"] = str(module_path)
+    # `failed_nodes` below parses the inner run's FAILED lines by regex, so the
+    # inner pytest must not emit ANSI colour: a colour code lands between
+    # "FAILED" and the node id and the regex silently matches nothing, turning
+    # every killed mutant into a false "HARNESS ERROR". Belt and braces --
+    # --color=no wins over the env, and dropping FORCE_COLOR keeps the harness
+    # independent of whatever the caller's shell happens to export.
+    env.pop("FORCE_COLOR", None)
     return subprocess.run(
-        [sys.executable, "-m", "pytest", str(FLOOR), "-q", "-p", "no:cacheprovider"],
+        [sys.executable, "-m", "pytest", str(FLOOR), "-q", "-p", "no:cacheprovider",
+         "--color=no"],
         cwd=str(ROOT),
         capture_output=True,
         text=True,

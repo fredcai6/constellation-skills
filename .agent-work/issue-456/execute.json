@@ -49,13 +49,14 @@
           "id": "c1",
           "statement": "orchestrator context + glossary + confirmed spec + mission frame loaded; plan intent and scope confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Loaded this turn: skills/_shared/global-orchestrator.md (169L) and global-everyone.md (276L); docs/agents/ORCHESTRATOR_CONTEXT.md (35L) and GLOSSARY.md (30L); .agent-work/issue-456/MISSION_FRAME.md (218L) and ownership-scope.md; plus gate-spec.json, the distilled operative form of the hash-pinned substitute DESIGN_SPEC.md (orientation was DEGRADED-NO-MAP -- this repo has no docs/architecture packets). INTENT CONFIRMED: productionize the derived code map -- extract/render pipeline, agent-lean page format, and the consuming skills -- behind checks that can actually go red. SCOPE CONFIRMED against ownership-scope.md: all 13 decision-classes and every created/modified file now have an owning gate across the 11 authored gates. TWO CORRECTIONS made to ownership-scope.md this turn, because the frozen plan must not carry withdrawn numbers: (1) decision-class 3 still asserted '75 flat-name collisions, 1,848 nested defs' -- wrong, it modelled the symbol as module.name which is not what astx.py:_func emits; withdrawn and replaced with the measured 4 collisions plus D2's second arm at 0 occurrences (fixture-only). (2) The coverage check still read 'It does not pass yet' from before the plan froze; it passes now, and the two gaps it named are closed rather than implicit -- gs is a REAL gate owning the four skills/ files (not the non-gate 'cherry-pick' label), and gs is sequenced LAST so the committed map/ tree exists before the handoff templates citing a map entry point land. NOTE for every gate: the issue's 0-9 gate numbering is NOT the authored gate ids (g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs); gb is a threshold-commit gate the original ownership list did not anticipate. AUTHORITY: local commits allowed; push and a full non-draft PR PRE-APPROVED for this work; MERGE TO MAIN IS NOT approved. f1Brainz and superCoolSpaceSim are READ-ONLY corpora."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1640,5 +1641,14 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "CONTEXT LOADED, PLAN INTENT AND SCOPE CONFIRMED. Orientation is DEGRADED-NO-MAP: this repo has no docs/architecture packets, so the hash-pinned substitutes (reference/DESIGN_SPEC.md, docs/agents/ORCHESTRATOR_CONTEXT.md) stand in and gate anchors are PATHS, not anchor ids. Corrected two stale claims in ownership-scope.md: the withdrawn '75 collisions' D2 figure (truth: 4, all closure-in-method, plus a second arm at 0 occurrences that is fixture-only) and the 'coverage does not pass yet' line (it passes -- all 13 decision-classes owned across 11 gates). Gate ids are g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs and do NOT match the issue's 0-9 numbering. NEXT: g0-implement -- stand up scripts/code_map/ as the repo's first package under scripts/, move the six prototype modules behind a real argparse CLI, and build the discovery layer that excludes .agent-work/, asserted by a test that fails if the exclusion is removed. Full suite must be green at every gate boundary (critic F6). Crews dispatch via run_crew.py --dispatch external --verify-result after recover_crews.py reports clean; recover_crews.py currently reports NO recorded crews for this work-id.",
+      "mechanical": false,
+      "ts": "2026-08-07T20:18:39.039417+00:00"
+    }
+  ]
 }

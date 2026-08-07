@@ -58,7 +58,14 @@ Each must be *owned* by a gate, not merely mentioned:
    Removes a pipeline stage rather than shipping one to deprecate. → gate 4.
 3. **Nested-definition symbol identity** (defect D2) — how a nested def is
    distinguished from a top-level one that flattens to the same symbol.
-   **Measured on this repo: 75 flat-name collisions, 1,848 nested defs.** → gate 2.
+   **CORRECTED. The "75 flat-name collisions, 1,848 nested defs" figure written
+   here was WRONG and is withdrawn** — it modelled the symbol as `module.name`,
+   which is not what `astx.py:_func` emits. Measured against the real rule:
+   **exactly 4 collisions**, all closure-in-method, listed individually in
+   `reference/d2_collisions.txt`. D2 has a **second arm** the panel found —
+   `visit_ClassDef` has no enclosing-chain branch, so a class defined inside a
+   function is named as if module-level; **0 occurrences here**, so it is
+   fixture-only, same standing as BOM. → gate `g2`.
 4. **Referenced-by semantics** — what the count includes versus what the name
    list shows; the defining module is in one and not the other. → gate 3.
 5. **Production vs test caller split** — de-conflates unused from untested.
@@ -108,4 +115,37 @@ exist. That is a decision — generate the tree, or state the dangle knowingly �
 not an oversight to leave implicit.
 
 The check to run before freezing: no row above lacks an owning gate in the
-authored `execute.json`. It does not pass yet.
+authored `execute.json`. ~~It does not pass yet.~~
+
+**It passes now.** Resolved at plan-freeze against the authored 11-gate
+`execute.json` (gate ids are `g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs`, which are NOT
+the issue's 0–9 numbering used in the rows above):
+
+| Row | Owning gate |
+|---|---|
+| `scripts/code_map/` package, CLI, discovery, `.gitignore` | `g0` |
+| checks module + decision-class 9 (committed thresholds) | `g1` authors the movable-invariant checks; **`gb`** commits every threshold |
+| decision-class 3 (D2 symbol identity), 4 (referenced-by semantics) | `g2` |
+| decision-class 1 (line base), 2 (statement schema) | `g3` |
+| decision-class 6 (top-index routing tier) | `g4` |
+| decision-class 5 (production vs test caller split) | `g5` |
+| decision-class 8 (stale-tag anchor hashing) | `g6` |
+| decision-class 7 (tag vocabulary + cull test) | `g7` |
+| decision-class 11 (D3 wrapped docstring), 12 (BOM + fixture) | `g8` |
+| the four `skills/` files, `map/` page tree, decision-class 13 (branch base) | **`gs`** |
+| decision-class 10 (package layout) | `g0` creates it; carried to reconcile as a decision candidate |
+
+Two gaps named above are now closed rather than left implicit:
+
+- **The four `skills/` files have a real gate.** `gs` owns them, with a close
+  criterion, a command, and evidence — not the non-gate "cherry-pick" label.
+- **The map-entry-point dangle is decided, not left implicit.** `gs` is
+  sequenced LAST precisely so the committed `map/` tree exists before the
+  handoff templates that cite an entry point land, and its close criterion
+  asserts a rebuild-and-diff against a fresh build.
+
+**`gb` is a gate the original ownership list did not anticipate.** It exists
+because a threshold committed before `g3`/`g4`/`g5` would be invalidated three
+times, and the cheapest in-gate fix each time is to edit the baseline — which
+turns the check back into the print-only diagnostic this issue exists to
+replace.
