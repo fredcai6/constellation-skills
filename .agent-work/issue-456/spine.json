@@ -420,6 +420,26 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "note",
+          "payload": {
+            "topic": "g0 pass 1 integrated; pass 2 blocked on the shared-gauge deadlock (tc5)",
+            "detail": "STATE: g0 is roughly a third built and every claim is verified. scripts/code_map/ exists (four modules), tests/test_code_map.py has 12 green tests, and the CLI runs: python -m scripts.code_map discover --root . returns 108 files, exit 0. I reproduced the load-bearing falsifier myself -- setting EXCLUDED_PREFIXES to an empty tuple turns 3 tests red, restoring it turns them green. Committed at 7e13781 and pushed; branch head 14eeb65. REMAINING FOR g0: the four stage ports (astx, supplement, render_map, and wiring the checks pair), two .gitignore entries, the bundling resolution, the end-to-end extract-to-render run, and the full-suite green. The implementer plan is at .agent-work/issue-456/g0-implementer-plan.json, at m2-cli with a pending refresh-request; a fresh implementer claims session id g0-impl-9febe0be idempotently and cold-starts from current, then drives m3-m9. My rulings for it are in crew-handoffs/g0-implement-ADDENDUM.md. WHY PASS 2 IS NOT DISPATCHED YET: tc5. The gauge is work-area-scoped, so a relaunched crew reads MY context, not its own, and would HARD-trip on arrival before doing any work -- the relaunch mechanism cannot make progress while my own reading is over the hard band. This is not a reason to skip the refresh; it is the reason the refresh has to come first. Dispatch pass 2 immediately after the refresh, while the reading is low."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-4",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "execute",
+            "why_ref": "e-execute-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -702,7 +722,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T20:59:10.256286+00:00",
+    "last_heartbeat": "2026-08-07T21:00:41.859027+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
