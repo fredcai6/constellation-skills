@@ -587,6 +587,11 @@
       "id": "tc2",
       "from": "plan",
       "statement": "SPEC GAP for the plan checkpoint: DESIGN_SPEC section 2 (Storage layout) ends with 'Build the named guards FIRST' and names three -- (a) the empty-diff determinism assertion, (b) the mis-pairing guard on auto-supersession, (c) the C++ colon collision fix in the relative-id rule. The ranked build queue carries only (a), inside gate 1. (b) attaches to tombstone/auto-supersession machinery the critic panel DEFERRED (SY6); (c) attaches to C++ adapters explicitly OUT OF SCOPE. Both are most likely correctly dropped with the machinery they guard -- but that is the Commander's inference, not a recorded disposition, and 'build first' is strong language to leave dangling. Confirm with Tommy at plan approval: dropped-with-their-machinery, or added to gate 1."
+    },
+    {
+      "id": "tc3",
+      "from": "plan",
+      "statement": "REPO DEFECT (not this issue's scope, found while establishing a baseline): tests/test_mutation_floor.py reports 10 spurious HARNESS ERROR failures for any developer whose environment sets FORCE_COLOR. failed_nodes() at tests/test_mutation_floor.py:255 parses pytest output with the regex '(?:SUB)?FAILED(?:\\([^)]*\\))? (tests[/\\]test_map_orient\\.py::\\S+)', which requires a literal space between FAILED and the path. With FORCE_COLOR set, the inner pytest subprocess emits ANSI codes ('\\x1b[31mFAILED\\x1b[0m tests/...'), the regex matches nothing, and the harness reports 'non-zero exit with no FAILED test node' -- i.e. it misreports a CORRECTLY killed mutant as a broken harness. PROVEN: regex vs colored line -> [], vs plain line -> match; FORCE_COLOR=3 is set in this session. test_0_unmutated_baseline_is_green PASSES, so the module under test is fine. CI is unaffected (no FORCE_COLOR, no TTY), so main is genuinely green. Fix: strip ANSI from proc.stdout before parsing, or pass --color=no / PY_COLORS=0 to the inner run_floor subprocess. Worth a ticket: a falsifiability harness that cannot parse its own evidence fails OPEN in exactly the direction it exists to prevent."
     }
   ],
   "blockers": [],
@@ -595,7 +600,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T18:03:36.337730+00:00",
+    "last_heartbeat": "2026-08-07T18:11:27.325303+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
