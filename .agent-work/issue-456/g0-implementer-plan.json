@@ -226,7 +226,8 @@
           "id": "p1",
           "statement": "extract stage runs",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m3-extract complete: extract stage writes 85321 statements over this repo, 0 failures."
         }
       ],
       "postconditions": [
@@ -237,7 +238,8 @@
             "kind": "command",
             "command": "python -m scripts.code_map supplement --root . && test -s .code-map/supplement.json"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-supplement-1"
         }
       ],
       "constraints": [
@@ -247,11 +249,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m4-supplement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map supplement --root . && test -s .code-map/supplement.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m5-render": {
@@ -482,7 +496,7 @@
     "session_id": "g0-impl-9febe0be",
     "status": "active",
     "claimed_at": "2026-08-07T20:48:13.953663+00:00",
-    "last_heartbeat": "2026-08-07T21:06:15.082776+00:00",
+    "last_heartbeat": "2026-08-07T21:07:23.675726+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -516,6 +530,13 @@
       "why": "astx.py ported verbatim to extract.py: the two AST passes, the resolver and every visitor are unchanged, so D1/D2/D3 survive for the gates that own them. Only the edges moved -- the hardcoded f1Brainz ROOT is now a run() parameter, INDEX_DIRS and slice_manifest.json are both replaced by discover_corpus, and the report lost its timing fields. 108 modules indexed, 85321 statements, 0 failures over this repo.",
       "mechanical": false,
       "ts": "2026-08-07T21:06:15.082757+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-supplement",
+      "why": "supplement.py ported unimproved -- same eight gap ids, same fields, same walk; g3 deletes this stage by folding the gaps into the statement schema, so improving it now would be work thrown away. Root and file list come from run(root) and discover_corpus; the report lost its timings. 3482 entities over 109 modules, 0 failures.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:07:23.675707+00:00"
     }
   ]
 }
