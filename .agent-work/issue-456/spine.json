@@ -440,6 +440,16 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-5",
+          "type": "note",
+          "payload": {
+            "topic": "tc5 CORRECTION -- the deadlock claim was overstated",
+            "detail": "Correcting my own tc5 statement before it hardens into a false fact. WHAT STANDS, measured: the gauge file is work-area-scoped, both the commander spine and a crew plan in the same directory resolve to one gauge.json, and with no crew running BOTH reported CONTEXT 19 percent matching my fill_fraction 0.193251. Readings are therefore attributed to whichever agent asks, not to whichever agent they measure. That is the defect and it is real. WHAT DOES NOT STAND: I wrote that every relaunched crew trips on arrival before doing any work, and that the relaunch mechanism can never make progress. That was an INFERENCE stated as a measurement, and reading the writer again contradicts it. The hook fires on TOOL USE and both agents write the same file, so the last writer wins -- a crew overwrites the commander's reading with its own on its first tool call, which happens before it runs current or advance. Direct evidence I already had and did not weigh: the gauge carried 0.151219 during the crew's run, which is the crew's own reading, not mine. So the shared file interleaves rather than pins, and a fresh crew most likely reads itself. CONSEQUENCE FOR THE RUN: pass 2 is dispatched now rather than held. The honest severity of tc5 is a wrong-attribution defect with an interleaving race -- a crew can be tripped by the commander's reading if the commander wrote last, and a genuinely full crew can be masked by a small commander's reading. That is still worth fixing and still inverts the safety property; it is not a hard deadlock. LESSON, the same one that cost three passes on D2 earlier in this run: model the behaviour by reading the code that produces it, not by inventing a plausible consequence and asserting it."
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -722,7 +732,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T21:00:41.859027+00:00",
+    "last_heartbeat": "2026-08-07T21:01:44.002391+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
