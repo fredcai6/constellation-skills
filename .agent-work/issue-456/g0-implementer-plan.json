@@ -330,7 +330,8 @@
           "id": "p1",
           "statement": "render stage runs",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m5-render complete: build runs extract -> supplement -> render end to end, 3600 pages, exit 0."
         }
       ],
       "postconditions": [
@@ -341,7 +342,8 @@
             "kind": "command",
             "command": "python -m scripts.code_map check --root . > /dev/null"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-checks-1"
         }
       ],
       "constraints": [
@@ -351,11 +353,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m6-checks-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map check --root . > /dev/null",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m7-gitignore-bundling": {
@@ -510,7 +524,7 @@
     "session_id": "g0-impl-9febe0be",
     "status": "active",
     "claimed_at": "2026-08-07T20:48:13.953663+00:00",
-    "last_heartbeat": "2026-08-07T21:09:53.043374+00:00",
+    "last_heartbeat": "2026-08-07T21:11:32.627881+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -558,6 +572,13 @@
       "why": "render_map.py ported to render.py with its import-time store loading moved into load_stores(), so importing the module costs nothing and a second run against a different root is possible at all. The top index is titled from the git common dir's parent, not the directory name, because a worktree directory is named for the branch. build wires extract -> supplement -> render and exits 0: 3600 pages, 3489 entities, alias_missing 0 over this repo. Two hermetic tests now cover the wiring -- one that every stage produces its artifact, one that scratch never reaches the page tree -- without pinning page content g2/g3 will change.",
       "mechanical": false,
       "ts": "2026-08-07T21:09:53.043346+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-checks",
+      "why": "checks.py and checks2.py folded into one module and wired to the check subcommand, print-only and returning 0 -- they assert nothing, so g1 still has its rewrite to do. The prototype's fourth section is dropped and the docstring says why: it spot-checked one hardcoded file of another repo, and the real rule it demonstrated (every top-level def gets a page) belongs in g1 as a corpus-wide check, not as one file's probe.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:11:32.627862+00:00"
     }
   ]
 }
