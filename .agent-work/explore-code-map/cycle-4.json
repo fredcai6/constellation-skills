@@ -8,7 +8,9 @@
     "prep-fullmap",
     "prep-issue",
     "x13",
-    "x14-regen"
+    "x14-regen",
+    "x15-merge",
+    "q8-test-coverage"
   ],
   "tasks": {
     "c0-frame": {
@@ -88,6 +90,38 @@
       "status_detail": {},
       "result": "pass",
       "finding": "REGEN #2 RAN \u2014 the maintenance loop works. Rebuild over the map-trial-708 branch: 38s-class again (8.2s extract, 1.8s supplement, 11.7s render). MAP DIFF: 38 of 16,222 files, 98 changed lines total vs the source diff's 84 (+77/-7) \u2014 churn ratio ~1.2x, confirming the minimal design's core claim (map churn bounded by source churn) with a measured number. LEGIBILITY: the entry-point page diff reads as a review artifact (signature change, new docstring contract, new call edge, referenced-by 3 to 5 picking up both new tests); the importer-side effect is ONE line (validate_segment_map_662 joins telemetry_store's imported-by \u2014 the fix's new import, visible from the other end). Untouched-entity churn is pure line-number shift (:132 to :133), one line per below-edit entity, confined to derived pages which are gitignored \u2014 the committed layer carries no positions per the ruled design. TAGGED COMMENTS: 0 extracted \u2014 as expected, the comment-extraction pass does NOT exist yet; 6 authored tags now sit in real source as its first test corpus. Named next build item. Determinism was proven at prep (double-build identical).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "x15-merge": {
+      "id": "x15-merge",
+      "title": "Merge map-trial-708 to f1Brainz main (human-authorized)",
+      "imperative": "Human 2026-08-07: 'im not gonna review it... if its judged good its good and we can go ahead and send out an agent to merge it up to main in f1brainz.' Dispatch a merge agent: re-verify gating tests, push branch, PR with Closes #708, squash-merge via GitHub (local main checkout untouched), clean up worktree+branch. Record outcome.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q8-test-coverage": {
+      "id": "q8-test-coverage",
+      "title": "Human direction: test noise discussion + explicit function-test coverage links",
+      "imperative": "Record the ruling conversation: is test-page noise a problem or byproduct; human wants explicit function-to-test links for direct coverage understanding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUMAN DIRECTION 2026-08-07: test-entity noise raised ('generates a bunch of useless stuff - problem or byproduct?'); wants the map to serve test-coverage evaluation, with EXPLICIT function-to-test links ('id actually like us to explicitly create links between functions and test files so we have an understanding of coverage directly'). AGENT ANALYSIS presented: the noise is a RENDERING byproduct, not an extraction problem \u2014 nobody navigates TO a test page, but extracting tests is precisely what enables the inverse projection: a src entity's 'tested by:' line = inbound calls filtered to tests.*, derivable from the store TODAY with zero new extraction (derived-views-never-stored doctrine). Proposed: stop rendering per-entity test pages (halves page count, module INDEX still lists them); split referenced-by into prod-callers vs test-callers (fixes the conflated orphan signal: 561 'no inbound' currently mixes unused with untested); emit a coverage report (src entities with zero inbound test edges, ranked by x4 call frequency). LIMITS NAMED: static direct-call reachability, not executed-line coverage \u2014 fixture/helper indirection lands on the helper (transitive closure approximates); 9.26pct unresolved hides some test-to-target edges; complements coverage.py, does not replace it. Authored links (See: tags) only where static resolution fails, per derivation-first.",
       "evidence": [],
       "rework_count": 0
     }

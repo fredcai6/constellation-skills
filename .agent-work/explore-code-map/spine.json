@@ -132,7 +132,21 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-explore-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "converge",
+            "who": "Tommy",
+            "date": "2026-08-07",
+            "quote": "at a certain point, we're just getting to implementation... this feels like we're pretty close to just a mid stream switch to commander",
+            "followup": "okay, we recently reworked spec/issue cutting, so lets be mindful there. this is an easy one - implement the thing we've made. you can make references to the prototype directly. realistically we're gonna cut the spec and issues and im gonna compact and turn you loose on it. lets not over think this, just do enough to keep our thoughts organized"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "spec": {
@@ -279,7 +293,7 @@
     "session_id": "explore-code-map",
     "status": "active",
     "claimed_at": "2026-08-05T22:26:12.939354+00:00",
-    "last_heartbeat": "2026-08-05T22:30:01.466209+00:00",
+    "last_heartbeat": "2026-08-07T16:49:51.892792+00:00",
     "claimed_by": "explorer",
     "worktree": ".",
     "previous_session_id": null,
