@@ -163,13 +163,14 @@
           "id": "c1",
           "statement": "notes + result written, branch pushed, PR opened",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "notes-436.md + IMPLEMENTER_RESULT.md written; branch epic-418/d-436-enumeration-falsification pushed; PR #469 opened: https://github.com/fredcai6/constellation-skills/pull/469"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -183,13 +184,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "implementer-436",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-07T21:40:06.769299+00:00",
-    "last_heartbeat": "2026-08-07T22:12:48.321211+00:00",
+    "last_heartbeat": "2026-08-07T22:14:29.752673+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-07T22:14:41.624401+00:00"
   },
   "why_trail": [
     {
@@ -212,6 +214,13 @@
       "why": "Live demo executed and reverted in the real repo: added a genuinely new scoutbot fixture template + gate to WORKTREE_ENTERING_GATES, observed a real refusal naming the exact template/gate/missing-precondition with exit 1 and the m1 count fix showing '1 of 2', then removed both the tuple entry and the fixture file, confirmed via git diff only the intentional m1 change remains, and re-ran the CLI to confirm exit 0. Evidence captured verbatim in notes-436.md.",
       "mechanical": false,
       "ts": "2026-08-07T22:12:28.372036+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-artifact-and-pr",
+      "why": "Artifacts written (notes-436.md with verbatim evidence, IMPLEMENTER_RESULT.md), commit 7a8ad181 pushed to epic-418/d-436-enumeration-falsification, PR #469 opened against main with the full verdict, evidence, and test plan.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:14:29.752660+00:00"
     }
   ]
 }
