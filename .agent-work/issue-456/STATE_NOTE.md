@@ -11,14 +11,27 @@ dispatch (the PID changes every time).
   (`e-g0-review-3`). **THE ONLY THING LEFT AT THIS GATE IS A FOCUSED RE-REVIEW
   OF THE DELTA** — `git diff b14ff3ff~1..HEAD -- scripts/ tests/`, 2 files,
   +191. Scope it to: are B1 and B2 actually closed, did anything regress, and is
-  there a third sibling of the same defect shape. **THAT RE-REVIEW IS ALREADY
-  DISPATCHED AND IN FLIGHT** — registry `constellation/issue-456/g0/reviewer/attempt-2`,
-  handoff `crew-handoffs/g0-rereview.md`, expected artifact
-  `crew-handoffs/g0-rereview-RESULT.md`. **Do not re-dispatch it; harvest it.**
-  If the artifact exists, attach it as evidence and act on the verdict; if the
-  crew died, `run_crew.py --abandon <id> --relaunch` against the same handoff.
-  Then `advance g0-review` → `g0-integrate`. 11 gates:
-  g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs
+  there a third sibling. **THE RE-REVIEW IS DONE AND RETURNED BLOCK**
+  (`e-g0-review-5`, `crew-handoffs/g0-rereview-RESULT.md`, crew verified fresh).
+  B1 and B2 are genuinely closed and independently reproduced. **B3: the B2 fix
+  RELOCATED the tautology** — `pages` now counts the tree it describes, so
+  deleting a quarter of the pages, dropping all 112 module indexes, or writing
+  the tree flat each leave the suite GREEN.
+
+  **EXACTLY ONE THING CLOSES `g0`, and it does NOT touch `render.py`:** rewrite
+  the misleading docstring at `tests/test_code_map.py:127-131`, which claims
+  `pages` "has to be a number that can be WRONG" and that "the count has to come
+  from the tree". The second clause is true; the first is now false, and shipping
+  it inside the gate whose subject is this defect shape is the finding. State
+  honestly that the test guards the counting **method** only. Then `advance
+  g0-review` → `g0-integrate`.
+
+  **Do NOT add the invariant assertion to `g0`** — `pages - 1 - modules` (3535)
+  vs `entity_pages` (3536) is the falsifiable check and it is REAL, but it fails
+  today because the page genuinely is lost, and `g2` owns the rename. It goes to
+  `g1` with `tc17`; `tc24` corrects the misdirection in `tc18`.
+
+  11 gates: g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs
 - **slug:** work-id `issue-456` · branch `issue-456/code-map` (pushed to origin)
   · worktree `C:/Programs/constellation-skills/.claude/worktrees/issue-456`
 - **next command:** `python C:/Users/fredc/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/issue-456/spine.json current` — then re-claim lease `commander-issue-456` idempotently (same id, NOT a takeover), read the DIGEST, and drive `.agent-work/issue-456/execute.json` from `current`. Before any crew: `python scripts/recover_crews.py issue-456`, then dispatch only via `python scripts/run_crew.py --dispatch external --verify-result`.
