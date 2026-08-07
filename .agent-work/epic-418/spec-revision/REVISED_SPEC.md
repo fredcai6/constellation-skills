@@ -297,6 +297,28 @@ declares `directives` as `[string] | null`, while the shipped templates carry ne
 (`{"wave_transition": {...}}`). One of the two is wrong; correcting either is acceptable, but
 the renderer must handle the shape that actually ships.
 
+**Carried into this wave — four issues #447 surfaced, none trivial** (Tommy, 2026-08-07). They
+are here because they all live in the same channel-and-record surface B is opening, and because
+each looked small and turned out not to be:
+
+- **#460 — the episode store's own records read as prescriptions.** ~24 of 32 pre-existing
+  episodes carry `workaround` assertions written as instructions. This is
+  `constraint:episodes-are-not-prescriptions` failing *inside* the store that #447 just made the
+  single home for this signal. Judgement work per record, not a fix — and the most important of
+  the four, because the constraint holding around the store while failing inside it is exactly
+  the shape #308's retirement came back in.
+- **#461 — the episode-store negative control fails every run that legitimately captures an
+  episode**, in the window between `git add` and commit. A control that fires on success is a
+  check that cannot distinguish the thing it guards.
+- **#464 — `CONSTELLATION_FEEDBACK`'s `Lesson:` field takes an episode id under its old name.**
+  Looks like a rename and is not: `collect_feedback.py` fingerprints cross-run recurrence on
+  that field's literal name, so renaming the template alone makes every existing export's
+  identity dangle **silently** — no error, recurrence detection just stops. Template and parser
+  must change together, and existing exports need a migration decision.
+- **#465 — reviewer `r6-fowler` ships a placeholder no engine verb can fill**, and filling it in
+  text mode rewrites every CRLF in the state file. On Windows that hides a one-line change
+  inside a whole-file diff.
+
 **Sequencing constraint, handed to C.** B's echo removal is still assumption 3 — untested, and
 graded a guess, because repetition can be load-bearing for compliance. The original spec named
 C's tracer as the sentinel, but a two-arm tracer cannot separate B's de-dup from C's

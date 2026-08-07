@@ -1,79 +1,67 @@
 # Crash-resume state note — epic-418
 
-**Wave 1 is nearly closed. #440 is MERGED. #447 is at g4 review. The epic's spec has been
-revised, cold-panelled and fully triaged, and is awaiting Tommy's confirm.**
+**WAVES 0 AND 1 ARE COMPLETE AND MERGED. The spec is revised, cold-panelled, fully triaged and
+CONFIRMED. The epic is at a clean stop, ready for a wave-2 relaunch against the new spec.**
 
-- **step:** `execute` — in progress. Remaining after `execute`: `closeout` only.
-- **slug:** `epic-418` · main checkout `C:/Programs/constellation-skills` · local `main` is
-  **~30 commits ahead of `origin/main`, UNPUSHED**
+- **step:** `execute` — in progress, between waves. Remaining after `execute`: `closeout` only.
+- **slug:** `epic-418` · main checkout `C:/Programs/constellation-skills` · **everything pushed**
+  (`origin/main` current, working tree clean)
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418/spine.json current`
-  — then poll `constellation-skills-wt/epic418-h-447` for its g4 verdict and `RETURN.md`
-- **pid:** none — Commanders are harness subagents, not detached OS processes
-- **expected artifact:** #447's `RETURN.md` with a g4 verdict, then a four-file conflict
-  resolution (below), then wave-1 closeout
+  — then plan wave 2 from the confirmed spec's execution order
+- **pid:** none — no Commanders in flight
+- **expected artifact:** a wave-2 launch, first link in the confirmed order
 
-## In flight
+## The spec of record — read this before planning wave 2
 
-| Issue | State | Notes |
+`.agent-work/epic-418/spec-revision/REVISED_SPEC.md` — **CONFIRMED 2026-08-07**, supersedes
+`.agent-work/archive/2026-08-03-explore-post-phase1/DESIGN_SPEC.md`. Both gate phases pass
+(`--phase review` and `--phase confirm` exit 0). All 81 cold-panel findings dispositioned.
+
+**Execution order: B extended → A2 → F → C → E.** Off-chain, runnable any time: A's remainder
+(#452 multi-spine, ship the gauge writer) and D's #436 debt. The chain is a *dependency* order,
+not a schedule — each link's reason is stated, and a Commander that finds a link is not real
+should say so rather than honour it.
+
+**Organising principle:** reveal the next step, not the whole plan — gate, wave, epic. Safe
+because instructions are gate-local while constraints are spine-global.
+
+## What landed
+
+| Wave | Issues | State |
 |---|---|---|
-| #447 | **g4 review**, lease `g4-reviewer-447` live | g1–g3 approved; g4 implementer done, its four-file prune ratified |
-| #440 | **MERGED** at `90f0343` | main green: 1764 passed, 2 skipped, real exit 0 |
+| 0 | #419 #420 #422 #425 | merged; #419/#420/#422/#425 all closed |
+| 1 | #440 #447 | merged and closed; wave 1 complete |
 
-## Merging #447 — READ THIS FIRST
+Main green: **1723 passed, 2 skipped, 643 subtests, exit 0** (real exit code captured).
 
-Four files conflict, enumerated by command (`comm -12` over
-`git diff --name-only cbd9aee...epic-418/h-447-episodes-retirement` and `...HEAD`):
+Closed today with evidence: #419 #420 #422 #425 #328 #329 #428 #437 #440 #443 #454 #462 #463 #466.
+Filed today: #452 #457 #458 #460 #461 #464 #465 (+#447's own batch).
 
-```
-scripts/install_constellation.py
-skills/admiral/templates/ADMIRAL_SPINE.template.json
-skills/commander/templates/COMMANDER_SPINE.template.json
-tests/test_install_constellation.py
-```
+## Live defect that will bite the next Admiral — #457
 
-**The dangerous one is not a text conflict.** The iterative-planning merge POPULATED the
-`directives` field on the Admiral and Commander spines with wave-transition wiring. On #447's
-base (`cbd9aee`) that key exists but is `null`. #447 edits those templates as raw text by
-constraint, so an edit written against the null version **merges cleanly and is silently
-wrong**. It has been asked to name its edited spans by gate id (not line number) and to flag any
-edit that assumed `directives` was empty. Check both before accepting the merge.
-
-## Live defect affecting this session — do not be fooled by it
-
-**The spine rail attributes a DESCENDANT's gate to its ancestor.** #447's crew inherit this
-session's id with their own agent ids, so the rail resolves this Admiral onto a spine a
-descendant is driving and orders it to work that gate. Eight firings so far, across
-`g4-impl-447` and `g4-reviewer-447`. **Never run one.** Two agents in one spine is forbidden and
-the lease is live every time.
+**The spine rail attributes a DESCENDANT's gate to its ancestor.** Crew inherit their
+dispatcher's session id with their own agent ids, so the rail resolves an Admiral onto a spine a
+descendant is driving and orders it to work that gate. Ten firings this session. **Never run
+one** — the lease is live every time, and two agents in one spine is forbidden.
 
 The three-strike escape hatch cannot save you: `spine_rail.py:897` resets the counter on the
 *watched spine's* progress, so a productive descendant resets its ancestor's strikes forever.
-The better the descendant works, the more relentless the nudging. Unfiled; belongs with #441/#452.
+The better the descendant works, the more relentless the nudging.
 
 ## Settled — do NOT re-derive
 
-- **`py` is not the test runner** and **`FORCE_COLOR=3` produces false reds for `python` too**
-  (#454, fixed and merged). `_COMMON.md` said "Both `py` and `python` work" — the inverse of the
-  ruling — and now carries both warnings. Four agents hit the FORCE_COLOR trap in one day.
-- **#180 is CLOSED.** The governor's gauge writer is wired only in untracked
-  `.claude/settings.local.json`, so it ships nowhere. Tracked project settings wire `spine_rail`
-  and not the gauge writer. This is workstream **R** (constellation-readiness), new this session.
-- **Multi-spine attribution is #452**, filed. Not unfiled.
-- **#422/#329/#328 are OPEN** though D's code merged — tracker and tree disagree.
-- Two Commander departures ratified this run (#447's 6→8 rescope, its four-file prune). Both the
-  same shape: a frozen artifact's specifics went stale, the agent applied the governing rule and
-  said so. Five instances epic-wide. Expect it; it is the mode, not the exception.
+- **`py` is not the test runner**, and **`FORCE_COLOR=3` produces false reds for `python` too**
+  (#454, fixed). `_COMMON.md` now carries both warnings — it previously asserted the opposite.
+  Run suites as `FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests`.
+- **#180 is CLOSED.** The gauge writer is wired only in untracked `.claude/settings.local.json`,
+  so it ships nowhere — that is #458 (workstream R), not #180.
+- **`docs/agents/engine-config.json` is a Charter deliverable, not a dangling pointer.**
+  `TRIPWIRES.md` T1 fires when an agent creates it. Two independent agents filed it as a defect
+  (#443, #462) — both closed. Do not file it a third time.
+- **File overlap is not conflict.** The predicted four-file conflict set for #447 was wrong in
+  composition: two predicted files merged cleanly, two unpredicted ones conflicted.
+- **Commander departures from stale plan specifics are the MODE, not the exception** — five this
+  epic, all ratified. A frozen artifact's specifics go stale; the agent applies the governing
+  rule and says so.
 
-## Spec revision — done, awaiting confirm
-
-`.agent-work/epic-418/spec-revision/REVISED_SPEC.md`, 882 lines. Six workstreams re-cut plus new
-**R**. Order: **B → A2 → F → C → E**, with A's remainder and D's #436 debt off-chain. Cold panel
-of four arms returned 81 findings (12 BLOCKING / 46 MAJOR / 23 MINOR); **all 81 dispositioned**.
-Two new lenses were added for this panel — `done-condition fidelity` and `claim accuracy` — and
-produced 41 of the 81, including six factual errors in the draft.
-
-Still marked `UNCONFIRMED — DO NOT CUT`. **Confirming it is Tommy's.** Note #428: the
-review-phase gate will refuse this document by construction, not for its content — do not
-"fix" that by pulling the marker early.
-
-_Updated: 2026-08-07T17:40:00Z_
+_Updated: 2026-08-07T20:30:00Z_
