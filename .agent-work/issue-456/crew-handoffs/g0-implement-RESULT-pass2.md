@@ -98,6 +98,15 @@ FAILED tests/test_code_map.py::CliBuildCommandTests::test_cli_build_maps_the_cor
 4 failed, 10 passed, 10 subtests passed in 0.85s
 ```
 
+**Reconciling the count with ADDENDUM 2.** That addendum says the mutation
+turns **3** red and warns that a pass-1 note saying 2 is stale. Both numbers are
+selection-dependent, and neither is what I got. What I actually observed:
+**2 red under `-k discovery`** (the selection the plan's own check uses) and
+**4 red across the whole file**. The extra one over the addendum's 3 is
+`test_cli_build_maps_the_corpus_and_not_the_scratch`, which I added at `m5` in
+this pass — it did not exist when the addendum was measured. Asserting what I
+observed, as instructed.
+
 Revert confirmed against git (`git status --porcelain` on the file: no output),
 then GREEN:
 
@@ -235,9 +244,11 @@ FAILED ...::test_no_skill_bundles_a_module_from_a_non_installable_package
 
 ## Assumptions used
 
-1. **Two `.gitignore` entries, per ADDENDUM ruling 3** — `.code-map/statements.jsonl`
-   and `.code-map/supplement.json`. The plan item's imperative still says three;
-   I followed the addendum, which supersedes it.
+1. **`.gitignore` entries: two per ADDENDUM ruling 3, then three more per
+   ADDENDUM 2.** The plan item's imperative still says "three", meaning the
+   stores plus a position cache; ADDENDUM 1 cut the position cache (no gate
+   produces one) and ADDENDUM 2 added the three run reports. Final state: five
+   narrow entries, no blanket rule.
 2. **The top index is titled from the git *common* dir's parent, not the root
    directory name.** A worktree directory is named for the branch, so
    `Path(root).name` would have titled the committed map `issue-456 map`. It
@@ -314,7 +325,16 @@ indistinguishable from one that passed." I produced the real evidence by hand
 for this check; treat that pass as unearned and section 6 as the actual
 evidence.** The fix is `git check-ignore -v <paths>` and asserting exit 1.
 
-### D-b. The run reports are neither tracked nor ignored
+### D-b. The run reports are neither tracked nor ignored — RULED AND FIXED
+
+> **Update.** `g0-implement-ADDENDUM-2.md` landed while I was writing this and
+> ruled exactly this point: add the three reports in the same narrow,
+> one-file-per-line style, no blanket `.code-map/` rule. **Applied.**
+> `.gitignore` now carries five entries; `git check-ignore -v` confirms all
+> three reports resolve, the deliverable paths still exit 1 (not ignored), and
+> `.code-map/` no longer shows as untracked. The original finding is kept below
+> as written, since it is what prompted the ruling.
+
 
 `build` writes three report files the two ruled `.gitignore` entries do not
 cover:
