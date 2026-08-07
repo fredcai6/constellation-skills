@@ -1,0 +1,449 @@
+{
+  "work_id": "epic418-h-447-g4-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-carry",
+    "m2-untrack",
+    "m3-delete",
+    "m4-prune",
+    "m5-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md if present, the g4 handoff in full, the staged LESSONS snapshot at .agent-work/epic418-h-447/context/LESSONS-main-861ecbe.md, the precedent episode episodes/active/issue-308-001.md, and the writer scripts/apply_episode_delta.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + lessons snapshot + precedent episode loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-carry": {
+      "id": "m1-carry",
+      "title": "Carry the eight live lessons into the episode store",
+      "imperative": "Write .agent-work/epic418-h-447/episode-delta.json with eight create ops, one per active lesson in the staged snapshot. Map grounding -> task-intent / expected-behavior / observed-behavior (never synthesised); grounding cost + verbatim playbook counters -> impact-cost; the lesson's statement REWRITTEN FROM A RULE INTO AN OBSERVATION OF WHAT WAS DONE -> workaround. Carry lesson:<slug> plus the grounding artifact lines as artifact-ref. Never supply an id. Dry-run first, then apply, then git add episodes/active/issue-447-*.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every workaround statement read back as an observation of what was done, not an instruction to a future agent - manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "exactly eight episodes carry run issue-447 and the archive-phase capture gate passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python scripts/query_episodes.py select --field run --value issue-447 | grep -q '\"count\": 8' && python scripts/verify_episode_captured.py issue-447 --store-root episodes --phase archive"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-carry-1"
+        }
+      ],
+      "constraints": [
+        "episodes/ written ONLY through scripts/apply_episode_delta.py",
+        "python never py",
+        "single-line statements"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-carry-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python scripts/query_episodes.py select --field run --value issue-447 | grep -q '\"count\": 8' && python scripts/verify_episode_captured.py issue-447 --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-untrack": {
+      "id": "m2-untrack",
+      "title": "Untrack the two retired records, do not delete them",
+      "imperative": "git rm --cached .agent-work/LESSONS.md and .agent-work/AGENT_FEEDBACK.md (NEVER plain git rm - durable_root() redirects to this worktree under the active epic lease, so this run's own closeout gate reads this worktree's AGENT_FEEDBACK.md). Add ONE comment at the retired-path-still-tracked leg in scripts/verify_retirement.py recording why it is untrack-not-delete; change no logic there.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "episodes carried and staged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "neither retired record is tracked, and both still exist on disk",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && ! git ls-files --error-unmatch .agent-work/LESSONS.md >/dev/null 2>&1 && ! git ls-files --error-unmatch .agent-work/AGENT_FEEDBACK.md >/dev/null 2>&1 && test -f .agent-work/LESSONS.md && test -f .agent-work/AGENT_FEEDBACK.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-untrack-1"
+        },
+        {
+          "id": "c2",
+          "statement": "this run's own closeout gate still runs with its unchanged pre-change exit code (1)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py epic418-h-447 --phase feedback > .agent-work/epic418-h-447/evidence/g4-vaf-after.txt 2>&1; test $? -eq 1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-untrack-2"
+        }
+      ],
+      "constraints": [
+        "git rm --cached, never plain git rm",
+        "leave the removal staged, do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-untrack-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && ! git ls-files --error-unmatch .agent-work/LESSONS.md >/dev/null 2>&1 && ! git ls-files --error-unmatch .agent-work/AGENT_FEEDBACK.md >/dev/null 2>&1 && test -f .agent-work/LESSONS.md && test -f .agent-work/AGENT_FEEDBACK.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-untrack-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py epic418-h-447 --phase feedback > .agent-work/epic418-h-447/evidence/g4-vaf-after.txt 2>&1; test $? -eq 1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-delete": {
+      "id": "m3-delete",
+      "title": "Delete the playbook machinery",
+      "imperative": "Delete scripts/apply_lessons_delta.py, scripts/verify_lessons_applied.py, scripts/verify_agent_feedback.py, the whole skills/lessons-auditor/ tree, skills/workbench/templates/LESSONS.template.md, skills/workbench/templates/AGENT_FEEDBACK.template.md, tests/test_apply_lessons_delta.py, tests/test_verify_lessons_applied.py, tests/test_verify_agent_feedback.py. Do NOT delete scripts/stage_feedback.py or scripts/collect_feedback.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "retired records untracked and the closeout gate still runs",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every named machinery path is gone from the index and from disk; stage_feedback.py and collect_feedback.py survive; the retired-path-still-tracked guard leg is gone",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && for p in scripts/apply_lessons_delta.py scripts/verify_lessons_applied.py scripts/verify_agent_feedback.py skills/workbench/templates/LESSONS.template.md skills/workbench/templates/AGENT_FEEDBACK.template.md tests/test_apply_lessons_delta.py tests/test_verify_lessons_applied.py tests/test_verify_agent_feedback.py; do test ! -e \"$p\" || exit 1; git ls-files --error-unmatch \"$p\" >/dev/null 2>&1 && exit 1; done; test ! -e skills/lessons-auditor && test -f scripts/stage_feedback.py && test -f scripts/collect_feedback.py && python scripts/verify_retirement.py | cut -f1 | sort -u > .agent-work/epic418-h-447/evidence/g4-guard-legs-after.txt; ! grep -q retired-path-still-tracked .agent-work/epic418-h-447/evidence/g4-guard-legs-after.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-delete-1"
+        }
+      ],
+      "constraints": [
+        "do not delete stage_feedback.py or collect_feedback.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-delete-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && for p in scripts/apply_lessons_delta.py scripts/verify_lessons_applied.py scripts/verify_agent_feedback.py skills/workbench/templates/LESSONS.template.md skills/workbench/templates/AGENT_FEEDBACK.template.md tests/test_apply_lessons_delta.py tests/test_verify_lessons_applied.py tests/test_verify_agent_feedback.py; do test ! -e \"$p\" || exit 1; git ls-files --error-unmatch \"$p\" >/dev/null 2>&1 && exit 1; done; test ! -e skills/lessons-auditor && test -f scripts/stage_feedback.py && test -f scripts/collect_feedback.py && python scripts/verify_retirement.py | cut -f1 | sort -u > .agent-work/epic418-h-447/evidence/g4-guard-legs-after.txt; ! grep -q retired-path-still-tracked .agent-work/epic418-h-447/evidence/g4-guard-legs-after.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-prune": {
+      "id": "m4-prune",
+      "title": "Prune the test methods that load a now-deleted module",
+      "imperative": "Enumerate BY COMMAND every test that loads a now-deleted module or template, state the count, then prune those individual test methods - never the files. Keep everything else. Remove a class that becomes empty and say so. The handoff names tests/test_agent_work_root.py and tests/test_feedback_tooling.py; any further file the enumeration finds is a scope departure to report, not to hide.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "machinery deleted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every pruned test method is named in the result with where it went - manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the pruned test files pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest tests/test_agent_work_root.py tests/test_feedback_tooling.py tests/test_stage_feedback.py tests/test_install_constellation.py tests/test_clamp_presence.py tests/test_retirement_guard.py -q > .agent-work/epic418-h-447/evidence/g4-pruned-files.txt 2>&1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-prune-1"
+        }
+      ],
+      "constraints": [
+        "prune methods, never delete the files"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-prune-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest tests/test_agent_work_root.py tests/test_feedback_tooling.py tests/test_stage_feedback.py tests/test_install_constellation.py tests/test_clamp_presence.py tests/test_retirement_guard.py -q > .agent-work/epic418-h-447/evidence/g4-pruned-files.txt 2>&1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify": {
+      "id": "m5-verify",
+      "title": "Run the full evidence set and write the result",
+      "imperative": "Run every required-evidence command with its real exit code captured to a file, run the full suite with FORCE_COLOR=0 NO_COLOR=1, state the suite count delta against the 1716-passed baseline explained test by test, and write the IMPLEMENTER_RESULT quoting all eight workaround statements in full.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tests pruned and the targeted files pass",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite passes with zero failures",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q > .agent-work/epic418-h-447/evidence/g4-final-suite.txt 2>&1"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the IMPLEMENTER_RESULT exists and quotes all eight workaround statements",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && test -f .agent-work/epic418-h-447/results/g4-IMPLEMENTER_RESULT.md && test $(grep -c '^W[0-9]' .agent-work/epic418-h-447/results/g4-IMPLEMENTER_RESULT.md) -ge 8"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-4"
+        }
+      ],
+      "constraints": [
+        "FORCE_COLOR=0 NO_COLOR=1 on suite runs",
+        "do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Suite has exactly one failure: tests/test_episode_negative_control.py::test_canon_episode_store_untouched, which asserts git status --porcelain episodes/ is empty. It fails ONLY because the eight episodes are staged, which the handoff mandates (verify_episode_captured --phase archive requires them tracked, and close criterion 1 requires the git add). Committing is forbidden to me, and tests/test_episode_negative_control.py is outside my allowed EDIT scope, so both exits need authority above mine. Measured: a staged addition prints 'A <path>' in porcelain and the empty string once committed, so the Commander's own integrate commit closes this with no other change. All other work is complete and verified.",
+        "authority_needed": "commander",
+        "next_action": "Commit the eight staged episodes at integrate, then re-run FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q and confirm 1703 passed 0 failed; or rule on triage candidate tc1, which proposes scoping the negative control to unstaged residue only.",
+        "prior_status": "in-progress"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q > .agent-work/epic418-h-447/evidence/g4-final-suite.txt 2>&1",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && test -f .agent-work/epic418-h-447/results/g4-IMPLEMENTER_RESULT.md && test $(grep -c '^W[0-9]' .agent-work/epic418-h-447/results/g4-IMPLEMENTER_RESULT.md) -ge 8",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q > .agent-work/epic418-h-447/evidence/g4-final-suite.txt 2>&1",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && test -f .agent-work/epic418-h-447/results/g4-IMPLEMENTER_RESULT.md && test $(grep -c '^W[0-9]' .agent-work/epic418-h-447/results/g4-IMPLEMENTER_RESULT.md) -ge 8",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-5",
+          "type": "command-output",
+          "payload": {
+            "correction": "the blocker's --next says 1703 passed; that is WRONG (it forgets the 85 tests in the three deleted test files). Correct post-commit expectation is 1618 passed 0 failed = 1716 - 85 deleted - 13 pruned. Recorded in the IMPLEMENTER_RESULT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m5-verify",
+      "statement": "tests/test_episode_negative_control.py::test_canon_episode_store_untouched asserts 'git status --porcelain episodes/' is empty, which forbids the staged-but-uncommitted state that verify_episode_captured.py --phase archive requires. Every future run that captures episodes will red this test between git add and the commit. Its stated intent is that the TEST MODULE left no residue in canon, so asking about unstaged residue only would keep that intent and end the conflict."
+    },
+    {
+      "id": "tc2",
+      "from": "m5-verify",
+      "statement": "scripts/stage_feedback.py still writes lessons-delta.json as one of the four members of the fenced staged trio, and StageFeedbackTests::test_default_lessons_delta_is_tick_only_valid_json still asserts its shape. That member is now a delta for a writer #447 deleted. Inert (written, never applied) and out of g4's scope; a candidate for g5."
+    }
+  ],
+  "blockers": [
+    {
+      "item": "m5-verify",
+      "blocker": "Suite has exactly one failure: tests/test_episode_negative_control.py::test_canon_episode_store_untouched, which asserts git status --porcelain episodes/ is empty. It fails ONLY because the eight episodes are staged, which the handoff mandates (verify_episode_captured --phase archive requires them tracked, and close criterion 1 requires the git add). Committing is forbidden to me, and tests/test_episode_negative_control.py is outside my allowed EDIT scope, so both exits need authority above mine. Measured: a staged addition prints 'A <path>' in porcelain and the empty string once committed, so the Commander's own integrate commit closes this with no other change. All other work is complete and verified.",
+      "authority_needed": "commander",
+      "next_action": "Commit the eight staged episodes at integrate, then re-run FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q and confirm 1703 passed 0 failed; or rule on triage candidate tc1, which proposes scoping the negative control to unstaged residue only."
+    }
+  ],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "g4-impl-447",
+    "status": "released",
+    "claimed_at": "2026-08-07T16:47:04.939153+00:00",
+    "last_heartbeat": "2026-08-07T17:25:56.497052+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T17:25:56.686007+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete on every field. The carry's risk is the mood inversion: a lesson statement is prescriptive, an episode workaround must report what was done. Source of truth is the staged snapshot (8 lessons), not this worktree's stale LESSONS.md (6). Recon found a scope gap: the handoff names two test files to prune, but verify_agent_feedback is also loaded by tests/test_stage_feedback.py and tests/test_install_constellation.py, and the deleted templates/skill tree are referenced by tests/test_clamp_presence.py and test_install_constellation.py. Will enumerate by command at m4 and report the departure.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:47:26.923349+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-carry",
+      "why": "Eight episodes written through the writer only; ids assigned by the writer 001-008. Each workaround read back aloud as a future finder: all eight are past-tense reports of what that run did, none carries an imperative, a second-person address, or a must/should/always/never aimed forward. AGENT_FEEDBACK content dropped, not migrated: synthesising typed assertions from 2119 lines of unstructured prose is the fabrication the store forbids; the content is retained in git at main 861ecbe.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:50:52.458747+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-untrack",
+      "why": "git rm --cached only: both paths left the index (ls-files exit 1 each, was 0) and both are still on disk (test -f exit 0 each). This run's own closeout gate is measured unchanged: verify_agent_feedback.py --phase feedback exits 1 before and 1 after, same message, same worktree path - it was already 1 because this run has not written its feedback entry yet, so the untracking neither stranded nor silently repaired it. The why is recorded in a docstring on _leg_retired_path, the leg that enforces it; no logic there changed.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:51:35.121498+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-delete",
+      "why": "All nine paths plus the whole skills/lessons-auditor tree are gone from index and disk. Guard leg distribution moved 117 retired-name + 5 retired-path -> 85 retired-name + 0 retired-path: the retired-path-still-tracked leg is GONE, and the 32 retired-name lines that vanished are the deleted auditor tree and templates. The 85 remaining are prose sites, which is g5's gate, not mine. stage_feedback.py and collect_feedback.py survive and both still import cleanly - neither imports the deleted verifier, so nothing in them broke.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:52:09.114107+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-prune",
+      "why": "Enumerated by command, not by the handoff's list: 8 test files name a deleted artifact, 19 tests failed across FOUR files (handoff named two). Disposition reconciles exactly: 13 PRUNED (subject deleted) + 6 RETARGETED (subject was a deleted template but the machinery under test survives) = 19; 317 tests in the set became 304. Pruned: 7 in test_agent_work_root.py, 2 verifier tests in test_install_constellation.py, the whole 4-test VerifyAgentFeedbackAcceptsStagedOutputTests class in test_stage_feedback.py, plus the move-9 leg inside a surviving install test. Retargeted rather than deleted: 2 in test_feedback_tooling.py and 3 TemplateBaselineTests, all of which used LESSONS/AGENT_FEEDBACK templates only as a SUBJECT for check_skill_freshness and the baseline manifest, both of which survive - deleting them would have silently dropped the only coverage of upstream-changed/baseline-promoted/project-customized/both-changed. Two departures reported up: the two extra files, and retarget-not-prune.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:00:49.305331+00:00"
+    }
+  ]
+}

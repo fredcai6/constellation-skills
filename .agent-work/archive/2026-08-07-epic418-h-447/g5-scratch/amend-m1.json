@@ -1,0 +1,4 @@
+{"ops": [
+  {"op": "retext-check", "id": "m1-doctrine", "which": "postconditions", "cond": "c2",
+   "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py > .agent-work/epic418-h-447/g5-m1.tsv; test \"$(grep -c 'docs/agents/' .agent-work/epic418-h-447/g5-m1.tsv)\" = 1 && grep -q 'docs/agents/ORCHESTRATOR_CONTEXT.md' .agent-work/epic418-h-447/g5-m1.tsv && T=docs/agents/ORCHESTRATOR_CONTEXT.md && grep -qF 'are **retired** (#447)' $T && grep -qF 'replaces both' $T && grep -qF 'never read back as a rule' $T && grep -qF \"and putting one there is a human's call\" $T && grep -qF 'no successor playbook and no read-and-apply loop' $T"}
+]}

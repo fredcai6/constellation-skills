@@ -1,0 +1,25 @@
+23 changed files
+README.md: now=CRLF (263/263)  head=LF <<< CHANGED
+SKILL_INDEX.md: now=CRLF (96/96)  head=LF <<< CHANGED
+docs/CONSTELLATION_OVERVIEW.md: now=CRLF (143/143)  head=LF <<< CHANGED
+docs/EPISODE_STORE.md: now=CRLF (822/822)  head=LF <<< CHANGED
+docs/POSITIONING.md: now=CRLF (81/81)  head=LF <<< CHANGED
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md: now=CRLF (567/567)  head=LF <<< CHANGED
+docs/agents/CREW_CONTEXT.md: now=CRLF (107/107)  head=LF <<< CHANGED
+docs/agents/GLOSSARY.md: now=CRLF (30/30)  head=LF <<< CHANGED
+docs/agents/ORCHESTRATOR_CONTEXT.md: now=CRLF (54/54)  head=LF <<< CHANGED
+episodes/README.md: now=CRLF (80/80)  head=LF <<< CHANGED
+scripts/agent_work_root.py: now=CRLF (150/150)  head=LF <<< CHANGED
+scripts/verify_retirement.py: now=CRLF (714/714)  head=LF <<< CHANGED
+skills/admiral/SKILL.md: now=CRLF (75/75)  head=LF <<< CHANGED
+skills/admiral/references/fleet-doctrine.md: now=CRLF (241/241)  head=LF <<< CHANGED
+skills/charter/templates/AGENT_GUIDE.template.md: now=CRLF (84/84)  head=LF <<< CHANGED
+skills/commander-delegated/SKILL.md: now=CRLF (30/30)  head=LF <<< CHANGED
+skills/commander/references/commander-core.md: now=CRLF (146/146)  head=LF <<< CHANGED
+skills/workbench/SKILL.md: now=CRLF (43/43)  head=LF <<< CHANGED
+skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md: now=CRLF (30/30)  head=LF <<< CHANGED
+skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md: now=CRLF (43/43)  head=LF <<< CHANGED
+tests/data/retired_names.approved.txt: now=CRLF (190/190)  head=N/A(new)
+tests/data/store_mentions.approved.txt: now=CRLF (187/187)  head=LF <<< CHANGED
+tests/test_retirement_guard.py: now=CRLF (438/438)  head=LF <<< CHANGED
+PROBLEM FILES: ['README.md', 'SKILL_INDEX.md', 'docs/CONSTELLATION_OVERVIEW.md', 'docs/EPISODE_STORE.md', 'docs/POSITIONING.md', 'docs/RECURSIVE_IMPROVEMENT_DESIGN.md', 'docs/agents/CREW_CONTEXT.md', 'docs/agents/GLOSSARY.md', 'docs/agents/ORCHESTRATOR_CONTEXT.md', 'episodes/README.md', 'scripts/agent_work_root.py', 'scripts/verify_retirement.py', 'skills/admiral/SKILL.md', 'skills/admiral/references/fleet-doctrine.md', 'skills/charter/templates/AGENT_GUIDE.template.md', 'skills/commander-delegated/SKILL.md', 'skills/commander/references/commander-core.md', 'skills/workbench/SKILL.md', 'skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md', 'skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md', 'tests/data/store_mentions.approved.txt', 'tests/test_retirement_guard.py']

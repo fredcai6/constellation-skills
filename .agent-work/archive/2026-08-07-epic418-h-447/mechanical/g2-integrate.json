@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-integrate",
+  "mechanical": {
+    "run": "epic418-h-447",
+    "project": "constellation-skills",
+    "role": "cmdr-447-episodes-retirement",
+    "spine-step": "g2-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-g2-integrate@5acd4d2e0fd1c16c36a09b4be8718261b1e5972a",
+    "artifact-ref": []
+  },
+  "refused": [
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T15:41:23Z"
+  }
+}

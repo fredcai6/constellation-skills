@@ -508,6 +508,18 @@ def store_root() -> Path:
     under an active Admiral epic lease durable_root() would redirect to the worktree
     root and silo the store per worktree, which is exactly wrong for a tracked path
     that is the same logical directory in every worktree the moment a commit lands."""
+    # HAZARD, measured (#447): this resolves relative to THIS FILE, so it is only the
+    # project's store while this file sits in the project's scripts/. On a copy bundled
+    # into a skill and installed, it resolves to
+    # ~/.claude/skills/<role>/episodes — the skill install directory, not the repo. A
+    # spine that invoked this writer without an explicit --store-root would silently
+    # create a store outside the repo while every gate reported green: #308's failure
+    # shape wearing a new name. Callers running an INSTALLED copy must pass
+    # --store-root explicitly (wired into the spine commands at g3). The semantics
+    # above are deliberately unchanged — durable_root() is ruled out for the reason in
+    # the docstring, and a retirement is not the place to overturn that ruling.
+    # scripts/verify_episode_captured.py's --store-root default carries the same hazard
+    # and names it at the same place in its own main().
     return Path(__file__).resolve().parent.parent / "episodes"
 
 

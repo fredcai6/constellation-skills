@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "epic418-h-447",
+    "project": "constellation-skills",
+    "role": "cmdr-447-episodes-retirement-reviewer",
+    "refusals": 1,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-r4-quality@e3602a2b5b29109a5dbbb9b464f11baa98d85c21",
+    "artifact-ref": [
+      "tests/data/retired_names.approved.txt"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T19:12:00Z"
+  }
+}

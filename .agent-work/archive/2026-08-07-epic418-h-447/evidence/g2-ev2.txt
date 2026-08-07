@@ -1,0 +1,1 @@
+episode capture: BLOCKED — no episode in episodes\active records run 'no-such-run' (32 episode(s) scanned). Capture one with scripts/apply_episode_delta.py before advancing.

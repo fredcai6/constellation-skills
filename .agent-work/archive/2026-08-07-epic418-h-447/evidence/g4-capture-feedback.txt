@@ -1,0 +1,9 @@
+episode capture: 8 episode(s) recorded for run 'issue-447' in episodes\active (40 scanned, phase feedback)
+  - issue-447-001
+  - issue-447-002
+  - issue-447-003
+  - issue-447-004
+  - issue-447-005
+  - issue-447-006
+  - issue-447-007
+  - issue-447-008

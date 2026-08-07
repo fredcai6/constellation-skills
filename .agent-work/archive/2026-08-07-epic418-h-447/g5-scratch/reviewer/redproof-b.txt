@@ -1,0 +1,20 @@
+PASS P1 unapproved retired name FIRES on both lines  [('docs/live.md', 1), ('docs/live.md', 2)]
+PASS P2 approving line 1 silences ONLY line 1  [('docs/live.md', 2)]
+PASS P3 near-miss (reworded) approval suppresses NOTHING  [('docs/live.md', 1)]
+PASS P4 same text, wrong path -> still fires (not a pattern allowlist)  [('docs/live.md', 1)]
+PASS P5 PATH half fires despite an approval entry  [('skills/lessons-auditor/SKILL.md', 0)]
+PASS P6 reasonless approval refused, naming the right census  tests/data/retired_names.approved.txt: entry 'docs/live.md:consult .agent-work/L
+
+ALL SIX HELD
+Traceback (most recent call last):
+  File [35m"<stdin>"[0m, line [35m58[0m, in [35m<module>[0m
+  File [35m"C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\shutil.py"[0m, line [35m852[0m, in [35mrmtree[0m
+    [31m_rmtree_impl[0m[1;31m(path, dir_fd, onexc)[0m
+    [31m~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\shutil.py"[0m, line [35m705[0m, in [35m_rmtree_unsafe[0m
+    [31monexc[0m[1;31m(os.unlink, fullname, err)[0m
+    [31m~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\shutil.py"[0m, line [35m701[0m, in [35m_rmtree_unsafe[0m
+    [31mos.unlink[0m[1;31m(fullname)[0m
+    [31m~~~~~~~~~[0m[1;31m^^^^^^^^^^[0m
+[1;35mPermissionError[0m: [35m[WinError 5] Access is denied: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\.agent-work\\epic418-h-447\\g5-scratch\\reviewer\\decoy\\c1\\decoy-repo\\.git\\objects\\2d\\0d697a1c1311c676f84f38c45b9b36c1a05636'[0m

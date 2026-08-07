@@ -1,0 +1,1120 @@
+diff --git a/README.md b/README.md
+index 3c7561b..9eb720c 100644
+--- a/README.md
++++ b/README.md
+@@ -48,7 +48,6 @@ The corpus is **19 skills**. `skills/_shared/` is **not a skill** — it is shar
+ | `constellation-prototyper` | Build a throwaway prototype that answers one named question (logic / UI / measurement), with a mandatory disposition at closeout. |
+ | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, Glossary, and engine config. |
+ | `constellation-curator` | Periodic human-run maintenance of the skills corpus: measure, mend mechanical issues in place, route design decisions to Triage. |
+-| `constellation-lessons-auditor` | Fresh-context Reflector at closeout: distill scoped, grounded lesson candidates from run artifacts; nominate, never apply. |
+ | `constellation-docent` | Generate a self-contained static HTML explainer site for humans from Cartographer map truth, stamped with the source-map digest so a stale site is visibly flagged. |
+ | `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey); the substrate every other skill uses. |
+ 
+@@ -230,7 +229,6 @@ docs/
+     *.template.json
+     *.template.md
+ 
+-  AGENT_FEEDBACK.md                # unified run retrospective; persists across work-ids, never archived
+   CHARTER_OPEN_QUESTIONS.md
+   SCOUT_REPORT.md
+ 
+@@ -251,7 +249,7 @@ docs/
+ Rules:
+ 
+ - `docs/agents/AGENT_GUIDE.md` is the single repo-orientation guide (repo layout, documentation map, conventions) — the shared middle of Orchestrator and Crew context. Root `AGENTS.md` and `CLAUDE.md` are thin pointers to it; keep guidance in the guide, not the pointers.
+-- `.agent-work/AGENT_FEEDBACK.md` is the unified run retrospective. Commander appends one entry per run before archive; it persists across work-ids and is never moved into `archive/`. Use it to improve doctrine over time, not as project truth.
++- What a run learned is recorded as **episodes** under the repo-root `episodes/` directory, not anywhere under `.agent-work/`. Commander and Admiral write them at closeout through `scripts/apply_episode_delta.py`, the store's only write path. An episode is a record of what happened, never a rule for a later agent to follow — a rule belongs in `docs/agents/*` and putting one there is a human's call.
+ - If it is in `docs/`, it is meant to guide future workflows.
+ - If it is in `.agent-work/templates/`, it is the project-owned template catalog. Agents prefer `.agent-work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
+ - If it is in `.agent-work/`, it is temporary workflow state or archived history.
+diff --git a/SKILL_INDEX.md b/SKILL_INDEX.md
+index 873b963..d01b55d 100644
+--- a/SKILL_INDEX.md
++++ b/SKILL_INDEX.md
+@@ -78,12 +78,7 @@ Classifies and writes issue-ready recommendations for future work. No checklist
+ ## Constellation Admiral
+ Path: `skills/admiral/SKILL.md`
+ 
+-Runs an epic as the human's delegate: confirms a latitude contract, dispatches Commanders in waves, adjudicates and merges, and closes with lessons and architecture audits.
+-
+-## Constellation Lessons Auditor
+-Path: `skills/lessons-auditor/SKILL.md`
+-
+-Fresh-context Reflector dispatched at closeout: distills scoped, grounded lesson candidates from run artifacts and routes them as nominations, never applying them itself.
++Runs an epic as the human's delegate: confirms a latitude contract, dispatches Commanders in waves, adjudicates and merges, and closes with a recorded epic retrospective and architecture audits.
+ 
+ ## Constellation Write-a-Skill
+ Path: `skills/write-a-skill/SKILL.md`
+diff --git a/docs/CONSTELLATION_OVERVIEW.md b/docs/CONSTELLATION_OVERVIEW.md
+index 115d8ef..e105c6b 100644
+--- a/docs/CONSTELLATION_OVERVIEW.md
++++ b/docs/CONSTELLATION_OVERVIEW.md
+@@ -37,7 +37,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
+ | Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project DELTAS over inherited global-crew doctrine: implementation/review rules usable inside a handoff |
+ | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
+ | Charter | `docs/agents/AGENT_GUIDE.md` + root `AGENTS.md`/`CLAUDE.md` pointers | all agents (Constellation or external) | single repo-orientation guide: layout, documentation map, conventions; the shared middle of the two contexts, not how to approach the job |
+-| Commander | `.agent-work/AGENT_FEEDBACK.md` | future Charter refresh, maintainers | unified run retrospective appended before archive; persists across work-ids; workflow-improvement signal, not project truth |
++| Commander, Admiral | `episodes/active/` via `scripts/apply_episode_delta.py` | future Charter refresh, curator rhyme-search, maintainers | one episode per distinct thing that happened, written at closeout through the store's only write path; a record of what happened, never a rule to follow |
+ | Workbench | `templates/DEFAULT.template.json` | any role | generic gated controller for ad-hoc work; not durable truth |
+ | Role skills | role-specific checklist templates | owning role, Workbench | execution controller when role ships one; Workbench creates/archives files but does not own semantics |
+ | Workbench | closeout/archive rules | Commander, Cartographer | artifact hygiene; roles execute package movement at closeout |
+diff --git a/docs/EPISODE_STORE.md b/docs/EPISODE_STORE.md
+index 4a5d914..cc66bfa 100644
+--- a/docs/EPISODE_STORE.md
++++ b/docs/EPISODE_STORE.md
+@@ -20,7 +20,8 @@ under `.agent-work/episodes/`, and **not** resolved through `durable_root()`
+ 
+ This is a deliberate departure from all four design-it-twice candidates
+ (`.agent-work/301/design-it-twice/`), which placed the store at `.agent-work/episodes/`
+-by inheriting the location from `.agent-work/LESSONS.md`. That inheritance was wrong for
++by inheriting the location from the run-retrospective playbook that then lived there (retired
++at issue #447). That inheritance was wrong for
+ this store, for a reason verifiable by command — **re-measured at issue #308, because the
+ transcript this section originally carried went stale.**
+ 
+@@ -44,11 +45,11 @@ who found the old transcript and concluded the storage decision was unfounded wo
+ misled by a true-when-written claim, which is exactly the failure this store exists to make
+ findable.
+ 
+-`LESSONS.md` lives under `.agent-work/` because it is a deliberately **transitory inbox**:
+-"where lessons pass through, not where they live." A lesson that graduates is applied and
+-deleted from the playbook; the playbook's job is to carry *open* problems, not a permanent
+-record. As of issue #308 that inbox is retired as a live-agent input entirely — see
+-`docs/CONSTELLATION_OVERVIEW.md` § "Truth layers".
++The playbook it was inherited from lived under `.agent-work/` because it was a deliberately
++**transitory inbox**: "where lessons pass through, not where they live." A lesson that
++graduated was applied and deleted from it; its job was to carry *open* problems, not a
++permanent record. Issue #308 retired it as a live-agent input, and issue #447 retired it
++outright — see `docs/CONSTELLATION_OVERVIEW.md` § "Truth layers".
+ 
+ The episode store is the **opposite**. Its entire purpose (§2 of the launch order's
+ protected intent) is **durability past consolidation**: an episode must outlive its own
+@@ -232,19 +233,20 @@ only when a suspected cause and/or proposed remedy exist — its **absence** (no
+ heading) is itself the signal that diagnosis was not attempted; an episode with no
+ diagnosis is complete and valid.
+ 
+-**Rhyme / depart from `apply_lessons_delta.py`, stated explicitly.** This grammar rhymes
+-with the prior art deliberately: one Markdown record per unit, `- field: value` lines, an
++**Rhyme / depart from the prior art, stated explicitly.** The prior art is the retired
++lesson-playbook writer: a validated, all-or-nothing delta writer over a single curated
++Markdown bank. This grammar rhymes with it deliberately: one Markdown record per unit, `- field: value` lines, an
+ HTML-comment state header carrying machine state, all mutation through a validated
+ all-or-nothing delta script so the LLM never writes a record directly (§6). It departs in
+ three places, and here is why:
+ 
+-1. **One file per episode, not one growing file.** `LESSONS.md` is a single running
+-   playbook because it is read top-to-bottom by a human. Episodes are captured by several
++1. **One file per episode, not one growing file.** The prior art was a single running
++   playbook because it was read top-to-bottom by a human. Episodes are captured by several
+    concurrent Commanders in separate worktrees; a shared mutable file is a merge-conflict
+    generator under that concurrency, and nothing about the episode store's job needs
+    linear human readability the way the playbook does.
+-2. **No counters, no cap, no dormancy/auto-expiry.** `LESSONS.md` curates an *evolving*
+-   claim that gets reconfirmed over time, so it carries mentions/confirmed/disconfirmed
++2. **No counters, no cap, no dormancy/auto-expiry.** The prior art curated an *evolving*
++   claim that got reconfirmed over time, so it carried mentions/confirmed/disconfirmed
+    counters. It also carried a 20-entry cap for the same reason — until #308 removed it,
+    having measured that a cap does not bound a bank so much as silently drop from it, and
+    at 20/20 refuses new entries outright. Bounding is now the Curator's regular cleanup
+@@ -254,7 +256,7 @@ three places, and here is why:
+    adjudication machinery that is right for a curated playbook is over-engineering for a
+    write-once record.
+ 3. **The agent-supplied bin is individually addressable per field; the mechanical bin is
+-   not.** See §5 — this is new structure `apply_lessons_delta.py` has no analogue for,
++   not.** See §5 — this is new structure the prior-art writer had no analogue for,
+    because a lesson's `statement` is a single evolving claim, not five independently
+    assertable facts about one occurrence.
+ 
+@@ -337,8 +339,8 @@ changes exactly `a4`:
+ ```
+ 
+ **What changes:** `a4`'s `lifecycle-standing` line, plus an appended `history` entry
+-recording who disputed it and why (append-only, same convention `apply_lessons_delta.py`
+-already uses for its own `- history:` lines).
++recording who disputed it and why (append-only, the same `- history:` convention the
++prior-art writer used).
+ 
+ **What does not change:** `a1`, `a2`, `a3`, `a5`, every `## Mechanical` line, both
+ `## Diagnosis` assertions, the episode's own `## Retirement` block (§7), and the episode's
+@@ -390,7 +392,7 @@ concrete example rather than asserted in the abstract.
+ - Retirement means **excluded from ordinary rhyme-search, RETAINED in history.** Never
+   deletion, never truncation.
+ - Retiring an episode requires a **non-empty reason**, validated at write time by g2's
+-  writer (mirroring `apply_lessons_delta.py`'s own mandatory `retire` reason — inherited,
++  writer (mirroring the prior-art writer's own mandatory `retire` reason — inherited,
+   not re-decided).
+ - Retiring an episode never touches any assertion inside it. `lifecycle-standing` on an
+   agent-supplied or diagnosis assertion, and `status` on the episode itself, are separate
+@@ -772,7 +774,7 @@ worktree's files directly.
+ **Built** (issue #301, gates g1–g4):
+ 
+ - **`scripts/apply_episode_delta.py`** — the validated, all-or-nothing delta writer
+-  (mirroring `apply_lessons_delta.py`'s contract) that is the **only** write path; the LLM
++  (validate the whole delta first, then apply every op or none) that is the **only** write path; the LLM
+   never writes an episode file directly. It enforces the partition allowlist (§4), the
+   mandatory non-empty retire reason (§7), and single-line enforcement on agent-supplied
+   free-text fields (§7). Its retire op routes its content half through
+diff --git a/docs/POSITIONING.md b/docs/POSITIONING.md
+index 65a742b..8f5ea99 100644
+--- a/docs/POSITIONING.md
++++ b/docs/POSITIONING.md
+@@ -25,7 +25,7 @@ Constellation **remixes capabilities** from both (vertical-slice language, HITL/
+ 
+ **1 — Vague idea → `explorer`.** Let it breathe. Exploration cycles (shotgun / compare / refine) using interrogator doctrine, excursions (research / `prototyper` / design-it-twice), a cold critic panel, a hard human-only confirmation gate. Out: a confirmed **design spec** + the issues it should become. Explorer stays *pure exploration* — it does not file issues itself; `to-issues` cuts them.
+ 
+-**2 — Big but AFK-easy → `admiral`.** Runs a whole epic in waves of delegated commanders; can enter here directly (interrogator makes sure the idea is fully fledged first). Closeout: lessons-auditor + cartographer reconcile.
++**2 — Big but AFK-easy → `admiral`.** Runs a whole epic in waves of delegated commanders; can enter here directly (interrogator makes sure the idea is fully fledged first). Closeout: episode capture + cartographer reconcile.
+ 
+ **3 — Hard / into-the-weeds → `commander` (human-run).** Deep, focused interrogation that will not quit early (joint understanding is the gate). Two crew in cycles: **`implementer`** (rigorous TDD, vertical-slice chunks) and **`reviewer`** (validates intent *and* implementation, plus a Fowler code-smell pass). Multiple implementer ⇄ reviewer cycles are built-in design-it-twice. Then `cartographer` updates the network and collects feedback.
+ 
+@@ -62,7 +62,6 @@ The `to-issues` box — the cut-work seam between exploration and execution —
+ | `prototyper` | Throwaway prototype answering one named question | (native) |
+ | `charter` | Compile project doctrine, glossary, engine config | (native) |
+ | `curator` | Periodic corpus-health maintenance | (native) |
+-| `lessons-auditor` | Fresh-context lesson distillation at closeout | (native) |
+ | `docent` | Static HTML explainer from map truth | (native) |
+ | `workbench` | The checklist-engine substrate every skill drives | (native) |
+ 
+diff --git a/docs/RECURSIVE_IMPROVEMENT_DESIGN.md b/docs/RECURSIVE_IMPROVEMENT_DESIGN.md
+index 886e5b3..ec39840 100644
+--- a/docs/RECURSIVE_IMPROVEMENT_DESIGN.md
++++ b/docs/RECURSIVE_IMPROVEMENT_DESIGN.md
+@@ -1,3 +1,19 @@
++> **SUPERSEDED — this is a HISTORICAL RECORD, not an instruction.** It describes the
++> recursive-improvement loop as designed and built in June 2026. Every surface, writer, gate
++> and role named below was **retired at issue #447**. Nothing here is live doctrine: do not
++> act on any of it, and do not restore anything it describes.
++>
++> It is kept **unedited** on purpose. Rewriting it to describe a system it never described
++> would falsify the record of why the loop was built this way and what it cost, which is the
++> only thing it is still good for.
++>
++> **Where the current loop lives.** A run records what happened as episodes under
++> `episodes/`, written only through `scripts/apply_episode_delta.py` and proved by
++> `scripts/verify_episode_captured.py`. An episode is a record and is never read back as a
++> rule; a rule to follow belongs in `docs/agents/*`, and putting one there is a human's call.
++> The governing doctrine is `docs/agents/ORCHESTRATOR_CONTEXT.md` § "The Retired Learning
++> Playbook"; the store's own spec is `docs/EPISODE_STORE.md`.
++
+ # Recursive Improvement Framework — audit, survey, and proposal
+ 
+ Status: draft for discussion · 2026-06-10
+diff --git a/docs/agents/CREW_CONTEXT.md b/docs/agents/CREW_CONTEXT.md
+index ecb3065..81548c5 100644
+--- a/docs/agents/CREW_CONTEXT.md
++++ b/docs/agents/CREW_CONTEXT.md
+@@ -46,7 +46,7 @@ MAX_PATH is real. Prefer short paths under deeply-nested work areas.
+ 
+ ## Record Stores Are Never Hand-Edited
+ 
+-Three stores in this repo are written **only** through their validated delta writers. An LLM
++Two stores in this repo are written **only** through their validated delta writers. An LLM
+ or a human editing them directly is a defect regardless of how correct the resulting text
+ looks — the writers enforce partition allowlists, mandatory reasons, single-line values and
+ all-or-nothing application.
+@@ -54,12 +54,11 @@ all-or-nothing application.
+ | store | the only write path |
+ |---|---|
+ | `episodes/` | `scripts/apply_episode_delta.py` |
+-| `.agent-work/LESSONS.md` | `scripts/apply_lessons_delta.py` |
+ | any checklist (`spine.json`, `execute.json`, survey files) | `checklist_engine.py` verbs |
+ 
+-Read them with `scripts/query_episodes.py` and the engine's `current` verb. Retiring an
+-episode **moves its file** between `episodes/active/` and `episodes/retired/`; membership is
+-the directory, never a parsed `status` field.
++Retiring an episode **moves its file** between `episodes/active/` and `episodes/retired/`;
++membership is the directory, never a parsed `status` field. That move is a write like any
++other and goes through the writer above.
+ 
+ ---
+ 
+diff --git a/docs/agents/GLOSSARY.md b/docs/agents/GLOSSARY.md
+index 5f18121..763806a 100644
+--- a/docs/agents/GLOSSARY.md
++++ b/docs/agents/GLOSSARY.md
+@@ -11,9 +11,9 @@ Define current meanings only; do not include debate history or uncertain terms.
+ | `latitude` | — | The scope of actions a role may take without asking the human. | — | A lease is exclusivity; latitude is permission. |
+ | `gauge` | — | The context governor's written reading of one agent's context fill: the model plus the filled fraction of its window. | — | — |
+ | `trip` | — | The event where a gauge reading crosses a band (SOFT or HARD) and the engine restricts what the agent may do next. | — | HARD blocks `advance` until the agent requests a context refresh. |
+-| `episode` | — | One stored record of something observed in a run, kept for later harvest. | — | Lives under `episodes/active/` or `episodes/retired/`. |
++| `episode` | — | One stored record of something observed in a run. | — | Lives under `episodes/active/` or `episodes/retired/`. A record, never a rule. |
+ | `episode store` | — | The durable home of episodes. | ~~record store~~ — use **episode store** | — |
+-| `harvest` | — | Reading stored episodes back to act on them. | — | An arm is captured; a harvest is read back. |
++| `harvest` | — | Gathering what a run's own artifacts recorded and writing it into the episode store as episodes. | — | The direction is INTO the store. There is no reading harvested episodes back out as rules. |
+ | `arm` | — | One group of runs in a before-and-after comparison; the PRE arm runs before a change, the POST arm after. | ~~apparatus~~, ~~capture rig~~ — use **arm** | Borrowed from clinical-trial design. |
+ | `instrument` | — | The machinery that records measurements during a run. | — | As a verb, "instrumented" means fitted with that machinery. |
+ | `ablation` | — | An arm with one piece deliberately removed, to show whether that piece causes the effect. | — | — |
+diff --git a/docs/agents/ORCHESTRATOR_CONTEXT.md b/docs/agents/ORCHESTRATOR_CONTEXT.md
+index 2a5ed20..10c0027 100644
+--- a/docs/agents/ORCHESTRATOR_CONTEXT.md
++++ b/docs/agents/ORCHESTRATOR_CONTEXT.md
+@@ -33,3 +33,22 @@ Continuously improve the active Constellation Skills corpus for clarity and prov
+ 
+ - Solicit lightweight, freeform post-job feedback (“how did it go?”); prompt for positives and negatives where useful.
+ - Feedback is advisory and may be brief or absent. Record it when available; do not require immediate interpretation or a per-item disposition.
++
++## The Retired Learning Playbook
++
++`.agent-work/LESSONS.md` and `.agent-work/AGENT_FEEDBACK.md` are **retired** (#447). This
++section is doctrine, not a changelog: it binds you even if the instruction that sent you
++looking for one of those files never mentioned any of this.
++
++- **`episodes/` replaces both.** One store of observations — not two inboxes plus a
++  playbook. Its only write path is `scripts/apply_episode_delta.py`.
++- **An episode is a record of what happened, and is never read back as a rule.** Write what
++  you observed. Do not write, and do not obey, an instruction that has an agent consult the
++  store and condition its behaviour on what it finds there.
++- **A rule to follow belongs in `docs/agents/*`, and putting one there is a human's call.**
++  Observing something that feels like a rule is not authority to promote it into doctrine.
++  Record the observation and say so; the human decides.
++- **There is to be no successor playbook and no read-and-apply loop.** A new file that
++  accumulates distilled advice for future agents to consult is this retirement undone,
++  whatever it is named and wherever it sits. If you find yourself creating one, stop and ask
++  the human instead.
+diff --git a/episodes/README.md b/episodes/README.md
+index e75e450..bce26ad 100644
+--- a/episodes/README.md
++++ b/episodes/README.md
+@@ -9,11 +9,13 @@ partition, retirement policy, and Stratum A mapping: **`docs/EPISODE_STORE.md`**
+ The store must **outlive** the run that captures it, and its whole purpose is to stay
+ findable across sessions and worktrees so a later rhyme-detection pass (issue #308) can
+ find neighbours of a new episode months later. That only works if the store is **tracked
+-in git**: `.agent-work/` is gitignored (see `.gitignore` line 1) and nothing under it
+-survives a `git worktree remove` or a fresh clone. `episodes/` is a plain repo-root
+-directory, tracked like any other, so a commit here is visible in every worktree, every
+-clone, and every later checkout — no special durability plumbing required. See
+-`docs/EPISODE_STORE.md` § "Why a tracked path" for the full argument.
++in git** at a path with no durability plumbing of its own: `episodes/` is a plain repo-root
++directory, tracked like any other, so the moment a commit lands the store is visible in
++every worktree, every clone, and every later checkout, with nothing to configure and
++nothing to resolve at runtime. A store whose location has to be computed — from a lease, a
++work-id, or which worktree happens to be current — is a store that can be written to the
++wrong place while every gate still reports green. See `docs/EPISODE_STORE.md` § "Why a
++tracked path" for the full argument.
+ 
+ ## What lives here
+ 
+@@ -68,15 +70,11 @@ enumerating to zero episodes with exit 0, which would read exactly like an empty
+ ## What does NOT live here
+ 
+ - **Nothing hand-edited.** `scripts/apply_episode_delta.py` is the only write path — a
+-  validated, all-or-nothing delta writer mirroring `scripts/apply_lessons_delta.py`'s
+-  contract. Read with `scripts/query_episodes.py`.
+-- **No automated capture wiring** (issue #305) and **no consolidation / rhyme-search**
+-  (issue #308) — both are downstream of this store, not part of it.
+-
+-## Not to be confused with
+-
+-`.agent-work/LESSONS.md` — a live, curated, human-facing playbook of open problems,
+-deliberately transitory ("where lessons pass through, not where they live"). This store
+-is the opposite: a raw, append-mostly, machine-consumed capture that is meant to outlive
+-its own consolidation. The two systems are siblings, not the same thing, and this run
+-does not touch `LESSONS.md` or its writer.
++  validated, all-or-nothing delta writer: it checks the whole delta before it touches the
++  store, and either every operation lands or none does.
++- **No consolidation / rhyme-search** (issue #308) — downstream of this store, not part of
++  it.
++- **No rules.** An episode records what was observed, and nothing here is read back as an
++  instruction. A rule for a future agent to follow belongs in `docs/agents/*` and is a
++  human's call — see `docs/agents/ORCHESTRATOR_CONTEXT.md` § "The Retired Learning
++  Playbook".
+diff --git a/scripts/agent_work_root.py b/scripts/agent_work_root.py
+index 9074549..e36b388 100644
+--- a/scripts/agent_work_root.py
++++ b/scripts/agent_work_root.py
+@@ -1,8 +1,8 @@
+ #!/usr/bin/env python
+ """Resolve the DURABLE `.agent-work` root that survives `git worktree remove`.
+ 
+-The recursive-improvement trio (LESSONS.md, AGENT_FEEDBACK.md,
+-CONSTELLATION_FEEDBACK.md, plus their sidecar/inbox ledgers) must be shared by
++The durable run-record artifacts (CONSTELLATION_FEEDBACK.md, plus its sidecar
++ledger) must be shared by
+ every linked worktree of a repo, not scattered into each worktree's own
+ (gitignored, disposable) `.agent-work/`. `durable_root(start)` returns the MAIN
+ checkout root when `start` is inside a LINKED git worktree, and otherwise returns
+diff --git a/scripts/verify_retirement.py b/scripts/verify_retirement.py
+index e6ad0f5..f8d6134 100644
+--- a/scripts/verify_retirement.py
++++ b/scripts/verify_retirement.py
+@@ -324,6 +324,35 @@ def _leg_retired_path(root: Path, tracked: set[str]) -> list[Violation]:
+ 
+ 
+ # --- leg: retired-name-on-shipped-surface ---------------------------------------------
++#
++# A SECOND FROZEN APPROVAL CENSUS, in the same format as the store-mention one above and
++# read through the same parser. It exists because this leg could not otherwise reach zero
++# and was never going to: `docs/RECURSIVE_IMPROVEMENT_DESIGN.md` is a June-2026 design
++# RECORD whose ~33 sites must survive untouched (rewriting it to describe a system it never
++# described would falsify history), the commander spine's `archive.c4` deny-globs keep both
++# retired path strings as a RE-STAGING BLOCK, and `scripts/stage_feedback.py` survives by
++# explicit ruling and names them eight times. With no approval mechanism at all,
++# `test_canon_is_clean`'s `xfail(strict=True)` could never XPASS and the scaffolding would
++# outlive the work it exists to end — the exact defect g1's own review caught once already.
++#
++# NOT a pattern allowlist, and the difference is the whole value: the census names EXACT
++# sites, so anything new still has to be looked at by a human and given a reason. A glob
++# would make the leg decorative.
++#
++# THE BRIGHT LINE, stated where it is enforced: a reason amounting to "an agent is still
++# told to use the retired thing" is NOT approvable — fix the surface instead. Approvable
++# reasons look like: a frozen historical record; a deny-glob re-staging block; a survivor
++# script naming what it stages; a tombstone naming the retired files in order to forbid
++# them; a comment recording why the retirement was untrack-not-delete.
++
++RETIRED_NAME_CENSUS_PATH = "tests/data/retired_names.approved.txt"
++
++RETIRED_NAME_DETAIL = (
++    "a shipped surface still names the retired {name!r}: {line}. If it TELLS an agent to "
++    "use the retired thing, fix the surface. If it is a frozen record, a re-staging block, "
++    "or a tombstone, approve it in " + RETIRED_NAME_CENSUS_PATH + " with a reason for that "
++    "exact line."
++)
+ 
+ 
+ def _leg_retired_name(root: Path, shipped: list[str]) -> list[Violation]:
+@@ -333,7 +362,17 @@ def _leg_retired_name(root: Path, shipped: list[str]) -> list[Violation]:
+     constant's own comment claimed coverage of "a skill directory" while nothing tested a
+     path. Re-adding `skills/lessons-auditor/` — a whole directory deleted at g4 — was
+     therefore missed entirely: a restored skill can be perfectly innocent line by line and
+-    still be the retired thing, because what identifies it is where it sits."""
++    still be the retired thing, because what identifies it is where it sits.
++
++    **Only the CONTENT half is approvable.** The census is keyed on `(path, normalized
++    line)` and there is no honest line to key a path violation on — but the real reason is
++    stronger than the mechanical one: a restored file or skill directory whose *name* is the
++    retired thing IS the retirement undone, and there is no record, block or tombstone that
++    needs to sit at such a path. Leaving the path half unapprovable keeps the one leg that
++    catches a verbatim re-commit (see `_leg_retired_path`) impossible to write a reason
++    around. Named here rather than left implicit, because "the census did not cover it" and
++    "the census must never cover it" read the same in code and mean opposite things."""
++    approved = {(entry.path, entry.mention) for entry in load_approved(root, RETIRED_NAME_CENSUS_PATH)}
+     out: list[Violation] = []
+     for path in shipped:
+         named = next((name for name in RETIRED_NAMES if name in path), None)
+@@ -345,7 +384,8 @@ def _leg_retired_name(root: Path, shipped: list[str]) -> list[Violation]:
+                     0,
+                     f"the PATH itself names the retired {named!r}. A restored file or skill "
+                     "directory is the retired thing whatever its contents say — line 0 "
+-                    "because the whole path is the violation, not any line in it.",
++                    "because the whole path is the violation, not any line in it. This half "
++                    "is deliberately NOT approvable by census.",
+                 )
+             )
+         lines = _read_lines(root, path)
+@@ -353,16 +393,19 @@ def _leg_retired_name(root: Path, shipped: list[str]) -> list[Violation]:
+             continue
+         for number, line in enumerate(lines, start=1):
+             hit = next((name for name in RETIRED_NAMES if name in line), None)
+-            if hit is not None:
+-                out.append(
+-                    Violation(
+-                        LEG_RETIRED_NAME,
+-                        path,
+-                        number,
+-                        f"a shipped surface still names the retired {hit!r}: "
+-                        f"{normalize(line)[:160]}",
+-                    )
++            if hit is None:
++                continue
++            mention = normalize(line)
++            if (path, mention) in approved:
++                continue
++            out.append(
++                Violation(
++                    LEG_RETIRED_NAME,
++                    path,
++                    number,
++                    RETIRED_NAME_DETAIL.format(name=hit, line=mention[:160]),
+                 )
++            )
+     return out
+ 
+ 
+@@ -424,13 +467,18 @@ def store_mention_sites(root: Path, shipped: list[str]) -> list[tuple[str, int,
+     return sites
+ 
+ 
+-def parse_approved(text: str) -> list[ApprovedEntry]:
+-    """Parse the census. Each entry is `<path>:<normalized line>` on its own line, directly
++def parse_approved(text: str, census_path: str = APPROVED_CENSUS_PATH) -> list[ApprovedEntry]:
++    """Parse a census. Each entry is `<path>:<normalized line>` on its own line, directly
+     beneath a `#` comment line that is its REASON.
+ 
+     `partition(":")` on the FIRST colon: a path never contains one, a quoted source line
+     routinely does. An entry with no reason directly above it raises rather than being
+-    accepted — an approval nobody justified is an approval nobody can review."""
++    accepted — an approval nobody justified is an approval nobody can review.
++
++    `census_path` names the file being read and appears in every refusal, so a malformed
++    entry says WHICH census to go and fix. There is exactly ONE parser for both censuses on
++    purpose: a second implementation is how two files that look alike start disagreeing
++    about what an approval is."""
+     entries: list[ApprovedEntry] = []
+     reason = ""
+     for raw in text.splitlines():
+@@ -443,30 +491,30 @@ def parse_approved(text: str) -> list[ApprovedEntry]:
+         path, separator, mention = raw.strip().partition(":")
+         if not separator or not mention.strip():
+             raise ValueError(
+-                f"{APPROVED_CENSUS_PATH}: malformed entry {raw!r} — an entry is "
++                f"{census_path}: malformed entry {raw!r} — an entry is "
+                 "`<path>:<normalized line>`."
+             )
+         if not reason:
+             raise ValueError(
+-                f"{APPROVED_CENSUS_PATH}: entry {raw.strip()!r} has no reason. Put a "
+-                "one-line `# <why this mention is not a prescription>` directly above it."
++                f"{census_path}: entry {raw.strip()!r} has no reason. Put a "
++                "one-line `# <why this mention is approved>` directly above it."
+             )
+         entries.append(ApprovedEntry(path, mention.strip(), reason))
+         reason = ""  # one reason approves exactly one entry
+     return entries
+ 
+ 
+-def load_approved(root: Path) -> list[ApprovedEntry]:
+-    """The census as it exists in `root`, or empty when the file is absent.
++def load_approved(root: Path, census_path: str = APPROVED_CENSUS_PATH) -> list[ApprovedEntry]:
++    """A census as it exists in `root`, or empty when the file is absent.
+ 
+     Absent-means-empty is safe in the only direction that matters: with no approvals every
+     mention is unapproved, so the guard fires MORE, never less. A decoy repository built in
+     `tmp_path` carries no census, and that is the correct reading for it."""
+-    census = root / APPROVED_CENSUS_PATH
++    census = root / census_path
+     if not census.is_file():
+         return []
+     with census.open(encoding="utf-8") as handle:
+-        return parse_approved(handle.read())
++        return parse_approved(handle.read(), census_path)
+ 
+ 
+ def _leg_store_mention(root: Path, shipped: list[str]) -> list[Violation]:
+diff --git a/skills/admiral/SKILL.md b/skills/admiral/SKILL.md
+index 914c51e..fdd5947 100644
+--- a/skills/admiral/SKILL.md
++++ b/skills/admiral/SKILL.md
+@@ -1,11 +1,11 @@
+ ---
+ name: constellation-admiral
+-description: Run an epic as the human's delegate — confirm latitude, dispatch Commanders in waves, adjudicate and merge, close with lessons and architecture audits. Use when handed work spanning multiple issues; for ONE issue under a launch order use constellation-commander-delegated, not this skill.
++description: Run an epic as the human's delegate — confirm latitude, dispatch Commanders in waves, adjudicate and merge, close with a recorded epic retrospective and architecture audits. Use when handed work spanning multiple issues; for ONE issue under a launch order use constellation-commander-delegated, not this skill.
+ ---
+ 
+ # Constellation Admiral
+ 
+-Run one epic end to end as the human's delegate. The Admiral **never commands an issue itself**: it dispatches Commanders, adjudicates what they float, merges their results, and logs every ruling. Rigor concentrates at the bookends — latitude in, lessons out — and the middle is free.
++Run one epic end to end as the human's delegate. The Admiral **never commands an issue itself**: it dispatches Commanders, adjudicates what they float, merges their results, and logs every ruling. Rigor concentrates at the bookends — latitude in, a recorded retrospective out — and the middle is free.
+ 
+ ## Start here — drive the engine before you touch the epic
+ 
+@@ -29,7 +29,7 @@ Drive `templates/ADMIRAL_SPINE.template.json` through the engine: **init → lat
+ | init | work area for the epic id; claim the engine session lease |
+ | latitude | load `constellation-interrogator`; produce and confirm the latitude contract |
+ | execute | dispatch waves, adjudicate, merge — free middle, log mandatory |
+-| closeout | lessons audit, map reconcile, repo hygiene, epic summary, user acceptance |
++| closeout | episode capture, map reconcile, repo hygiene, epic summary, user acceptance |
+ 
+ ## Latitude (first bookend)
+ 
+@@ -43,7 +43,7 @@ A decision that fits no listed class is **out-of-taxonomy and always escalates**
+ 
+ Do what the epic needs. Two hard requirements only:
+ 
+-1. **The ADMIRAL_LOG is the run's audit trail** (`templates/ADMIRAL_LOG.template.md`): every ruling, incident, merge, wave launch, and error you own goes in as it happens. With no gates in this step, the log is the accountability surface and the lessons audit's primary input. An unlogged ruling didn't happen.
++1. **The ADMIRAL_LOG is the run's audit trail** (`templates/ADMIRAL_LOG.template.md`): every ruling, incident, merge, wave launch, and error you own goes in as it happens. With no gates in this step, the log is the accountability surface and the closeout retrospective's primary input. An unlogged ruling didn't happen.
+ 2. **The latitude contract is honored**: adjudicate inside delegated classes (logged as RULING), escalate everything else.
+ 
+ Operating doctrine:
+@@ -57,20 +57,18 @@ Operating doctrine:
+ - A Commander that dies or stalls: inspect its worktree (commits, workbench state, orphan processes) before acting; relaunch a continuation into the same worktree resuming from its engine state — don't restart from zero. Log every incident and recovery. An **idle** commander that has produced complete artifacts is *done*, not stalled — adjudicate it per the shared rule in `references/global-orchestrator.md` (§idle-subagent-adjudication): verify from the artifact set (branch/commit/PR/files) plus a **clean-room reviewer subagent** and accept the work, never blocking on a dropped verdict, and still confirm it dead before you reuse or sweep its worktree. Epic-specific adjudication deltas: `references/fleet-doctrine.md`, "Adjudication invariants".
+ - **Field your Commanders' queries — you are their reachable tier.** A delegated Commander cannot reach the human; it floats decisions and **queries you for context** it lacks (a clarification, an epic-level fact, a read on intent its launch order didn't settle). Answer from your epic-level knowledge, then **continue** the Commander (it returned with context intact — a return-and-relaunch round-trip, not a host-process resume, so this is distinct from the dead-Commander recovery drill). This is inherited delegate-not-replacement doctrine — see `references/global-everyone.md`. Admiral-specific: when your own knowledge and granted latitude run out, reach the human **out-of-band** via the latitude contract's out-of-taxonomy / expiry escalation before continuing the Commander.
+ - **A refresh is a third shape, distinct from both a query and a dead Commander.** A Commander that trips writes a `refresh-request` into its own `spine.json` and goes idle (`global-everyone.md` §reach-up) — it is neither answering-and-continuing (query) nor dead (recovery drill). Its `current` carries `REFRESH REQUESTED:` alongside the run's `DIGEST:`; relaunch a **fresh** Commander into the **same worktree and spine file** (job-file-not-agent-file), cold-starting it from that `current` alone — no separate handoff document, no re-briefing from your own memory of the run.
+-- **Surviving long detached compute is platform doctrine, not project lore** — the three kill vectors, watcher-sleep, the "completed"-but-sleeping hazard, detach + state-note-first, and the recovery drill live in `references/fleet-doctrine.md`. The spine enforces state-note-first: `execute` refuses to start until `.agent-work/<epic-id>/STATE_NOTE.md` is filled (precondition p2). Carry its launch-execution rules into every launch order and follow its recovery drill when a ship dies; use `.agent-work/LESSONS.md` only to stage genuinely project-specific fleet signal between audits rather than relearning platform doctrine there.
++- **Surviving long detached compute is platform doctrine, not project lore** — the three kill vectors, watcher-sleep, the "completed"-but-sleeping hazard, detach + state-note-first, and the recovery drill live in `references/fleet-doctrine.md`. The spine enforces state-note-first: `execute` refuses to start until `.agent-work/<epic-id>/STATE_NOTE.md` is filled (precondition p2). Carry its launch-execution rules into every launch order and follow its recovery drill when a ship dies, rather than relearning platform doctrine per project.
+ - The project's platform invariants ride in every launch order's inherited-context block.
+ 
+ ## Closeout (second bookend — the improvement engine)
+ 
+ The run cannot close with unrouted observations. Engine-enforced:
+ 
+-1. Dispatch a fresh-context subagent invoking `constellation-lessons-auditor` with a compiled run brief; every returned candidate gets a routed disposition (graduate-and-retire to a named permanent home / template delta / Charter nomination / constellation export / lesson-inbox delta / drop-with-reason). `.agent-work/LESSONS.md` is a **transitory inbox, not a playbook**: an audit ends every lesson it reads — its operative content graduates to the doc that owns it (a template, a skill doctrine section, a reference, or a code-fix issue) and the lesson is then retired, or it is deleted with a reason; nothing audited stays active. Write lesson-inbox deltas — including every graduation's paired `retire` op — only via `apply_lessons_delta.py`, and when an op edits a shipped compact-format JSON template, edit the raw text **surgically** (never round-trip through `json.load`/`json.dump`, which reflows the whole file and destroys blame) and re-validate with `json.load` afterward. When the epic runs against this repo (constellation-skills) itself — self-maintenance/dogfooding — the run brief additionally includes a fresh `collect_feedback.py` sweep over the known dogfood project roots, so the cross-project feedback loop cannot go dormant between epics; see `docs/DEBT_SWEEP_CADENCE.md` for the current roots list and exact invocation. In any other consuming repo this bullet is a no-op (no `docs/DEBT_SWEEP_CADENCE.md` there, nothing to sweep).
+-2. Append the epic retrospective to `.agent-work/AGENT_FEEDBACK.md`; the feedback invariant check must pass.
+-3. Architecture audit: hand the epic's net change to `constellation-cartographer` for reconcile.
+-4. **Harvest before sweep (mandated substep, ordered before `git worktree remove`).** For each commander worktree, collect its durable trio into the shared durable `.agent-work/` at the main checkout **before** the worktree is swept: the lessons-delta (applied via `apply_lessons_delta.py`), the `AGENT_FEEDBACK.md` entry, and the `CONSTELLATION_FEEDBACK.md` exports. A **fenced** commander (forbidden from writing your main checkout) stages exactly this trio worktree-locally under `.agent-work/staged-feedback/<work-id>/`, alongside a `FENCE.md` citing its launch order — that staging dir is your harvest source, and the commander satisfied its own `feedback`/`archive` gate against it (via `verify_agent_feedback.py`) rather than waiving. Harvest first, **then** remove — a worktree swept before its trio is collected silently drops that run's learning. When applying the harvested deltas, sibling lesson ids raised from **different worktrees for the same defect** are `confirm`s of the existing lesson (or an `amend` to reword it), **not** new `add`s (a new slug for the same defect forks its identity) — the full rationale (recurrence counting, the export fingerprint) lives in the `constellation-lessons-auditor` home, which owns this rule; apply it here, don't restate it. **Sweep both locations — under an epic the trio does NOT land at the main checkout.** Git-common-dir resolution centralizes `.agent-work/` on the main checkout *only when no Admiral epic lease is active*. While your own epic lease is held, `durable_root()` (`scripts/agent_work_root.py`) deliberately returns the **worktree** root instead — the main checkout is fenced read-only, so redirecting there would write to an unwritable root. The consequence for closeout: a fenced commander's trio lands at `<worktree>/.agent-work/{AGENT_FEEDBACK,LESSONS,CONSTELLATION_FEEDBACK}.md`, which `git worktree remove` destroys. Harvest **both** sources before sweeping each worktree — the `staged-feedback/<work-id>/` staging dir above **and** the worktree-root trio — and treat the worktree-root trio as the *expected* location for any commander running under an epic on current scripts, not an edge case. The manual collection above is also the fallback for consuming projects on older scripts or any hand reconciliation.
+-5. Post-merge ripe lessons: once the wave's PRs are merged, apply/export/retire the ripe lessons whose fixes shipped in those merged PRs. A per-issue commander worktree cannot settle an **epic-level** ripe lesson (issue-48) — its fix spans issues it never saw; only the Admiral, post-merge with the whole epic in view, can close them out.
+-6. Repo hygiene: branches merged or dispositioned, worktrees swept (`git worktree remove` + `git worktree prune`, only after merge or confirmed-dead **and after the harvest substep above**), ADMIRAL_LOG archived to main under `.agent-work/archive/`.
+-7. Present the epic summary; user acceptance closes the run.
++1. Record the epic retrospective as **episodes**: one episode per distinct thing that happened across the epic — not one per wave, and not a summary — each harvesting what the ADMIRAL_LOG, the crew Workflow Feedback and the Commander returns actually recorded. An episode is a record, not a rule: write what you observed, and do **not** write a rule for a future agent to follow — a rule to follow belongs in `docs/agents/*` and is a human's call. Write the delta through `apply_episode_delta.py` (the store's only write path, `--store-root episodes` on every invocation) and prove the capture with `verify_episode_captured.py` before advancing. When any part of this closeout edits a shipped compact-format JSON template, edit the raw text **surgically** (never round-trip through `json.load`/`json.dump`, which reflows the whole file and destroys blame) and re-validate with `json.load` afterward. When the epic runs against this repo (constellation-skills) itself — self-maintenance/dogfooding — additionally run a fresh `collect_feedback.py` sweep over the known dogfood project roots, so the cross-project feedback loop cannot go dormant between epics; see `docs/DEBT_SWEEP_CADENCE.md` for the current roots list and exact invocation. In any other consuming repo that sweep is a no-op (no `docs/DEBT_SWEEP_CADENCE.md` there, nothing to sweep).
++2. Architecture audit: hand the epic's net change to `constellation-cartographer` for reconcile.
++3. **Harvest before sweep (mandated substep, ordered before `git worktree remove`).** The episodes themselves need no harvesting — `episodes/` is a tracked repo-root path, so a committed episode already survives `git worktree remove` and lands in a fresh clone. What does **not** survive is a commander's worktree-local `CONSTELLATION_FEEDBACK.md` export, so collect that from each commander worktree **before** it is swept. A **fenced** commander (forbidden from writing your main checkout) stages its export worktree-locally under `.agent-work/staged-feedback/<work-id>/`, alongside a `FENCE.md` citing its launch order — that staging dir is your harvest source. **Look in both places.** Git-common-dir resolution centralizes `.agent-work/` on the main checkout *only when no Admiral epic lease is active*; while your own epic lease is held, `durable_root()` (`scripts/agent_work_root.py`) deliberately returns the **worktree** root instead, because the main checkout is fenced read-only. So a commander running under an epic on current scripts writes to its own worktree root, and that is the *expected* location rather than an edge case. Harvest first, **then** remove.
++4. Repo hygiene: branches merged or dispositioned, worktrees swept (`git worktree remove` + `git worktree prune`, only after merge or confirmed-dead **and after the harvest substep above**), ADMIRAL_LOG archived to main under `.agent-work/archive/`.
++5. Present the epic summary; user acceptance closes the run.
+ 
+ **Batched re-verification.** Re-running the full suite once per merged PR is often redundant when a wave batches several merges before a single close — the sanctioned pattern is to batch the merges and re-verify once, on the final merged main, in a fresh worktree, rather than per-PR. The skip is governed by the shared unchanged-tree evidence contract in `references/global-orchestrator.md` (§unchanged-tree-shortcut).
+ 
+diff --git a/skills/admiral/references/fleet-doctrine.md b/skills/admiral/references/fleet-doctrine.md
+index f63ea72..6993456 100644
+--- a/skills/admiral/references/fleet-doctrine.md
++++ b/skills/admiral/references/fleet-doctrine.md
+@@ -4,10 +4,9 @@ Platform/harness-scoped doctrine for running a fleet: how Admiral and Commander
+ sessions die, how to make every death cheap, and how to recover. This is **not**
+ project doctrine — it is true for every project running Constellation on an
+ agent harness, which is why it lives in the skill (shipped to every install)
+-rather than in any one project's `.agent-work/LESSONS.md`. That lessons file is
+-a transitory inbox, not a playbook: it stages only genuinely project-specific
+-fleet signal between audits, and an audit graduates each lesson into the doc that
+-owns it or deletes it — it is never the permanent home for a fleet rule.
++rather than in any one project's run records. A project's episode store records
++what happened on that project; it is never the home for a fleet rule, and it is
++never read back as one. A fleet rule lives here.
+ 
+ Distilled from field fleets (f1brainz epics #372/#378/#453); the incident count
+ there was dominated by *tracking* long detached jobs, not by the work itself.
+@@ -158,21 +157,20 @@ the worktree — a headless `claude -p` launch pointed at it, or a plain subproc
+ with the env var set for the non-agent (pure-function) paths — never a fixture
+ that hand-injects the value under test.
+ 
+-**Harvest before you sweep — a required precondition of removal.** A worktree
+-carries durable learning the shared root does not yet hold: its lessons-delta,
+-its `AGENT_FEEDBACK.md` entry, and its `CONSTELLATION_FEEDBACK.md` exports. A
+-**fenced** Commander stages that trio worktree-locally under
+-`.agent-work/staged-feedback/<work-id>/` with a `FENCE.md` launch-order citation
+-(the shape `verify_agent_feedback.py` accepts in lieu of the durable-root write,
+-so the Commander closes out without waiving); that staging dir is your harvest
+-source. Just
+-as you confirm a Commander dead before touching its worktree, you harvest that
+-trio into the shared durable `.agent-work/` at the main checkout **before**
++**Harvest before you sweep — a required precondition of removal.** A worktree can
++carry durable learning the shared root does not yet hold: its
++`CONSTELLATION_FEEDBACK.md` exports. A **fenced** Commander stages that export
++worktree-locally under `.agent-work/staged-feedback/<work-id>/` with a `FENCE.md`
++launch-order citation; that staging dir is your harvest source. Just as you
++confirm a Commander dead before touching its worktree, you harvest the export
++into the shared durable `.agent-work/` at the main checkout **before**
+ `git worktree remove` — removal is not permitted until it is collected, because a
+-swept worktree's learning is unrecoverable. Git-common-dir resolution points the
+-durable trio at one shared root, so the harvest is **mostly automatic**; the manual
+-harvest above remains the fallback for consuming projects on older scripts, or any
+-hand reconciliation.
++swept worktree's learning is unrecoverable. The run's **episodes** are the
++exception and need no harvesting: `episodes/` is a tracked repo-root path, so a
++committed episode already survives the sweep and lands in a fresh clone.
++Git-common-dir resolution points the durable root at one shared root, so the
++harvest is **mostly automatic**; the manual harvest above remains the fallback for
++consuming projects on older scripts, or any hand reconciliation.
+ 
+ ## Windows shell hazards (command-checks)
+ 
+@@ -214,7 +212,8 @@ false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run
+   commit/merge. Sync the working tree too (`git status`, then `git restore`/checkout the affected paths — or
+   `git merge --ff-only origin/main` which moves ref and tree together), not just the ref. Tag a genuine
+   self-inflicted near-miss as an **`ADMIRAL ERROR`** entry even when caught and fixed inline — the dedicated
+-  tag is what makes it greppable at the next lessons audit; folding it into a `MERGE` entry's prose hides it.
++  tag is what makes it greppable when closeout writes the run's episodes; folding it into a `MERGE` entry's
++  prose hides it.
+ 
+ ## Engine/platform quirks
+ 
+diff --git a/skills/charter/templates/AGENT_GUIDE.template.md b/skills/charter/templates/AGENT_GUIDE.template.md
+index 2fab14e..913b4cc 100644
+--- a/skills/charter/templates/AGENT_GUIDE.template.md
++++ b/skills/charter/templates/AGENT_GUIDE.template.md
+@@ -71,8 +71,8 @@ Universal commands only. Area-specific commands belong in handoffs, not here.
+ ## Workflow State
+ 
+ - Temporary workflow state and archived history live under `.agent-work/` (see `docs/agents/` skills for the full layout). Treat it as recoverable state, not project truth.
+-- The unified agent feedback log at `.agent-work/AGENT_FEEDBACK.md` accumulates run retrospectives across work-ids; it persists and is never archived with a single run.
+-- The curated lessons playbook at `.agent-work/LESSONS.md` is its bounded, distilled derivative. It is a staging bank an audit drains, not planning input for a live run — agents write to it only through `apply_lessons_delta.py` structured deltas, never by hand.
++- What a run observed is recorded as **episodes** under the repo-root `episodes/` directory, written only through `scripts/apply_episode_delta.py` structured deltas and never by hand. That path is tracked, so a committed episode survives `git worktree remove` and lands in a fresh clone.
++- An episode is a record of what happened, not planning input for a live run. Do not read the store back and condition behaviour on what you find there; a rule to follow belongs in `docs/agents/*` and putting one there is a human's call.
+ - If it is in `docs/`, it is meant to guide future work. If it is in `.agent-work/`, it is temporary or historical.
+ 
+ ## Where to Go Next
+diff --git a/skills/commander-delegated/SKILL.md b/skills/commander-delegated/SKILL.md
+index 30a2be6..f7b22c5 100644
+--- a/skills/commander-delegated/SKILL.md
++++ b/skills/commander-delegated/SKILL.md
+@@ -14,7 +14,7 @@ You were dispatched to **run** an issue, not to solve it by hand. The moment thi
+ 1. **Set up the work area and CLAIM the engine lease.** Instantiate `spine.json` from `templates/COMMANDER_SPINE.template.json` (use the commander skill's `scripts/init_work_area.py --spine`, which resolves the placeholders), then `claim` the checklist lease with the engine. This is your **first command**, ahead of any problem-solving.
+ 2. **Ask the engine what to do next, at every step.** Run the engine's `current` verb, do exactly what the active step's imperative says, and `advance` only once its postconditions pass. Never skip ahead, and never hand-write or hand-edit `spine.json` — the engine owns that state and stamps the provenance (session lease, heartbeats, evidence) that proves the work was really driven.
+ 3. **Deliverables come out of the spine, not around it.** `solution.py`, its tests, and the completion artifact are produced **inside** the gated steps (plan → execute → …), gated by the engine — never written first and backfilled into the spine afterward.
+-4. **Producing the solution is the MIDDLE of the run, not the end.** When an implementer crew hands back `solution.py` and green tests, you are still at the `execute` step — **not done**. Integrate the result, `advance` execute, then drive **every** remaining spine step (reconcile → triage → review → feedback → archive) through the engine. **Do not end your turn while any spine step is still `pending` or `in-progress`:** run the engine's `current` verb and keep going until it reports the spine is done. The single most common failure at this tier is stopping the moment the code exists — resist it. At the final `archive` step, order the closeout correctly: satisfy or waive the archive postconditions, run the engine's final `advance` on archive (which marks the spine done), and **only then** `release` the engine session lease as your very last action. **Fenced feedback/archive closeout — stage, do not waive.** When an Admiral launch-order fence forbids writing the main checkout, the `feedback`/`archive` gate's durable-log write is impossible, but do **not** waive the gate for fencing: instead **stage the worktree-local trio** — the `AGENT_FEEDBACK.md` entry, `lessons-delta.json`, and `CONSTELLATION_FEEDBACK.md` exports — plus a `FENCE.md` citing this launch order, all under `.agent-work/staged-feedback/<work-id>/`, which `verify_agent_feedback.py` now accepts in lieu of the durable-root write (the Admiral harvests that trio into the shared root before sweeping your worktree). A `FENCE.md` citation **without** the complete staged trio still fails the gate — learning cannot be silently dropped. Releasing before that closing advance leaves archive's own closeout entries after the lease release and fails the terminal provenance check — the lease must cover every journaled action.
++4. **Producing the solution is the MIDDLE of the run, not the end.** When an implementer crew hands back `solution.py` and green tests, you are still at the `execute` step — **not done**. Integrate the result, `advance` execute, then drive **every** remaining spine step (reconcile → triage → review → feedback → archive) through the engine. **Do not end your turn while any spine step is still `pending` or `in-progress`:** run the engine's `current` verb and keep going until it reports the spine is done. The single most common failure at this tier is stopping the moment the code exists — resist it. At the final `archive` step, order the closeout correctly: satisfy or waive the archive postconditions, run the engine's final `advance` on archive (which marks the spine done), and **only then** `release` the engine session lease as your very last action. **Fenced feedback/archive closeout — write the episodes, stage the rest, do not waive.** When an Admiral launch-order fence forbids writing the main checkout, your run's episodes are unaffected: `episodes/` is a tracked path inside your own worktree, so write them there through `scripts/apply_episode_delta.py --store-root episodes`, prove the capture with `scripts/verify_episode_captured.py`, and commit — the commit is what carries them out. What the fence does block is the durable-root `CONSTELLATION_FEEDBACK.md` export; do **not** waive the gate for fencing, but stage that export plus a `FENCE.md` citing this launch order under `.agent-work/staged-feedback/<work-id>/`, which the Admiral harvests before sweeping your worktree. A `FENCE.md` citation **without** the staged export still fails the gate — learning cannot be silently dropped. Releasing before that closing advance leaves archive's own closeout entries after the lease release and fails the terminal provenance check — the lease must cover every journaled action.
+ 5. **Dispatching a crew is never a reason to end your turn.** You run headless: if you end your turn to "wait for the crew," nothing resumes you — the run just dies mid-`execute`, no matter how well the crew is doing. When you dispatch an implementer or reviewer and must wait for its result, wait **actively, inside your turn**: poll the crew's result artifact (or registry) in a loop until it lands, then integrate it and drive on. Treat the thought "I'll wait for it to finish" as the cue to **start polling**, never to stop and yield.
+ 
+ **Work the engine never saw did not happen.** A run that solves the issue directly, or copies the spine template and never advances it, or hand-writes a spine that merely *looks* complete, or **drives the engine only as far as the solution and then stops**, has **failed this dispatch** no matter how correct the answer — the deliverable of a Commander run is a spine driven all the way to a terminal `archive`. Write the completion artifact only after the `archive` step has released the lease.
+diff --git a/skills/commander/references/commander-core.md b/skills/commander/references/commander-core.md
+index 35560c0..5481a8e 100644
+--- a/skills/commander/references/commander-core.md
++++ b/skills/commander/references/commander-core.md
+@@ -57,7 +57,7 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
+ | reconcile | subagent — load `constellation-cartographer` |
+ | triage | this context — load `constellation-triage`; each candidate routes to `fixed-now`, `filed`, or `recommend-and-defer` — fix-now use follows a latitude decision class |
+ | review | this context — summarize run, get principal acceptance |
+-| feedback | this context — append the run retrospective to `.agent-work/AGENT_FEEDBACK.md`; distill lesson delta ops and apply via `scripts/apply_lessons_delta.py` (never edit `LESSONS.md` directly) |
++| feedback | this context — reflect on the run, then record what happened as episodes and apply them via `scripts/apply_episode_delta.py` (the only write path; never hand-edit under `episodes/`), proved by `scripts/verify_episode_captured.py` |
+ | archive | this context — commit, push, move work area |
+ 
+ **Shaped-design intake (`understand`).** An ask citing a shaped-design spec/issue is verified confirmed — `verify_spec_confirmed.py` passes or the CONFIRMED marker is visible — before any work is cut; a shaped-design issue bearing the loud `UNCONFIRMED — DO NOT CUT` header is never cut into work.
+diff --git a/skills/workbench/SKILL.md b/skills/workbench/SKILL.md
+index 6854595..b9f9ab9 100644
+--- a/skills/workbench/SKILL.md
++++ b/skills/workbench/SKILL.md
+@@ -13,8 +13,6 @@ Drive every step through the checklist engine and finish its sequence — final
+ 
+ ```text
+ .agent-work/
+-  AGENT_FEEDBACK.md              # unified run retrospective; persists across work-ids, never archived
+-
+   <work-id>/                     # one work-id holds the whole tree
+     <checklist>.json             # spine.json, interrogation.json, execute.json, g1-review.json, ...
+     crew-handoffs/
+@@ -26,7 +24,7 @@ Drive every step through the checklist engine and finish its sequence — final
+       <complete work-id package>
+ ```
+ 
+-`AGENT_FEEDBACK.md` is workflow-improvement signal, not project truth: Commander appends one entry per run at its `feedback` step (template `templates/AGENT_FEEDBACK.template.md`). It lives at the agent-work root, accumulates across runs, and is never moved into `archive/`.
++What a run learned is not kept here. It is recorded as **episodes** under the repo-root `episodes/` directory, written at the Commander's `feedback` step through `scripts/apply_episode_delta.py` — the store's only write path — and never hand-edited. An episode is a record of what happened, not a rule for a later agent to follow.
+ 
+ Work IDs: `issue-123-slug`, `pr-45-slug`, `YYYYMMDD-slug`; lowercase, stable, hyphen-separated. Prefer `.agent-work/templates/<template-name>`; fall back to bundled `templates/<template-name>`.
+ 
+@@ -42,4 +40,4 @@ Drive a controller one step at a time with the absolute path to this installed s
+ 
+ Closed = controller current, evidence captured, durable truth promoted, future work packaged, reconciliation done/skipped with reason, artifact closeout complete or explained.
+ 
+-Templates: `templates/DEFAULT.template.json`, `templates/WORKFLOW_CLOSEOUT.template.md`, `templates/AGENT_FEEDBACK.template.md`. References: `references/checklist-engine.md`, `references/status-model.md`.
++Templates: `templates/DEFAULT.template.json`, `templates/WORKFLOW_CLOSEOUT.template.md`, `templates/STATE_NOTE.template.md`, `templates/CONSTELLATION_FEEDBACK.template.md`. References: `references/checklist-engine.md`, `references/status-model.md`.
+diff --git a/skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md b/skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md
+index bf95650..d396046 100644
+--- a/skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md
++++ b/skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md
+@@ -10,16 +10,17 @@ candidate stays visible in sweep reports until resolved). Just append entries;
+ never edit the sidecar by hand. Never archived with a run.
+ 
+ Recurrence is the validator, so a finding's **identity must be stable across
+-runs**. When this export derives from a `constellation`-scoped lesson, carry that
+-lesson's id in the **Lesson** field — the sweep fingerprints on it, so the same
+-finding groups even as its prose/slug drift. Reword a recurring finding by
+-`amend`-ing the lesson (its id is preserved), not by inventing a new slug. Only
+-when there is no originating lesson does the sweep fall back to the candidate
+-slug.
++runs**. When this export derives from a recorded episode, carry that episode's id
++in the **Lesson** field — the sweep fingerprints on whatever id sits there, so the
++same finding groups even as its prose/slug drift. (The field keeps its old name
++because `collect_feedback.py` reads it by that name; what it holds is now an
++episode id.) An episode id is stable once written, so a reworded finding keeps its
++id rather than getting a new slug. Only when there is no originating episode does
++the sweep fall back to the candidate slug.
+ 
+ ## `<date>` — `<project>` — `<work-id>`
+ 
+-- **Lesson:** `<originating lesson:id from LESSONS.md (stable identity), or n/a>`
++- **Lesson:** `<originating episode id from episodes/ (stable identity), or n/a>`
+ - **Candidate:** `<short-kebab-slug>`
+ - **Observed:** `<the skill/template/engine behavior that was ambiguous, missing, wrong, or improvised around>`
+ - **Cost:** `<what it caused>`
+diff --git a/skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md b/skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md
+index e8df74b..5bc3292 100644
+--- a/skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md
++++ b/skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md
+@@ -23,12 +23,12 @@
+ 
+ - `<path/title or none>`
+ 
+-## Lesson dispositions
++## Episode capture
+ 
+-Template/interface and doctrine fixes are lessons carrying a `target`, settled at the
+-Commander `feedback` step by the forced apply-or-defer gate (`verify_lessons_applied.py`), not
+-a separate advisory table. Confirm here only that the gate passed: every ripe lesson was
+-applied, exported, or deferred with a reason.
++What this run observed is recorded as episodes at the Commander `feedback` step, written
++through `scripts/apply_episode_delta.py` and proved by `scripts/verify_episode_captured.py`.
++Confirm here only that the capture gate passed. An episode is a record of what happened; a
++rule for a future agent to follow belongs in `docs/agents/*` and is a human's call.
+ 
+ ## Reconciliation status
+ 
+diff --git a/tests/data/retired_names.approved.txt b/tests/data/retired_names.approved.txt
+new file mode 100644
+index 0000000..ecbb875
+--- /dev/null
++++ b/tests/data/retired_names.approved.txt
+@@ -0,0 +1,190 @@
++# Frozen approval census for the `retired-name-on-shipped-surface` leg of
++# scripts/verify_retirement.py (#403 / #447 g5).
++#
++# Format: identical to tests/data/store_mentions.approved.txt, and read by the SAME
++# parser -- one `# <reason>` line, then one `<path>:<normalized line>` entry directly
++# beneath it. `normalize()` collapses all whitespace. A path never contains a colon; the
++# quoted line often does, so the FIRST colon separates the two fields.
++#
++# WHY THIS EXISTS. The leg could not reach zero and was never going to. Invariant 7 of
++# #447 g5 REQUIRES ~33 sites in docs/RECURSIVE_IMPROVEMENT_DESIGN.md to survive untouched
++# -- it is a June 2026 design RECORD, and rewriting it to describe a system it never
++# described would falsify history. The commander spine's archive.c4 deny_globs keep both
++# retired path strings as a re-staging block. scripts/stage_feedback.py survives by
++# explicit ruling. With no approval mechanism at all, test_canon_is_clean's
++# xfail(strict=True) could never XPASS and the scaffolding would outlive the work.
++#
++# THE BRIGHT LINE. A reason amounting to "an agent is still told to use the retired thing"
++# is NOT approvable -- fix the surface instead. Every reason below is one of: a frozen
++# historical record, a deny-glob re-staging block, a survivor script naming what it
++# stages, a tombstone naming the retired files in order to forbid them, or a replacement
++# naming what it replaced.
++#
++# NOT A PATTERN ALLOWLIST. Exact sites only, so anything new still has to be looked at by
++# a human and given its own reason. Only the CONTENT half of the leg is approvable here;
++# a restored file or skill DIRECTORY whose name is the retired thing fires regardless.
++#
++# ONE OPEN NOTE, recorded rather than silently approved: scripts/stage_feedback.py still
++# writes an `AGENT_FEEDBACK.md` and a `lessons-delta.json` into its staging dir, and names
++# a verifier deleted at g4. It was already orphaned before this gate -- no shipped surface
++# references it outside its own tests and the historical design record -- and it is out of
++# g5's scope. Filed upward as a triage candidate at #447 g5.
++
++# workstream A's inherited RETURN document, not editable from this gate: a finding RECORD naming the two files a merge conflict was confined to
++RETURN.md:conflict is confined to `.agent-work/AGENT_FEEDBACK.md` and `.agent-work/LESSONS.md` — the two shared
++
++# workstream A's inherited RETURN document: a finding RECORD naming where the conflicts that cost real time landed
++RETURN.md:`.agent-work/AGENT_FEEDBACK.md`; these are the ones that cost real time.
++
++# the ruling that the playbook is deliberately ABSENT from the artifact taxonomy -- it names the retired file in order to record the exclusion, and #447 g5 invariant 8 requires this paragraph to survive
++docs/CONSTELLATION_OVERVIEW.md:**`.agent-work/LESSONS.md` is not in this taxonomy, and that is the ruling, not an
++
++# June 2026 design record, audit table row: names where the run retrospective was then written, and records that nothing read it
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:| Run retrospective | spine `feedback` step → `.agent-work/AGENT_FEEDBACK.md` | adherence, friction, what worked, improvement signals | **nothing reads it** (nominal: "Charter refresh", untriggered) |
++
++# June 2026 design record, audit table row: names the lesson-disposition gate as it then stood
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:| Lesson dispositions | lessons carrying a `target`, settled at the Commander `feedback` step | concrete template/interface + doctrine fixes | `verify_lessons_applied.py` forced apply-or-defer gate; `WORKFLOW_CLOSEOUT.template.md` confirms the gate passed (the retired Template Update Candidates table is superseded by this flow) |
++
++# June 2026 design record, audit table row: names the feedback-invariant verifier as it then stood
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:| Feedback invariant | `scripts/verify_agent_feedback.py` | file exists, mentions work-id, durable placement | spine postconditions at `feedback` and `archive` |
++
++# June 2026 design record, gap analysis: records that the feedback log was write-only
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:2. **Commander in sequence.** `AGENT_FEEDBACK.md` is write-only. No spine step reads
++
++# June 2026 design record, parenthetical: names the gate that force-settled lesson application at the feedback step
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:force-settled by `verify_lessons_applied.py` at the `feedback` step.)
++
++# June 2026 design record, proposal: names the verifier it would have extended to require a section's presence
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:verifier like `verify_agent_feedback.py`) to require the section's presence.
++
++# June 2026 design record, superseded-block quote: the context-step read and digest injection the design proposed
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> The `context`-step read below, and the `SessionStart` `LESSONS.md` digest injection
++
++# June 2026 design record, superseded-block quote: names the writer the feedback step then distilled deltas through
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> `feedback` step still distils delta ops through `apply_lessons_delta.py`, and the
++
++# June 2026 design record, Loop 2 proposal: names the append-only log half of the split durable store
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- Split the durable store: keep `.agent-work/AGENT_FEEDBACK.md` as the append-only
++
++# June 2026 design record, Loop 2 proposal: names the curated-playbook half of the split durable store
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:log; add `.agent-work/LESSONS.md` as the curated playbook (small, itemized lessons
++
++# June 2026 design record, Loop 2 proposal: the context-step READ this retirement exists to abolish, kept as the record of what was proposed
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- Spine `context` step gains a read: load `LESSONS.md` (and skim undigested log
++
++# June 2026 design record, Loop 2 proposal: describes the delta update the playbook would take
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:**delta** update of `LESSONS.md` — new lesson, increment a recurring one, or retire
++
++# June 2026 design record, Loop 2 proposal: names the verifier extension the split would have needed
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- `verify_agent_feedback.py` extends to check `LESSONS.md` exists/durable and that
++
++# June 2026 design record, Loop 3 proposal: names the gate that would refuse the feedback advance
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:and `verify_lessons_applied.py` refuses the `feedback` advance while any
++
++# June 2026 design record, Loop 5 proposal: the SessionStart digest injection into ad-hoc sessions, kept as history
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:inject the `LESSONS.md` digest so even ad-hoc non-Commander sessions inherit
++
++# June 2026 design record, sequencing list: names the read path Loop 2 would have added
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:2. Loop 2 read path + LESSONS.md — makes the existing log stop being write-only.
++
++# June 2026 design record, role survey: names the Reflector role this retirement deleted
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:**`constellation-lessons-auditor`** — ACE's Reflector as a bounded Constellation
++
++# June 2026 design record, build list: names the skill it proposed and where it would be wired
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:4. `constellation-lessons-auditor` skill; wire as Admiral closeout step and optional
++
++# June 2026 design record, open question: asks whether the digest injection should be unconditional
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- Should `LESSONS.md` injection be unconditional at `context`, or selected per
++
++# June 2026 design record, rejected alternative: names the LLM-editing shape the design refused
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:Commander LLM-editing LESSONS.md — Generator and Curator collapsed, the exact
++
++# June 2026 design record, rejected alternative: names the script that would apply deltas mechanically instead
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:justification and grounding citation — and a script (`apply_lessons_delta.py`,
++
++# June 2026 design record, rejected alternative: names the verifier that script was proposed as a sibling of
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:sibling of `verify_agent_feedback.py`) applies them mechanically, enforcing
++
++# June 2026 design record, drill proposal: names where the drill link would have been enforced
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:`docs/superpowers/drills/<lesson-id>.md`; enforced in `apply_lessons_delta.py`) — the
++
++# June 2026 design record, superseded note: records what the writer deliberately did NOT carry
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> `apply_lessons_delta.py` carries no `DEFAULT_CAP`, no active-entry refusal branch,
++
++# June 2026 design record, concurrency hazard: names the shared log two parallel Commanders would race on
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:Parallel Commanders under an Admiral share `.agent-work/AGENT_FEEDBACK.md` and
++
++# June 2026 design record, concurrency hazard: names the second shared file in that same race
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:LESSONS.md with no locking. The per-work-id sidecar file proposal
++
++# June 2026 design record, resolution: names the trio the durable-root fix made canonical
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:trio (LESSONS.md, AGENT_FEEDBACK.md, CONSTELLATION_FEEDBACK.md) is one canonical
++
++# June 2026 design record, resolution: names the first member of the worktree-local staged trio
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:checkout, it stages the worktree-local trio — the `AGENT_FEEDBACK.md` entry,
++
++# June 2026 design record, resolution: names the verifier that accepted the staged shape in lieu of a durable write
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:serializes the harvest into the canonical files at epic closeout. `verify_agent_feedback.py`
++
++# June 2026 design record, follow-on: names what the staging script writes
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:**`scripts/stage_feedback.py`** (#154): it writes the `AGENT_FEEDBACK.md` entry,
++
++# June 2026 design record, follow-on: names the verifier whose accepted layout that script matched
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:exact layout `verify_agent_feedback.py` accepts, so a fenced Commander no longer
++
++# June 2026 design record, ordering constraint: names the file the constraint was about
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- **Ordering constraint for any future mechanized write-through:** AGENT_FEEDBACK.md
++
++# June 2026 design record, trigger proposal: names the entry-count threshold that would trigger an audit
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:closeout; for plain Commander runs it triggers when LESSONS.md > 5 entries or on
++
++# the retirement TOMBSTONE: names both retired files in order to FORBID them and to forbid any successor playbook -- this block is where a good-faith agent acting on a stale instruction lands
++docs/agents/ORCHESTRATOR_CONTEXT.md:`.agent-work/LESSONS.md` and `.agent-work/AGENT_FEEDBACK.md` are **retired** (#447). This
++
++# the surviving store writer's module docstring: records which prior-art contract it inherited (validate-then-apply, all-or-nothing)
++scripts/apply_episode_delta.py:Mirrors scripts/apply_lessons_delta.py's contract (validate-then-apply, all-or-nothing,
++
++# the surviving store writer: records a deliberate DEPARTURE from the prior art's date stamping
++scripts/apply_episode_delta.py:not generated here. (apply_lessons_delta.py stamps its own dates; this store departs
++
++# the surviving store writer: records that the mandatory non-empty retire reason was inherited, not re-decided
++scripts/apply_episode_delta.py:# C3a — the mandatory non-empty reason (mirrors apply_lessons_delta.py's own
++
++# placeholder-token comment: a HYPOTHETICAL example of a skill-dir token carrying hyphens, illustrating the parser's rule; it directs nobody to anything
++scripts/init_work_area.py:# carry hyphens, e.g. a hypothetical <lessons-auditor-skill-dir>). A token in
++
++# bundle comment: names, by analogy, which roles ship no script; nothing is installed under that name
++scripts/install_constellation.py:# doctrine (mirrors interrogator/lessons-auditor). It ships no script.
++
++# survivor script's docstring: names the durable file the staged layout stood in for. Retained by explicit ruling at #447 g4; no shipped surface directs an agent to this script
++scripts/stage_feedback.py:write the durable `AGENT_FEEDBACK.md` (see "Fenced feedback/archive closeout
++
++# survivor script's docstring: names the four-file staged layout the script writes
++scripts/stage_feedback.py:worktree-local trio -- AGENT_FEEDBACK.md, lessons-delta.json,
++
++# survivor script's docstring: names the verifier (deleted at g4) whose accepted shapes the layout was built to match -- a record of why the layout is what it is
++scripts/stage_feedback.py:`verify_agent_feedback.py --phase feedback` and `--phase archive` accept
++
++# survivor script: the TRIO_FILES constant, the literal filenames it writes into a worktree-local staging dir
++scripts/stage_feedback.py:TRIO_FILES = ("AGENT_FEEDBACK.md", "lessons-delta.json", "CONSTELLATION_FEEDBACK.md", "FENCE.md")
++
++# survivor script: the staged file's own header text, naming the durable destination it was staged for
++scripts/stage_feedback.py:"Staged for Admiral harvest into the durable `.agent-work/AGENT_FEEDBACK.md` "
++
++# survivor script: the FENCE.md manifest line describing one staged file
++scripts/stage_feedback.py:"- `AGENT_FEEDBACK.md` -- this run's retrospective entry\n"
++
++# survivor script: a comment naming the verifier that would have rejected an invalid staged delta
++scripts/stage_feedback.py:# reject later at verify_agent_feedback.
++
++# survivor script: the write call that creates the staged file, named by its literal filename
++scripts/stage_feedback.py:(staged / "AGENT_FEEDBACK.md").write_text(
++
++# the replacement gate's own docstring: names what it replaced, which is the fact that makes the gate's existence legible
++scripts/verify_episode_captured.py:The write-side replacement for the retiring `.agent-work/LESSONS.md` /
++
++# the replacement gate's own docstring: names the second retired file and the issue that retired both
++scripts/verify_episode_captured.py:`.agent-work/AGENT_FEEDBACK.md` machinery (issue #447). It answers exactly one
++
++# commander spine archive.c4: the deny_globs RE-STAGING BLOCK. Both retired path strings are kept here deliberately so a future run cannot re-stage either file -- a stronger reason than the one they were added for
++skills/commander/templates/COMMANDER_SPINE.template.json:{"id": "c4", "statement": "staged diff carries no suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); refuse closeout unless a human waives via the engine override path", "check": {"kind": "git-change-policy", "mode": "staged", "max_file_bytes": 1000000, "deny_globs": ["*.parquet", "*.pkl", "*.pickle", "*.joblib", "*.pt", "*.onnx", "*.bin", "*.ckpt", "data/generated/**", "records/**", ".agent-work/LESSONS.md", ".agent-work/AGENT_FEEDBACK.md", ".agent-work/CONSTELLATION_FEEDBACK.md", ".agent-work/CONSTELLATION_FEEDBACK.collected.json"], "allow_globs": ["docs/**", "src/**", "tests/**", "skills/**", "scripts/**", ".agent-work/**"], "require_human_waiver_for_binary": true}, "satisfied": false, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}}
+diff --git a/tests/data/store_mentions.approved.txt b/tests/data/store_mentions.approved.txt
+index 10ccb88..e2bd37a 100644
+--- a/tests/data/store_mentions.approved.txt
++++ b/tests/data/store_mentions.approved.txt
+@@ -43,24 +43,30 @@ docs/CONSTELLATION_OVERVIEW.md:accumulator is `episodes/`; the doctrine is `docs
+ # design rationale: names what replaced the playbook read, prescribes nothing
+ docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> What replaces the read is the **episode store** (`episodes/`, #301): observations
+ 
+-# crew doctrine: names the store's WRITE path and the never-hand-edit rule
++# crew doctrine, Python-invocation example: shows the store's WRITE command being run, and instructs no read
+ docs/agents/CREW_CONTEXT.md:python scripts/apply_episode_delta.py ...
+ 
+-# crew doctrine: names the store's WRITE path and the never-hand-edit rule
++# crew doctrine, record-stores table: names the store's ONLY write path, which is the whole point of the table
+ docs/agents/CREW_CONTEXT.md:| `episodes/` | `scripts/apply_episode_delta.py` |
+ 
+-# crew doctrine: names the store's WRITE path and the never-hand-edit rule
+-docs/agents/CREW_CONTEXT.md:Read them with `scripts/query_episodes.py` and the engine's `current` verb. Retiring an
++# crew doctrine, retirement rule: says how the writer MOVES a file between the two partitions -- a write-path fact about membership, not an instruction to read
++docs/agents/CREW_CONTEXT.md:Retiring an episode **moves its file** between `episodes/active/` and `episodes/retired/`;
+ 
+-# crew doctrine: names the store's WRITE path and the never-hand-edit rule
+-docs/agents/CREW_CONTEXT.md:episode **moves its file** between `episodes/active/` and `episodes/retired/`; membership is
+-
+-# glossary: defines the term, prescribes no behaviour
+-docs/agents/GLOSSARY.md:| `episode` | — | One stored record of something observed in a run, kept for later harvest. | — | Lives under `episodes/active/` or `episodes/retired/`. |
++# glossary: defines the term and where its records live, and states outright that an episode is never a rule
++docs/agents/GLOSSARY.md:| `episode` | — | One stored record of something observed in a run. | — | Lives under `episodes/active/` or `episodes/retired/`. A record, never a rule. |
+ 
+ # glossary: defines the term, prescribes no behaviour
+ docs/agents/GLOSSARY.md:| `episode store` | — | The durable home of episodes. | ~~record store~~ — use **episode store** | — |
+ 
++# glossary: defines `harvest` against the WRITE direction (into the store) and denies the read-back-as-rules direction in the same row
++docs/agents/GLOSSARY.md:| `harvest` | — | Gathering what a run's own artifacts recorded and writing it into the episode store as episodes. | — | The direction is INTO the store. There is no reading harvested episodes back out as rules. |
++
++# the retirement tombstone: names the store as the replacement for the retired playbook, and its only write path, in the act of forbidding a read-and-apply loop
++docs/agents/ORCHESTRATOR_CONTEXT.md:- **`episodes/` replaces both.** One store of observations — not two inboxes plus a
++
++# the retirement tombstone: names the store's only write path; the very next clause forbids reading the store back
++docs/agents/ORCHESTRATOR_CONTEXT.md:playbook. Its only write path is `scripts/apply_episode_delta.py`.
++
+ # the capture seam's own module: a WRITE path
+ scripts/episode_capture.py:#: The mechanical fields `apply_episode_delta._validate_create` requires on every
+ 
+@@ -132,3 +138,50 @@ skills/commander/templates/COMMANDER_SPINE.template.json:"imperative": "Before c
+ 
+ # spine imperative: the episode WRITE path (apply_episode_delta.py --store-root episodes) and the capture gate that follows it; neither reads the store back
+ skills/commander/templates/COMMANDER_SPINE.template.json:"imperative": "Commit all remaining work, including this run's episodes under episodes/. That is a tracked repo-root path, so the committed episode IS the durable record: it survives `git worktree remove` and lands in a fresh clone. None of the old is-.agent-work-gitignored reasoning applies to it. Push the branch to remote. When you open a PR on Windows, write the body to a temp file and use gh pr create -F <file> — a bash heredoc and a PowerShell @'...'@ here-string both fail for gh pr create --body (here-strings work for git commit -m, not PR bodies). Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/. Run the archive-phase capture gate before marking archive complete — it additionally requires git to TRACK the episode, which is what proves the record outlived this worktree: python <commander-skill-dir>/scripts/verify_episode_captured.py <work-id> --store-root episodes --phase archive. Confirm the branch is clean and merge-ready per repo guidance. The engine mechanically refuses closeout (c4) when the staged diff includes suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); if any are intentional, a human waives c4 via <engine> waive archive --cond c4 --authority human --reason \"...\" rather than hand-editing the spine. Release the engine session lease only as your VERY LAST action, AFTER the archive postconditions pass and you have run the engine's final advance on archive (the advance that marks the spine done): <engine> release --session-id <commander-session-id>. Release must come after that closing advance, never before it — the lease must cover every journaled action, so the release is the final journal entry; releasing earlier leaves archive's own closeout entries (attest/waive/advance) after the lease release and fails the terminal provenance check.",
++
++# --- #447 g5: the prose sweep repointed every live pointer off the retired playbook
++# and onto the store. Every entry below is a WRITE-side mention or a denial of the read
++# path. Several sit under skills/ -- the g1 note above recorded 'zero entries under
++# skills/' as the property most worth keeping, and that property did not survive contact
++# with the retirement: the roles that USED to be told to write a playbook have to be told
++# what to write instead. What must survive is the narrower and real property -- no shipped
++# surface tells an agent to READ the store and condition its behaviour on what it finds.
++
++# repo README, workflow-artifacts rules: says where a run's record goes and through which write path, and states outright that an episode is never a rule to follow
++README.md:- What a run learned is recorded as **episodes** under the repo-root `episodes/` directory, not anywhere under `.agent-work/`. Commander and Admiral write them at closeout through `scripts/apply_episode_delta.py`, the store's only write path. An episode is a record of what happened, never a rule for a later agent to follow — a rule belongs in `docs/agents/*` and putting one there is a human's call.
++
++# architecture overview, artifact taxonomy row: names the store's write path as the closeout artifact; the row's own text says a record of what happened, never a rule to follow
++docs/CONSTELLATION_OVERVIEW.md:| Commander, Admiral | `episodes/active/` via `scripts/apply_episode_delta.py` | future Charter refresh, curator rhyme-search, maintainers | one episode per distinct thing that happened, written at closeout through the store's only write path; a record of what happened, never a rule to follow |
++
++# admiral closeout step 1: the WRITE path (apply_episode_delta.py --store-root episodes) plus the capture gate that follows it, and it forbids writing a rule in the same breath
++skills/admiral/SKILL.md:1. Record the epic retrospective as **episodes**: one episode per distinct thing that happened across the epic — not one per wave, and not a summary — each harvesting what the ADMIRAL_LOG, the crew Workflow Feedback and the Commander returns actually recorded. An episode is a record, not a rule: write what you observed, and do **not** write a rule for a future agent to follow — a rule to follow belongs in `docs/agents/*` and is a human's call. Write the delta through `apply_episode_delta.py` (the store's only write path, `--store-root episodes` on every invocation) and prove the capture with `verify_episode_captured.py` before advancing. When any part of this closeout edits a shipped compact-format JSON template, edit the raw text **surgically** (never round-trip through `json.load`/`json.dump`, which reflows the whole file and destroys blame) and re-validate with `json.load` afterward. When the epic runs against this repo (constellation-skills) itself — self-maintenance/dogfooding — additionally run a fresh `collect_feedback.py` sweep over the known dogfood project roots, so the cross-project feedback loop cannot go dormant between epics; see `docs/DEBT_SWEEP_CADENCE.md` for the current roots list and exact invocation. In any other consuming repo that sweep is a no-op (no `docs/DEBT_SWEEP_CADENCE.md` there, nothing to sweep).
++
++# admiral harvest substep: names episodes/ only to explain why a committed episode needs NO harvesting before a worktree sweep
++skills/admiral/SKILL.md:3. **Harvest before sweep (mandated substep, ordered before `git worktree remove`).** The episodes themselves need no harvesting — `episodes/` is a tracked repo-root path, so a committed episode already survives `git worktree remove` and lands in a fresh clone. What does **not** survive is a commander's worktree-local `CONSTELLATION_FEEDBACK.md` export, so collect that from each commander worktree **before** it is swept. A **fenced** commander (forbidden from writing your main checkout) stages its export worktree-locally under `.agent-work/staged-feedback/<work-id>/`, alongside a `FENCE.md` citing its launch order — that staging dir is your harvest source. **Look in both places.** Git-common-dir resolution centralizes `.agent-work/` on the main checkout *only when no Admiral epic lease is active*; while your own epic lease is held, `durable_root()` (`scripts/agent_work_root.py`) deliberately returns the **worktree** root instead, because the main checkout is fenced read-only. So a commander running under an epic on current scripts writes to its own worktree root, and that is the *expected* location rather than an edge case. Harvest first, **then** remove.
++
++# fleet doctrine preamble: names the episode store in order to DENY it as a home for fleet rules and to deny reading it back as one
++skills/admiral/references/fleet-doctrine.md:rather than in any one project's run records. A project's episode store records
++
++# fleet doctrine harvest rule: names episodes/ only to explain why the run's episodes are the exception that needs no harvesting
++skills/admiral/references/fleet-doctrine.md:exception and need no harvesting: `episodes/` is a tracked repo-root path, so a
++
++# charter's repo-orientation template: names the store's write path and the never-by-hand rule; the bullet directly below forbids reading the store back
++skills/charter/templates/AGENT_GUIDE.template.md:- What a run observed is recorded as **episodes** under the repo-root `episodes/` directory, written only through `scripts/apply_episode_delta.py` structured deltas and never by hand. That path is tracked, so a committed episode survives `git worktree remove` and lands in a fresh clone.
++
++# delegated-commander fenced closeout: names the WRITE path and the capture gate a fenced run must still use before it commits; no read
++skills/commander-delegated/SKILL.md:4. **Producing the solution is the MIDDLE of the run, not the end.** When an implementer crew hands back `solution.py` and green tests, you are still at the `execute` step — **not done**. Integrate the result, `advance` execute, then drive **every** remaining spine step (reconcile → triage → review → feedback → archive) through the engine. **Do not end your turn while any spine step is still `pending` or `in-progress`:** run the engine's `current` verb and keep going until it reports the spine is done. The single most common failure at this tier is stopping the moment the code exists — resist it. At the final `archive` step, order the closeout correctly: satisfy or waive the archive postconditions, run the engine's final `advance` on archive (which marks the spine done), and **only then** `release` the engine session lease as your very last action. **Fenced feedback/archive closeout — write the episodes, stage the rest, do not waive.** When an Admiral launch-order fence forbids writing the main checkout, your run's episodes are unaffected: `episodes/` is a tracked path inside your own worktree, so write them there through `scripts/apply_episode_delta.py --store-root episodes`, prove the capture with `scripts/verify_episode_captured.py`, and commit — the commit is what carries them out. What the fence does block is the durable-root `CONSTELLATION_FEEDBACK.md` export; do **not** waive the gate for fencing, but stage that export plus a `FENCE.md` citing this launch order under `.agent-work/staged-feedback/<work-id>/`, which the Admiral harvests before sweeping your worktree. A `FENCE.md` citation **without** the staged export still fails the gate — learning cannot be silently dropped. Releasing before that closing advance leaves archive's own closeout entries after the lease release and fails the terminal provenance check — the lease must cover every journaled action.
++
++# commander spine step table, feedback row: names the store's only write path and the capture gate that proves the write landed
++skills/commander/references/commander-core.md:| feedback | this context — reflect on the run, then record what happened as episodes and apply them via `scripts/apply_episode_delta.py` (the only write path; never hand-edit under `episodes/`), proved by `scripts/verify_episode_captured.py` |
++
++# workbench layout note: says a run's record lives in the store rather than under .agent-work/, names the write path, and states the record-not-a-rule property
++skills/workbench/SKILL.md:What a run learned is not kept here. It is recorded as **episodes** under the repo-root `episodes/` directory, written at the Commander's `feedback` step through `scripts/apply_episode_delta.py` — the store's only write path — and never hand-edited. An episode is a record of what happened, not a rule for a later agent to follow.
++
++# constellation-export template field: cites an originating episode id as the export's stable identity -- an identifier reference, not an instruction to read the store
++skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md:- **Lesson:** `<originating episode id from episodes/ (stable identity), or n/a>`
++
++# closeout template, episode-capture section: names the write path and the capture gate the Commander confirms passed
++skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md:through `scripts/apply_episode_delta.py` and proved by `scripts/verify_episode_captured.py`.
++
++# superseding header on a retired design record: names where the CURRENT loop lives so a reader of the history is not left following it -- a write path and a denial of the read path, not an instruction to consult the store
++docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> `episodes/`, written only through `scripts/apply_episode_delta.py` and proved by
+diff --git a/tests/test_retirement_guard.py b/tests/test_retirement_guard.py
+index 8147830..001dbe2 100644
+--- a/tests/test_retirement_guard.py
++++ b/tests/test_retirement_guard.py
+@@ -290,6 +290,7 @@ def test_the_guard_is_not_inside_the_set_it_guards():
+     assert not vr.is_shipped("scripts/verify_retirement.py")
+     assert not vr.is_shipped("tests/test_retirement_guard.py")
+     assert not vr.is_shipped("tests/data/store_mentions.approved.txt")
++    assert not vr.is_shipped(vr.RETIRED_NAME_CENSUS_PATH)
+     # ...and the exclusion is narrow: everything else under scripts/ is still guarded.
+     assert vr.is_shipped("scripts/install_constellation.py")
+ 
+@@ -355,6 +356,77 @@ def test_an_approval_without_a_reason_is_refused():
+         vr.parse_approved("docs/note.md:names episodes/active/\n")
+ 
+ 
++def test_the_two_censuses_share_one_parser():
++    """`retired_names.approved.txt` must not be a second, forked implementation.
++
++    Both censuses are read through the SAME `parse_approved`/`load_approved`/`normalize`
++    machinery, so a format the store-mention census accepts is a format the retired-name
++    census accepts, and a malformed entry is refused identically in both. A parallel
++    implementation is how two files that look alike start disagreeing about what an
++    approval is; asserted here so a fork fails rather than drifts."""
++    assert vr.RETIRED_NAME_CENSUS_PATH != vr.APPROVED_CENSUS_PATH
++    with pytest.raises(ValueError, match="has no reason"):
++        vr.parse_approved(
++            "docs/note.md:consult LESSONS.md\n", census_path=vr.RETIRED_NAME_CENSUS_PATH
++        )
++    with pytest.raises(ValueError, match=vr.RETIRED_NAME_CENSUS_PATH):
++        vr.parse_approved("# a reason\nno-colon-here\n", census_path=vr.RETIRED_NAME_CENSUS_PATH)
++
++
++def test_every_retired_name_approval_exists_verbatim():
++    """The same anti-rot invariant the store-mention census carries, for the second census.
++
++    An approval whose line has since been edited or deleted suppresses nothing real but
++    survives as a licence nobody reviewed. Matching is over NORMALIZED lines for the same
++    reason as above: `.gitattributes` sets `* text=auto`, so a Windows checkout may hold
++    CRLF where the blob holds LF."""
++    approved = vr.load_approved(REPO_ROOT, vr.RETIRED_NAME_CENSUS_PATH)
++    assert approved, "the retired-name census is empty; this check would be vacuous"
++
++    by_path: dict[str, set[str]] = {}
++    for entry in approved:
++        if entry.path not in by_path:
++            lines = vr._read_lines(REPO_ROOT, entry.path)
++            assert lines is not None, f"approved path is unreadable: {entry.path}"
++            by_path[entry.path] = {vr.normalize(line) for line in lines}
++        assert entry.mention in by_path[entry.path], (
++            f"stale approval: {entry.path} no longer contains {entry.mention!r}. Remove the "
++            "entry — an approval for a line that is gone is an unreviewed licence."
++        )
++        assert entry.reason.strip(), f"approval without a reason: {entry.path}"
++
++
++def test_a_retired_name_approval_suppresses_only_the_line_it_names(tmp_path):
++    """The census approves EXACT sites, and only line hits — never a pattern, never a path.
++
++    Two properties in one decoy, because they are the two ways this leg could be quietly
++    turned into decoration. First, an approval is keyed on `(path, normalized line)`: a
++    second, differently-worded mention in the same file is still unapproved. Second, the
++    PATH half of the leg is not approvable at all — a restored file or skill directory whose
++    name is the retired thing must fire however many reasons anyone writes for it, because
++    what identifies it is where it sits, not what it says."""
++    repo = healthy_repo(tmp_path)
++    _write(
++        repo / "docs" / "note.md",
++        "A frozen record: the old loop wrote .agent-work/LESSONS.md.\n"
++        "But this second line tells you to go and read .agent-work/LESSONS.md.\n",
++    )
++    _write(
++        repo / "tests" / "data" / "retired_names.approved.txt",
++        "# frozen historical record: names what the old loop wrote\n"
++        "docs/note.md:A frozen record: the old loop wrote .agent-work/LESSONS.md.\n",
++    )
++    _write(repo / "skills" / "lessons-auditor" / "SKILL.md", "Innocent by every line.\n")
++    _git(["add", "-A"], repo)
++
++    violations = vr.scan(repo)
++    assert [(v.path, v.line) for v in violations] == [
++        ("docs/note.md", 2),
++        ("skills/lessons-auditor/SKILL.md", 0),
++    ]
++    assert {v.leg for v in violations} == {"retired-name-on-shipped-surface"}
++
++
+ @pytest.mark.xfail(
+     strict=True, reason="#447 g6 removes this marker — the tree is deliberately still dirty"
+ )

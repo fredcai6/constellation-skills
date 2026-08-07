@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r3-visible-decode",
+  "files": [],
+  "repo_rev": {
+    "commit": "cbd9aee86c54e612b148dc7220b262c5bef03aa4"
+  },
+  "run": {
+    "work_id": "h-447-g1-implementer-rework",
+    "generated_at": "2026-08-06T10:04:24Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    }
+  }
+}

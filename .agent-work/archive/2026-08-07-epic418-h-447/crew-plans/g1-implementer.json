@@ -1,0 +1,444 @@
+{
+  "work_id": "h-447-g1-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-path-and-name-legs",
+    "m2-store-mention-leg",
+    "m3-replacement-leg",
+    "m4-guard-tests",
+    "m5-red-evidence",
+    "m6-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff",
+      "imperative": "Read the inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the g1 handoff, and the three named archetypes (tests/test_episode_negative_control.py, tests/test_prose_deletions.py, scripts/apply_episode_delta.py). Verify the handoff is complete: task, intent, allowed scope, exclusions, required evidence, test mode, stop conditions, return format. Block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + crew context + glossary + handoff + three archetypes read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "use python NEVER py",
+        "CREATE ONLY scripts/verify_retirement.py, tests/test_retirement_guard.py, tests/data/store_mentions.approved.txt"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-path-and-name-legs": {
+      "id": "m1-path-and-name-legs",
+      "title": "scripts/verify_retirement.py: Violation, git ls-files surface, legs retired-path-still-tracked + retired-name-on-shipped-surface, CLI",
+      "imperative": "Create scripts/verify_retirement.py exposing scan(root: Path) -> list[Violation] where Violation is a NamedTuple(leg, path, line, detail), sorted by (leg, path, line). Enumerate surfaces from `git ls-files`, never Path.rglob. Define the record-only roots with REQUIRED non-empty reason strings (an empty reason must raise). Implement leg retired-path-still-tracked (path-based, on the index) and leg retired-name-on-shipped-surface. Add a CLI that prints TSV leg/path/line/detail and exits 1 when any violation exists, 0 otherwise. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "scan() returns NAMED legs, never a bool; surfaces come from git ls-files; every record-only root carries a non-empty reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the CLI exits 1 on the untouched tree and both legs fire",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && out=$(python scripts/verify_retirement.py); test $? -eq 1 && printf '%s\\n' \"$out\" | cut -f1 | sort -u | grep -q '^retired-path-still-tracked$' && printf '%s\\n' \"$out\" | cut -f1 | sort -u | grep -q '^retired-name-on-shipped-surface$'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-path-and-name-legs-1"
+        }
+      ],
+      "constraints": [
+        "exactly four legs, no more",
+        "Windows: encoding='utf-8', newline='\\n' on every write"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-path-and-name-legs-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && out=$(python scripts/verify_retirement.py); test $? -eq 1 && printf '%s\\n' \"$out\" | cut -f1 | sort -u | grep -q '^retired-path-still-tracked$' && printf '%s\\n' \"$out\" | cut -f1 | sort -u | grep -q '^retired-name-on-shipped-surface$'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-store-mention-leg": {
+      "id": "m2-store-mention-leg",
+      "title": "Leg unapproved-store-mention plus the seeded frozen approval census",
+      "imperative": "Add the unapproved-store-mention leg: every shipped line naming episodes/, `episode store`, query_episodes or apply_episode_delta must appear in tests/data/store_mentions.approved.txt. Exclude the store's own module (scripts/apply_episode_delta.py, scripts/query_episodes.py) and its own spec (docs/EPISODE_STORE.md). The failure detail must state the discriminator verbatim. Seed tests/data/store_mentions.approved.txt with the sites that exist today, each carrying a required one-line reason. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed: scan() and the CLI exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the census file is seeded with today's sites, each with a reason; zero entries under skills/",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the leg is green by construction on the untouched tree",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && ! python scripts/verify_retirement.py | grep -q '^unapproved-store-mention'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-store-mention-leg-1"
+        }
+      ],
+      "constraints": [
+        "frozen approval census, not a pattern allowlist"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-store-mention-leg-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && ! python scripts/verify_retirement.py | grep -q '^unapproved-store-mention'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-replacement-leg": {
+      "id": "m3-replacement-leg",
+      "title": "Leg replacement-absent \u2014 the PRESENCE half, legitimately RED until g3",
+      "imperative": "Add the replacement-absent leg: verify_episode_captured.py must be named in BOTH spine imperatives (commander and admiral spine templates), be in the commander AND admiral install bundles, and exist on disk. Each unmet requirement emits its own violation carrying the path that should have satisfied it. This leg is legitimately RED at g1 and stays red until g3 ships the replacement \u2014 that is correct, not a bug. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the presence half is asserted in both directions, mirroring tests/test_prose_deletions.py's shape",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the leg fires on the untouched tree naming scripts/verify_episode_captured.py",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py | awk -F'\\t' '$1==\"replacement-absent\" && $2==\"scripts/verify_episode_captured.py\"' | grep -q ."
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-replacement-leg-1"
+        }
+      ],
+      "constraints": [
+        "an absence-only guard is insufficient \u2014 this is the presence half"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-replacement-leg-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py | awk -F'\\t' '$1==\"replacement-absent\" && $2==\"scripts/verify_episode_captured.py\"' | grep -q .",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-guard-tests": {
+      "id": "m4-guard-tests",
+      "title": "tests/test_retirement_guard.py \u2014 one decoy red-proof per leg, the census, the approved-entry check, the strict-xfail canon test",
+      "imperative": "Create tests/test_retirement_guard.py. One decoy red-proof per leg, each building a minimal git repo in tmp_path with exactly one planted violation, asserting BOTH [v.leg for v in scan(decoy)] == [LEG_X] AND the offending path. Add test_every_leg_has_a_red_proof (leg roster pinned as an independent literal in the test module), test_every_approved_entry_exists_verbatim, and test_canon_is_clean carrying @pytest.mark.xfail(strict=True). State in the module docstring that tests/ is deliberately outside the shipped surface, as a principled scope choice. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all four legs implemented",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every decoy asserts leg AND path; the leg roster is an independent literal in the test module",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the guard suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-guard-tests-1"
+        }
+      ],
+      "constraints": [
+        "use python NEVER py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-guard-tests-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-red-evidence": {
+      "id": "m5-red-evidence",
+      "title": "Capture the RED transcript on the untouched tree and confirm no new suite failures",
+      "imperative": "Run the three required evidence commands, capturing each real exit code by redirecting to a file and echoing $? (never piping to tail, which captures tail's exit). Write the verbatim transcript to .agent-work/epic418-h-447/evidence/g1-guard-red.txt. Then run the full suite and confirm no NEW failures beyond the pre-existing baseline of 1688 passed, 2 skipped. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "guard and tests land green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite run and compared against the 1688 passed / 2 skipped baseline",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the red transcript exists and names at least three distinct legs",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && test -s .agent-work/epic418-h-447/evidence/g1-guard-red.txt && test $(python scripts/verify_retirement.py | cut -f1 | sort -u | wc -l) -ge 3"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-red-evidence-1"
+        }
+      ],
+      "constraints": [
+        "redirect then echo $? \u2014 never pipe to tail"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-red-evidence-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && test -s .agent-work/epic418-h-447/evidence/g1-guard-red.txt && test $(python scripts/verify_retirement.py | cut -f1 | sort -u | wc -l) -ge 3",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-result": {
+      "id": "m6-result",
+      "title": "Write the IMPLEMENTER_RESULT",
+      "imperative": "Write .agent-work/epic418-h-447/results/g1-IMPLEMENTER_RESULT.md from the skill's template: diff summary, every evidence command with its real exit code, the verbatim red transcript, corner cases not chased with their comment file:line, Map Impact, and a filled Workflow Feedback section. Attest c1, then let the engine run c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "evidence captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Workflow Feedback filled with run-specific signal; corner cases carry file:line",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the result file exists and is non-empty",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && test -s .agent-work/epic418-h-447/results/g1-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-result-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-h-447 && test -s .agent-work/epic418-h-447/results/g1-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "sess-h447-g1-rework",
+    "status": "released",
+    "claimed_at": "2026-08-06T09:59:53.208020+00:00",
+    "last_heartbeat": "2026-08-06T09:59:53.208020+00:00",
+    "claimed_by": "implementer",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-h-447",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T10:01:22.842437+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T09:21:12.958247+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-path-and-name-legs",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T09:23:02.063192+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-store-mention-leg",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T09:24:42.548565+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-replacement-leg",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T09:26:10.265020+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-guard-tests",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T09:28:07.021919+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-red-evidence",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T09:36:05.761868+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-result",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T09:37:30.626394+00:00"
+    }
+  ]
+}

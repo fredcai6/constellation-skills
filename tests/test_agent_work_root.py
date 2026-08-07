@@ -150,26 +150,11 @@ class DurableRootEpicLeaseTests(unittest.TestCase):
         resolved = self.mod.durable_root(self.linked)  # must NOT raise
         self.assertEqual(_norm(resolved), _norm(self.main))
 
-    def test_verify_agent_feedback_resolves_to_worktree_under_lease(self):
-        # The pre-ruling's explicit ask: under an active admiral lease the durable
-        # feedback check resolves to the WRITABLE worktree, so a worktree-local
-        # AGENT_FEEDBACK.md satisfies the gate (exit 0) despite the fenced main.
-        vaf = _load("verify_agent_feedback")
-        _write_lease(self.main, "epic-198-burndown", status="active", claimed_by="admiral")
-        work_id = "wid-118"
-        worktree_aw = self.linked / ".agent-work"
-        worktree_aw.mkdir(parents=True)
-        (worktree_aw / "AGENT_FEEDBACK.md").write_text(
-            f"## {work_id}\n**Friction / unclear:**\n- something concrete happened\n",
-            encoding="utf-8",
-        )
-        old = os.getcwd()
-        os.chdir(self.linked)
-        try:
-            rc = vaf.main([work_id, "--phase", "feedback"])
-        finally:
-            os.chdir(old)
-        self.assertEqual(0, rc)
+    # PRUNED (#447 g4): test_verify_agent_feedback_resolves_to_worktree_under_lease
+    # loaded scripts/verify_agent_feedback.py, which this retirement deleted. The
+    # durable_root() behaviour it exercised — an active admiral lease resolving to the
+    # writable worktree — is still covered by the sibling lease tests in this class; only
+    # the deleted verifier's use of it went away.
 
 
 class DurableRootFallbackTests(unittest.TestCase):
@@ -231,29 +216,12 @@ class WiringExplicitWinsTests(unittest.TestCase):
             raise AssertionError("durable_root consulted for an explicit path arg")
         module.durable_root = boom
 
-    def test_apply_lessons_delta_explicit_file_wins(self):
-        apply = _load("apply_lessons_delta")
-        self._poison(apply)
-        target = self.dir / "explicit" / "LESSONS.md"
-        delta = self.dir / "d.json"
-        delta.write_text(json.dumps({"work_id": "i1", "tick": True}), encoding="utf-8")
-        self.assertEqual(0, apply.main([str(delta), "--file", str(target)]))
-        self.assertTrue(target.is_file())
-
-    def test_verify_lessons_applied_explicit_file_wins(self):
-        verify = _load("verify_lessons_applied")
-        self._poison(verify)
-        # Missing explicit file -> "clear" without ever consulting durable_root.
-        target = self.dir / "explicit" / "LESSONS.md"
-        self.assertEqual(0, verify.main(["--file", str(target)]))
-
-    def test_verify_agent_feedback_explicit_root_wins_for_both(self):
-        vaf = _load("verify_agent_feedback")
-        self._poison(vaf)
-        # Explicit --root: the durable log resolves under it too (no durable_root).
-        # No feedback log present -> error exit, but crucially no AssertionError.
-        rc = vaf.main(["wid", "--root", str(self.dir), "--phase", "feedback"])
-        self.assertEqual(1, rc)  # missing durable log under the explicit root
+    # PRUNED (#447 g4): test_apply_lessons_delta_explicit_file_wins,
+    # test_verify_lessons_applied_explicit_file_wins and
+    # test_verify_agent_feedback_explicit_root_wins_for_both each loaded a script this
+    # retirement deleted (apply_lessons_delta.py, verify_lessons_applied.py,
+    # verify_agent_feedback.py). The explicit-path-wins contract itself is unchanged and
+    # still asserted below for collect_feedback, which survives.
 
     def test_collect_feedback_explicit_inbox_wins(self):
         collect = _load("collect_feedback")
@@ -302,45 +270,11 @@ class WiringDefaultResolutionTests(unittest.TestCase):
         root = self.dir
         module.durable_root = lambda start=None: root
 
-    def test_apply_lessons_delta_default_uses_durable_root(self):
-        apply = _load("apply_lessons_delta")
-        self._stub(apply)
-        delta = self.dir / "d.json"
-        delta.write_text(json.dumps({"work_id": "i1", "tick": True}), encoding="utf-8")
-        self.assertEqual(0, apply.main([str(delta)]))  # no --file
-        self.assertTrue((self.dir / ".agent-work" / "LESSONS.md").is_file())
-
-    def test_verify_lessons_applied_default_uses_durable_root(self):
-        apply = _load("apply_lessons_delta")
-        verify = _load("verify_lessons_applied")
-        self._stub(apply)
-        self._stub(verify)
-        # Build a playbook at the durable default location, then verify with no --file.
-        delta = self.dir / "d.json"
-        delta.write_text(json.dumps({"work_id": "i1", "tick": True}), encoding="utf-8")
-        self.assertEqual(0, apply.main([str(delta)]))
-        self.assertEqual(0, verify.main([]))  # reads durable default, no ripe -> clear
-
-    def test_verify_agent_feedback_default_durable_split(self):
-        vaf = _load("verify_agent_feedback")
-        self._stub(vaf)
-        # Durable log lives under the (stubbed) durable root; work area check stays
-        # local to cwd. Write a valid durable entry, run from a cwd with no work area.
-        durable_aw = self.dir / ".agent-work"
-        durable_aw.mkdir(parents=True)
-        (durable_aw / "AGENT_FEEDBACK.md").write_text(
-            "## wid\n**Friction / unclear:**\n- something concrete happened\n",
-            encoding="utf-8",
-        )
-        local = tempfile.TemporaryDirectory()
-        old = os.getcwd()
-        os.chdir(local.name)
-        try:
-            rc = vaf.main(["wid", "--phase", "feedback"])
-        finally:
-            os.chdir(old)
-            local.cleanup()
-        self.assertEqual(0, rc)
+    # PRUNED (#447 g4): test_apply_lessons_delta_default_uses_durable_root,
+    # test_verify_lessons_applied_default_uses_durable_root and
+    # test_verify_agent_feedback_default_durable_split each loaded a script this
+    # retirement deleted. The default-resolves-through-durable_root contract is unchanged
+    # and still asserted below for collect_feedback, which survives.
 
     def test_collect_feedback_default_inbox_uses_durable_root(self):
         collect = _load("collect_feedback")

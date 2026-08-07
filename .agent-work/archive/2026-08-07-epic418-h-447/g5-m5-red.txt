@@ -1,0 +1,75 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+___________________ test_the_two_censuses_share_one_parser ____________________
+
+    def test_the_two_censuses_share_one_parser():
+        """`retired_names.approved.txt` must not be a second, forked implementation.
+    
+        Both censuses are read through the SAME `parse_approved`/`load_approved`/`normalize`
+        machinery, so a format the store-mention census accepts is a format the retired-name
+        census accepts, and a malformed entry is refused identically in both. A parallel
+        implementation is how two files that look alike start disagreeing about what an
+        approval is; asserted here so a fork fails rather than drifts."""
+>       assert vr.RETIRED_NAME_CENSUS_PATH != vr.APPROVED_CENSUS_PATH
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'verify_retirement' has no attribute 'RETIRED_NAME_CENSUS_PATH'
+
+tests\test_retirement_guard.py:366: AttributeError
+______________ test_every_retired_name_approval_exists_verbatim _______________
+
+    def test_every_retired_name_approval_exists_verbatim():
+        """The same anti-rot invariant the store-mention census carries, for the second census.
+    
+        An approval whose line has since been edited or deleted suppresses nothing real but
+        survives as a licence nobody reviewed. Matching is over NORMALIZED lines for the same
+        reason as above: `.gitattributes` sets `* text=auto`, so a Windows checkout may hold
+        CRLF where the blob holds LF."""
+>       approved = vr.load_approved(REPO_ROOT, vr.RETIRED_NAME_CENSUS_PATH)
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'verify_retirement' has no attribute 'RETIRED_NAME_CENSUS_PATH'
+
+tests\test_retirement_guard.py:382: AttributeError
+_______ test_a_retired_name_approval_suppresses_only_the_line_it_names ________
+
+tmp_path = WindowsPath('C:/Users/fredc/AppData/Local/Temp/pytest-of-fredc/pytest-5306/test_a_retired_name_approval_s0')
+
+    def test_a_retired_name_approval_suppresses_only_the_line_it_names(tmp_path):
+        """The census approves EXACT sites, and only line hits — never a pattern, never a path.
+    
+        Two properties in one decoy, because they are the two ways this leg could be quietly
+        turned into decoration. First, an approval is keyed on `(path, normalized line)`: a
+        second, differently-worded mention in the same file is still unapproved. Second, the
+        PATH half of the leg is not approvable at all — a restored file or skill directory whose
+        name is the retired thing must fire however many reasons anyone writes for it, because
+        what identifies it is where it sits, not what it says."""
+        repo = healthy_repo(tmp_path)
+        _write(
+            repo / "docs" / "note.md",
+            "A frozen record: the old loop wrote .agent-work/LESSONS.md.\n"
+            "But this second line tells you to go and read .agent-work/LESSONS.md.\n",
+        )
+        _write(
+            repo / "tests" / "data" / "retired_names.approved.txt",
+            "# frozen historical record: names what the old loop wrote\n"
+            "docs/note.md:A frozen record: the old loop wrote .agent-work/LESSONS.md.\n",
+        )
+        _write(repo / "skills" / "lessons-auditor" / "SKILL.md", "Innocent by every line.\n")
+        _git(["add", "-A"], repo)
+    
+        violations = vr.scan(repo)
+>       assert [(v.path, v.line) for v in violations] == [
+            ("docs/note.md", 2),
+            ("skills/lessons-auditor/SKILL.md", 0),
+        ]
+E       AssertionError: assert [('docs/note....SKILL.md', 0)] == [('docs/note....SKILL.md', 0)]
+E         
+E         At index 0 diff: ('docs/note.md', 1) != ('docs/note.md', 2)
+E         Left contains one more item: ('skills/lessons-auditor/SKILL.md', 0)
+E         Use -v to get more diff
+
+tests\test_retirement_guard.py:422: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_retirement_guard.py::test_the_two_censuses_share_one_parser
+FAILED tests/test_retirement_guard.py::test_every_retired_name_approval_exists_verbatim
+FAILED tests/test_retirement_guard.py::test_a_retired_name_approval_suppresses_only_the_line_it_names
+3 failed, 13 deselected in 0.34s

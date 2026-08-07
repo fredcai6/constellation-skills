@@ -1,342 +1,312 @@
-# RETURN — `cmdr-440-binding-cwd` · issue #440 · epic-418 wave 1, workstream A2
+# RETURN — `cmdr-447-episodes-retirement` · issue #447 · epic-418 workstream H
 
-Branch `epic-418/a2-440-binding-cwd` · base `cbd9aee` · tip of branch · **not pushed, no PR — yours**
+> This file replaces workstream A's inherited `RETURN.md`, which was tracked at `cbd9aee` and
+> appears in every worktree off it. Its content is preserved in git history at `77e428d^`.
 
-> **Archive is BLOCKED on you, by design — see §12.** The run itself is complete and green.
+Branch `epic-418/h-447-episodes-retirement` · base `cbd9aee` · six commits · **not pushed, no PR,
+not merged** — those are the Admiral's per this launch order.
 
 ---
 
 ## 1. Verdict
 
-**This is a win, not a measured negative, and it clears the done-condition you set.**
+**This is a win, not a measured negative.**
 
-You asked for a HARD trip to fire from a per-agent reading produced by an agent **dispatched into a
-worktree**, with the reading landing where the engine actually reads it — a fired trip, observed on a
-live run, not a path that resolves correctly. That is what happened.
+I was asked to finish #308's retirement: `.agent-work/LESSONS.md` and `.agent-work/AGENT_FEEDBACK.md`
+genuinely retired, replaced by the episode store, with a shipped guard that keeps it true, live
+content carried across, and nothing reading episodes as prescriptions.
 
-The binding store no longer resolves a relative `--file` against the payload's `cwd`. It walks
-ordered candidate roots and takes the first that **validates as a checklist on disk**, deriving the
-worktree root from `git worktree list` rather than being handed it, and **refuses to bind at all**
-when two guessed roots name different existing files. On a live two-arm run, a subagent dispatched
-into a real worktree claimed a spine there with a relative `--file`, filled its own context to **56%**
-against a HARD of **15%**, its `gauge.json` landed **beside the worktree spine**, and the engine
-**REFUSED its `advance`**:
+All of that is now true. Both files are off the index with no shipped writer, no shipped reader, and
+no skill or template pointing at them. The eight live lessons are in `episodes/` as records of what
+happened rather than rules to follow. `AGENT_FEEDBACK.md`'s prose is dropped with a stated reason and
+retained in git history. The playbook's machinery — three scripts, a whole skill, two templates — is
+deleted, and the closeout obligation on both the Commander and Admiral spines now runs through a
+capture gate that can emit ids and counts but structurally cannot emit an episode's content.
+`scripts/verify_retirement.py` exits 0 across four legs, having been observed **failing** on the
+untouched tree before it was ever observed passing. The suite is 1622 passed, 0 failed, 0 xfailed.
 
-```
-REFUSED: m1: context at 56% is at/over the hard limit — advancing is blocked until you
-request a refresh, so work is handed off at a seam rather than lost to a runaway.
-EXIT=1
-```
-
-The byte-identical control on `cbd9aee` reached **56.2%**, filed its reading in a phantom
-`.agent-work/` inside the sandbox main, and **advanced clean at exit 0**.
-
-**Two things you should know before you merge**, both in §7: this run crashed once and was resumed,
-and the pre-existing "baseline is exit 0" line in the launch order turns out to be an artifact of
-where it was measured. Neither changes the verdict.
+The one thing this run did **not** do is fix the store's existing records: roughly 24 of the 32
+episodes that predate this run carry `workaround` assertions written as instructions. That is
+`constraint:episodes-are-not-prescriptions` failing inside the store rather than around it. It is
+filed (**#460**) and floated, not fixed — `decision:store-hardening-out-of-scope` makes it a
+different job, and this run introduced none of it.
 
 ---
 
-## 2. The fired trip, with its evidence
+## 2. Evidence — commands with real exit codes
 
-| | treatment (HEAD) | control (`cbd9aee`) |
+All suite runs prefixed `FORCE_COLOR=0 NO_COLOR=1`; see §7 for why that matters.
+
+| command | exit | result |
 |---|---|---|
-| headless run | exit 0, 156.4s | exit 0, 143.5s |
-| binding resolved to | **worktree** spine, `path_source: git_worktree` | **sandbox main**, `path_source: null` |
-| gauge beside worktree spine | **present**, fill **0.559655** | absent |
-| gauge at phantom path in main | absent | **present**, fill **0.562149** |
-| `advance` | **REFUSED, real exit 1** | succeeded, **real exit 0** |
-| gate after | stayed `in-progress` | `complete` |
+| `python scripts/verify_retirement.py` | **0** | **zero bytes printed** — all four legs green |
+| `FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q` | **0** | 1622 passed, 2 skipped, 0 failed, 0 xfailed |
+| `python -m pytest tests/test_retirement_guard.py -q` | **0** | 16 passed, no xfail marker remains |
+| `python scripts/verify_episode_captured.py issue-447 --store-root episodes` | **0** | 8 episodes |
+| `... --phase archive` | **0** | all 8 tracked by git |
+| `git ls-files --error-unmatch .agent-work/LESSONS.md` | **1** | off the index |
+| `git ls-files --error-unmatch .agent-work/AGENT_FEEDBACK.md` | **1** | off the index |
+| `test -f` on both retired paths | **0** | still on disk — see §3 |
+| installed `verify_agent_feedback.py epic418-h-447 --phase feedback` | **1** | **unchanged** before and after |
+| `git diff --stat 77e428d..HEAD -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md` | — | 16 insertions, **0 deletions** |
+| `git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md` | — | **12**, same as at `77e428d` |
+| `recover_crews.py epic418-h-447` | — | 8 crews, **0 unresolved** |
 
-HARD for `claude-sonnet-5` is **0.15**. The two fills are **0.44% apart**, so the opposite outcomes
-are attributable to the hook path and to nothing else.
+**Commits.** `bf8819a` guard · `dbf9a23` capture gate · `100a33c` rewire · `77e428d` carry+untrack+delete · `fd7ef60` prose+census · `f2dd40a` verify.
 
-### Why I know the trip came from the *worktree-dispatched* agent, not the parent
+**Suite delta, reconciled by name** (`.agent-work/epic418-h-447/evidence/g6-count-delta.md`):
+1688 baseline + 12 guard + 15 capture gate + 1 general install assertion − 85 deleted
+(`test_apply_lessons_delta` 70, `test_verify_agent_feedback` 11, `test_verify_lessons_applied` 4)
+− 13 pruned + 3/−2 census + 2 HEAD-pinning tests restored by g5's commit + 1 marker removal = **1622**.
+The claim is **"0 failed"**, never "strictly greater" — a retirement that deletes 85 tests cannot
+honestly assert a higher count.
 
-Three independent signals, captured on both arms and agreeing 3/3:
+**Every gate carried an independent review.** Six gates, each with an implementer, an independent
+reviewer that re-ran the evidence rather than reading the transcript, and my own re-derivation.
+All four reviews returned **APPROVE with 0 blockers**. One implementer raised a blocker (g4) and it
+was dispositioned, not absorbed.
 
-1. **The binding key is composite** — `9d959dcd-…#a26a9cb68fda52cdc`. Only a dispatched agent keys
-   `session_id#agent_id`; a top-level agent keys bare.
-2. **`identity_resolution_ms` is present** (0.0433). The writer emits that fifth field **only** on a
-   dispatched agent's record (#419), so a 5-field record is positive proof of subagent origin.
-3. **`gauge.json`'s own `model` says `claude-sonnet-5`** while the parent ran `opus`. The verifier now
-   also asserts the *premise* — that the two tiers ran different models — because signal 3 is vacuous
-   otherwise.
-
-Corroborated at source by the reviewer: `gauge_writer_hook.py:608-631` reads only the derived
-`subagents/agent-<id>.jsonl` with an **explicit refusal** to fall back to the parent, and
-`find_latest_usage:325` further requires `isSidechain` **and** a matching `agentId`. A fill of
-0.559655 is structurally incapable of being the parent's.
-
-### Why the control is worth something
-
-**It worked and missed.** It produced a real, over-HARD reading *at the wrong path* rather than going
-quiet. That is what rules out the three impostors that would otherwise wear the bug's face: an
-incomplete sibling `scripts/` set (the writer nulls **silently** if it cannot import `spine_rail` as
-a filesystem sibling), an uncalibrated model, and a subagent that never got an `agent_id`. A quiet
-control would have proved nothing, and I would have reported it as inconclusive.
+**PR state:** none. Not pushed, no PR opened, nothing merged. `gh pr view --json state` has nothing
+to report because this launch order reserves those for you.
 
 ---
 
-## 3. How I know my green is real
+## 3. The three things you said you would check first
 
-You flagged the sharp edge yourself: **the mechanism under repair is the mechanism that makes an
-in-worktree validation lie.** Four things stand behind the green.
+### (1) The guard — what ships, and the evidence it failed on purpose
 
-1. **The arms differ in exactly one file.** Proved by a recursive `diff -rq` over two *complete*
-   `scripts/` trees, not a curated subset — `scripts/hooks/spine_rail.py`. The reviewer independently
-   diffed the settings (two lines, both `treatment`→`control`) and the prompts (exit 0 after
-   normalising the arm name).
-2. **Nothing handed the hook the value it was supposed to derive.** The treatment binding records
-   `path_source: "git_worktree"`, which is only written when the root came from `git worktree list`.
-3. **The reviewer refused to take the harness's word and built its own repro** — and found the
-   variant I had not thought to ask for. It moved the engine script token **out** of the worktree
-   into `main/bin`. The hook **still** resolved to the worktree. With no worktree-shaped token
-   anywhere in the command, the derivation is real and the hand-injection hypothesis is dead. That is
-   the single most convincing item in this return, and it is not mine.
-4. **The verifier can fail.** `verify_evidence.py` exits 0 over **59 checks** and its `--selftest`
-   fails **all 10** deliberately damaged copies. I re-ran both myself rather than reading the crew's
-   claim.
+`scripts/verify_retirement.py`, authored at `bf8819a` **before any retirement work**, so it was
+falsified against the real disease rather than a decoy. On the untouched tree it exited **1 across
+three legs**; transcript at `.agent-work/epic418-h-447/evidence/g1-guard-red.txt`.
 
----
+Four **named** legs, so each is falsifiable alone rather than a single boolean:
 
-## 4. Evidence — commands and real exit codes
-
-All gated on real exit codes by redirecting to a file and echoing `$?`, never off a piped tail.
-
-| command | exit |
+| leg | what it catches |
 |---|---|
-| `python .agent-work/issue-440-binding-cwd/acceptance/verify_evidence.py` | **0** (59 checks) |
-| `… verify_evidence.py --selftest` | **0** (10/10 mutations correctly fail) |
-| `NO_COLOR=1 FORCE_COLOR= PY_COLORS=0 python -m pytest tests/ -q` | **0** — 1723 passed, 2 skipped, 550 subtests |
-| `python -m pytest tests/ -q` (with harness `FORCE_COLOR=3`) | 1 — 10 false failures, see §7 |
-| `python -m pytest tests/test_mutation_floor.py -q` in a `git archive cbd9aee` tree | 1 — **11** failures, pre-existing |
-| `python scripts/verify_worktree_isolation.py --here …` | **0** |
-| engine's own re-run of `python -m pytest tests -q` at the `g3-close` gate | **0** |
+| `retired-path-still-tracked` | either retired path back in the **index** — path-based, unparaphraseable |
+| `retired-name-on-shipped-surface` | a retired name on any surface an agent is instructed by — path half **and** content half |
+| `unapproved-store-mention` | a new shipped site naming the store without an approved reason |
+| `replacement-absent` | the replacement missing from either spine's **imperatives** or either bundle |
 
-**Baseline:** 1688 → **1723 passed**, strictly greater by +35. **No previously-passing test id
-disappeared** — verified by a `--collect-only` id diff against a `git archive` of `cbd9aee`
-(1690 → 1725 ids; `comm -23` = **0** disappeared, `comm -13` = 35 added), not by comparing counts.
+Surfaces are enumerated from `git ls-files`, not `rglob`, so a path deleted from the working tree but
+still in the index is seen — which is exactly the state §3(2) leaves behind.
 
-**PR state:** none. Not pushed, no PR opened, nothing merged — that is your step, per the dispatch.
+Two reason-carrying censuses back it, both naming **exact sites, never patterns**:
+`tests/data/store_mentions.approved.txt` and the new `tests/data/retired_names.approved.txt`. The
+g5 reviewer measured the second **exactly-covering in both directions** — 53 approvals against 53
+residual sites, zero dead approvals, zero uncovered lines — and ran a six-property decoy suite
+proving a reworded near-miss suppresses nothing, the same text under a different path still fires,
+and the path half fires despite an approval written for it.
 
-Commits on top of `cbd9aee`:
+`test_canon_is_clean` carried `xfail(strict=True)` from g1 through g5. **Strict means an XPASS
+fails**, so the moment the tree really went clean the scaffolding broke the build and forced its own
+removal at `f2dd40a`. It did not need remembering.
 
-(the five that carry the change; four closeout commits follow — triage/return, archive move,
-state note, and this file)
+**The guard caught me, twice.** At g1 review it fired on **itself** once tracked — 12 self-hits,
+because its own constants name the retired files — and the fix was the principle that a guard cannot
+be inside the set it guards. And at g5 integrate, my own one-column edit to
+`docs/CONSTELLATION_OVERVIEW.md` took it from exit 0 to exit 1 within the minute, because the census
+records approved lines **verbatim** and is exactly-covering, so editing an approved line orphans its
+approval.
 
-```
-b2810d9 docs(#440 g3): record the shipped resolution and rule on the existing bindings
-89cc99a fix(#440 g2-review): assert the BINDING, not just the gauge, in the acceptance verifier
-b332287 test(#440 g2): two-arm live-fire acceptance — a HARD trip fires from a worktree-dispatched agent
-38214ec fix(#440 g1b): refuse to guess when two guessed roots name different files
-9d44aa6 fix(#440 g1): resolve a relative --file against validated candidate roots
-```
+### (2) How I avoided stranding my own closeout
 
----
+**Both** of the sequencing options you named, deliberately.
 
-## 5. Isolation proof
+`scripts/agent_work_root.py:136-140` redirects `durable_root()` to the **worktree** whenever an
+active Admiral epic lease exists — and epic #418 holds one. So this run's own `feedback`/`archive`
+gate reads *this worktree's* `.agent-work/AGENT_FEEDBACK.md`. Therefore:
 
-```
-$ python scripts/verify_worktree_isolation.py --here C:/Programs/constellation-skills-wt/epic418-a2-440
-worktree OK: in C:/Programs/constellation-skills-wt/epic418-a2-440
-ISO_EXIT=0
-```
+- **`git rm --cached`, never `git rm`** (`decision:untrack-do-not-delete`). Untracking removes the
+  path from the **index**, which is what "shipped" means and what the guard's path leg checks. The
+  on-disk copies survive this run and die with the worktree. Deleting them would have stranded the
+  closeout, whose only two exits are recreating a retired file — literally #308's failure shape — or
+  a human override in a run with no reachable human. The measurement is now recorded in a docstring
+  **at the leg that enforces it**, so the next reader finds the why where the rule lives.
+- **Dropping `verify_agent_feedback.py` from `SKILL_SCRIPT_BUNDLES` does not delete the installed
+  copy** — no install runs mid-gate. I verified this rather than assuming it: the installed gate
+  exits **1 before and 1 after**, byte-identical message. Unchanged, not merely non-fatal.
 
-**The live main checkout was never written.** `.agent-work/.spine-rail-binding.json` was read for the
-`existing-bindings` ruling and left byte-for-byte alone; no live `.claude/settings*.json` and no real
-worktree was touched. The harness ran entirely under `%TEMP%\acc440`. Verified two ways: the arms
-record their sandbox root, and the verifier asserts no sandbox path appears in the live store.
+My outer spine was instantiated before g3's rewiring, so its `feedback`/`archive` conditions still
+call the installed `verify_agent_feedback.py`. That path is confirmed open. A Commander launched
+**after** this merges gets the rewired spine and the capture gate instead.
 
----
+### (3) What happened to the live content
 
-## 6. The `decision:existing-bindings` ruling
+**`LESSONS.md` — carried, all of it, and there was more of it than the plan knew.**
 
-**LEAVE TO AGE OUT. Live store untouched. Regraded `guess` → `measured`** by running the settle
-experiment your pre-ruling named.
+Your resume brief said not to assume those files were frozen at what my worktree sees. They were not.
+`main` advanced to `861ecbe` and `LESSONS.md` was union-merged there: its Active section holds
+**eight** lessons, not the six my frozen plan named. The two extra came from the governor-262 side —
+`name-scoped-test-filter-gates-are-strong-but-structurally-blind` and
+`crew-blocked-on-a-commander-blocked-on-that-crew-has-no-exit` — and both satisfy the plan's own
+CARRY RULE, each `grounding` naming a concrete observed event.
 
-**A stale binding yields a missing reading, never a wrong one**, for three independent reasons: the
-engine reads `gauge.json` beside the spine it was itself invoked with and never through the store, so
-a wrong binding can misplace a *write* but never redirect a *read*; a key with more than one
-candidate makes the writer **refuse outright** (`gauge_writer_hook.py:595-606`); and a misplaced
-reading ages past the reader's 30-minute window into nothing.
+Carrying six would have silently dropped two live lessons at merge, which is the loss "Done looks
+like" item 3 forbids. So I **amended the spine through the engine** — `rescope` on `g4-implement` and
+`g4-integrate`, count 6→8, authority cited as `admiral:launch-order/H-447 (resume brief)` — rather
+than attesting a statement I knew to be false. Both audit entries are in the journal. I did **not**
+rebase or merge: episodes land in `episodes/`, my own tracked path.
 
-I considered retiring the dead entries and **rejected it on measurement, not caution**: the one
-silenced key holds **10 entries of which 3 are LIVE**, so deleting all 7 dead ones leaves the guard
-still firing. It would buy no behavioural change while risking a lost update against a store two live
-sessions were writing at the time. Before-state at
-`.agent-work/issue-440-binding-cwd/g3/live-binding-store-before.json`; full reasoning in
-`g3/EXISTING_BINDINGS_RULING.md`.
+The **inversion** is the substance. A lesson's `statement` is prescriptive; an episode holds no
+rules. So each statement became the episode's `workaround` assertion **rewritten as an observation of
+what that run did**. All eight read as reports. One is worth your eye: `issue-447-001`'s source rule
+demanded a check be run against a decoy, and that run caught its checks by cold reading and never ran
+one — so the episode reports the cold reading. Claiming the decoy would have been the fabricated
+`observed-behavior` the store's doctrine forbids.
 
-Your "60 of 64" is now **8 of 12** — the store has been rewritten by live activity since, and the
-shape is unchanged.
+**`AGENT_FEEDBACK.md` — dropped with reason, not migrated.** 2119 lines (its state on main at
+`861ecbe`). Synthesising typed assertions from unstructured prose retrospectives is that same
+fabrication. Git history retains the file at its final revision, and a snapshot sits at
+`.agent-work/epic418-h-447/context/AGENT_FEEDBACK-main-861ecbe.md`.
 
----
-
-## 7. Two things that need your attention
-
-### (a) This run crashed and was resumed — the cause was an account limit, not a defect
-
-The prior session died mid-`g2`. Its engine state was durable and intact, and I resumed under the
-same lease rather than restarting. The crash cause is in the evidence verbatim:
-
-```
-EXIT: 1
---- STDOUT ---
-You've hit your weekly limit · resets Aug 7, 7am (America/Los_Angeles)
-```
-
-The limit reset before I resumed. **I re-ran the arms unchanged** — I did not trim the inflation
-budget to squeeze under it, which would have risked an under-inflated subagent producing a false
-negative wearing the bug's face.
-
-### (b) The launch order's `cbd9aee` baseline of "exit 0" cannot be reproduced, and I found out why
-
-**FOR YOUR ATTENTION — this affects every Commander you dispatch.**
-
-My first full-suite run showed **10 failures**. I attributed them with `uniq -c` rather than reading
-the tail (all 10 in `tests/test_mutation_floor.py`), then verified rather than reasoned: a
-`git archive cbd9aee` temp tree gives **11** failures — one *more* than my branch. Pre-existing.
-
-The cause is worth more than the pass. The Claude Code harness exports **`FORCE_COLOR=3`**, so pytest
-emits ANSI **even into a captured pipe**. `test_mutation_floor.py:255` matches `FAILED` immediately
-followed by the test path and does not strip ANSI, so the colour-reset lands between them, every
-match breaks, and the meta-harness reports `HARNESS ERROR: non-zero exit with no FAILED test node`
-while its own captured output plainly contains those nodes. Clear the variable and that file goes
-from **10 failed → 14 passed, exit 0**.
-
-So your recorded baseline was measured **outside** a `FORCE_COLOR` session and mine was inside one.
-This is a **second, independent false-red** in the same family as your `py`-is-not-the-test-runner
-warning — and unlike that one, **it fires for `python` too**. Filed as **#454**. I would consider
-adding it to `_COMMON.md` beside the `py` warning.
+**Where the replaced content now lives:** `episodes/active/issue-447-001.md` … `008.md`, each
+carrying `- artifact-ref: lesson:<slug>` for identity continuity with the retired playbook.
 
 ---
 
-## 8. Scope-discipline report
+## 4. Isolation proof
 
-Corner cases deliberately **not** chased, each commented at the code site and filed rather than
-absorbed:
+```
+$ python scripts/verify_worktree_isolation.py --here C:/Programs/constellation-skills-wt/epic418-h-447
+worktree OK: in C:/Programs/constellation-skills-wt/epic418-h-447
+EXIT=0
+```
 
-| not chased | code site | filed |
+That is the tool's entire output — one line. Run at closeout; transcript at
+`.agent-work/epic418-h-447/evidence/isolation-proof.txt`. **Fence honoured:** `scripts/hooks/*`,
+`scripts/gauge_reader.py` and `docs/GAUGE_WRITER_HOOK.md` have an **empty diff** across
+`cbd9aee..HEAD`, index and worktree. **No commander-to-commander contact with `cmdr-440`.**
+
+---
+
+## 5. Scope-discipline report — corner cases deliberately not chased
+
+Each has a comment at the code site naming it.
+
+| # | corner case | comment site |
 |---|---|---|
-| bare-key multi-spine ambiguity silence | `docs/GAUGE_WRITER_HOOK.md` § Known limits | **#452** |
-| `spine_rail` binds an unexpanded shell token | `docs/GAUGE_WRITER_HOOK.md` § Known limits | **#453** |
-| `test_mutation_floor` ANSI parse | — (test-harness area this run never opened) | **#454** |
-| self-referential freshness check | `acceptance/verify_evidence.py`, above `obs = att.get("observed_at")` | **#455** |
-| per-launch log overwrite, declined-protocol flakiness, undeclared evidence schema, `probe()` dead verdict | `acceptance/` | **#455** |
+| 1 | the `--store-root` default carries the installed-copy hazard (resolves to the skill install dir); mitigated by printing the resolved root on every outcome | `scripts/verify_episode_captured.py:196-201` |
+| 2 | "untracked" is not distinguished from "not a git repository" — both mean not durable, git's own message is carried through | `scripts/verify_episode_captured.py:151-161` |
+| 3 | `retired/` is not searched, so an episode retired mid-run reads as uncaptured; chasing it means teaching the capture gate to reach into the archive | `scripts/verify_episode_captured.py:125-130` |
+| 4 | `store_root()`'s semantics and its `durable_root()` ruling left untouched; only the hazard is named | `scripts/apply_episode_delta.py:511-522` |
+| 5 | `query_episodes.py` unbundled is a **default, not a boundary** — four measured routes around it named, because an overclaim here is worse than no claim | `scripts/install_constellation.py:141-159` |
+| 6 | the `retired-name` leg's **path half is deliberately unapprovable** | at the leg in `scripts/verify_retirement.py` |
+| 7 | untrack-not-delete, and why the leg asks the index rather than the filesystem | docstring at the leg in `scripts/verify_retirement.py` |
+| 8 | the `Lesson:` field **name** kept while its accepted value became an episode id — `collect_feedback.py` fingerprints recurrence on the literal name | in `CONSTELLATION_FEEDBACK.template.md`; filed as **#464** |
+| 9 | g1's unchased guard limits: a successor playbook that never names episodes, prescriptions inside workaround statements, lowercase variants, prescriptions split across two lines | at the code site in `scripts/verify_retirement.py` |
 
-**One thing I did NOT defer, and I want you to check my call.** The g2 reviewer found that
-`verify_evidence.py` never read `binding_entries` — so a treatment arm binding to the sandbox **main**
-(the defect *not* fixed) still exited 0. I fixed it (`89cc99a`) rather than triaging it, because
-shipping an acceptance artifact *for this very issue* that cannot fail is the tests-that-cannot-fail
-shape this epic has already filed three issues about (#432, #446, and a finding inside #419's own
-run). 46 → 59 checks, 5 → 10 mutations. If you would rather that had been triaged, it reverts cleanly.
-
-Where the issue text and the scope-discipline ruling disagreed on breadth, the ruling won — the
-`existing-bindings` question was settled by measurement and left alone rather than migrated.
+Limit 9's first item is why the **tombstone** exists: no mechanical leg can catch a successor
+playbook that never names episodes, so `docs/agents/ORCHESTRATOR_CONTEXT.md` names the *shape* of the
+retirement as doctrine. That is where a good-faith agent acting from a stale instruction lands.
 
 ---
 
-## 9. Map impact
+## 6. Map impact
 
-No packet map exists (`DEGRADED-NO-MAP`), so I reconciled the structural record **directly**, which
-this step sanctions. The record of governing truth for this area is
-`docs/GAUGE_WRITER_HOOK.md` § "Known limits of the binding store itself", which stated this defect as
-**open**; it now states it as fixed and describes the shipped resolution with the live verification
-beside it. Two **new** limits were added in the same pass rather than left to be rediscovered.
+**No packet map exists** — `docs/architecture/` is absent — so the spine's own fallback applied and I
+reconciled the structural record directly, inside g5 rather than as a separate pass. Nine documents
+carry it: `docs/CONSTELLATION_OVERVIEW.md` (taxonomy row), `docs/agents/ORCHESTRATOR_CONTEXT.md`
+(tombstone), `docs/agents/CREW_CONTEXT.md`, `docs/agents/GLOSSARY.md`, `docs/EPISODE_STORE.md`,
+`episodes/README.md`, `README.md`, `SKILL_INDEX.md`, `docs/POSITIONING.md`.
 
-Net structural delta: `scripts/hooks/spine_rail.py` gained a candidate-root resolution path and an
-ambiguity refusal. **No load-bearing interface shape moved** — the gauge binding key, the gate schema
-and the MCP tool surface are untouched, which matters because changing the binding key is explicitly
-outside my latitude.
+Net structural change an architecture reconcile needs to know:
 
----
-
-## 10. Triage candidates
-
-All filed under `_COMMON.md` § Inherited Latitude, which delegates issue **filing** outright. No
-issue was closed — that is withheld and rides a human batch confirm.
-
-- **#452 — a bare-keyed agent driving several spines at once gets NO gauge reading at all.**
-  **Read this one first.** It is not #440 and #440 does not fix it, but it is what actually keeps the
-  governor silent for orchestrators. It fell out of the existing-bindings measurement rather than
-  from inspection. Its fix may require changing the binding key shape, which is **yours to
-  adjudicate, not mine**.
-- **#453** — `spine_rail` binds an unexpanded shell token (`--file $E`) verbatim.
-- **#454** — `test_mutation_floor` false HARNESS ERROR under `FORCE_COLOR` (see §7b).
-- **#455** — acceptance-harness hardening; consolidates the reviewer's five non-material findings and
-  the crew's two candidates.
-
-Full recommendations in `.agent-work/issue-440-binding-cwd/TRIAGE.md`.
+- **`capability:run-closeout-learning` changes owner** — from the lessons playbook to the episode
+  store. Both spines' closeout conditions now run `verify_episode_captured.py`.
+- **New:** `scripts/verify_episode_captured.py` (the store's first write-side gate, at two strengths:
+  captured, and captured **and** tracked), `scripts/verify_retirement.py`,
+  `tests/data/retired_names.approved.txt`.
+- **Gone:** `scripts/apply_lessons_delta.py`, `scripts/verify_lessons_applied.py`,
+  `scripts/verify_agent_feedback.py`, `skills/lessons-auditor/` (whole tree),
+  `skills/workbench/templates/{LESSONS,AGENT_FEEDBACK}.template.md`.
+- **Deliberately not reconciled:** `docs/RECURSIVE_IMPROVEMENT_DESIGN.md`. It is a design **record**
+  of the loop as built in June 2026 and gains only a superseding header. Reconciling a map means
+  making it match reality; doing that to a record would falsify history.
 
 ---
 
-## 11. Workflow feedback
+## 7. Triage — 8 filed, 4 folded, 2 fixed now
 
-- **The engine's typed-evidence enforcement earned its keep.** It refused an `artifact` where an
-  `implementer-result` was required, and refused a `review-result` whose `verdict` was not literally
-  `APPROVE`. The second forced me to make the "APPROVE WITH FINDINGS → APPROVE" reduction *explicit
-  and recorded* rather than quietly typing the word it wanted. That is the gate working.
-- **The `g3-close` gate re-runs its own gated command.** Worth knowing: it took ~4 minutes and looked
-  like a hang until I checked the postcondition definition. It also inherits the session environment,
-  so it hit the `FORCE_COLOR` trap and refused until I cleared the variable for its subprocess.
-- **Backticks in an engine `--why` string are executed by bash.** One of my `--why` values contained
-  `` `git worktree list` `` and `` `py` ``; the shell ran both, spawned Python REPLs, and leaked
-  `git worktree list` output into a stored `satisfied_by` note on `g3-close.c2`. Cosmetic, but that
-  note is polluted. Long `--why` values should be passed via `"$(cat file)"` with no backticks.
-- **An externally-dispatched crew is unrecoverable after a session crash.** `recover_crews.py`
-  correctly flagged the g2 implementer as RESUMABLE and advised `SendMessage` to its `agentId` — but
-  no `agentId` is recorded for `--backend external`, so the only route was
-  `--abandon … --relaunch`. Worth either recording the `agentId` or changing the advice.
-- **The R2 handoff I wrote contained an ordering conflict** ("treatment first" vs "prioritise the
-  control if you can only afford one"). The crew flagged it. Mine to own.
+**Filed** (filing is delegated; every number below is new):
 
----
+| # | what |
+|---|---|
+| **459** | `test_mutation_floor.py`'s kill detector cannot match coloured pytest output — see §7 note |
+| **460** | ~24 of 32 canon episodes carry **imperative** workarounds. **Read this one first.** |
+| **461** | the episode-store negative control reds every run that legitimately captures, between `git add` and commit |
+| **462** | `docs/agents/engine-config.json` does not exist, yet every checklist names it; the engine accepts the dangling ref **silently**, so every run is on defaults nobody chose |
+| **463** | `stage_feedback.py` is orphaned after this run and still writes retired-named files |
+| **464** | `CONSTELLATION_FEEDBACK`'s `Lesson:` field takes an episode id under its old name; rename it **with** `collect_feedback.py` |
+| **465** | reviewer `r6-fowler` ships a placeholder no engine verb can fill, and filling it in text mode rewrites every CRLF in the state file |
+| **466** | README's skill table reads 18 against its own "19 skills" sentence (pre-existing) |
 
+**Folded, not re-filed** per `decision:fold-dont-refile` — commented on **#400, #403, #404, #277**.
+**No issue closed. Every close is floated to you.** #277 is moot (its validator no longer ships);
+I flagged rather than assumed that its underlying interest — id grammar and validators agreeing —
+may still be live for `episodes/` and is uncovered by anything I filed.
 
-## 11b. Decision-anchor regrade — scoped deliberately
+**Fixed now**, both recorded with their commit rather than left unrecorded: the `copytree` line-number
+citation invalidated by its own insertion, replaced with the symbol name (`100a33c`); and
+`curator rhyme-search` removed from the overview's audience column, a consumer with no implementation
+anywhere in `skills/curator/` (`fd7ef60`).
 
-`decision:existence-verified-resolution` carried `settle: THIS GATE`, so it is regraded to
-**`measured` — for the GUESSED-RUNG PATH ONLY**. The live arms exercised exactly two rungs: rung 4
-(`git_worktree`) succeeding and rung 5 failing. **Told-truth rungs 0-2, the g1b disagreement refusal,
-and g1-review's tc1 remain `guess`** — tc1 being the case where both trees hold a real checklist at
-the same relative path and rung 3 beats rung 4, binding a confident wrong path. That reviewer judged
-it non-blocking on evidence and I agree, but this gate did not settle it.
+### The measurement worth your attention
 
-The narrowness is the point: a flat `measured` would have let a two-rung result stand as if the whole
-ladder were proven, and would have buried tc1 — which is exactly
-`lesson:grading-a-contested-claim-settled-launders-it`. Full note at
-`.agent-work/archive/2026-08-07-issue-440-binding-cwd/REGRADE_existence-verified-resolution.md`.
+**The "10 pre-existing `test_mutation_floor` failures" that my crew and the pre-crash g1 session both
+reasoned about are neither pre-existing nor a regression.** `FORCE_COLOR=3` in the session
+environment puts an ANSI reset between `FAILED` and the node id, defeating the harness regex at
+`tests/test_mutation_floor.py:255`. With colour off the file is 14 passed, exit 0. It is fail-loud,
+not fail-green, so nothing shipped wrong — but while red it **masks any real regression in that
+file**, and it means every suite number in this run had to be taken with colour disabled.
 
 ---
 
-## 12. Closeout status — archive is BLOCKED, and it is blocked on you
+## 8. Workflow feedback — where things fought us
 
-The run is **complete and green**. Every gate closed with integrated evidence and the spine was
-driven through `execute` → `reconcile` → `triage` → `review` → `feedback`. The `archive` step is
-**blocked**, bubbled to parent, on its two postconditions I am not permitted to satisfy:
+- **My own g4 handoff asked for the wrong proof.** I told the reviewer to verify writer-provenance by
+  comparing blob OIDs against `HEAD`. That cannot work for **new** files — they have no `HEAD` blob —
+  so the check is vacuous exactly where it is needed. The reviewer replaced it with a **delta replay**
+  into a scratch store, getting the eight staged blobs back byte-identically. OID-vs-HEAD proves the
+  *existing* records were untouched; a replay proves the *new* ones came from the writer. Two
+  questions, two commands. The replay recipe belongs in the reviewer template.
+- **My line-ending guidance nearly caused a false BLOCK.** I warned that `grep -c $'\r$'` is
+  unreliable here (it is). But the obvious Python alternative — worktree bytes vs
+  `git show <rev>:<file>` — is *also* wrong and fails alarmingly: `.gitattributes` sets `* text=auto`,
+  so blobs are LF by design and all 23 changed files report as corrupted. The correct baseline is
+  unmodified **worktree** files.
+- **The g4 prune widened from two test files to four**, found by command rather than by eye — which is
+  the exact shape of the lesson being carried in `issue-447-006` ("enumerate the sites by command
+  before editing a claim"), arriving inside the handoff that carries it. Tests couple to scripts by
+  file path through per-file `importlib` loaders, so any deletion is shotgun-surgery by construction.
+- **A survey has no verdict for "confirmed a real defect that is out of this gate's scope."** The g4
+  reviewer had to record #460 as `pass` with the finding intact, because recording it as `fail` would
+  have forced a BLOCK on something the gate neither introduced nor was allowed to fix.
+- **Two crews reported the same proof-of-life problem:** the team roster listed the crew's own name as
+  the Commander's, so there was no distinct parent to message without guessing. Both skipped it rather
+  than message an unrelated agent. Worth fixing in the dispatch harness.
+- **The launch order's "Expected and NOT defects" section earned its place.** The g3 reviewer said so
+  explicitly: being told the red guard was expected let it spend its effort on the intent question
+  instead of re-litigating a known red. I put one in every reviewer handoff after that.
 
-- **`c2` — branch pushed.** Not done.
-- **`c2b` — an open PR exists.** Not done.
+---
 
-My dispatch reserves both: *"Do NOT push, open a PR, or merge — that is the Admiral's step."*
-`_COMMON.md` **does** pre-clear `git push on epic-418/*` and `gh pr create`, so this is **not** a
-permission block and **not** the #145 environmental shape — the capability exists and I declined to
-use it because you withheld it. I recorded a `block`, not a `waive`, because a waive would read as
-"this did not need doing" and `c2b` is right that a terminal spine without an open PR gets chased.
+## 9. Provenance
 
-**The engine session lease `cmdr-440-binding-cwd` is still held, deliberately.** The archive step is
-explicit that releasing before the closing `advance` leaves archive's own closeout entries after the
-release and fails the terminal provenance check. Releasing now would corrupt the provenance of an
-otherwise clean run.
+Spine `.agent-work/epic418-h-447/spine.json` (lease `cmdr-447-episodes-retirement`), execute plan
+`.agent-work/epic418-h-447/execute.json` (lease `exec-447`, released after its terminal advance).
+Two engine amendments, both with authority and reason: the lesson count 6→8, and the
+`retired-name` approval census added to g5 without which the guard could never have gone green and
+the xfail scaffolding would have outlived the work.
 
-**To finish it:** push `epic-418/a2-440-binding-cwd` (clean tree, 9 commits on `cbd9aee`),
-open the PR declaring **FINAL** in the title, satisfy `c2`/`c2b`, check `c4`, run the closing
-`advance archive` against the **moved** spine path
-`.agent-work/archive/2026-08-07-issue-440-binding-cwd/spine.json`, and release the lease last.
-`STATE_NOTE.md` at the worktree root carries the exact commands.
+Evidence transcripts: `.agent-work/epic418-h-447/evidence/`. Crew handoffs and results:
+`.agent-work/epic418-h-447/crew-handoffs/` and `results/`. Episode candidates harvested from every
+gate: `.agent-work/epic418-h-447/episode-candidates.md`.
 
-**Also at PR time:** `main` has advanced to `4fbdf6e` while this branch is based on `cbd9aee`. Per the
-dispatch that is handled at PR time, so I did not rebase mid-gate. And harvest
-`.agent-work/staged-feedback/issue-440-binding-cwd/` — its `FENCE.md` lists the three steps and
-pastes the validated dry-run output.
+**Merge note.** This branch is based on `cbd9aee`; `main` is at `861ecbe`. Per your instruction I did
+not rebase or merge mid-gate. Expect a conflict in `.agent-work/LESSONS.md` and
+`.agent-work/AGENT_FEEDBACK.md` — **both are deletions on my side**, and all eight of main's lessons
+are already carried into `episodes/`, so taking my side loses nothing. `main`'s new `replan` and
+`to-initial-issues` skills were checked and mention neither retired file, so the guard's censuses do
+not need to account for them. `skills/to-issues/` was renamed on main and my `SKILL_SCRIPT_BUNDLES`
+edit touches the old name — that hunk needs the rename applied.

@@ -57,24 +57,31 @@ class CheckSkillFreshnessTests(unittest.TestCase):
         self.assertTrue(rows)
         self.assertTrue(all(r["status"] == "up-to-date" for r in rows))
 
+    # RETARGETED, not pruned (#447 g4): the two tests below used the retired
+    # LESSONS and AGENT_FEEDBACK templates purely as a SUBJECT for check_skill_freshness. This
+    # retirement deleted both templates, but check_skill_freshness itself survives, so
+    # deleting these tests would silently drop the only coverage of its upstream-changed,
+    # baseline-promoted, project-customized and both-changed statuses. They are pointed at
+    # two surviving workbench templates instead; not one assertion about the behaviour
+    # under test changed.
     def test_upstream_change_detected_and_baseline_promotion(self):
         upstream = (
-            self.skills_root / "constellation-workbench" / "templates" / "LESSONS.template.md"
+            self.skills_root / "constellation-workbench" / "templates" / "WORKFLOW_CLOSEOUT.template.md"
         )
         upstream.write_text(upstream.read_text(encoding="utf-8") + "\nupstream change\n", encoding="utf-8")
 
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["LESSONS.template.md"], "upstream-changed")
+        self.assertEqual(statuses["WORKFLOW_CLOSEOUT.template.md"], "upstream-changed")
 
         self.m.update_baseline(self.project, self.skills_root)
         # A project-local working copy is now seeded at install, so promoting the
         # baseline alone leaves that copy stale (it reads project-customized until
         # reconciled). The reconcile step brings the working copy up to the new
         # upstream too; then it reads up-to-date.
-        local = self.project / ".agent-work" / "templates" / "LESSONS.template.md"
+        local = self.project / ".agent-work" / "templates" / "WORKFLOW_CLOSEOUT.template.md"
         local.write_text(upstream.read_text(encoding="utf-8"), encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["LESSONS.template.md"], "up-to-date")
+        self.assertEqual(statuses["WORKFLOW_CLOSEOUT.template.md"], "up-to-date")
         manifest = json.loads(
             (self.project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json").read_text(
                 encoding="utf-8"
@@ -83,21 +90,21 @@ class CheckSkillFreshnessTests(unittest.TestCase):
         self.assertEqual(manifest["baseline_origin"], "baseline-promoted")
 
     def test_local_customization_and_both_changed(self):
-        local = self.project / ".agent-work" / "templates" / "AGENT_FEEDBACK.template.md"
+        local = self.project / ".agent-work" / "templates" / "CONSTELLATION_FEEDBACK.template.md"
         baseline = (
             self.project / ".agent-work" / "templates" / ".baseline"
-            / "constellation-workbench" / "AGENT_FEEDBACK.template.md"
+            / "constellation-workbench" / "CONSTELLATION_FEEDBACK.template.md"
         )
         local.write_text(baseline.read_text(encoding="utf-8") + "\nproject custom field\n", encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["AGENT_FEEDBACK.template.md"], "project-customized")
+        self.assertEqual(statuses["CONSTELLATION_FEEDBACK.template.md"], "project-customized")
 
         upstream = (
-            self.skills_root / "constellation-workbench" / "templates" / "AGENT_FEEDBACK.template.md"
+            self.skills_root / "constellation-workbench" / "templates" / "CONSTELLATION_FEEDBACK.template.md"
         )
         upstream.write_text(upstream.read_text(encoding="utf-8") + "\nupstream change\n", encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["AGENT_FEEDBACK.template.md"], "both-changed")
+        self.assertEqual(statuses["CONSTELLATION_FEEDBACK.template.md"], "both-changed")
 
 
 class CollectFeedbackTests(unittest.TestCase):

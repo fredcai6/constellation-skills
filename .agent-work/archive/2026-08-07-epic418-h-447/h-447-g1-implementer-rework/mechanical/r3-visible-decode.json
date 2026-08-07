@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-visible-decode",
+  "mechanical": {
+    "run": "h-447-g1-implementer-rework",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "r3-visible-decode",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-h-447-g1-implementer-rework-r3-visible-decode@3d88a5bd50fb0ed070e334c0e5c93fad8670f030",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "h-447-g1-implementer-rework",
+    "generated_at": "2026-08-06T10:04:24Z"
+  }
+}

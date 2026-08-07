@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g5-implement",
+  "mechanical": {
+    "run": "epic418-h-447",
+    "project": "constellation-skills",
+    "role": "cmdr-447-episodes-retirement",
+    "spine-step": "g5-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-g5-implement@d6c3e5760bd41499415620fdbb62232ffdebd5b7",
+    "artifact-ref": []
+  },
+  "refused": [
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T17:57:46Z"
+  }
+}

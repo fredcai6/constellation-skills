@@ -1,0 +1,13 @@
+pre-mutation sha256: bd90bb29521e0fb1d101805ba175b5aa6f6d4e43ce7ceb1be5e2b13a6af73b90
+MUTATION APPLIED: both early breaks removed + per-line stderr echo in scan_episode()
+RED RUN exit=1
+  E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in '<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: i
+  E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in "<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: i
+  E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in "<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: i
+  E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in '<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: i
+  FAILED tests/test_verify_episode_captured.py::ValveTests::test_no_statement_text_reaches_stdout_or_stderr
+  FAILED tests/test_verify_episode_captured.py::ValveTests::test_the_leak_assertion_can_fail
+  5 failed, 1 passed, 1 subtests passed in 0.29s
+post-restore sha256: bd90bb29521e0fb1d101805ba175b5aa6f6d4e43ce7ceb1be5e2b13a6af73b90
+RESTORE byte-identical: True
+C2 VALID (widening scan_episode DOES trip the sentinel): True

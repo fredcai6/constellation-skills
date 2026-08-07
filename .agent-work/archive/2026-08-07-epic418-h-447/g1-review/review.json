@@ -1,0 +1,229 @@
+{
+  "work_id": "epic418-h-447",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a-fail-visibly",
+    "r4b-blast-radius",
+    "r4c-falsifiable"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-everyone doctrine, the g1 handoff, and all three built files (scripts/verify_retirement.py, tests/test_retirement_guard.py, tests/data/store_mentions.approved.txt).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Four legs, named-Violation return, git ls-files enumeration, TSV CLI, per-leg decoys and the census are all present and independently reproduced. BUT the handoff's own principle -- 'a guard cannot be inside the set it guards' -- was applied only to tests/ and not to scripts/verify_retirement.py, which IS on the shipped surface. Measured: with the three deliverables staged, scan() reports 18 violations located in the guard's own source (12 retired-name, 6 unapproved-store-mention), taking the tree from 3 legs/131 violations to 4 legs/149. The documented property 'unapproved-store-mention is GREEN by construction' is false once committed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git status --porcelain shows exactly the three allowed new files plus the .agent-work workbench: '?? scripts/verify_retirement.py', '?? tests/data/', '?? tests/test_retirement_guard.py'. No skill, spine, doc or existing script was edited. No scope breach.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Re-ran every required command independently. verify_retirement.py EXIT=1 with 5 replacement-absent / 121 retired-name / 5 retired-path = 131 across 3 distinct legs (matches the claim). Guard suite 8 passed 1 xfailed. Full suite 1696 passed, 2 skipped, 1 xfailed vs the 1688 baseline = +8, no new failures. All reproduced. BUT the centerpiece transcript was measured with the deliverable UNTRACKED -- a state the repo leaves the moment Commander commits. Re-measured with the three files staged the same command yields 4 legs and 149 violations, so the pinned evidence describes a state that will never exist again.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Windows encoding rules honoured (every write passes encoding='utf-8', newline='\\n'); python not py; git ls-files not rglob; no raw-byte comparison. Two inherited-doctrine breaches, both measured -- see r4a and r4b.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Map Impact notes check out against the diff: new leaf scripts/verify_retirement.py, new test module, new tests/data/ root, no existing anchor moved. The claimed capability (ask the repo whether the #403 retirement holds, answered with named legs) is real and I reproduced it. constraint:episodes-are-not-prescriptions is named verbatim in the leg's own failure detail. The notes-*.md decision candidate was surfaced for a Commander ruling rather than absorbed, which is the correct route. No architecture divergence needing reconciliation.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 12 baseline smells ruled. Flagged: duplicated-code (RETIRED_PATHS vs RETIRED_NAMES restate the same facts, nothing tests the overlap), data-clumps (store_mention_sites returns a bare triple against the module's own NamedTuple convention), primitive-obsession (exclusion dict keys encode the matching algorithm in their string shape -- the direct cause of the notes-*.md under-stated reach). Overridden with logged standards: long-method, speculative-generality, comments-as-deodorant. Record at .agent-work/epic418-h-447/g1-review/fowler-pass.json; verify_fowler_pass.py exits 0.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g1-REVIEW_RESULT.md",
+            "verdict": "BLOCK"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a-fail-visibly": {
+      "id": "r4a-fail-visibly",
+      "title": "Inherited rule: fail visibly, no hidden fallback",
+      "imperative": "Does the guard ever skip a surface silently? Measure.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "global-everyone.md Universal posture: 'Fail visibly rather than emit plausible wrong output; no hidden fallback.' _read_lines() returns None on UnicodeDecodeError/OSError and both content legs 'continue' with no record. Measured: a docs/guide.md carrying 'Read .agent-work/LESSONS.md' in latin-1 bytes is scanned, skipped and reported clean -- the identical UTF-8 file is CAUGHT. An undecodable shipped file is an unscanned shipped file and the guard says nothing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b-blast-radius": {
+      "id": "r4b-blast-radius",
+      "title": "Inherited rule: enumerate the blast radius by command, state the count",
+      "imperative": "Does every exclusion state its true reach? Measure.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The SCOPE_EXCLUSIONS comment at scripts/verify_retirement.py:141-143 and the result both name three files (notes-304/308/309.md). Measured by command, the glob 'notes-*.md' actually removes SEVEN tracked files -- notes-261, notes-269, notes-301, notes-304, notes-308, notes-309, notes-b420 -- plus every future root-level notes-*.md. The count stated is 3; the real count is 7 and unbounded. The 37->18 arithmetic is honest, but the mechanism reaches more than twice as far as its own justification says.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c-falsifiable": {
+      "id": "r4c-falsifiable",
+      "title": "Repo lesson: falsify-a-check-against-a-decoy-before-trusting-it",
+      "imperative": "Independently plant a violation per leg; confirm the leg fires and no other does.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Built an independent baseline repo (not the shipped healthy_repo fixture) and planted one violation per leg using DIFFERENT plants than the shipped decoys: verify_agent_feedback.py tracked; 'Check apply_episode_delta before acting'; installer bundle half removed only; 'The lessons-auditor decides what matters'. Baseline clean ([]); each plant fired exactly its own leg with the correct path and no cross-firing. All four legs genuinely can fail. The shipped decoys are testing what they claim.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r1-handoff: Four legs, named-Violation return, git ls-files enumeration, TSV CLI, per-leg decoys and the census are all present and independently reproduced. BUT the handoff's own principle -- 'a guard cannot be inside the set it guards' -- was applied only to tests/ and not to scripts/verify_retirement.py, which IS on the shipped surface. Measured: with the three deliverables staged, scan() reports 18 violations located in the guard's own source (12 retired-name, 6 unapproved-store-mention), taking the tree from 3 legs/131 violations to 4 legs/149. The documented property 'unapproved-store-mention is GREEN by construction' is false once committed.",
+      "r3-evidence: Re-ran every required command independently. verify_retirement.py EXIT=1 with 5 replacement-absent / 121 retired-name / 5 retired-path = 131 across 3 distinct legs (matches the claim). Guard suite 8 passed 1 xfailed. Full suite 1696 passed, 2 skipped, 1 xfailed vs the 1688 baseline = +8, no new failures. All reproduced. BUT the centerpiece transcript was measured with the deliverable UNTRACKED -- a state the repo leaves the moment Commander commits. Re-measured with the three files staged the same command yields 4 legs and 149 violations, so the pinned evidence describes a state that will never exist again.",
+      "r4-quality: Windows encoding rules honoured (every write passes encoding='utf-8', newline='\\n'); python not py; git ls-files not rglob; no raw-byte comparison. Two inherited-doctrine breaches, both measured -- see r4a and r4b.",
+      "r4a-fail-visibly: global-everyone.md Universal posture: 'Fail visibly rather than emit plausible wrong output; no hidden fallback.' _read_lines() returns None on UnicodeDecodeError/OSError and both content legs 'continue' with no record. Measured: a docs/guide.md carrying 'Read .agent-work/LESSONS.md' in latin-1 bytes is scanned, skipped and reported clean -- the identical UTF-8 file is CAUGHT. An undecodable shipped file is an unscanned shipped file and the guard says nothing.",
+      "r4b-blast-radius: The SCOPE_EXCLUSIONS comment at scripts/verify_retirement.py:141-143 and the result both name three files (notes-304/308/309.md). Measured by command, the glob 'notes-*.md' actually removes SEVEN tracked files -- notes-261, notes-269, notes-301, notes-304, notes-308, notes-309, notes-b420 -- plus every future root-level notes-*.md. The count stated is 3; the real count is 7 and unbounded. The 37->18 arithmetic is honest, but the mechanism reaches more than twice as far as its own justification says."
+    ],
+    "summary": "BLOCK on one structural defect. All four legs are genuinely falsifiable -- verified against my own independent decoys, not the shipped fixtures -- the census is clean, scope is exact, and the strict-xfail mechanism provably fails on XPASS. BUT scripts/verify_retirement.py is itself on the shipped surface: with the three deliverables staged, scan() reports 18 violations in the guard's own definition constants, taking the tree from 3 legs/131 to 4 legs/149. So test_canon_is_clean can never XPASS, the marker outlives the work, and the documented 'unapproved-store-mention is green by construction' is false. The evidence only reads green because the deliverable is still untracked. Fix is one SCOPE_EXCLUSIONS entry (verified to restore 121/5/5 across the 3 intended legs) plus a re-captured red transcript with the files staged. Advisory: notes-*.md glob reaches 7 tracked files plus every future one while its comment names 3; five realistic bypasses measured, of which a re-added skills/lessons-auditor/ directory contradicts the code's own coverage claim and an undecodable file is skipped silently against the fail-visibly posture; three Fowler smells flagged."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4b-blast-radius",
+      "statement": "Narrow SCOPE_EXCLUSIONS['notes-*.md'] from an unbounded glob to an explicit enumeration of the tracked run-note files, or give root-level notes a directory. As a glob it silently absorbs every future notes-<n>.md, which is the same class of surface the retired playbook occupied."
+    },
+    {
+      "id": "tc2",
+      "from": "r4a-fail-visibly",
+      "statement": "An undecodable or unreadable shipped file is silently skipped by both content legs. Emit a violation (or a distinct diagnostic) instead of 'continue', per the fail-visibly posture."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "cmdr-447-reviewer-g1",
+    "status": "released",
+    "claimed_at": "2026-08-06T09:40:20.890370+00:00",
+    "last_heartbeat": "2026-08-06T09:57:09.044999+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T09:57:16.793283+00:00"
+  }
+}

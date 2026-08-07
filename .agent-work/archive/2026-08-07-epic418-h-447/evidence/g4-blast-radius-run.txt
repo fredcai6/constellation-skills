@@ -1,0 +1,642 @@
+........F....F.FFF.FF................................... [ 17%]
+.......................................................................s [ 40%]
+.FF...........................................................FF.........................F...........................F.FF........................... [ 86%]
+.............................x.........FFFF                              [100%]
+================================== FAILURES ===================================
+_ DurableRootEpicLeaseTests.test_verify_agent_feedback_resolves_to_worktree_under_lease _
+
+self = <test_agent_work_root.DurableRootEpicLeaseTests testMethod=test_verify_agent_feedback_resolves_to_worktree_under_lease>
+
+    def test_verify_agent_feedback_resolves_to_worktree_under_lease(self):
+        # The pre-ruling's explicit ask: under an active admiral lease the durable
+        # feedback check resolves to the WRITABLE worktree, so a worktree-local
+        # AGENT_FEEDBACK.md satisfies the gate (exit 0) despite the fenced main.
+>       vaf = _load("verify_agent_feedback")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_agent_work_root.py:157: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_agent_work_root.py:29: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707C63F710>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_____ WiringExplicitWinsTests.test_apply_lessons_delta_explicit_file_wins _____
+
+self = <test_agent_work_root.WiringExplicitWinsTests testMethod=test_apply_lessons_delta_explicit_file_wins>
+
+    def test_apply_lessons_delta_explicit_file_wins(self):
+>       apply = _load("apply_lessons_delta")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_agent_work_root.py:235: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_agent_work_root.py:29: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707C751CD0>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\apply_lessons_delta.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\apply_lessons_delta.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ WiringExplicitWinsTests.test_verify_agent_feedback_explicit_root_wins_for_both _
+
+self = <test_agent_work_root.WiringExplicitWinsTests testMethod=test_verify_agent_feedback_explicit_root_wins_for_both>
+
+    def test_verify_agent_feedback_explicit_root_wins_for_both(self):
+>       vaf = _load("verify_agent_feedback")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_agent_work_root.py:251: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_agent_work_root.py:29: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707C41E570>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+___ WiringExplicitWinsTests.test_verify_lessons_applied_explicit_file_wins ____
+
+self = <test_agent_work_root.WiringExplicitWinsTests testMethod=test_verify_lessons_applied_explicit_file_wins>
+
+    def test_verify_lessons_applied_explicit_file_wins(self):
+>       verify = _load("verify_lessons_applied")
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_agent_work_root.py:244: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_agent_work_root.py:29: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707C751F70>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_lessons_applied.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_lessons_applied.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ WiringDefaultResolutionTests.test_apply_lessons_delta_default_uses_durable_root _
+
+self = <test_agent_work_root.WiringDefaultResolutionTests testMethod=test_apply_lessons_delta_default_uses_durable_root>
+
+    def test_apply_lessons_delta_default_uses_durable_root(self):
+>       apply = _load("apply_lessons_delta")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_agent_work_root.py:306: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_agent_work_root.py:29: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707C7521B0>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\apply_lessons_delta.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\apply_lessons_delta.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ WiringDefaultResolutionTests.test_verify_agent_feedback_default_durable_split _
+
+self = <test_agent_work_root.WiringDefaultResolutionTests testMethod=test_verify_agent_feedback_default_durable_split>
+
+    def test_verify_agent_feedback_default_durable_split(self):
+>       vaf = _load("verify_agent_feedback")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_agent_work_root.py:325: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_agent_work_root.py:29: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707C753950>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ WiringDefaultResolutionTests.test_verify_lessons_applied_default_uses_durable_root _
+
+self = <test_agent_work_root.WiringDefaultResolutionTests testMethod=test_verify_lessons_applied_default_uses_durable_root>
+
+    def test_verify_lessons_applied_default_uses_durable_root(self):
+>       apply = _load("apply_lessons_delta")
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_agent_work_root.py:314: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_agent_work_root.py:29: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707C753D70>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\apply_lessons_delta.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\apply_lessons_delta.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_____ CheckSkillFreshnessTests.test_local_customization_and_both_changed ______
+
+self = <test_feedback_tooling.CheckSkillFreshnessTests testMethod=test_local_customization_and_both_changed>
+
+    def test_local_customization_and_both_changed(self):
+        local = self.project / ".agent-work" / "templates" / "AGENT_FEEDBACK.template.md"
+        baseline = (
+            self.project / ".agent-work" / "templates" / ".baseline"
+            / "constellation-workbench" / "AGENT_FEEDBACK.template.md"
+        )
+>       local.write_text(baseline.read_text(encoding="utf-8") + "\nproject custom field\n", encoding="utf-8")
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_feedback_tooling.py:91: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/fredc/AppData/Local/Temp/tmp1mcz16p9/proj/.agent-work/templates/.baseline/constellation-workbench/AGENT_FEEDBACK.template.md')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\fredc\\AppData\\Local\\Temp\\tmp1mcz16p9\\proj\\.agent-work\\templates\\.baseline\\constellation-workbench\\AGENT_FEEDBACK.template.md'
+
+C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py:771: FileNotFoundError
+_ CheckSkillFreshnessTests.test_upstream_change_detected_and_baseline_promotion _
+
+self = <test_feedback_tooling.CheckSkillFreshnessTests testMethod=test_upstream_change_detected_and_baseline_promotion>
+
+    def test_upstream_change_detected_and_baseline_promotion(self):
+        upstream = (
+            self.skills_root / "constellation-workbench" / "templates" / "LESSONS.template.md"
+        )
+>       upstream.write_text(upstream.read_text(encoding="utf-8") + "\nupstream change\n", encoding="utf-8")
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_feedback_tooling.py:64: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/fredc/AppData/Local/Temp/tmpa_h19lik/proj/.claude/skills/constellation-workbench/templates/LESSONS.template.md')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\fredc\\AppData\\Local\\Temp\\tmpa_h19lik\\proj\\.claude\\skills\\constellation-workbench\\templates\\LESSONS.template.md'
+
+C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py:771: FileNotFoundError
+_ InstallConstellationTests.test_agent_feedback_verifier_enforces_archive_phase _
+
+self = <test_install_constellation.InstallConstellationTests testMethod=test_agent_feedback_verifier_enforces_archive_phase>
+
+    def test_agent_feedback_verifier_enforces_archive_phase(self):
+>       verifier = load_verifier()
+                   ^^^^^^^^^^^^^^^
+
+tests\test_install_constellation.py:409: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_install_constellation.py:34: in load_verifier
+    return load_module("verify_agent_feedback", VERIFIER)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_install_constellation.py:25: in load_module
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707E46F470>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ InstallConstellationTests.test_agent_feedback_verifier_enforces_durable_log_location _
+
+self = <test_install_constellation.InstallConstellationTests testMethod=test_agent_feedback_verifier_enforces_durable_log_location>
+
+    def test_agent_feedback_verifier_enforces_durable_log_location(self):
+>       verifier = load_verifier()
+                   ^^^^^^^^^^^^^^^
+
+tests\test_install_constellation.py:387: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_install_constellation.py:34: in load_verifier
+    return load_module("verify_agent_feedback", VERIFIER)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_install_constellation.py:25: in load_module
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707E412570>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ InstallConstellationTests.test_relocated_doctrine_pins_ship_to_installed_destination _
+
+argv = ['--agent', 'codex', '--scope', 'user', '--dest', 'C:\\Users\\fredc\\AppData\\Local\\Temp\\tmpd6fgw5jt\\skills', ...]
+
+    def main(
+        argv: Sequence[str] | None = None,
+        *,
+        env: Mapping[str, str] | None = None,
+        cwd: Path | None = None,
+        out: Callable[[str], object] = print,
+    ) -> int:
+        parser = build_parser()
+        args = parser.parse_args(argv)
+    
+        try:
+            runtime_env = os.environ if env is None else env
+            runtime_cwd = Path.cwd() if cwd is None else cwd
+>           skills = select_skills(args.skills, discover_skills())
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+scripts\install_constellation.py:1312: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+requested = ['explorer', 'commander', 'lessons-auditor']
+available = [Skill(source_name='admiral', install_name='constellation-admiral', source_path=WindowsPath('C:/Programs/constellation...red_scripts=('curate_corpus.py',), required_references=('global-everyone.md', 'windows.md', 'skill-goodness.md')), ...]
+
+    def select_skills(requested: Sequence[str] | None, available: Iterable[Skill]) -> list[Skill]:
+        skills = list(available)
+        if requested is None:
+            return skills
+    
+        index: dict[str, Skill] = {}
+        for skill in skills:
+            index[skill.source_name] = skill
+            index[skill.install_name] = skill
+    
+        selected: list[Skill] = []
+        seen: set[str] = set()
+        unknown: list[str] = []
+        for name in requested:
+            skill = index.get(name)
+            if skill is None:
+                unknown.append(name)
+                continue
+            if skill.install_name not in seen:
+                selected.append(skill)
+                seen.add(skill.install_name)
+    
+        if unknown:
+            valid = ", ".join(sorted(index))
+>           raise InstallError(f"unknown skill(s): {', '.join(unknown)}. Valid names: {valid}")
+E           install_constellation.InstallError: unknown skill(s): lessons-auditor. Valid names: admiral, cartographer, charter, commander, commander-delegated, constellation-admiral, constellation-cartographer, constellation-charter, constellation-commander, constellation-commander-delegated, constellation-curator, constellation-diagnose, constellation-docent, constellation-explorer, constellation-how-to-talk, constellation-implementer, constellation-interrogator, constellation-prototyper, constellation-reviewer, constellation-scout, constellation-to-issues, constellation-triage, constellation-workbench, constellation-write-a-skill, curator, diagnose, docent, explorer, how-to-talk, implementer, interrogator, prototyper, reviewer, scout, to-issues, triage, workbench, write-a-skill
+
+scripts\install_constellation.py:312: InstallError
+
+During handling of the above exception, another exception occurred:
+
+self = <test_install_constellation.InstallConstellationTests testMethod=test_relocated_doctrine_pins_ship_to_installed_destination>
+
+    def test_relocated_doctrine_pins_ship_to_installed_destination(self):
+        # issue-102 Move 11 content-pin: every doctrine relocated by moves
+        # 1,2,4,5,6,7,8,9 + the move-10 canonical must ride the reference-bundle
+        # mechanism into its CORRECT installed destination. Destinations differ
+        # by bucket, so each signature is asserted on the file it actually lands
+        # in (everyone -> ANY installed skill's global-everyone.md; orchestrator
+        # -> an orchestrator-tier skill's global-orchestrator.md; move 9's home
+        # is lessons-auditor's own SKILL.md).
+        # Falsification: drop a bucket line in _shared -> the matching assert reds.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+>           installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                            "--skills", "explorer", "commander", "lessons-auditor"],
+                           env={}, out=lambda _: None)
+
+tests\test_install_constellation.py:782: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\install_constellation.py:1389: in main
+    parser.exit(2, f"error: {exc}\n")
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ArgumentParser(prog='python.exe -m pytest', usage=None, description='Install Constellation skills for supported agents at user or project scope.', formatter_class=<class 'argparse.HelpFormatter'>, conflict_handler='error', add_help=True)
+status = 2
+message = 'error: unknown skill(s): lessons-auditor. Valid names: admiral, cartographer, charter, commander, commander-delegated...er, how-to-talk, implementer, interrogator, prototyper, reviewer, scout, to-issues, triage, workbench, write-a-skill\n'
+
+    def exit(self, status=0, message=None):
+        if message:
+            self._print_message(message, _sys.stderr)
+>       _sys.exit(status)
+E       SystemExit: 2
+
+C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\argparse.py:2767: SystemExit
+---------------------------- Captured stderr call -----------------------------
+error: unknown skill(s): lessons-auditor. Valid names: admiral, cartographer, charter, commander, commander-delegated, constellation-admiral, constellation-cartographer, constellation-charter, constellation-commander, constellation-commander-delegated, constellation-curator, constellation-diagnose, constellation-docent, constellation-explorer, constellation-how-to-talk, constellation-implementer, constellation-interrogator, constellation-prototyper, constellation-reviewer, constellation-scout, constellation-to-issues, constellation-triage, constellation-workbench, constellation-write-a-skill, curator, diagnose, docent, explorer, how-to-talk, implementer, interrogator, prototyper, reviewer, scout, to-issues, triage, workbench, write-a-skill
+___ TemplateBaselineTests.test_project_install_seeds_baseline_and_manifest ____
+
+self = <test_install_constellation.TemplateBaselineTests testMethod=test_project_install_seeds_baseline_and_manifest>
+
+    def test_project_install_seeds_baseline_and_manifest(self):
+        installer = load_installer()
+    
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            exit_code = installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--skills", "commander", "workbench"],
+                env={}, cwd=project, out=lambda _line: None,
+            )
+            self.assertEqual(0, exit_code)
+    
+            manifest_path = project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json"
+            baseline_root = project / ".agent-work" / "templates" / ".baseline"
+            self.assertTrue(manifest_path.is_file())
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(manifest["baseline_origin"], "baseline-from-install")
+            self.assertTrue(manifest["templates"])
+            for entry in manifest["templates"]:
+                copy = baseline_root / entry["skill"] / entry["template"]
+                self.assertTrue(copy.is_file(), copy)
+                self.assertEqual(len(entry["sha256"]), 64)
+            names = {e["template"] for e in manifest["templates"]}
+            self.assertIn("COMMANDER_SPINE.template.json", names)
+>           self.assertIn("LESSONS.template.md", names)
+E           AssertionError: 'LESSONS.template.md' not found in {'WORKFLOW_CLOSEOUT.template.md', 'IMPLEMENTER_HANDOFF.template.md', 'COMMANDER_SPINE.template.json', 'DEFAULT.template.json', 'REVIEWER_HANDOFF.template.md', 'MISSION_FRAME.template.md', 'STATE_NOTE.template.md', 'CONSTELLATION_FEEDBACK.template.md', 'EXECUTE_PLAN.template.json', 'COMMANDER_STARTING_QUESTIONS.template.md'}
+
+tests\test_install_constellation.py:1627: AssertionError
+_ TemplateBaselineTests.test_reinstall_adds_new_upstream_template_to_existing_baseline _
+
+self = <test_install_constellation.TemplateBaselineTests testMethod=test_reinstall_adds_new_upstream_template_to_existing_baseline>
+
+    def test_reinstall_adds_new_upstream_template_to_existing_baseline(self):
+        installer = load_installer()
+    
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            base = ["--agent", "claude", "--scope", "project", "--project", str(project),
+                    "--baseline-only"]
+            # initial baseline tracks only workbench templates
+            installer.main(base + ["--skills", "workbench"], env={}, cwd=project, out=lambda _l: None)
+            troot = project / ".agent-work" / "templates"
+            mpath = troot / "TEMPLATES_MANIFEST.json"
+            before = {(e["skill"], e["template"]): e["sha256"]
+                      for e in json.loads(mpath.read_text(encoding="utf-8"))["templates"]}
+            self.assertTrue(before)
+            self.assertFalse(any(s == "constellation-commander" for s, _ in before))
+            wb_baseline = (troot / ".baseline" / "constellation-workbench"
+>                          / "LESSONS.template.md").read_text(encoding="utf-8")
+                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_install_constellation.py:1662: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py:787: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = WindowsPath('C:/Users/fredc/AppData/Local/Temp/tmp25q5mj2y/.agent-work/templates/.baseline/constellation-workbench/LESSONS.template.md')
+mode = 'r', buffering = -1, encoding = 'utf-8', errors = None, newline = None
+
+    def open(self, mode='r', buffering=-1, encoding=None,
+             errors=None, newline=None):
+        """
+        Open the file pointed to by this path and return a file object, as
+        the built-in open() function does.
+        """
+        if "b" not in mode:
+            encoding = io.text_encoding(encoding)
+>       return io.open(self, mode, buffering, encoding, errors, newline)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\fredc\\AppData\\Local\\Temp\\tmp25q5mj2y\\.agent-work\\templates\\.baseline\\constellation-workbench\\LESSONS.template.md'
+
+C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py:771: FileNotFoundError
+_ TemplateBaselineTests.test_reinstall_does_not_backfill_removed_working_copies _
+
+self = <test_install_constellation.TemplateBaselineTests testMethod=test_reinstall_does_not_backfill_removed_working_copies>
+
+    def test_reinstall_does_not_backfill_removed_working_copies(self):
+        # The over-seed guard: a project that drops a working copy (choosing to be
+        # a lean consumer of the installed skill) must not have it silently
+        # backfilled on reinstall — a frozen copy would read as false drift and
+        # mask later upstream changes.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            args = ["--agent", "claude", "--scope", "project", "--project", str(project),
+                    "--baseline-only", "--skills", "workbench"]
+            installer.main(args, env={}, cwd=project, out=lambda _l: None)
+            troot = project / ".agent-work" / "templates"
+            lessons_wc = troot / "LESSONS.template.md"
+>           self.assertTrue(lessons_wc.is_file())  # fresh install seeded it
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: False is not true
+
+tests\test_install_constellation.py:1700: AssertionError
+_ VerifyAgentFeedbackAcceptsStagedOutputTests.test_boilerplate_only_feedback_body_still_fails _
+
+self = <test_stage_feedback.VerifyAgentFeedbackAcceptsStagedOutputTests testMethod=test_boilerplate_only_feedback_body_still_fails>
+
+    def test_boilerplate_only_feedback_body_still_fails(self):
+        # A feedback body whose signal sections are all bare "none" must still
+        # trip the content-free rejection -- stage_feedback.py does not launder
+        # boilerplate past the gate.
+        sf = load_stage_feedback()
+>       va = load_verify_agent_feedback()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_stage_feedback.py:238: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_stage_feedback.py:36: in load_verify_agent_feedback
+    return _load("verify_agent_feedback", "scripts/verify_agent_feedback.py")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_stage_feedback.py:27: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707E4108F0>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ VerifyAgentFeedbackAcceptsStagedOutputTests.test_missing_member_of_trio_still_fails _
+
+self = <test_stage_feedback.VerifyAgentFeedbackAcceptsStagedOutputTests testMethod=test_missing_member_of_trio_still_fails>
+
+    def test_missing_member_of_trio_still_fails(self):
+        # A FENCE.md citation without the complete trio must still fail the gate --
+        # learning cannot be silently dropped by staging only the fence.
+>       va = load_verify_agent_feedback()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_stage_feedback.py:224: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_stage_feedback.py:36: in load_verify_agent_feedback
+    return _load("verify_agent_feedback", "scripts/verify_agent_feedback.py")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_stage_feedback.py:27: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707E3C3A70>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ VerifyAgentFeedbackAcceptsStagedOutputTests.test_phase_archive_passes_when_work_area_already_swept _
+
+self = <test_stage_feedback.VerifyAgentFeedbackAcceptsStagedOutputTests testMethod=test_phase_archive_passes_when_work_area_already_swept>
+
+    def test_phase_archive_passes_when_work_area_already_swept(self):
+>       va = load_verify_agent_feedback()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_stage_feedback.py:209: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_stage_feedback.py:36: in load_verify_agent_feedback
+    return _load("verify_agent_feedback", "scripts/verify_agent_feedback.py")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_stage_feedback.py:27: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707E3C01D0>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_ VerifyAgentFeedbackAcceptsStagedOutputTests.test_phase_feedback_passes_against_staged_output _
+
+self = <test_stage_feedback.VerifyAgentFeedbackAcceptsStagedOutputTests testMethod=test_phase_feedback_passes_against_staged_output>
+
+    def test_phase_feedback_passes_against_staged_output(self):
+>       va = load_verify_agent_feedback()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_stage_feedback.py:199: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_stage_feedback.py:36: in load_verify_agent_feedback
+    return _load("verify_agent_feedback", "scripts/verify_agent_feedback.py")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_stage_feedback.py:27: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001707E3C35F0>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_agent_feedback.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+=========================== short test summary info ===========================
+FAILED tests/test_agent_work_root.py::DurableRootEpicLeaseTests::test_verify_agent_feedback_resolves_to_worktree_under_lease
+FAILED tests/test_agent_work_root.py::WiringExplicitWinsTests::test_apply_lessons_delta_explicit_file_wins
+FAILED tests/test_agent_work_root.py::WiringExplicitWinsTests::test_verify_agent_feedback_explicit_root_wins_for_both
+FAILED tests/test_agent_work_root.py::WiringExplicitWinsTests::test_verify_lessons_applied_explicit_file_wins
+FAILED tests/test_agent_work_root.py::WiringDefaultResolutionTests::test_apply_lessons_delta_default_uses_durable_root
+FAILED tests/test_agent_work_root.py::WiringDefaultResolutionTests::test_verify_agent_feedback_default_durable_split
+FAILED tests/test_agent_work_root.py::WiringDefaultResolutionTests::test_verify_lessons_applied_default_uses_durable_root
+FAILED tests/test_feedback_tooling.py::CheckSkillFreshnessTests::test_local_customization_and_both_changed
+FAILED tests/test_feedback_tooling.py::CheckSkillFreshnessTests::test_upstream_change_detected_and_baseline_promotion
+FAILED tests/test_install_constellation.py::InstallConstellationTests::test_agent_feedback_verifier_enforces_archive_phase
+FAILED tests/test_install_constellation.py::InstallConstellationTests::test_agent_feedback_verifier_enforces_durable_log_location
+FAILED tests/test_install_constellation.py::InstallConstellationTests::test_relocated_doctrine_pins_ship_to_installed_destination
+FAILED tests/test_install_constellation.py::TemplateBaselineTests::test_project_install_seeds_baseline_and_manifest
+FAILED tests/test_install_constellation.py::TemplateBaselineTests::test_reinstall_adds_new_upstream_template_to_existing_baseline
+FAILED tests/test_install_constellation.py::TemplateBaselineTests::test_reinstall_does_not_backfill_removed_working_copies
+FAILED tests/test_stage_feedback.py::VerifyAgentFeedbackAcceptsStagedOutputTests::test_boilerplate_only_feedback_body_still_fails
+FAILED tests/test_stage_feedback.py::VerifyAgentFeedbackAcceptsStagedOutputTests::test_missing_member_of_trio_still_fails
+FAILED tests/test_stage_feedback.py::VerifyAgentFeedbackAcceptsStagedOutputTests::test_phase_archive_passes_when_work_area_already_swept
+FAILED tests/test_stage_feedback.py::VerifyAgentFeedbackAcceptsStagedOutputTests::test_phase_feedback_passes_against_staged_output
+19 failed, 298 passed, 1 skipped, 1 xfailed, 372 subtests passed in 31.21s

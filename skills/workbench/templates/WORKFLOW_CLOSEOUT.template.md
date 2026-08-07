@@ -23,12 +23,12 @@
 
 - `<path/title or none>`
 
-## Lesson dispositions
+## Episode capture
 
-Template/interface and doctrine fixes are lessons carrying a `target`, settled at the
-Commander `feedback` step by the forced apply-or-defer gate (`verify_lessons_applied.py`), not
-a separate advisory table. Confirm here only that the gate passed: every ripe lesson was
-applied, exported, or deferred with a reason.
+What this run observed is recorded as episodes at the Commander `feedback` step, written
+through `scripts/apply_episode_delta.py` and proved by `scripts/verify_episode_captured.py`.
+Confirm here only that the capture gate passed. An episode is a record of what happened; a
+rule for a future agent to follow belongs in `docs/agents/*` and is a human's call.
 
 ## Reconciliation status
 

@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "work_id": "epic418-h-447",
+  "root": "C:/Programs/constellation-skills-wt/epic418-h-447",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7",
+      "source": "known-fallback"
+    },
+    {
+      "path": "docs/EPISODE_STORE.md",
+      "content_hash": "14bc1f4c0b5daf152ee252f4f69b6b048bcb307b71a125366fda3187f65e8577",
+      "source": "agent-declared"
+    },
+    {
+      "path": "episodes/README.md",
+      "content_hash": "a93aab0f8d64572e691dce6e421ea7fb45106e8574c9728124d10bd9a4bab71e",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CONSTELLATION_OVERVIEW.md",
+      "content_hash": "a937845b2c1b50b0ef1ab1c3b3251b21aba87db22c18e7c5870b7a59cfdf0c79",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/RECURSIVE_IMPROVEMENT_DESIGN.md",
+      "content_hash": "e8db1fc8588d8c492fd8e6bec723c2469554284861474bdf2bf4c2b106c27802",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This is a skill-source repo with no docs/architecture packet map; the lessons/feedback/episode surface has no structural map, so the retirement's blast radius was enumerated by git grep over skills/ scripts/ docs/ tests/ rather than read off a map."
+  ],
+  "escalation": "No architecture map exists to reconcile against; per commander-core's architecture bookend the reconcile step will fold the change into the docs it actually touches (docs/EPISODE_STORE.md, docs/CONSTELLATION_OVERVIEW.md, docs/RECURSIVE_IMPROVEMENT_DESIGN.md) and record a reasoned no-op for the absent packet map. Escalated to the Admiral in RETURN.md.",
+  "emitted_at": "2026-08-06T08:39:19.069264+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

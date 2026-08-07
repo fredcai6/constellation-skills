@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "mechanical": {
+    "run": "epic418-h-447",
+    "project": "constellation-skills",
+    "role": "cmdr-447-episodes-retirement-reviewer",
+    "refusals": 1,
+    "spine-step": "r6-fowler",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-r6-fowler@f079ca78bd940f3c32e619df490a6f51b6f4ccea",
+    "artifact-ref": [
+      "tests/data/retired_names.approved.txt"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T19:12:01Z"
+  }
+}

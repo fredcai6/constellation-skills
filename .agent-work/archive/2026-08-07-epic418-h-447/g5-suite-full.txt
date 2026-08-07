@@ -1,0 +1,343 @@
+........................................................................ [  4%]
+....................................................... [  7%]
+........................................................................ [ 12%]
+.................................................................. [ 16%]
+........................................................................ [ 20%]
+....................................................F................................... [ 26%]
+..................................................... [ 29%]
+........................................................................ [ 33%]
+........................................................................ [ 38%]
+.......................................F................ [ 41%]
+........................................................................ [ 46%]
+..................s..................................................... [ 50%]
+........................................................................ [ 55%]
+........................................................................ [ 59%]
+.................................................................. [ 63%]
+.......................................................................... [ 68%]
+........................................................... [ 71%]
+......................................................................................................... [ 78%]
+....................................................... [ 81%]
+.F...................................................................... [ 86%]
+........................................................................ [ 90%]
+........................................................................ [ 94%]
+.......................................................s............ [ 99%]
+...............                                                          [100%]
+================================== FAILURES ===================================
+_ RealCheckoutSkew.test_a_clean_checkout_differs_only_in_rev_never_in_shape (path='scripts/agent_work_root.py') _
+
+self = <test_context_determinism.RealCheckoutSkew testMethod=test_a_clean_checkout_differs_only_in_rev_never_in_shape>
+
+    def test_a_clean_checkout_differs_only_in_rev_never_in_shape(self):
+        if shutil.which("git") is None:  # pragma: no cover - environment guard
+            raise unittest.SkipTest("git is required to add a second checkout")
+    
+        declaration = self.declaration()
+        checklist = {
+            "work_id": "skew", "type": "gated", "items": ["context"],
+            "tasks": {"context": {"id": "context", "title": "context",
+                                  "imperative": "…", "status": "pending",
+                                  cm.DECLARATION_KEY: declaration}},
+        }
+    
+        probe = ROOT / self.PROBE
+        self.addCleanup(lambda: probe.unlink(missing_ok=True))
+        with open(probe, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write("untracked in this working tree only\n")
+    
+        def project(base):
+            roots = {"skill": Path(base) / "skills" / "commander",
+                     "repo": Path(base), "durable": Path(base)}
+            manifest = cm.build_manifest(checklist, roots)
+            # Presence is recorded now, while both trees still exist.
+            present = [Path(cm.resolve(entry, roots)).exists() for entry in declaration]
+            return manifest, present
+    
+        here, here_present = project(ROOT)
+    
+        tmp = tempfile.mkdtemp(prefix="ctx-skew-")
+        checkout = Path(tmp) / "clean"
+        try:
+            added = subprocess.run(
+                ["git", "worktree", "add", "--detach", str(checkout), "HEAD"],
+                cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+            )
+            if added.returncode != 0:  # pragma: no cover - environment guard
+                raise unittest.SkipTest(f"git worktree add failed: {added.stderr}")
+            for rel in OVERLAY:
+                shutil.copyfile(ROOT / rel, checkout / rel)
+            there, there_present = project(checkout)
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", str(checkout)],
+                           cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+            subprocess.run(["git", "worktree", "prune"], cwd=ROOT,
+                           capture_output=True, text=True, encoding="utf-8")
+            shutil.rmtree(tmp, ignore_errors=True)
+    
+        # The premise, established rather than assumed: the probe really was present
+        # on one side and absent on the other, and the tracked files really resolved.
+        self.assertEqual(here_present, [True, True, True, False])
+        self.assertEqual(there_present, [True, True, False, False])
+    
+        # Shape is invariant: same step, same rows, same declaration order.
+        self.assertEqual(here["step"], there["step"])
+        self.assertEqual([(r["root"], r["path"]) for r in here["files"]],
+                         [(r["root"], r["path"]) for r in there["files"]])
+    
+        # The determinism half: identical tracked bytes give identical revs across
+        # two independent checkouts at two different absolute paths.
+        for index in range(len(self.TRACKED)):
+            with self.subTest(path=here["files"][index]["path"]):
+                self.assertIsNotNone(here["files"][index]["rev"])
+>               self.assertEqual(here["files"][index]["rev"],
+                                 there["files"][index]["rev"])
+E               AssertionError: 'e36b388499b9853f8cf675f8783c206390d96e8a' != '9074549724a9e5eb77d06cbe46017f12afbe115d'
+E               - e36b388499b9853f8cf675f8783c206390d96e8a
+E               + 9074549724a9e5eb77d06cbe46017f12afbe115d
+
+tests\test_context_determinism.py:492: AssertionError
+_ RealCheckoutSkew.test_a_clean_checkout_differs_only_in_rev_never_in_shape (path='scripts/agent_work_root.py') _
+
+self = <test_context_determinism.RealCheckoutSkew testMethod=test_a_clean_checkout_differs_only_in_rev_never_in_shape>
+
+    def test_a_clean_checkout_differs_only_in_rev_never_in_shape(self):
+        if shutil.which("git") is None:  # pragma: no cover - environment guard
+            raise unittest.SkipTest("git is required to add a second checkout")
+    
+        declaration = self.declaration()
+        checklist = {
+            "work_id": "skew", "type": "gated", "items": ["context"],
+            "tasks": {"context": {"id": "context", "title": "context",
+                                  "imperative": "…", "status": "pending",
+                                  cm.DECLARATION_KEY: declaration}},
+        }
+    
+        probe = ROOT / self.PROBE
+        self.addCleanup(lambda: probe.unlink(missing_ok=True))
+        with open(probe, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write("untracked in this working tree only\n")
+    
+        def project(base):
+            roots = {"skill": Path(base) / "skills" / "commander",
+                     "repo": Path(base), "durable": Path(base)}
+            manifest = cm.build_manifest(checklist, roots)
+            # Presence is recorded now, while both trees still exist.
+            present = [Path(cm.resolve(entry, roots)).exists() for entry in declaration]
+            return manifest, present
+    
+        here, here_present = project(ROOT)
+    
+        tmp = tempfile.mkdtemp(prefix="ctx-skew-")
+        checkout = Path(tmp) / "clean"
+        try:
+            added = subprocess.run(
+                ["git", "worktree", "add", "--detach", str(checkout), "HEAD"],
+                cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+            )
+            if added.returncode != 0:  # pragma: no cover - environment guard
+                raise unittest.SkipTest(f"git worktree add failed: {added.stderr}")
+            for rel in OVERLAY:
+                shutil.copyfile(ROOT / rel, checkout / rel)
+            there, there_present = project(checkout)
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", str(checkout)],
+                           cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+            subprocess.run(["git", "worktree", "prune"], cwd=ROOT,
+                           capture_output=True, text=True, encoding="utf-8")
+            shutil.rmtree(tmp, ignore_errors=True)
+    
+        # The premise, established rather than assumed: the probe really was present
+        # on one side and absent on the other, and the tracked files really resolved.
+        self.assertEqual(here_present, [True, True, True, False])
+        self.assertEqual(there_present, [True, True, False, False])
+    
+        # Shape is invariant: same step, same rows, same declaration order.
+        self.assertEqual(here["step"], there["step"])
+        self.assertEqual([(r["root"], r["path"]) for r in here["files"]],
+                         [(r["root"], r["path"]) for r in there["files"]])
+    
+        # The determinism half: identical tracked bytes give identical revs across
+        # two independent checkouts at two different absolute paths.
+        for index in range(len(self.TRACKED)):
+            with self.subTest(path=here["files"][index]["path"]):
+                self.assertIsNotNone(here["files"][index]["rev"])
+                self.assertEqual(here["files"][index]["rev"],
+                                 there["files"][index]["rev"])
+    
+        # The skew half: the untracked probe differs, and differs in exactly the way
+        # a delivery record should — present here, absent there.
+        probe_here, probe_there = here["files"][-2], there["files"][-2]
+        self.assertEqual(probe_here["path"], self.PROBE)
+        self.assertIsNotNone(probe_here["rev"])
+        self.assertIsNone(probe_there["rev"])
+        self.assertNotEqual(probe_here["rev"], probe_there["rev"])
+    
+        # Absent on both sides is not skew, and must not masquerade as it.
+        self.assertIsNone(here["files"][-1]["rev"])
+        self.assertIsNone(there["files"][-1]["rev"])
+    
+        # Nothing else moved: every remaining difference is confined to `rev`, and
+        # only where the two checkouts genuinely hold different bytes.
+        differed = 0
+        for mine, theirs, mine_here, mine_there in zip(
+            here["files"], there["files"], here_present, there_present
+        ):
+            with self.subTest(path=mine["path"]):
+                self.assertEqual(mine["rev"] is not None, mine_here)
+                self.assertEqual(theirs["rev"] is not None, mine_there)
+                if mine["rev"] == theirs["rev"]:
+                    continue
+                differed += 1
+>               self.assertNotEqual(
+                    mine_here, mine_there,
+                    f"{mine['path']}: revs differ although the file is present in "
+                    "both checkouts — that is a determinism defect, not delivery skew",
+                )
+E               AssertionError: True == True : scripts/agent_work_root.py: revs differ although the file is present in both checkouts — that is a determinism defect, not delivery skew
+
+tests\test_context_determinism.py:519: AssertionError
+__ RealCheckoutSkew.test_a_clean_checkout_differs_only_in_rev_never_in_shape __
+
+self = <test_context_determinism.RealCheckoutSkew testMethod=test_a_clean_checkout_differs_only_in_rev_never_in_shape>
+
+    def test_a_clean_checkout_differs_only_in_rev_never_in_shape(self):
+        if shutil.which("git") is None:  # pragma: no cover - environment guard
+            raise unittest.SkipTest("git is required to add a second checkout")
+    
+        declaration = self.declaration()
+        checklist = {
+            "work_id": "skew", "type": "gated", "items": ["context"],
+            "tasks": {"context": {"id": "context", "title": "context",
+                                  "imperative": "…", "status": "pending",
+                                  cm.DECLARATION_KEY: declaration}},
+        }
+    
+        probe = ROOT / self.PROBE
+        self.addCleanup(lambda: probe.unlink(missing_ok=True))
+        with open(probe, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write("untracked in this working tree only\n")
+    
+        def project(base):
+            roots = {"skill": Path(base) / "skills" / "commander",
+                     "repo": Path(base), "durable": Path(base)}
+            manifest = cm.build_manifest(checklist, roots)
+            # Presence is recorded now, while both trees still exist.
+            present = [Path(cm.resolve(entry, roots)).exists() for entry in declaration]
+            return manifest, present
+    
+        here, here_present = project(ROOT)
+    
+        tmp = tempfile.mkdtemp(prefix="ctx-skew-")
+        checkout = Path(tmp) / "clean"
+        try:
+            added = subprocess.run(
+                ["git", "worktree", "add", "--detach", str(checkout), "HEAD"],
+                cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+            )
+            if added.returncode != 0:  # pragma: no cover - environment guard
+                raise unittest.SkipTest(f"git worktree add failed: {added.stderr}")
+            for rel in OVERLAY:
+                shutil.copyfile(ROOT / rel, checkout / rel)
+            there, there_present = project(checkout)
+        finally:
+            subprocess.run(["git", "worktree", "remove", "--force", str(checkout)],
+                           cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+            subprocess.run(["git", "worktree", "prune"], cwd=ROOT,
+                           capture_output=True, text=True, encoding="utf-8")
+            shutil.rmtree(tmp, ignore_errors=True)
+    
+        # The premise, established rather than assumed: the probe really was present
+        # on one side and absent on the other, and the tracked files really resolved.
+        self.assertEqual(here_present, [True, True, True, False])
+        self.assertEqual(there_present, [True, True, False, False])
+    
+        # Shape is invariant: same step, same rows, same declaration order.
+        self.assertEqual(here["step"], there["step"])
+        self.assertEqual([(r["root"], r["path"]) for r in here["files"]],
+                         [(r["root"], r["path"]) for r in there["files"]])
+    
+        # The determinism half: identical tracked bytes give identical revs across
+        # two independent checkouts at two different absolute paths.
+        for index in range(len(self.TRACKED)):
+            with self.subTest(path=here["files"][index]["path"]):
+                self.assertIsNotNone(here["files"][index]["rev"])
+                self.assertEqual(here["files"][index]["rev"],
+                                 there["files"][index]["rev"])
+    
+        # The skew half: the untracked probe differs, and differs in exactly the way
+        # a delivery record should — present here, absent there.
+        probe_here, probe_there = here["files"][-2], there["files"][-2]
+        self.assertEqual(probe_here["path"], self.PROBE)
+        self.assertIsNotNone(probe_here["rev"])
+        self.assertIsNone(probe_there["rev"])
+        self.assertNotEqual(probe_here["rev"], probe_there["rev"])
+    
+        # Absent on both sides is not skew, and must not masquerade as it.
+        self.assertIsNone(here["files"][-1]["rev"])
+        self.assertIsNone(there["files"][-1]["rev"])
+    
+        # Nothing else moved: every remaining difference is confined to `rev`, and
+        # only where the two checkouts genuinely hold different bytes.
+        differed = 0
+        for mine, theirs, mine_here, mine_there in zip(
+            here["files"], there["files"], here_present, there_present
+        ):
+            with self.subTest(path=mine["path"]):
+                self.assertEqual(mine["rev"] is not None, mine_here)
+                self.assertEqual(theirs["rev"] is not None, mine_there)
+                if mine["rev"] == theirs["rev"]:
+                    continue
+                differed += 1
+                self.assertNotEqual(
+                    mine_here, mine_there,
+                    f"{mine['path']}: revs differ although the file is present in "
+                    "both checkouts — that is a determinism defect, not delivery skew",
+                )
+        # The headline assertion above ran. Without this the whole loop can be
+        # vacuous and still report green.
+>       self.assertEqual(differed, 1)
+E       AssertionError: 2 != 1
+
+tests\test_context_determinism.py:526: AssertionError
+---------------------------- Captured stdout call -----------------------------
+uuuuuu
+_____________________ test_canon_episode_store_untouched ______________________
+
+seeded_store = {'log': ['created episode:cluster-001', 'created episode:cluster-002', 'created episode:cluster-003', 'created episode:outsider-001'], 'root': WindowsPath('C:/Users/fredc/AppData/Local/Temp/pytest-of-fredc/pytest-5310/epistore0/episodes')}
+
+    def test_canon_episode_store_untouched(seeded_store):
+        """Belt and braces (b): the tracked store's blob OIDs are READ and compared, not
+        assumed. Empty-vs-empty passes a naive equality check, so the store's NON-emptiness
+        is asserted first — this repo's `episodes/active/` carries real episodes plus
+        `.gitkeep`, and that is what makes the comparison meaningful."""
+        listing = subprocess.run(
+            ["git", "ls-files", "-s", "episodes/active/"],
+            cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8",
+        ).stdout
+        tracked = {ln.split("\t")[-1]: ln.split()[1] for ln in listing.splitlines() if ln.strip()}
+        assert len(tracked) >= 2, f"canon store looks empty; the comparison would be vacuous: {tracked}"
+        assert any(name.endswith(".md") for name in tracked), tracked
+        # Nothing this module wrote lives here: the whole exercise ran in a temp store,
+        # outside the repository.
+        assert REPO_ROOT not in seeded_store["root"].parents
+        # And the working tree agrees with the index for every tracked episode file, so the
+        # synthetic consolidation left no residue in canon.
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "episodes/"],
+            cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8",
+        ).stdout.strip()
+>       assert dirty == "", f"canon episode store is dirty: {dirty}"
+E       AssertionError: canon episode store is dirty: M episodes/README.md
+E       assert 'M episodes/README.md' == ''
+E         
+E         + M episodes/README.md
+
+tests\test_episode_negative_control.py:1150: AssertionError
+_____________________________ test_canon_is_clean _____________________________
+[XPASS(strict)] #447 g6 removes this marker — the tree is deliberately still dirty
+=========================== short test summary info ===========================
+SUBFAILED(path='scripts/agent_work_root.py') tests/test_context_determinism.py::RealCheckoutSkew::test_a_clean_checkout_differs_only_in_rev_never_in_shape
+SUBFAILED(path='scripts/agent_work_root.py') tests/test_context_determinism.py::RealCheckoutSkew::test_a_clean_checkout_differs_only_in_rev_never_in_shape
+FAILED tests/test_context_determinism.py::RealCheckoutSkew::test_a_clean_checkout_differs_only_in_rev_never_in_shape
+FAILED tests/test_episode_negative_control.py::test_canon_episode_store_untouched
+FAILED tests/test_retirement_guard.py::test_canon_is_clean - [XPASS(strict)] ...
+5 failed, 1619 passed, 2 skipped, 549 subtests passed in 265.06s (0:04:25)

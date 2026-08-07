@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-archive-phase",
+  "files": [],
+  "repo_rev": {
+    "commit": "bf8819a16739113cedcb9b5ed40be92111c93bf1"
+  },
+  "run": {
+    "work_id": "h-447-g2-implementer",
+    "generated_at": "2026-08-07T14:46:07Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    }
+  }
+}

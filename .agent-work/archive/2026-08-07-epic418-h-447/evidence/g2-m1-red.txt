@@ -1,0 +1,112 @@
+FFFF                                                                     [100%]
+================================== FAILURES ===================================
+_________ CaptureTests.test_cli_exit_codes_match_the_in_process_ones __________
+
+self = <test_verify_episode_captured.CaptureTests testMethod=test_cli_exit_codes_match_the_in_process_ones>
+
+    def setUp(self):
+        self.writer = _load("apply_episode_delta")
+>       self.verify = _load("verify_episode_captured")
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_verify_episode_captured.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_verify_episode_captured.py:39: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001AA28520E90>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_episode_captured.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_episode_captured.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_____________________ CaptureTests.test_empty_store_fails _____________________
+
+self = <test_verify_episode_captured.CaptureTests testMethod=test_empty_store_fails>
+
+    def setUp(self):
+        self.writer = _load("apply_episode_delta")
+>       self.verify = _load("verify_episode_captured")
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_verify_episode_captured.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_verify_episode_captured.py:39: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001AA28522C90>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_episode_captured.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_episode_captured.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+_______ CaptureTests.test_seeded_store_passes_and_prints_ids_and_count ________
+
+self = <test_verify_episode_captured.CaptureTests testMethod=test_seeded_store_passes_and_prints_ids_and_count>
+
+    def setUp(self):
+        self.writer = _load("apply_episode_delta")
+>       self.verify = _load("verify_episode_captured")
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_verify_episode_captured.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_verify_episode_captured.py:39: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001AA285904D0>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_episode_captured.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_episode_captured.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+____________ CaptureTests.test_store_holding_only_other_runs_fails ____________
+
+self = <test_verify_episode_captured.CaptureTests testMethod=test_store_holding_only_other_runs_fails>
+
+    def setUp(self):
+        self.writer = _load("apply_episode_delta")
+>       self.verify = _load("verify_episode_captured")
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_verify_episode_captured.py:76: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests\test_verify_episode_captured.py:39: in _load
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:755: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:892: in get_code
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <_frozen_importlib_external.SourceFileLoader object at 0x000001AA28591AF0>
+path = 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_episode_captured.py'
+
+>   ???
+E   FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Programs\\constellation-skills-wt\\epic418-h-447\\scripts\\verify_episode_captured.py'
+
+<frozen importlib._bootstrap_external>:950: FileNotFoundError
+=========================== short test summary info ===========================
+FAILED tests/test_verify_episode_captured.py::CaptureTests::test_cli_exit_codes_match_the_in_process_ones
+FAILED tests/test_verify_episode_captured.py::CaptureTests::test_empty_store_fails
+FAILED tests/test_verify_episode_captured.py::CaptureTests::test_seeded_store_passes_and_prints_ids_and_count
+FAILED tests/test_verify_episode_captured.py::CaptureTests::test_store_holding_only_other_runs_fails
+4 failed in 0.23s

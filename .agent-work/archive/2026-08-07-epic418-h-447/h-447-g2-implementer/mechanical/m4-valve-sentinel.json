@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-valve-sentinel",
+  "mechanical": {
+    "run": "h-447-g2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m4-valve-sentinel",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-h-447-g2-implementer-m4-valve-sentinel@179f27efacb713068d31ba43e26483cba7832d3c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "h-447-g2-implementer",
+    "generated_at": "2026-08-07T14:51:28Z"
+  }
+}

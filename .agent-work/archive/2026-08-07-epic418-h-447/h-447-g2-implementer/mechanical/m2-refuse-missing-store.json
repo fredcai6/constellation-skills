@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-refuse-missing-store",
+  "mechanical": {
+    "run": "h-447-g2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-refuse-missing-store",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-h-447-g2-implementer-m2-refuse-missing-store@70de82bef7cc71576743896e02d6684ce64a25c2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "h-447-g2-implementer",
+    "generated_at": "2026-08-07T14:44:52Z"
+  }
+}

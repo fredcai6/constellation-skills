@@ -1,0 +1,17 @@
+census sha256 BEFORE = bb101b2b660ec680b424cbdf66f30e111e2ab4ef3be93c1b3f69f18ff051bbcf  (15536 bytes)
+scan BEFORE          = 0 violations
+
+REMOVING approval for docs/agents/ORCHESTRATOR_CONTEXT.md
+  reason: # the retirement TOMBSTONE: names both retired files in order to FORBID them and to forbid any successor playbook -- this block is where a good-faith agent acting on a stale instruction lands
+  entry : docs/agents/ORCHESTRATOR_CONTEXT.md:`.agent-work/LESSONS.md` and `.agent-work/AGENT_FEEDBACK.md` are **retired...
+
+scan WITH ENTRY REMOVED = 1 violation(s)
+  retired-name-on-shipped-surface	docs/agents/ORCHESTRATOR_CONTEXT.md:39
+CLI exit with entry removed = 1 (1 == violations found)
+
+census sha256 AFTER  = bb101b2b660ec680b424cbdf66f30e111e2ab4ef3be93c1b3f69f18ff051bbcf  (15536 bytes)
+byte-identical restore = True
+scan AFTER           = 0 violations
+CLI exit restored    = 0 (0 == clean), stdout=''
+
+RED PROOF PASSED

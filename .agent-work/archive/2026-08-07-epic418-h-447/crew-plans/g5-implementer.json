@@ -1,0 +1,528 @@
+{
+  "work_id": "epic418-h-447-g5-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-doctrine",
+    "m2-store-readme",
+    "m3-pointers",
+    "m4-records",
+    "m5-census",
+    "m6-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the g5 handoff. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); block and return if incomplete. Measure the guard baseline. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; guard baseline measured at 85 findings on one leg",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md + docs/agents/CREW_CONTEXT.md + docs/agents/GLOSSARY.md + g5 handoff read in full. Handoff complete: task, intent, allowed scope, exclusions (fences, RETURN.md, episodes/ store), required evidence, test mode, stop conditions and return format all present. Baseline measured: python scripts/verify_retirement.py -> 85 findings, all on leg retired-name-on-shipped-surface, across 23 paths."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-doctrine": {
+      "id": "m1-doctrine",
+      "title": "Invariants 1, 2, 4 \u2014 the doctrine directory stops prescribing a read",
+      "imperative": "docs/agents/CREW_CONTEXT.md: delete the LESSONS.md row from the record-stores table, keep the episodes/ row as WRITE path only, and remove the standing instruction to read the store. docs/agents/GLOSSARY.md: redefine or remove `harvest` so it is not read-and-act, and fix the `episode` definition that leans on it. docs/agents/ORCHESTRATOR_CONTEXT.md: add the tombstone carrying all five clauses of invariant 4, written as doctrine. tests/data/store_mentions.approved.txt: give each CREW_CONTEXT entry its own honest per-line reason and drop the entry for the removed line.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded; handoff verified complete at m0"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the CREW_CONTEXT read-instruction line is gone and every store_mentions census entry still resolves verbatim",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py::test_every_approved_entry_exists_verbatim -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-doctrine-1"
+        },
+        {
+          "id": "c2",
+          "statement": "no retired name survives in docs/agents/ and the tombstone is present",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py > .agent-work/epic418-h-447/g5-m1.tsv; test \"$(grep -c 'docs/agents/' .agent-work/epic418-h-447/g5-m1.tsv)\" = 1 && grep -q 'docs/agents/ORCHESTRATOR_CONTEXT.md' .agent-work/epic418-h-447/g5-m1.tsv && T=docs/agents/ORCHESTRATOR_CONTEXT.md && grep -qF 'are **retired** (#447)' $T && grep -qF 'replaces both' $T && grep -qF 'never read back as a rule' $T && grep -qF \"and putting one there is a human's call\" $T && grep -qF 'no successor playbook and no read-and-apply loop' $T"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-doctrine-2"
+        }
+      ],
+      "constraints": [
+        "episodes are a record, not a playbook",
+        "utf-8 + newline='\\n' on every write; preserve existing line endings",
+        "no commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-doctrine-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python -m pytest tests/test_retirement_guard.py::test_every_approved_entry_exists_verbatim -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-doctrine-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py > .agent-work/epic418-h-447/g5-m1.tsv; test \"$(grep -c 'docs/agents/' .agent-work/epic418-h-447/g5-m1.tsv)\" = 1 && grep -q 'docs/agents/ORCHESTRATOR_CONTEXT.md' .agent-work/epic418-h-447/g5-m1.tsv && T=docs/agents/ORCHESTRATOR_CONTEXT.md && grep -qF 'are **retired** (#447)' $T && grep -qF 'replaces both' $T && grep -qF 'never read back as a rule' $T && grep -qF \"and putting one there is a human's call\" $T && grep -qF 'no successor playbook and no read-and-apply loop' $T",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-store-readme": {
+      "id": "m2-store-readme",
+      "title": "Invariant 3 \u2014 episodes/README.md's tracked-path argument is re-founded on a true premise",
+      "imperative": "Replace the false `.agent-work/ is gitignored (see .gitignore line 1)` premise with the true argument: the store must be visible in every worktree and every clone the moment a commit lands, which a plain tracked repo-root directory gives for free. Do not delete the argument. Delete the `Not to be confused with` section entirely. Fix the apply_lessons_delta.py pointer in `What does NOT live here` into a description of the property.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "episodes/README.md names no retired name, carries no gitignore claim, and has no 'Not to be confused with' section, while the durability argument survives",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && ! grep -q -e 'gitignored' -e 'Not to be confused' -e 'LESSONS.md' -e 'apply_lessons_delta' episodes/README.md && grep -q 'every worktree' episodes/README.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-store-readme-1"
+        }
+      ],
+      "constraints": [
+        "episodes/active and episodes/retired are written only through scripts/apply_episode_delta.py; README.md is ordinary prose"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-store-readme-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && ! grep -q -e 'gitignored' -e 'Not to be confused' -e 'LESSONS.md' -e 'apply_lessons_delta' episodes/README.md && grep -q 'every worktree' episodes/README.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-pointers": {
+      "id": "m3-pointers",
+      "title": "Invariants 5 and 6 \u2014 every live pointer repointed or removed",
+      "imperative": "Re-derive the live pointer list from python scripts/verify_retirement.py, then repoint or remove each on README.md, SKILL_INDEX.md, docs/CONSTELLATION_OVERVIEW.md:40, docs/POSITIONING.md, skills/admiral/SKILL.md, skills/admiral/references/fleet-doctrine.md, skills/commander/references/commander-core.md, skills/commander-delegated/SKILL.md, skills/workbench/SKILL.md, skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md, skills/charter/templates/AGENT_GUIDE.template.md, scripts/agent_work_root.py docstring, and skills/commander/templates/COMMANDER_SPINE.template.json. Invariant 6: CONSTELLATION_FEEDBACK.template.md's Lesson: field takes an episode id. Invariant 8: docs/CONSTELLATION_OVERVIEW.md:98's ruling paragraph SURVIVES.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no live pointer survives on README, SKILL_INDEX, docs/POSITIONING, skills/ or scripts/agent_work_root.py; the OVERVIEW ruling paragraph survives",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py > .agent-work/epic418-h-447/g5-m3.tsv; cut -f2 .agent-work/epic418-h-447/g5-m3.tsv | sort -u > .agent-work/epic418-h-447/g5-m3-paths.txt; printf '%s\\n' RETURN.md docs/CONSTELLATION_OVERVIEW.md docs/EPISODE_STORE.md docs/RECURSIVE_IMPROVEMENT_DESIGN.md docs/agents/ORCHESTRATOR_CONTEXT.md scripts/apply_episode_delta.py scripts/init_work_area.py scripts/install_constellation.py scripts/stage_feedback.py scripts/verify_episode_captured.py skills/commander/templates/COMMANDER_SPINE.template.json | sort -u > .agent-work/epic418-h-447/g5-m3-expected.txt; diff -u .agent-work/epic418-h-447/g5-m3-expected.txt .agent-work/epic418-h-447/g5-m3-paths.txt && test \"$(cut -f1 .agent-work/epic418-h-447/g5-m3.tsv | sort -u)\" = 'retired-name-on-shipped-surface' && grep -qF 'is not in this taxonomy' docs/CONSTELLATION_OVERVIEW.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-pointers-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the corpus still installs and the suite's skill/template tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest tests/test_install_constellation.py tests/test_prose_deletions.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-pointers-2"
+        }
+      ],
+      "constraints": [
+        "CONSTELLATION_FEEDBACK.md itself is NOT retired",
+        "touch nothing outside the enumerated files"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-pointers-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py > .agent-work/epic418-h-447/g5-m3.tsv; cut -f2 .agent-work/epic418-h-447/g5-m3.tsv | sort -u > .agent-work/epic418-h-447/g5-m3-paths.txt; printf '%s\\n' RETURN.md docs/CONSTELLATION_OVERVIEW.md docs/EPISODE_STORE.md docs/RECURSIVE_IMPROVEMENT_DESIGN.md docs/agents/ORCHESTRATOR_CONTEXT.md scripts/apply_episode_delta.py scripts/init_work_area.py scripts/install_constellation.py scripts/stage_feedback.py scripts/verify_episode_captured.py skills/commander/templates/COMMANDER_SPINE.template.json | sort -u > .agent-work/epic418-h-447/g5-m3-expected.txt; diff -u .agent-work/epic418-h-447/g5-m3-expected.txt .agent-work/epic418-h-447/g5-m3-paths.txt && test \"$(cut -f1 .agent-work/epic418-h-447/g5-m3.tsv | sort -u)\" = 'retired-name-on-shipped-surface' && grep -qF 'is not in this taxonomy' docs/CONSTELLATION_OVERVIEW.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-pointers-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest tests/test_install_constellation.py tests/test_prose_deletions.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-records": {
+      "id": "m4-records",
+      "title": "Invariants 7 and 10 \u2014 records stay records",
+      "imperative": "docs/RECURSIVE_IMPROVEMENT_DESIGN.md gains ONLY a superseding header saying it is history and not instruction and naming where the current loop lives; all ~33 sites untouched. docs/EPISODE_STORE.md's nine findings become descriptions of the property rather than pointers to a deleted module. Invariant 9: docs/superpowers/ and tests/fixtures/ untouched.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RECURSIVE_IMPROVEMENT_DESIGN gains only inserted lines (0 deletions), its LESSONS.md count is unchanged, docs/EPISODE_STORE.md carries no retired name, and superpowers/fixtures are untouched",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && git diff --numstat docs/RECURSIVE_IMPROVEMENT_DESIGN.md | awk '{exit ($2==0)?0:1}' && test \"$(git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md | sed 's/.*://')\" = \"$(git grep -c 'LESSONS.md' HEAD -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md | sed 's/.*://')\" && ! grep -q -e 'LESSONS.md' -e 'apply_lessons_delta' docs/EPISODE_STORE.md && test -z \"$(git diff --stat docs/superpowers/ tests/fixtures/)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-records-2"
+        }
+      ],
+      "constraints": [
+        "rewriting the design record to describe a system it never described would be falsifying history"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-records-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && git diff --numstat docs/RECURSIVE_IMPROVEMENT_DESIGN.md | awk '{exit ($2==0)?0:1}' && test \"$(git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md)\" = \"$(git grep -c 'LESSONS.md' HEAD -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md | sed 's/.*://')\" && ! grep -q -e 'LESSONS.md' -e 'apply_lessons_delta' docs/EPISODE_STORE.md && test -z \"$(git diff --stat docs/superpowers/ tests/fixtures/)\"",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-records-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && git diff --numstat docs/RECURSIVE_IMPROVEMENT_DESIGN.md | awk '{exit ($2==0)?0:1}' && test \"$(git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md | sed 's/.*://')\" = \"$(git grep -c 'LESSONS.md' HEAD -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md | sed 's/.*://')\" && ! grep -q -e 'LESSONS.md' -e 'apply_lessons_delta' docs/EPISODE_STORE.md && test -z \"$(git diff --stat docs/superpowers/ tests/fixtures/)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-census": {
+      "id": "m5-census",
+      "title": "Invariant 11 \u2014 the retired-name leg gets a reason-carrying approval census",
+      "imperative": "Generalize the existing load_approved()/parse_approved()/normalize() machinery in scripts/verify_retirement.py to serve a SECOND census at tests/data/retired_names.approved.txt in the SAME format; do not fork a parallel implementation and do not weaken the leg into a pattern allowlist. Approve each residual with an honest per-line reason; a reason amounting to 'an agent is still told to use the retired thing' is not approvable. Add the covering test in tests/test_retirement_guard.py the same way the existing census is covered, and RED-PROVE it: remove/point an entry away, watch the leg fire, restore, confirm byte-identical.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 landed; the residual set is final",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete; residual set final at 53 findings across 11 paths"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: the new census test written and observed failing before the census exists \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: 3 new tests in tests/test_retirement_guard.py fail before the mechanism exists. test_the_two_censuses_share_one_parser and test_every_retired_name_approval_exists_verbatim fail on AttributeError (no vr.RETIRED_NAME_CENSUS_PATH); test_a_retired_name_approval_suppresses_only_the_line_it_names fails showing the leg firing on BOTH lines of the decoy (index 0 diff: ('docs/note.md', 1) != ('docs/note.md', 2)) -- i.e. the census is not consulted at all yet. Transcript: .agent-work/epic418-h-447/g5-m5-red.txt, pytest exit 1, '3 failed, 13 deselected'."
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: verify_retirement.py exits 0 printing nothing, and the guard's own suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py > .agent-work/epic418-h-447/g5-m5.tsv 2>&1; test ! -s .agent-work/epic418-h-447/g5-m5.tsv && FORCE_COLOR=0 NO_COLOR=1 python -m pytest tests/test_retirement_guard.py -q --deselect tests/test_retirement_guard.py::test_canon_is_clean"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-census-1"
+        },
+        {
+          "id": "c3",
+          "statement": "RED PROOF: removing one census entry makes the leg fire again, and restoring it leaves the file byte-identical \u2014 manual attest with the transcript",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED PROOF, transcript at .agent-work/epic418-h-447/g5-census-redproof.txt. Removed the ORCHESTRATOR_CONTEXT tombstone approval (reason + entry pair) from the census: scan went 0 -> 1 violation, exactly retired-name-on-shipped-surface at docs/agents/ORCHESTRATOR_CONTEXT.md:39, CLI exit 1. Restored: sha256 bb101b2b660ec680b424cbdf66f30e111e2ab4ef3be93c1b3f69f18ff051bbcf identical before and after, 15536 bytes both, scan back to 0, CLI exit 0 with empty stdout. Second, independent proof that the census does not blanket-suppress: tests/test_retirement_guard.py::test_a_retired_name_approval_suppresses_only_the_line_it_names plants two retired-name lines in one decoy file, approves ONE, and asserts the other still fires -- plus a restored skills/lessons-auditor/ directory firing at line 0 despite innocent contents, proving the PATH half stays unapprovable."
+        }
+      ],
+      "constraints": [
+        "reuse load_approved()/ApprovedEntry/normalize()",
+        "exact sites, never globs",
+        "every approval carries an honest per-line reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-census-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && python scripts/verify_retirement.py > .agent-work/epic418-h-447/g5-m5.tsv 2>&1; test ! -s .agent-work/epic418-h-447/g5-m5.tsv && FORCE_COLOR=0 NO_COLOR=1 python -m pytest tests/test_retirement_guard.py -q --deselect tests/test_retirement_guard.py::test_canon_is_clean",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify": {
+      "id": "m6-verify",
+      "title": "Full evidence sweep and IMPLEMENTER_RESULT",
+      "imperative": "Run every command in the handoff's Required evidence block, gating on real exit codes redirected to files. Run the full suite with FORCE_COLOR=0 NO_COLOR=1 and explain the count delta by name against the 1618-passed baseline. Report test_canon_is_clean's strict-xfail XPASS as expected and g6's to close. Write the IMPLEMENTER_RESULT covering every item the handoff's Report back section names, including the full text of the tombstone and the design-record header and every census reason.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite reports 0 failed apart from the expected strict-xfail XPASS of test_canon_is_clean, and the delta is explained by name",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q --deselect tests/test_retirement_guard.py::test_canon_is_clean --deselect tests/test_episode_negative_control.py::test_canon_episode_store_untouched --deselect 'tests/test_context_determinism.py::RealCheckoutSkew::test_a_clean_checkout_differs_only_in_rev_never_in_shape' > .agent-work/epic418-h-447/g5-suite-deselected.txt 2>&1; tail -2 .agent-work/epic418-h-447/g5-suite-deselected.txt; grep -qE '^1619 passed' .agent-work/epic418-h-447/g5-suite-deselected.txt && ! grep -qE '[0-9]+ failed' .agent-work/epic418-h-447/g5-suite-deselected.txt && test -s .agent-work/epic418-h-447/g5-suite-delta-proof.txt && grep -qF 'BOTH FAILURES ARE UNCOMMITTED-WORKING-TREE ARTIFACTS' .agent-work/epic418-h-447/g5-suite-delta-proof.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written to .agent-work/epic418-h-447/results/g5-IMPLEMENTER_RESULT.md with all eleven invariants, both full texts, and every census reason",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && test -s .agent-work/epic418-h-447/results/g5-IMPLEMENTER_RESULT.md && grep -q 'Workflow Feedback' .agent-work/epic418-h-447/results/g5-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-2"
+        }
+      ],
+      "constraints": [
+        "do not remove the xfail(strict=True) marker \u2014 that is g6's",
+        "do not commit or push"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q --deselect tests/test_retirement_guard.py::test_canon_is_clean --deselect tests/test_episode_negative_control.py::test_canon_episode_store_untouched --deselect 'tests/test_context_determinism.py::RealCheckoutSkew::test_a_clean_checkout_differs_only_in_rev_never_in_shape' > .agent-work/epic418-h-447/g5-suite-deselected.txt 2>&1; tail -2 .agent-work/epic418-h-447/g5-suite-deselected.txt; grep -qE '^1619 passed' .agent-work/epic418-h-447/g5-suite-deselected.txt && ! grep -qE '[0-9]+ failed' .agent-work/epic418-h-447/g5-suite-deselected.txt && test -s .agent-work/epic418-h-447/g5-suite-delta-proof.txt && grep -qF 'BOTH FAILURES ARE UNCOMMITTED-WORKING-TREE ARTIFACTS' .agent-work/epic418-h-447/g5-suite-delta-proof.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-h-447 && test -s .agent-work/epic418-h-447/results/g5-IMPLEMENTER_RESULT.md && grep -q 'Workflow Feedback' .agent-work/epic418-h-447/results/g5-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "g5-impl-01",
+    "status": "released",
+    "claimed_at": "2026-08-07T18:01:01.206396+00:00",
+    "last_heartbeat": "2026-08-07T18:48:16.319363+00:00",
+    "claimed_by": "implementer",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-h-447",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T18:48:36.007023+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete and verified. The run's governing constraint is that episodes are a RECORD, not a playbook: invariants 1, 2 and 4 are where that gets written into docs/agents/. Baseline guard state at 77e428d: 85 findings, single leg retired-name-on-shipped-surface, 23 paths; 33 of them are the design record that must SURVIVE untouched, so the leg can only reach zero via invariant 11's new approval census. Slice order is deliberate: prose first (m1-m4) so the residual set is final before the census (m5) is written against it.",
+      "mechanical": false,
+      "ts": "2026-08-07T18:01:31.774944+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-doctrine",
+      "why": "docs/agents/ no longer tells an agent to read the store. CREW_CONTEXT's record-stores table lost its playbook row and its 'Read them with query_episodes.py' sentence; the episodes/ row is write-path-only. GLOSSARY's harvest now points INTO the store and episode drops 'kept for later harvest'. The ORCHESTRATOR_CONTEXT tombstone carries all five clauses. Measured consequence: the unapproved-store-mention leg is at ZERO (85 findings, all retired-name), and the only docs/agents residual is the tombstone naming the two files in order to forbid them -- approvable at m5, not a defect.",
+      "mechanical": false,
+      "ts": "2026-08-07T18:06:34.603972+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-store-readme",
+      "why": "The store's why-a-tracked-path argument now rests on a true premise. The old one cited '.agent-work/ is gitignored (see .gitignore line 1)': measured false -- .gitignore line 1 is a comment saying .agent-work/ is TRACKED, and git ls-files .agent-work returns 3067. The argument survives, re-founded on what a plain tracked repo-root path actually buys (visible in every worktree and clone the moment a commit lands, nothing computed at runtime). The 'Not to be confused with' section is gone: it asserted the store was a SIBLING of the playbook and that this run does not touch it -- the exact claim #447 reverses. Also removed the now-false 'no automated capture wiring (#305)' claim, which g2 built, and the read-with-query_episodes instruction.",
+      "mechanical": false,
+      "ts": "2026-08-07T18:07:40.761352+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-pointers",
+      "why": "Every live pointer is repointed or removed. The lessons-auditor skill was deleted at g4, so its README/SKILL_INDEX/POSITIONING roster entries were removed rather than repointed. The AGENT_FEEDBACK/LESSONS pointers on README, CONSTELLATION_OVERVIEW, workbench, charter's AGENT_GUIDE template, commander-core, commander-delegated, admiral SKILL and fleet-doctrine were repointed at the store's WRITE path plus the record-not-a-rule clause. Measured consequence: the sweep introduced 12 NEW store mentions, each given its own reason in the store-mention census -- and the g1 census note's claim that zero entries sit under skills/ is now false, so the new block says so and restates the narrower property that actually matters (nothing tells an agent to READ the store). Two adjacent dangling referents fixed in files already in scope: admiral's four 'lessons audit' closeout references, and workbench SKILL.md's pointer to the deleted AGENT_FEEDBACK.template.md. Invariant 6 was held to ONE field: the CONSTELLATION_FEEDBACK Lesson: field now takes an episode id but KEEPS ITS NAME, because collect_feedback.py fingerprints on the literal field name 'Lesson' and renaming it would silently drop the export's stable identity.",
+      "mechanical": false,
+      "ts": "2026-08-07T18:18:33.144316+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-records",
+      "why": "The design record stays a record. docs/RECURSIVE_IMPROVEMENT_DESIGN.md gained 16 inserted lines and ZERO deletions, and its LESSONS.md line count is 12 both at HEAD and now -- the header deliberately spells NO retired name, because spelling one would have moved that count and broken invariant 7's own check. docs/EPISODE_STORE.md's nine comparative references now describe the property (a validated all-or-nothing delta writer; a single running playbook read top-to-bottom by a human) instead of pointing at a module the reader cannot open. docs/superpowers/ and tests/fixtures/ show an empty diff. The header added one new store mention, approved with its own reason.",
+      "mechanical": false,
+      "ts": "2026-08-07T18:21:09.535082+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-census",
+      "why": "The leg can now reach green without being weakened. One parser serves both censuses: parse_approved/load_approved took an optional census_path, and no second implementation was written -- test_the_two_censuses_share_one_parser asserts a malformed entry is refused identically and names the right file. 53 residuals approved, each with its own reason describing that line; none says an agent is still told to use the retired thing. The PATH half of the leg is deliberately left unapprovable and that choice is stated at the code site, because 'the census did not cover it' and 'the census must never cover it' read the same in code and mean opposite things. verify_retirement.py now exits 0 printing nothing. EXPECTED and NOT mine to fix: test_canon_is_clean now XPASSes, and strict-xfail turns that into a failure -- g6 removes the marker; I left it in place.",
+      "mechanical": false,
+      "ts": "2026-08-07T18:26:46.021499+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-verify",
+      "why": "Every invariant is demonstrated by a command, not asserted. verify_retirement.py exits 0 with zero bytes of stdout and all four legs clean; the design record is 16 insertions and 0 deletions with its LESSONS.md count identical to HEAD; superpowers and fixtures show an empty diff; every changed file is fully CRLF as it was at 77e428d, measured in Python bytes because grep -c is unreliable for that here. The suite is 5 failed / 1619 passed and the arithmetic closes exactly: plus 3 new census tests, minus 2 guards that pin a tracked path against HEAD and cannot pass while an invariant-mandated edit is uncommitted. I did NOT edit those two out-of-scope tests -- I proved causality by restoring each file from HEAD, watching the test go green, and putting my version back byte-identically. test_canon_is_clean XPASSes strictly and its marker is left in place for g6. IMPLEMENTER_RESULT written with both full texts, all 53 plus 15 census reasons, four declined corner cases with their comment sites, four triage candidates, and no blockers.",
+      "mechanical": false,
+      "ts": "2026-08-07T18:48:16.319334+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-07T18:06:23.373250+00:00",
+      "reason": "m1's c2 check demanded ZERO retired-name hits under docs/agents/, which contradicts invariant 4: the tombstone must NAME the two retired files in order to forbid them, and that naming line is exactly what invariant 11's new census exists to approve with a reason. Re-cut to assert the one expected residual IS the tombstone, plus each of invariant 4's five clauses by its own grep.",
+      "authority": "implementer:handoff-invariant-4",
+      "ops": [
+        "retext-check m1-doctrine.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-07T18:18:03.253900+00:00",
+      "reason": "m3's c1 check asserted no residual under skills/ at all. Invariant 11 explicitly keeps skills/commander/templates/COMMANDER_SPINE.template.json:126 as an approvable residual -- archive.c4's deny_globs carries both retired path strings as a RE-STAGING BLOCK, a stronger reason than the one they were added for. Re-cut to assert the exact residual PATH SET (11 paths, all on surfaces no invariant retires) and that the store-mention leg is back at zero, rather than a blunt no-skills rule that would have forced a wrong edit.",
+      "authority": "implementer:handoff-invariant-11",
+      "ops": [
+        "retext-check m3-pointers.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-07T18:21:09.069769+00:00",
+      "reason": "Check-text defect, not a work defect: the count comparison stripped only ONE colon-prefix, but  prints 'path:N' for the working copy and 'HEAD:path:N' for the tree, so the two sides could never be equal even when the counts match. Corrected to strip to the LAST colon on both sides. The subject of the check is unchanged.",
+      "authority": "implementer:check-text-correction",
+      "ops": [
+        "retext-check m4-records.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-07T18:40:24.851705+00:00",
+      "reason": "The full suite reports 5 failed / 1619 passed, and THREE test nodes account for all of it. One is the expected strict-XPASS of test_canon_is_clean, which is g6 work. The other two -- test_canon_episode_store_untouched and RealCheckoutSkew -- assert that a tracked path matches the index or a clean checkout of the same commit, and BOTH files were changed under a mandated invariant (3 and 5). Neither can pass while the change is uncommitted, and I may not commit. Proved by causality rather than asserted: each file was restored from HEAD, the test re-run green, and my version put back byte-identically (transcript g5-suite-delta-proof.txt, sha256 matched both times). c1 is re-cut to deselect the three named nodes and to REQUIRE that proof transcript exist and carry its verdict, so the deselection cannot be a quiet dodge.",
+      "authority": "implementer:measured-working-tree-artifact",
+      "ops": [
+        "retext-check m6-verify.c1"
+      ]
+    }
+  ]
+}

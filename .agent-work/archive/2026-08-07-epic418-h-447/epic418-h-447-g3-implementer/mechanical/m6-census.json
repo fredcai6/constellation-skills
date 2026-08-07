@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m6-census",
+  "mechanical": {
+    "run": "epic418-h-447-g3-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m6-census",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-g3-implementer-m6-census@4c5d28f9cb27548cdac15d61e33c2b6164e1bb5d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447-g3-implementer",
+    "generated_at": "2026-08-07T15:59:58Z"
+  }
+}

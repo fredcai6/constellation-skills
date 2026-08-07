@@ -15,7 +15,8 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "scripts" / "install_constellation.py"
-VERIFIER = ROOT / "scripts" / "verify_agent_feedback.py"
+# PRUNED (#447 g4): VERIFIER pointed at scripts/verify_agent_feedback.py, deleted by this
+# retirement, as did load_verifier() and the two tests below that were its only callers.
 
 
 def load_module(name: str, path: Path):
@@ -28,10 +29,6 @@ def load_module(name: str, path: Path):
 
 def load_installer():
     return load_module("install_constellation", INSTALLER)
-
-
-def load_verifier():
-    return load_module("verify_agent_feedback", VERIFIER)
 
 
 # issue-116: derived from the installer's OWN enumeration (discover_skills()),
@@ -87,7 +84,7 @@ class InstallConstellationTests(unittest.TestCase):
                     target_root
                     / "constellation-commander"
                     / "scripts"
-                    / "verify_agent_feedback.py"
+                    / "verify_episode_captured.py"  # #447: replaced verify_agent_feedback.py
                 ).exists()
             )
             self.assertTrue(
@@ -314,11 +311,11 @@ class InstallConstellationTests(unittest.TestCase):
                 spine["tasks"]["init"]["postconditions"][0]["check"]["command"],
             )
             self.assertIn(
-                (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
+                (commander_root / "scripts" / "verify_episode_captured.py").as_posix(),
                 spine["tasks"]["feedback"]["postconditions"][0]["check"]["command"],
             )
             self.assertIn(
-                (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
+                (commander_root / "scripts" / "verify_episode_captured.py").as_posix(),
                 spine["tasks"]["archive"]["postconditions"][0]["check"]["command"],
             )
             # the state-note precondition on execute is bundled and its token rewritten
@@ -398,49 +395,11 @@ class InstallConstellationTests(unittest.TestCase):
         self.assertNotIn("<commander-skill-dir>", spine_text)
         self.assertIn(f"python3 {commander_root}/scripts/init_work_area.py", spine_text)
 
-    def test_agent_feedback_verifier_enforces_durable_log_location(self):
-        verifier = load_verifier()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            agent_work = root / ".agent-work"
-            work_id = "issue-123"
-            (agent_work / work_id).mkdir(parents=True)
-            feedback = agent_work / "AGENT_FEEDBACK.md"
-            feedback.write_text(
-                f"## 2026-06-08 — {work_id}\n\n"
-                "**Friction / unclear:**\n- spine step ambiguous about lease release\n",
-                encoding="utf-8",
-            )
-
-            verifier.verify_agent_feedback(root, work_id, "feedback")
-
-            bad_feedback = agent_work / work_id / "AGENT_FEEDBACK.md"
-            bad_feedback.write_text("archived by mistake", encoding="utf-8")
-            with self.assertRaises(verifier.FeedbackVerificationError):
-                verifier.verify_agent_feedback(root, work_id, "feedback")
-
-    def test_agent_feedback_verifier_enforces_archive_phase(self):
-        verifier = load_verifier()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            agent_work = root / ".agent-work"
-            work_id = "issue-123"
-            (agent_work / work_id).mkdir(parents=True)
-            (agent_work / "AGENT_FEEDBACK.md").write_text(
-                f"## 2026-06-08 — {work_id}\n\n"
-                "**Friction / unclear:**\n- spine step ambiguous about lease release\n",
-                encoding="utf-8",
-            )
-
-            with self.assertRaises(verifier.FeedbackVerificationError):
-                verifier.verify_agent_feedback(root, work_id, "archive")
-
-            archive_dir = agent_work / "archive" / f"2026-06-08-{work_id}"
-            archive_dir.mkdir(parents=True)
-            (agent_work / work_id).rmdir()
-            verifier.verify_agent_feedback(root, work_id, "archive")
+    # PRUNED (#447 g4): test_agent_feedback_verifier_enforces_durable_log_location and
+    # test_agent_feedback_verifier_enforces_archive_phase. Both loaded and exercised
+    # scripts/verify_agent_feedback.py, which this retirement deleted; their subject is gone,
+    # not merely renamed. Nothing about the INSTALLER, which this file is otherwise about,
+    # was asserted by either.
 
     def test_dry_run_prints_plan_without_creating_target(self):
         installer = load_installer()
@@ -726,15 +685,88 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertEqual(0, exit_code)
             self.assertTrue((home / ".claude" / "skills" / "constellation-triage" / "SKILL.md").exists())
 
-    def test_lessons_gate_verifier_bundled_into_commander_and_admiral(self):
+    def test_episode_write_path_bundled_into_commander_and_admiral(self):
+        # #447: the playbook's apply/verify pair retired; what replaces it is the episode
+        # store's WRITE side. The writer is named only in the spine IMPERATIVE (no check
+        # runs it), so `test_every_spine_command_names_an_installed_script` below cannot
+        # see it -- this per-name pin is what covers that half. The retired trio is
+        # asserted ABSENT in the same breath, so a revert shows up here rather than as a
+        # mid-run gate failure.
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             target_root = Path(tmp) / "skills"
             installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
                             "--skills", "commander", "admiral"], env={}, out=lambda _: None)
             for skill in ("constellation-commander", "constellation-admiral"):
-                self.assertTrue(
-                    (target_root / skill / "scripts" / "verify_lessons_applied.py").exists())
+                scripts_root = target_root / skill / "scripts"
+                for script in ("apply_episode_delta.py", "verify_episode_captured.py"):
+                    with self.subTest(skill=skill, script=script):
+                        self.assertTrue((scripts_root / script).is_file(), scripts_root / script)
+                for retired in ("apply_lessons_delta.py", "verify_lessons_applied.py",
+                                "verify_agent_feedback.py"):
+                    with self.subTest(skill=skill, retired=retired):
+                        self.assertFalse((scripts_root / retired).exists(),
+                                         f"{skill} still ships the retired {retired}")
+
+    #: Every spine template the installer ships, paired with the skill that serves it.
+    #: Derived from the two roles that own a spine rather than globbed, because a spine
+    #: only means anything alongside the skill whose scripts/ its commands resolve into.
+    SPINE_TEMPLATES = {
+        "commander": "COMMANDER_SPINE.template.json",
+        "admiral": "ADMIRAL_SPINE.template.json",
+    }
+
+    def test_every_spine_command_names_an_installed_script(self):
+        # GENERAL, deliberately not per-name. A test that asserts "commander installs
+        # verify_episode_captured.py" protects the #447 rewiring and nothing after it; this
+        # asserts that NO spine command names a script its own skill does not install, which
+        # protects every future rewiring the same way. A spine that names an unshipped script
+        # fails mid-run at the gate that needed it, with the run already half-done -- catching
+        # it at install time is the whole point.
+        #
+        # Both condition lists are walked: a precondition command (execute.p2's state-note
+        # check) can strand a run exactly as a postcondition command can.
+        #
+        # Not every command names a script -- archive.c2b shells out to `gh pr list`. A
+        # command with no `.py` token is legitimately skipped; the assertion is about the
+        # ones that DO name one.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", *self.SPINE_TEMPLATES],
+                env={}, out=lambda _: None)
+            self.assertEqual(0, exit_code)
+
+            checked = 0
+            for skill, template in self.SPINE_TEMPLATES.items():
+                skill_root = target_root / f"constellation-{skill}"
+                spine_path = skill_root / "templates" / template
+                self.assertTrue(spine_path.is_file(), spine_path)
+                spine = json.loads(spine_path.read_text(encoding="utf-8"))
+                for task_id, task in spine["tasks"].items():
+                    for which in ("preconditions", "postconditions"):
+                        for cond in task.get(which) or ():
+                            check = cond.get("check")
+                            if not isinstance(check, dict) or check.get("kind") != "command":
+                                continue
+                            for named in re.findall(r"[\w.\-]+\.py",
+                                                    check.get("command", "")):
+                                script = Path(named).name
+                                checked += 1
+                                with self.subTest(skill=skill, task=task_id,
+                                                  cond=cond["id"], script=script):
+                                    self.assertTrue(
+                                        (skill_root / "scripts" / script).is_file(),
+                                        f"{skill} spine {task_id}.{cond['id']} runs "
+                                        f"{script}, which SKILL_SCRIPT_BUNDLES does not "
+                                        f"install into {skill_root / 'scripts'}",
+                                    )
+            # A loop that reported clean without examining anything is the failure this
+            # guard is here to catch, so the count is asserted rather than trusted.
+            self.assertGreater(checked, 0, "no spine command named a script -- the walk "
+                                           "found nothing to check, which is not a pass")
 
     def test_bundled_scripts_carry_their_sibling_imports(self):
         # Every bundled script that does `from X import ...` on a sibling
@@ -807,7 +839,7 @@ class InstallConstellationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target_root = Path(tmp) / "skills"
             installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
-                            "--skills", "explorer", "commander", "lessons-auditor"],
+                            "--skills", "explorer", "commander"],
                            env={}, out=lambda _: None)
 
             # EVERYONE moves -> bundled references/global-everyone.md (rides to all
@@ -832,10 +864,10 @@ class InstallConstellationTests(unittest.TestCase):
                 with self.subTest(bucket="global-orchestrator", sig=sig):
                     self.assertIn(sig, orch)
 
-            # SINGLE-HOME move 9 -> the home keeps the full rule in its own SKILL.md.
-            auditor = (target_root / "constellation-lessons-auditor"
-                       / "SKILL.md").read_text(encoding="utf-8")
-            self.assertIn("forks its identity", auditor)  # move 9 sibling-ids
+            # PRUNED (#447 g4): the move-9 leg asserted "forks its identity" in
+            # constellation-lessons-auditor/SKILL.md. That skill tree is deleted by this
+            # retirement, so move 9's single home no longer exists and the leg has no
+            # subject. Every other move's pin above is untouched and still asserted.
 
     def test_relocated_doctrine_leaves_no_residual_in_carrier_skill_md(self):
         # issue-102 Move 11 no-residual: each retired inline signature must NOT
@@ -1651,7 +1683,7 @@ class TemplateBaselineTests(unittest.TestCase):
                 self.assertEqual(len(entry["sha256"]), 64)
             names = {e["template"] for e in manifest["templates"]}
             self.assertIn("COMMANDER_SPINE.template.json", names)
-            self.assertIn("LESSONS.template.md", names)
+            self.assertIn("WORKFLOW_CLOSEOUT.template.md", names)
 
     def test_reinstall_leaves_existing_baseline_untouched(self):
         installer = load_installer()
@@ -1686,7 +1718,7 @@ class TemplateBaselineTests(unittest.TestCase):
             self.assertTrue(before)
             self.assertFalse(any(s == "constellation-commander" for s, _ in before))
             wb_baseline = (troot / ".baseline" / "constellation-workbench"
-                           / "LESSONS.template.md").read_text(encoding="utf-8")
+                           / "WORKFLOW_CLOSEOUT.template.md").read_text(encoding="utf-8")
 
             # a later install brings a skill whose templates the project never tracked
             messages = []
@@ -1707,7 +1739,7 @@ class TemplateBaselineTests(unittest.TestCase):
                 self.assertEqual(after[key], sha)
             self.assertEqual(
                 wb_baseline,
-                (troot / ".baseline" / "constellation-workbench" / "LESSONS.template.md")
+                (troot / ".baseline" / "constellation-workbench" / "WORKFLOW_CLOSEOUT.template.md")
                 .read_text(encoding="utf-8"),
             )
 
@@ -1723,12 +1755,12 @@ class TemplateBaselineTests(unittest.TestCase):
                     "--baseline-only", "--skills", "workbench"]
             installer.main(args, env={}, cwd=project, out=lambda _l: None)
             troot = project / ".agent-work" / "templates"
-            lessons_wc = troot / "LESSONS.template.md"
-            self.assertTrue(lessons_wc.is_file())  # fresh install seeded it
-            lessons_wc.unlink()  # project opts out of tracking it locally
+            closeout_wc = troot / "WORKFLOW_CLOSEOUT.template.md"
+            self.assertTrue(closeout_wc.is_file())  # fresh install seeded it
+            closeout_wc.unlink()  # project opts out of tracking it locally
 
             installer.main(args, env={}, cwd=project, out=lambda _l: None)  # reinstall
-            self.assertFalse(lessons_wc.exists())  # not backfilled (already tracked)
+            self.assertFalse(closeout_wc.exists())  # not backfilled (already tracked)
 
     def test_user_scope_install_writes_no_baseline(self):
         installer = load_installer()
