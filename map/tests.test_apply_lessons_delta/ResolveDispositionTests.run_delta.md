@@ -1,0 +1,16 @@
+# tests.test_apply_lessons_delta:ResolveDispositionTests.run_delta
+method, tests/test_apply_lessons_delta.py:756, 4 lines
+
+```python
+def run_delta(self, delta, expect_rc=0)
+```
+
+HOLE: no docstring
+
+calls internal: ResolveDispositionTests.assertEqual
+calls stdlib: builtins.str x2, json.dumps, pathlib.Path
+reads internal: ResolveDispositionTests.file, ResolveDispositionTests.m, ResolveDispositionTests.tmp
+reads stdlib: json (module)
+unresolved: 2 calls (dispatch-unknown-base), 1 reads (dispatch-unknown-base)
+
+referenced by: 8 sites, this module only

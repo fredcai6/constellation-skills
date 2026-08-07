@@ -1,0 +1,46 @@
+# tests.test_install_constellation:InstallConstellationTests
+class, tests/test_install_constellation.py:43, 906 lines
+
+```python
+class InstallConstellationTests(TestCase)
+```
+
+HOLE: no docstring
+
+- [test_codex_project_scope_installs_all_skills_under_project_codex_skills](InstallConstellationTests.test_codex_project_scope_installs_all_skills_under_project_codex_skills.md) method: HOLE: no docstring
+- [test_codex_user_scope_uses_codex_home_and_accepts_short_or_full_skill_names](InstallConstellationTests.test_codex_user_scope_uses_codex_home_and_accepts_short_or_full_skill_names.md) method: HOLE: no docstring
+- [test_shared_scripts_are_bundled_with_each_skill_that_requires_them](InstallConstellationTests.test_shared_scripts_are_bundled_with_each_skill_that_requires_them.md) method: HOLE: no docstring
+- [test_global_doctrine_buckets_bundled_per_audience](InstallConstellationTests.test_global_doctrine_buckets_bundled_per_audience.md) method: HOLE: no docstring
+- [test_windows_md_bundled_alongside_global_everyone](InstallConstellationTests.test_windows_md_bundled_alongside_global_everyone.md) method: HOLE: no docstring
+- [test_shared_reference_dir_is_not_installed_as_a_skill](InstallConstellationTests.test_shared_reference_dir_is_not_installed_as_a_skill.md) method: HOLE: no docstring
+- [test_force_refreshes_global_doctrine_buckets](InstallConstellationTests.test_force_refreshes_global_doctrine_buckets.md) method: HOLE: no docstring
+- [test_installed_templates_use_absolute_bundled_script_paths](InstallConstellationTests.test_installed_templates_use_absolute_bundled_script_paths.md) method: HOLE: no docstring
+- [test_platform_interpreter_maps_os_name](InstallConstellationTests.test_platform_interpreter_maps_os_name.md) method: HOLE: no docstring
+- [_install_commander_spine](InstallConstellationTests._install_commander_spine.md) method: HOLE: no docstring
+- [test_installed_spine_rewrites_interpreter_prefix_on_windows](InstallConstellationTests.test_installed_spine_rewrites_interpreter_prefix_on_windows.md) method: HOLE: no docstring
+- [test_installed_spine_rewrites_interpreter_prefix_on_posix](InstallConstellationTests.test_installed_spine_rewrites_interpreter_prefix_on_posix.md) method: HOLE: no docstring
+- [test_agent_feedback_verifier_enforces_durable_log_location](InstallConstellationTests.test_agent_feedback_verifier_enforces_durable_log_location.md) method: HOLE: no docstring
+- [test_agent_feedback_verifier_enforces_archive_phase](InstallConstellationTests.test_agent_feedback_verifier_enforces_archive_phase.md) method: HOLE: no docstring
+- [test_dry_run_prints_plan_without_creating_target](InstallConstellationTests.test_dry_run_prints_plan_without_creating_target.md) method: HOLE: no docstring
+- [test_subset_force_does_not_wipe_unselected_skills](InstallConstellationTests.test_subset_force_does_not_wipe_unselected_skills.md) method: HOLE: no docstring
+- [test_full_force_clears_orphaned_constellation_dirs](InstallConstellationTests.test_full_force_clears_orphaned_constellation_dirs.md) method: HOLE: no docstring
+- [test_existing_install_requires_force](InstallConstellationTests.test_existing_install_requires_force.md) method: HOLE: no docstring
+- [test_unknown_skill_fails_fast](InstallConstellationTests.test_unknown_skill_fails_fast.md) method: HOLE: no docstring
+- [test_claude_project_scope_installs_under_project_claude_skills](InstallConstellationTests.test_claude_project_scope_installs_under_project_claude_skills.md) method: HOLE: no docstring
+- [test_claude_user_scope_uses_home_claude_skills](InstallConstellationTests.test_claude_user_scope_uses_home_claude_skills.md) method: HOLE: no docstring
+- [test_lessons_gate_verifier_bundled_into_commander_and_admiral](InstallConstellationTests.test_lessons_gate_verifier_bundled_into_commander_and_admiral.md) method: HOLE: no docstring
+- [test_bundled_scripts_carry_their_sibling_imports](InstallConstellationTests.test_bundled_scripts_carry_their_sibling_imports.md) method: HOLE: no docstring
+- [test_worktree_isolation_verifier_bundled_into_commander_and_admiral](InstallConstellationTests.test_worktree_isolation_verifier_bundled_into_commander_and_admiral.md) method: HOLE: no docstring
+- [test_explorer_script_bundle_lands_in_installed_skill](InstallConstellationTests.test_explorer_script_bundle_lands_in_installed_skill.md) method: HOLE: no docstring
+- [test_deep_module_vocabulary_ships_into_installed_skill](InstallConstellationTests.test_deep_module_vocabulary_ships_into_installed_skill.md) method: HOLE: no docstring
+- [test_relocated_doctrine_pins_ship_to_installed_destination](InstallConstellationTests.test_relocated_doctrine_pins_ship_to_installed_destination.md) method: HOLE: no docstring
+- [test_relocated_doctrine_leaves_no_residual_in_carrier_skill_md](InstallConstellationTests.test_relocated_doctrine_leaves_no_residual_in_carrier_skill_md.md) method: HOLE: no docstring
+- [test_commander_delegated_installs_with_orchestrator_bucket](InstallConstellationTests.test_commander_delegated_installs_with_orchestrator_bucket.md) method: HOLE: no docstring
+- [test_commander_delegated_points_at_installed_commander_core](InstallConstellationTests.test_commander_delegated_points_at_installed_commander_core.md) method: HOLE: no docstring
+- [test_curator_script_bundle_lands_in_installed_skill](InstallConstellationTests.test_curator_script_bundle_lands_in_installed_skill.md) method: HOLE: no docstring
+- [test_curator_carries_global_everyone_bucket](InstallConstellationTests.test_curator_carries_global_everyone_bucket.md) method: HOLE: no docstring
+- [test_curator_installs_and_discovers_as_a_skill](InstallConstellationTests.test_curator_installs_and_discovers_as_a_skill.md) method: HOLE: no docstring
+- [test_every_discovered_skill_is_pinned_in_skill_index](InstallConstellationTests.test_every_discovered_skill_is_pinned_in_skill_index.md) method: HOLE: no docstring
+- [test_shared_sync_integrity_installed_references_match_source_bytes](InstallConstellationTests.test_shared_sync_integrity_installed_references_match_source_bytes.md) method: HOLE: no docstring
+
+referenced by: none found

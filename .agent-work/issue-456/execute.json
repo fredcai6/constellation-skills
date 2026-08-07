@@ -72,7 +72,8 @@
           "id": "p1",
           "statement": "none -- first gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "First gate -- no dependency to satisfy. Baseline measured green before dispatch: 1688 passed, 2 skipped, 0 failed."
         }
       ],
       "postconditions": [
@@ -118,11 +119,43 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g0-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g0-implement-RESULT-pass3.md",
+            "verdict": "COMPLETE -- no unresolved blockers",
+            "detail": "Gate g0 delivered across THREE implementer passes against one job file (g0-implementer-plan.json, session g0-impl-9febe0be re-claimed idempotently each time). Passes 1 and 2 each stopped at a context trip and filed a refresh-request rather than pushing through; pass 3 closed it. Results: g0-implement-RESULT.md, -RESULT-pass2.md, -RESULT-pass3.md. EVERY LOAD-BEARING CLAIM REPRODUCED IN MY OWN HANDS, not accepted on the crew's word: (1) full suite 1706 passed / 2 skipped / 0 failed, run by me in a cleared environment -- baseline was 1688, so +18 and nothing red; (2) the falsifier -- I deleted the .agent-work exclusion myself and watched tests go red, then restored and watched them pass, and the crew independently found it turns FOUR red not the three I predicted, because the build CLI catches the leak as well as discover; (3) NON_INSTALLABLE_PACKAGES verified by grep as referenced only by the four guard tests, exactly as reported; (4) the end-to-end build really runs, producing .code-map/statements.jsonl at 24MB and a 3,635-page tree under map/; (5) no timings in any of the three run reports, so that constraint holds; (6) both stores and all three reports confirmed ignored via git status --ignored, narrow by file as ruled. FIGURES RECONCILE: 112 files / 3,523 entities against a 103-file baseline, the +9 being exactly this gate's own new Python files. CLOSE CRITERIA MET: the CLI runs extract to render end to end and exits 0; discovery enumerates the mappable corpus with .agent-work excluded and a test fails if the exclusion is removed; the bundling question is RESOLVED ON THE RECORD as option (b), a NON_INSTALLABLE_PACKAGES declaration with four guard tests holding every scripts/ subdirectory to one declaration or the other, itself falsifiable since emptying it turns 3 of 4 red. WIRING: 76 new symbols, 178 external call sites, 75 of 76 wired into production; the single exception is the policy declaration I ruled on at e-execute-6. NO UNRESOLVED BLOCKERS -- the one stop condition raised was escalated to me and ruled ACCEPTED with reasoning. Three triage candidates harvested from these passes: tc5, tc6, tc7."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g0-implement-2",
+          "type": "note",
+          "payload": {
+            "topic": "HANDOFF DIGEST for g0-implement (tc1 workaround -- advance is blocked, so the digest is written by hand)",
+            "detail": "STATE: g0-implement is SUBSTANTIVELY COMPLETE and independently verified; ONLY the engine advance click is outstanding, blocked by a HARD context trip on the commander. Evidence is already attached as e-g0-implement-1. A fresh commander re-claims lease commander-issue-456 idempotently (same id, NOT a takeover), and its FIRST action is: advance g0-implement (the evidence is in place and the why text is in this note), then g0-review. WHAT EXISTS AND IS VERIFIED IN MY OWN HANDS: scripts/code_map/ with 8 modules; tests/test_code_map.py 14 tests / 10 subtests; FULL SUITE 1706 passed, 2 skipped, 0 FAILED in a cleared environment against an 1688 baseline; end-to-end build produces .code-map/statements.jsonl (24MB) plus a 3,635-page map/ tree; the .agent-work exclusion falsifier turns FOUR tests red when deleted and green when restored; bundling resolved as option (b) with four falsifiable guard tests. map/ and .code-map/ are deliberately UNTRACKED -- map/ is staged at gs, last, so intermediate diffs stay reviewable. FIGURES: 112 files / 3,523 entities vs the 103-file baseline, the +9 being this gate's own new .py files. FIVE RULINGS MADE, all recorded and none to be reopened: port FOUR prototype modules not six (render.py/render_fn.py superseded by render_map.py); artifact paths .code-map/ for stores and map/ for pages; TWO store ignore entries not three (no gate produces a position cache); ignore the three run reports too; and NON_INSTALLABLE_PACKAGES with zero production call sites ACCEPTED at e-execute-6 as a policy declaration enforced by falsifiable guards, which is the repo's two-bin rule, not inert code. NEXT AFTER THE ADVANCE: g0-review. Dispatch a reviewer crew via run_crew.py --dispatch external --verify-result against the three result files (g0-implement-RESULT.md, -pass2, -pass3) and the diff from 6ae6193 to HEAD. STATE THE e-execute-6 RULING IN THE REVIEWER HANDOFF so the reviewer CHECKS it rather than re-raising it as a finding. PROCESS LESSON TO APPLY TO g2, g3 AND gs: dispatch wide gates as MULTIPLE implementer passes BY DESIGN -- g0 took three, each stopping at a context trip, and pass 1 fed back that discovering that seam by tripping into it wastes a run. OPEN TRIAGE now tc1-tc7: tc4 (recover_crews reports any external crew RESUMABLE -- it reads a pid that cannot exist), tc5 (the gauge is work-area-scoped not agent-scoped, so readings are attributed to the wrong agent -- my deadlock claim was OVERSTATED and is corrected at e-execute-5), tc6 (corpus overloaded), tc7 (test_crew_launcher does not isolate PYTHONIOENCODING -- second environment-leak false red after tc3; a sweep is warranted)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g0-implement-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g0-implement",
+            "why_ref": "e-g0-implement-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g0-review": {

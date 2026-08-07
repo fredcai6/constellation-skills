@@ -450,6 +450,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-6",
+          "type": "user-decision",
+          "payload": {
+            "topic": "RULING on the g0 wiring stop condition -- NON_INSTALLABLE_PACKAGES with zero production call sites",
+            "decision": "ACCEPTED. The gate is NOT blocked on it.",
+            "detail": "The pass-3 crew escalated rather than deciding, which was right. VERIFIED INDEPENDENTLY, not taken on its word: grep across scripts/ and tests/ shows NON_INSTALLABLE_PACKAGES defined once at scripts/install_constellation.py:137 and referenced ONLY at tests/test_install_constellation.py lines 1552, 1557, 1568 and 1575. The installer never reads it at runtime. The crew's report is exact. RULING AND REASONING: the wiring rule exists to catch shipped-INERT CAPABILITY code -- a symbol that passes review and passes tests while no caller ever reaches it. This is not that. It is a POLICY DECLARATION whose enforcement point is the test suite BY DESIGN, and the correct runtime behaviour for a non-installable package is to do nothing, so no production code path could consult it: a package is kept out of the install by never appearing in any skill's required_scripts, and the four guard tests are what make that non-accidental rather than incidental. This is precisely the repo's own two-bin rule from the glossary -- every enforced invariant is either checked by a command or attested by a named human, and prose alone enforces nothing. A frozenset consumed by four guards is bin one, checked by a command. THE DISCRIMINATING EVIDENCE, which is what the wiring rule actually cares about: the declaration is falsifiable -- emptying it turns 3 of the 4 guards red. A symbol that can be broken and caught is not inert, whatever the call-site count says. So the rule fired on a technicality its own purpose does not reach. THE ALTERNATIVE IS REJECTED FOR THIS GATE, NOT DENIED: having discover_skills or validate_required_scripts consult the frozenset at runtime is a real behaviour change to the installer, not a rename, and g0's own constraints forbid unrelated changes here. If it is wanted it gets its own slice. RECORDED SO IT IS NOT REDISCOVERED: 75 of the 76 symbols this gate adds are wired into production code, 178 external call sites total. This is the single exception and it is deliberate."
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -724,6 +735,11 @@
       "id": "tc6",
       "from": "execute",
       "statement": "GLOSSARY GAP (raised by the g0 implementer, confirmed): the term corpus is overloaded. docs/agents/GLOSSARY.md defines it as 'the full set of installed constellation skills, references, and templates' -- the INSTALLED SKILLS corpus. This issue uses the same word for the set of source files being mapped, and the required symbol name is discover_corpus. Both senses are now live in the same repo and one of them is in a shipped public symbol name, which is exactly what the repo's own one-name-for-one-thing rule forbids. The implementer kept the required symbol name as handed to it and wrote 'mappable corpus' everywhere the distinction mattered, which is the right conservative move but leaves the collision unresolved. RESOLUTION NEEDED: either add a glossary row distinguishing the two senses (e.g. skills corpus vs mappable corpus / source corpus), or rename the derived-map sense before the symbol is load-bearing across gates -- renaming gets more expensive at every later gate, since g1 through gs all build on discover_corpus."
+    },
+    {
+      "id": "tc7",
+      "from": "execute",
+      "statement": "REPO DEFECT, same family as tc3, found by the g0 pass-3 crew and independently reproducible: tests/test_crew_launcher.py::LaunchTests::test_records_entry_before_launch_and_completes does not isolate the environment it asserts about. It asserts PYTHONIOENCODING equals the literal 'utf-8' on the env handed to the launch seam, but scripts/run_crew.py:271 uses env.setdefault('PYTHONIOENCODING', 'utf-8') and its own docstring says that is deliberate -- it honours an explicit caller value without clobbering it. So under any shell that exports a different value the test fails while the PRODUCT BEHAVES EXACTLY AS DESIGNED. The Constellation crew shell exports PYTHONIOENCODING=utf-8:surrogateescape, so it fails here for every agent on this machine. Proven in both directions in one sequence: with the ambient value set, 1 failed / 73 passed; with Remove-Item Env:PYTHONIOENCODING, 74 passed. The test is at fault, not the product. FIX: patch.dict(os.environ, ..., clear=...) or pop the var in setUp. WHY IT MATTERS BEYOND COSMETICS: this is the SECOND environment-leak false red in this repo's suite after tc3 (FORCE_COLOR defeating the mutation-floor regex), and both share one root -- a test asserting on process environment it does not control. Every crew that runs the full suite at a gate boundary pays a diagnostic detour, and a false red at a gate boundary is exactly the speed bump Tommy's tripwire ruling forbids. WORTH A SWEEP, not just two point fixes: grep the suite for assertions on os.environ-derived values that do not isolate first. NOT FIXED IN THIS RUN, unlike tc3: tc3 blocked all 11 gate boundaries so fixing it was load-bearing; this one fails a single unrelated test that no gate boundary depends on, and the honest gate-boundary number is obtainable by clearing the variable. Fixing it here would be scope creep."
     }
   ],
   "blockers": [],
@@ -732,7 +748,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T21:01:44.002391+00:00",
+    "last_heartbeat": "2026-08-07T21:42:21.735198+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
