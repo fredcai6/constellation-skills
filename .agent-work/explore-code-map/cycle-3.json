@@ -194,7 +194,11 @@
       "rework_count": 0
     }
   },
-  "consolidation": null,
+  "consolidation": {
+    "verdict": "cycle complete \u2014 all rulings landed",
+    "findings": [],
+    "summary": "Cycle 3 (refine): storage design-it-twice ran (3 candidates; minimal design accepted with on-demand ids + ids.jsonl lookup; serial-number machinery = named fallback); articles trial ran and drew three granularity/register rulings (one page per entity; agent-first aggressive minimization; ASCII templates); grammar v0 + map-model amendment signed off and applied; x12 prior-art excursion confirmed per-entity pull granularity, refuted the orientation claim, yielded the redundancy rule and push-then-pull ratification; two-tier handoff ruled; three skills work items executed live (entry points in handoffs, entrance references, role-specific use guidance). Cycle 4 = the real-issue dogfood trial: full f1Brainz extraction, one unblocked issue, dev agent with map handoff, regen as part of the trial."
+  },
   "triage_candidates": [],
   "blockers": []
 }

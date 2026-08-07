@@ -4,3 +4,6 @@ evidence/*/build/
 evidence/*/index.scip
 evidence/x1/*.jsonl
 evidence/*/pylib/
+evidence/x13/*.jsonl
+evidence/x13/map/
+evidence/x13/supplement.json
