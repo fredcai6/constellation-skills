@@ -183,3 +183,7 @@ Then g2. The **g2 implementer handoff is already written** at
 **One thing the successor needs that is not yet in a handoff:** g3 requires a `<pre-g2-sha>`
 — the commit that holds the 32 canon records *before* the rewrite — so the detector can be
 measured against the corpus as it was. The commit this note lands in is that sha.
+
+**`<pre-g2-sha>` for g3's measurement: `c9d9dd7cf380e497ab8b356122a525e4644605db`** — the g1
+commit. `episodes/active/` is untouched at that sha, so it holds the 32 canon records exactly
+as they read before the rewrite.
