@@ -441,7 +441,7 @@
           "statement": "the exclusion test observed RED with the exclusion removed, with the mutation confirmed applied",
           "check": null,
           "satisfied": true,
-          "satisfied_by": "Mutation confirmed applied by git diff: EXCLUDED_PREFIXES = ('.agent-work/',) -> (). RED with it removed: 2 failed, 3 passed on -k discovery; the repo test listed 141 .agent-work paths leaking into the corpus, first '.agent-work/archive/2026-08-02-issue-304/evidence/g4_assert_closeout.py'. Across the whole file 4 failed, 10 passed -- the discover and build CLI tests fail too, so the exclusion is load-bearing end to end, not only at the discovery call. Restored: git status clean on the file, 5 passed."
+          "satisfied_by": "Re-run first-hand this pass, not inherited. Mutation confirmed applied by git diff: -EXCLUDED_PREFIXES = ('.agent-work/',) / +EXCLUDED_PREFIXES = (). RED, whole file: 4 failed, 10 passed, 10 subtests passed -- DiscoveryTests.test_discovery_excludes_agent_work, DiscoveryOnThisRepoTests.test_discovery_on_this_repo_excludes_agent_work, CliDiscoverCommandTests.test_cli_discover_prints_the_mappable_corpus_and_exits_zero, CliBuildCommandTests.test_cli_build_maps_the_corpus_and_not_the_scratch. That is FOUR, not the three the addendum predicted: both CLI tests catch it, discover and build, not just discover. RED on -k discovery alone: 2 failed, 3 passed, 9 deselected; the on-this-repo test listed 141 leaked .agent-work paths, first '.agent-work/archive/2026-08-02-issue-304/evidence/g4_assert_closeout.py'."
         },
         {
           "id": "c2",
@@ -450,7 +450,8 @@
             "kind": "command",
             "command": "python -m pytest tests/test_code_map.py -k discovery -q --color=no"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m8-falsifiable-2"
         }
       ],
       "constraints": [
@@ -459,7 +460,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -470,6 +471,17 @@
           "payload": {
             "seam": "m8-falsifiable",
             "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-falsifiable-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k discovery -q --color=no",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -486,7 +498,8 @@
           "id": "p1",
           "statement": "every implementation slice is closed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m0 through m8-falsifiable all read 'complete' in the plan. m8, the last one, closed this pass on a first-hand red/green."
         }
       ],
       "postconditions": [
@@ -497,7 +510,8 @@
             "kind": "command",
             "command": "python -m pytest tests/ -q --color=no"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m9-close-2"
         },
         {
           "id": "c3",
@@ -506,7 +520,8 @@
             "kind": "command",
             "command": "grep -rn 'discover_corpus\\|build_parser' --include=*.py scripts/code_map/ tests/test_code_map.py | grep -v 'def discover_corpus' | grep -v 'def build_parser' | grep -q ."
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m9-close-3"
         },
         {
           "id": "c4",
@@ -515,7 +530,8 @@
             "kind": "command",
             "command": "test -s .agent-work/issue-456/crew-handoffs/g0-implement-RESULT.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m9-close-4"
         }
       ],
       "constraints": [
@@ -524,11 +540,55 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m9-close-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m9-close",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-close-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -rn 'discover_corpus\\|build_parser' --include=*.py scripts/code_map/ tests/test_code_map.py | grep -v 'def discover_corpus' | grep -v 'def build_parser' | grep -q .",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-close-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/issue-456/crew-handoffs/g0-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -546,16 +606,17 @@
     }
   ],
   "blockers": [],
-  "refusals": 4,
+  "refusals": 6,
   "engine_session": {
     "session_id": "g0-impl-9febe0be",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-07T20:48:13.953663+00:00",
-    "last_heartbeat": "2026-08-07T21:24:35.428791+00:00",
+    "last_heartbeat": "2026-08-07T21:53:00.120250+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-07T21:53:20.880798+00:00"
   },
   "why_trail": [
     {
@@ -613,6 +674,20 @@
       "why": "TWO .gitignore entries per the addendum's ruling, not the item's three -- no gate produces a position cache, so that line would be the stale rule this plan exists to remove. Bundling resolved as (b): NON_INSTALLABLE_PACKAGES declares code_map unbundlable because the install destination is flat and flattening strips the package its relative imports resolve against; scripts/hooks/ stays flattenable because its modules import nothing from each other. Four guard tests hold every scripts/ subdirectory to one declaration or the other, and the declaration is falsifiable -- emptying it turned 3 of the 4 red.",
       "mechanical": false,
       "ts": "2026-08-07T21:14:46.972471+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-falsifiable",
+      "why": "The exclusion is load-bearing and the test that guards it can fail. Removing it turned 4 tests red, not the 3 predicted -- both CLI tests catch the leak as well as the two discovery tests -- and the mutation was confirmed applied by git diff before the run, so the red is the exclusion's absence and not a broken import. Restoring it returned a clean git status and 5 passed on -k discovery, 14 passed on the whole file.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:26:56.786496+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m9-close",
+      "why": "Gate g0 closes green. Full suite 1706 passed / 2 skipped / 0 failed against a 1688/2/0 baseline -- 18 tests up, nothing red. The one failure in the first run was tests/test_crew_launcher.py asserting PYTHONIOENCODING=='utf-8' while run_crew.py:271 deliberately setdefault-preserves an ambient value; this crew's shell exports utf-8:surrogateescape. Proved by removing the var (74 passed) and restoring it (1 failed). Not this gate's code and filed as a triage candidate. Wiring: 76 new symbols, 178 call sites outside their own definition and outside any self-test, resolved through imports with the AST because a bare-name grep is meaningless here (run/main/_check are defined in dozens of scripts and matched 4535 times). 75 of 76 are wired into production code; NON_INSTALLABLE_PACKAGES has zero non-test consumers, which is the stop condition -- reported for the Commander's confirmation rather than ruled by me, because a non-installable package's correct runtime behavior is to do nothing, so the guard tests are its enforcement point by design. Corpus re-derives to 112 files. The three .gitignore run-report entries were already landed at 5aa4170 and were verified against the ruling, not redone.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:53:00.120223+00:00"
     }
   ]
 }

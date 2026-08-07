@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m9-close",
+  "mechanical": {
+    "run": "g0-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 6,
+    "spine-step": "m9-close",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g0-implement-m9-close@0c586f57ad1bb07a8442791dba4b4eeb0e38b4b4",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g0-implement",
+    "generated_at": "2026-08-07T21:41:40Z"
+  }
+}
