@@ -131,18 +131,85 @@ def _fill_over_hard(record) -> tuple[bool, str]:
         float(fill), hard, model)
 
 
+def _under(path: str | None, root: str | None) -> bool:
+    """Is `path` inside `root`? Both are Windows absolute paths as recorded."""
+    if not path or not root:
+        return False
+    try:
+        Path(path).resolve().relative_to(Path(root).resolve())
+        return True
+    except (ValueError, OSError):
+        return False
+
+
+def check_binding(c: Checker, arm_name: str, a: dict, expect: str) -> None:
+    """Where did the BINDING land? -- the fact the whole claim rests on.
+
+    g2-review finding F1: this was the worst of eight silent-pass holes. Without
+    it a treatment arm whose binding pointed at the sandbox MAIN -- i.e. the #440
+    defect NOT fixed -- still exited 0, because the arm checks only ever read the
+    gauge paths and never the binding that produced them. `path_source` was
+    asserted for the preflight alone, though it is the single most load-bearing
+    fact in the result: it is what says the hook DERIVED the worktree root from
+    `git worktree list` rather than being handed it.
+
+    `expect` is "wt" (the fix works) or "main" (the defect reproduces).
+    """
+    sb = a.get("sandbox") or {}
+    entries = a.get("binding_entries") or []
+    if not c.ok(bool(entries),
+                "{0}: the binding store recorded at least one entry".format(arm_name)):
+        return
+
+    root = sb.get(expect)
+    label = "WORKTREE" if expect == "wt" else "sandbox MAIN"
+    bound = [e for e in entries if _under(e.get("spine"), root)]
+    c.ok(bool(bound),
+         "{0}: the binding resolved the relative --file to the {1} ({2})".format(
+             arm_name, label,
+             ", ".join(repr(e.get("spine")) for e in entries) or "no entries"))
+
+    other = "main" if expect == "wt" else "wt"
+    c.ok(not any(_under(e.get("spine"), sb.get(other)) for e in entries),
+         "{0}: NO binding entry points at the {1} -- the arms are not both-ways "
+         "ambiguous".format(arm_name, "sandbox MAIN" if expect == "wt" else "WORKTREE"))
+
+    sources = [e.get("path_source") for e in bound]
+    if expect == "wt":
+        c.ok("git_worktree" in sources,
+             "treatment: path_source is 'git_worktree', so the hook DERIVED the root "
+             "from `git worktree list` -- it was NOT handed the value being proved "
+             "(got {0!r})".format(sources))
+    else:
+        c.ok(all(s is None for s in sources),
+             "control: path_source is null, the pre-fix cwd-relative resolution "
+             "(got {0!r})".format(sources))
+
+
 def check_treatment(c: Checker, d: Path) -> dict | None:
     a = load(d / "arm-treatment.json")
     if not c.ok(a is not None, "arm-treatment.json present and parseable"):
         return None
     c.ok(a.get("headless", {}).get("timed_out") is False,
          "treatment headless run did not time out")
+    # F1: a headless run killed part-way (attempt 1 died on a weekly usage limit
+    # at exit 1) must not be read as a clean arm.
+    c.ok(a.get("headless", {}).get("exit") == 0,
+         "treatment headless run exited 0 (got {0!r}) -- a part-way kill is not a "
+         "clean arm".format(a.get("headless", {}).get("exit")))
+
+    check_binding(c, "treatment", a, expect="wt")
 
     g = a.get("gauge_in_worktree") or {}
     c.ok(g.get("exists") is True,
          "treatment: gauge.json exists BESIDE THE WORKTREE SPINE (the engine's own read path)")
     over, why = _fill_over_hard(g.get("record"))
     c.ok(over, "treatment: the worktree reading is at/over HARD -- " + why)
+    # F1: a gauge at BOTH candidate paths would make "which one did the engine
+    # read?" unanswerable, so the phantom must be empty on this arm.
+    c.ok((a.get("gauge_in_main_phantom") or {}).get("exists") is not True,
+         "treatment: NOTHING was written to the phantom path in the sandbox MAIN, "
+         "so the reading is unambiguous")
 
     c.ok(a.get("advance_exit") not in (None, 0),
          "treatment: `advance` exit code is non-zero (got {0!r})".format(a.get("advance_exit")))
@@ -164,6 +231,14 @@ def check_control_is_positive(c: Checker, d: Path) -> dict | None:
         return None
     c.ok(a.get("headless", {}).get("timed_out") is False,
          "control headless run did not time out")
+    c.ok(a.get("headless", {}).get("exit") == 0,
+         "control headless run exited 0 (got {0!r}) -- a part-way kill is not a "
+         "clean arm".format(a.get("headless", {}).get("exit")))
+
+    # The defect reproducing is the POINT of this arm, so assert its shape too:
+    # the binding must land in the sandbox MAIN, which is what makes the miss a
+    # miss rather than an absence.
+    check_binding(c, "control", a, expect="main")
 
     phantom = a.get("gauge_in_main_phantom") or {}
     c.ok(phantom.get("exists") is True,
@@ -194,11 +269,24 @@ def check_attribution(c: Checker, arm_name: str, a: dict) -> None:
          "{0} attribution 2/3: identity_resolution_ms is present on the record -- the "
          "writer emits that fifth field ONLY for a dispatched agent (got {1!r})".format(
              arm_name, irm))
+    # F1: signal 3 is only evidence if the two models actually DIFFER. With an
+    # identical pair the equality below still passes while proving nothing about
+    # whose reading it is, so assert the premise before the conclusion.
+    c.ok(a.get("parent_model") != a.get("subagent_model_requested"),
+         "{0} attribution 3/3 premise: parent ({1!r}) and subagent ({2!r}) ran "
+         "DIFFERENT models, so the model field can discriminate between them".format(
+             arm_name, a.get("parent_model"), a.get("subagent_model_requested")))
     c.ok(att.get("gauge_model") == att.get("subagent_model_id_expected"),
          "{0} attribution 3/3: gauge.json's model is the SUBAGENT's ({1!r}), not the "
          "parent's -- parent and subagent ran different models (got {2!r})".format(
              arm_name, att.get("subagent_model_id_expected"), att.get("gauge_model")))
 
+    # KNOWN LIMIT, not chased (g2-review F2; scope-discipline ruling). Both
+    # timestamps below are written by the same collect() call, so this proves the
+    # reading was fresh WHEN THE ENGINE READ IT -- which is the relation the trip
+    # depends on -- but it cannot detect stale evidence being re-presented later.
+    # Settling that needs an out-of-band clock (the reviewer used file mtimes).
+    # Filed at triage rather than fixed here.
     obs = att.get("observed_at")
     wall = att.get("wall_clock_at_collect")
     try:
@@ -352,6 +440,30 @@ def selftest() -> int:
             {"main": "C:/Programs/constellation-skills/run-treatment/main",
              "wt": "C:/Programs/constellation-skills/run-treatment/wt",
              "spine": "C:/Programs/constellation-skills/run-treatment/wt/s.json"}),
+        # --- g2-review F1: the four holes closed above, each proved fallible ---
+        # THE IMPORTANT ONE. A treatment arm whose binding points at the sandbox
+        # MAIN is the #440 defect NOT fixed. Before check_binding existed this
+        # mutation exited 0 -- the acceptance artifact for this very issue passed
+        # while the bug was present.
+        "treatment-binds-main": lambda d: _rebind(
+            d / "arm-treatment.json", "main", None),
+        # The derivation claim on its own: the right path reached the wrong way.
+        # `path_source` null means the hook was handed the root rather than
+        # deriving it from `git worktree list`.
+        "treatment-path-source-not-derived": lambda d: _rebind(
+            d / "arm-treatment.json", "wt", None),
+        # A control that binds the worktree is not reproducing the defect.
+        "control-binds-worktree": lambda d: _rebind(
+            d / "arm-control.json", "wt", "git_worktree"),
+        # A part-way kill (attempt 1 died here on a weekly usage limit) is not a
+        # clean arm and must not read as one.
+        "treatment-headless-killed": lambda d: _rewrite(
+            d / "arm-treatment.json", "headless",
+            {"exit": 1, "timed_out": False, "elapsed_s": 143.0,
+             "stdout_tail": "You've hit your weekly limit"}),
+        # Attribution signal 3 is vacuous when both tiers run the same model.
+        "same-model-both-tiers": lambda d: _rewrite(
+            d / "arm-treatment.json", "parent_model", "sonnet"),
     }
     failed = []
     for name, damage in cases.items():
@@ -377,6 +489,21 @@ def selftest() -> int:
 def _rewrite(path: Path, key: str, value) -> None:
     data = json.loads(path.read_text(encoding="utf-8"))
     data[key] = value
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _rebind(path: Path, where: str, path_source: str | None) -> None:
+    """Repoint an arm's binding entries at the other tree, for --selftest.
+
+    Damages ONLY `binding_entries`, leaving the gauge paths untouched, so the
+    mutation is caught by `check_binding` specifically rather than by some other
+    check noticing collateral damage.
+    """
+    data = json.loads(path.read_text(encoding="utf-8"))
+    root = (data.get("sandbox") or {}).get(where)
+    for e in data.get("binding_entries") or []:
+        e["spine"] = str(Path(root) / ".agent-work" / "sbwork" / "spine.json")
+        e["path_source"] = path_source
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 

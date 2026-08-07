@@ -1,0 +1,89 @@
+{
+  "work_id": "issue-440-binding-cwd-g2-review",
+  "diff_ref": "commit b332287 — the two NEW code files it adds: .agent-work/issue-440-binding-cwd/acceptance/run_two_arm.py (793 lines) and .agent-work/issue-440-binding-cwd/acceptance/verify_evidence.py (405 lines). The rest of the commit is evidence and engine state, not code.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Python Invocation; Verification Discipline; Evidence You Owe Back), docs/agents/GLOSSARY.md, constellation-reviewer references/global-crew.md and references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "run_two_arm.py main() (715-789) does argument parsing, arm building, diff capture, settings generation, preflight, probing, a per-arm run loop and cleanup in one 75-line body, and collect() (627-700) ends in a 38-line dict literal that is the evidence schema written out inline. Neither is hard to follow — both are strictly linear — but the inline literal is why the evidence schema exists nowhere as a named thing, which is the root of the shotgun-surgery entry below. Low severity for a single-purpose harness.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The only class in the diff is verify_evidence.Checker (46-57), twelve lines with two fields and one method. Everything else is module-level functions.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "run_two_arm.read_json (586-590) and verify_evidence.load (60-64) are the same four-line swallow-and-return-None JSON loader, and both files carry their own path/temp helpers.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md §Verification Discipline — 'A round-trip test over the real shipped artifacts proves the artifacts are clean — it does not prove the tool is correct', together with the checker's own documented contract at verify_evidence.py:34-36 ('this checker never imports the code under test -- an evidence checker that asks the implementation what to expect cannot contradict it').",
+        "reason": "De-duplicating these helpers means the checker importing the producer, which is precisely the coupling the verification standard exists to prevent: a shared loader is a shared failure mode, and a checker that shares code with the harness can no longer contradict it. Eight lines of duplication is the cheap price of independence."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "Every check_* function in verify_evidence.py reaches deep into dictionaries produced by run_two_arm.collect() — a.get('gauge_in_worktree') or {} then .get('record') — rather than asking an object about itself.",
+      "override": {
+        "repo_standard": "verify_evidence.py:34-36 documented independence contract, plus docs/agents/CREW_CONTEXT.md §Verification Discipline 'Assert against behaviour, never against text that describes it'.",
+        "reason": "The data genuinely lives in another process's JSON output, so there is no object to move the behaviour onto without introducing the shared record type the independence contract forbids. Envy of a serialized boundary is not envy of a class."
+      }
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "The sandbox tuple (root, main, wt, spine, gauge_wt, gauge_main) travels as an untyped dict `sb` through build_sandbox (307-353), subagent_prompt (360), launch, collect (627) and check_live_checkout_untouched's caller. A dict is a parameter object with no schema, so a mistyped key returns None and reads as a clean negative — the exact hazard this issue's own handoff warns about. Low severity because every consumer is in the same 800-line file, but it is why check_live_checkout_untouched has to recover the sandbox root by walking Path(m).parent.parent (verify_evidence.py:257) instead of reading a recorded field.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "flagged",
+      "finding": "The arm identity is a bare string used as a dict key, a filename fragment and a substring probe. verify_evidence.py:111 and :115 establish 'each arm's hook command points at its OWN arm tree' by testing `'/treatment/' in cmd` and `'control' in cmd`. That makes arm identity a property of path spelling rather than of anything recorded, and it is directly why the selftest's live-store-leaked mutation has to smuggle its payload through a path string. Contrast spine_rail.py, which in the same epic introduced named PATH_SOURCE_* constants for exactly this reason.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "flagged",
+      "finding": "run_two_arm.launch(prompt, cwd, settings, model, log_path, timeout) takes six positional parameters (451-452) and is called from two sites with different orderings of intent (probe at 567, arm at 767). Borderline rather than egregious; a LaunchSpec would collapse it, and the cwd/CLAUDE_PROJECT_DIR coupling that the docstring has to explain in prose (453-457) would become a named field.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Adding one field to the evidence means editing three places that share no declaration: the inline dict literal in run_two_arm.collect() (663-699), a new check_* function plus its wiring in verify_evidence.verify() (306-322), and a selftest case (338-355). Nothing fails when only one or two are done — which is observably what happened: collect() records skip_sidecar_wt, skip_sidecar_main, uncalibrated_wt, binding_entries[].path_source and headless.exit, and verify_evidence asserts NONE of them. That silent gap is the mechanism behind five of the eight verifier holes recorded under r10.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "Each file has one reason to change — the harness when the experiment changes, the checker when the evidence schema changes. The split is clean.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "flagged",
+      "finding": "verify_evidence.py:257 — `Path(m).parent.parent.name` walks two levels up a path to recover the sandbox root name, with the layout it assumes recorded only in a comment on the line above (:256). If build_sandbox's directory depth ever changes, this silently yields the wrong root and the leakage test in :268-273 searches the live store for the wrong string while still reporting PASS. Chained `.get(...) or {}` accessors elsewhere are the milder, tolerable form.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "run_two_arm.probe() (548-579) is machinery whose result is discarded. Its docstring promises 'Returns the filler count to use; a TRUNCATED verdict is reported, not silently worked around', and the trailing comment (577-579) describes a two-branch policy ('FULL: 6 x 200_000 chars ... Otherwise assume ~30_000 chars per call and take 30 calls'), but the body ends in an unconditional `return FILLER_COUNT`. The verdict is computed, written to disk and then ignored. The committed evidence/probe.json makes this concrete: it is dated 2026-08-06T03:19, records filler_chars 240000 and verdict TRUNCATED, and contradicts the module's own FILLER_CHARS = 28_000 and its 80-87 comment claiming a whole file arrives untruncated.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "Both files are comment-dense to an unusual degree — run_two_arm.py:78-103 is a 26-line comment block on token budgeting, and most functions carry a docstring several times the length of their body. On a normal codebase this ratio would read as prose compensating for unclear code.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md §Evidence You Owe Back ('Name the exact commands you ran and paste their real output'; 'Report a measured negative as a complete result') and §Verification Discipline, plus the established in-repo convention of KNOWN-NOT-CHASED / TOLD-TRUTH-vs-GUESS rationale blocks visible in scripts/hooks/spine_rail.py at this same HEAD.",
+        "reason": "In this repo the comments carry the experimental design — which measurement was taken versus assumed, what a rung refuses and why, what was knowingly not chased. That is owed evidence, not deodorant: a reader who deletes run_two_arm.py:78-103 loses the argument that the inflation budget clears HARD under every chars-per-token assumption, and cannot reconstruct it from the code. The one place the convention IS abused is probe(), where the comment describes behaviour the body does not have — and that is flagged above under speculative-generality rather than excused here."
+      }
+    }
+  ],
+  "rail_exception": null
+}

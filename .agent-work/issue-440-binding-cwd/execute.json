@@ -371,7 +371,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g2",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -395,7 +396,27 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-440-binding-cwd/crew/g2-review/REVIEW_RESULT.md",
+            "verdict": "APPROVE WITH FINDINGS. The core claim survives an independent hostile read; the verifier that guards it does not fully.",
+            "q1_answer": "YES - the trip is the worktree-dispatched agent's own reading, settled on the REVIEWER'S OWN evidence rather than the harness's. The reviewer built a scratch git main plus a real worktree, planted the spine only in the worktree, and fired both hook versions on a synthetic payload whose cwd is the main: HEAD binds the worktree (path_source=git_worktree), cbd9aee binds the main. THE DECISIVE VARIANT: it moved the engine script token OUT of the worktree into main/bin and the hook STILL resolved to the worktree - with no worktree-shaped token anywhere in the command, the root is genuinely derived from `git worktree list`, which kills the hand-injection hypothesis outright. Corroborated at source: gauge_writer_hook.py:608-631 reads only the derived subagents/agent-<id>.jsonl with an explicit refusal to fall back to the parent, and find_latest_usage:325 additionally requires isSidechain AND a matching agentId, so fill_fraction 0.559655 is structurally incapable of being the parent's.",
+            "q2_answer": "YES in substance. build_arms uses whole trees (copytree vs `git archive cbd9aee scripts`), not a curated subset. The reviewer diffed the settings itself: two lines, both treatment->control. It diffed the prompts itself: after normalising the arm name, diff exits 0. Both fills are ~3.7x HARD and 0.44% apart, so the outcome difference cannot be an inflation difference.",
+            "rewritten_check_adjudicated": "LEGITIMATE CORRECTION, with a caveat to record. The reviewer independently confirmed byte-identity was unsatisfiable - the live store changed again under its own engine claim (4213 -> 4663 -> 4561) - and independently verified no acc440/sbwork/Temp/sandbox substring is present in the live store, all 12 entries being real repo paths. Caveat: the leakage test now runs at VERIFICATION time, so a leak-then-release would go undetected.",
+            "quiet_first_launch_adjudicated": "Declined-then-complied-unchanged, settled by a route the handoff did not anticipate: run_two_arm.py's mtime is 2026-08-06 03:26, BEFORE both launches, and it is unmodified, so the prompt generator could not have been touched between them. The requested route was unavailable because the harness overwrites the headless log per invocation.",
+            "findings_material": "F1 (the material one): verify_evidence.py has 8 uncovered silent-pass holes. The worst - a treatment arm whose binding points at the sandbox MAIN, i.e. the bug NOT fixed, still exits 0, because check_treatment never reads binding_entries. path_source == git_worktree, the most load-bearing fact in the whole claim, is asserted only for the preflight. Also uncaught: headless.exit != 0, identical parent/subagent models, a gauge at BOTH paths, a skip sidecar, and prompts differing in substance. F2: the freshness check compares observed_at to wall_clock_at_collect, both written by the same collect() call, so it cannot detect staleness; the reviewer settled freshness by mtimes instead and the evidence IS fresh. F3: arm-diff.txt and settings-*.json post-date the treatment run by 3 minutes, so they are a deterministic post-hoc rebuild rather than a capture. F4: probe() computes a verdict, writes it, discards it. F5: `py` in the hook wiring vs `python` in preflight. F6 Fowler: shotgun-surgery - the evidence schema is declared nowhere, which is the mechanism behind five of the eight holes.",
+            "findings_do_not_overturn_result": "The reviewer states explicitly that NONE of the eight holes describes the real evidence - it hand-checked every fact. The holes are a weakness in the guard, not a defect in the result.",
+            "commander_ruling": "Result APPROVED and carried. F1's worst hole is being closed fix-now under inherited latitude rather than triaged, because an acceptance artifact for THIS issue that passes while the bug is present is precisely the tests-that-cannot-fail shape this epic has already filed three issues about (#432, #446, and a finding inside #419's own run). The remaining findings go to triage.",
+            "could_not_settle": "Whether the declined first launch was byte-identical (the log was destroyed by the overwrite); whether a leak occurred and was later released (no contemporaneous instrument); order/time confounding (n=1 per arm, treatment always first).",
+            "regrade_requested": "existence-verified-resolution -> measured for the GUESSED-RUNG PATH ONLY. The live arms exercised only rung 4 succeeding and rung 5 failing; told-truth rungs 0-2 and the g1b disagreement refusal remain unit-tested only."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-integrate": {
@@ -599,7 +620,7 @@
     "session_id": "cmdr-440-binding-cwd",
     "status": "active",
     "claimed_at": "2026-08-06T08:36:15.298330+00:00",
-    "last_heartbeat": "2026-08-07T14:53:58.192391+00:00",
+    "last_heartbeat": "2026-08-07T15:19:43.863364+00:00",
     "claimed_by": "commander-delegated",
     "worktree": ".",
     "previous_session_id": null,
