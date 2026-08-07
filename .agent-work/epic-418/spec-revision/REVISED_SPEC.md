@@ -1,7 +1,32 @@
 # Epic #418 — revised spec, section by section
 
+_**DRAFT — UNCONFIRMED — DO NOT CUT.** This spec has not passed the confirm gate. Do not cut
+issues or waves from this document while this marker stands._
+
 Working document. Revises `.agent-work/archive/2026-08-03-explore-post-phase1/DESIGN_SPEC.md`
 against what execution actually taught us. Written with Tommy, 2026-08-07.
+
+## Confirmation
+
+- **Status: DRAFT — UNCONFIRMED — DO NOT CUT**
+- Confirmed by:
+- Date:
+- Critic findings dispositioned: NO — every row in the Critic findings table must carry a
+  Disposition before confirm
+- Cold panel: four arms dispatched 2026-08-07 — `intent-fit`, `testability`,
+  `done-condition fidelity`, `claim accuracy`. The last two are new lenses, added for this
+  review; `claim accuracy` is the only arm permitted to read the tree.
+
+**Known gate defect:** #428 reports that `verify_spec_confirmed.py --phase review` refuses
+every template-conformant draft by construction, because the any-phase marker check makes the
+review phase unpassable while the `UNCONFIRMED` marker can only come off at confirm. Expect the
+review-phase gate to refuse this document for that reason rather than for its content. Do not
+"fix" it by removing the marker early — that defeats the gate it is protecting.
+
+**Note for triage:** the tree moved under the `claim accuracy` arm mid-review. #440 merged
+while the panel was running, changing `scripts/hooks/spine_rail.py`, `docs/GAUGE_WRITER_HOOK.md`
+and `tests/test_spine_rail.py`. Any finding touching those three paths must be re-checked
+against merged main before it is dispositioned.
 
 **Why the original needs revising, in one line:** it was written on 2026-08-03, before this
 epic ever dispatched concurrent Commanders, and several of its "by construction" claims have
@@ -512,3 +537,16 @@ Commander that finds a link is not real should say so rather than honour it.
 interface for any section. The order above plus each section's fixed boundaries is the whole
 course. Wave composition is the Admiral's call under the standing latitude contract, and the
 iterative-planning flow is how it revises between waves.
+
+---
+
+## Critic findings and dispositions
+
+The cold adversarial review's findings. The columns below are contractual and machine-parsed —
+do not rename them. Disposition is one of `EDIT` / `RE-EXPLORE` / `REJECT`; a RE-EXPLORE
+reopens the explore step. Every row must carry a Disposition and a Reason before this spec can
+confirm. **Critics never self-triage** — empty Disposition cells on arrival are correct.
+
+| ID | Lens | Severity | Finding | Disposition | Reason |
+|---|---|---|---|---|---|
+| _(panel dispatched 2026-08-07; rows land here as arms return)_ | | | | | |
