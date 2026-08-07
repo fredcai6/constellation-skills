@@ -293,6 +293,23 @@ Full recommendations in `.agent-work/issue-440-binding-cwd/TRIAGE.md`.
 
 ---
 
+
+## 11b. Decision-anchor regrade — scoped deliberately
+
+`decision:existence-verified-resolution` carried `settle: THIS GATE`, so it is regraded to
+**`measured` — for the GUESSED-RUNG PATH ONLY**. The live arms exercised exactly two rungs: rung 4
+(`git_worktree`) succeeding and rung 5 failing. **Told-truth rungs 0-2, the g1b disagreement refusal,
+and g1-review's tc1 remain `guess`** — tc1 being the case where both trees hold a real checklist at
+the same relative path and rung 3 beats rung 4, binding a confident wrong path. That reviewer judged
+it non-blocking on evidence and I agree, but this gate did not settle it.
+
+The narrowness is the point: a flat `measured` would have let a two-rung result stand as if the whole
+ladder were proven, and would have buried tc1 — which is exactly
+`lesson:grading-a-contested-claim-settled-launders-it`. Full note at
+`.agent-work/archive/2026-08-07-issue-440-binding-cwd/REGRADE_existence-verified-resolution.md`.
+
+---
+
 ## 12. Closeout status — archive is BLOCKED, and it is blocked on you
 
 The run is **complete and green**. Every gate closed with integrated evidence and the spine was
