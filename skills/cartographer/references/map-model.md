@@ -106,7 +106,7 @@ supports        capability/struct -> capability     (this helps provide that cap
 depends-on      struct -> struct                    (consumer -> provider)
 emits           struct/capability -> event          (this produces that event)
 constrained-by  node -> constraint | assumption     (this is governed by that rule/assumption)
-explained-by    node -> decision                    (this is explained by that decision anchor)
+explained-by    node -> decision | claim            (this is explained by that decision anchor or short rationale claim)
 verified-by     node | claim -> claim               (this is backed by that verifiable claim/evidence)
 ```
 
@@ -116,7 +116,7 @@ Edge semantics:
 - `depends-on` — consumer -> provider structural dependency. Generated dependency evidence may live in `map.json`; do not add edge types for imports or call detail.
 - `emits` — a struct or capability produces a named event. Direction is producer -> event.
 - `constrained-by` — a node is governed by a constraint or assumption. Direction is governed node -> constraint/assumption.
-- `explained-by` — a node's current shape is explained by a decision anchor. Direction is node -> decision.
+- `explained-by` — a node's current shape is explained by a decision anchor or a short rationale claim. Direction is node -> decision/claim.
 - `verified-by` — a node or claim is backed by a claim that points at evidence. Direction is subject -> claim. This is the trust dimension; it is not formal traceability.
 
 Edge metadata:

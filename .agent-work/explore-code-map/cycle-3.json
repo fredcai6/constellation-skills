@@ -10,7 +10,8 @@
     "x11",
     "q2-articles-ruling",
     "q3-agent-lean",
-    "q4-id-syntax"
+    "q4-id-syntax",
+    "q5-rulings"
   ],
   "tasks": {
     "c0-frame": {
@@ -122,6 +123,22 @@
       "status_detail": {},
       "result": "pass",
       "finding": "HUMAN RULING 2026-08-07: minimal storage accepted for the mindmap interface; most functions never need ids; ids minted AS NEEDED when the mindmap hooks a function; syntax must be established NOW for traceability. PROPOSAL ON TABLE (agent): (1) anchor comment = a comment line containing only the bracket token, directly above the def/class/assignment it names, same indent -- works for callables AND constants; slug shares the ruled [kebab-slug] token from the grammar; (2) crawler binds slug to the enclosing entity's symbol path; (3) every regen emits ids.jsonl at the map root, one sorted statement-shaped line per id {id, s, q:{file,line}} -- the single well-known place to resolve an id; deterministic, so its diff IS the id-motion report; (4) mindmap stores repo+slug only, never paths; (5) duplicate slug = build error in run report; deleted slug = the already-ruled orphan gate. Not yet implemented: f1Brainz is read-only this cycle; first real anchors can be written by the dev agent during the cycle-4 real-issue trial.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q5-rulings": {
+      "id": "q5-rulings",
+      "title": "Rulings: map-model amendment signed off; commenting is a skills function; regen in cycle 4; skills design opens",
+      "imperative": "Record the four rulings and open the consumption-skill design discussion.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUMAN RULINGS 2026-08-07: (1) map-model.md amendment SIGNED OFF and applied -- explained-by target widened to decision|claim (grammar line 109 + semantics bullet 119), resolving the x9-found contradiction with the doc's own claim-routing prose. (2) Comment-writing adoption is NOT a culture gamble: 'the commenting is a function of our skills' -- agents write tagged comments because the skills direct it; kills the open adoption unknown as a skills-layer design task. (3) Regen/maintenance-loop test folded into the cycle-4 real-issue trial, agreed. (4) 'let's talk skills so we unlock cycle 4' -- consumption+maintenance skill design is the gating work item; discussion opened this turn.",
       "evidence": [],
       "rework_count": 0
     }
