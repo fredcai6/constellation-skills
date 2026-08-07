@@ -38,6 +38,7 @@ import tempfile
 import unittest
 from dataclasses import dataclass, field
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = ROOT / "scripts" / "map_orient.py"
@@ -238,12 +239,53 @@ def apply_mutation(source: str, mutation: Mutation) -> str:
     return mutated
 
 
+# ANSI CSI sequences (colour, bold, cursor moves). See strip_ansi() below.
+ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+
+
+def strip_ansi(text: str) -> str:
+    """Remove ANSI escapes so captured output can be parsed as plain text.
+
+    ISSUE #454 -- the defect this exists to refuse. The Claude Code harness
+    exports `FORCE_COLOR=3`, which makes pytest colourize even when its stdout
+    is a captured pipe rather than a terminal. The colour RESET then lands
+    between `FAILED` and the test path:
+
+        \\x1b[31mFAILED\\x1b[0m tests/test_map_orient.py::\\x1b[1mFoo::bar\\x1b[0m
+
+    `failed_nodes` matched nothing, so this harness reported
+    "HARNESS ERROR: non-zero exit with no FAILED test node" while its own
+    captured output plainly contained those nodes -- ten tests red for a reason
+    with no bearing on what they test. That false red burned three independent
+    agents in one day.
+
+    `run_floor` now neutralises colour in the child's environment, so in the
+    normal case this function has nothing to do. It is kept as a second line of
+    defence: a future forced-colour source this harness does not control (a
+    pytest plugin, a CI runner, a config file) must not be able to silently
+    reintroduce the failure. Parsing is written to tolerate colour rather than
+    to assume its absence.
+    """
+    return ANSI_RE.sub("", text)
+
+
+def clean_stdout(proc: subprocess.CompletedProcess) -> str:
+    """The child's stdout as plain text -- always parse and report through this."""
+    return strip_ansi(proc.stdout)
+
+
 def run_floor(module_path: Path) -> subprocess.CompletedProcess:
     """Run the whole floor with the module under test pointed at `module_path`."""
     env = dict(os.environ)
     env["MAP_ORIENT_MODULE"] = str(module_path)
+    # #454: keep the captured output colour-free AT THE SOURCE. `--color=no` is
+    # the authoritative switch for pytest itself; the two env vars cover any
+    # other colour-capable library the child imports. Belt and braces here is
+    # cheap, and the alternative is output nobody can parse OR read.
+    env.pop("FORCE_COLOR", None)
+    env["NO_COLOR"] = "1"
     return subprocess.run(
-        [sys.executable, "-m", "pytest", str(FLOOR), "-q", "-p", "no:cacheprovider"],
+        [sys.executable, "-m", "pytest", str(FLOOR), "-q", "-p", "no:cacheprovider", "--color=no"],
         cwd=str(ROOT),
         capture_output=True,
         text=True,
@@ -252,11 +294,13 @@ def run_floor(module_path: Path) -> subprocess.CompletedProcess:
 
 
 def failed_nodes(proc: subprocess.CompletedProcess) -> list[str]:
-    return re.findall(r"(?:SUB)?FAILED(?:\([^)]*\))? (tests[/\\]test_map_orient\.py::\S+)", proc.stdout)
+    return re.findall(
+        r"(?:SUB)?FAILED(?:\([^)]*\))? (tests[/\\]test_map_orient\.py::\S+)", clean_stdout(proc)
+    )
 
 
 def passed_count(proc: subprocess.CompletedProcess) -> int:
-    match = re.search(r"(\d+) passed", proc.stdout)
+    match = re.search(r"(\d+) passed", clean_stdout(proc))
     return int(match.group(1)) if match else 0
 
 
@@ -284,7 +328,7 @@ class MutationFloor(unittest.TestCase):
             proc.returncode,
             0,
             "HARNESS ERROR: the unmutated copy does not pass its own floor, so no "
-            f"red below proves anything.\n{proc.stdout[-4000:]}\n{proc.stderr[-2000:]}",
+            f"red below proves anything.\n{clean_stdout(proc)[-4000:]}\n{strip_ansi(proc.stderr)[-2000:]}",
         )
         self.assertGreater(passed_count(proc), 0)
 
@@ -378,7 +422,7 @@ class MutationFloor(unittest.TestCase):
             f"MUTANT SURVIVED: {mutation.name}\nwhy it matters: {mutation.why}\n"
             "The floor passed against a module that no longer holds the contract, so "
             "the floor does not actually test it.\n"
-            f"{proc.stdout[-4000:]}",
+            f"{clean_stdout(proc)[-4000:]}",
         )
 
         # The red must be a real kill, not a broken import.
@@ -386,13 +430,13 @@ class MutationFloor(unittest.TestCase):
             passed_count(proc),
             0,
             f"HARNESS ERROR: {mutation.name}: the mutated module collected no passing "
-            f"tests, so the floor went red for the wrong reason.\n{proc.stdout[-4000:]}",
+            f"tests, so the floor went red for the wrong reason.\n{clean_stdout(proc)[-4000:]}",
         )
         nodes = failed_nodes(proc)
         self.assertTrue(
             nodes,
             f"HARNESS ERROR: {mutation.name}: non-zero exit with no FAILED test node.\n"
-            f"{proc.stdout[-4000:]}",
+            f"{clean_stdout(proc)[-4000:]}",
         )
         self.assertTrue(
             any(f"::{mutation.expect_kills}::" in node for node in nodes),
@@ -431,6 +475,84 @@ class HarnessSelfCheck(unittest.TestCase):
             for old, _ in mutation.subs:
                 with self.subTest(mutation=mutation.name):
                     self.assertEqual(ORIGINAL.count(old), 1, f"anchor not unique: {old!r}")
+
+
+class ForcedColourDoesNotBreakParsing(unittest.TestCase):
+    """ISSUE #454 regression guard -- a false RED is as bad as a false GREEN.
+
+    Under `FORCE_COLOR=3` (which the Claude Code harness exports) pytest
+    colourizes into a captured pipe, `failed_nodes` matched nothing, and this
+    file reported ten HARNESS ERRORs about output that plainly contained the
+    nodes it said were missing. Three independent agents were sent chasing a
+    defect that did not exist.
+
+    Both halves of the fix are pinned here, because either alone would let it
+    back: the environment neutralisation stops colour AT THE SOURCE, and the
+    parsing tolerates colour anyway in case some future source is one this
+    harness does not control.
+    """
+
+    # Recorded VERBATIM from the RED run of this file under FORCE_COLOR=3.
+    # Do not "tidy" the escapes -- the point is that this is what pytest really
+    # emitted, including the reset sitting between `FAILED` and the test path.
+    COLOURED_TAIL = (
+        "\x1b[31mFAILED\x1b[0m tests/test_map_orient.py::"
+        "\x1b[1mSubstituteProvenanceIsReported::test_BOTH_labels_appear_in_one_real_report"
+        "\x1b[0m - AssertionError: 'known-fallback' not found in 'DEGRADED-NO-MAP...\n"
+        "\x1b[31m\x1b[31m\x1b[1m5 failed\x1b[0m, \x1b[32m82 passed\x1b[0m, "
+        "\x1b[32m39 subtests passed\x1b[0m\x1b[31m in 14.33s\x1b[0m\x1b[0m\n"
+    )
+    EXPECTED_NODE = (
+        "tests/test_map_orient.py::"
+        "SubstituteProvenanceIsReported::test_BOTH_labels_appear_in_one_real_report"
+    )
+
+    @staticmethod
+    def _captured(stdout: str) -> subprocess.CompletedProcess:
+        return subprocess.CompletedProcess(args=[], returncode=1, stdout=stdout, stderr="")
+
+    def test_the_fixture_really_does_carry_ansi_escapes(self):
+        """Guards the guard: a fixture that lost its escapes proves nothing."""
+        self.assertIn("\x1b[", self.COLOURED_TAIL)
+        self.assertNotIn("\x1b[", strip_ansi(self.COLOURED_TAIL))
+
+    def test_failed_nodes_reads_a_colourized_FAILED_line(self):
+        self.assertEqual(
+            failed_nodes(self._captured(self.COLOURED_TAIL)),
+            [self.EXPECTED_NODE],
+            "#454 REGRESSION: a FAILED node wrapped in ANSI was not parsed, so a real "
+            "kill would be reported as 'non-zero exit with no FAILED test node'.",
+        )
+
+    def test_passed_count_reads_a_colourized_summary_line(self):
+        self.assertEqual(
+            passed_count(self._captured(self.COLOURED_TAIL)),
+            82,
+            "#454 REGRESSION: the passed count was misread from a colourized summary.",
+        )
+
+    def test_run_floor_strips_colour_from_the_child_even_when_FORCE_COLOR_is_set(self):
+        """The source-side half: the captured output must be clean as CAPTURED.
+
+        This is the assertion that actually reproduces the bug -- it sets the
+        exact variable the harness sets and looks at what comes back. Runs the
+        real floor once, which is the only honest way to prove what the child
+        environment does.
+        """
+        with mock.patch.dict(os.environ, {"FORCE_COLOR": "3"}):
+            proc = run_floor(MODULE)
+        self.assertNotIn(
+            "\x1b",
+            proc.stdout,
+            "#454 REGRESSION: FORCE_COLOR leaked into the floor subprocess, so its "
+            "captured stdout carries ANSI escapes. Every parse and every truncated "
+            f"diagnostic dump in this file is now unreliable.\n{proc.stdout[:2000]}",
+        )
+        self.assertEqual(
+            proc.returncode,
+            0,
+            f"the unmutated floor should still pass\n{clean_stdout(proc)[-2000:]}",
+        )
 
 
 if __name__ == "__main__":
