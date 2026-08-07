@@ -345,8 +345,9 @@ def _leg_retired_path(root: Path, tracked: set[str]) -> list[Violation]:
 # and was never going to: `docs/RECURSIVE_IMPROVEMENT_DESIGN.md` is a June-2026 design
 # RECORD whose ~33 sites must survive untouched (rewriting it to describe a system it never
 # described would falsify history), the commander spine's `archive.c4` deny-globs keep both
-# retired path strings as a RE-STAGING BLOCK, and `scripts/stage_feedback.py` survives by
-# explicit ruling and names them eight times. With no approval mechanism at all,
+# retired path strings as a RE-STAGING BLOCK. (`scripts/stage_feedback.py` also named them
+# eight times and survived #447 by explicit ruling; it was deleted under #463 once it was
+# shown orphaned — a stager whose consumer #447 had removed.) With no approval mechanism at all,
 # `test_canon_is_clean`'s `xfail(strict=True)` could never XPASS and the scaffolding would
 # outlive the work it exists to end — the exact defect g1's own review caught once already.
 #

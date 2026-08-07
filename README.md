@@ -28,7 +28,7 @@ Constellation deliberately holds native, rigor-flavored versions of the capabili
 
 ## Skill set
 
-The corpus is **19 skills**. `skills/_shared/` is **not a skill** — it is shared doctrine (e.g. `skill-goodness.md`, deep-module notes) that multiple skills consume.
+The corpus is **20 skills**. `skills/_shared/` is **not a skill** — it is shared doctrine (e.g. `skill-goodness.md`, deep-module notes) that multiple skills consume.
 
 | Skill | Purpose |
 |---|---|
@@ -51,6 +51,7 @@ The corpus is **19 skills**. `skills/_shared/` is **not a skill** — it is shar
 | `constellation-curator` | Periodic human-run maintenance of the skills corpus: measure, mend mechanical issues in place, route design decisions to Triage. |
 | `constellation-docent` | Generate a self-contained static HTML explainer site for humans from Cartographer map truth, stamped with the source-map digest so a stale site is visibly flagged. |
 | `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey); the substrate every other skill uses. |
+| `constellation-how-to-talk` | Keep an agent's prose clear, concise, and grounded — each sentence one point in the plainest words — so meaning stays consistent across artifacts, agents, and sessions. Applies to any human-facing output, so it is not tier-specific. |
 
 ## Repo layout vs. installed layout
 

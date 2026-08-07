@@ -156,30 +156,6 @@ scripts/apply_episode_delta.py:# C3a — the mandatory non-empty reason (mirrors
 # placeholder-token comment: a HYPOTHETICAL example of a skill-dir token carrying hyphens, illustrating the parser's rule; it directs nobody to anything
 scripts/init_work_area.py:# carry hyphens, e.g. a hypothetical <lessons-auditor-skill-dir>). A token in
 
-# survivor script's docstring: names the durable file the staged layout stood in for. Retained by explicit ruling at #447 g4; no shipped surface directs an agent to this script
-scripts/stage_feedback.py:write the durable `AGENT_FEEDBACK.md` (see "Fenced feedback/archive closeout
-
-# survivor script's docstring: names the four-file staged layout the script writes
-scripts/stage_feedback.py:worktree-local trio -- AGENT_FEEDBACK.md, lessons-delta.json,
-
-# survivor script's docstring: names the verifier (deleted at g4) whose accepted shapes the layout was built to match -- a record of why the layout is what it is
-scripts/stage_feedback.py:`verify_agent_feedback.py --phase feedback` and `--phase archive` accept
-
-# survivor script: the TRIO_FILES constant, the literal filenames it writes into a worktree-local staging dir
-scripts/stage_feedback.py:TRIO_FILES = ("AGENT_FEEDBACK.md", "lessons-delta.json", "CONSTELLATION_FEEDBACK.md", "FENCE.md")
-
-# survivor script: the staged file's own header text, naming the durable destination it was staged for
-scripts/stage_feedback.py:"Staged for Admiral harvest into the durable `.agent-work/AGENT_FEEDBACK.md` "
-
-# survivor script: the FENCE.md manifest line describing one staged file
-scripts/stage_feedback.py:"- `AGENT_FEEDBACK.md` -- this run's retrospective entry\n"
-
-# survivor script: a comment naming the verifier that would have rejected an invalid staged delta
-scripts/stage_feedback.py:# reject later at verify_agent_feedback.
-
-# survivor script: the write call that creates the staged file, named by its literal filename
-scripts/stage_feedback.py:(staged / "AGENT_FEEDBACK.md").write_text(
-
 # the replacement gate's own docstring: names what it replaced, which is the fact that makes the gate's existence legible
 scripts/verify_episode_captured.py:The write-side replacement for the retiring `.agent-work/LESSONS.md` /
 
