@@ -257,6 +257,25 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-g0-review-4",
+          "type": "remediation-result",
+          "payload": {
+            "artifact": ".agent-work/issue-456/crew-handoffs/g0-remediate-RESULT.md",
+            "crew": "constellation/issue-456/g0/implementer/attempt-1 (relaunch; registry reused the abandoned slot number)",
+            "status": "complete",
+            "commits": "b14ff3ff (code) + a42fbf6c (closed plan)",
+            "b1_fix": "render.py:184 in loc(): head is now the bare file path; the :<line> is gone and the file path and ', N lines' both stay, exactly as ruled. loc() had exactly one call site, entity_page() at render.py:274. Over the real 3,635-page corpus: 0 entity-page headers carry a .py:<line>, 3522 kept the path, 3522 kept the size (3522 not 3523 because one entity page is the still-lost Verdict page).",
+            "b2_fix": "render.py:436: npages = sum(1 for _ in out.rglob('*.md')), read off the tree after it is written; the three per-write increments and the nonlocal are gone. Figure moved 3636 -> 3635 against an unchanged on-disk 3635, with the Verdict page still lost, which is the required outcome.",
+            "commander_independent_verification": "I reproduced BOTH falsifiers in my own hands with a script that asserts each mutation applied before running: baseline 17 passed / 13 subtests; B1 mutated (source line number put back into the header) -> RED on RenderedPageFormatTests::test_no_rendered_page_carries_a_source_line_number; B2 mutated (write-call count restored) -> RED on RenderReportTests::test_render_report_page_count_equals_the_files_on_disk; restored -> 17 passed, working tree byte-identical. Full suite re-run by me in a cleared environment (FORCE_COLOR and PYTHONIOENCODING both popped): 1709 passed, 2 skipped, 0 failed, EXIT 0, 393s -- the 1706 boundary plus exactly the three tests this pass adds. Diff is 2 files, 191 insertions. Zero MUTATION PROBE strings left in render.py. map/ still untracked.",
+            "crew_corrected_two_errors_in_my_handoff": "First, my handoff (repeating the reviewer's B1 text) claimed render.py:306 also emits a position. It does not -- the module index already emitted 'file, N lines' with no line number, so following my instruction literally would have meant editing a compliant line. loc() was the only position emitter. Second, I offered a free choice between 'a set of resolved paths' and 'counting files after the fact'. Only one branch is correct: on a case-insensitive filesystem Verdict.md and verdict.md are two distinct strings and one file, so a set would still have reported 3636 and failed my own acceptance figure. The crew ruled correctly against my wording in both cases and said so.",
+            "fixture_design_note": "The B2 fixture deliberately collides a class named INDEX with its own module's INDEX.md -- an EXACT-path collision that diverges on every platform -- rather than mimicking the real Verdict/verdict pair, which collides only on a case-insensitive filesystem and would prove nothing on Linux. That is the right call and worth carrying forward: a falsifier whose mechanism is platform-dependent is a check that cannot fail on half the platforms.",
+            "out_of_scope_findings_filed": "tc18 entity_pages carries the identical cannot-fail defect in the same function and is still wrong (3523 vs 3522), assigned to g1 beside tc17. tc19 a third environment trap, python-not-py, which fails SILENTLY GREEN and had already reached three of this crew's own command postconditions before it was caught. tc20 no engine verb lets an author correct their own not-yet-started plan without human authority, which forced a disclosed improvisation to avoid shipping vacuous checks. tc21 a blunt position grep of the committed tree still returns 2 hits from one authored docstring echoed through by the renderer, which is correct to leave but will look like B1 unfixed at gs.",
+            "commander_selfcheck": "My own mutation script rewrote render.py's line endings, leaving it flagged modified with an empty git diff; I restored it from HEAD and confirmed the tree is clean. No content was affected."
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0

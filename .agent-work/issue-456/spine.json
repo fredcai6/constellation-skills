@@ -790,6 +790,31 @@
       "id": "tc17",
       "from": "execute",
       "statement": "tc17 A real page is silently lost to a case-insensitive filename collision, and it needs a check that can fail. class Verdict (scripts/run_skill_eval.py:178) and def verdict (:407) both resolve to map/scripts.run_skill_eval/Verdict.md, because render.py:405 derives the page filename from key.split(':',1)[1] with no collision check and no case check. This filesystem is case-insensitive and so is CI's windows-latest. I confirmed the surviving file holds the FUNCTION page; the class is unreachable from the map while the module INDEX.md still links to it. Reviewer swept the whole tree and found exactly one collision, no duplicate keys, no module-directory collisions, no invalid filename characters. Second consequence: the map is platform-dependent, so the same source renders 3636 pages on a case-sensitive filesystem, which fails the spec's own determinism falsifier of 'any non-empty diff on unchanged source'. COMMANDER RULING: the collision is NOT fixed at g0 -- renaming is a symbol-identity question and g2 owns symbol identity. Detection is assigned to g1, whose entire charter is a check stage that can fail; g1 must add a page-name collision check that goes red on this exact case, and it cannot write that check if it does not know the case is there. This is populating g1's stated purpose, not expanding its scope. The Fowler pass names the mechanism: primitive obsession -- the supplement key is a bare 'module:Qualified.Name' string that five call sites re-parse by hand, so there is no single place that owns page-name derivation and therefore no single place to put the check."
+    },
+    {
+      "id": "tc18",
+      "from": "execute",
+      "statement": "tc18 'entity_pages' carries the IDENTICAL check-that-cannot-fail defect that B2 fixed, in the same function, and is still wrong. render.py reports entity_pages as len(sizes), and sizes gets one append per emit() CALL, so it reads 3523 while 3522 entity pages exist on disk. It is the same number-that-cannot-go-wrong shape as the 'pages' field: identical output in the healthy world and in a world where pages overwrite each other. The remediation implementer found it, correctly did NOT fix it because the handoff scoped that pass to 'pages' and forbade other defect fixes, and recommended routing it onward. COMMANDER RULING: assigned to g1 alongside tc17, since g1's charter is a check stage that can fail and this is a one-line fix in the function g1 will already be in. Note the lesson for the remaining ten gates: fixing one instance of this defect family does not fix its siblings, so a gate that fixes a cannot-fail check must sweep the enclosing function for the same shape."
+    },
+    {
+      "id": "tc19",
+      "from": "execute",
+      "statement": "tc19 A third environment trap, more dangerous than tc3 and tc7 because it fails SILENTLY GREEN. docs/agents/CREW_CONTEXT.md:19 requires 'python', not 'py'. The py launcher has no pytest installed, so 'py -m pytest' dies with 'No module named pytest' and a careless reader takes it for a clean run. The g0 remediation implementer had already authored 'py -m pytest' into all three of its plan's command postconditions before it found the rule; had it not, the engine would have recorded a verified pass on every gate of that plan on the strength of checks that could not fail -- this issue's own defect class, occurring inside this issue's own scaffolding for the second time (see tc8). It caught and fixed this before starting any gate. Fix direction: add the python-not-py rule to the environment-traps section that every crew handoff now carries, beside FORCE_COLOR and PYTHONIOENCODING; the traps section is demonstrably the field crews actually read."
+    },
+    {
+      "id": "tc20",
+      "from": "execute",
+      "statement": "tc20 The engine has no verb for an author correcting their own not-yet-started plan. The g0 remediation implementer needed to fix three wrong command strings in a plan file it had itself just authored, before 'start' on any gate. 'amend' is the sanctioned route but requires --authority human and no human is reachable from a crew. Its alternatives were to drive four gates through checks it already KNEW were vacuous, or to edit the command text directly. It edited directly, touching no status, satisfied, evidence or journal field, and disclosed the improvisation in its result -- which is the right call and the right disclosure. But the state machine forced a rule-break to avoid shipping a check that cannot fail, which is a bad incentive to leave in place. Fix direction: allow plan-authoring edits to a gate that has never been started, without human authority, since no state or evidence exists yet to protect. Same family as tc9 and tc16: the machine models the obligation but not its legitimate discharge."
+    },
+    {
+      "id": "tc21",
+      "from": "execute",
+      "statement": "tc21 A blunt position grep over the committed page tree will still return 2 hits after B1 is fixed, and a reviewer at gs will read them as B1 unfixed. Both come from a single authored docstring: tests/test_checklist_engine.py's TestGlobToRegex names scripts/checklist_engine.py:449 in its own prose, which the renderer copies through onto the entity page and onto its module index line (tests.test_checklist_engine/TestGlobToRegex.md:8 and INDEX.md:450). This is source text echoed through, not a position the renderer emitted, and it churns only when its own docstring changes -- so by the B1 reasoning it is in the same category as the retained file path and is CORRECT to leave. Recorded so gs is not surprised into re-opening a settled ruling. The remediation implementer also noted it in the test's class docstring. Related: the read-only prototype at .agent-work/issue-456/reference/prototype/render_map.py:159 and render_fn.py:26 still carry the old file:line header, so anyone lifting from the prototype will reintroduce B1."
+    },
+    {
+      "id": "tc22",
+      "from": "execute",
+      "statement": "tc22 A relaunched crew reuses an ABANDONED attempt number, and the resulting registry entry can never be result-verified. Measured this run: two earlier g0 implementer attempts were explicitly abandoned after clean context-trip handoffs; dispatching the remediation implementer registered it as 'constellation/issue-456/g0/implementer/attempt-1' -- the SAME id as the first abandoned attempt -- and reported 'running'. The crew then ran to completion and wrote its result artifact. But 'run_crew.py --verify-result' on that id REFUSED with 'cannot verify an abandoned crew', because the registry still carries the abandoned disposition against the reused slot. So the single mechanism the durable registry exists to provide -- confirming that a dispatched crew actually produced its result artifact -- is unavailable for any relaunched crew, and it fails CLOSED in a way that looks like a policy refusal rather than a defect. I only discovered it because I ran the verification; a commander that trusted the dispatch would never learn the check had not happened. Adjacent to this issue's own defect family: not a check that cannot fail, but a check that cannot RUN, with the same end state of an unverified claim entering the record. Fix direction: allocate a fresh attempt number on every dispatch rather than reusing a terminal slot, and make --verify-result distinguish 'this id was abandoned' from 'this id was abandoned and then relaunched'."
     }
   ],
   "blockers": [],
@@ -798,7 +823,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T22:38:42.309214+00:00",
+    "last_heartbeat": "2026-08-07T23:21:05.635460+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
