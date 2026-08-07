@@ -126,7 +126,8 @@
             "kind": "command",
             "command": "python -m pytest tests/test_code_map.py -k cli -q --color=no && python -m scripts.code_map discover --root . > /dev/null"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m2-cli-2"
         }
       ],
       "constraints": [
@@ -135,7 +136,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -146,6 +147,17 @@
           "payload": {
             "seam": "m2-cli",
             "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-cli-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k cli -q --color=no && python -m scripts.code_map discover --root . > /dev/null",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -162,7 +174,8 @@
           "id": "p1",
           "statement": "CLI exists",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m2-cli complete: scripts/code_map/cli.py and __main__.py exist, 7 CLI tests green, discover exits 0."
         }
       ],
       "postconditions": [
@@ -173,7 +186,8 @@
             "kind": "command",
             "command": "python -m scripts.code_map extract --root . && test -s .code-map/statements.jsonl"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-extract-1"
         }
       ],
       "constraints": [
@@ -184,11 +198,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-extract-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map extract --root . && test -s .code-map/statements.jsonl",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m4-supplement": {
@@ -451,12 +477,12 @@
     }
   ],
   "blockers": [],
-  "refusals": 1,
+  "refusals": 3,
   "engine_session": {
     "session_id": "g0-impl-9febe0be",
     "status": "active",
     "claimed_at": "2026-08-07T20:48:13.953663+00:00",
-    "last_heartbeat": "2026-08-07T21:02:37.344626+00:00",
+    "last_heartbeat": "2026-08-07T21:06:15.082776+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -476,6 +502,20 @@
       "why": "Discovery layer green: corpus = tracked *.py minus .agent-work/. Hermetic synthetic-repo tests plus one rule-asserting integration test; no pinned count.",
       "mechanical": false,
       "ts": "2026-08-07T20:51:13.721318+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-cli",
+      "why": "CLI is one argparse entrypoint over six stage subcommands; --root defaults to this repo and resolves the artifact/map dirs at parse time so callers cannot drift. Stage imports are deferred into handlers so parsing does not pay for the extractor. 7 CLI tests green and discover exits 0 against this repo.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:03:32.613990+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-extract",
+      "why": "astx.py ported verbatim to extract.py: the two AST passes, the resolver and every visitor are unchanged, so D1/D2/D3 survive for the gates that own them. Only the edges moved -- the hardcoded f1Brainz ROOT is now a run() parameter, INDEX_DIRS and slice_manifest.json are both replaced by discover_corpus, and the report lost its timing fields. 108 modules indexed, 85321 statements, 0 failures over this repo.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:06:15.082757+00:00"
     }
   ]
 }
