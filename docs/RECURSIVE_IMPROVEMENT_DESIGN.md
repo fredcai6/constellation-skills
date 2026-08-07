@@ -1,3 +1,19 @@
+> **SUPERSEDED — this is a HISTORICAL RECORD, not an instruction.** It describes the
+> recursive-improvement loop as designed and built in June 2026. Every surface, writer, gate
+> and role named below was **retired at issue #447**. Nothing here is live doctrine: do not
+> act on any of it, and do not restore anything it describes.
+>
+> It is kept **unedited** on purpose. Rewriting it to describe a system it never described
+> would falsify the record of why the loop was built this way and what it cost, which is the
+> only thing it is still good for.
+>
+> **Where the current loop lives.** A run records what happened as episodes under
+> `episodes/`, written only through `scripts/apply_episode_delta.py` and proved by
+> `scripts/verify_episode_captured.py`. An episode is a record and is never read back as a
+> rule; a rule to follow belongs in `docs/agents/*`, and putting one there is a human's call.
+> The governing doctrine is `docs/agents/ORCHESTRATOR_CONTEXT.md` § "The Retired Learning
+> Playbook"; the store's own spec is `docs/EPISODE_STORE.md`.
+
 # Recursive Improvement Framework — audit, survey, and proposal
 
 Status: draft for discussion · 2026-06-10

@@ -290,6 +290,7 @@ def test_the_guard_is_not_inside_the_set_it_guards():
     assert not vr.is_shipped("scripts/verify_retirement.py")
     assert not vr.is_shipped("tests/test_retirement_guard.py")
     assert not vr.is_shipped("tests/data/store_mentions.approved.txt")
+    assert not vr.is_shipped(vr.RETIRED_NAME_CENSUS_PATH)
     # ...and the exclusion is narrow: everything else under scripts/ is still guarded.
     assert vr.is_shipped("scripts/install_constellation.py")
 
@@ -353,6 +354,77 @@ def test_an_approval_without_a_reason_is_refused():
     review, so the parser refuses it rather than accepting a silent widening."""
     with pytest.raises(ValueError, match="has no reason"):
         vr.parse_approved("docs/note.md:names episodes/active/\n")
+
+
+def test_the_two_censuses_share_one_parser():
+    """`retired_names.approved.txt` must not be a second, forked implementation.
+
+    Both censuses are read through the SAME `parse_approved`/`load_approved`/`normalize`
+    machinery, so a format the store-mention census accepts is a format the retired-name
+    census accepts, and a malformed entry is refused identically in both. A parallel
+    implementation is how two files that look alike start disagreeing about what an
+    approval is; asserted here so a fork fails rather than drifts."""
+    assert vr.RETIRED_NAME_CENSUS_PATH != vr.APPROVED_CENSUS_PATH
+    with pytest.raises(ValueError, match="has no reason"):
+        vr.parse_approved(
+            "docs/note.md:consult LESSONS.md\n", census_path=vr.RETIRED_NAME_CENSUS_PATH
+        )
+    with pytest.raises(ValueError, match=vr.RETIRED_NAME_CENSUS_PATH):
+        vr.parse_approved("# a reason\nno-colon-here\n", census_path=vr.RETIRED_NAME_CENSUS_PATH)
+
+
+def test_every_retired_name_approval_exists_verbatim():
+    """The same anti-rot invariant the store-mention census carries, for the second census.
+
+    An approval whose line has since been edited or deleted suppresses nothing real but
+    survives as a licence nobody reviewed. Matching is over NORMALIZED lines for the same
+    reason as above: `.gitattributes` sets `* text=auto`, so a Windows checkout may hold
+    CRLF where the blob holds LF."""
+    approved = vr.load_approved(REPO_ROOT, vr.RETIRED_NAME_CENSUS_PATH)
+    assert approved, "the retired-name census is empty; this check would be vacuous"
+
+    by_path: dict[str, set[str]] = {}
+    for entry in approved:
+        if entry.path not in by_path:
+            lines = vr._read_lines(REPO_ROOT, entry.path)
+            assert lines is not None, f"approved path is unreadable: {entry.path}"
+            by_path[entry.path] = {vr.normalize(line) for line in lines}
+        assert entry.mention in by_path[entry.path], (
+            f"stale approval: {entry.path} no longer contains {entry.mention!r}. Remove the "
+            "entry — an approval for a line that is gone is an unreviewed licence."
+        )
+        assert entry.reason.strip(), f"approval without a reason: {entry.path}"
+
+
+def test_a_retired_name_approval_suppresses_only_the_line_it_names(tmp_path):
+    """The census approves EXACT sites, and only line hits — never a pattern, never a path.
+
+    Two properties in one decoy, because they are the two ways this leg could be quietly
+    turned into decoration. First, an approval is keyed on `(path, normalized line)`: a
+    second, differently-worded mention in the same file is still unapproved. Second, the
+    PATH half of the leg is not approvable at all — a restored file or skill directory whose
+    name is the retired thing must fire however many reasons anyone writes for it, because
+    what identifies it is where it sits, not what it says."""
+    repo = healthy_repo(tmp_path)
+    _write(
+        repo / "docs" / "note.md",
+        "A frozen record: the old loop wrote .agent-work/LESSONS.md.\n"
+        "But this second line tells you to go and read .agent-work/LESSONS.md.\n",
+    )
+    _write(
+        repo / "tests" / "data" / "retired_names.approved.txt",
+        "# frozen historical record: names what the old loop wrote\n"
+        "docs/note.md:A frozen record: the old loop wrote .agent-work/LESSONS.md.\n",
+    )
+    _write(repo / "skills" / "lessons-auditor" / "SKILL.md", "Innocent by every line.\n")
+    _git(["add", "-A"], repo)
+
+    violations = vr.scan(repo)
+    assert [(v.path, v.line) for v in violations] == [
+        ("docs/note.md", 2),
+        ("skills/lessons-auditor/SKILL.md", 0),
+    ]
+    assert {v.leg for v in violations} == {"retired-name-on-shipped-surface"}
 
 
 @pytest.mark.xfail(

@@ -37,7 +37,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project DELTAS over inherited global-crew doctrine: implementation/review rules usable inside a handoff |
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
 | Charter | `docs/agents/AGENT_GUIDE.md` + root `AGENTS.md`/`CLAUDE.md` pointers | all agents (Constellation or external) | single repo-orientation guide: layout, documentation map, conventions; the shared middle of the two contexts, not how to approach the job |
-| Commander | `.agent-work/AGENT_FEEDBACK.md` | future Charter refresh, maintainers | unified run retrospective appended before archive; persists across work-ids; workflow-improvement signal, not project truth |
+| Commander, Admiral | `episodes/active/` via `scripts/apply_episode_delta.py` | future Charter refresh, maintainers | one episode per distinct thing that happened, written at closeout through the store's only write path; a record of what happened, never a rule to follow |
 | Workbench | `templates/DEFAULT.template.json` | any role | generic gated controller for ad-hoc work; not durable truth |
 | Role skills | role-specific checklist templates | owning role, Workbench | execution controller when role ships one; Workbench creates/archives files but does not own semantics |
 | Workbench | closeout/archive rules | Commander, Cartographer | artifact hygiene; roles execute package movement at closeout |

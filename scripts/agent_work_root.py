@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """Resolve the DURABLE `.agent-work` root that survives `git worktree remove`.
 
-The recursive-improvement trio (LESSONS.md, AGENT_FEEDBACK.md,
-CONSTELLATION_FEEDBACK.md, plus their sidecar/inbox ledgers) must be shared by
+The durable run-record artifacts (CONSTELLATION_FEEDBACK.md, plus its sidecar
+ledger) must be shared by
 every linked worktree of a repo, not scattered into each worktree's own
 (gitignored, disposable) `.agent-work/`. `durable_root(start)` returns the MAIN
 checkout root when `start` is inside a LINKED git worktree, and otherwise returns

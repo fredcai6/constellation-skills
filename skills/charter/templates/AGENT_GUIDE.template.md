@@ -71,8 +71,8 @@ Universal commands only. Area-specific commands belong in handoffs, not here.
 ## Workflow State
 
 - Temporary workflow state and archived history live under `.agent-work/` (see `docs/agents/` skills for the full layout). Treat it as recoverable state, not project truth.
-- The unified agent feedback log at `.agent-work/AGENT_FEEDBACK.md` accumulates run retrospectives across work-ids; it persists and is never archived with a single run.
-- The curated lessons playbook at `.agent-work/LESSONS.md` is its bounded, distilled derivative. It is a staging bank an audit drains, not planning input for a live run — agents write to it only through `apply_lessons_delta.py` structured deltas, never by hand.
+- What a run observed is recorded as **episodes** under the repo-root `episodes/` directory, written only through `scripts/apply_episode_delta.py` structured deltas and never by hand. That path is tracked, so a committed episode survives `git worktree remove` and lands in a fresh clone.
+- An episode is a record of what happened, not planning input for a live run. Do not read the store back and condition behaviour on what you find there; a rule to follow belongs in `docs/agents/*` and putting one there is a human's call.
 - If it is in `docs/`, it is meant to guide future work. If it is in `.agent-work/`, it is temporary or historical.
 
 ## Where to Go Next

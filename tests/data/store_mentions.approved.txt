@@ -43,23 +43,29 @@ docs/CONSTELLATION_OVERVIEW.md:accumulator is `episodes/`; the doctrine is `docs
 # design rationale: names what replaced the playbook read, prescribes nothing
 docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> What replaces the read is the **episode store** (`episodes/`, #301): observations
 
-# crew doctrine: names the store's WRITE path and the never-hand-edit rule
+# crew doctrine, Python-invocation example: shows the store's WRITE command being run, and instructs no read
 docs/agents/CREW_CONTEXT.md:python scripts/apply_episode_delta.py ...
 
-# crew doctrine: names the store's WRITE path and the never-hand-edit rule
+# crew doctrine, record-stores table: names the store's ONLY write path, which is the whole point of the table
 docs/agents/CREW_CONTEXT.md:| `episodes/` | `scripts/apply_episode_delta.py` |
 
-# crew doctrine: names the store's WRITE path and the never-hand-edit rule
-docs/agents/CREW_CONTEXT.md:Read them with `scripts/query_episodes.py` and the engine's `current` verb. Retiring an
+# crew doctrine, retirement rule: says how the writer MOVES a file between the two partitions -- a write-path fact about membership, not an instruction to read
+docs/agents/CREW_CONTEXT.md:Retiring an episode **moves its file** between `episodes/active/` and `episodes/retired/`;
 
-# crew doctrine: names the store's WRITE path and the never-hand-edit rule
-docs/agents/CREW_CONTEXT.md:episode **moves its file** between `episodes/active/` and `episodes/retired/`; membership is
-
-# glossary: defines the term, prescribes no behaviour
-docs/agents/GLOSSARY.md:| `episode` | — | One stored record of something observed in a run, kept for later harvest. | — | Lives under `episodes/active/` or `episodes/retired/`. |
+# glossary: defines the term and where its records live, and states outright that an episode is never a rule
+docs/agents/GLOSSARY.md:| `episode` | — | One stored record of something observed in a run. | — | Lives under `episodes/active/` or `episodes/retired/`. A record, never a rule. |
 
 # glossary: defines the term, prescribes no behaviour
 docs/agents/GLOSSARY.md:| `episode store` | — | The durable home of episodes. | ~~record store~~ — use **episode store** | — |
+
+# glossary: defines `harvest` against the WRITE direction (into the store) and denies the read-back-as-rules direction in the same row
+docs/agents/GLOSSARY.md:| `harvest` | — | Gathering what a run's own artifacts recorded and writing it into the episode store as episodes. | — | The direction is INTO the store. There is no reading harvested episodes back out as rules. |
+
+# the retirement tombstone: names the store as the replacement for the retired playbook, and its only write path, in the act of forbidding a read-and-apply loop
+docs/agents/ORCHESTRATOR_CONTEXT.md:- **`episodes/` replaces both.** One store of observations — not two inboxes plus a
+
+# the retirement tombstone: names the store's only write path; the very next clause forbids reading the store back
+docs/agents/ORCHESTRATOR_CONTEXT.md:playbook. Its only write path is `scripts/apply_episode_delta.py`.
 
 # the capture seam's own module: a WRITE path
 scripts/episode_capture.py:#: The mechanical fields `apply_episode_delta._validate_create` requires on every
@@ -132,3 +138,50 @@ skills/commander/templates/COMMANDER_SPINE.template.json:"imperative": "Before c
 
 # spine imperative: the episode WRITE path (apply_episode_delta.py --store-root episodes) and the capture gate that follows it; neither reads the store back
 skills/commander/templates/COMMANDER_SPINE.template.json:"imperative": "Commit all remaining work, including this run's episodes under episodes/. That is a tracked repo-root path, so the committed episode IS the durable record: it survives `git worktree remove` and lands in a fresh clone. None of the old is-.agent-work-gitignored reasoning applies to it. Push the branch to remote. When you open a PR on Windows, write the body to a temp file and use gh pr create -F <file> — a bash heredoc and a PowerShell @'...'@ here-string both fail for gh pr create --body (here-strings work for git commit -m, not PR bodies). Move .agent-work/<work-id>/ to .agent-work/archive/<date>-<work-id>/. Run the archive-phase capture gate before marking archive complete — it additionally requires git to TRACK the episode, which is what proves the record outlived this worktree: python <commander-skill-dir>/scripts/verify_episode_captured.py <work-id> --store-root episodes --phase archive. Confirm the branch is clean and merge-ready per repo guidance. The engine mechanically refuses closeout (c4) when the staged diff includes suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); if any are intentional, a human waives c4 via <engine> waive archive --cond c4 --authority human --reason \"...\" rather than hand-editing the spine. Release the engine session lease only as your VERY LAST action, AFTER the archive postconditions pass and you have run the engine's final advance on archive (the advance that marks the spine done): <engine> release --session-id <commander-session-id>. Release must come after that closing advance, never before it — the lease must cover every journaled action, so the release is the final journal entry; releasing earlier leaves archive's own closeout entries (attest/waive/advance) after the lease release and fails the terminal provenance check.",
+
+# --- #447 g5: the prose sweep repointed every live pointer off the retired playbook
+# and onto the store. Every entry below is a WRITE-side mention or a denial of the read
+# path. Several sit under skills/ -- the g1 note above recorded 'zero entries under
+# skills/' as the property most worth keeping, and that property did not survive contact
+# with the retirement: the roles that USED to be told to write a playbook have to be told
+# what to write instead. What must survive is the narrower and real property -- no shipped
+# surface tells an agent to READ the store and condition its behaviour on what it finds.
+
+# repo README, workflow-artifacts rules: says where a run's record goes and through which write path, and states outright that an episode is never a rule to follow
+README.md:- What a run learned is recorded as **episodes** under the repo-root `episodes/` directory, not anywhere under `.agent-work/`. Commander and Admiral write them at closeout through `scripts/apply_episode_delta.py`, the store's only write path. An episode is a record of what happened, never a rule for a later agent to follow — a rule belongs in `docs/agents/*` and putting one there is a human's call.
+
+# architecture overview, artifact taxonomy row: names the store's write path as the closeout artifact; the row's own text says a record of what happened, never a rule to follow
+docs/CONSTELLATION_OVERVIEW.md:| Commander, Admiral | `episodes/active/` via `scripts/apply_episode_delta.py` | future Charter refresh, maintainers | one episode per distinct thing that happened, written at closeout through the store's only write path; a record of what happened, never a rule to follow |
+
+# admiral closeout step 1: the WRITE path (apply_episode_delta.py --store-root episodes) plus the capture gate that follows it, and it forbids writing a rule in the same breath
+skills/admiral/SKILL.md:1. Record the epic retrospective as **episodes**: one episode per distinct thing that happened across the epic — not one per wave, and not a summary — each harvesting what the ADMIRAL_LOG, the crew Workflow Feedback and the Commander returns actually recorded. An episode is a record, not a rule: write what you observed, and do **not** write a rule for a future agent to follow — a rule to follow belongs in `docs/agents/*` and is a human's call. Write the delta through `apply_episode_delta.py` (the store's only write path, `--store-root episodes` on every invocation) and prove the capture with `verify_episode_captured.py` before advancing. When any part of this closeout edits a shipped compact-format JSON template, edit the raw text **surgically** (never round-trip through `json.load`/`json.dump`, which reflows the whole file and destroys blame) and re-validate with `json.load` afterward. When the epic runs against this repo (constellation-skills) itself — self-maintenance/dogfooding — additionally run a fresh `collect_feedback.py` sweep over the known dogfood project roots, so the cross-project feedback loop cannot go dormant between epics; see `docs/DEBT_SWEEP_CADENCE.md` for the current roots list and exact invocation. In any other consuming repo that sweep is a no-op (no `docs/DEBT_SWEEP_CADENCE.md` there, nothing to sweep).
+
+# admiral harvest substep: names episodes/ only to explain why a committed episode needs NO harvesting before a worktree sweep
+skills/admiral/SKILL.md:3. **Harvest before sweep (mandated substep, ordered before `git worktree remove`).** The episodes themselves need no harvesting — `episodes/` is a tracked repo-root path, so a committed episode already survives `git worktree remove` and lands in a fresh clone. What does **not** survive is a commander's worktree-local `CONSTELLATION_FEEDBACK.md` export, so collect that from each commander worktree **before** it is swept. A **fenced** commander (forbidden from writing your main checkout) stages its export worktree-locally under `.agent-work/staged-feedback/<work-id>/`, alongside a `FENCE.md` citing its launch order — that staging dir is your harvest source. **Look in both places.** Git-common-dir resolution centralizes `.agent-work/` on the main checkout *only when no Admiral epic lease is active*; while your own epic lease is held, `durable_root()` (`scripts/agent_work_root.py`) deliberately returns the **worktree** root instead, because the main checkout is fenced read-only. So a commander running under an epic on current scripts writes to its own worktree root, and that is the *expected* location rather than an edge case. Harvest first, **then** remove.
+
+# fleet doctrine preamble: names the episode store in order to DENY it as a home for fleet rules and to deny reading it back as one
+skills/admiral/references/fleet-doctrine.md:rather than in any one project's run records. A project's episode store records
+
+# fleet doctrine harvest rule: names episodes/ only to explain why the run's episodes are the exception that needs no harvesting
+skills/admiral/references/fleet-doctrine.md:exception and need no harvesting: `episodes/` is a tracked repo-root path, so a
+
+# charter's repo-orientation template: names the store's write path and the never-by-hand rule; the bullet directly below forbids reading the store back
+skills/charter/templates/AGENT_GUIDE.template.md:- What a run observed is recorded as **episodes** under the repo-root `episodes/` directory, written only through `scripts/apply_episode_delta.py` structured deltas and never by hand. That path is tracked, so a committed episode survives `git worktree remove` and lands in a fresh clone.
+
+# delegated-commander fenced closeout: names the WRITE path and the capture gate a fenced run must still use before it commits; no read
+skills/commander-delegated/SKILL.md:4. **Producing the solution is the MIDDLE of the run, not the end.** When an implementer crew hands back `solution.py` and green tests, you are still at the `execute` step — **not done**. Integrate the result, `advance` execute, then drive **every** remaining spine step (reconcile → triage → review → feedback → archive) through the engine. **Do not end your turn while any spine step is still `pending` or `in-progress`:** run the engine's `current` verb and keep going until it reports the spine is done. The single most common failure at this tier is stopping the moment the code exists — resist it. At the final `archive` step, order the closeout correctly: satisfy or waive the archive postconditions, run the engine's final `advance` on archive (which marks the spine done), and **only then** `release` the engine session lease as your very last action. **Fenced feedback/archive closeout — write the episodes, stage the rest, do not waive.** When an Admiral launch-order fence forbids writing the main checkout, your run's episodes are unaffected: `episodes/` is a tracked path inside your own worktree, so write them there through `scripts/apply_episode_delta.py --store-root episodes`, prove the capture with `scripts/verify_episode_captured.py`, and commit — the commit is what carries them out. What the fence does block is the durable-root `CONSTELLATION_FEEDBACK.md` export; do **not** waive the gate for fencing, but stage that export plus a `FENCE.md` citing this launch order under `.agent-work/staged-feedback/<work-id>/`, which the Admiral harvests before sweeping your worktree. A `FENCE.md` citation **without** the staged export still fails the gate — learning cannot be silently dropped. Releasing before that closing advance leaves archive's own closeout entries after the lease release and fails the terminal provenance check — the lease must cover every journaled action.
+
+# commander spine step table, feedback row: names the store's only write path and the capture gate that proves the write landed
+skills/commander/references/commander-core.md:| feedback | this context — reflect on the run, then record what happened as episodes and apply them via `scripts/apply_episode_delta.py` (the only write path; never hand-edit under `episodes/`), proved by `scripts/verify_episode_captured.py` |
+
+# workbench layout note: says a run's record lives in the store rather than under .agent-work/, names the write path, and states the record-not-a-rule property
+skills/workbench/SKILL.md:What a run learned is not kept here. It is recorded as **episodes** under the repo-root `episodes/` directory, written at the Commander's `feedback` step through `scripts/apply_episode_delta.py` — the store's only write path — and never hand-edited. An episode is a record of what happened, not a rule for a later agent to follow.
+
+# constellation-export template field: cites an originating episode id as the export's stable identity -- an identifier reference, not an instruction to read the store
+skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md:- **Lesson:** `<originating episode id from episodes/ (stable identity), or n/a>`
+
+# closeout template, episode-capture section: names the write path and the capture gate the Commander confirms passed
+skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md:through `scripts/apply_episode_delta.py` and proved by `scripts/verify_episode_captured.py`.
+
+# superseding header on a retired design record: names where the CURRENT loop lives so a reader of the history is not left following it -- a write path and a denial of the read path, not an instruction to consult the store
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> `episodes/`, written only through `scripts/apply_episode_delta.py` and proved by

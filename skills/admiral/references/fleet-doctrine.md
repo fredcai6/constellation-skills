@@ -4,10 +4,9 @@ Platform/harness-scoped doctrine for running a fleet: how Admiral and Commander
 sessions die, how to make every death cheap, and how to recover. This is **not**
 project doctrine — it is true for every project running Constellation on an
 agent harness, which is why it lives in the skill (shipped to every install)
-rather than in any one project's `.agent-work/LESSONS.md`. That lessons file is
-a transitory inbox, not a playbook: it stages only genuinely project-specific
-fleet signal between audits, and an audit graduates each lesson into the doc that
-owns it or deletes it — it is never the permanent home for a fleet rule.
+rather than in any one project's run records. A project's episode store records
+what happened on that project; it is never the home for a fleet rule, and it is
+never read back as one. A fleet rule lives here.
 
 Distilled from field fleets (f1brainz epics #372/#378/#453); the incident count
 there was dominated by *tracking* long detached jobs, not by the work itself.
@@ -158,21 +157,20 @@ the worktree — a headless `claude -p` launch pointed at it, or a plain subproc
 with the env var set for the non-agent (pure-function) paths — never a fixture
 that hand-injects the value under test.
 
-**Harvest before you sweep — a required precondition of removal.** A worktree
-carries durable learning the shared root does not yet hold: its lessons-delta,
-its `AGENT_FEEDBACK.md` entry, and its `CONSTELLATION_FEEDBACK.md` exports. A
-**fenced** Commander stages that trio worktree-locally under
-`.agent-work/staged-feedback/<work-id>/` with a `FENCE.md` launch-order citation
-(the shape `verify_agent_feedback.py` accepts in lieu of the durable-root write,
-so the Commander closes out without waiving); that staging dir is your harvest
-source. Just
-as you confirm a Commander dead before touching its worktree, you harvest that
-trio into the shared durable `.agent-work/` at the main checkout **before**
+**Harvest before you sweep — a required precondition of removal.** A worktree can
+carry durable learning the shared root does not yet hold: its
+`CONSTELLATION_FEEDBACK.md` exports. A **fenced** Commander stages that export
+worktree-locally under `.agent-work/staged-feedback/<work-id>/` with a `FENCE.md`
+launch-order citation; that staging dir is your harvest source. Just as you
+confirm a Commander dead before touching its worktree, you harvest the export
+into the shared durable `.agent-work/` at the main checkout **before**
 `git worktree remove` — removal is not permitted until it is collected, because a
-swept worktree's learning is unrecoverable. Git-common-dir resolution points the
-durable trio at one shared root, so the harvest is **mostly automatic**; the manual
-harvest above remains the fallback for consuming projects on older scripts, or any
-hand reconciliation.
+swept worktree's learning is unrecoverable. The run's **episodes** are the
+exception and need no harvesting: `episodes/` is a tracked repo-root path, so a
+committed episode already survives the sweep and lands in a fresh clone.
+Git-common-dir resolution points the durable root at one shared root, so the
+harvest is **mostly automatic**; the manual harvest above remains the fallback for
+consuming projects on older scripts, or any hand reconciliation.
 
 ## Windows shell hazards (command-checks)
 
@@ -214,7 +212,8 @@ false-FAILing, so read a `cmd-fallback` marker as "install Git Bash, then re-run
   commit/merge. Sync the working tree too (`git status`, then `git restore`/checkout the affected paths — or
   `git merge --ff-only origin/main` which moves ref and tree together), not just the ref. Tag a genuine
   self-inflicted near-miss as an **`ADMIRAL ERROR`** entry even when caught and fixed inline — the dedicated
-  tag is what makes it greppable at the next lessons audit; folding it into a `MERGE` entry's prose hides it.
+  tag is what makes it greppable when closeout writes the run's episodes; folding it into a `MERGE` entry's
+  prose hides it.
 
 ## Engine/platform quirks
 

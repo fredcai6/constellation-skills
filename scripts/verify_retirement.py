@@ -324,6 +324,35 @@ def _leg_retired_path(root: Path, tracked: set[str]) -> list[Violation]:
 
 
 # --- leg: retired-name-on-shipped-surface ---------------------------------------------
+#
+# A SECOND FROZEN APPROVAL CENSUS, in the same format as the store-mention one above and
+# read through the same parser. It exists because this leg could not otherwise reach zero
+# and was never going to: `docs/RECURSIVE_IMPROVEMENT_DESIGN.md` is a June-2026 design
+# RECORD whose ~33 sites must survive untouched (rewriting it to describe a system it never
+# described would falsify history), the commander spine's `archive.c4` deny-globs keep both
+# retired path strings as a RE-STAGING BLOCK, and `scripts/stage_feedback.py` survives by
+# explicit ruling and names them eight times. With no approval mechanism at all,
+# `test_canon_is_clean`'s `xfail(strict=True)` could never XPASS and the scaffolding would
+# outlive the work it exists to end — the exact defect g1's own review caught once already.
+#
+# NOT a pattern allowlist, and the difference is the whole value: the census names EXACT
+# sites, so anything new still has to be looked at by a human and given a reason. A glob
+# would make the leg decorative.
+#
+# THE BRIGHT LINE, stated where it is enforced: a reason amounting to "an agent is still
+# told to use the retired thing" is NOT approvable — fix the surface instead. Approvable
+# reasons look like: a frozen historical record; a deny-glob re-staging block; a survivor
+# script naming what it stages; a tombstone naming the retired files in order to forbid
+# them; a comment recording why the retirement was untrack-not-delete.
+
+RETIRED_NAME_CENSUS_PATH = "tests/data/retired_names.approved.txt"
+
+RETIRED_NAME_DETAIL = (
+    "a shipped surface still names the retired {name!r}: {line}. If it TELLS an agent to "
+    "use the retired thing, fix the surface. If it is a frozen record, a re-staging block, "
+    "or a tombstone, approve it in " + RETIRED_NAME_CENSUS_PATH + " with a reason for that "
+    "exact line."
+)
 
 
 def _leg_retired_name(root: Path, shipped: list[str]) -> list[Violation]:
@@ -333,7 +362,17 @@ def _leg_retired_name(root: Path, shipped: list[str]) -> list[Violation]:
     constant's own comment claimed coverage of "a skill directory" while nothing tested a
     path. Re-adding `skills/lessons-auditor/` — a whole directory deleted at g4 — was
     therefore missed entirely: a restored skill can be perfectly innocent line by line and
-    still be the retired thing, because what identifies it is where it sits."""
+    still be the retired thing, because what identifies it is where it sits.
+
+    **Only the CONTENT half is approvable.** The census is keyed on `(path, normalized
+    line)` and there is no honest line to key a path violation on — but the real reason is
+    stronger than the mechanical one: a restored file or skill directory whose *name* is the
+    retired thing IS the retirement undone, and there is no record, block or tombstone that
+    needs to sit at such a path. Leaving the path half unapprovable keeps the one leg that
+    catches a verbatim re-commit (see `_leg_retired_path`) impossible to write a reason
+    around. Named here rather than left implicit, because "the census did not cover it" and
+    "the census must never cover it" read the same in code and mean opposite things."""
+    approved = {(entry.path, entry.mention) for entry in load_approved(root, RETIRED_NAME_CENSUS_PATH)}
     out: list[Violation] = []
     for path in shipped:
         named = next((name for name in RETIRED_NAMES if name in path), None)
@@ -345,7 +384,8 @@ def _leg_retired_name(root: Path, shipped: list[str]) -> list[Violation]:
                     0,
                     f"the PATH itself names the retired {named!r}. A restored file or skill "
                     "directory is the retired thing whatever its contents say — line 0 "
-                    "because the whole path is the violation, not any line in it.",
+                    "because the whole path is the violation, not any line in it. This half "
+                    "is deliberately NOT approvable by census.",
                 )
             )
         lines = _read_lines(root, path)
@@ -353,16 +393,19 @@ def _leg_retired_name(root: Path, shipped: list[str]) -> list[Violation]:
             continue
         for number, line in enumerate(lines, start=1):
             hit = next((name for name in RETIRED_NAMES if name in line), None)
-            if hit is not None:
-                out.append(
-                    Violation(
-                        LEG_RETIRED_NAME,
-                        path,
-                        number,
-                        f"a shipped surface still names the retired {hit!r}: "
-                        f"{normalize(line)[:160]}",
-                    )
+            if hit is None:
+                continue
+            mention = normalize(line)
+            if (path, mention) in approved:
+                continue
+            out.append(
+                Violation(
+                    LEG_RETIRED_NAME,
+                    path,
+                    number,
+                    RETIRED_NAME_DETAIL.format(name=hit, line=mention[:160]),
                 )
+            )
     return out
 
 
@@ -424,13 +467,18 @@ def store_mention_sites(root: Path, shipped: list[str]) -> list[tuple[str, int, 
     return sites
 
 
-def parse_approved(text: str) -> list[ApprovedEntry]:
-    """Parse the census. Each entry is `<path>:<normalized line>` on its own line, directly
+def parse_approved(text: str, census_path: str = APPROVED_CENSUS_PATH) -> list[ApprovedEntry]:
+    """Parse a census. Each entry is `<path>:<normalized line>` on its own line, directly
     beneath a `#` comment line that is its REASON.
 
     `partition(":")` on the FIRST colon: a path never contains one, a quoted source line
     routinely does. An entry with no reason directly above it raises rather than being
-    accepted — an approval nobody justified is an approval nobody can review."""
+    accepted — an approval nobody justified is an approval nobody can review.
+
+    `census_path` names the file being read and appears in every refusal, so a malformed
+    entry says WHICH census to go and fix. There is exactly ONE parser for both censuses on
+    purpose: a second implementation is how two files that look alike start disagreeing
+    about what an approval is."""
     entries: list[ApprovedEntry] = []
     reason = ""
     for raw in text.splitlines():
@@ -443,30 +491,30 @@ def parse_approved(text: str) -> list[ApprovedEntry]:
         path, separator, mention = raw.strip().partition(":")
         if not separator or not mention.strip():
             raise ValueError(
-                f"{APPROVED_CENSUS_PATH}: malformed entry {raw!r} — an entry is "
+                f"{census_path}: malformed entry {raw!r} — an entry is "
                 "`<path>:<normalized line>`."
             )
         if not reason:
             raise ValueError(
-                f"{APPROVED_CENSUS_PATH}: entry {raw.strip()!r} has no reason. Put a "
-                "one-line `# <why this mention is not a prescription>` directly above it."
+                f"{census_path}: entry {raw.strip()!r} has no reason. Put a "
+                "one-line `# <why this mention is approved>` directly above it."
             )
         entries.append(ApprovedEntry(path, mention.strip(), reason))
         reason = ""  # one reason approves exactly one entry
     return entries
 
 
-def load_approved(root: Path) -> list[ApprovedEntry]:
-    """The census as it exists in `root`, or empty when the file is absent.
+def load_approved(root: Path, census_path: str = APPROVED_CENSUS_PATH) -> list[ApprovedEntry]:
+    """A census as it exists in `root`, or empty when the file is absent.
 
     Absent-means-empty is safe in the only direction that matters: with no approvals every
     mention is unapproved, so the guard fires MORE, never less. A decoy repository built in
     `tmp_path` carries no census, and that is the correct reading for it."""
-    census = root / APPROVED_CENSUS_PATH
+    census = root / census_path
     if not census.is_file():
         return []
     with census.open(encoding="utf-8") as handle:
-        return parse_approved(handle.read())
+        return parse_approved(handle.read(), census_path)
 
 
 def _leg_store_mention(root: Path, shipped: list[str]) -> list[Violation]:

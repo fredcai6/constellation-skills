@@ -25,7 +25,7 @@ Constellation **remixes capabilities** from both (vertical-slice language, HITL/
 
 **1 — Vague idea → `explorer`.** Let it breathe. Exploration cycles (shotgun / compare / refine) using interrogator doctrine, excursions (research / `prototyper` / design-it-twice), a cold critic panel, a hard human-only confirmation gate. Out: a confirmed **design spec** + the issues it should become. Explorer stays *pure exploration* — it does not file issues itself; `to-issues` cuts them.
 
-**2 — Big but AFK-easy → `admiral`.** Runs a whole epic in waves of delegated commanders; can enter here directly (interrogator makes sure the idea is fully fledged first). Closeout: lessons-auditor + cartographer reconcile.
+**2 — Big but AFK-easy → `admiral`.** Runs a whole epic in waves of delegated commanders; can enter here directly (interrogator makes sure the idea is fully fledged first). Closeout: episode capture + cartographer reconcile.
 
 **3 — Hard / into-the-weeds → `commander` (human-run).** Deep, focused interrogation that will not quit early (joint understanding is the gate). Two crew in cycles: **`implementer`** (rigorous TDD, vertical-slice chunks) and **`reviewer`** (validates intent *and* implementation, plus a Fowler code-smell pass). Multiple implementer ⇄ reviewer cycles are built-in design-it-twice. Then `cartographer` updates the network and collects feedback.
 
@@ -62,7 +62,6 @@ The `to-issues` box — the cut-work seam between exploration and execution — 
 | `prototyper` | Throwaway prototype answering one named question | (native) |
 | `charter` | Compile project doctrine, glossary, engine config | (native) |
 | `curator` | Periodic corpus-health maintenance | (native) |
-| `lessons-auditor` | Fresh-context lesson distillation at closeout | (native) |
 | `docent` | Static HTML explainer from map truth | (native) |
 | `workbench` | The checklist-engine substrate every skill drives | (native) |
 

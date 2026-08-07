@@ -78,12 +78,7 @@ Classifies and writes issue-ready recommendations for future work. No checklist 
 ## Constellation Admiral
 Path: `skills/admiral/SKILL.md`
 
-Runs an epic as the human's delegate: confirms a latitude contract, dispatches Commanders in waves, adjudicates and merges, and closes with lessons and architecture audits.
-
-## Constellation Lessons Auditor
-Path: `skills/lessons-auditor/SKILL.md`
-
-Fresh-context Reflector dispatched at closeout: distills scoped, grounded lesson candidates from run artifacts and routes them as nominations, never applying them itself.
+Runs an epic as the human's delegate: confirms a latitude contract, dispatches Commanders in waves, adjudicates and merges, and closes with a recorded epic retrospective and architecture audits.
 
 ## Constellation Write-a-Skill
 Path: `skills/write-a-skill/SKILL.md`

@@ -20,7 +20,8 @@ under `.agent-work/episodes/`, and **not** resolved through `durable_root()`
 
 This is a deliberate departure from all four design-it-twice candidates
 (`.agent-work/301/design-it-twice/`), which placed the store at `.agent-work/episodes/`
-by inheriting the location from `.agent-work/LESSONS.md`. That inheritance was wrong for
+by inheriting the location from the run-retrospective playbook that then lived there (retired
+at issue #447). That inheritance was wrong for
 this store, for a reason verifiable by command — **re-measured at issue #308, because the
 transcript this section originally carried went stale.**
 
@@ -44,11 +45,11 @@ who found the old transcript and concluded the storage decision was unfounded wo
 misled by a true-when-written claim, which is exactly the failure this store exists to make
 findable.
 
-`LESSONS.md` lives under `.agent-work/` because it is a deliberately **transitory inbox**:
-"where lessons pass through, not where they live." A lesson that graduates is applied and
-deleted from the playbook; the playbook's job is to carry *open* problems, not a permanent
-record. As of issue #308 that inbox is retired as a live-agent input entirely — see
-`docs/CONSTELLATION_OVERVIEW.md` § "Truth layers".
+The playbook it was inherited from lived under `.agent-work/` because it was a deliberately
+**transitory inbox**: "where lessons pass through, not where they live." A lesson that
+graduated was applied and deleted from it; its job was to carry *open* problems, not a
+permanent record. Issue #308 retired it as a live-agent input, and issue #447 retired it
+outright — see `docs/CONSTELLATION_OVERVIEW.md` § "Truth layers".
 
 The episode store is the **opposite**. Its entire purpose (§2 of the launch order's
 protected intent) is **durability past consolidation**: an episode must outlive its own
@@ -232,19 +233,20 @@ only when a suspected cause and/or proposed remedy exist — its **absence** (no
 heading) is itself the signal that diagnosis was not attempted; an episode with no
 diagnosis is complete and valid.
 
-**Rhyme / depart from `apply_lessons_delta.py`, stated explicitly.** This grammar rhymes
-with the prior art deliberately: one Markdown record per unit, `- field: value` lines, an
+**Rhyme / depart from the prior art, stated explicitly.** The prior art is the retired
+lesson-playbook writer: a validated, all-or-nothing delta writer over a single curated
+Markdown bank. This grammar rhymes with it deliberately: one Markdown record per unit, `- field: value` lines, an
 HTML-comment state header carrying machine state, all mutation through a validated
 all-or-nothing delta script so the LLM never writes a record directly (§6). It departs in
 three places, and here is why:
 
-1. **One file per episode, not one growing file.** `LESSONS.md` is a single running
-   playbook because it is read top-to-bottom by a human. Episodes are captured by several
+1. **One file per episode, not one growing file.** The prior art was a single running
+   playbook because it was read top-to-bottom by a human. Episodes are captured by several
    concurrent Commanders in separate worktrees; a shared mutable file is a merge-conflict
    generator under that concurrency, and nothing about the episode store's job needs
    linear human readability the way the playbook does.
-2. **No counters, no cap, no dormancy/auto-expiry.** `LESSONS.md` curates an *evolving*
-   claim that gets reconfirmed over time, so it carries mentions/confirmed/disconfirmed
+2. **No counters, no cap, no dormancy/auto-expiry.** The prior art curated an *evolving*
+   claim that got reconfirmed over time, so it carried mentions/confirmed/disconfirmed
    counters. It also carried a 20-entry cap for the same reason — until #308 removed it,
    having measured that a cap does not bound a bank so much as silently drop from it, and
    at 20/20 refuses new entries outright. Bounding is now the Curator's regular cleanup
@@ -254,7 +256,7 @@ three places, and here is why:
    adjudication machinery that is right for a curated playbook is over-engineering for a
    write-once record.
 3. **The agent-supplied bin is individually addressable per field; the mechanical bin is
-   not.** See §5 — this is new structure `apply_lessons_delta.py` has no analogue for,
+   not.** See §5 — this is new structure the prior-art writer had no analogue for,
    because a lesson's `statement` is a single evolving claim, not five independently
    assertable facts about one occurrence.
 
@@ -337,8 +339,8 @@ changes exactly `a4`:
 ```
 
 **What changes:** `a4`'s `lifecycle-standing` line, plus an appended `history` entry
-recording who disputed it and why (append-only, same convention `apply_lessons_delta.py`
-already uses for its own `- history:` lines).
+recording who disputed it and why (append-only, the same `- history:` convention the
+prior-art writer used).
 
 **What does not change:** `a1`, `a2`, `a3`, `a5`, every `## Mechanical` line, both
 `## Diagnosis` assertions, the episode's own `## Retirement` block (§7), and the episode's
@@ -390,7 +392,7 @@ concrete example rather than asserted in the abstract.
 - Retirement means **excluded from ordinary rhyme-search, RETAINED in history.** Never
   deletion, never truncation.
 - Retiring an episode requires a **non-empty reason**, validated at write time by g2's
-  writer (mirroring `apply_lessons_delta.py`'s own mandatory `retire` reason — inherited,
+  writer (mirroring the prior-art writer's own mandatory `retire` reason — inherited,
   not re-decided).
 - Retiring an episode never touches any assertion inside it. `lifecycle-standing` on an
   agent-supplied or diagnosis assertion, and `status` on the episode itself, are separate
@@ -772,7 +774,7 @@ worktree's files directly.
 **Built** (issue #301, gates g1–g4):
 
 - **`scripts/apply_episode_delta.py`** — the validated, all-or-nothing delta writer
-  (mirroring `apply_lessons_delta.py`'s contract) that is the **only** write path; the LLM
+  (validate the whole delta first, then apply every op or none) that is the **only** write path; the LLM
   never writes an episode file directly. It enforces the partition allowlist (§4), the
   mandatory non-empty retire reason (§7), and single-line enforcement on agent-supplied
   free-text fields (§7). Its retire op routes its content half through

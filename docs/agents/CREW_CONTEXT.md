@@ -46,7 +46,7 @@ MAX_PATH is real. Prefer short paths under deeply-nested work areas.
 
 ## Record Stores Are Never Hand-Edited
 
-Three stores in this repo are written **only** through their validated delta writers. An LLM
+Two stores in this repo are written **only** through their validated delta writers. An LLM
 or a human editing them directly is a defect regardless of how correct the resulting text
 looks — the writers enforce partition allowlists, mandatory reasons, single-line values and
 all-or-nothing application.
@@ -54,12 +54,11 @@ all-or-nothing application.
 | store | the only write path |
 |---|---|
 | `episodes/` | `scripts/apply_episode_delta.py` |
-| `.agent-work/LESSONS.md` | `scripts/apply_lessons_delta.py` |
 | any checklist (`spine.json`, `execute.json`, survey files) | `checklist_engine.py` verbs |
 
-Read them with `scripts/query_episodes.py` and the engine's `current` verb. Retiring an
-episode **moves its file** between `episodes/active/` and `episodes/retired/`; membership is
-the directory, never a parsed `status` field.
+Retiring an episode **moves its file** between `episodes/active/` and `episodes/retired/`;
+membership is the directory, never a parsed `status` field. That move is a write like any
+other and goes through the writer above.
 
 ---
 

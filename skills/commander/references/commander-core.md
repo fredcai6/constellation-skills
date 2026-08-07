@@ -57,7 +57,7 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 | reconcile | subagent — load `constellation-cartographer` |
 | triage | this context — load `constellation-triage`; each candidate routes to `fixed-now`, `filed`, or `recommend-and-defer` — fix-now use follows a latitude decision class |
 | review | this context — summarize run, get principal acceptance |
-| feedback | this context — append the run retrospective to `.agent-work/AGENT_FEEDBACK.md`; distill lesson delta ops and apply via `scripts/apply_lessons_delta.py` (never edit `LESSONS.md` directly) |
+| feedback | this context — reflect on the run, then record what happened as episodes and apply them via `scripts/apply_episode_delta.py` (the only write path; never hand-edit under `episodes/`), proved by `scripts/verify_episode_captured.py` |
 | archive | this context — commit, push, move work area |
 
 **Shaped-design intake (`understand`).** An ask citing a shaped-design spec/issue is verified confirmed — `verify_spec_confirmed.py` passes or the CONFIRMED marker is visible — before any work is cut; a shaped-design issue bearing the loud `UNCONFIRMED — DO NOT CUT` header is never cut into work.
