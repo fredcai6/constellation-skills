@@ -21,3 +21,10 @@ junit*.xml
 # Defensive: eval run-dirs are fabricated under the system temp dir (never the
 # repo tree); this only fires if a run is ever redirected into evals/ (#106).
 evals/**/_runs/
+# Rebuilt intermediates of the derived code map (issue #456). Both are
+# regenerated from source by `python -m scripts.code_map build`, so committing
+# them would commit a second copy of the repo that goes stale on the next edit.
+# Narrow by file, not a blanket .code-map/ rule: the page tree under map/ IS
+# committed, and a later gate may add a store that has to be reviewed.
+.code-map/statements.jsonl
+.code-map/supplement.json

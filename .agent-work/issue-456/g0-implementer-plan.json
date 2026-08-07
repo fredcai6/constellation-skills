@@ -381,7 +381,8 @@
           "id": "p1",
           "statement": "the package exists and the pipeline runs",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "scripts/code_map/ exists as a package and build runs extract -> supplement -> render end to end over this repo."
         }
       ],
       "postconditions": [
@@ -392,7 +393,8 @@
             "kind": "command",
             "command": "python -m pytest tests/test_install_constellation.py -q --color=no && ! git check-ignore -q scripts/code_map/__init__.py tests/test_code_map.py .gitignore"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m7-gitignore-bundling-1"
         }
       ],
       "constraints": [
@@ -401,11 +403,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m7-gitignore-bundling-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -q --color=no && ! git check-ignore -q scripts/code_map/__init__.py tests/test_code_map.py .gitignore",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m8-falsifiable": {
@@ -524,7 +538,7 @@
     "session_id": "g0-impl-9febe0be",
     "status": "active",
     "claimed_at": "2026-08-07T20:48:13.953663+00:00",
-    "last_heartbeat": "2026-08-07T21:11:32.627881+00:00",
+    "last_heartbeat": "2026-08-07T21:14:46.972499+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -579,6 +593,13 @@
       "why": "checks.py and checks2.py folded into one module and wired to the check subcommand, print-only and returning 0 -- they assert nothing, so g1 still has its rewrite to do. The prototype's fourth section is dropped and the docstring says why: it spot-checked one hardcoded file of another repo, and the real rule it demonstrated (every top-level def gets a page) belongs in g1 as a corpus-wide check, not as one file's probe.",
       "mechanical": false,
       "ts": "2026-08-07T21:11:32.627862+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-gitignore-bundling",
+      "why": "TWO .gitignore entries per the addendum's ruling, not the item's three -- no gate produces a position cache, so that line would be the stale rule this plan exists to remove. Bundling resolved as (b): NON_INSTALLABLE_PACKAGES declares code_map unbundlable because the install destination is flat and flattening strips the package its relative imports resolve against; scripts/hooks/ stays flattenable because its modules import nothing from each other. Four guard tests hold every scripts/ subdirectory to one declaration or the other, and the declaration is falsifiable -- emptying it turned 3 of the 4 red.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:14:46.972471+00:00"
     }
   ]
 }

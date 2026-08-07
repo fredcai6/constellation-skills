@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m6-checks",
+  "files": [],
+  "repo_rev": {
+    "commit": "05be7db6f07caf6eeb559e38ce2d09d04244762c"
+  },
+  "run": {
+    "work_id": "g0-implement",
+    "generated_at": "2026-08-07T21:11:30Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}
