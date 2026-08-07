@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": null
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": null
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "2a5ed203936c1dbd7703ad98dd546c87cec1c004"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "5f181215b36a64f9dc1246ea3041414db34970f4"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "cbd9aee86c54e612b148dc7220b262c5bef03aa4"
+  },
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-07T17:28:46Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

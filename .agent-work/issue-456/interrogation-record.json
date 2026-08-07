@@ -1,0 +1,74 @@
+{
+  "goal": "Run constellation-skills issue #456 end to end: productionize the derived code map -- the extraction/render pipeline, the agent-lean page format, and the skills that consume it -- from the CONFIRMED explore-code-map DESIGN_SPEC and its working prototype.",
+  "mode": "interactive",
+  "questions": [
+    {
+      "id": "f1-repo-conventions",
+      "kind": "fact",
+      "question": "What shape must a new tool take to live in this repo?",
+      "status": "resolved",
+      "resolution": "Vendored tools live at scripts/<tool>.py, tested at tests/test_<tool>.py, run by CI as a plain pytest suite. The code map must be stdlib-only, because CI installs nothing but pytest and coverage; the prototype already satisfies this (ast/json/pathlib). Any check requiring an external repo cannot run in CI. Work-area artifacts are committable.",
+      "code_evidence": ".github/workflows/ci.yml (windows-latest, shell bash, python 3.12, 'pip install pytest coverage', 'python -m pytest tests/ -q', verify_skip_guard.py on junit xml, coverage --fail-under=90 on checklist_engine.py); git ls-files counts: 233 *.py total, 42 scripts/*.py, 49 tests/*.py; 'git check-ignore .agent-work/issue-456/spine.json' exits 1 (not ignored).",
+      "human_answer": ""
+    },
+    {
+      "id": "f2-incumbent-map-tool",
+      "kind": "fact",
+      "question": "Does scripts/build_architecture_map.py overlap the derived code map?",
+      "status": "resolved",
+      "resolution": "No functional overlap; a real vocabulary collision. build_architecture_map.py is a schema compiler over hand-AUTHORED packets -- it validates closed vocabularies and never parses Python source. The derived code map runs the opposite direction: it parses source and derives structure, authoring nothing. They are complements, matching the spec's own split of derived structural layer vs Cartographer judgment layer. No integration required for this build, but the name 'architecture map' is taken and the glossary enforces one-name-one-thing, so the derived tool needs a distinct name.",
+      "code_evidence": "scripts/build_architecture_map.py:1-30 and 423 lines total -- ALLOWED_LEVELS, ALLOWED_NODE_STATUS, ALLOWED_CONFIDENCE, ALLOWED_RELATIONSHIPS (incl. 'explained-by'), ALLOWED_OVERLAY_KINDS; reads docs/architecture packets, contains no ast import and no source parsing. docs/agents/GLOSSARY.md header: 'the source of truth for one name for one thing'.",
+      "human_answer": ""
+    },
+    {
+      "id": "f3-test-corpus",
+      "kind": "fact",
+      "question": "What Python corpus can the check stage actually run against in CI?",
+      "status": "resolved",
+      "resolution": "This repo can map itself, so gate 1's assertions need no external repo and no network. 233 tracked .py files, all 233 parse under ast, 5232 def/class entities (tests 2572, .agent-work 1821, scripts 785, evals 54). Three consequences: (1) a self-map MUST exclude .agent-work/ or it maps its own scratch and the archived prototype -- ~35% of entities -- leaving ~3400 real entities, ample for determinism, referenced-by and recall assertions; (2) zero BOM-prefixed files exist here, so gate 9's BOM defect cannot be exercised against this repo and needs a purpose-built fixture to get a failing test; (3) the prototype is NOT parameterized, so a CLI/discovery layer must exist before any check can run.",
+      "code_evidence": "Probe C:/Users/fredc/.claude/jobs/9cbc67f4/tmp/probe_corpus.py over 'git ls-files *.py': files tracked 233, parsed ok 233, entities 5232, problem files 0. Prototype hardcoding at .agent-work/issue-456/reference/prototype/astx.py:46 (ROOT = r\"C:\\Programs\\f1Brainz\"), :48 (INDEX_DIRS fixed to src/scripts/tests), :741 (main() reads slice_manifest.json from its own directory); no argparse anywhere in the file.",
+      "human_answer": ""
+    },
+    {
+      "id": "d1-run-scope",
+      "kind": "decision",
+      "question": "Do all nine gates ship in this one Commander run, or only the trustworthiness core?",
+      "status": "resolved",
+      "resolution": "All nine issue gates ship in this run, plus a gate 0 for the CLI/discovery layer that every other gate leans on and that no issue gate names. Ten gates total, in the critic-reordered sequence. The Commander's recommendation (gate 0 + gates 1-4, file 5-9) was put to the human and NOT taken.",
+      "code_evidence": "",
+      "human_answer": "go for all 9 gates"
+    },
+    {
+      "id": "d2-tool-home-and-name",
+      "kind": "decision",
+      "question": "Where does the tool live and what is it called?",
+      "status": "resolved",
+      "resolution": "scripts/code_map/ as a package, tested at tests/test_code_map.py, named 'code map' -- distinct from the authored 'architecture map'. Departs from the 42 flat scripts/*.py; scripts/hooks/ is the directory precedent. Carried to reconcile as a decision candidate because it governs future structure.",
+      "code_evidence": "",
+      "human_answer": "cool with scripts/code_map package"
+    },
+    {
+      "id": "d3-crew-dispatch-authority",
+      "kind": "decision",
+      "question": "Does this run dispatch implementer/reviewer crews?",
+      "status": "resolved",
+      "resolution": "Yes. The human explicitly overrides the standing session instruction against calling the Agent tool, for this run. Execute-step gates run as crew gates -- implementer subagent then reviewer subagent per gate. Individual doc-only or pure-design gates may still be authored as reasoning gates with a stated crew-waiver reason; that is a per-gate judgment, not a reversal.",
+      "code_evidence": "",
+      "human_answer": "def use crews"
+    },
+    {
+      "id": "d4-skills-diff-and-pr",
+      "kind": "decision",
+      "question": "Does the skills-integration diff ride this branch, and is a PR pre-approved?",
+      "status": "resolved",
+      "resolution": "Both approved. The 5-file/9-line skills integration is cherry-picked from worktree-explore-code-map onto issue-456/code-map so the map ships with its consumers. Push and a full (non-draft) PR are pre-approved under the ORCHESTRATOR_CONTEXT carve-out for pre-approved work. Merging to main is NOT covered by this ruling and is not taken.",
+      "code_evidence": "",
+      "human_answer": "cherry pick work onto this branch and you're preapproved for push & full pr"
+    }
+  ],
+  "signoff": {
+    "by": "Tommy (Fred / fredcai6), repo owner and the Commander's principal",
+    "statement": "Ruled every open decision in one reply, decisively and without counter-questions, after being shown the three resolved facts and a stated recommendation for each decision: 'go for all 9 gates. cool with scripts/code_map package. def use crews. cherry pick work onto this branch and you're preapproved for push & full pr'. He overrode the Commander's own scope recommendation, which evidences an independent read of the question set rather than an assent token. Questioning is complete: no question remains open, and the understanding of what is being built, where it lands, how it is executed, and how it ships is shared."
+  },
+  "consolidated": false
+}
