@@ -83,6 +83,29 @@ Each must be *owned* by a gate, not merely mentioned:
 
 ## Coverage check
 
-Thirteen decision-classes across ten gates, every created/modified file
-assigned. The check to run before freezing: no row above lacks an owning gate in
-the authored `execute.json`.
+**This claim was FALSE as first written and is corrected here (critic F11).** An
+earlier version asserted "thirteen decision-classes across ten gates, every
+created/modified file assigned." Two rows had no owning gate:
+
+- **Decision-class 10 (package layout)** — marked "already ruled by the human,
+  carried to reconcile." A ruling is not a gate. Now attached to gate 0, which
+  is where the package actually gets created.
+- **The four `skills/` files** — assigned to "cherry-pick", which is not a gate
+  either: no close criterion, no command, no evidence. Still **UNOWNED**,
+  pending the human's call on adding an integration gate.
+
+The sharp edge, and the reason this matters rather than being bookkeeping: the
+commit being cherry-picked (`d102c05`) is the one that ADDS the rule to
+`commander-core.md` requiring "one gate for every file and decision-class in the
+issue's stated file-ownership scope... a gate imperative that merely
+*references* a decision is not a substitute for that gate existing." The plan
+would ship that rule while breaking it on that same commit's own files.
+
+Second-order, also unowned: those skills instruct implementers to start from a
+**map entry point**. Nothing in the plan generates a committed map for THIS
+repo, so on merge every crew handoff here cites an entry point that does not
+exist. That is a decision — generate the tree, or state the dangle knowingly —
+not an oversight to leave implicit.
+
+The check to run before freezing: no row above lacks an owning gate in the
+authored `execute.json`. It does not pass yet.
