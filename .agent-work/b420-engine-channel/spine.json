@@ -1,0 +1,730 @@
+{
+  "work_id": "b420-engine-channel",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "feedback",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py b420-engine-channel. This same script now ALSO optionally materializes spine.json from a spine template with its placeholders resolved, via --spine <spine-template> [--skill-dir <path>] (shipped in issue-73 g1) \u2014 use it to instantiate spine.json rather than hand-substituting placeholders, passing the commander skill directory to --skill-dir so the commander-skill-dir placeholder resolves to an absolute path (it auto-detects when omitted). Start the work branch per repo guidance. Claim the engine session lease on this spine so a resumed or duplicated parent cannot concurrently drive it: <engine> claim --session-id commander-b420-engine-channel --claimed-by commander --worktree . (if a stale prior lease blocks you, re-run with --force --reason \"resuming this run\"). From here on, pass --session-id commander-b420-engine-channel on every mutating engine call against this spine.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py b420-engine-channel"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-2"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine (commander owns the state)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py b420-engine-channel",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-init-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/init_work_area.py b420-engine-channel",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution \u2014 do not treat those paths as guaranteed to exist. Before you open any source file, resolve and read the map input: run py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py orient --root C:/Programs/constellation-skills-wt/epic418-b-420 --work-id b420-engine-channel. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map \u2014 it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order \u2014 README.md, AGENTS.md, CLAUDE.md, a docs/ index \u2014 and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly \u2014 that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded; current map read for the affected area where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the orientation contract is satisfied -- RESOLVED, or a DEGRADED verdict discharged with hash-pinned substitutes AND the unmapped gap AND an escalation -- recorded at the context step, which precedes understand and plan. Ordering itself is NOT machine-verifiable from a receipt: nothing in a receipt distinguishes a run that resolved the map first from one that crawled fifty files and then wrote an identical receipt. Ordering lives in this step's imperative ('Before you open any source file') and in the report-only ordering audit, never in this check. This gate is a regression floor so map-IGNORING cannot silently return; it is NOT the fix for map-LATENESS (measured sensitivity 0/4, specificity 0/1). Gate-vs-report is a flag flip: adding --report-only to 'py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/epic418-b-420 --work-id b420-engine-channel' turns this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/epic418-b-420 --work-id b420-engine-channel"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-context-1"
+        }
+      ],
+      "context_refs": [
+        {
+          "root": "skill",
+          "path": "references/global-orchestrator.md",
+          "required": true
+        },
+        {
+          "root": "skill",
+          "path": "references/global-everyone.md",
+          "required": true
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/GLOSSARY.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/engine-config.json",
+          "required": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills-wt/epic418-b-420 --work-id b420-engine-channel",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral \u2014 float a decision outside latitude, or query for missing context \u2014 per Stop Conditions. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Mission"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Map-first: BEFORE authoring execute.json, produce a mission frame from the map input the context step resolved, using templates/MISSION_FRAME.template.md (intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope). Write it to .agent-work/b420-engine-channel/MISSION_FRAME.md \u2014 that exact path is what the c6 gate reads, so a frame parked anywhere else reads as no frame at all. For a trivial local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent; c6 is waivable, so take that escape as a RECORDED waiver (<engine> waive plan --cond c6 --authority human --reason '...') rather than as a silent skip. The c6 gate runs map_orient.py verify-frame over that file: every anchor id the frame cites must exist in the map inventory the context step resolved, or \u2014 when context came back DEGRADED \u2014 must be one of the substitutes the receipt hash-pinned there, so the frame is compared against a committed prior declaration instead of a same-breath assertion. Know what that check is and is not, and do not overclaim it: it is a regression floor so map-IGNORING cannot silently return, not the fix for map-LATENESS. Measured against this epic's baseline five runs it has sensitivity 0/4 and specificity 0/1, and it inherits the late-anchor defect it was built next to, because anchors-in-a-late-frame is compliance without sequence. The load-bearing map-first anchor is at the context step ('before you open any source file'), which is why verify-orientation is gated there and verify-frame is gated only here. Do NOT 'fix' that asymmetry by also running verify-frame at context: no frame exists at context \u2014 the step runs before understand and plan \u2014 and the only way to make it pass there is to let an ABSENT frame pass, which is exactly the refusal the whole check is built on. If verify-frame ever has to be context-safe, give it a step-scoped mode; never a vacuous pass. For any low-confidence/stale/disputed map area the run depends on, alter the plan accordingly: add a scout/verification gate or surface it to the human as a decision \u2014 never author gates that silently trust an unverified map. Surface durable-structure choices as decision candidates per the skill's Decision candidates section rather than choosing alone. Then author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria, required evidence, and an anchors block cut from the frame. Before the plan-approved checkpoint run plan-alternatives (parallel gate-plan candidates under distinct constraints, via the references/design-it-twice-brief.md contract) and a cold plan critic (reads the candidate plan + mission frame only, no authoring context); both bias-to-yes \u2014 any skip is surfaced as a named untaken road \u2014 and the panel-vs-single choice is surfaced to the human at plan approval. Get the human to approve it. In delegated mode, satisfy c3 (plan approved) by attaching a user-decision evidence item citing the launch order's frozen plan and scope (attach plan --type user-decision --field cite='LAUNCH_ORDER:Mission'); surface a plan-invalidating discovery to the Admiral rather than blocking on the human. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mission frame produced from the current map (or explicitly skipped as trivial) where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "execute.json authored, one bounded issue, gates carry anchors cut from the frame",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-1",
+          "attested": {
+            "evidence": "e-plan-1",
+            "note": null
+          }
+        },
+        {
+          "id": "c4",
+          "statement": "plan-alternatives run BEFORE the plan freezes (parallel candidates under distinct constraints converging to one recommendation), or the skip surfaced as a named untaken road",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c5",
+          "statement": "cold plan critic run on the converged candidate plan + mission frame (after alternatives, before plan approval), findings triaged by the human; panel-vs-single choice surfaced at plan approval",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c6",
+          "statement": "the mission frame at .agent-work/b420-engine-channel/MISSION_FRAME.md cites anchors that resolve against the map the context step oriented on (or, when context degraded, against the substitutes the receipt hash-pinned) \u2014 an ABSENT frame REFUSES and never vacuously passes. A regression floor against map-ignoring, NOT a check for map-lateness; waive it for a genuinely trivial change so the escape is recorded. Gate-vs-report is a flag flip: append --report-only to turn this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills-wt/epic418-b-420 --work-id b420-engine-channel"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Mission"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills-wt/epic418-b-420 --work-id b420-engine-channel",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Before entering this step: ensure context headroom (run a harness compaction command if one is exposed, else rely on harness auto-compaction \u2014 either is fine) and reload the constellation-commander skill into this context, confirming it is active; this satisfies p1. Then, before this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/b420-engine-channel/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md, or the bundled skills/workbench/templates/STATE_NOTE.template.md when the project has no .agent-work/templates/ overlay \u2014 the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through py C:/Users/fredc/.claude/skills/constellation-commander/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run py C:/Users/fredc/.claude/skills/constellation-commander/scripts/recover_crews.py b420-engine-channel and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. If a gate proves the plan wrong, surface the decision to the user before continuing. In delegated mode, surface a plan-invalidating discovery to the Admiral (float it) per the commander skill's Delegated/autonomous mode, rather than blocking on the human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached dispatch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py b420-engine-channel"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "execute.json",
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py b420-engine-channel",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture \u2014 this is the default path whenever a packet map exists. Where the run has no packet map (e.g. a skill-source repo with no docs/architecture map), reconcile the structural record directly instead: fold the change into the schema or design doc it actually touches, and where the change touched neither, record a reasoned no-op as compliant rather than blocking on an absent map.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects the implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation \u2014 do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed. In delegated mode, satisfy c2 (user approved issue creation) by attaching a user-decision evidence item citing the launch order's issue-filing authority (attach triage --type user-decision --field cite='LAUNCH_ORDER:Inherited Latitude'), or float to the Admiral when filing falls outside inherited latitude. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving. In delegated mode, satisfy c1 (run summary accepted) by attaching a user-decision evidence item citing the launch order (attach review --type user-decision --field cite='LAUNCH_ORDER:Return Shape'); the Admiral ratifies at the epic return boundary. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "feedback": {
+      "id": "feedback",
+      "title": "Record workflow feedback",
+      "imperative": "Before committing, reflect honestly on how this run actually went: how closely you followed the skills, handoffs, and checklists; where you had to improvise or work around the instructions; what was ambiguous, missing, or contradictory; and what would have helped. Include the crew Workflow Feedback harvested at each gN-integrate. A 'none' answer requires a run-specific reason ('none \u2014 confirmed after review: <what you checked>'); bare 'none' entries fail the invariant check. Append one dated entry for this work-id to .agent-work/AGENT_FEEDBACK.md (create it from templates/AGENT_FEEDBACK.template.md if absent \u2014 prefer the project copy under .agent-work/templates/, fall back to the bundled workbench template). This log persists across runs and is never archived with the work-id. Adjudicate each lesson before banking it \u2014 the playbook holds open problems you are carrying forward, not a log of everything learned. If a lesson is understood and fixable now, APPLY it this run (make the bounded edit, record it in AGENT_FEEDBACK) and do not add a playbook entry at all; a lesson goes in the bank (an add) ONLY because it needs to be re-observed to be understood, and every add must carry a bank_reason saying what re-observation will clarify. Applying to project doctrine (a docs/agents/* delta or a template working copy \u2014 any .md / .template.*) is a human call: it needs authority=human on the apply op, and in delegated/autonomous mode you do NOT self-apply doctrine \u2014 surface it to your principal (who may rule 'apply', or 'wait, observe it again') and defer with 'needs human' until they do. Applying a code target (with its test suite as proof) stays autonomous. Then distill what remains into the playbook: write structured delta ops (add [with bank_reason]/confirm/disconfirm/mention/retire/apply/defer \u2014 every add/confirm/disconfirm cites a grounding artifact line; corroborate with engine telemetry like rework counts, BLOCK verdicts, waives where possible) to .agent-work/b420-engine-channel/lessons-delta.json with tick=true, and apply deterministically: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/apply_lessons_delta.py .agent-work/b420-engine-channel/lessons-delta.json --file .agent-work/LESSONS.md. Never edit LESSONS.md directly; if there are no lesson candidates, still apply a tick-only delta. Then settle every threshold-ripe lesson (py C:/Users/fredc/.claude/skills/constellation-commander/scripts/apply_lessons_delta.py --ripe --file .agent-work/LESSONS.md): for each, APPLY it (make the bounded edit to its target \u2014 a thin docs/agents/* delta or a project template working copy \u2014 confirmed by the human, then an apply op deletes it as paid), or for a constellation lesson EXPORT it (append to .agent-work/CONSTELLATION_FEEDBACK.md \u2014 carry the originating lesson id in that entry's Lesson field so the upstream sweep groups recurrences on stable identity, rewording a recurring finding via amend not a new slug \u2014 then an export op marks it exported and pinned), or RESOLVE it if you can confirm the upstream fix has already shipped (a resolve op citing the shipping PR/commit marks the constellation lesson fixed-upstream: no longer ripe, immune to re-confirmation, and it ages out of the playbook \u2014 this is how an already-fixed defect stops being re-exported every run), or DEFER it with a reason (a broad or contradictory doctrine shift routes to a Charter refresh; an autonomous run without that latitude defers 'needs human'). Lessons flagged charter-review go to a Charter refresh. Then run the feedback invariant check before advancing: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py b420-engine-channel --phase feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "durable feedback log exists, contains this work id, and is not inside the work area or archive",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py b420-engine-channel --phase feedback"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
+        },
+        {
+          "id": "c2",
+          "statement": "no threshold-ripe lesson left unpaid \u2014 each applied to its target, exported upstream, resolved (fixed upstream), or explicitly deferred with a reason",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py b420-engine-channel --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work, including the appended .agent-work/AGENT_FEEDBACK.md entry \u2014 where the repo tracks .agent-work/. Where .agent-work/ is gitignored, do not try to commit it: the durable copy is the work-area-root AGENT_FEEDBACK.md file itself, uncommitted; when this run is dispatched under an Admiral, the epic-level harvest at closeout is the durable record instead. Push the branch to remote. When you open a PR on Windows, write the body to a temp file and use gh pr create -F <file> \u2014 a bash heredoc and a PowerShell @'...'@ here-string both fail for gh pr create --body (here-strings work for git commit -m, not PR bodies). Move .agent-work/b420-engine-channel/ to .agent-work/archive/<date>-b420-engine-channel/, leaving the unified AGENT_FEEDBACK.md at the agent-work root. Run the archive-phase feedback invariant check before marking archive complete: py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py b420-engine-channel --phase archive. Confirm the branch is clean and merge-ready per repo guidance. The engine mechanically refuses closeout (c4) when the staged diff includes suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); if any are intentional, a human waives c4 via <engine> waive archive --cond c4 --authority human --reason \"...\" rather than hand-editing the spine. Release the engine session lease only as your VERY LAST action, AFTER the archive postconditions pass and you have run the engine's final advance on archive (the advance that marks the spine done): <engine> release --session-id commander-b420-engine-channel. Release must come after that closing advance, never before it \u2014 the lease must cover every journaled action, so the release is the final journal entry; releasing earlier leaves archive's own closeout entries (attest/waive/advance) after the lease release and fails the terminal provenance check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "workflow feedback recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived and durable feedback log left at .agent-work root",
+          "check": {
+            "kind": "command",
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py b420-engine-channel --phase archive"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2b",
+          "statement": "the work is REACHABLE: an open PR exists for this branch. A terminal spine and a pushed branch describe the run, not the ref -- CI never runs on an unopened branch, and every commander that reached a terminal spine without opening one had to be chased for it. Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up.",
+          "check": {
+            "kind": "command",
+            "command": "gh pr list --head <branch> --state open --json number --jq 'length > 0'"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "engine session lease released",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "staged diff carries no suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); refuse closeout unless a human waives via the engine override path",
+          "check": {
+            "kind": "git-change-policy",
+            "mode": "staged",
+            "max_file_bytes": 1000000,
+            "deny_globs": [
+              "*.parquet",
+              "*.pkl",
+              "*.pickle",
+              "*.joblib",
+              "*.pt",
+              "*.onnx",
+              "*.bin",
+              "*.ckpt",
+              "data/generated/**",
+              "records/**",
+              ".agent-work/LESSONS.md",
+              ".agent-work/AGENT_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.collected.json"
+            ],
+            "allow_globs": [
+              "docs/**",
+              "src/**",
+              "tests/**",
+              "skills/**",
+              "scripts/**",
+              ".agent-work/**"
+            ],
+            "require_human_waiver_for_binary": true
+          },
+          "satisfied": false,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "cmdr-420-engine-channel",
+    "status": "active",
+    "claimed_at": "2026-08-05T23:12:14.765773+00:00",
+    "last_heartbeat": "2026-08-06T00:26:31.880400+00:00",
+    "claimed_by": "commander",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": "Work area scaffolded at .agent-work/b420-engine-channel, spine instantiated from COMMANDER_SPINE.template.json with skill-dir resolved to this worktree, engine lease claimed as cmdr-420-engine-channel per launch order B-420 (delegated Commander for issue #420, epic #418 wave 1).",
+      "mechanical": false,
+      "ts": "2026-08-05T23:12:50.117238+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "context",
+      "why": "Read global-orchestrator.md + global-everyone.md (already in this session), plus project overlays ORCHESTRATOR_CONTEXT.md and GLOSSARY.md; no engine-config.json present (defaults apply). Repo has no docs/architecture map (skill-source repo) so map_orient returned DEGRADED-NO-MAP; discharged with substitutes docs/CHECKLIST_ENGINE_DESIGN.md and docs/CHECKLIST_SCHEMA.md, which are the actual entrypoints for the engine-channel rendering path this issue touches (current projection, RAIL, postcondition/evidence shape).",
+      "mechanical": false,
+      "ts": "2026-08-05T23:14:10.731093+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "understand",
+      "why": "Reconciled against launch order B-420 + issue #420 + DESIGN_SPEC.md workstream B (no live human; delegated mode). Verified against actual code (checklist_engine.py) rather than trusting the order's framing: RAIL 2x-duplication confirmed live at _rail_position()/_RAIL_STRINGS['mid-flight'] (line ~229) where {imperative} carries the FULL gate imperative text already shown on the ACTIVE line -- reproduced in my own current-output above. anchors/constraints confirmed genuinely unrendered: state() (line 1548) never reads t.get('anchors')/t.get('constraints'). Discharged pre-ruling decision:b-vestigial-fields by inventory: both fields are populated across ~20+ real archived execute.json gates (issue-58,99,102-107,87,299,304-310, epic-298 runs) with real structured content -- NOT vestigial, so the renderer gets built rather than the fields deleted. Noted constraint: the five RAIL strings are frozen verbatim (measurement precondition for #145) -- the fix substitutes a shorter pointer value for the {imperative} token rather than rewording the template. Shared-file fence with D (#422): my changes are confined to the RENDERING path (state()/render_human()/_rail_position()), not the invariant-check path. The DIGEST-staleness-after-HARD-trip observation is judged separate from this issue's 'channel must not lie' scope per the launch order's default -- routing to workstream G (#425), not absorbing it here.",
+      "mechanical": false,
+      "ts": "2026-08-05T23:16:54.413165+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "Mission frame written (shrunk, no repo map exists -- backed by docs/CHECKLIST_ENGINE_DESIGN.md + docs/CHECKLIST_SCHEMA.md as substitutes); execute.json authored (e0-context + g1 implement/review/integrate, one bounded fix). Plan-alternatives: cited DESIGN_SPEC.md workstream B's own human-approved skip-as-trivial (Tommy, 2026-08-03) rather than re-running a fresh fan-out -- recorded as an untaken road in notes-b420.md. Cold plan critic: ran single Sonnet critic (fairly-easy-call panel size), no authoring context; it returned 3 real blockers -- my first RAIL-fix sketch was verb-blind (only 'current' among the 6 RAIL_VERBS actually duplicates; the other 5 need the full imperative kept), a pinned test needed a deliberate update not a preserve, and a stale line-number citation I'd copied from a source docstring. All three addressed in execute.json's constraints before approval; full trail in notes-b420.md. Plan approved via LAUNCH_ORDER:Mission citation (delegated mode, no live human). verify-frame passes (FRAME-OK, problems: 0).",
+      "mechanical": false,
+      "ts": "2026-08-05T23:32:45.229416+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "execute.json fully driven: e0-context, g1-implement (implementer dispatched via run_crew.py external + verified fresh; caught a real defect in independent verification -- dict-of-string anchor shape exploding into chars -- sent back for rework via SendMessage, rework fixed cleanly through the crew's own engine plan), g1-review (reviewer dispatched, independently re-reproduced everything including the rework fix, APPROVE), g1-integrate (c1 tests re-run by advance itself, c2 satisfied by reference to reviewer evidence). All closed with integrated, independently-verified evidence.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:18:30.182403+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "No packet map exists in this skill-source repo, so reconciled the structural record directly per commander-core.md's Architecture bookend: added the anchors field to docs/CHECKLIST_SCHEMA.md's Task table (was entirely undocumented there, only prose-mentioned in commander-core.md -- reviewer's triage candidate tc2) with all 3 real corpus shapes named, plus a short Rendering subsection stating current now renders populated constraints/anchors and naming directives as the known remaining unrendered-field gap. This is the doc the change actually touches (constraints/anchors are Task-schema fields); CHECKLIST_ENGINE_DESIGN.md's design narrative needed no edit -- it already states the INV-1 completeness invariant abstractly and this fix is an implementation detail fulfilling it, not a new invariant.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:19:37.073687+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "2 triage candidates from g1-review's survey: tc1 (directives rendering follow-up) filed as issue #433, same shape as #420, per launch order's pre-cleared 'gh issue create' + inherited latitude 'issue filing and commenting'. tc2 (anchors missing from CHECKLIST_SCHEMA.md's Task table) resolved directly at the reconcile step this run (added the field to the schema doc) -- no issue needed, closed by this run's own work. Issue-filing authority cited via LAUNCH_ORDER:Inherited Latitude (delegated mode, no live human to individually approve).",
+      "mechanical": false,
+      "ts": "2026-08-06T00:21:07.886828+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary: both defects fixed (RAIL echo dedup, verb-aware, current only; anchors/constraints rendering, all 3 real corpus shapes handled including a shape the first implementer pass missed and I caught in independent verification) plus the mandated completeness property test. execute.json's 4 gates all closed with independently-verified evidence (I re-verified both implementer and reviewer claims myself, not just trusted them). Reconciled docs/CHECKLIST_SCHEMA.md (anchors documented, was a real gap). 1 triage candidate filed as issue #433; the other resolved in-run. Plan approved via LAUNCH_ORDER:Mission; run summary accepted via LAUNCH_ORDER:Return Shape (delegated mode, Admiral ratifies at epic return boundary).",
+      "mechanical": false,
+      "ts": "2026-08-06T00:21:38.280154+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Fenced from the main checkout (Admiral holds an active epic lease there, per durable_root()'s own auto-detection) -- staged the full trio under .agent-work/staged-feedback/b420-engine-channel/ (AGENT_FEEDBACK.md entry with real, non-boilerplate content in every signal section; lessons-delta.json with 1 new constellation-scoped lesson about docstring line-citation drift, dry-run validated against a scratch copy; CONSTELLATION_FEEDBACK.md staged as an honest empty-this-run placeholder since --ripe read-only against the real durable playbook returned zero ripe lessons; FENCE.md citing the launch order). verify_agent_feedback.py --phase feedback passes via the staged-trio path (fence_marker present).",
+      "mechanical": false,
+      "ts": "2026-08-06T00:26:01.892799+00:00"
+    }
+  ]
+}

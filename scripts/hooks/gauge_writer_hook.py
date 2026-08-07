@@ -17,9 +17,14 @@ Design contract (frozen DESIGN_SPEC #178, Module 2 post-review amendments):
   file is left exactly as it was and ages into staleness naturally. A
   fabricated 0.0 would read as genuine low fill and could suppress a
   nudge that should have fired.
-- Record is FROZEN, four fields only (identical to #181's reader):
+- Record is four REQUIRED fields (identical to #181's reader):
   {schema_version: int, fill_fraction: float 0..1, model: str,
-  observed_at: ISO-8601 str -- the SAMPLED moment, not write time}.
+  observed_at: ISO-8601 str -- the SAMPLED moment, not write time},
+  plus ONE optional fifth on the dispatched-agent path only (#419):
+  {identity_resolution_ms: float}. A top-level agent's record still
+  carries exactly the four, byte-identical to before #419. The reader
+  validates the four and does not reject extras, which is what makes an
+  additive field free on the read side.
 - Atomic write: tmp file + os.replace. A concurrent reader of gauge.json
   never observes a torn/partial record -- it always sees either the
   complete prior record or the complete new one.
@@ -41,13 +46,27 @@ Design contract (frozen DESIGN_SPEC #178, Module 2 post-review amendments):
   cache_read_input_tokens` IS the current total context size (not a sum
   across lines/turns). Sidechain entries (subagent turns, `isSidechain:
   true`) are a different context window entirely and are skipped.
+- The reading belongs to the AGENT THAT PRODUCED IT (#419). Agent-tool
+  subagents share their parent's `session_id`, and their tool calls carry
+  the PARENT's `transcript_path`, but the harness hands the acting agent's
+  own `agent_id` over directly. So: the binding is keyed on
+  `spine_rail.binding_key(payload)` (`session_id#agent_id` for a dispatched
+  agent, the bare `session_id` for a top-level one), and the agent's own
+  transcript is DERIVED from that id, never searched for. For a dispatched
+  agent the sidechain polarity INVERTS -- every line of its own transcript
+  is `isSidechain: true` -- and the line's `agentId` must equal the payload's.
+  There is NO fallback to the parent's transcript: an absent derived
+  transcript writes a `subagent-transcript-missing` skip and nothing else.
+  Silence is an acceptable outcome; a confident wrong number is not.
 - Stdlib only. Windows-friendly: UTF-8 I/O, native paths, no /tmp literals.
 """
 
 import importlib.util
 import json
 import os
+import re
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -142,21 +161,99 @@ def _is_contained(gauge_path: Path) -> bool:
         return False
 
 
-def resolve_gauge_path(project_dir: Path, session_id):
-    """`.agent-work/<work_id>/gauge.json` for EVERY spine this session_id is
-    currently bound to (#202: one session_id can hold N distinct spine
-    bindings at once) -- a list of Path, possibly empty. Each candidate is
-    individually checked against `_is_contained`; a candidate that fails the
-    fence is dropped rather than failing the whole call, so one bad entry
-    never blinds the write for the session's other, legitimate bindings.
-    Empty list if unresolvable (no sibling module, no session_id, no binding
-    at all) -- skip-on-uncertainty applies to WHERE we write, not just to
-    what."""
+# --- the acting agent's identity, and the transcript derived from it --------
+
+# An ALLOWLIST, deliberately not an extension of spine_rail's denylist. That
+# denylist (`#`, `/`, `\`, `..`) is hand-maintained and still admits `:`, `*`
+# and `?` -- and unlike spine_rail, which only ever uses agent_id as a dict
+# KEY, this module interpolates it into `agent-{agent_id}.jsonl`, a real
+# filesystem path on a Windows box. A denylist of path metacharacters is a
+# list that drifts from the predicate the filesystem actually applies; the
+# allowlist is defined by the ids the harness genuinely sends (measured live
+# on 2.1.222: hex-ish tokens such as `a8f0a946eaaa2fe6c`), widened only to `-`
+# and `_`. A value outside it means WRITE NOTHING -- never a repaired or
+# sanitized path, and never an exception the outer swallow would flatten into
+# the same indistinguishable silence every other failure produces.
+_AGENT_ID_ALLOWED = re.compile(r"\A[A-Za-z0-9_-]{1,64}\Z")
+
+
+def _is_usable_agent_id(agent_id) -> bool:
+    return isinstance(agent_id, str) and _AGENT_ID_ALLOWED.match(agent_id) is not None
+
+
+def derive_subagent_transcript(transcript_path, agent_id):
+    """The ACTING agent's own transcript, derived from the payload:
+    `<parent transcript minus .jsonl>/subagents/agent-<agent_id>.jsonl`.
+
+    Derived, never searched for. The harness hands over `agent_id` directly,
+    so resolving WHO is an O(1) payload lookup and this path follows from it
+    by construction -- which is why the identical-command race a search-based
+    identity would have to defend against cannot arise here at all. The shape
+    was confirmed on disk for both agents of a live two-subagent probe.
+
+    Returns None -- never a repaired path -- when the id fails
+    `_is_usable_agent_id` or the parent path is unusable."""
     try:
-        if _spine_rail is None or not session_id:
+        if not transcript_path or not _is_usable_agent_id(agent_id):
+            return None
+        parent = Path(transcript_path)
+        return parent.with_suffix("") / "subagents" / "agent-{aid}.jsonl".format(aid=agent_id)
+    except Exception:
+        return None
+
+
+def _binding_key(data: dict):
+    """This payload's outer binding key, or None to write NOTHING.
+
+    Thin on purpose: `spine_rail.binding_key` is the single place the
+    composite `session_id#agent_id` key is composed anywhere in the codebase
+    (#419 g1), and this module CALLS it rather than reimplementing it, so the
+    two hooks cannot drift.
+
+    What this adds is the `_spine_rail is None` guard, moved OUT here with the
+    call. `_load_spine_rail` returns None on any import failure; leaving the
+    guard behind in `resolve_gauge_path` would strand it, and an unguarded
+    `_spine_rail.binding_key(...)` would raise into `handle_post_tool_use`'s
+    outer `except` -- silence with zero diagnostic, wearing exactly the same
+    symptom as every other silence this module works to keep distinguishable.
+
+    It also applies THIS module's stricter `_is_usable_agent_id` allowlist
+    before delegating, so an id spine_rail admits but this module could not
+    safely put in a path resolves to None -- write nothing -- rather than
+    reaching the `agent-{agent_id}.jsonl` interpolation.
+
+    Deliberately carries NO try/except of its own: `binding_key` already
+    swallows internally, and a bare helper makes the guard directly
+    observable in a test instead of being absorbed one frame up."""
+    if _spine_rail is None:
+        return None
+    if "agent_id" in (data or {}) and not _is_usable_agent_id((data or {}).get("agent_id")):
+        return None
+    return _spine_rail.binding_key(data)
+
+
+def resolve_gauge_path(project_dir: Path, binding_key):
+    """`.agent-work/<work_id>/gauge.json` for EVERY spine this BINDING KEY is
+    currently bound to (#202: one key can hold N distinct spine bindings at
+    once) -- a list of Path, possibly empty. Each candidate is individually
+    checked against `_is_contained`; a candidate that fails the fence is
+    dropped rather than failing the whole call, so one bad entry never blinds
+    the write for the key's other, legitimate bindings.
+
+    The key is `_binding_key(payload)`, NOT the bare `session_id` (#419):
+    Agent-tool subagents share their parent's session_id, so a session-keyed
+    lookup piled every crew claim under one key and left this writer with 2+
+    candidates and no way to tell whose reading it held -- so it wrote nothing,
+    for exactly the runs an orchestrator dispatches. A dispatched agent is
+    keyed `session_id#agent_id`; a top-level agent keeps the bare session_id.
+
+    Empty list if unresolvable (no sibling module, no key, no binding at all)
+    -- skip-on-uncertainty applies to WHERE we write, not just to what."""
+    try:
+        if _spine_rail is None or not binding_key:
             return []
         binding = _spine_rail.load_binding(project_dir)
-        sid_bindings = binding.get(session_id) or {}
+        sid_bindings = binding.get(binding_key) or {}
         candidates = []
         for entry in sid_bindings.values():
             spine_path = entry.get("spine") if isinstance(entry, dict) else None
@@ -191,10 +288,27 @@ def _iter_tail_lines_reverse(path, max_bytes=TAIL_BYTES):
             yield line
 
 
-def find_latest_usage(transcript_path):
-    """Scan the transcript tail for the most recent main-chain (non-sidechain)
-    assistant message carrying a usage record. Returns (model, total_tokens,
-    observed_at), or None if nothing usable is found in the scanned window."""
+def find_latest_usage(transcript_path, agent_id=None):
+    """Scan the transcript tail for the most recent assistant message carrying
+    a usage record. Returns (model, total_tokens, observed_at), or None if
+    nothing usable is found in the scanned window.
+
+    `agent_id` INVERTS the sidechain polarity, and it is deliberately ONE
+    parameter rather than an `expect_sidechain` + `expect_agent_id` pair:
+    "this is agent X's own transcript" is a single fact, and a pair would let
+    a caller set an incoherent combination.
+
+    - `None` (a top-level agent): today's filter exactly -- skip anything
+      `isSidechain` truthy, because a subagent's turns are a different context
+      window entirely.
+    - set (a dispatched agent, reading its OWN derived transcript): the line
+      must be `isSidechain` TRUTHY *and* carry a top-level `agentId` EQUAL to
+      it. Every line of a subagent's own transcript is `isSidechain: true`
+      (measured; docs/GAUGE_WRITER_HOOK.md's field table states both
+      polarities), so the polarity has to flip; the `agentId` equality is what
+      makes a WRONG derived path fail closed rather than produce a confidently
+      misattributed number.
+    """
     try:
         for line in _iter_tail_lines_reverse(transcript_path):
             try:
@@ -203,7 +317,12 @@ def find_latest_usage(transcript_path):
                 continue
             if not isinstance(d, dict):
                 continue
-            if d.get("type") != "assistant" or d.get("isSidechain"):
+            if d.get("type") != "assistant":
+                continue
+            if agent_id is None:
+                if d.get("isSidechain"):
+                    continue
+            elif not d.get("isSidechain") or d.get("agentId") != agent_id:
                 continue
             msg = d.get("message")
             if not isinstance(msg, dict):
@@ -235,8 +354,15 @@ def find_latest_usage(transcript_path):
         return None
 
 
-def compute_record(transcript_path):
-    """Build the frozen 4-field record for this transcript.
+def compute_record(transcript_path, agent_id=None):
+    """Build the four required fields of the record for this transcript.
+
+    Four is what THIS function returns, always. The optional fifth field
+    `identity_resolution_ms` is added by `handle_post_tool_use` on the
+    dispatched-agent path only -- see the module docstring.
+
+    `agent_id` is forwarded verbatim to `find_latest_usage` -- see there for
+    what it does to the sidechain polarity. One parameter, not two.
 
     Returns `(record, uncalibrated)`. At most one is non-None:
 
@@ -251,7 +377,7 @@ def compute_record(transcript_path):
     "Write nothing" never means "write a placeholder" -- a fabricated fill
     reads as a genuine measurement downstream."""
     try:
-        found = find_latest_usage(transcript_path)
+        found = find_latest_usage(transcript_path, agent_id)
         if found is None:
             return None, None
         model, total_tokens, observed_at = found
@@ -283,12 +409,15 @@ def _atomic_write_json(path: Path, record: dict) -> None:
 
 # --- uncalibrated-model flag (visible, not silent) ---------------------------
 
-# A SIDECAR, deliberately not a field on gauge.json: that record is frozen at
-# four fields and shared with the reader, and "no reading" must stay literally
-# no reading so every existing fail-safe path keeps working untouched. The flag
-# rides alongside so the engine can explain the silence instead of the governor
-# just going quiet -- an unexplained silent governor is how a miscalibration
-# survives unnoticed, which is exactly what happened with claude-opus-5.
+# A SIDECAR, deliberately not a field on gauge.json: that record's four
+# required fields are shared with the reader, and "no reading" must stay
+# literally no reading so every existing fail-safe path keeps working
+# untouched -- an uncalibrated model has no fill to report at all, which is a
+# different thing from #419's additive fifth field riding a real reading.
+# The flag rides alongside so the engine can explain the silence instead of
+# the governor just going quiet -- an unexplained silent governor is how a
+# miscalibration survives unnoticed, which is exactly what happened with
+# claude-opus-5.
 UNCALIBRATED_FILENAME = "gauge-uncalibrated.json"
 
 
@@ -411,9 +540,10 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
     flag path. Only exactly one candidate ever gets a gauge.json/
     gauge-uncalibrated.json write.
 
-    Two of the skip causes are now POSITIVELY LOCALIZED (issue #271) with a
-    visible gauge-skip.json sidecar -- see _write_skip_flag's docstring for
-    why this rides a SEPARATE sidecar family rather than reusing
+    THREE of the skip causes are now POSITIVELY LOCALIZED with a visible
+    gauge-skip.json sidecar (two from issue #271, plus
+    subagent-transcript-missing from #419) -- see _write_skip_flag's docstring
+    for why this rides a SEPARATE sidecar family rather than reusing
     gauge-uncalibrated.json:
       - ambiguous binding (2+ candidates): unlike a gauge.json reading, a
         diagnostic fact about WHY nothing was written is never a fabricated/
@@ -422,8 +552,11 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
         candidate (decision:skip-sidecar-fanout-and-clear).
       - no-usable-record on the single resolved candidate: same treatment,
         one path.
-    The other two causes stay silent by design -- there is no known gauge
-    path to write a sidecar TO: zero candidates (unresolvable binding) and a
+      - subagent-transcript-missing: agent_id resolved but its derived
+        transcript is absent. Fails closed -- never the parent's transcript.
+    The other causes stay silent by design -- there is no known gauge path to
+    write a sidecar TO: zero candidates (unresolvable binding, which now also
+    covers a subagent whose identity would not compose a key) and a
     missing/unreadable transcript_path (checked first, below, before
     gauge_paths is even resolved).
 
@@ -436,7 +569,25 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
             # No known gauge path yet (resolve_gauge_path hasn't even run) --
             # genuinely unlocatable, so this cause stays silent by design.
             return {}
-        gauge_paths = resolve_gauge_path(project_dir, data.get("session_id"))
+        # Identity resolution is measured, not assumed (#419): the harness
+        # hands `agent_id` over directly, so resolving WHO is an O(1) payload
+        # lookup and the acting agent's transcript follows from it by
+        # construction -- but "should be fast" is not evidence. Accumulated
+        # across the two identity steps (key composition, transcript
+        # derivation) and reported on the record. The binding-store read
+        # between them is binding resolution, a pre-existing cost, and is
+        # deliberately NOT counted.
+        identity_ms = 0.0
+        _t0 = time.perf_counter()
+        key = _binding_key(data)
+        identity_ms += (time.perf_counter() - _t0) * 1000.0
+        if key is None:
+            # Unresolvable acting identity (#419). NOT a fallback to the bare
+            # session_id: that would file a subagent's reading under the
+            # PARENT's key -- the same misattribution this keying exists to
+            # remove, just wearing a different hat. Fail closed, write nothing.
+            return {}
+        gauge_paths = resolve_gauge_path(project_dir, key)
         if not gauge_paths:
             # Zero: unresolvable binding, no known gauge path to flag either.
             # Existing skip-on-uncertainty, unchanged.
@@ -454,7 +605,30 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
                                   candidate_count=len(gauge_paths), observed_at=now_iso)
             return {}
         gauge_path = gauge_paths[0]
-        record, uncalibrated = compute_record(transcript_path)
+        acting_agent_id = data.get("agent_id") if "agent_id" in data else None
+        if acting_agent_id is None:
+            read_path = transcript_path
+        else:
+            # #419 FAIL CLOSED. The payload's transcript_path is the PARENT's
+            # transcript, always (measured live on 2.1.222) -- so for a
+            # dispatched agent the reading comes from the DERIVED transcript
+            # and only from it. There is deliberately no fallback to the
+            # parent: that is precisely the misattribution #202/#261 already
+            # tried and reverted, where spreading one agent's reading into an
+            # unrelated agent's work area was worse than silence. Read the
+            # module docstring above for that history.
+            _t1 = time.perf_counter()
+            read_path = derive_subagent_transcript(transcript_path, acting_agent_id)
+            unresolved = read_path is None or not os.path.isfile(read_path)
+            identity_ms += (time.perf_counter() - _t1) * 1000.0
+            if unresolved:
+                # A third positively-localized skip cause. gauge_reader's
+                # skip_reason does not whitelist reason strings and the
+                # engine's advisory renders an unrecognized one verbatim, so
+                # this costs zero change on the reading side.
+                _write_skip_flag(gauge_path, "subagent-transcript-missing")
+                return {}
+        record, uncalibrated = compute_record(read_path, acting_agent_id)
         if uncalibrated is not None:
             # No window for this model: raise the flag and leave gauge.json
             # exactly as it was. It ages into staleness naturally, which the
@@ -471,6 +645,16 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
             # localizable skip cause. Single path, no candidate_count.
             _write_skip_flag(gauge_path, "no-usable-record")
             return {}
+        if acting_agent_id is not None:
+            # An OPTIONAL FIFTH field, additive only. gauge_reader validates
+            # the presence of its four required fields and does not reject
+            # extras, so this costs no reader change. It rides ONLY the
+            # dispatched-agent path: a payload with no agent_id must stay
+            # byte-identical to before this change, and there is no identity
+            # to resolve for a top-level agent anyway. The four required
+            # fields keep their meaning untouched.
+            record = dict(record)
+            record["identity_resolution_ms"] = identity_ms
         _atomic_write_json(gauge_path, record)
         _clear_uncalibrated_flag(gauge_path)
         _clear_skip_flag(gauge_path)

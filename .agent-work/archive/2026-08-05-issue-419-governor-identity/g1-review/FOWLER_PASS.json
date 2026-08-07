@@ -1,0 +1,98 @@
+{
+  "work_id": "issue-419-governor-identity-g1-review",
+  "diff_ref": "git diff HEAD~1 (commit 340c46d) over scripts/hooks/spine_rail.py (+156/-20), tests/test_spine_rail.py (+468/-0), tests/fixtures/probe_payloads.jsonl (+6/-0)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, installed reviewer skill references/global-crew.md + references/global-everyone.md, and the g1 reviewer handoff's 'Allowed scope / exclusions' section",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "handle_post_tool_use is now 85 lines (64 non-blank non-comment) and holds four responsibilities in one body: parse the engine command out of tool_input, resolve the absolute spine path, apply the claim branch, and apply the release branch with its empty-set cleanup and its nudge-ledger delete. The diff did not create that shape but it grew it, and g2 will touch the same function. Non-blocking observation for the Commander: extracting _apply_claim(binding, key, abs_spine, ...) and _apply_release(...) would make the key/sid asymmetry in the release branch -- the one line the handoff calls the most dangerous -- visible at a glance instead of eleven lines into a comment block. decide_session_start (71 lines) is the same shape and is pre-existing.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The diff introduces no classes. scripts/hooks/spine_rail.py is a flat module of pure functions over JSON dicts, 717 lines total.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, Verification Discipline: 'A check that cannot fail is indistinguishable from one that passed.'",
+        "reason": "The composite key expression sid + sr.BINDING_KEY_SEP + payload['agent_id'] is repeated in eight new tests rather than factored into a helper that calls sr.binding_key(). Deduplicating it through the function under test would make each assertion tautological -- the test would compute its expectation with the code it is testing and would pass in a world where binding_key composed any key at all. Restating the format independently in the test is the point, not an oversight. In production code the format is NOT duplicated: grep over scripts/ finds exactly one composition site (spine_rail.py:184) and one prefix site (203)."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "session_view reads the binding dict's keys and values, but the binding map IS this module's data type -- there is no other object the behavior could sensibly move to. The function lives beside load_binding/save_binding, which own that same dict.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "references/global-crew.md, Implementation discipline: 'Make the minimal change that satisfies the handoff; no speculative abstraction', plus the g1 handoff's 'Allowed scope / exclusions'.",
+        "reason": "The four-field binding entry {spine, engine_session, worktree, claimed_at} is constructed literally in two places (the claim writer at spine_rail.py:434 and the bind-on-resume writer at 651), and a third literal copy lives in the tests' bind() helper -- a genuine clump. It is entirely pre-existing (#202/#261 introduced both sites); this diff renamed the surrounding local from sid_bindings to key_bindings and touched nothing about the entry shape. Introducing an entry factory now would widen a gate whose allowed scope is three files and whose whole risk story is that the outer key changed and the entry did not."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "references/global-everyone.md, Universal posture: 'One canonical path; no speculative abstraction', and Deep-module vocabulary: 'One adapter = a hypothetical seam; two = a real one'.",
+        "reason": "The per-agent identity is carried as a '#'-joined string rather than a (session_id, agent_id) pair. That is the classic primitive, and here it is forced: the value is the outer key of a JSON object persisted to .agent-work/.spine-rail-binding.json, so it must serialize as a string. The primitive does not leak either -- binding_key is the single composer and session_view is the single reader of the format, both verified by grep, so a key type object would be a second seam with one implementer."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "binding_key(payload) takes one argument; session_view(binding, sid) takes two. No signature in the diff exceeds two parameters.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "The g1 reviewer handoff, 'Allowed scope / exclusions': 'scripts/hooks/gauge_writer_hook.py is deliberately untouched -- it belongs to gate g2, and the interim state ... is expected and is not a defect to report against this gate.'",
+        "reason": "Knowledge of the binding store's key shape now sits in two files: spine_rail.py composes and merges it, while gauge_writer_hook.py:159 still reads binding.get(session_id) directly. That is textbook shotgun surgery and it is the declared, gated interim state, not a defect of this gate -- g1's own Map Impact records the constraint that g2 must call binding_key through the _spine_rail handle rather than compose a second key. Flagging it here would contradict the handoff's explicit exclusion. Worth noting that the direction of travel is the cure for the smell, not the cause: before this change every reader hand-rolled binding.get(sid)."
+      }
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "references/global-crew.md: 'Make the minimal change that satisfies the handoff'; the hook is registered by file path in .claude/settings.json and scripts/install_constellation.py.",
+        "reason": "scripts/hooks/spine_rail.py changes for three different reasons -- PostToolUse binding writes, Stop gating, SessionStart resume -- and this diff touched all three. That is divergent change, and it is pre-existing and structural: the harness registers one hook script per path, and .claude/settings.json plus install_constellation.py both name this file, so splitting the module is a distribution change well outside a gate scoped to three files. The change also does not deepen it: the three handlers now share ONE keying function instead of three inline binding.get(sid) expressions."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation in the diff. The deepest access is a single data.get('session_id') / entry.get('spine'), and both are guarded.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Checked the two candidates and neither is speculative. _AGENT_ID_REJECT's '/', '\\\\' and '..' tokens have a named live consumer -- gauge_writer_hook interpolates the identity into a filesystem path agent-{id}.jsonl -- and BINDING_KEY_SEP is rejected because the key is parsed by prefix. The unreachable-today branch (agent_id present as null) is a fail-closed guard, not an unused abstraction; the implementer surfaced it as a decision candidate rather than building for a hypothesis. No unused parameter, hook, or extension point is introduced.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "The module's own established convention -- decision-carrying docstrings tagged with the issue that set them, pre-existing at load_binding, _is_old_shape_binding_entry, _scan_active_spine and decide_stop (8 issue references in the pre-change file) -- plus references/global-everyone.md: 'Keep Constellation context and architecture docs current when their meaning changes.'",
+        "reason": "binding_key carries a 35-line docstring over a 15-line body, and the release branch carries a 12-line comment. On raw ratio that reads as deodorant. It is not: the prose states WHY (an unusable agent_id must not fall back to the bare key because that files the subagent's entry under the parent's key and silences the parent's gauge) and records the key/sid asymmetry that a future maintainer would otherwise 'fix' into a bug. The repo has no architecture map, so the code site is the only place this decision can live, and the file already documents #202/#261 the same way. The comments explain intent the code cannot express, not code the reader cannot follow."
+      }
+    }
+  ],
+  "rail_exception": null
+}

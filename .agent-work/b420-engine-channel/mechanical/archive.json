@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "mechanical": {
+    "run": "b420-engine-channel",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "archive",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b420-engine-channel-archive@294ade7d9a3ac476770e527bd186de67914e9306",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b420-engine-channel",
+    "generated_at": "2026-08-06T00:26:31Z"
+  }
+}

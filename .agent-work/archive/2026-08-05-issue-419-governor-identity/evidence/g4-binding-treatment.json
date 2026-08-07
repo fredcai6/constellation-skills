@@ -1,0 +1,26 @@
+{
+  "e0063a6f-5f31-473e-938a-1feea2863166": {
+    "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment\\.agent-work\\wk-parent\\spine.json": {
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment\\.agent-work\\wk-parent\\spine.json",
+      "engine_session": "sess-parent",
+      "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment",
+      "claimed_at": "2026-08-06T04:30:40.742536+00:00"
+    }
+  },
+  "e0063a6f-5f31-473e-938a-1feea2863166#a6df3902f0bf72c29": {
+    "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment\\.agent-work\\wk-alpha\\spine.json": {
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment\\.agent-work\\wk-alpha\\spine.json",
+      "engine_session": "sess-alpha",
+      "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment",
+      "claimed_at": "2026-08-06T04:31:13.102239+00:00"
+    }
+  },
+  "e0063a6f-5f31-473e-938a-1feea2863166#a69093b8ea2f159f6": {
+    "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment\\.agent-work\\wk-bravo\\spine.json": {
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment\\.agent-work\\wk-bravo\\spine.json",
+      "engine_session": "sess-bravo",
+      "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-treatment",
+      "claimed_at": "2026-08-06T04:32:51.159253+00:00"
+    }
+  }
+}

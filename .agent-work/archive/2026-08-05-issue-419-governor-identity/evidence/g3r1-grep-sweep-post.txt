@@ -1,0 +1,18 @@
+# g3 REWORK 1 -- sidechain-polarity sweep, RE-RUN AFTER THE LAST EDIT
+# (the g3 review's one non-reproducing artifact was the stale-line-number version of this sweep)
+# Run: 2026-08-06T03:06:10Z
+
+$ grep -n -i -E "isSidechain|sidechain|falsy" docs/GAUGE_WRITER_HOOK.md
+234:  top-level, so its lines read `isSidechain: false`; a dispatched agent's own
+236:  `{"type": "assistant", "isSidechain": false, "message": {"model": "...",
+291:| `isSidechain` | top-level | the polarity depends on whose transcript is being read: **falsy on a main-chain read** (a top-level agent), **truthy on a dispatched agent's own transcript**, where every line carries `isSidechain: true` |
+350:  side of the sidechain polarity (see the field table above) with a well-formed
+432:| `session_id` falsy, or `agent_id` present but unusable | `None` — **bind nothing** |
+exit=0
+$ ... | wc -l  # matching LINES
+5
+$ grep -o -i -E "isSidechain|sidechain|falsy" docs/GAUGE_WRITER_HOOK.md | wc -l  # OCCURRENCES
+7
+
+$ grep -n -i -E "non-sidechain|must be falsy|main-chain only|only main-chain" docs/GAUGE_WRITER_HOOK.md
+exit=1   # 1 == no sentence asserts the pre-fix polarity

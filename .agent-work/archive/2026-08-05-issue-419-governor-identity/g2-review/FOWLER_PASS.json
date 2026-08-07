@@ -1,0 +1,95 @@
+{
+  "work_id": "issue-419-governor-identity-g2-review",
+  "diff_ref": "git diff 340c46d..5491bd4 -- scripts/hooks/gauge_writer_hook.py tests/test_gauge_writer.py tests/fixtures/subagent_transcript_with_mainchain_tail.jsonl",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, reviewer references/global-crew.md + global-everyone.md, and the in-file decision records in scripts/hooks/gauge_writer_hook.py",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "handle_post_tool_use is now ~97 lines (516-647), of which roughly 35 are executable. It is a linear guard chain of early returns, which is the right shape for skip-on-uncertainty, but it has accreted one more branch per issue (#202 fan-out, #261 skip-on-ambiguity, #271 skip sidecar, now #419 derive-or-skip) and the g2 change adds a nested else block inside it. Non-blocking observation, not a defect in this change: the next branch added here is the one that will be hard to read. Worth a Triage candidate to extract the read-path decision (`read_path, skip_reason = _resolve_read_path(...)`) once a second reason to change it appears.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The module is function-level; the only class in the diff is the 15-line test helper _SlowRail.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-everyone.md 'Fail visibly rather than emit plausible wrong output; no hidden fallback', and the code-site comment on derive_subagent_transcript ('the derivation re-validates at its own boundary too')",
+        "reason": "_is_usable_agent_id is called from both _binding_key and derive_subagent_transcript. That is one shared predicate invoked at two boundaries, not two copies of a rule - the second call is what makes derive_subagent_transcript safe to use directly, which the tests do. Collapsing it to one call site would make the pure helper trust its caller, which is the failure mode the fail-visibly standard exists to prevent."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "spine_rail.binding_key's docstring: 'the SINGLE place the composite per-agent key is composed anywhere in the codebase (the gauge writer calls this same function through its _spine_rail module handle, so the two hooks cannot drift)' - landed and reviewed at g1",
+        "reason": "_binding_key does almost nothing but reach into _spine_rail, which reads as envy. But delegation rather than reimplementation is the explicit anti-drift property g1 was built around; the smell's usual remedy (move the behavior here) is exactly the defect the standard forbids. The only thing _binding_key adds is the guard and the stricter allowlist, both of which belong on this side because only this module puts agent_id in a filesystem path."
+      }
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No repeated parameter group appears in the diff. The change deliberately adds ONE agent_id parameter rather than an (expect_sidechain, expect_agent_id) pair, which is the opposite of clumping.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "gauge_writer_hook.py module docstring 'Stdlib only', and global-crew.md 'Make the minimal change that satisfies the handoff; no speculative abstraction'",
+        "reason": "agent_id and the binding key stay bare strings rather than becoming an AgentId/BindingKey value type. The harness delivers a string, spine_rail keys a dict with a string, and a value type here would be a seam with exactly one adapter - a hypothetical seam by the deep-module rule. The validation the value type would carry already exists as _AGENT_ID_ALLOWED applied at both boundaries."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "find_latest_usage and compute_record each go from one parameter to two. resolve_gauge_path keeps two. Nothing approaches a list worth a parameter object.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The entire behavior change is in one module. spine_rail already held the key composer from g1 and was not touched; gauge_reader needed no change because it validates presence of four required fields and rejects no extras (verified at scripts/gauge_reader.py:_parse_fields).",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "gauge_writer_hook.main's docstring: 'Single-purpose hook (PostToolUse only) -- no event-name dispatch is needed; the settings.json wiring registers this script for PostToolUse specifically'",
+        "reason": "handle_post_tool_use has changed for four different reasons across #202/#261/#271/#419, which is the classic divergent-change signature. But the hook has exactly one entry point by documented design, and every one of those reasons is the same reason wearing different clothes: a new way the write target or the reading can be uncertain. The pressure this creates on method length is the real finding and is recorded under long-method rather than counted twice here."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "Path(transcript_path).with_suffix('') / 'subagents' / f'agent-{id}.jsonl' is pathlib construction, not navigation through a chain of collaborators. gauge_path.parent.parent.name in _is_contained is pre-existing and unchanged.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Nothing added is unused. Both new module-level functions have production call sites; identity_resolution_ms is required by handoff piece (e); the new fixture exists solely to falsify the sidechain conjunct and I confirmed it does (mutation B).",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions - the project's specific conventions are the local delta'",
+        "reason": "The diff is comment-heavy (roughly 2:1 comment-to-code in handle_post_tool_use's new block), which normally reads as prose covering for unclear code. Here the comments carry decision history the code cannot express - why there is NO parent fallback (#202/#261 tried it and reverted it), why the allowlist is not an extension of spine_rail's denylist, why the fifth field rides only one path. The unchanged parts of this same file already carry exactly this style (MODEL_WINDOWS, _clear_skip_flag, _write_skip_flag), so the new comments match the established in-file convention rather than departing from it. Removing them would delete the only record of a reverted design."
+      }
+    }
+  ],
+  "rail_exception": null
+}

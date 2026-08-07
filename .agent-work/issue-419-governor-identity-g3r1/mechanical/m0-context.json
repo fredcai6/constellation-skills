@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "issue-419-governor-identity-g3r1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g3r1-m0-context@5425cb31a319d5941faf10316bdfd5f8b677d2c3",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-419-governor-identity-g3r1",
+    "generated_at": "2026-08-06T02:58:49Z"
+  }
+}

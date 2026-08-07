@@ -1,0 +1,10 @@
+binding store C:\Users\fredc\AppData\Local\Temp\claude\C--Programs-constellation-skills\e8249451-5c48-417b-9f38-cf2dd40d405c\scratchpad\accept419\sb-treatment\.agent-work\.spine-rail-binding.json exists=False
+harness project dir C:\Users\fredc\.claude\projects\C--Users-fredc-AppData-Local-Temp-claude-C--Programs-constellation-skills-e8249451-5c48-417b-9f38-cf2dd40d405c-scratchpad-accept419-sb-treatment exists=True
+  session dirs present BEFORE this run: 2 ['b9e77515-941d-42d1-b7d0-8c97b1b61e57', 'memory']
+  subagents dirs under it: 1 ['C:\\Users\\fredc\\.claude\\projects\\C--Users-fredc-AppData-Local-Temp-claude-C--Programs-constellation-skills-e8249451-5c48-417b-9f38-cf2dd40d405c-scratchpad-accept419-sb-treatment\\b9e77515-941d-42d1-b7d0-8c97b1b61e57\\subagents']
+  gauge.json files present: 0
+binding store C:\Users\fredc\AppData\Local\Temp\claude\C--Programs-constellation-skills\e8249451-5c48-417b-9f38-cf2dd40d405c\scratchpad\accept419\sb-control\.agent-work\.spine-rail-binding.json exists=False
+harness project dir C:\Users\fredc\.claude\projects\C--Users-fredc-AppData-Local-Temp-claude-C--Programs-constellation-skills-e8249451-5c48-417b-9f38-cf2dd40d405c-scratchpad-accept419-sb-control exists=False
+  session dirs present BEFORE this run: 0 []
+  subagents dirs under it: 0 []
+  gauge.json files present: 0

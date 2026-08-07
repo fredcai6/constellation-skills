@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m2-interrogation-template",
+  "files": [],
+  "repo_rev": {
+    "commit": "569e845160b8ece1b04d488c582ea50ac0f32c29"
+  },
+  "run": {
+    "work_id": "g2-implement-issue-422",
+    "generated_at": "2026-08-06T00:25:18Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-d-422",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-d-422",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-d-422"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-d-422"
+    }
+  }
+}

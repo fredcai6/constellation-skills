@@ -1,0 +1,106 @@
+# g3 REWORK 2 (Commander ruling) -- sweep for any comment or sentence asserting
+# that docs/GAUGE_WRITER_HOOK.md is wrong or stale about something this gate corrected.
+# Run: 2026-08-06T03:20:50Z  base HEAD 5491bd4
+# Swept: scripts/ and tests/, *.py and *.md. spine_rail.py included (zero hits).
+
+$ grep -rn -i -E "wrong about|is wrong|out of date|outdated|stale (doc|table)|does not match the doc|contradict|GAUGE_WRITER_HOOK.md" scripts/ tests/ --include=*.py --include=*.md
+scripts/apply_episode_delta.py:1070:        failed, contradicting this module's own all-or-nothing claim. Staging
+scripts/curate_corpus.py:17:    semantic verdict (e.g. "this register is wrong", "this clause is a
+scripts/curate_corpus.py:62:# never asserts the description is wrong (T7 mechanical-only).
+scripts/curate_corpus.py:259:        # register is wrong. A human decides (T7).
+scripts/grade_lint.py:30:  2. `decision:gl012-scoped-per-file` — contradictory-grade detection (GL012)
+scripts/grade_lint.py:90:    "GL012": ("CONTRADICTORY_GRADE", FAIL),
+scripts/grade_lint.py:105:TBD_RE = re.compile(r"\b(TBD|TODO|CONTRADICTION)\b", re.IGNORECASE)
+scripts/grade_lint.py:244:                                              "TBD/TODO/CONTRADICTION marker present"))
+scripts/grade_lint.py:441:                    "GL009", file, loc, "TBD/TODO/CONTRADICTION marker present"))
+scripts/hooks/gauge_writer_hook.py:7:reader (#181) to consume. See docs/GAUGE_WRITER_HOOK.md for the wiring,
+scripts/hooks/gauge_writer_hook.py:37:  documented coupling, not a new mechanism (see docs/GAUGE_WRITER_HOOK.md).
+scripts/hooks/gauge_writer_hook.py:111:# Bounded reverse-scan window (bytes) -- see docs/GAUGE_WRITER_HOOK.md. Real
+scripts/hooks/gauge_writer_hook.py:128:    outcome -- see docs/GAUGE_WRITER_HOOK.md)."""
+scripts/hooks/gauge_writer_hook.py:307:      (measured; docs/GAUGE_WRITER_HOOK.md's field table states both
+scripts/hooks/gauge_writer_hook.py:667:    specifically (see docs/GAUGE_WRITER_HOOK.md). Always exits 0."""
+scripts/install_constellation.py:541:# docs/GAUGE_WRITER_HOOK.md. Neither is tuned, derived, or invented here: the
+scripts/query_episodes.py:261:    contract that must not drift, since "your field name is wrong" has to read identically
+scripts/query_episodes.py:514:    # argparse's exit-2 usage error, so "your field name is wrong" reads the same
+tests/test_context_determinism.py:11:and the *design* is wrong, not this test.
+tests/test_diagnose.py:96:            "falsifier": "seeded_add(2, 3) returns 5 (then the * hypothesis is wrong)",
+tests/test_diagnose.py:119:            "map_staleness_caveat": "map purity claim is the oracle; reviewer weighs whether the map, not the code, is what is wrong",
+tests/test_episode_fields.py:216:        `items[0]`, or any constant, gets this wrong the moment a run is underway."""
+tests/test_episode_negative_control.py:177:    is wrong", which is indistinguishable from a wrapper mapping any non-zero exit to
+tests/test_episode_store.py:899:    It is wrong, and wrong in the worst available way. artifact-ref is REPEATED — one
+tests/test_episode_store.py:1884:# allowlist to be wrong about.
+tests/test_episode_store.py:2804:    interpreters that are not the same environment, and the guidance is wrong in both
+tests/test_gauge_writer.py:5:inspected live during implementation -- see docs/GAUGE_WRITER_HOOK.md for the
+tests/test_gauge_writer.py:1001:# docs/GAUGE_WRITER_HOOK.md's field table is wrong about this today), so the
+tests/test_grade_lint.py:82:            "Ruled in advance, each overridable if evidence contradicts it.\n"
+tests/test_grade_lint.py:143:            "Ruled in advance, each overridable if evidence contradicts it "
+tests/test_install_constellation.py:1996:        """docs/GAUGE_WRITER_HOOK.md currently tells users to hand-wire a
+tests/test_install_constellation.py:2173:        the timeout is carried verbatim from docs/GAUGE_WRITER_HOOK.md."""
+tests/test_map_contract_wiring.py:150:    implementer hitting the contradiction does not take it: do NOT resolve the
+tests/test_map_contract_wiring.py:224:        the contradiction ('why not just run both at both steps?') needs the
+tests/test_prose_deletions.py:11:overlay file"* contradicts a sibling role's shipped deliverable (#336).
+exit=0
+
+$ ... | wc -l   # ALL hits, including unrelated modules that merely use the words
+35
+
+$ grep -rn "GAUGE_WRITER_HOOK.md" scripts/ tests/ --include=*.py   # every reference to the document
+scripts/hooks/gauge_writer_hook.py:7:reader (#181) to consume. See docs/GAUGE_WRITER_HOOK.md for the wiring,
+scripts/hooks/gauge_writer_hook.py:37:  documented coupling, not a new mechanism (see docs/GAUGE_WRITER_HOOK.md).
+scripts/hooks/gauge_writer_hook.py:111:# Bounded reverse-scan window (bytes) -- see docs/GAUGE_WRITER_HOOK.md. Real
+scripts/hooks/gauge_writer_hook.py:128:    outcome -- see docs/GAUGE_WRITER_HOOK.md)."""
+scripts/hooks/gauge_writer_hook.py:307:      (measured; docs/GAUGE_WRITER_HOOK.md's field table states both
+scripts/hooks/gauge_writer_hook.py:667:    specifically (see docs/GAUGE_WRITER_HOOK.md). Always exits 0."""
+scripts/install_constellation.py:541:# docs/GAUGE_WRITER_HOOK.md. Neither is tuned, derived, or invented here: the
+tests/test_gauge_writer.py:5:inspected live during implementation -- see docs/GAUGE_WRITER_HOOK.md for the
+tests/test_gauge_writer.py:1001:# docs/GAUGE_WRITER_HOOK.md's field table is wrong about this today), so the
+tests/test_install_constellation.py:1996:        """docs/GAUGE_WRITER_HOOK.md currently tells users to hand-wire a
+tests/test_install_constellation.py:2173:        the timeout is carried verbatim from docs/GAUGE_WRITER_HOOK.md."""
+$ ... | wc -l
+11
+
+# ================================================================
+# COUNT: 35 raw hits on the word sweep; 11 of them name the document
+#        (counted by command: grep -rn GAUGE_WRITER_HOOK.md scripts/ tests/ --include=*.py | wc -l -> 11).
+#        TWO of those ten assert the document is WRONG. Not one -- two.
+#
+#  1. scripts/hooks/gauge_writer_hook.py:307  find_latest_usage docstring
+#     "docs/GAUGE_WRITER_HOOK.md's field table is wrong about this today"
+#     -> FIXED this run (in scope): now reads "measured; ...'s field table
+#        states both polarities".
+#
+#  2. tests/test_gauge_writer.py:1000-1001  section comment above the #419 tests
+#     "(measured; docs/GAUGE_WRITER_HOOK.md's field table is wrong about this
+#      today)" -- the SAME false claim, copied into the test file.
+#     -> NOT FIXED: outside this rework's scope, which is comments only in
+#        scripts/hooks/gauge_writer_hook.py, and the Commander's ruling said
+#        nothing else changes. Reported for a ruling instead. One comment line.
+#
+# The other NINE references are plain pointers, not claims about the
+# document's correctness. Each was read, not just counted:
+#   gauge_writer_hook.py:7    "see ... for the wiring, transcript shape, what breaks it"
+#   gauge_writer_hook.py:37   "a documented coupling, not a new mechanism (see ...)"
+#   gauge_writer_hook.py:111  "Bounded reverse-scan window -- see ..."
+#   gauge_writer_hook.py:128  "a valid skip-on-uncertainty outcome -- see ..."
+#   gauge_writer_hook.py:667  "the settings.json wiring registers this script (see ...)"
+#   install_constellation.py:541 "matcher and timeout carried VERBATIM from the snippet in ..."
+#        checked: the doc's snippet at :156-157 still says matcher "*", timeout 10. True.
+#   tests/test_gauge_writer.py:5 "see ... for the exact schema this depends on"
+#   tests/test_install_constellation.py:1996 "... currently tells users to hand-wire a
+#        ${CLAUDE_PROJECT_DIR} entry" -- checked: the doc still documents that form
+#        at :135-157. Still true.
+#   tests/test_install_constellation.py:2173 "the timeout is carried verbatim from ..."
+#        checked against the doc at :110 and :156-157. Still true.
+#
+# The remaining 24 word-sweep hits (curate_corpus, grade_lint, query_episodes,
+# apply_episode_delta, and eight test modules) match on "is wrong"/"contradict"
+# in unrelated code and name no document.
+#
+# scripts/hooks/spine_rail.py references the document ZERO times:
+# ================================================================
+
+$ grep -n "GAUGE_WRITER_HOOK" scripts/hooks/spine_rail.py
+exit=1   # 1 == no reference
+
+# Comments-only proof, re-run after this edit (AST equality vs HEAD, docstrings stripped):
+exit=0   # 0 == code identical to HEAD, comments and docstrings only

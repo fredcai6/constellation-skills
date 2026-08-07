@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "issue-419-governor-identity-g3-rereview",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g3-rereview-r1-handoff@a81076b03cacb7ea2dfa35650f444ec220dff8ac",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-419-governor-identity-g3-rereview",
+    "generated_at": "2026-08-06T03:44:50Z"
+  }
+}

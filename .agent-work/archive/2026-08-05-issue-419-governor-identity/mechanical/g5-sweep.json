@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g5-sweep",
+  "mechanical": {
+    "run": "issue-419-governor-identity",
+    "project": "constellation-skills",
+    "spine-step": "g5-sweep",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-issue-419-governor-identity-g5-sweep@306fda1baa839ceaebb70137ac7e61109756d071",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-419-governor-identity",
+    "generated_at": "2026-08-06T05:22:15Z"
+  }
+}

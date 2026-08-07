@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "b420-engine-channel",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 3,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b420-engine-channel-reconcile@dbcb179c2c898a948ef2f489021e804530d2fa1d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b420-engine-channel",
+    "generated_at": "2026-08-06T00:19:28Z"
+  }
+}

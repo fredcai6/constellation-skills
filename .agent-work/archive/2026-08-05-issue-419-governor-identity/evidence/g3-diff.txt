@@ -1,0 +1,328 @@
+$ git diff -- docs/GAUGE_WRITER_HOOK.md
+diff --git a/docs/GAUGE_WRITER_HOOK.md b/docs/GAUGE_WRITER_HOOK.md
+index 9fcd33f..a11420a 100644
+--- a/docs/GAUGE_WRITER_HOOK.md
++++ b/docs/GAUGE_WRITER_HOOK.md
+@@ -10,21 +10,25 @@ writer's wiring and its dependency on Claude Code's transcript format.
+ `scripts/hooks/gauge_writer_hook.py` is a Claude Code `PostToolUse` hook. On
+ every tool call it:
+ 
+-1. Reads `transcript_path` and `session_id` from the hook's stdin JSON.
+-2. Resolves `.agent-work/<work_id>/gauge.json` by looking up `session_id` in
+-   `.agent-work/.spine-rail-binding.json` — the session→spine binding that
++1. Reads `transcript_path`, `session_id` and `agent_id` from the hook's stdin
++   JSON — see "The payload fields this hook reads" below.
++2. Resolves `.agent-work/<work_id>/gauge.json` by looking up this call's
++   **binding key** in `.agent-work/.spine-rail-binding.json` — the binding that
+    `scripts/hooks/spine_rail.py`'s own `PostToolUse` and `SessionStart`
+    handlers maintain (populated when `checklist_engine.py claim` runs, or
+    when a session resumes/compacts onto an unambiguous single active-leased
+-   spine it did not itself claim — #261). This hook **reuses that binding,
+-   it does not maintain a second one.** Since #202, one `session_id` may
+-   legitimately hold bindings into more than one spine at once (e.g. an
+-   Agent-tool subagent sharing its parent's `session_id` claims its own
+-   spine without clobbering the parent's); when that happens, this hook
+-   writes to **none** of them rather than guessing — see "Skip-on-uncertainty,
+-   enumerated" below.
+-3. Parses the tail of the transcript (JSONL) for the latest non-sidechain
+-   assistant message's `usage` block, sums
++   spine it did not itself claim — #261). The key is the bare `session_id`
++   for a top-level agent and `session_id#agent_id` for a dispatched one
++   (#419) — see "Session→spine binding" below. This hook **reuses that
++   binding, it does not maintain a second one.** Since #202, one key may
++   legitimately hold bindings into more than one spine at once (an
++   orchestrator that claims a second spine of its own while the first is
++   still leased); when that happens, this hook writes to **none** of them
++   rather than guessing — see "Skip-on-uncertainty, enumerated" below.
++3. Parses the tail of the acting agent's own transcript (JSONL) for the
++   latest assistant message carrying a `usage` block — the main-chain lines
++   of `transcript_path` for a top-level agent, the derived subagent
++   transcript for a dispatched one — sums
+    `input_tokens + cache_creation_input_tokens + cache_read_input_tokens`
+    (the "X2 strategic-compact" technique), and normalizes by a per-model
+    context-window table to get `fill_fraction`.
+@@ -129,12 +133,14 @@ nest it inside an existing matcher block.
+ Two things still need your eyes:
+ 
+ **Ordering note:** the gauge writer only produces a record once a binding
+-exists for the session, i.e. only after at least one `checklist_engine.py
+-claim` command has run and `spine_rail.py`'s handler has recorded it. If you
+-fire a tool call before any claim happens in a session (or in a session
+-with no spine at all — e.g. plain chat, no engine in use), the gauge writer
+-will see no binding and correctly write nothing. This is not a bug to fix;
+-a gauge file that no engine gate will ever read is not worth writing.
++exists **under the acting agent's own key**, i.e. only after that agent ran a
++`checklist_engine.py claim` command and `spine_rail.py`'s handler recorded it.
++If you fire a tool call before any claim (or in a session with no spine at all
++— e.g. plain chat, no engine in use), the gauge writer will see no binding and
++correctly write nothing. Since #419 the same holds one level down: a dispatched
++agent that never claims a spine of its own gets no record either, and its
++parent's claim no longer stands in for it. This is not a bug to fix; a gauge
++file that no engine gate will ever read is not worth writing.
+ 
+ ### (b) Confirm it on one real tool call
+ 
+@@ -181,7 +187,9 @@ unit-tested against the fixture) against this machine's own live, in-progress
+ Claude Code session transcript file
+ (`~/.claude/projects/<project-slug>/<session-id>.jsonl`):
+ 
+-- The real schema matched exactly what this hook depends on: top-level
++- The real schema matched exactly what this hook depends on. That session was
++  top-level, so its lines read `isSidechain: false`; a dispatched agent's own
++  transcript reads `true` instead (see the field table below). Top-level
+   `{"type": "assistant", "isSidechain": false, "message": {"model": "...",
+   "usage": {"input_tokens": ..., "cache_creation_input_tokens": ...,
+   "cache_read_input_tokens": ...}}, "timestamp": "..."}`.
+@@ -199,18 +207,46 @@ still HITL for the live-wiring half of this issue, per the acceptance
+ criteria) -- but the parsing/sum/normalize logic itself is no longer just
+ "confirmed buildable," it is confirmed correct against live data.
+ 
++## The payload fields this hook reads
++
++The table below this one is about lines *inside* a transcript. This one is
++about the hook's own stdin JSON -- the payload Claude Code hands the hook on
++every tool call.
++
++| Field | Present when | Used for |
++|---|---|---|
++| `transcript_path` | always | the **parent session's** transcript. Read directly for a top-level agent; for a dispatched agent it is only the base its own transcript path is derived from. |
++| `session_id` | always | the first half of the binding key. Read through `spine_rail.binding_key`, which this hook calls rather than composing the key itself. |
++| `agent_id` | **only on a subagent's tool call** | the acting agent's identity: the second half of the binding key, the id its transcript path is derived from, and the value each transcript line's `agentId` must equal. |
++
++`agent_id` is **absent** from a top-level agent's payload -- the harness omits
++the key rather than sending null (measured on 2.1.222;
++`tests/fixtures/probe_payloads.jsonl` holds both shapes side by side). That
++absence is what the whole fix rests on: identity is **handed to** the hook by
++the harness, never discovered by it. So `"agent_id" in payload` is the test
++for "am I running under a dispatched agent", and a present-but-null value
++reads as unusable rather than as absent.
++
++`spine_rail.py`'s own handlers additionally read `cwd` and `tool_input`, for
++its claim/release parsing and its worktree comparison. Neither reaches the
++gauge writer. No other payload field is read by either hook -- notably not
++`agent_type`, which the harness does send.
++
+ ## The exact transcript shape this parser depends on (format-drift note)
+ 
+ This is the fragile, undocumented part -- Claude Code does not publish a
+ transcript schema, and issue #27969 (closed as duplicate; see #43431, still
+ open) confirms there is no native context-fill API. `find_latest_usage` in
+-`gauge_writer_hook.py` depends on ALL of the following holding for at least
+-one line near the tail of the transcript JSONL:
++`gauge_writer_hook.py` depends on the following holding for at least one line
++near the tail of the transcript JSONL **it reads** -- which is the parent's
++transcript for a top-level agent and the dispatched agent's own derived
++transcript otherwise:
+ 
+ | Field | Path | Required for |
+ |---|---|---|
+ | `type` | top-level | must equal `"assistant"` |
+-| `isSidechain` | top-level | must be falsy (subagent turns are a different context window and are skipped) |
++| `isSidechain` | top-level | the polarity depends on whose transcript is being read: **falsy on a main-chain read** (a top-level agent), **truthy on a dispatched agent's own transcript**, where every line carries `isSidechain: true` |
++| `agentId` | top-level | dispatched agents only: must equal the payload's `agent_id`. A top-level read does not look at this field. |
+ | `timestamp` | top-level | used as `observed_at` -- the sampled moment |
+ | `model` | `message.model` | the frozen record's `model` field, and the key into `MODEL_WINDOWS` |
+ | `usage.input_tokens` | `message.usage.input_tokens` | one term of the sum |
+@@ -234,42 +270,56 @@ this table against a fresh real transcript sample.
+ 
+ The writer never fabricates a `gauge.json` record. Each of these leaves any
+ existing `gauge.json` byte-for-byte untouched (unit-tested in
+-`tests/test_gauge_writer.py`). As of #265 (issue #271), **two of these causes
+-are no longer silent**: the writer hook can positively localize them, so it
+-also writes a visible `gauge-skip.json` sidecar — `{schema_version, reason,
+-observed_at, candidate_count?}` — at the exact gauge path(s) it skipped,
+-which `checklist_engine.py`'s `current` advisory (`_skip_reason_advisory`)
+-then surfaces at the gate boundary. The other three stay silent by design,
+-each for the same reason: there is no known gauge path to write a sidecar
+-**to**.
++`tests/test_gauge_writer.py`). **Three of these causes are not silent** — two
++since #265 (issue #271) and a third since #419: the writer hook can positively
++localize them, so it also writes a visible `gauge-skip.json` sidecar —
++`{schema_version, reason, observed_at, candidate_count?}` — at the exact gauge
++path(s) it skipped, which `checklist_engine.py`'s `current` advisory
++(`_skip_reason_advisory`) then surfaces at the gate boundary. The other four
++stay silent by design, each for the same reason: there is no known gauge path
++to write a sidecar **to**.
+ 
+ **Now flagged (`gauge-skip.json` written):**
+ 
+-- **This `session_id` is bound to more than one spine** (#202/#261,
+-  `decision:gauge-write-skips-on-multiple-bindings`). Two genuinely
+-  different top-level agents can share one `session_id` (confirmed live: an
+-  Agent-tool-dispatched Commander and its own Admiral) — when they do, they
+-  also share one physical transcript, so `find_latest_usage` cannot tell
+-  whose activity produced the latest usage record. Writing *that* record to
+-  every bound spine ("fan-out") was tried and reverted after live evidence
+-  showed it cross-writes one agent's reading into an unrelated agent's work
+-  area — a confident wrong record, not silence. `gauge.json` itself still
+-  gets no write for **any** of the candidates, including the parent's own
+-  spine. But `reason: "ambiguous-binding"` (with `candidate_count`) IS now
+-  written to **every** candidate path (fan-out is safe here — a diagnostic
+-  fact about why nothing was written can never be a misattributed reading,
+-  unlike `gauge.json` itself; `decision:skip-sidecar-fanout-and-clear`).
+-  Known cost, not fixed here: an orchestrator holding multiple bindings is
+-  ungauged for the duration of every wave it dispatches — filed as its own
+-  issue, cross-referenced from #261/#202 (see that issue for the residual
+-  gap and a candidate discriminator).
++- **This binding key is bound to more than one spine** (#202/#261,
++  `decision:gauge-write-skips-on-multiple-bindings`). Before #419 the usual
++  cause was two genuinely different top-level agents sharing one `session_id`
++  (confirmed live: an Agent-tool-dispatched Commander and its own Admiral),
++  which piled both claims under the one bare key. A dispatched agent now keys
++  separately, so what is left is one agent holding two spines at once — a
++  Commander leasing both its `spine.json` and its `execute.json` is the
++  everyday case. Either way the reading comes from one transcript, so
++  `find_latest_usage` cannot tell which spine the latest usage record belongs
++  to. Writing *that* record to every bound spine ("fan-out") was tried and
++  reverted after live evidence showed it cross-writes one agent's reading into
++  an unrelated agent's work area — a confident wrong record, not silence. `gauge.json` itself still
++  gets no write for **any** of the candidates. But `reason:
++  "ambiguous-binding"` (with `candidate_count`) IS now written to **every**
++  candidate path (fan-out is safe here — a diagnostic fact about why nothing
++  was written can never be a misattributed reading, unlike `gauge.json`
++  itself; `decision:skip-sidecar-fanout-and-clear`). Known cost, not fixed
++  here: an agent holding two or more spines of its own stays ungauged for as
++  long as it holds them — residual 1 below, filed as its own issue and
++  cross-referenced from #261/#202 (see that issue for the residual gap and a
++  candidate discriminator).
+ - **The transcript has no usable usage line** — either no line, within the
+-  bounded tail-scan window, that is a non-sidechain assistant message with a
+-  well-formed `usage` block, a `model`, and a `timestamp`; or a usage field
+-  present but not a number (a schema-drift symptom). Both collapse to
+-  `compute_record` returning `(None, None)`. On the single resolved
+-  candidate path, `reason: "no-usable-record"` (no `candidate_count`) is
+-  written.
++  bounded tail-scan window, that is an assistant message on the acting agent's
++  side of the sidechain polarity (see the field table above) with a well-formed
++  `usage` block, a `model`, and a `timestamp`; or a usage field present but not
++  a number (a schema-drift symptom). Both collapse to `compute_record`
++  returning `(None, None)`. On the single resolved candidate path,
++  `reason: "no-usable-record"` (no `candidate_count`) is written.
++- **A dispatched agent's own transcript is missing** (#419). The payload's
++  `transcript_path` is always the parent's, so a dispatched agent's reading
++  comes from a transcript derived from its `agent_id` —
++  `<parent transcript minus its .jsonl>/subagents/agent-<agent_id>.jsonl`.
++  When that file is not on disk, the writer writes nothing.
++  **It never reads the parent's transcript instead.**
++  Falling back would file the parent's
++  context fill against the subagent's own spine, which is the misattribution
++  #202/#261 already tried and reverted; silence is an acceptable outcome and a
++  confident wrong number is not. `reason: "subagent-transcript-missing"` (no
++  `candidate_count`) is written at the single resolved candidate path.
+ 
+ Clearing: any successful outcome at a given path — a clean `gauge.json`
+ write, or the existing uncalibrated-model flag write — clears that path's
+@@ -282,10 +332,15 @@ accepted, bounded residual (see the comment at `_clear_skip_flag` in
+ **Still silent by design (no known gauge path to write a sidecar to):**
+ 
+ - `transcript_path` missing from the hook payload, or the file doesn't
+-  exist on disk — checked *before* the session→spine binding is even
+-  resolved, so no gauge path is known yet either way.
+-- No session→spine binding for this `session_id` at all (work_id
+-  unresolvable, zero candidates) — genuinely unlocatable.
++  exist on disk — checked *before* the binding is even resolved, so no gauge
++  path is known yet either way.
++- **The acting agent's identity does not resolve** (#419) — the payload
++  carries an `agent_id` this hook will not put in a path (anything outside
++  `[A-Za-z0-9_-]{1,64}`), or `spine_rail.py` failed to import. The binding key
++  is `None`, so nothing is looked up and no gauge path is known.
++- No binding for this key at all (work_id unresolvable, zero candidates) —
++  genuinely unlocatable. This is also where a dispatched agent that never
++  claimed a spine of its own lands; see residual 2 below.
+ - The hook isn't wired into `settings.json`/`settings.local.json` at all —
+   external to the writer entirely; if the hook never runs, it cannot
+   self-report. **This one is structurally unfixable from inside the writer**,
+@@ -315,19 +370,79 @@ hook already writes on `checklist_engine.py claim`/`release`, and, since
+ pre-existing mechanism found in the repo (`scripts/hooks/spine_rail.py`,
+ `PostToolUse`/`SessionStart` handlers) -- not something invented for this
+ issue. **As of #202/#261, the binding is a nested multi-entry map**
+-(`{session_id: {abs_spine_path: {spine, engine_session, worktree,
++(`{binding_key: {abs_spine_path: {spine, engine_session, worktree,
+ claimed_at}}}`), keyed by the resolved absolute spine path rather than a
+ derived worktree or the harness's `cwd` field (empirically unreliable for
+ a session dispatched into a worktree by instruction rather than a real
+ per-agent working-directory parameter — see `notes-261.md` in that fix's
+-PR for the live evidence). The dependency this creates: **the gauge writer
+-can only produce a reading for sessions bound to EXACTLY ONE spine** — zero
+-bindings (nothing claimed/resumed yet) or two-or-more (an ambiguous shared
+-session) both skip. That is the intended, now-narrower scope (gauge.json
+-only matters where an engine gate will read it, and only when the reading
+-is genuinely about that gate's own spine), so this is noted as a documented
+-coupling, not floated as a gap — except for the multi-binding coverage cost
+-named above, which IS floated, in the issue this doc points to.
++PR for the live evidence).
++
++**The outer key is per agent, not per session (#419).** `spine_rail.binding_key`
++composes it, and it is the single place in the codebase that composes it — the
++gauge writer calls that same function rather than building the key itself, so
++the two hooks cannot drift apart. It returns three things:
++
++| payload | outer key |
++|---|---|
++| `session_id`, no `agent_id` (a top-level agent) | the bare `session_id` |
++| `session_id` plus a usable `agent_id` (a dispatched agent) | `session_id#agent_id` |
++| `session_id` falsy, or `agent_id` present but unusable | `None` — **bind nothing** |
++
++`None` means exactly that: an unusable `agent_id` binds nothing at all, and no
++entry is written anywhere. The key does **not** fall back to the bare
++`session_id`, because that would file the subagent's entry under the parent's
++key, push the parent to two candidates and silence the parent's own gauge —
++manufacturing the blindness this keying exists to remove. Failing closed costs that one subagent its binding and
++affects nobody else. An `agent_id` counts as unusable if it is not a non-empty
++string, or if it contains `#`, `/`, `\` or `..`; the gauge writer applies a
++stricter test still before it will use one — the id must match
++`[A-Za-z0-9_-]{1,64}`, because this hook interpolates it into a real file path
++(`agent-<agent_id>.jsonl`) rather than only using it as a dictionary key.
++
++`SessionStart` binds under the bare `session_id` always: that event carries no
++`agent_id`, so a resumed session is by definition top-level. Readers that must
++see every spine a harness session touches (`decide_stop`, `decide_session_start`)
++read through `session_view`, which merges the bare key with every
++`session_id#<agent_id>` key under it.
++
++The dependency this creates: **the gauge writer can only produce a reading for
++a binding key bound to EXACTLY ONE spine** — zero bindings (nothing
++claimed/resumed yet) or two-or-more (an ambiguous key) both skip. Because the
++key is now per agent, that coupling holds **per agent**, which is what makes it
++satisfiable again for a dispatched agent: a crew agent's own claim no longer
++lands in the same bucket as its parent's. That is the intended scope (gauge.json
++only matters where an engine gate will read it, and only when the reading is
++genuinely about that gate's own spine), so it is a documented coupling rather
++than a floated gap.
++
++### Two residuals survive this change, and they sit side by side
++
++1. **An orchestrator holding several spines under one bare key is still
++   ambiguous.** A top-level agent that claims a second spine while the first is
++   still leased has two candidates under its own bare `session_id`, so no
++   reading is written for either and it stays ungauged for the duration.
++   `gauge-skip.json` names the reason at each candidate path (#271), so the
++   silence is at least visible. Unchanged by #419, and still floated in the
++   issue this doc points to.
++2. **A dispatched agent that never claims a spine of its own now writes
++   nothing at all.** Its payload keys to `session_id#agent_id`, nothing is
++   bound under that key, so it resolves to **zero** candidates — a silent skip,
++   with no path to write a sidecar to. Before #419 the same tool call resolved
++   against the parent's bare `session_id` and, where exactly one spine was
++   bound there, wrote a record computed from the **parent's** transcript to it.
++   Two different things were happening under that one behaviour, and #419 ends
++   both. Where the bound spine was the parent's own, the record was the
++   parent's and was filed correctly — so what is lost is coverage: a parent
++   that is idle while its children work no longer picks up its own latest usage
++   line until it runs a tool call itself. (That loss is bounded. Staleness is
++   judged by the record's own `observed_at`, never the file's mtime — see
++   `scripts/gauge_reader.py` — so those writes never bought freshness, only an
++   earlier sample of a turn the parent's next tool call would have sampled
++   anyway.) Where the single bound spine belonged to a **different** top-level
++   agent sharing the `session_id`, that same write filed one agent's reading
++   against another's spine, and it is gone. The trade is deliberate: some
++   coverage for correctness, because a reading filed against an agent that did
++   not produce it is worse than no reading.
+ 
+ ## What was NOT done here (HITL boundary, per the launch order)
+ 
+exit=0
+
+$ git diff --stat -- docs/GAUGE_WRITER_HOOK.md
+ docs/GAUGE_WRITER_HOOK.md | 249 +++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 182 insertions(+), 67 deletions(-)

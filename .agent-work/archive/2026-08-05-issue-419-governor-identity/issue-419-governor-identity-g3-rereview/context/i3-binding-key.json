@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "i3-binding-key",
+  "files": [],
+  "repo_rev": {
+    "commit": "5491bd45d9d2760a6402bd37bc7a41e6970e264f"
+  },
+  "run": {
+    "work_id": "issue-419-governor-identity-g3-rereview",
+    "generated_at": "2026-08-06T03:48:19Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-reviewer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a-419",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-a-419"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a-419"
+    }
+  }
+}

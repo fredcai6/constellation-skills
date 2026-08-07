@@ -1,0 +1,22 @@
+{
+  "e19b7c7d-59cc-46da-8c30-ba6b393dd0ac": {
+    "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control\\.agent-work\\wk-parent\\spine.json": {
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control\\.agent-work\\wk-parent\\spine.json",
+      "engine_session": "sess-parent",
+      "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control",
+      "claimed_at": "2026-08-06T04:40:30.108194+00:00"
+    },
+    "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control\\.agent-work\\wk-alpha\\spine.json": {
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control\\.agent-work\\wk-alpha\\spine.json",
+      "engine_session": "sess-alpha",
+      "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control",
+      "claimed_at": "2026-08-06T04:41:01.733269+00:00"
+    },
+    "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control\\.agent-work\\wk-bravo\\spine.json": {
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control\\.agent-work\\wk-bravo\\spine.json",
+      "engine_session": "sess-bravo",
+      "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\claude\\C--Programs-constellation-skills\\e8249451-5c48-417b-9f38-cf2dd40d405c\\scratchpad\\accept419\\sb-control",
+      "claimed_at": "2026-08-06T04:42:21.792592+00:00"
+    }
+  }
+}

@@ -1,0 +1,426 @@
+{
+  "work_id": "issue-419-governor-identity-g1",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-fixture",
+    "m2-binding-key",
+    "m3-write-routing",
+    "m4-read-routing",
+    "m5-no-regression"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (implementer references/global-crew.md + global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the g1 handoff, PROBLEM_STATEMENT.md, evidence/probe-payloads.jsonl, scripts/hooks/spine_rail.py and tests/test_spine_rail.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); block if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + problem statement + target code loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md + CREW_CONTEXT.md + GLOSSARY.md + g1 handoff + PROBLEM_STATEMENT.md + probe-payloads.jsonl (6 lines, wrapper->payload) + spine_rail.py (602 lines) + test_spine_rail.py (948 lines) all read; handoff carries task, protected intent, allowed scope, exclusions, constraints, close criteria, required evidence, test mode, verification commands, anchors, stop conditions, authority and return format \u2014 complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-fixture": {
+      "id": "m1-fixture",
+      "title": "Pin the six real captured payloads as a test fixture",
+      "imperative": "Copy .agent-work/issue-419-governor-identity/evidence/probe-payloads.jsonl to tests/fixtures/probe_payloads.jsonl byte-for-byte. Add a loader that UNWRAPS each line's `payload` key, a sha256 pin test over newline-normalized bytes (the working tree holds CRLF and .gitattributes sets `* text=auto`, so a raw-byte hash is silently wrong on Windows), and a decomposition test that PRINTS and asserts the real tool/agent_id decomposition of the six payloads rather than trusting the handoff's stated 3/2/1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff verified complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: fixture tests written and observed failing before the fixture exists (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed before the fixture existed: 2 failed, 58 deselected, exit 1 (FileNotFoundError on tests/fixtures/probe_payloads.jsonl)"
+        },
+        {
+          "id": "c2",
+          "statement": "sha256 pin + decomposition tests pass; decomposition counts printed by the test itself",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q -k probe_fixture -s"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-fixture-1"
+        }
+      ],
+      "constraints": [
+        "allowed scope: scripts/hooks/spine_rail.py, tests/test_spine_rail.py, tests/fixtures/probe_payloads.jsonl only",
+        "no hand-injected agent_id in any delivery-proving fixture"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-fixture-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q -k probe_fixture -s",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-binding-key": {
+      "id": "m2-binding-key",
+      "title": "binding_key: the single composer of the per-agent key",
+      "imperative": "Add BINDING_KEY_SEP = '#' and the pure helper binding_key(payload) to scripts/hooks/spine_rail.py implementing the three-way table exactly: bare session_id when no agent_id; f'{sid}#{agent_id}' when agent_id is well-formed; None when agent_id is present but unusable (empty, not a string, or containing '#', '/', '\\\\' or '..'); None when session_id is falsy. Prove it over all 6 real pinned payloads AND at least 6 adversarial rows derived by mutating those real payloads, with counts asserted. decision:agent-id-null-is-unusable \u2014 a payload carrying `agent_id: null` reads as present-but-unusable and binds nothing, per the handoff's literal table ('not a string'). @grade: settled/inherited \u00b7 leans m2-binding-key",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "fixture pinned and unwrapping loader in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-fixture complete; probe_payloads() unwrapping loader in place"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: composition-table tests written and observed failing (no binding_key yet) \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed before the helper existed: 3 failed, 60 deselected, exit 1 (AttributeError: module 'spine_rail' has no attribute 'binding_key')"
+        },
+        {
+          "id": "c2",
+          "statement": "composition table green over 6 real + >=6 derived adversarial rows, counts asserted",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q -k binding_key -s"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-binding-key-1"
+        }
+      ],
+      "constraints": [
+        "binding_key is the ONLY composer of the composite key anywhere in the codebase",
+        "fail closed: None means bind nothing",
+        "stdlib only; the hook must never raise"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-binding-key-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q -k binding_key -s",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-write-routing": {
+      "id": "m3-write-routing",
+      "title": "Route the writes: claim, release, empty-set cleanup",
+      "imperative": "In handle_post_tool_use route the claim write, the release delete and the empty-set cleanup through binding_key(data). The nudge-ledger delete on release KEEPS the bare session_id, with a comment at the code site saying why. Prove: a composite claim leaves the bare key's entry set byte-identical; two distinct agent_ids give two independent key sets; a composite release removes only that agent's entry and leaves nudges[bare_sid] untouched; an unusable agent_id writes no binding anywhere; the empty-set cleanup removes the composite key and leaves the bare key's entries intact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "binding_key green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-binding-key complete and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: write-routing tests written and observed failing against the unrouted writer \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed before routing: 6 failed, 9 passed, 55 deselected, exit 1 (composite key absent; entries piled under the bare sid)"
+        },
+        {
+          "id": "c2",
+          "statement": "write-routing tests green and every pre-existing test in tests/test_spine_rail.py still passes UNEDITED",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-write-routing-1"
+        }
+      ],
+      "constraints": [
+        "the empty-set cleanup must delete the composite key, never the bare one",
+        "nudge ledger stays keyed by bare session_id",
+        "PostToolUse never blocks: always returns {}"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-write-routing-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-read-routing": {
+      "id": "m4-read-routing",
+      "title": "Route the reads: session_view in decide_stop and decide_session_start",
+      "imperative": "Add session_view(binding, sid) merging the bare sid key and every key starting sid+'#', and route the reads in decide_stop and decide_session_start through it. The bind-on-resume WRITE in decide_session_start stays under the bare session_id. Prove the settle is not vacuous: build a store holding ONE bare key and TWO composite keys, state the entry count, and assert decide_stop blocks on a mid-flight spine held ONLY under a composite key.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "write routing green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-write-routing complete; composite keys now written by the real claim writer"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: session_view / composite-read tests written and observed failing \u2014 manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed before session_view: 3 failed, 4 passed, 67 deselected, exit 1 (AttributeError on sr.session_view; Stop allowed a composite-only mid-flight spine; SessionStart returned {})"
+        },
+        {
+          "id": "c2",
+          "statement": "session_view + composite-read tests green; whole spine_rail module green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-read-routing-1"
+        }
+      ],
+      "constraints": [
+        "decide_session_start's bind-on-resume write stays under the bare session_id",
+        "decide_stop and decide_session_start must still see every spine they saw before"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-read-routing-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-no-regression": {
+      "id": "m5-no-regression",
+      "title": "No regression, and demonstrate the new checks can fail",
+      "imperative": "Run the handoff's two required verification commands plus the full suite, and demonstrate the new tests are not checks-that-cannot-fail by stashing ONLY scripts/hooks/spine_rail.py back to HEAD and observing the new tests red, then restoring. Write the IMPLEMENTER_RESULT with real command output and real exit codes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "read routing green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-read-routing complete; module green at 74 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new tests observed RED against the pre-change hook module, then restored \u2014 manual attest with pasted output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Reverted scripts/hooks/spine_rail.py to HEAD with tests+fixture in place: 13 failed, 61 passed, exit 1 \u2014 every hook-dependent new test red, every pre-existing test green. Restored from a byte-copy: 74 passed, exit 0. Separately, hand-injecting an agent_id into fixture payload 0 turned the sha256 pin, the decomposition and the composition table red (3 failed), then restored byte-identically."
+        },
+        {
+          "id": "c2",
+          "statement": "gauge writer + gauge reader suites pass unchanged",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py tests/test_gauge_reader.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-no-regression-1"
+        },
+        {
+          "id": "c3",
+          "statement": "full repo suite green (baseline 1621 passed, 2 skipped, 550 subtests at HEAD 990712f)",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-no-regression-2"
+        },
+        {
+          "id": "c4",
+          "statement": "IMPLEMENTER_RESULT written to .agent-work/issue-419-governor-identity/results/g1-IMPLEMENTER_RESULT.md",
+          "check": {
+            "kind": "command",
+            "command": "test -s C:/Programs/constellation-skills-wt/epic418-a-419/.agent-work/issue-419-governor-identity/results/g1-IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-no-regression-3"
+        }
+      ],
+      "constraints": [
+        "do not push, do not open a PR, do not file issues"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-no-regression-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest tests/test_gauge_writer.py tests/test_gauge_reader.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-no-regression-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a-419 && python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-no-regression-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s C:/Programs/constellation-skills-wt/epic418-a-419/.agent-work/issue-419-governor-identity/results/g1-IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "impl-419-g1",
+    "status": "released",
+    "claimed_at": "2026-08-06T00:22:57.086428+00:00",
+    "last_heartbeat": "2026-08-06T00:49:31.872226+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T00:50:09.003191+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete. Real fixture decomposition checked directly and it is 2 parent Bash / 2 subagent Bash / 2 parent Agent-dispatch, NOT the handoff's provisional 3/2/1 \u2014 the handoff told me to verify and state what I find.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:23:15.096737+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-fixture",
+      "why": "Fixture copied byte-for-byte (raw sha256 804313f4...). Pin hashes NEWLINE-NORMALIZED bytes because the tree holds CRLF under text=auto. Real decomposition measured: 2 parent Bash / 2 subagent-scope / 2 parent Agent-dispatch \u2014 the handoff's 3/2/1 was wrong.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:24:46.884890+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-binding-key",
+      "why": "binding_key green: 4 bare / 2 composite over the six real payloads, 12 adversarial rows derived by mutating real payloads all rejected. Reject token set is ('#','/','\\','..') because the next gate interpolates agent_id into a filesystem path.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:26:17.200335+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-write-routing",
+      "why": "Writes routed through binding_key. Handoff tension resolved at the code site: constraint 1 says the nudge delete keeps the bare session_id, the required-evidence line says a composite release leaves nudges[bare_sid] untouched \u2014 both hold if the ledger stays bare-keyed AND the delete fires only for a top-level release (key == sid). 70 passed; git diff shows 343 insertions and 0 deletions, so every pre-existing test is unedited.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:28:56.322421+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-read-routing",
+      "why": "session_view merges bare + sid#agent keys; decide_stop and decide_session_start read through it; the bind-on-resume write still uses the bare sid. Non-vacuous settle: 5-key store (1 bare, 2 composite, 2 decoy) merges to exactly 3 entries, and decide_stop blocks on a spine held only under a composite key. 74 passed.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:31:03.868482+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-no-regression",
+      "why": "Full suite 1637 passed / 2 skipped / 550 subtests (baseline 1621+2+550, delta = exactly the 16 new tests). gauge writer+reader 82 passed. Result written with real output and exit codes.",
+      "mechanical": false,
+      "ts": "2026-08-06T00:49:31.872194+00:00"
+    }
+  ]
+}

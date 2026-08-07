@@ -1,0 +1,49 @@
+# treatment arm gauge inventory
+--- sb-treatment/.agent-work/wk-alpha/gauge.json
+{"schema_version": 1, "fill_fraction": 0.329482, "model": "claude-sonnet-5", "observed_at": "2026-08-06T04:32:19.675Z", "identity_resolution_ms": 0.08370005525648594}
+--- sb-treatment/.agent-work/wk-bravo/gauge.json
+{"schema_version": 1, "fill_fraction": 0.102211, "model": "claude-sonnet-5", "observed_at": "2026-08-06T04:33:30.534Z", "identity_resolution_ms": 0.07760000880807638}
+--- sb-treatment/.agent-work/wk-echo/gauge.json
+{"schema_version": 1, "fill_fraction": 0.064216, "model": "claude-sonnet-5", "observed_at": "2026-08-06T04:35:11.133Z", "identity_resolution_ms": 0.08049991447478533}
+--- sb-treatment/.agent-work/wk-parent/gauge.json
+{"schema_version": 1, "fill_fraction": 0.094663, "model": "claude-sonnet-5", "observed_at": "2026-08-06T04:35:45.657Z"}
+# directory listing of every work dir (records absence too)
+sb-treatment/.agent-work/wk-alpha/:
+total 14
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:32 .
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:35 ..
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:31 context
+-rw-r--r-- 1 fredc 197609  166 Aug  5 21:32 gauge.json
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:31 mechanical
+-rw-r--r-- 1 fredc 197609 2018 Aug  5 21:32 spine.json
+-rw-r--r-- 1 fredc 197609  226 Aug  5 21:31 spine.json.journal
+
+sb-treatment/.agent-work/wk-bravo/:
+total 14
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:33 .
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:35 ..
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:32 context
+-rw-r--r-- 1 fredc 197609  166 Aug  5 21:33 gauge.json
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:32 mechanical
+-rw-r--r-- 1 fredc 197609 2323 Aug  5 21:33 spine.json
+-rw-r--r-- 1 fredc 197609  526 Aug  5 21:33 spine.json.journal
+
+sb-treatment/.agent-work/wk-echo/:
+total 14
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:35 .
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:35 ..
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:34 context
+-rw-r--r-- 1 fredc 197609  166 Aug  5 21:35 gauge.json
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:34 mechanical
+-rw-r--r-- 1 fredc 197609 2379 Aug  5 21:35 spine.json
+-rw-r--r-- 1 fredc 197609  524 Aug  5 21:35 spine.json.journal
+
+sb-treatment/.agent-work/wk-parent/:
+total 14
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:35 .
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:35 ..
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:30 context
+-rw-r--r-- 1 fredc 197609  119 Aug  5 21:35 gauge.json
+drwxr-xr-x 1 fredc 197609    0 Aug  5 21:30 mechanical
+-rw-r--r-- 1 fredc 197609 2333 Aug  5 21:35 spine.json
+-rw-r--r-- 1 fredc 197609  528 Aug  5 21:35 spine.json.journal

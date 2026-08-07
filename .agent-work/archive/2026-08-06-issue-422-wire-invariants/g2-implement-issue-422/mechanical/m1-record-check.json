@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-record-check",
+  "mechanical": {
+    "run": "g2-implement-issue-422",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m1-record-check",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-issue-422-m1-record-check@f990281351a0da9b0f2f2a6bcede4aa9b8edf051",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement-issue-422",
+    "generated_at": "2026-08-06T00:24:07Z"
+  }
+}

@@ -10,6 +10,34 @@ Newest entries on top.
 
 ---
 
+## `2026-08-06` — `issue-422-wire-invariants`
+
+**Run shape:** `commander (delegated, under LAUNCH_ORDER D-422, epic-418)` · 10/10 spine steps + 7/7 execute items (`e0-context`, `g1-implement/review/integrate` #329, `g2-implement/review/integrate` #328) closed · sonnet commander, sonnet implementer × 2, sonnet reviewer × 2 (per launch order's Sonnet-or-lower cap).
+
+**Instruction adherence:** `fully followed`
+- Drove the spine and `execute.json` end to end through the engine; no hand-editing of any checklist JSON. `--dispatch external` + Agent-tool subagent + `--verify-result` used throughout (no headless `claude` CLI in this harness). Deliberate breakage in both gates ran only against `tmp_path`/git-stash-and-restore fixtures, never against the shared checkout, as pre-cleared.
+- Used the DEGRADED-NO-MAP escape hatch as designed: shrunk mission frame, waived `plan.c6` (verify-frame, structurally inapplicable with no map), reconciled directly into `docs/CHECKLIST_SCHEMA.md`/`docs/CHECKLIST_ENGINE_DESIGN.md` at the `reconcile` step rather than dispatching a Cartographer that has nothing to read.
+
+**Friction / unclear:**
+- **`init_work_area.py --spine` silently accepted the GLOBAL installed template path** (`C:/Users/fredc/.claude/skills/constellation-commander/templates/COMMANDER_SPINE.template.json`) instead of the repo's own vendored copy, even with `--skill-dir <worktree-root>` passed correctly — `--skill-dir` only resolves `<commander-skill-dir>` TOKENS inside whichever template text you feed it; it does not care which template file you point `--spine` at. Every `<commander-skill-dir>`-resolved command in my own spine (`run_crew.py`, `verify_agent_feedback.py`, `apply_lessons_delta.py`, `map_orient.py`, `verify_state_note.py`) ended up pointing at the global install rather than this worktree's vendored `scripts/`. Did not unwind (none of those scripts were part of this issue's deliverable, so it did not corrupt the actual fix), but the dogfooding instruction ("pass `--skill-dir <repo-root>`") reads as sufficient when it is not — the `--spine` path also has to be the repo-local one. Worth a loud check in `init_work_area.py` when `--skill-dir` and `--spine`'s directory disagree.
+- **A `py` vs `python` PATH split cost real time**: this environment's `py` launcher resolved to a Python with no `pytest` installed, while bare `python` had it. Every handoff to crew now explicitly names the fallback; worth promoting into the shared crew-dispatch doctrine rather than re-discovering per run.
+- Bash tool's `run_in_background` output file for a long (`pytest tests/ -q`, ~8 min) command read back empty for a while after the notification fired — resolved by trusting the engine's own re-run (`g2-integrate.c1`) and the reviewer's independent re-run instead of my own background job's stdout capture.
+
+**Crew-reported friction:**
+- g1 implementer/reviewer: none — handoff was precise enough to implement/verify without improvisation (their own words).
+- g2 implementer: none on substance; noted `base_dir` is a no-op for `command`-kind checks (only `artifact`/`git-change-policy` consume it) — confirmed by reading `_check_condition`, consistent with the handoff's framing.
+- g2 reviewer: hand-authoring a Fowler-pass JSON record with nested apostrophes produced an invalid `\'`-escaped file that read fine but failed strict `json.load` — worked around via `json.dump()`. Worth a note in the Fowler-pass rail's own doc.
+
+**What worked:**
+- The shared-file fence (`checklist_engine.py`'s invariant-check path vs. workstream B/#420's rendering path) held cleanly: both g2's implementer and reviewer independently declined to touch `_next_verbs` for a stale-comment fix that was otherwise trivially fix-now-eligible, routing it to triage instead (filed as #437) rather than risking a same-function collision with a concurrent workstream. The reviewer's independent full-file diff (not just the reported hunk) is what actually proved the fence held.
+- Deliberate-breakage-via-git-stash (revert the real tracked file, observe the exact expected failure, restore) was reproduced independently by both reviewers and gave much stronger confidence than a synthetic-only fixture would have.
+
+**Improvement signals:**
+- `init_work_area.py --spine` should warn or refuse when the `--spine` template's own path is outside `--skill-dir`'s tree (the global-vs-vendored-copy divergence above) → disposition: `noted here for a future dogfooding-hygiene pass; not filed separately since it did not affect this run's deliverable`
+- `py`-vs-`python` PATH ambiguity for pytest → disposition: `noted here; not filed as a corpus-wide issue since it is environment-specific, not doctrine`
+
+---
+
 ## `2026-08-02` — `issue-307`
 
 **Run shape:** `commander (delegated, under LAUNCH_ORDER-307)` · 10/10 spine steps + 4/4 execute items (`e0-context`, `g1-capture`, `g2-score`, `g3-pair` — all command-checked, no crew gates) closed · opus commander, one opus cold plan critic, five opus measured subjects. Two capture attempts: the first **void**, the second clean.
@@ -2023,3 +2051,69 @@ changeover, which is exactly what a durable artifact is for.
 and its three unmerged commits deliberately KEPT** — epic-418's confirmed spec names them as
 requiring #412's orphan-risk read before disposal, so sweeping them here would have violated a
 standing constraint from a live epic.
+
+---
+
+## 2026-08-05 — issue-419-governor-identity (delegated Commander, epic-418 workstream A)
+
+**How closely the skills, handoffs and checklists were followed:** the spine was driven end to end
+through the engine, every gate through its own verbs, one rework round at g3 after a correct reviewer
+BLOCK. No work was done around the spine. Six crews dispatched via `run_crew.py --backend external`,
+each result verified fresh before integration.
+
+**What went well, and why it is worth repeating:**
+- **The probe before the build paid for the whole run.** The pre-ruling required inspecting the real
+  hook payload before designing anything. It took twenty minutes and it deleted a 250-line module from
+  the plan: the payload carries `agent_id` outright, so identity is a lookup rather than a search, and
+  every hazard that module existed to handle — verbatim-dispatch contamination, the identical-command
+  race — became unreachable rather than mitigated.
+- **Measuring non-vacuity by revert, rather than arguing it.** Each code gate reverted its own file and
+  counted how many new tests went red (13 of 16, then 23 of 30). Both reviewers reproduced the count
+  independently, and one went further with five targeted mutations. This single practice did more for
+  confidence than any assertion either crew wrote, and it caught nothing — which is the point: it is
+  what let the reviews be short.
+- **The cold panel earned its cost twice over.** Two critics on the frozen plan produced 20 findings,
+  and the two most valuable were ones no author would have found: every `command` postcondition in the
+  plan was **already green at HEAD with zero code written**, and g4's acceptance evidence **passed on a
+  crossed attribution** — the exact misattribution class the issue exists to kill.
+- **The reviewer BLOCK at g3 was correct and cheap.** It cost one rework round and turned up that a
+  single claim was asserted in **seven** places across four files, each pass finding sites the previous
+  one reported clean.
+
+**Where I had to improvise, and what fought me:**
+- **`py` is not the test runner here.** `py` resolves to a codex runtime with no pytest, and
+  `py -m unittest discover` reports 4 loader errors plus 11 mutation-floor failures that are pure
+  interpreter artifacts. I nearly recorded a red baseline as real. Every handoff after that carried the
+  correction explicitly, and no crew hit it. → disposition: `carried in every handoff; worth a line in
+  the repo's crew context`
+- **`init_work_area.py` does not resolve the `<branch>` placeholder**, so the archive gate's
+  `gh pr list --head <branch>` postcondition ships unrunnable. → disposition: `worked around at
+  archive; recorded here`
+- **`git worktree add` into the scratchpad fails on Windows MAX_PATH**, so the isolate-the-revert move
+  every gate needed had to be rediscovered as a copy fallback by each crew independently. → disposition:
+  `recommend-and-defer — target is crew doctrine, outside this run's authority`
+- **`verify-frame` refuses any `decision:`-shaped anchor under a DEGRADED orientation, while
+  `MISSION_FRAME.template.md` requires graded decision anchors.** I kept decisions out of the frame and
+  put them in `execute.json` where `grade_lint` sees them. → disposition: `already filed as #394;
+  confirming instance recorded, not re-filed`
+- **`docs/agents/engine-config.json` does not exist** while every template's `config_ref` names it, so
+  the rework cap and checkpoints are unchosen defaults. Third report. → disposition: `filed as #443`
+- **The `Agent` tool refused `name` and `run_in_background`** for an in-process teammate, so the
+  design-it-twice candidates and the critic panel ran synchronously in one message rather than in the
+  background the doctrine assumes. It worked, but the doctrine's "tell every background subagent to
+  SendMessage before ending its turn" instruction is unreachable at this tier. → disposition: `recorded`
+- **One crew's final message was blocked by a permission classifier**, so its evidence was recovered
+  from its own transcript. The reviewer judged that stronger rather than weaker. → disposition:
+  `recorded — the #145 shape, environmental, not a scope problem`
+
+**Improvement signals:**
+- **An evidence artifact that cannot be regenerated from its archived producer is testimony, not
+  evidence.** One of this run's own artifacts had a section appended from an unrecorded command; every
+  number reproduced, but nothing said which lines came from where. → disposition: `distilled to a
+  lesson (banked)`
+- **A "fix it where you are pointed" handoff systematically misses sites.** g3's handoff named one of
+  what turned out to be seven. The fix that worked was requiring enumeration by command with the count
+  stated, before any edit. → disposition: `distilled to a lesson (banked)`
+- **The authoring side of blast radius is where this run kept bleeding.** Adding one optional field to
+  a record stranded six documents and comments asserting the old shape, in four files, and each was
+  found by a different pass. → disposition: `filed as #444 (the mechanical link that would close it)`

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-rail-green",
+  "mechanical": {
+    "run": "b420-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-rail-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b420-g1-implement-m2-rail-green@1dd0ac87d3770047fd62e78a7ffccc41c90726a7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b420-g1-implement",
+    "generated_at": "2026-08-05T23:44:07Z"
+  }
+}

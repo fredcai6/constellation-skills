@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "work_id": "b420-engine-channel",
+  "root": "C:/Programs/constellation-skills-wt/epic418-b-420",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "f3be07c1cc8ef00277c2d5b901aa3d6cc83d04d87a980c3b578a43d9bfe2692a",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "c1951074a96802ccaf95a749789cdf4a0d3a287d1fdcc02cd7b24c34a55aefbc",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "No docs/architecture map exists in this skill-source repo (dogfood/skill-authoring repo, not a packet-mapped product repo); per commander-core.md Architecture bookend, reconcile at end folds into the schema/design doc actually touched instead."
+  ],
+  "escalation": "None needed \u2014 this is the accepted no-map shape for a skill-source repo per constellation-commander references/commander-core.md; not escalating.",
+  "emitted_at": "2026-08-05T23:13:42.002023+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
