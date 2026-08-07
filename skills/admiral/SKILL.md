@@ -46,6 +46,33 @@ Do what the epic needs. Two hard requirements only:
 1. **The ADMIRAL_LOG is the run's audit trail** (`templates/ADMIRAL_LOG.template.md`): every ruling, incident, merge, wave launch, and error you own goes in as it happens. With no gates in this step, the log is the accountability surface and the lessons audit's primary input. An unlogged ruling didn't happen.
 2. **The latitude contract is honored**: adjudicate inside delegated classes (logged as RULING), escalate everything else.
 
+### Replan before the next wave
+
+Treat `wave_forecast` as provisional, never as a launch queue. At every wave
+boundary, and immediately when a material exception invalidates the active
+plan, consume the exact installed sibling
+`../constellation-replan/templates/REPLAN_INPUT.template.json`, author one exact
+`../constellation-replan/templates/REPLAN_RESULT.template.json`, and place both
+under `.agent-work/<work-id>/transitions/<boundary-id>/`. Write
+`.agent-work/<work-id>/NEXT_WAVE.json` with exactly `boundary_id`, `launch_id`,
+and a `wave_boundary` or `material_exception` trigger. Record exactly one audit
+line in `.agent-work/<work-id>/ADMIRAL_LOG.md` as
+`- TRANSITION | boundary=<boundary-id> | decision=<decision> | verified`, then run
+`python <admiral-skill-dir>/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id <work-id>`
+in the foreground before launching. A nonzero result refuses the launch. The
+check requires exactly one matching `advance`, `repair`, `replan`, or `stop`
+exit and writes `CURRENT_TRUTH.md` plus `WAVE_REVIEW.md` from the verified result.
+A `repair` holds the forecast and
+current wave; no next launch occurs until its blocking evidence is settled.
+Render and retain both `revised_epic_body` as current planning truth and
+`wave_review_comment` as the evidence history.
+
+The replan pass never grants posting authority. Do not call `gh` or another
+network mutation path directly from planning doctrine. A future update may post
+only through the existing authorized tracker port after latitude, review, and
+normal execution gates. Fixed-boundary proposals stay inapplicable and escalate
+to the human when they exceed the latitude contract.
+
 Operating doctrine:
 
 - One Commander per issue, each in its own worktree you **provision explicitly** and verify before the wave — see `references/fleet-doctrine.md`, "Worktree isolation is a harness no-op on Windows" (the Agent-tool `isolation:"worktree"` flag is a silent no-op; provision, gate, and never run two Commanders in one worktree — stop/confirm-dead the original before a continuation). Pick model tier per issue complexity — least-powerful model that works, escalating only when complexity, ambiguity, or risk demands it — and record it in the launch order's Budget model-tier slot.

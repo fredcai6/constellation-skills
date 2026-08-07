@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "title": "Initial-cut capability",
+  "source_path": "DESIGN_SPEC.md",
+  "confirmation": {
+    "status": "CONFIRMED",
+    "confirmed_by": "<human name>",
+    "date": "2026-08-06"
+  },
+  "intent_and_why": "Deliver one evidence-supported current wave without making future outcomes binding.",
+  "definition_of_done": [
+    "The current wave has completed its named exit criteria."
+  ],
+  "good_enough": {
+    "mandatory_quality": "State the quality boundary that cannot be traded away.",
+    "sufficient_evidence": "State the evidence sufficient to accept or falsify this cut.",
+    "appetite": "State the time or complexity appetite for the initial wave."
+  },
+  "hard_constraints": [],
+  "fixed_decisions": [],
+  "initial_wave": {
+    "objective": "Complete one coherent execution-and-validation loop.",
+    "exit_criteria": [
+      "Required behavior is demonstrated through the public interface."
+    ]
+  },
+  "wave_forecast": [],
+  "uncertainty_register": [],
+  "parked_possibilities": [],
+  "evidence_digest": []
+}

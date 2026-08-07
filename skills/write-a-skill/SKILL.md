@@ -16,7 +16,7 @@ Every skill is one of three archetypes; the described capability picks one, and 
 
 | Archetype | When | Shape |
 |---|---|---|
-| **lean** | a judgement made repeatable; no multi-step state | chat-first prose, maybe one rail script (`to-issues`, `diagnose`) |
+| **lean** | a judgement made repeatable; no multi-step state | chat-first prose, maybe one rail script (`to-initial-issues`, `diagnose`) |
 | **gated-engine** | ordered steps that must not be skipped | a `templates/*.json` checklist driven through `checklist_engine.py` (`commander`) |
 | **survey** | visit-every-item inquiry that consolidates a verdict | a `survey` checklist (`reviewer`, `interrogator`) |
 

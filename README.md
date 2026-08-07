@@ -33,7 +33,8 @@ The corpus is **19 skills**. `skills/_shared/` is **not a skill** — it is shar
 | Skill | Purpose |
 |---|---|
 | `constellation-explorer` | Shape a raw idea into an interrogated, critically reviewed, human-confirmed design spec before any work is cut; convergence is human-only. |
-| `constellation-to-issues` | Cut a confirmed design spec into a dependency-ordered, HITL/AFK-typed issue set and file it (GitHub-first, tracker-pluggable). |
+| `constellation-to-initial-issues` | Cut a confirmed shaped brief into one runnable current wave while preserving later outcomes as nonbinding forecast and uncertainty. |
+| `constellation-replan` | Classify wave evidence into an explicit advance, repair, replan, or stop transition while preserving launched identities and fixed intent. |
 | `constellation-admiral` | Run an epic as the human's delegate: latitude contract, Commander waves, adjudication, lessons-and-architecture closeout. |
 | `constellation-commander` | Run one bounded issue end to end for a live human as the human's rigor scaffold. |
 | `constellation-commander-delegated` | Run one bounded issue end to end under a frozen Admiral launch order with no reachable human, citing the order and escalating genuine gaps. |

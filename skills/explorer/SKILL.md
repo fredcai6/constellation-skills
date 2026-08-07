@@ -73,22 +73,38 @@ An excursion is a dispatched investigation answering **one named question**.
 
 ## Spec phase
 
-Crystallize `DESIGN_SPEC.md` from the board using `templates/DESIGN_SPEC.template.md` (ships with the loud marker and a DRAFT Confirmation block — deliberate; the verifier refuses it until confirm is genuinely met). Present for **per-section approval**; after the first pass go **delta-based** — present what changed since the last confirmation, not the whole statement again. Run **design-it-twice** on every load-bearing interface (skip a trivial one only with a stated reason). Describe interfaces in deep-module terms.
+Crystallize `DESIGN_SPEC.md` from the board using `templates/DESIGN_SPEC.template.md` (ships with the loud marker and a DRAFT Confirmation block — deliberate; the verifier refuses it until confirm is genuinely met). Present for **per-section approval**; after the first pass go **delta-based** — present what changed since the last confirmation, not the whole statement again. Spend **design-it-twice** weight only on irreversible or load-bearing initial commitments; reversible details and forecast possibilities do not earn it. Skip a seemingly load-bearing commitment only with a stated reason. Describe interfaces in deep-module terms.
 
 **Pre-name the adapted per-role wording when a spec directs transcription-grade restoration.** When the spec directs verbatim, *transcription-grade* restoration of one body of role-specific doctrine into several structurally different roles under a **no-paraphrase** constraint, the spec must **pre-name the adapted per-role wording** itself — exactly as it already fixes the shared verbatim sentences — not just pre-rule a role-noun swap and leave the rest to the implementer. A role-noun swap ("replace *Commander* with *Admiral*") covers only the targets whose clause structure is already identical; where a target role's structure diverges — a clause naming a step, an actor, or an artifact the source role has and the target does not — spell out **that target's** clause in the spec. Directing transcription-grade restoration while leaving the implementer to invent the structural substitution is self-contradictory: the no-paraphrase constraint forbids the very paraphrase the divergence demands, so the implementer either stalls or improvises silently. Grounded: **#142** — 3 of 5 full-clause targets needed clause-3/4 structural adaptation beyond the pre-ruled role-noun swap, ratified only post-hoc by the human.
 
 ## Critical review
 
-Cold, **full adversary**: the critic reads the spec with **no exploration record**, holds nothing sacred, and may attack deliberate decisions; the human filters relitigation noise (see `templates/CRITIC_HANDOFF.template.md`). Panel scaled by weight: default one critic; a spec that would spawn epics or touch architecture gets the **3-lens panel** — intent-fit (does the design serve the stated point), testability (can each pathway be exercised and falsified), simplicity/YAGNI (what can be deleted). **When in doubt, panel.**
+Cold, **full adversary**: the critic reads the spec with **no exploration record**, holds nothing sacred, and may attack deliberate decisions; the human filters relitigation noise (see `templates/CRITIC_HANDOFF.template.md`). Scale critic weight to irreversible or load-bearing initial commitments: default one critic, and use the **3-lens panel** when those commitments would spawn epics or alter architecture — intent-fit (does the design serve the stated point), testability (can each pathway be exercised and falsified), simplicity/YAGNI (what can be deleted). Reversible details and provisional forecast do not justify a heavier panel. **When in doubt about commitment weight, surface the choice.**
 
 Findings land in the spec's structured table with fixed columns `| ID | Lens | Severity | Finding | Disposition | Reason |`. The human triages **every** finding to one Disposition — **EDIT** (fix the spec), **RE-EXPLORE** (reopen a cycle, possibly with a targeted excursion), or **REJECT** (with reason). The critic never self-triages. Confirm opens only when every Disposition cell is filled.
 
 A RE-EXPLORE is an engine `reopen` of the `explore` step. The spine's inline rework cap is 99 so the critic→re-explore loop never hard-blocks (the default cap of 3 would). Documented cost: the reopen cascade resets spec/review/confirm and supersedes their evidence (retained, not deleted). This is survivable **because the ideas board is the source of truth** — the spec re-crystallizes from it.
 
+## Confirmed shaped brief
+
+After the human confirms the design, write `.agent-work/<work-id>/SHAPED_BRIEF.json`
+by filling the exact sibling contract
+`../constellation-to-initial-issues/templates/SHAPED_BRIEF.template.json`. This JSON is the
+single executable Explorer-to-cutter handoff; do not invent a parallel prose
+handoff. Preserve the explored ideas and evidence explicitly through its
+parked possibilities, uncertainty register, fixed decisions, and
+`evidence_digest`. `DESIGN_SPEC.md` and `IDEAS_BOARD.md` remain the reasoning
+record, but the cutter consumes the confirmed JSON directly.
+
+The confirm gate runs
+`python <skill-dir>/scripts/verify_iterative_role_artifacts.py explorer --work-id <work-id>`
+against that run artifact. Missing, malformed, or non-G1 JSON refuses the gate;
+the existing human `user-decision` remains a separate required conjunct.
+
 ## Route
 
-The human routes the confirmed spec. **Explorer never cuts issues itself** — to-issues owns cutting:
-- Hand off to constellation-to-issues or directly to a Commander; or
+The human routes the confirmed spec. **Explorer never cuts issues itself** — to-initial-issues owns cutting:
+- Hand the exact confirmed `SHAPED_BRIEF.json` to constellation-to-initial-issues or directly to a Commander; or
 - File one "shaped design" issue holding the full spec body; or
 - **Shelve unconfirmed**: file the ideas board as the shaped-design issue and place `UNCONFIRMED — DO NOT CUT` as a **standalone header line** on it, so `verify_spec_confirmed.py` and Commander intake refuse to cut it. This is the one place the marker is written standalone on purpose.
 

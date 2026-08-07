@@ -1,31 +1,5 @@
 #!/usr/bin/env python
-"""File a cut-work issue set to a tracker — the constellation-to-issues FILER.
-
-Ports-and-adapters (DESIGN_SPEC Section A): a tracker-agnostic issue-set
-manifest is filed through ONE swappable adapter seam. Two adapters ship this
-epic — `github` (the real, GitHub-first default) and `markdown` (the offline
-test fixture / portability proof). A `gitlab` seam is deliberately NOT built
-(the seam exists; only github + markdown ship). GitHub-first, seam-pluggable,
-not GitHub-only.
-
-Two safeties, both cheap and both load-bearing:
-
-  * THE RAIL RUNS FIRST. `verify_issue_set` (verify_issue_set.py) gates every
-    filing; a malformed set raises before ANY tracker write, so a malformed
-    manifest can never reach a tracker.
-
-  * IDEMPOTENT VIA A RECEIPT + KEY-EXISTENCE CHECK. Every epic/issue carries a
-    deterministic idempotency key embedded in its filed body. A crash mid-file
-    re-runs without a duplicate epic: the receipt is the fast path, and when the
-    receipt is missing an entry (the crash landed between the tracker write and
-    the receipt write) the adapter re-finds the already-filed item BY KEY and
-    adopts it. Correctness holds at all three crash-injection points
-    (before-file / after-file-before-receipt / after-receipt; TF7).
-
-Downstream seam: the epic body is the wave-ordered task list (a topological
-sort of the `blocks` edges) with AFK/HITL labels — the Admiral's intake
-consumes it. Standard library only (the github adapter shells out to `gh`).
-"""
+"""File only the runnable current wave from a verified initial issue set."""
 
 from __future__ import annotations
 
@@ -38,26 +12,31 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from verify_issue_set import verify_issue_set, IssueSetError  # noqa: F401 (re-exported)
+from verify_issue_set import IssueSetError, render_epic_body, verify_issue_set  # noqa: E402,F401
+
 
 KEY_PREFIX = "constellation-key"
 
 
 class CrashInjected(Exception):
-    """Test-only: raised at a named crash-injection point to prove idempotency."""
+    """Test-only crash at one entity/window, e.g. ``issue:A:after-receipt``."""
 
 
-# --------------------------------------------------------------------------- #
-# Idempotency keys — deterministic from the manifest, embedded in filed bodies.
-# --------------------------------------------------------------------------- #
 def _short(text: str) -> str:
-    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:12]
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def _canonical(value: object) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def manifest_key(manifest: dict) -> str:
+    return f"manifest:{_short(_canonical(manifest))}"
 
 
 def epic_key(manifest: dict) -> str:
     epic = manifest["epic"]
-    seed = f"{epic.get('spec_path', '')}\0{epic['title']}"
-    return f"epic:{_short(seed)}"
+    return f"epic:{_short(epic['spec_path'] + chr(0) + epic['title'])}"
 
 
 def issue_key(ekey: str, issue_id: str) -> str:
@@ -65,75 +44,57 @@ def issue_key(ekey: str, issue_id: str) -> str:
 
 
 def key_marker(key: str) -> str:
-    """The hidden marker embedded in a filed body so an adapter can find the
-    item again by key after a crash (before the receipt recorded it)."""
     return f"<!-- {KEY_PREFIX}: {key} -->"
 
 
-# --------------------------------------------------------------------------- #
-# Wave ordering — topological sort of the `blocks` edges into ordered waves.
-# --------------------------------------------------------------------------- #
-def wave_order(manifest: dict) -> list[list[dict]]:
-    """Kahn-style layering: wave 0 = issues nothing blocks-into (no unmet
-    dependency), then peel. `A blocks B` means A must precede B. A cycle raises
-    (the rail already rejects dangling edges; a cycle is the remaining hazard)."""
-    issues = {i["id"]: i for i in manifest["issues"]}
-    # deps[x] = set of issues that must come before x (i.e. that block x).
-    deps: dict[str, set[str]] = {iid: set() for iid in issues}
-    for i in manifest["issues"]:
-        for target in i.get("blocks", []):
-            deps[str(target)].add(i["id"])
+def current_issues(manifest: dict) -> list[dict]:
+    """The sole actionable collection. Forecast is deliberately unreachable."""
+    return manifest["current_wave"]["issues"]
 
+
+def wave_order(manifest: dict) -> list[list[dict]]:
+    issues = {issue["id"]: issue for issue in current_issues(manifest)}
+    deps = {iid: set() for iid in issues}
+    for issue in current_issues(manifest):
+        for target in issue["blocks"]:
+            deps[target].add(issue["id"])
     waves: list[list[dict]] = []
     placed: set[str] = set()
     while len(placed) < len(issues):
-        ready = [iid for iid in issues if iid not in placed and deps[iid] <= placed]
+        ready = sorted(iid for iid in issues if iid not in placed and deps[iid] <= placed)
         if not ready:
-            raise IssueSetError("dependency cycle in blocks edges; cannot wave-order")
-        ready.sort()
+            raise IssueSetError("dependency cycle in current_wave.issues blocks edges")
         waves.append([issues[iid] for iid in ready])
         placed.update(ready)
     return waves
 
 
 def build_epic_body(manifest: dict, ekey: str) -> str:
-    """The downstream seam: wave-ordered task list + AFK/HITL labels + the
-    idempotency marker."""
-    lines = [manifest["epic"].get("body", "").strip(), "", "## Waves", ""]
-    for w, wave in enumerate(wave_order(manifest)):
-        lines.append(f"### Wave {w}")
-        for issue in wave:
-            label = issue.get("type", "?")
-            reason = f" — {issue['hitl_reason']}" if issue.get("type") == "HITL" else ""
-            lines.append(f"- [ ] **[{label}]** {issue['id']}: {issue['title']}{reason}")
-        lines.append("")
-    lines.append(key_marker(ekey))
-    return "\n".join(lines).strip() + "\n"
+    return render_epic_body(manifest).rstrip() + "\n\n" + key_marker(ekey) + "\n"
 
 
 def build_issue_body(issue: dict, ikey: str) -> str:
-    body = issue.get("body", "").strip()
-    label = issue.get("type", "?")
-    tail = [key_marker(ikey), f"type: {label}"]
-    if issue.get("type") == "HITL":
-        tail.append(f"hitl_reason: {issue['hitl_reason']}")
-    return (body + "\n\n" + "\n".join(tail)).strip() + "\n"
+    lines = [
+        issue["desired_outcome"], "",
+        f"Useful now: {issue['useful_now']}",
+        f"Appetite: {issue['appetite']}",
+        f"Acceptance or falsification evidence: {issue['acceptance_or_falsification_evidence']}",
+        f"Implementation latitude: {issue['implementation_latitude']}",
+        "", key_marker(ikey), f"type: {issue['type']}",
+    ]
+    if issue["type"] == "HITL":
+        lines.append(f"hitl_reason: {issue['hitl_reason']}")
+    return "\n".join(lines).strip() + "\n"
 
 
-# --------------------------------------------------------------------------- #
-# Adapter seam — the ONE port every tracker plugs into.
-# --------------------------------------------------------------------------- #
 class FilingAdapter:
-    """The port. An adapter finds an item by its idempotency key (crash
-    recovery) and creates it if absent. `find_*` returns a tracker ref or None."""
-
-    def find_epic(self, key: str) -> str | None:  # pragma: no cover - interface
+    def find_epic(self, key: str) -> str | None:  # pragma: no cover
         raise NotImplementedError
 
     def create_epic(self, epic: dict, body: str, key: str) -> str:  # pragma: no cover
         raise NotImplementedError
 
-    def find_issue(self, key: str) -> str | None:  # pragma: no cover - interface
+    def find_issue(self, key: str) -> str | None:  # pragma: no cover
         raise NotImplementedError
 
     def create_issue(self, issue: dict, body: str, key: str) -> str:  # pragma: no cover
@@ -141,10 +102,6 @@ class FilingAdapter:
 
 
 class MarkdownAdapter(FilingAdapter):
-    """Offline fixture / portability proof: the 'tracker' is a single markdown
-    file. Find-by-key scans the file for the embedded key marker; create appends
-    a section. Faithful to the idempotency contract without any network."""
-
     def __init__(self, path: Path):
         self.path = Path(path)
 
@@ -153,8 +110,8 @@ class MarkdownAdapter(FilingAdapter):
 
     def _append(self, section: str) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self.path.open("a", encoding="utf-8") as fh:
-            fh.write(section)
+        with self.path.open("a", encoding="utf-8", newline="\n") as handle:
+            handle.write(section)
 
     def _find(self, key: str) -> str | None:
         return f"md:{key}" if key_marker(key) in self._text() else None
@@ -173,20 +130,14 @@ class MarkdownAdapter(FilingAdapter):
         self._append(f"\n## ISSUE: {issue['title']}\n\n{body}\n")
         return f"md:{key}"
 
-    # Test/inspection helpers.
     def count_epics(self) -> int:
-        return sum(1 for line in self._text().splitlines() if line.startswith("# EPIC: "))
+        return sum(line.startswith("# EPIC: ") for line in self._text().splitlines())
 
     def count_issues(self) -> int:
-        return sum(1 for line in self._text().splitlines() if line.startswith("## ISSUE: "))
+        return sum(line.startswith("## ISSUE: ") for line in self._text().splitlines())
 
 
 class GitHubAdapter(FilingAdapter):
-    """The shipped, GitHub-first adapter. Shells out to `gh`; finds an existing
-    item by searching for its embedded key marker so a crash re-run adopts
-    rather than duplicates. Not exercised by the offline test suite (no
-    network); the markdown adapter proves the idempotency contract."""
-
     def __init__(self, repo: str | None = None, labels: tuple[str, ...] = ()):
         self.repo = repo
         self.labels = labels
@@ -195,24 +146,28 @@ class GitHubAdapter(FilingAdapter):
         cmd = ["gh", *args]
         if self.repo:
             cmd += ["--repo", self.repo]
-        env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
-        result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True,
+            env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+        )
         if result.returncode != 0:
             raise RuntimeError(f"gh failed: {' '.join(cmd)}\n{result.stderr.strip()}")
         return result.stdout.strip()
 
     def _find(self, key: str) -> str | None:
-        out = self._gh(["issue", "list", "--state", "all", "--search",
-                        f"\"{key_marker(key)}\" in:body", "--json", "url", "--limit", "1"])
+        output = self._gh([
+            "issue", "list", "--state", "all", "--search", f'"{key_marker(key)}" in:body',
+            "--json", "url", "--limit", "1",
+        ])
         try:
-            hits = json.loads(out or "[]")
+            hits = json.loads(output or "[]")
         except json.JSONDecodeError:
             return None
         return hits[0]["url"] if hits else None
 
-    def _create(self, title: str, body: str, extra_labels: tuple[str, ...]) -> str:
+    def _create(self, title: str, body: str, labels: tuple[str, ...]) -> str:
         args = ["issue", "create", "--title", title, "--body", body]
-        for label in (*self.labels, *extra_labels):
+        for label in (*self.labels, *labels):
             args += ["--label", label]
         return self._gh(args)
 
@@ -226,131 +181,140 @@ class GitHubAdapter(FilingAdapter):
         return self._find(key)
 
     def create_issue(self, issue: dict, body: str, key: str) -> str:
-        return self._create(issue["title"], body, (issue.get("type", "").lower(),))
+        return self._create(issue["title"], body, (issue["type"].lower(),))
 
 
 def build_adapter(tracker: str, dest: str | None, repo: str | None) -> FilingAdapter:
-    resolved = "github" if tracker == "auto" else tracker
-    if resolved == "markdown":
+    tracker = "github" if tracker == "auto" else tracker
+    if tracker == "markdown":
         if not dest:
             raise IssueSetError("--tracker markdown requires --dest <tracker.md>")
         return MarkdownAdapter(Path(dest))
-    if resolved == "github":
+    if tracker == "github":
         return GitHubAdapter(repo=repo)
-    if resolved == "gitlab":
-        raise IssueSetError("gitlab adapter is not built this epic (the seam exists; only github + markdown ship)")
+    if tracker == "gitlab":
+        raise IssueSetError("gitlab adapter is not built; only github and markdown ship")
     raise IssueSetError(f"unknown tracker {tracker!r}")
 
 
-# --------------------------------------------------------------------------- #
-# Receipt — the durable record of what has been filed, keyed by idempotency key.
-# --------------------------------------------------------------------------- #
 def _load_receipt(path: Path) -> dict:
-    if path.exists():
-        return json.loads(path.read_text(encoding="utf-8"))
-    return {}
+    if not path.exists():
+        return {}
+    try:
+        receipt = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise IssueSetError(f"cannot read receipt: {exc}") from exc
+    if not isinstance(receipt, dict):
+        raise IssueSetError("receipt must be a JSON object")
+    return receipt
 
 
 def _write_receipt(path: Path, receipt: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8", newline="\n")
 
 
-def _crash(crash_at: str | None, point: str) -> None:
-    if crash_at == point:
-        raise CrashInjected(point)
+def _entry(entry: object, path: str, expected_key: str) -> dict:
+    if not isinstance(entry, dict) or set(entry) != {"key", "ref"}:
+        raise IssueSetError(f"{path} must contain exactly key and ref")
+    if entry["key"] != expected_key:
+        raise IssueSetError(f"{path}.key does not match the current manifest")
+    if not isinstance(entry["ref"], str) or not entry["ref"].strip():
+        raise IssueSetError(f"{path}.ref must be a nonempty string")
+    return entry
+
+
+def _validated_receipt(receipt: dict, manifest: dict) -> dict:
+    if not receipt:
+        return {"manifest_key": manifest_key(manifest), "issues": {}}
+    unknown = set(receipt) - {"manifest_key", "epic", "issues"}
+    if unknown:
+        raise IssueSetError(f"receipt has unknown field(s): {', '.join(sorted(unknown))}")
+    if receipt.get("manifest_key") != manifest_key(manifest):
+        raise IssueSetError("receipt.manifest_key does not match the current manifest")
+    if "issues" not in receipt or not isinstance(receipt["issues"], dict):
+        raise IssueSetError("receipt.issues must be an object")
+    ekey = epic_key(manifest)
+    if "epic" in receipt:
+        _entry(receipt["epic"], "receipt.epic", ekey)
+    expected = {issue["id"]: issue_key(ekey, issue["id"]) for issue in current_issues(manifest)}
+    for iid, entry in receipt["issues"].items():
+        if iid not in expected:
+            raise IssueSetError(f"receipt.issues has unknown current issue {iid!r}")
+        _entry(entry, f"receipt.issues.{iid}", expected[iid])
+    return receipt
+
+
+def _crash(crash_at: str | None, entity: str, point: str) -> None:
+    if crash_at == f"{entity}:{point}":
+        raise CrashInjected(f"{entity}:{point}")
 
 
 def file_issue_set(
     manifest: dict,
-    spec_text: str,
+    brief: dict,
     adapter: FilingAdapter,
     receipt_path: Path,
     *,
     crash_at: str | None = None,
 ) -> dict:
-    """File the set idempotently, returning the receipt. Runs the rail first.
-
-    `crash_at` is a test-only injection point: one of "before-file",
-    "after-file-before-receipt", "after-receipt". Each re-run after a crash
-    yields no duplicate epic.
-    """
-    # THE RAIL — refuse a malformed set before touching the tracker.
-    verify_issue_set(manifest, spec_text)
-
+    """Verify, validate the receipt, and idempotently file the current wave."""
+    verify_issue_set(manifest, brief)
     receipt_path = Path(receipt_path)
-    receipt = _load_receipt(receipt_path)
-    receipt.setdefault("issues", {})
-
+    receipt = _validated_receipt(_load_receipt(receipt_path), manifest)
     ekey = epic_key(manifest)
 
-    # --- Epic (the crash-window under test) ---
     epic_ref = receipt.get("epic", {}).get("ref")
     if epic_ref is None:
-        # Receipt has no epic: either first run, or we crashed after filing but
-        # before recording. Ask the tracker by key before creating (dupe guard).
         epic_ref = adapter.find_epic(ekey)
-    if epic_ref is None:
-        _crash(crash_at, "before-file")
-        epic_ref = adapter.create_epic(manifest["epic"], build_epic_body(manifest, ekey), ekey)
-        _crash(crash_at, "after-file-before-receipt")
-    receipt["epic"] = {"key": ekey, "ref": epic_ref}
-    _write_receipt(receipt_path, receipt)
-    _crash(crash_at, "after-receipt")
+        if epic_ref is None:
+            _crash(crash_at, "epic", "before-file")
+            epic_ref = adapter.create_epic(manifest["epic"], build_epic_body(manifest, ekey), ekey)
+            _crash(crash_at, "epic", "after-file-before-receipt")
+        receipt["epic"] = {"key": ekey, "ref": epic_ref}
+        _write_receipt(receipt_path, receipt)
+        _crash(crash_at, "epic", "after-receipt")
 
-    # --- Issues ---
-    for issue in manifest["issues"]:
+    for issue in current_issues(manifest):
         iid = issue["id"]
+        ikey = issue_key(ekey, iid)
         ref = receipt["issues"].get(iid, {}).get("ref")
         if ref is None:
-            ikey = issue_key(ekey, iid)
             ref = adapter.find_issue(ikey)
             if ref is None:
+                _crash(crash_at, f"issue:{iid}", "before-file")
                 ref = adapter.create_issue(issue, build_issue_body(issue, ikey), ikey)
+                _crash(crash_at, f"issue:{iid}", "after-file-before-receipt")
             receipt["issues"][iid] = {"key": ikey, "ref": ref}
             _write_receipt(receipt_path, receipt)
-
+            _crash(crash_at, f"issue:{iid}", "after-receipt")
     return receipt
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("manifest", help="path to the issue-set manifest JSON")
-    parser.add_argument("--spec", required=True, help="path to the confirmed DESIGN_SPEC.md")
+    parser.add_argument("manifest", help="path to initial issue-set JSON")
+    parser.add_argument("--brief", required=True, help="path to confirmed shaped-brief JSON")
     parser.add_argument("--tracker", choices=("auto", "github", "gitlab", "markdown"), default="auto")
-    parser.add_argument("--dest", help="markdown tracker file (for --tracker markdown)")
-    parser.add_argument("--repo", help="owner/name for the github adapter (default: current repo)")
+    parser.add_argument("--dest", help="markdown tracker path")
+    parser.add_argument("--repo", help="owner/name for GitHub")
     parser.add_argument("--receipt", help="receipt path (default: <manifest>.receipt.json)")
-    parser.add_argument("--dry-run", action="store_true",
-                        help="run the rail and print the plan; do not file")
+    parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
-
     try:
         manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
-        spec_text = Path(args.spec).read_text(encoding="utf-8")
-    except (OSError, json.JSONDecodeError) as exc:
-        print(f"REFUSED: cannot read inputs: {exc}", file=sys.stderr)
-        return 1
-
-    try:
-        verify_issue_set(manifest, spec_text)  # rail first, always
+        brief = json.loads(Path(args.brief).read_text(encoding="utf-8"))
+        verify_issue_set(manifest, brief)
         if args.dry_run:
-            waves = wave_order(manifest)
-            print(f"DRY RUN: would file epic {manifest['epic']['title']!r} + "
-                  f"{len(manifest['issues'])} issue(s) in {len(waves)} wave(s) via --tracker {args.tracker}")
+            print(f"DRY RUN: would file {len(current_issues(manifest))} current issue(s) via {args.tracker}")
             return 0
         adapter = build_adapter(args.tracker, args.dest, args.repo)
         receipt_path = Path(args.receipt) if args.receipt else Path(str(args.manifest) + ".receipt.json")
-        receipt = file_issue_set(manifest, spec_text, adapter, receipt_path)
-    except IssueSetError as exc:
+        receipt = file_issue_set(manifest, brief, adapter, receipt_path)
+    except (OSError, json.JSONDecodeError, IssueSetError, RuntimeError) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 1
-    except RuntimeError as exc:
-        print(f"FILING ERROR: {exc}", file=sys.stderr)
-        return 1
-
-    print(f"filed: epic {receipt['epic']['ref']} + {len(receipt['issues'])} issue(s); "
-          f"receipt {receipt_path}")
+    print(f"filed: epic {receipt['epic']['ref']} + {len(receipt['issues'])} current issue(s)")
     return 0
 
 

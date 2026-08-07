@@ -64,7 +64,7 @@ The Pocock mirror symlinks under `~/.claude/skills/` are currently **dangling** 
 | grill-with-docs | ★ | interrogator sharpening (D1) — resolve facts by exploring code/docs |
 | improve-codebase-architecture | covered | scout |
 | tdd | covered | implementer |
-| to-issues | ★ | to-issues (#1) — dependency edges + HITL/AFK typing |
+| to-issues | ★ | to-initial-issues (#1) — one runnable current wave plus nonbinding forecast, dependency edges, and HITL/AFK typing |
 | to-prd | *declined* | durable published spec declined by design; explorer's spec is bounded-durable, WHY retired into the network |
 | write-a-skill | ★ | write-a-skill (#6) — remixes Pocock's authoring rubric into shared goodness criteria |
 | zoom-out | *declined* | subsumed by cartographer current-only map + scout map-first audit; low value solo |

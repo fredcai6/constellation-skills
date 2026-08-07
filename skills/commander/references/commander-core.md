@@ -90,6 +90,25 @@ Pick subagent model tier from gate complexity, scope, ambiguity, and risk. Wait 
 
 **Crew dispatch mechanics** — the `run_crew.py` wrapper, the CLI-vs-Agent-tool backends, and crew recovery — live in `references/crew-dispatch.md`. Read it before dispatching a crew.
 
+### Return execution evidence for replanning
+
+Execution discrepancies are evidence before they are issues. As gates close,
+record completed outcomes, observed-vs-expected `wave_evidence`, and each
+discrepancy in the exact sibling
+`../constellation-replan/templates/REPLAN_INPUT.template.json` fields and write
+the packet to `.agent-work/<work-id>/REPLAN_INPUT.json`. Classify every signal
+as `blocks_current_wave_exit`, `invalidates_forecast_or_decomposition`,
+`later_only`, `evidence_only`, or `drop`; include its evidence and reason.
+Preserve the current-wave identity partition and describe unlaunched items, but
+do not file a discrepancy automatically. Return the verified packet to the
+Admiral. Issue creation, when a disposition warrants it, remains behind the
+normal authority, triage, independent-review, and tracker-port gates.
+
+The execute gate runs
+`python <commander-skill-dir>/scripts/verify_iterative_role_artifacts.py commander --work-id <work-id>`.
+Missing or malformed run packets refuse execute completion; prose or an unrelated
+checked-in fixture cannot satisfy this command postcondition.
+
 ## Repo (default; Charter overrides)
 
 Work on a branch off main; commit frequently as gates close; ready the branch to merge back during clean-up. The work area under `.agent-work/<work-id>/` is preserved through the run, then archived. The approach baseline is inherited global doctrine (`references/global-orchestrator.md` + `references/global-everyone.md`); project-specific deltas come from `ORCHESTRATOR_CONTEXT` when present.

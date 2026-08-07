@@ -141,7 +141,7 @@ def expand_script_bundle(scripts: tuple[str, ...]) -> tuple[str, ...]:
 
 
 SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
-    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py"),
+    "admiral": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py", "verify_iterative_role_artifacts.py"),
     "lessons-auditor": ("checklist_engine.py",),
     "charter": ("checklist_engine.py",),
     # map_orient.py is invoked by COMMANDER_SPINE.template.json as a command
@@ -152,7 +152,7 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     # SCRIPT_RUNTIME_COMPANIONS entry; that is a checked fact, not an omission --
     # tests/test_install_constellation.py pins companions against actual dynamic
     # loads.
-    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py", "map_orient.py"),
+    "commander": ("checklist_engine.py", "init_work_area.py", "verify_agent_feedback.py", "verify_state_note.py", "run_crew.py", "recover_crews.py", "apply_lessons_delta.py", "verify_lessons_applied.py", "verify_worktree_isolation.py", "agent_work_root.py", "map_orient.py", "verify_iterative_role_artifacts.py"),
     # workbench is the checklist engine's home skill, so it is the canonical (and
     # only) owner of the gauge WRITER hook -- the gauge exists solely to feed
     # checklist_engine.py's `current` advisory. Deliberately NOT a companion of
@@ -165,9 +165,10 @@ SKILL_SCRIPT_BUNDLES: dict[str, tuple[str, ...]] = {
     "docent": ("docent_freshness.py",),
     "implementer": ("checklist_engine.py",),
     "reviewer": ("checklist_engine.py", "verify_fowler_pass.py"),
-    "explorer": ("checklist_engine.py", "init_work_area.py", "run_crew.py", "recover_crews.py", "verify_cycles.py", "verify_spec_confirmed.py"),
+    "explorer": ("checklist_engine.py", "init_work_area.py", "run_crew.py", "recover_crews.py", "verify_cycles.py", "verify_spec_confirmed.py", "verify_iterative_role_artifacts.py"),
     "curator": ("curate_corpus.py",),
-    "to-issues": ("verify_spec_confirmed.py", "verify_issue_set.py", "file_issue_set.py"),
+    "to-initial-issues": ("verify_issue_set.py", "file_issue_set.py"),
+    "replan": ("verify_issue_set.py",),
     "diagnose": ("verify_diagnosis.py",),
     "write-a-skill": ("verify_skill_registered.py", "curate_corpus.py", "install_constellation.py"),
 }
@@ -197,7 +198,8 @@ SKILL_REFERENCE_BUNDLES: dict[str, tuple[str, ...]] = {
     "explorer": _GLOBAL_ORCHESTRATOR,
     "prototyper": _GLOBAL_CREW,
     "curator": _GLOBAL_EVERYONE + ("skill-goodness.md",),
-    "to-issues": _GLOBAL_ORCHESTRATOR,
+    "to-initial-issues": _GLOBAL_ORCHESTRATOR,
+    "replan": _GLOBAL_ORCHESTRATOR,
     "diagnose": _GLOBAL_ORCHESTRATOR,
     # how-to-talk is prose discipline any agent applies to its own human-facing
     # output, so it is not tier-specific: it carries only the everyone-global
@@ -416,8 +418,11 @@ def rewrite_installed_skill_paths(
 ) -> None:
     # Rewrite the interpreter prefix FIRST, before the skill-dir tokens consume the
     # trailing `<`: the replacement preserves the `<` so `<…-skill-dir>` still resolves.
+    # Forward slashes keep an absolute Windows interpreter executable while also
+    # remaining valid when the command is embedded in a JSON checklist string.
+    installed_interpreter = interpreter.interpreter.replace("\\", "/")
     replacements = {
-        "python <": f"{interpreter.interpreter} <",
+        "python <": f"{installed_interpreter} <",
         "<skill-dir>": target.as_posix(),
         f"<{skill.source_name}-skill-dir>": target.as_posix(),
     }
@@ -516,6 +521,44 @@ def remove_existing_constellation_set(target_root: Path) -> None:
             shutil.rmtree(target)
         else:
             target.unlink()
+
+
+INITIAL_CUT_INSTALL_NAME = "constellation-to-initial-issues"
+LEGACY_INITIAL_CUT_INSTALL_NAME = "constellation-to-issues"
+
+
+def migrate_legacy_initial_cut_destination(
+    skills: Sequence[Skill],
+    target_root: Path,
+    *,
+    force: bool,
+    dry_run: bool,
+    out: Callable[[str], object],
+) -> None:
+    """Apply the one sanctioned hard-rename migration, and no broader cleanup.
+
+    Selecting the canonical skill detects only the exact legacy install folder.
+    Explicit ``--force`` is the authority to remove it.  Dry-run reports the
+    same exact target without mutation.
+    """
+    if not any(skill.install_name == INITIAL_CUT_INSTALL_NAME for skill in skills):
+        return
+    legacy = target_root / LEGACY_INITIAL_CUT_INSTALL_NAME
+    if not legacy.exists():
+        return
+    ensure_target_is_inside_root(target_root, legacy)
+    migration = "--skills to-initial-issues --force"
+    if not force:
+        raise InstallError(
+            f"legacy initial-cut destination exists at {legacy}; migrate with {migration}"
+        )
+    if dry_run:
+        out(f"- DRY RUN: would remove legacy initial-cut destination {legacy}")
+        return
+    if legacy.is_dir():
+        shutil.rmtree(legacy)
+    else:
+        legacy.unlink()
 
 
 # ---------------------------------------------------------------------------
@@ -879,6 +922,10 @@ def install_skills(
 ) -> None:
     action = "DRY RUN: would install" if dry_run else "Installing"
     out(f"{action} {len(skills)} skill(s) into {target_root}")
+
+    migrate_legacy_initial_cut_destination(
+        skills, target_root, force=force, dry_run=dry_run, out=out
+    )
 
     # Set-level wipe only when replacing the FULL set (clears orphaned
     # constellation-* dirs whose upstream skill no longer exists). A --skills

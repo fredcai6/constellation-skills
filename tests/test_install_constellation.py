@@ -41,6 +41,21 @@ SKILL_NAMES = sorted(skill.install_name for skill in load_installer().discover_s
 
 
 class InstallConstellationTests(unittest.TestCase):
+    def test_replan_installs_its_pure_verifier_and_g1_contract_helper(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--skills", "replan"], env={}, out=lambda _: None,
+                ),
+            )
+            installed = target_root / "constellation-replan" / "scripts"
+            self.assertTrue((installed / "verify_replan.py").is_file())
+            self.assertTrue((installed / "verify_issue_set.py").is_file())
+
     def test_codex_project_scope_installs_all_skills_under_project_codex_skills(self):
         installer = load_installer()
 
@@ -454,6 +469,91 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertFalse(target_root.exists())
             self.assertIn("DRY RUN", "\n".join(output))
             self.assertIn("constellation-triage", "\n".join(output))
+
+    def test_initial_issues_is_the_only_discoverable_cut_skill(self):
+        installer = load_installer()
+        skills = installer.discover_skills()
+        self.assertIn("to-initial-issues", {skill.source_name for skill in skills})
+        self.assertIn("constellation-to-initial-issues", {skill.install_name for skill in skills})
+        self.assertNotIn("to-issues", {skill.source_name for skill in skills})
+        self.assertNotIn("constellation-to-issues", {skill.install_name for skill in skills})
+
+    def test_legacy_initial_cut_destination_refuses_without_force_and_names_migration(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            legacy = target_root / "constellation-to-issues"
+            legacy.mkdir(parents=True)
+            marker = legacy / "legacy.txt"
+            marker.write_text("keep until authorized", encoding="utf-8")
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--skills", "to-initial-issues"], env={}, out=lambda _: None,
+                )
+            self.assertIn("--skills to-initial-issues --force", stderr.getvalue())
+            self.assertEqual("keep until authorized", marker.read_text(encoding="utf-8"))
+            self.assertFalse((target_root / "constellation-to-initial-issues").exists())
+
+    def test_subset_force_removes_only_exact_legacy_destination_then_installs_canonical(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            legacy = target_root / "constellation-to-issues"
+            unrelated = target_root / "constellation-to-issues-not-legacy"
+            foreign = target_root / "foreign-skill"
+            legacy.mkdir(parents=True)
+            unrelated.mkdir()
+            foreign.mkdir()
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--skills", "to-initial-issues", "--force"],
+                    env={}, out=lambda _: None,
+                ),
+            )
+            self.assertFalse(legacy.exists())
+            self.assertTrue(unrelated.exists())
+            self.assertTrue(foreign.exists())
+            self.assertTrue((target_root / "constellation-to-initial-issues" / "SKILL.md").is_file())
+
+    def test_initial_cut_migration_dry_run_never_mutates_legacy_or_installs_canonical(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            legacy = target_root / "constellation-to-issues"
+            legacy.mkdir(parents=True)
+            marker = legacy / "legacy.txt"
+            marker.write_text("unchanged", encoding="utf-8")
+            output = []
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--skills", "to-initial-issues", "--force", "--dry-run"],
+                    env={}, out=output.append,
+                ),
+            )
+            self.assertEqual("unchanged", marker.read_text(encoding="utf-8"))
+            self.assertFalse((target_root / "constellation-to-initial-issues").exists())
+            self.assertIn("constellation-to-issues", "\n".join(output))
+
+    def test_full_force_leaves_exactly_canonical_initial_cut_destination(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            (target_root / "constellation-to-issues").mkdir(parents=True)
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--force"], env={}, out=lambda _: None,
+                ),
+            )
+            self.assertFalse((target_root / "constellation-to-issues").exists())
+            self.assertTrue((target_root / "constellation-to-initial-issues").is_dir())
 
     def test_subset_force_does_not_wipe_unselected_skills(self):
         # --skills SUBSET with --force must replace only the selected skills;
