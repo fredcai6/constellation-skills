@@ -825,6 +825,11 @@
       "id": "tc24",
       "from": "execute",
       "statement": "tc24 CORRECTS tc18, which as I filed it would have misdirected g1 into shipping a second cannot-fail field. tc18 says entity_pages is 'a one-line fix in the same function'. The one-line fix matching g0's own precedent is to count the tree again -- and counting the tree is exactly what the g0 re-review proved is still tautological (B3): pages = sum(1 for _ in out.rglob('*.md')) is a count of the tree it describes, and mutations that delete a quarter of the page tree, remove every module index, or destroy the output layout ALL leave the suite green. So g1 would have 'closed the family' by adding a second field that cannot fail. WHAT g1 SHOULD ACTUALLY DO, ruled: (1) the root is not entity_pages but 'sizes', which feeds three reported fields, so fix the source rather than each field; (2) assert the invariant the report ALREADY contradicts -- pages - 1 - modules against entity_pages, currently 3535 against 3536, differing by exactly the lost Verdict page (tc17); (3) treat a count derived from the same expression as the implementation as no check at all. GENERAL LESSON for the remaining ten gates, and the reason this correction exists: reproducing a falsifier that a crew designed only proves the crew's own probe works. I reproduced both g0 mutation proofs myself and still missed B3, because I never asked whether the test could catch anything OTHER than the probe it was built against. A cannot-fail check must be attacked with a mutation its author did not choose."
+    },
+    {
+      "id": "tc25",
+      "from": "execute",
+      "statement": "tc25 The crew registry became UNDISPATCHABLE for a gate/role, and no documented recovery cleared it. Trying to dispatch the g0 closing implementer: 'run_crew.py --dispatch external' REFUSED with 'refusing duplicate crew: an active attempt already holds g0/implementer@. (status running)', naming attempt-1 -- a crew that had already completed and returned its artifact. Ran the refusal message's own prescribed recovery, 'run_crew.py --abandon <id>': it reported 'abandoned' and the very next dispatch refused identically. Ran it a SECOND time, it again reported 'abandoned', and the dispatch refused identically a third time. Direct inspection of crew-runs.json shows why: slot reuse (tc22) has produced FOUR entries keyed to the same attempt-1 id, of which abandon-by-id resolves one per call while the duplicate check reads a different one, so the two operations can never converge. Meanwhile recover_crews.py reports '0 unresolved' throughout, i.e. the tool doctrine requires before every dispatch says the slot is clear while the dispatcher says it is occupied (tc23). CONSEQUENCE THIS RUN: I could not dispatch the crew, so I made the change myself and disclosed it -- see the ruling on e-g0-review-7. This is now a HARD blocker, not a papercut: a commander that must dispatch an implementer to this gate/role has no working route, and the failure presents as a policy refusal rather than a defect. Fix direction is tc22's -- never reuse a terminal slot -- plus making abandon idempotent over ALL entries sharing an id, and having the duplicate check and recover_crews share one disposition function."
     }
   ],
   "blockers": [],
@@ -833,7 +838,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-07T23:49:08.805755+00:00",
+    "last_heartbeat": "2026-08-07T23:59:47.380305+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,

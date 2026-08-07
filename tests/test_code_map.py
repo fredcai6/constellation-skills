@@ -124,11 +124,30 @@ POSITION = re.compile(r"\.py:\d+")
 
 
 class RenderReportTests(unittest.TestCase):
-    """`pages` in the render report has to be a number that can be WRONG.
+    """Guards the *method* `pages` is counted by, and nothing more.
 
-    Counting `write_text()` calls cannot be wrong: it reports what the renderer
-    tried to do, so a page silently overwriting another is invisible in it. The
-    count has to come from the tree."""
+    Read this before trusting the field. Counting `write_text()` calls reports
+    what the renderer TRIED to do, so a page silently overwriting another is
+    invisible in it -- that was the original defect and this test kills it:
+    restore the per-write counter and it goes red.
+
+    But the replacement is a count of the tree it describes, which makes it
+    tautologically true of that tree, so it cannot detect anything ABOUT the
+    tree either. Measured, not argued: delete every second entity page right
+    after writing it, or never write a single module `INDEX.md`, or write every
+    page flat into `map/` instead of its module directory -- this test stays
+    GREEN through all three. It computes its expected value with the same
+    `rglob("*.md")` expression as `render.run`, so it can only ever agree with
+    it. **`pages` does not detect a lost page. Do not read a green here as
+    evidence that the page tree is complete.**
+
+    The check that CAN fail already exists in the report and nothing asserts
+    it: `pages - 1 - modules` against `entity_pages` differ by exactly the pages
+    lost to filename collisions. Asserting it belongs to `g1`, whose charter is
+    a check stage that can fail, together with the collision itself (`tc17`);
+    it would be red on arrival here, because `g2` owns the rename that fixes
+    it. See `tc24` -- counting the tree again is NOT the fix for the sibling
+    field `entity_pages`."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
