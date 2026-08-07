@@ -176,5 +176,40 @@ class CliDiscoverCommandTests(unittest.TestCase):
         self.assertEqual(buf.getvalue().split(), ["b.py", "src/a.py"])
 
 
+class CliBuildCommandTests(unittest.TestCase):
+    """`build` is the whole pipeline's caller. This asserts that the three
+    ported stages are WIRED and produce their artifacts — not what they put in
+    them. Pinning page content here would freeze prototype behavior that gates
+    g2 and g3 exist to change."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_cli_build_runs_every_stage_and_writes_the_page_tree(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["build", "--root", str(self.repo)])
+        self.assertEqual(code, 0)
+        for produced in (".code-map/statements.jsonl", ".code-map/supplement.json",
+                         "map/INDEX.md", "map/ids.jsonl"):
+            with self.subTest(artifact=produced):
+                self.assertTrue((self.repo / produced).exists())
+        self.assertTrue((self.repo / ".code-map/statements.jsonl")
+                        .read_text(encoding="utf-8").strip())
+
+    def test_cli_build_maps_the_corpus_and_not_the_scratch(self):
+        """The exclusion has to hold through the whole pipeline, not only at the
+        discovery call: a scratch module reaching the page tree is the failure
+        this gate exists to prevent."""
+        with contextlib.redirect_stdout(io.StringIO()):
+            cli.main(["build", "--root", str(self.repo)])
+        rendered = sorted(p.name for p in (self.repo / "map").iterdir() if p.is_dir())
+        self.assertEqual(rendered, ["b", "src.a"])
+
+
 if __name__ == "__main__":
     unittest.main()
