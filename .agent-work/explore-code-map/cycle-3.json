@@ -7,7 +7,8 @@
     "c0-frame",
     "q1",
     "x10",
-    "x11"
+    "x11",
+    "q2-articles-ruling"
   ],
   "tasks": {
     "c0-frame": {
@@ -71,6 +72,22 @@
       "status_detail": {},
       "result": "pass",
       "finding": "Pages generated: 9 modules + index, 3331 lines, pure templating (no model prose; provenance marked per line: 249 lines needed source-fetch [s], 73 from x7a). Entity set exactly complete (87/87, no phantoms). MEASURED VOCABULARY GAPS, ranked: G7 constant values/annotations missing (fatal for constants.py \u2014 renders as bare name list); G1 entity kind (method/property/staticmethod) missing; G2 full signatures missing (param NAMES only); G4 docstring body beyond first line discarded (56% of documented entities have bodies); G5 entity spans; G3 decorators (low count, high consequence: @dataclass(frozen=True)); G9 no extraction-window statement (unused vs outside-window ambiguous); G10 stdlib-vs-third-party judged at render time not stored. DEFECT D1: x7b q.line is 0-based, x7a 1-based, schema silent \u2014 every source link off by one until renderer corrected. Near-miss finding: dataclass field annotations ARE in the store as unattributed type-reads \u2014 vocabulary cannot express the binding. Human's read of the pages = the real verdict, pending. Full: excursions/x11-result.md",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2-articles-ruling": {
+      "id": "q2-articles-ruling",
+      "title": "Human ruling: article pages go function-by-function",
+      "imperative": "Record the human's read of the x11 pages and apply it to the renderer.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "HUMAN RULING 2026-08-07: per-module pages are too long; the map renders one page per entity ('i think we want to do this function by function'). Matches the standing bite-sized-nodes requirement. APPLIED: evidence/x11/render_fn.py reuses render.py's entity_section verbatim, changes only pagination -> articles-fn/: 97 pages (top index + 9 module indexes + 87 entity pages), median entity page 36 lines, max 68 (vs 340+ per-module). Module index keeps doc/deps/constants/linked contents; breadcrumbs map-index / module / parent-class on every page. Skeleton-usefulness verdict still open pending his read of the new granularity.",
       "evidence": [],
       "rework_count": 0
     }
