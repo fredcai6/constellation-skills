@@ -54,6 +54,20 @@ for W in $(git worktree list --porcelain | awk '/^worktree /{print $2}'); do
     echo "  ON THIS BRANCH ONLY: none"
   fi
 
+  # (c) IGNORED files -- added in v3. Neither channel above can see them: `git status
+  #     --porcelain` omits ignored paths and `git diff main...HEAD` only sees tracked ones.
+  #     Found because epic418-a2-467 had 379 files on disk against 371 on main while BOTH
+  #     channels reported clean. v1 was blind to trackedness; v2 was blind to ignoredness.
+  #     REPORT them, do not judge them: they are usually disposable (gauge.json, __pycache__)
+  #     and occasionally not, and this script cannot tell the difference -- the reader can.
+  ignored=$(git -C "$W" status --porcelain --ignored=matching -- .agent-work 2>/dev/null | grep '^!!')
+  if [ -n "$ignored" ]; then
+    echo "  IGNORED (invisible to both channels above; destroyed by removal -- YOU judge these):"
+    echo "$ignored" | sed 's/^/    /'
+  else
+    echo "  IGNORED: none"
+  fi
+
   # Retired names are probed ONLY when locally modified -- a tracked retired file present
   # by checkout is main's business, not this worktree's.
   for p in .agent-work/LESSONS.md .agent-work/AGENT_FEEDBACK.md; do
@@ -62,8 +76,8 @@ for W in $(git worktree list --porcelain | awk '/^worktree /{print $2}'); do
     fi
   done
 
-  if [ -z "$uncommitted$branch_only" ]; then
-    echo "  => NOTHING TO HARVEST -- and this is a real null: both channels were queried and both were empty."
+  if [ -z "$uncommitted$branch_only$ignored" ]; then
+    echo "  => NOTHING TO HARVEST -- and this is a real null: ALL THREE channels were queried -- uncommitted, branch-only, and ignored -- and all three were empty."
   fi
   echo
 done

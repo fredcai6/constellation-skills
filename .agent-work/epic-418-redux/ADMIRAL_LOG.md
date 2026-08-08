@@ -4118,3 +4118,31 @@ turned out to be blind, and the third time I wrote the blind version first.
 
 Order pinned as mandatory: **harvest → verify MERGED on the forge → remove → prune.** Never on an
 ancestry test — squash-merge returns the same answer for merged and abandoned.
+
+### harvest_probe v3 — v2 was blind too, and I found it by counting files
+
+Checking a sweep precondition (does main actually hold wave 4's work area?) turned up a mismatch:
+**379 files on disk in `epic418-a2-467`, 371 on main — while BOTH probe channels reported clean.**
+
+The 8-file gap is **gitignored paths**. `git status --porcelain` omits them and
+`git diff main...HEAD` only sees tracked files, so **neither channel v2 uses can see them, and
+`git worktree remove` destroys them.**
+
+**v1 was blind to trackedness. v2 was blind to ignoredness.** Each fix narrowed the blind spot without
+eliminating it — which is the honest shape of this work and worth saying plainly rather than
+presenting v3 as finally correct.
+
+**v3 adds a third channel that REPORTS ignored paths and refuses to judge them**, because the script
+cannot tell a disposable `gauge.json` from a real local artifact and the reader can. Its "nothing to
+harvest" line now says **all three** channels were queried, not "both" — a document about accuracy
+should not miscount its own checks.
+
+**Inspected for the one worktree this affects now:** `epic418-a2-467`'s nine ignored paths are
+`gauge.json` transients and `__pycache__`. **Disposable — judged, not assumed.** Recorded in
+`SWEEP_LIST.md` so the judgement is auditable rather than re-made under time pressure.
+
+**Not sweeping it during the wave.** It is eligible on every test, but keeping it costs nothing and a
+premature sweep is unrecoverable. It goes at closeout with the rest.
+
+Noted in passing: **`governor-264`'s entire `.agent-work/` is ignored** in that tree. It is already
+protected from sweep, but under v2's rules a probe would have called it empty.

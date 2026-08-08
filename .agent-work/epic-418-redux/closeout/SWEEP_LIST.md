@@ -20,7 +20,7 @@ committed yet** — the single most destructive thing to sweep.
 
 | worktree | branch | state now |
 |---|---|---|
-| `epic418-a2-467` | `epic-418/a2-467-trip-semantics` | **ELIGIBLE NOW** — `ahead=0`, PR **#505 MERGED**, harvest probe returns a genuine null on both channels |
+| `epic418-a2-467` | `epic-418/a2-467-trip-semantics` | **ELIGIBLE** — `ahead=0`, PR **#505 MERGED**, clean on all three probe channels. Its 9 **ignored** paths were inspected and judged disposable (`gauge.json` transients and `__pycache__`). **Not swept during the wave**: keeping it costs nothing and a premature sweep is unrecoverable, so it goes at closeout with the rest. |
 | `epic418-w5-gates` | `epic-418/w5-bookend-gates` | after merge |
 | `epic418-w5-readiness` | `epic-418/w5-readiness-458` | after merge |
 | `epic418-w5-addressing` | `epic-418/w5-crew-addressing` | after merge |
@@ -48,8 +48,10 @@ is the prototype for the very next effort. They read as stale leftovers and are 
 
 ## Before any removal
 
-1. `bash .agent-work/epic-418-redux/closeout/harvest_probe.sh` — collect every **UNCOMMITTED** and
-   **ON THIS BRANCH ONLY** line it reports. Presence of a tracked file proves nothing (that was the
-   probe's own v1 defect).
+1. `bash .agent-work/epic-418-redux/closeout/harvest_probe.sh` — collect every **UNCOMMITTED**,
+   **ON THIS BRANCH ONLY**, and **IGNORED** line it reports. Presence of a tracked file proves
+   nothing (the probe's v1 defect); and neither of the first two channels can see an ignored file
+   (its v2 defect, found when a worktree held 379 files against main's 371 while both channels
+   reported clean). The probe **reports** ignored paths and does not judge them — that is yours.
 2. Confirm the PR is **MERGED on the forge** (`gh pr view`), not merged-looking by ancestry.
 3. `git worktree remove <path>` then `git worktree prune`.
