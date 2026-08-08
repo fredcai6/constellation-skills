@@ -4375,3 +4375,22 @@ answering** — the first was crew 5 finding a stronger justification for the #4
 gave it.
 
 **#511 merges on green CI for `bd31f69c`.** Run in progress.
+
+### Pre-merge collision check — zero cross-crew collisions, run before the first merge rather than after
+
+Enumerated every non-`.agent-work` file touched by all five crews (committed **and** uncommitted) and
+looked for any path claimed by more than one:
+
+```
+files touched by MORE THAN ONE crew:  (none)
+```
+
+**The file-ownership rulings held across all five crews for the whole wave.** That is the payoff for
+carving crew 5 out as docs-only purely so #496 — a doc fix whose *subject* is `save()` — could not
+pull a second writer into `checklist_engine.py`, and for moving #493/#495 **into** crew 4 when they
+read as repo-wide hygiene.
+
+Worth stating plainly because it is the kind of result that looks like nothing happened: **no conflicts
+is the outcome the assignment was designed to produce**, and it was checked by command rather than
+assumed from the design. Run before the first merge, when a collision would still be cheap to
+re-assign, rather than discovered at the second merge when it would not.
