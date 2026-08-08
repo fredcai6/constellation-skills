@@ -7,10 +7,30 @@
 - **wave-4 dispatch:** one Commander, issue **#467**, worktree
   `C:/Programs/constellation-skills-wt/epic418-a2-467`, branch `epic-418/a2-467-trip-semantics`,
   model **Opus**. Launch order: `launch-orders/LO-467.md`.
-  **Now on its SECOND instance (`commander-w4-467-b`)** — the first tripped the governor at the
-  `plan` boundary (27.6%, asserted) and handed off cleanly. Same worktree, same spine file, cold
-  start from `current` alone. **The plan is FROZEN** and lives at
-  `<worktree>/.agent-work/issue-467-trip-semantics/execute.json` — 16 tasks, 5 gates.
+  **Now on its THIRD instance (`commander-w4-467-c`)**, dispatched ~10:46Z. Instances A and B both
+  tripped, both handed off cleanly at seams, both lost nothing. **A and B are STOPPED.**
+  **The plan is FROZEN** at `<worktree>/.agent-work/issue-467-trip-semantics/execute.json` —
+  16 tasks, 5 gates. **`e0-context` and `g1-implement` are COMPLETE, committed `62f564c7`.**
+  `g1-review` is in progress; 13 gates remain.
+
+> ## READ `execute.json current` — THE SPINE'S DIGEST IS STALE
+>
+> `spine.json current` still carries **`w-4`, written two agents ago**, instructing work that is
+> already done. It would send a successor to redo `start execute`. **Read it only for the reach-up
+> flag.** The real DIGEST is:
+> ```
+> python C:/Programs/constellation-skills/scripts/checklist_engine.py \
+>   --file .agent-work/issue-467-trip-semantics/execute.json current
+> ```
+> **Why it cannot be fixed from inside:** `advance` is the only writer of `why_trail`, and `execute`
+> spans all 16 gates with 13 remaining — so **a Commander that trips MID-STEP cannot update the
+> spine's cold-start surface at all.** That is the ordinary case: `execute` is where nearly all the
+> time goes. Instance A tripped at a *step boundary* and could close a gate to write its handoff;
+> instance B tripped mid-step and could not. **#431 in its worst shape.** Not in #467's six
+> done-conditions; the frozen plan was correctly NOT amended to work around it.
+>
+> Also: **`LO-467.md` is reachable from nothing in the spine**, and that is where the environment
+> invariants live. A cold successor gets the plan and not the ground rules.
 - **expected artifact:** a green, reviewed PR closing #467; then the wave-4 checkpoint to Tommy.
 
 **If it trips again: relaunch the same way.** Fresh Commander, same worktree, same spine file,
@@ -44,6 +64,34 @@ measurement. Its own verdict on the handoff's sufficiency is part of its deliver
 > **The reach-up signal has no notion of being served** — it cannot say who asked, when, or whether
 > anyone answered. It is unreadable when it matters (active-gate-keyed, so a compliant handoff
 > erases it) and unclearable when it does not. Routed to #467 triage.
+
+## The gauge finding — SETTLED across three agents. Do not re-escalate it.
+
+I logged and told Tommy *"as built, the round trip cannot close — it loops."* **That was an
+overclaim and it is retracted.** Instance B downgraded its own finding; instance C independently
+re-measured it. Settled statement:
+
+> The gauge is a **single-slot, unowned, undated-in-practice value**. Two failure windows follow: a
+> **live overlap** while the outgoing agent is still taking tool calls, and a **stale-value window**
+> of at least one tool call at every handoff, **even when nothing else is running**. Both
+> **self-clear**. Neither is guarded, and the shape is guaranteed at every trip because trip and
+> resume share a spine.
+
+Severity: **real, structural, self-clearing, cost this run nothing.** Triage candidate, **not** a
+#467 gate.
+
+**The proposed fix does not cover both windows.** *"The writer should decline to write for an agent
+that does not hold the spine lease"* closes the **live overlap** only — a stale value needs no
+writer at all. A fix reported as closing both would be the exact defect this wave hunts.
+
+**Do NOT tidy the three accounts into one.** Instances A, B and C disagree *in sequence, on the
+record*: a claim made, downgraded by its own author, then independently re-measured by a third party
+with no stake. That sequence is the evidence. C was directed to add its own section to
+`RESUME_OBSERVATION.md`, never to rewrite its predecessor's.
+
+**Admiral error recorded with it:** I stopped instance A to unblock B, which confounded the
+severity measurement — the idleness that cleared the symptom was idleness I caused. C's arrival
+reading, taken with both predecessors already stopped, is the uncontaminated run.
 
 **LO-467 CONTAINS AN UNSATISFIABLE INSTRUCTION — do not repeat it in any future launch order.**
 It says *"write a `refresh-request` ... make sure your `current` carries the DIGEST ... go idle."*
