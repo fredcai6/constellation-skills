@@ -1942,3 +1942,25 @@ the severity stays at the lower level.
 
 **B is idle, tree clean, lease is C's, everything committed.** Three instances, three clean handoffs,
 zero work lost.
+
+**Known limit in my own liveness discriminator, recorded rather than patched.** Worktree write
+activity says *something* is alive; it does **not** say the **Commander** is. Right now files are
+being written every few minutes while Commander C's own `gauge.json` has been frozen at 6.3% since
+10:48 — because the writes are its **reviewer crew's**, and C is legitimately idle waiting on it.
+
+That is correct behaviour and my check reads it correctly *for the question I ask it* (is anything
+happening). But it cannot distinguish **"Commander idle, waiting on a crew"** from **"Commander dead
+while its crew runs on"** — and the second is a real failure mode with its own recovery drill in
+fleet doctrine.
+
+**Deliberately NOT patching it**, because the obvious patch is wrong: gating on gauge freshness would
+false-positive on every commander that dispatches a long crew, since a waiting commander makes no
+tool calls and so writes no reading. Absence of a reading is exactly the thing this epic says is not
+evidence. The correct discriminator is to ask the **harness** whether the agent process is alive,
+which is a different channel from the filesystem — noted as the right shape, not built on
+speculation while nothing is wrong.
+
+**g1-review is thorough, not stalled.** The reviewer is on its **third** probe set —
+`probe3-scratch/probe-literal/` with a paired `red-repro-431-probe-literal/`, independently
+reproducing the literal-`<why-id>`-placeholder defect the crews reported rather than taking their
+word — plus `fowler-pass.json`. Three probe generations and a quality pass on one gate.
