@@ -2868,3 +2868,38 @@ boundary I am actually crossing before believing any exit code.
 
 Crew unaffected and unperturbed — `g4-implement` still in flight (tests 329 -> 688 lines, engine +109,
 `docs/CHECKLIST_SCHEMA.md` written, a mutation harness `_m4_tests.py` in its work dir).
+
+---
+
+## FINDING | 2026-08-08T16:47:44Z | the journal proves the verb chain but not the instrument — filed #502
+
+Pre-computed the post-merge install sync while waiting on g4. The census answered a question I had not
+asked: **four builds of the engine are live at once**, and they differ by exactly the behaviour under
+test.
+
+| where | sha256[:16] | has the fix |
+|---|---|---|
+| origin/main | `e997cd2a3e6e766a` | no |
+| branch a2-467 | `0897dfa2b66c1aab` | **yes** |
+| installed `constellation-reviewer` | `e997cd2a3e6e766a` | no |
+| installed x8 (incl. **workbench** and **admiral**) | `9c05192f0feb3d4d` | no |
+
+Then checked what the record says about which one drove any given gate. **Nothing.** Journal keys are
+`evidence_ids, hash, prev_hash, seq, session_id, task, ts, verb`; the spine has no engine field either;
+60 entries and every evidence item record the *pytest* command but never the engine that executed the
+verb. So a hash-intact chain is compatible with **any** build having produced it.
+
+**Note the branch hash MOVED** — `ccbc247e0de0dcaa` at the seam handoff, `0897dfa2b66c1aab` now, because
+g4 is still writing the engine. **g5's pin-by-hash must be taken at the final commit, not from any
+number recorded earlier in this log, including the one three entries up.** That is the same
+carried-claim failure that cost me the "#467 has no issue cut" error; writing it down here so the
+number cannot be reused.
+
+**Not a defect in this run's conduct — a gap in what the run can prove.** g5's launch order already
+pins the engine by hash **by hand**, precisely because the record cannot. #502 is the durable version
+of that workaround.
+
+Also corroborates the #266 comment: `g3-integrate` carries a real recorded trip —
+*"Tripped at fill 0.168164 (>= hard 0.15, claude-opus-5) while trying to CLOSE g3-integrate"*.
+
+Crew still in `g4-implement`, alive, ~70 min on the wave's largest gate. Not perturbed.
