@@ -3121,3 +3121,34 @@ the seam observable, which now discriminates. Filed with the crew's evidence as 
 for the follow-on**, and the Commander is directed not to carry it into g5.
 
 **Seventh specimen** of this epic's subject. It keeps being found by people looking at something else.
+
+## WAVE LAUNCH | 2026-08-08T19:54:05Z | commander-w4-467-i — the last three gates
+
+**14/17.** `g4-integrate` closed on a real re-review (`e33f9eb1`, additive unkeyed
+`begin_over_line_records_historical` + a second `TRIP HISTORY` line; live keying **zero diff**; the
+false sentence corrected; the fourth limit declared in `CHECKLIST_SCHEMA.md` in the same plain voice as
+the other three; and **the test that pinned the defect renamed and corrected**).
+
+**The predecessor did not accept the approval on the report.** It broke the ledger write branch in its
+own shell (`ledger = cl.setdefault("trip_ledger", [])` -> `ledger = []`): **29 failed, real exit 1**,
+every named compliance and historical test among them; reverted; source porcelain-empty; slice back to
+34 passed / exit 0. Own full suite **1867 / 2 skipped / 829 subtests / real exit 0**, and it reconciled
+the +9/+8 subtest delta rather than waving at it. **That is the standard, met without me asking twice.**
+
+Then it tripped at **0.151841** and handed off. **Third live #431 of this run.** Rule 7: idle
+notification received -> predecessor already terminated (verified, nothing to stop) -> **then** launched
+`commander-w4-467-i` (Opus, named reason: it must adjudicate whether its own acceptance verifier
+discriminates). Order `launch-orders/LO-467-i.md`, cold-started from `current` alone.
+
+**The constraint I put above every other in that order**, because violating it destroys the wave's only
+deliverable: **agent B's dispatch prompt must contain NOTHING but the `current` output.** No summary, no
+context, no helpful pointer — including from the Commander, meaning well, because it can see what B is
+about to struggle with. A prompt that helps B tests something other than the claim. `g5-review` reads
+B's actual prompt.
+
+Also carried: pin by `git rev-parse` re-derived **at the moment of use** (`c281cb68` at `cc4aed99`, and
+it moves with every engine commit — **never copy a hash forward, including from this log**); the
+acceptance verifier must **discriminate** because g5-review will break its inputs; crews on Sonnet;
+amended rule 7; **#504 deferred, not carried**; and **honest null is a complete deliverable** — "the
+round trip does not close, and here is the reading that proves it" is a result I will take, a
+manufactured pass is not.
