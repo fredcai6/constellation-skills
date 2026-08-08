@@ -67,6 +67,12 @@
 >    "it said it was going idle". Then STOP it, then dispatch. *(I overlapped two Commanders on one
 >    run for 4 minutes. Nothing was lost and that was LUCK: every agent here shares one session id,
 >    so `claim` treats a teammate as an idempotent self-resume. **The lease does not exclude.**)*
+> 8. **Before ruling that something is BROKEN, run the command that would show it is FINE.**
+>    Name the falsifier out loud, then run it. *(I authorised amending FOUR frozen gates on a
+>    crew's report that a check was structurally unpassable. It was not — the house vocabulary
+>    is `APPROVE`/`BLOCK` in `REVIEWER_HANDOFF.template.md` and the check matched it exactly.
+>    One `grep` of the template would have settled it, and I had run exactly that check on a
+>    different template an hour earlier. The CREW retracted it; I did not catch it.)*
 
 
 **WAVE 4 RUNNING: one Commander on #467 (A2, trip semantics). Never dispatch a second into this worktree.**
@@ -92,6 +98,14 @@
 > `match: {verdict_class: "ACCEPTED", blocking_findings: "0"}`. **ACCEPT and ACCEPT WITH FINDINGS
 > pass; REJECT fails twice over** (verdict_class, and independently blocking_findings, since a
 > REJECT always carries at least one). Verify it exists before touching c3; do not re-apply.
+>
+> **THE BLANKET AMENDMENT AUTHORIZATION IS WITHDRAWN. Do NOT amend g2-g5's c3.** I authorised it,
+> then the crew checked the premise and it was wrong: the house vocabulary is `APPROVE`/`BLOCK`
+> (`constellation-commander/templates/REVIEWER_HANDOFF.template.md`) and `c3` matches it exactly.
+> g1 broke because **that commander's hand-written handoff contradicted its own frozen plan** — a
+> one-off slip, not a wave-wide defect. **The g1 amendment stands alone and extends to nothing.**
+> Standing correction: *when a gate's `c3` looks unpassable, check the handoff against the template
+> before concluding the plan is broken.*
 >
 > **Root cause, worth more than the fix and not yet fixed:** artifact `match` is **exact equality
 > per key** (`all(ev.payload[k] == v ...)`) — **it cannot express "one of."** The original author
