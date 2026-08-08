@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-fix-templates",
+  "mechanical": {
+    "run": "issue-507-370-413-addressing",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m3-fix-templates",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-507-370-413-addressing-m3-fix-templates@63aadb0af6755ea2a24d4f8ef909ac4da308aaee",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-507-370-413-addressing",
+    "generated_at": "2026-08-08T23:34:29Z"
+  }
+}
