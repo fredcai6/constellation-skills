@@ -3948,3 +3948,23 @@ refusing something real, not reasoned about"* — is load-bearing rather than pe
 
 **It states its own limit.** Nineteen found by people looking for them is a lower bound, not a total,
 and the useful response is a habit rather than a list to work through.
+
+### Tracker updated — epic #418's body now carries the rendered truth
+
+The epic's public body still read *"A2 — needs cutting"* and carried a scope decision as open. Both
+have been false since wave 4 merged. **Anyone reading the tracker was reading a stale epic.**
+
+Posted through the authorized route rather than by hand: the text is `CURRENT_TRUTH.md` **as rendered
+by `admiral-prelaunch` from the `close-to-w5` packet** (exit 0), not prose I wrote at the keyboard.
+That is what the `render: revised_epic_body` directive is for — the body and the boundary verdict
+cannot drift apart if one is generated from the other.
+
+**Prepended, not replaced.** The two earlier dated status sections are kept for provenance and
+explicitly marked superseded, and the 2026-08-03 original spec below them is untouched. Guarded the
+edit against GitHub's body cap by measuring first — 52,098 bytes against a ~65,000 limit — because
+#429 records that an oversized body fails on Windows, and an assertion that would have refused rather
+than truncated.
+
+The body now states: A2 complete and merged; DC2 done-by-different-means and **DC6 partial**, not
+rounded up; the follow-on cluster #500-#504; and **scope SETTLED** — one more wave, then close, with
+F/C/E as their own efforts.
