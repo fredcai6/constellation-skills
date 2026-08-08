@@ -4176,3 +4176,29 @@ One owned error: my first `restate-assertion` used `episode` where the op wants 
 named the exact accepted field set and why `lifecycle-standing`/`strength`/`kind` are excluded — a
 refusal that teaches rather than just rejects, which is the standard the engine's other refusals are
 being held to this wave.
+
+### The Admiral's own reading: 44%, and nothing has asked me to stop
+
+`.agent-work/epic-418-redux/gauge.json` → `fill=0.440, model=claude-opus-5` at 23:40:50Z, against a
+**0.15 hard line**. I am nearly three times over it.
+
+**Five crews tripped today. I have not been prompted once.** The reason is structural, not lucky: the
+trip evaluates **only on a gated verb**, and this role sits inside a single gate — `execute` — for the
+entire epic. A Commander crosses gate boundaries constantly and meets the check every time. **An
+Admiral holds one gate for hours and never does.**
+
+So **the tier with the longest-running context is the one the governor never fires on**, and the tiers
+that trip most are the ones with the least context to lose. Wave 4 recorded the same thing at 54.9%;
+this is the second measurement, on a different day, in a different wave, at a different fill. That
+makes it a property of the arrangement rather than an anecdote.
+
+**What I do about it, since the mechanism will not:** the crash-resume note is the mitigation, and it
+is why I have kept refreshing it rather than treating it as launch paperwork. It now carries the merge
+baseline, the close sequence, the trip-loop warning, the sweep list and the two rules that earned their
+keep today — enough that a successor could take this over cold. **That is the handoff the governor
+would have forced on a Commander, written voluntarily because nothing will force it here.**
+
+Not filing this as a new issue: it is the same subsystem as #452 (a bare-keyed agent driving several
+spines gets no reading) and #458 (the gauge ships nowhere), both open and both deferred to the governor
+thread by ruling. **Recorded as a second measurement on an existing finding, not as a new one** — the
+backlog does not need another issue, it needs this one to have evidence.
