@@ -18,6 +18,10 @@
 >    reads as live. *(One command from destroying a healthy crew, then its replacement, in a loop.)*
 > 4. **Mutation-test every check before you trust it.** If it cannot go red, it is not a check.
 >    *(7 instances built by me in the epic about exactly this.)*
+> 7. **NEVER dispatch a successor until the predecessor's IDLE NOTIFICATION has arrived** — not
+>    "it said it was going idle". Then STOP it, then dispatch. *(I overlapped two Commanders on one
+>    run for 4 minutes. Nothing was lost and that was LUCK: every agent here shares one session id,
+>    so `claim` treats a teammate as an idempotent self-resume. **The lease does not exclude.**)*
 > 5. **A piped `$?` is the pipe's exit code.** Redirect to a file or use `${PIPESTATUS[0]}`.
 >    *(Read a verifier REFUSAL as exit 0.)*
 > 6. **Never pass markdown to `gh` in a double-quoted string** — a backtick runs as command
@@ -31,7 +35,7 @@
 - **wave-4 dispatch:** one Commander, issue **#467**, worktree
   `C:/Programs/constellation-skills-wt/epic418-a2-467`, branch `epic-418/a2-467-trip-semantics`,
   model **Opus**. Launch order: `launch-orders/LO-467.md`.
-  **Now on its FOURTH instance (`commander-w4-467-d`).** A, B and C each tripped, each handed off
+  **Now on its FIFTH instance (`commander-w4-467-e`), driving g2.** A, B and C each tripped, each handed off
   cleanly at a seam, **none lost work**. A and B are STOPPED; C went idle with both leases released.
   **The engine journal CANNOT tell the instances apart** — every entry carries the same `session_id`
   (#419's identity problem, live in the journal). Read journal *verbs* and gate states, never the

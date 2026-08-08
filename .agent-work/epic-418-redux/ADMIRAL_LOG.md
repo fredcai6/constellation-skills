@@ -2256,3 +2256,19 @@ between two rules **I** enforce simultaneously; it is not the crew's to resolve.
 c2 `git diff --stat -- scripts tests` empty **and** `main...HEAD -- scripts tests` empty; the gate's
 own `repro_431.py --all` → **24 ASSERT OK / 0 FAIL, real exit 0** with `scripts`/`tests` still clean
 afterwards; `advance g1-integrate` → `complete`, DIGEST written as `w-4`.
+
+**WAVE 4, instance E dispatched — under the new rule, correctly this time.** Sequence, in order:
+D's **idle notification arrived 11:27:50** → I **stopped D** → I **verified state in my own shell**
+(both leases `released`, tree 0 dirty, HEAD `d80eda7c`, 4/16, `amendments: 1`, `g2-implement`
+`pending`, **zero writes in two minutes**) → **then** dispatched. No overlap, and the state I handed
+E was derived rather than inherited from a note that had already been wrong twice.
+
+E's brief carries the trust order D paid for — **raw `execute.json` first, `STATE_NOTE.md` as a lead
+to be verified, `MISSION_FRAME.md`/`LO-467.md` stale until proven** — and the test-design constraint
+that decides whether g2-g4 are worth anything: **do not verify the fix as "the advance is no longer
+blocked."** It never was.
+
+**Rule 7 added to the state note's top block** (the six became seven): *never dispatch a successor
+until the predecessor's idle notification has arrived; then stop it; then dispatch.* With the cost
+recorded — I overlapped two Commanders for four minutes and **nothing was lost purely by luck**,
+because the lease cannot exclude agents sharing a session id.
