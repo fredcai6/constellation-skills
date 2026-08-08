@@ -93,11 +93,26 @@ Admiral reverses it, dropping the historical clause is a one-line change; ship (
   clock-stamped gauges and real CLI subprocesses.
 - **19/19 mutations re-run and killed**, tree clean after every revert.
 - Write-site claim and its `ast` method independently verified; every evidence number reproduced.
-- **A1 — keep `why_ref`, but the evidence offered for it was wrong.** N7's 12-test blast radius is
-  *coupling*, not load-bearingness. The real argument is that the supersede rule cannot be replayed
-  from the trail. (My float to the Admiral on A1 still wants answering, but both the reviewer and I
-  land on **keep**.)
-- **A3 — the declared TDD deviation STRENGTHENS the guarantee.** A5 — the `amend` record is honest.
+- **A1 — keep `why_ref`, but BOTH arguments originally offered for it were wrong.** Take the
+  reviewer's reasoning, not the implementer's:
+  - **The timestamp argument is weak.** The implementer said re-derivation would be fragile at
+    "second granularity"; `_now()` is **microsecond** precision. **Do not repeat this claim** — I
+    relayed it upward before the review corrected it.
+  - **N7 is not evidence for the field.** Setting `why_ref: None` is behaviourally the same as
+    dead-coding the selector (N11), so N7 proves the *keying* is load-bearing but **cannot
+    distinguish "record it" from "derive it"** — which is the actual question.
+  - **The real reason:** `_latest_why_record` is **not a function of ordering**. A record is live
+    only if no *later* reopen-marker names its gate, so a reopen appended **after** the trip changes
+    any "as of now" derivation. Critic finding 14 is wrong on the **supersede rule**, not on
+    granularity.
+- **A3 — the declared TDD deviation STRENGTHENS the guarantee.** Deleting the selector gives
+  `AttributeError`, which proves nothing; dead-coding it to `return []` keeps the API and removes
+  only the behaviour. A5 — the `amend` record is honest.
+- **NB4, carry into the rework:** two further absence tests also survive N11. Their "positive control
+  in the same test" asserts the **ledger entry exists**, not that the **signal renders**, so it does
+  not defend against a dead selector. Both are killed by other mutations, so coverage is real — the
+  *claim* is looser than stated. `CHECK_THAT_CANNOT_FAIL.md:172` also claims "every one of this
+  gate's 25 tests" is two-world, which the implementer's own declared negative-only test contradicts.
 
 ## TWO CORRECTIONS AGAINST MY OWN HANDOFF — carry them, they are fair
 
@@ -208,7 +223,12 @@ I flagged the g4 candidates into the engine rather than leaving them in survey f
 survey candidates get missed" has bitten this run twice. **`tc1` CLOSED** (shipped as
 `g3b-glossary`), **`tc3` RESOLVED** (the parent-commit baseline). Live: `tc2`, `tc4` (`block()`'s
 missing status guard — **pre-existing, not ours, and the M15 kill now DEPENDS on that state**),
-`tc5`, `tc6` (survey sidecar collision), `tc7` (a lint for the `| tail` class of unfailable check),
+`tc5`, `tc6` (survey sidecar collision — **now WIDER than filed**: driving the survey at `g4-review/`
+*also* made the engine create `issue-467-trip-semantics-g4-review/{context,mechanical}/`, a **second
+sidecar path derived from `work_id` rather than from the survey directory**. Two different fields
+produce two different paths, so renaming the directory by hand does not avoid the collision — it only
+moves one of them. The stray tree is committed at the seam; do not be confused by it),
+`tc7` (a lint for the `| tail` class of unfailable check),
 `tc8` (the `git status`/`git diff` renormalization disagreement that silently drops a test target),
 `tc9`–`tc13` (from the g4 review: `--authority` accepts any string so "human ratification" is
 enforced by nothing; N15/N16 share one point of coverage; a crashing mutation is not a kill; the Trip
