@@ -4146,3 +4146,33 @@ premature sweep is unrecoverable. It goes at closeout with the rest.
 
 Noted in passing: **`governor-264`'s entire `.agent-work/` is ignored** in that tree. It is already
 protected from sweep, but under v2's rules a probe would have called it empty.
+
+### Three more episodes — and the store's own guard caught me writing a prescription
+
+`epic-418-redux-004/005/006`: the harvest probe's two successive blind spots, the inherited-gauge
+trip-loop, and the interpreter split. Written with `--store-root episodes` explicitly, per the
+corrected doctrine.
+
+**`verify_episode_observations.py --strict` refused them: exit 1, three offenders, all in 005.a5.**
+That field quoted my own instruction to the crews verbatim — *"make any tool call and re-read, and do
+not file a refresh-request against a reading you did not produce"* — imperatives and second person.
+**An instruction for a future agent, filed as a record of what happened.** That is precisely the defect
+**#460** catalogued in this same store, and I wrote it into the store while holding the census of it
+open in another file.
+
+**Restated through `restate-assertion`**, which exists for exactly this: it rewrites the statement and
+appends a history line carrying the original **verbatim**, and the history line is **built by the
+script from the parsed original, never supplied by the caller** — because a caller who could author it
+could misquote what was there. Good design, and it worked on me.
+
+The restatement drops the instruction and records the outcome instead: the three remaining relaunches
+were sent a correction before any read a gauge, and **none of them subsequently tripped on an
+inherited value.** That last clause is the part with evidential value, and the prescriptive version
+did not contain it.
+
+**Now: `--strict` exit 0, zero offenders across the whole store.** Six episodes for this run.
+
+One owned error: my first `restate-assertion` used `episode` where the op wants `id`. The refusal
+named the exact accepted field set and why `lifecycle-standing`/`strength`/`kind` are excluded — a
+refusal that teaches rather than just rejects, which is the standard the engine's other refusals are
+being held to this wave.
