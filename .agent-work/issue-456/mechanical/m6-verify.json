@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m6-verify",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "role": "constellation/issue-456/g3/implementer/attempt-1",
+    "refusals": 3,
+    "spine-step": "m6-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-m6-verify@4cfee87e4e8a9fe34cd5c8beda25cd7b3d56362d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T07:24:16Z"
+  }
+}

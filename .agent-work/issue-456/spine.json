@@ -395,12 +395,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "in-progress",
+      "status": "blocked",
       "status_detail": {
-        "blocker": "Commander context is at/over the engine's 15% hard limit, so advance is mechanically refused. Two of eleven gates are CLOSED (g0 APPROVE, g1 APPROVE with 0 open findings); g1-review's advance is the only thing outstanding and it is pure bookkeeping. Nothing is lost: everything is committed and pushed to issue-456/code-map. RESUME: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), then resume execute, resume g1-review, advance g1-review, start+advance g1-integrate (c1 re-runs the full suite, ~8 min, expect 1729 passed / 2 skipped / 1 xfailed), then g2. Do NOT re-dispatch any g0 or g1 crew -- all ten are terminal (recover_crews: 0 unresolved). Do NOT redo any g0 or g1 work. Read .agent-work/issue-456/STATE_NOTE.md first. CARRY FORWARD: 'python -m scripts.code_map check' now exits 1 on this repo, correctly, until g2 lands the rename -- do not read it as a regression.",
+        "blocker": "COMMANDER CONTEXT SEAM. Three of eleven gates closed (g0 g1 g2); g3's implementer crew is STILL RUNNING and will finish on its own. Baseline 1744 passed / 2 skipped / 0 xfailed / 0 failed; scripts.code_map check exits 0, 6/6. Resume recipe is in .agent-work/issue-456/STATE_NOTE.md -- read it FIRST. Short form: re-claim lease commander-issue-456 idempotently (SAME id, no --force), resume execute, resume g3-implement, verify the g3 crew's result artifact, attach and advance or relaunch a successor. Then g3 review + integrate, then g4 g5 gb g6 g7 g8 gs, then reconcile, triage (tc1-tc38), review, feedback, archive. Release the lease LAST. Push and a full non-draft PR are PRE-APPROVED; MERGE TO MAIN IS NOT.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "resume_reason": "context refreshed via compaction; refresh-request w-4 satisfied"
+        "prior_status": "in-progress"
       },
       "result": null,
       "finding": null,
@@ -902,13 +902,20 @@
       "statement": "tc38: SECOND instance of an integrate check that could only ever FAIL, and the first was tc29. g2-integrate c1's selector -k 'symbol_identity or referenced_by' matched ZERO tests; pytest deselects all and exits 5, so the check was informationless in the same way a check that cannot fail is -- just from the other side. Root cause: the gate spec's selectors were written in snake_case against test CLASS names that are CamelCase, and nothing verified a non-empty selection. g0 and g1 escaped only because 'discovery or cli' and 'determinism or invariant' happen to match. STANDING RULE for the remaining gates (g3 g4 g5 gb g6 g7 g8 gs): before advancing any *-integrate, run its -k selector by hand and confirm it selects a NON-EMPTY set, then confirm that set can go red. A gate whose selector matches nothing will refuse to advance and the failure will look like broken code rather than a broken check -- which is how it presented here. Also: tell each gate's implementer in its handoff what its integrate selector is, so the crew names its test classes to match."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "execute",
+      "blocker": "COMMANDER CONTEXT SEAM. Three of eleven gates closed (g0 g1 g2); g3's implementer crew is STILL RUNNING and will finish on its own. Baseline 1744 passed / 2 skipped / 0 xfailed / 0 failed; scripts.code_map check exits 0, 6/6. Resume recipe is in .agent-work/issue-456/STATE_NOTE.md -- read it FIRST. Short form: re-claim lease commander-issue-456 idempotently (SAME id, no --force), resume execute, resume g3-implement, verify the g3 crew's result artifact, attach and advance or relaunch a successor. Then g3 review + integrate, then g4 g5 gb g6 g7 g8 gs, then reconcile, triage (tc1-tc38), review, feedback, archive. Release the lease LAST. Push and a full non-draft PR are PRE-APPROVED; MERGE TO MAIN IS NOT.",
+      "authority_needed": "parent agent",
+      "next_action": ""
+    }
+  ],
   "refusals": 4,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T06:31:51.571864+00:00",
+    "last_heartbeat": "2026-08-08T07:29:29.072733+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

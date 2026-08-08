@@ -4,7 +4,47 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch (the PID changes every time).
 
-- **step:** execute · item `g3-implement` — dispatching the g3 IMPLEMENTER.
+- **step:** execute · item `g3-implement` — **COMMANDER PARKED AT A CONTEXT
+  SEAM. THE g3 IMPLEMENTER CREW IS STILL RUNNING and will finish on its own.**
+  Refresh-request filed as `e-g3-implement-1`.
+
+  **A FRESH COMMANDER DOES EXACTLY THIS, IN ORDER:**
+  1. re-claim the lease `commander-issue-456` **idempotently** — same id, NOT a
+     takeover, no `--force`
+  2. `--file .agent-work/issue-456/spine.json resume execute --session-id commander-issue-456 --reason "context refreshed"`
+  3. `--file .agent-work/issue-456/execute.json resume g3-implement --session-id commander-issue-456 --reason "context refreshed"`
+  4. Check whether the crew finished:
+     `python scripts/run_crew.py --verify-result constellation/issue-456/g3/implementer/attempt-1`.
+     If the result artifact
+     `.agent-work/issue-456/crew-handoffs/g3-implement-RESULT.md` exists, read
+     it, `attach` it as `implementer-result`, then `start`/`advance`
+     `g3-implement`. If the crew parked instead, **abandon and relaunch a
+     SUCCESSOR against the same plan** — do not restart the gate.
+  5. Then the g3 REVIEW (handoff not yet written), then `g3-integrate`, then
+     g4 g5 gb g6 g7 g8 gs, then `reconcile` → `triage` (tc1–tc38) → `review`
+     → `feedback` → `archive`. **Release the lease LAST.**
+
+  **CLI SHAPE:** `--file` goes BEFORE the verb, `--session-id` AFTER it.
+  `advance` needs `--why "<understanding>"`. `claim` takes no `--actor`.
+  `block` needs `--blocker`. `run_crew.py` takes `--result`, not `--expect`,
+  and `--abandon --relaunch` TIMES OUT — use `--abandon` alone, then
+  `--dispatch external`.
+
+  **DO NOT `git add -A`.** Stage explicit paths. The untracked ~3,761-page
+  `map/` tree is staged at `gs`, deliberately last.
+
+  **What g3 has landed so far** (crew commits, may have grown since):
+  `91da2500` RED / `0782ff2b` GREEN — the schema can say what a value IS;
+  `4246e87d` RED — tc34, a definition inside a `with` block gets no page;
+  `0d821d6f` GREEN — **the supplement stage is removed and the join it fed was
+  RE-BASED**, which was the gate's named risk; `70b60555` RED / `68f4a2eb`
+  GREEN — `ids.jsonl` carries authored ids, `{id, s}`, no position.
+  **Verify the re-based join independently** — that is the whole point of the
+  gate's risk section, and a re-based join standing on one derivation is a
+  check that cannot fail.
+
+  ---
+  **ORIGINAL g3 DISPATCH NOTE FOLLOWS.**
 
   **g0 ✅ g1 ✅ g2 ✅ ARE ALL CLOSED AND INTEGRATED. Do NOT re-dispatch any of
   their crews** (13 registered, 0 unresolved) and do NOT redo their work.

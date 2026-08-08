@@ -949,11 +949,27 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "COMMANDER CONTEXT SEAM ONLY -- the g3 implementer crew is STILL RUNNING and unaffected. Gauge 16% at/over the hard limit; refresh-request e-g3-implement-1 filed. Resume: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), resume execute on spine.json, resume g3-implement, then run scripts/run_crew.py --verify-result constellation/issue-456/g3/implementer/attempt-1. If .agent-work/issue-456/crew-handoffs/g3-implement-RESULT.md exists, attach it and advance; if the crew parked, abandon and relaunch a SUCCESSOR against the same plan -- do not restart the gate. Read .agent-work/issue-456/STATE_NOTE.md first. Gates g0 g1 g2 are CLOSED; do not redo them or re-dispatch their crews.",
+        "authority_needed": "parent agent",
+        "next_action": "",
+        "prior_status": "pending"
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-implement",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-review": {
@@ -2049,7 +2065,14 @@
       "statement": "tc26: the render report's page count still cannot notice a zero-byte page -- rglob('*.md') counts a file that was created and never written. Raised by the g0 closing reviewer (A5). NOT a blocker at g0: it weakens only the one field the B3 docstring now explicitly forbids trusting, and g1's structural invariant subsumes it. Goes to g1 with tc17."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "g3-implement",
+      "blocker": "COMMANDER CONTEXT SEAM ONLY -- the g3 implementer crew is STILL RUNNING and unaffected. Gauge 16% at/over the hard limit; refresh-request e-g3-implement-1 filed. Resume: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), resume execute on spine.json, resume g3-implement, then run scripts/run_crew.py --verify-result constellation/issue-456/g3/implementer/attempt-1. If .agent-work/issue-456/crew-handoffs/g3-implement-RESULT.md exists, attach it and advance; if the crew parked, abandon and relaunch a SUCCESSOR against the same plan -- do not restart the gate. Read .agent-work/issue-456/STATE_NOTE.md first. Gates g0 g1 g2 are CLOSED; do not redo them or re-dispatch their crews.",
+      "authority_needed": "parent agent",
+      "next_action": ""
+    }
+  ],
   "why_trail": [
     {
       "id": "w-1",

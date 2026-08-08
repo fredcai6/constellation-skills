@@ -1,0 +1,517 @@
+{
+  "work_id": "issue-456",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-line-base",
+    "m2-def-schema",
+    "m3-values-window",
+    "m4-remove-supplement",
+    "m5-ids-jsonl",
+    "m6-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas if present, the g3 handoff and STATE_NOTE. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Confirm the baseline suite numbers and `check` exit 0. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + state note loaded; handoff complete; baseline confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md, g3-implement.md and STATE_NOTE.md read in full. Handoff carries task, intent, allowed scope, specific exclusions, required evidence, test mode (red-before-green, reproducer committed failing), stop conditions and return format - complete. Baseline reproduced: 1744 passed, 2 skipped, 0 failed."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context",
+            "why_ref": "g3-m0-advance",
+            "reading": "fill_fraction 0.1566 of a 1,000,000-token window; hard cap is 150,000 tokens",
+            "judgment": "RECORDED, NOT TAKEN. The stop-point judgment is the agent's and this is not a seam worth parking at: 156K used of a 1M window, with ~84% of the window still available and the whole implementation still ahead. A relaunched crew would spend the same ~150K re-reading extract.py, render.py, checks.py and supplement.py before writing a line, so parking here costs the run a full context rather than 'almost nothing'. Continuing, and reporting this in the IMPLEMENTER_RESULT workflow feedback."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-line-base": {
+      "id": "m1-line-base",
+      "title": "Declare the line base in the schema (defect D1) via an extraction-window statement",
+      "imperative": "RED FIRST: write and COMMIT failing tests named so `-k 'schema or line_base or ids_jsonl'` selects them, asserting (a) the store carries one extraction-window statement per extracted file declaring the line base, and (b) the declared base agrees with ground truth read from the SOURCE TEXT (physical 1-based line of a known def found by scanning the file), and (c) the declared base is 0 so a flip is deliberate. THEN: add LINE_BASE to extract.py, emit the extraction-window statement, and replace the renderer's and checks' unexplained `+1` with a read of the declared base.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: line-base reproducer written and observed FAILING, committed in its failing state",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Five reproducers committed FAILING at 8029a4ea: pytest -k line_base -> 5 failed, exit 1. Grade B for the declaration arms (red by absence: no extraction-window statement exists) and grade A for the source-text arm (it reproduces on real input the moment the store is asked where a def is)."
+        },
+        {
+          "id": "c2",
+          "statement": "the line base is declared in the schema and asserted by a test that fails if the base flips; tests green",
+          "check": {
+            "kind": "command",
+            "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -k 'line_base' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-line-base-3"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "do not touch the page header format",
+        "no timings in any run report"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-line-base-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-line-base",
+            "why_ref": "g3-m1-advance",
+            "judgment": "Recorded, declined - same reason as e-m0-context-1: 1M window, hard cap set at 150K tokens, ~82% of the window still free. Parking here would cost a fresh crew the same 150K in re-reading. Reported in the IMPLEMENTER_RESULT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-line-base-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-line-base",
+            "why_ref": "w-1",
+            "judgment": "Recorded, declined - 1M window, hard cap 150K tokens, ~82% free. Parking would cost a fresh crew the same 150K re-reading. Reported in the IMPLEMENTER_RESULT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-line-base-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -k 'line_base' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-def-schema": {
+      "id": "m2-def-schema",
+      "title": "Fold kind, signature, span, docstring body and decorators onto the definition statement",
+      "imperative": "RED FIRST: commit a failing test named `*schema*` asserting one definition statement carries kind, signature, span (end line), docstring body and decorators for a fixture corpus. THEN emit them from extract.py alongside the existing supplement (expand phase: both paths live).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "line base declared and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete, line base declared and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: schema reproducer written and observed FAILING, committed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Five reproducers committed FAILING at 88870de2: pytest -k schema -> 8 failed with KeyError: 'd'. Grade B (red by absence: the statement that names a definition carried no facts about it at all)."
+        },
+        {
+          "id": "c2",
+          "statement": "one statement carries kind, signature, span, doc body and decorators; tests green",
+          "check": {
+            "kind": "command",
+            "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -k 'schema' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-def-schema-2"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "do not weaken any g1 or g2 check"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-def-schema-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-def-schema",
+            "why_ref": "w-2",
+            "judgment": "Recorded, declined - 1M window, hard cap 150K. Reported in the IMPLEMENTER_RESULT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-def-schema-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -k 'schema' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-values-window": {
+      "id": "m3-values-window",
+      "title": "Fold values (constants and annotation-only fields) and the module facts into the schema",
+      "imperative": "RED FIRST: commit a failing test named `*schema*` asserting the store carries the VALUE and annotation of a module-level constant and of a class field, and that the extraction-window statement carries the module's loc, doc body and __all__. THEN emit them from extract.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "definition fields in the schema and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: values/module-facts reproducer committed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Three reproducers committed FAILING at 91da2500: 0 declaration statements for pkg.shape:WIDTH and pkg.shape:Gadget.slots, KeyError 'all' on the window. Grade B (red by absence)."
+        },
+        {
+          "id": "c2",
+          "statement": "all six fields plus the module facts are in one schema; tests green",
+          "check": {
+            "kind": "command",
+            "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -k 'schema' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-values-window-2"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "constants must NOT become entities: page accounting is one page per module index, entity and top index"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-values-window-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-values-window",
+            "why_ref": "w-3",
+            "judgment": "Recorded, declined - 1M window, hard cap 150K. Reported in the IMPLEMENTER_RESULT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-values-window-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -k 'schema' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-remove-supplement": {
+      "id": "m4-remove-supplement",
+      "title": "Contract: remove the supplement stage entirely and dispose of entity_symbol_join honestly",
+      "imperative": "Point render.py and checks.py at the store alone, DELETE scripts/code_map/supplement.py, drop the stage from cli.py and __init__.py, and remove the dead supplement entry from .gitignore. Then dispose of `checks.entity_symbol_join`: either re-base it on a genuinely independent second derivation (proving independence by breaking EACH side in turn and showing it goes red for each) or delete it and state the coverage lost. Keeping it passing and silent is a BLOCK. Also test whether removing the stage closes tc34 (a definition inside a `with` block now gets a page) and prove it if so.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the store carries every field the supplement fetched",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all six fields in one schema, m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the tc34 reproducer (a definition inside a `with` block gets no page) committed FAILING against the supplement pipeline",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tc34 reproducer committed FAILING at 4246e87d against the supplement pipeline: no page and no index entry for a definition inside a with block. Grade A (reproduces on real input; measured 8 such definitions on this corpus)."
+        },
+        {
+          "id": "c2",
+          "statement": "supplement.py is gone, .gitignore entry removed, entity_symbol_join disposition made and proved by breaking each side in turn; full code_map suite green",
+          "check": {
+            "kind": "command",
+            "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-remove-supplement-2"
+        }
+      ],
+      "constraints": [
+        "`_make_collision_repo`'s INDEX collision must keep colliding",
+        "no production symbol renamed in scripts/run_skill_eval.py",
+        "do not touch the page header format"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-remove-supplement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-remove-supplement",
+            "why_ref": "w-4",
+            "judgment": "Recorded, declined - same reason as e-m0-context-1. Reported in the IMPLEMENTER_RESULT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-remove-supplement-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-ids-jsonl": {
+      "id": "m5-ids-jsonl",
+      "title": "ids.jsonl lines are {id, s} with no q and no position",
+      "imperative": "RED FIRST: commit a failing test named `*ids_jsonl*` that mints TWO anchor comments and renames one, asserting ids.jsonl carries one sorted `{id, s}` line per anchor, with no position, and that inserting lines above an anchor leaves the file byte-identical. THEN implement anchor extraction in extract.py and the emit in render.py.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "supplement removed and suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "supplement removed, suite green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: two-anchor mint-and-rename reproducer committed FAILING",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Five reproducers committed FAILING at 70b60555: pytest -k ids_jsonl -> 5 failed, exit 1. Grade B (red by absence: no anchor comment was read at all, so ids.jsonl was empty by construction). Two of the five carry an input precondition because a scan of an empty file passes without reading anything."
+        },
+        {
+          "id": "c2",
+          "statement": "ids.jsonl carries {id, s} lines with no position; tests green",
+          "check": {
+            "kind": "command",
+            "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -k 'ids_jsonl' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-ids-jsonl-2"
+        }
+      ],
+      "constraints": [
+        "nothing committed carries a position",
+        "sorted and derived so the git diff is the id-motion report"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-ids-jsonl-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-ids-jsonl",
+            "why_ref": "w-5",
+            "judgment": "Recorded, declined - same reason as e-m0-context-1. Reported in the IMPLEMENTER_RESULT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-ids-jsonl-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/test_code_map.py -k 'ids_jsonl' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify": {
+      "id": "m6-verify",
+      "title": "Full verification, the gate's own selector, real-corpus build and check, commit, IMPLEMENTER_RESULT",
+      "imperative": "Run the full suite, run the gate's exact `-k 'schema or line_base or ids_jsonl'` selector BY HAND and confirm it selects a NON-EMPTY set that covers this work and can go red, run `build` then `check` on the real corpus, confirm `git status` is clean of stray edits, commit on issue-456/code-map with explicit paths (never `git add -A`), and write the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "every implementation slice green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 through m5 complete and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the gate's own -k selector selects a non-empty set covering this work, confirmed by hand",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green at or above the 1744-passed baseline",
+          "check": {
+            "kind": "command",
+            "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/ -q --color=no"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "fresh build then check exits 0 on the real corpus; work committed; IMPLEMENTER_RESULT written",
+          "check": {
+            "kind": "command",
+            "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m scripts.code_map build && python -m scripts.code_map check"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do NOT `git add -A`",
+        "never force-push, never merge to main",
+        "no timings in any run report"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "g3-implementer-attempt-1",
+    "status": "active",
+    "claimed_at": "2026-08-08T06:46:33.759647+00:00",
+    "last_heartbeat": "2026-08-08T07:24:16.498209+00:00",
+    "claimed_by": "constellation/issue-456/g3/implementer/attempt-1",
+    "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff verified complete and baseline reproduced at 1744/2/0. Design settled: removing the supplement collapses render's (file,line) join to identity, so entity_symbol_join would compare a symbol against itself - route 1, re-basing it on an independent source-derived walk inside checks.py, is the disposition, to be proved by breaking each side in turn. Context seam recorded at e-m0-context-1 and declined with a stated reason.",
+      "mechanical": false,
+      "ts": "2026-08-08T06:55:03.246481+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-line-base",
+      "why": "Line base declared per file by an extraction-window statement carrying line_base and the half-open window; both production read sites (render.source_line, checks.StoreScan) convert through the declaration instead of an unexplained +1. RED 5 failed at 8029a4ea, GREEN 5 passed at 74ccd88b; code_map suite 57 passed. Seam recorded at e-m1-line-base-2 and declined.",
+      "mechanical": false,
+      "ts": "2026-08-08T06:59:33.171715+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-def-schema",
+      "why": "Five of the six measured gaps now ride the contains statement as a 'd' block; kind reproduces the supplement's own rule so no rendered word moves when the stage goes. RED 8 failed at 88870de2, GREEN 10 passed at 22d25531, code_map suite 62 passed. Seam e-m2-def-schema-1 recorded and declined.",
+      "mechanical": false,
+      "ts": "2026-08-08T07:02:23.394832+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-values-window",
+      "why": "All six measured gaps are now in one schema: declares carries a value's annotation and value (annotation-only fields included, which had no statement at all), and the extraction window carries loc, doc body and __all__. declares is deliberately not contains so a constant demands no page. RED 3 failed at 91da2500, GREEN 14 passed at 0782ff2b, suite 66 passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T07:04:35.599749+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-remove-supplement",
+      "why": "Supplement stage DELETED. entity_symbol_join disposed by route 1: re-based on checks.SourceScan, an independent source-derived qualified-name walk, proved by breaking each side in turn plus the position, and by a test pinning that checks.py borrows no naming code from extract.py. tc34 closed and measured: 8 definitions gained, 0 lost. Real corpus check 6/6 exit 0; code_map suite 70 passed. The re-based check went red on the real corpus against its own first cut (a def inside an except handler), which is the proof it is consulting the source rather than itself.",
+      "mechanical": false,
+      "ts": "2026-08-08T07:19:02.754106+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-ids-jsonl",
+      "why": "Anchor comments become anchored statements; ids.jsonl is sorted {id, s} with no position. Mint-two-rename-one exercised, and the payoff proved: a 5-line insertion above an anchor moves the recorded definition line by exactly 5 and leaves ids.jsonl byte-identical. Duplicate slug fails the build. RED 5 failed at 70b60555, GREEN 5 passed at 68f4a2eb, code_map suite 75 passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T07:24:00.437723+00:00"
+    }
+  ]
+}
