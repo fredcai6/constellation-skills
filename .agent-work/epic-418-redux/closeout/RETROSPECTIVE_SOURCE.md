@@ -180,11 +180,62 @@ Each of these needs a routed disposition: *graduate-and-retire to a named perman
     § "Evidence 4". Collected, nothing promoted. **Promotion is always Tommy's call** — route them,
     do not promote them.
 
-### G. Wave 4 — SLOT, FILL BEFORE DISPATCHING THIS BRIEF
+### G. Wave 4 (#467, A2 trip semantics) — in flight; these are recorded as they happened
 
-> #467 (A2, trip semantics) is in flight as of 2026-08-08. Its per-done-condition accounting,
-> its DC6 compliance mechanism, and the Commander's own dogfooding observation if it trips the
-> governor mid-run, all belong here. **Do not dispatch this audit with this section empty.**
+**Still open**: the per-done-condition accounting and the DC6 compliance mechanism, which land when
+the Commander returns. Everything below is already observed and committed.
+
+**Each of these is one distinct thing that happened. Write them as observations — what was expected,
+what was seen, what it cost, what worked around it. None of them is a rule.**
+
+18. **The Commander tripped the governor while implementing the governor's trip semantics.** Asserted
+    reading `0.2758`, hard `0.15`, engine printed `CONTEXT 28% (>= hard)`. It handed off at the seam
+    and lost nothing. **Three instances ran in sequence; all three handed off cleanly; zero work
+    lost.**
+19. **The trip is only evaluated when a gated verb is attempted**, so an agent crosses the line
+    unnoticed mid-gate and meets the refusal at the boundary. Two asserted readings, same hour: a
+    Commander at 0.2758 (tripped at its gate) and the Admiral at 0.2629 (never asked). **DC1 is
+    satisfied for gate-crossing roles and structurally silent for long-single-gate roles** — an
+    Admiral sits inside `execute` for a whole epic.
+20. **The Admiral's launch order contained an instruction that could not be obeyed**, and so does
+    `global-everyone.md` §reach-up: *"write a refresh-request AND make sure `current` carries the
+    DIGEST"* — only `advance` writes a why-record, and `advance` is what the refusal blocks. **#431
+    had propagated into the doctrine written on top of it.**
+21. **The capability was never missing; only the instruction was.** `attach` → `advance --why` →
+    `attach` was accepted by the shipped engine at every step. The trip needed to stop saying
+    *"blocked"* and start saying *"close this gate carrying your handoff, then stop."*
+22. **A Commander that trips mid-step cannot update the spine's cold-start surface at all** —
+    `advance` is the only writer of the why-trail and `execute` spanned 16 gates. The first instance
+    tripped at a step boundary and could write its handoff; the second tripped mid-step and could
+    not, leaving the spine's DIGEST two agents stale. **Mid-step is the ordinary case.**
+23. **The reach-up signal has no notion of being served.** Active-gate-keyed, so a compliant handoff
+    erases its own signal; records are permanent attachments with empty `ts`, so a *served* request
+    reads as live until its gate starts. **The Admiral came one command from relaunching a healthy
+    Commander, and then its replacement, in a loop.**
+24. **Copy-pasting the refusal's own printed remedy attaches with exit 0 and does not release the
+    block** — a silent no-op on the exact command the engine prints. Reasoned from source by one
+    instance, then confirmed empirically by another.
+25. **The gauge is a single-slot, unowned value.** A successor is judged on its predecessor's fill
+    until its own first tool call overwrites it. Two windows — live overlap, and a stale-value
+    window even when nothing is running. Both self-clear. **Recorded three times, at three different
+    severities, by three agents**: claimed as *"the round trip cannot close"*, downgraded by its own
+    author, then independently re-measured by a third with no stake. **The Admiral amplified the
+    first version to the user before it was settled.**
+26. **The Admiral stopped an agent to unblock its successor and thereby confounded the measurement**
+    of the defect being reported — the idleness that cleared the symptom was the idleness it caused.
+    A later instance's arrival reading, taken with both predecessors already stopped, is the
+    uncontaminated one.
+27. **A cold critic panel caught the Commander's own compliance observable being true by
+    construction** — green in both worlds — before it shipped. Two critics independently. A second
+    catch: one flag would have silently restored #431 after the fix.
+28. **`LO-467.md` is reachable from nothing in the spine**, and it is where the environment
+    invariants live. A cold successor inherits the plan and not the ground rules.
+29. **An implementer volunteered a scope limit against its own result** — that the masking is
+    confined to the `advance` refusal path — and asserted it in its own script rather than leaving it
+    for a reviewer to find.
+30. **Three agents disagreed in sequence, on the record, and were told not to reconcile it.** The
+    Admiral directed that the earlier accounts not be rewritten, because a claim made, downgraded by
+    its author, and re-measured by a third party is stronger evidence than any tidy single version.
 
 ---
 
