@@ -4,10 +4,41 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: `g5-remediate` — **DISPATCHED** 2026-08-08
-- **PID**: crew `constellation/issue-456/g5/implementer/attempt-2`, Agent name `g5-remediator`,
+- **step**: `execute` (in-progress) · **slug**: `g5-rereview` — **DISPATCHED** 2026-08-08
+- **PID**: crew `constellation/issue-456/g5/reviewer/attempt-2`, Agent name `g5-rereviewer`,
   model `sonnet`. Recover with `SendMessage` to that name (externally dispatched —
   `recover_crews.py` will report it RESUMABLE, which means nudge in place, never relaunch).
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g5-rereview-RESULT.md`
+
+## REMEDIATION LANDED — commit `588d5419`, verified by the Commander
+
+The `BLOCK` defect is fixed. Legend reworded in BOTH hand-independent copies to
+"a tests package anywhere on the module path"; pinning test added guarding both
+directions of drift; `measure_split.py` now carries the definer dimension.
+Commander-verified independently: **no import** between the copies; fresh `build`
+then `check` → **7/7 exit 0**; modules 111, entities **3753**, pages **3865**;
+suite **1781 passed / 2 skipped / 672 subtests / 0 failed**; commit is explicit
+paths only with **0** tracked `map/` files.
+
+**The one moved number is benign and confirmed:** `unused_test_defined` 2340 →
+2341, because the new pinning test is ITSELF a newly mapped entity with no
+callers (this repo self-indexes `tests/`). Corroborated by entities 3752 → 3753
+and pages 3864 → 3865. A NEW entity, not a reclassified one. All five other
+cells byte-identical: 88 / 2 / 449 / 873 / 0.
+
+**Exactly 1 of 3865 pages** still contains "top-level tests package" — the new
+test's own page, whose docstring quotes the old legend to explain what it guards.
+Correct behaviour, not a leftover. **Do not "fix" it.**
+
+**NEW candidate for triage (tc47):** this repo's `code_map` self-indexes
+`tests/test_code_map.py`, so any test added under TDD changes the repo's own map
+by +1 entity/page. It cost the crew one failed `advance` on hardcoded counts.
+Belongs in `CREW_CONTEXT.md`.
+
+**NEW for feedback:** `current` does not surface the latest `why_trail` id, so the
+`tc39` refresh-request recovery forces a crew to read the plan JSON directly — a
+documented exception to "never read the JSON for state". Ask for a
+`latest_why_id` field or an `attach ... --why-ref latest` shorthand.
 - **REGISTRY GOTCHA (new, 2026-08-08):** `recover_crews.py` reported `0 unresolved` while
   `run_crew.py` still REFUSED the launch as a duplicate — the two disagree. An externally
   dispatched crew stays `running` in the registry until you close it explicitly with
