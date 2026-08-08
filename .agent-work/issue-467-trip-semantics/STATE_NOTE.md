@@ -6,8 +6,9 @@ wholesale — its content is either carried below or is now done.**
 ## READ THIS FIRST — all of g3 is CLOSED. `g3b-glossary` has NOT been started.
 
 - **step:** spine `execute` (in-progress) · `execute.json` gate **`g3b-glossary` — `pending`, NOT
-  started.** **11/17 complete:** `e0-context`, all three `g1-*`, all three `g2-*`, and all three
-  `g3-*`. `amendments: 2`. **17 gates, not 16** — see the amend below.
+  started.** **10/17 complete:** `e0-context`, all three `g1-*`, all three `g2-*`, and all three
+  `g3-*`. `amendments: 2`. **17 gates, not 16** — see the amend below. Remaining 7: `g3b-glossary`,
+  the three `g4-*`, and the three `g5-*`.
 - **slug:** issue-467-trip-semantics · branch `epic-418/a2-467-trip-semantics` · worktree
   `C:/Programs/constellation-skills-wt/epic418-a2-467`, tree clean.
 - **engine lease:** **RELEASED** on both `spine.json` and `execute.json`. Claim each **without
