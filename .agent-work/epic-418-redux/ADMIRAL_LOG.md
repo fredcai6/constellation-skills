@@ -2642,3 +2642,69 @@ worth keeping, and it belongs to the pair, not to either of us alone.**
 **Instance E stopped after its idle notification (14:13:03Z), state verified in my own shell, then
 `commander-w4-467-f` dispatched.** Notification → stop → verify → dispatch, in that order. **8/16,
 `amendments: 1`, leases released, tree clean at `ad9e30e4`, next `g3-review`.**
+
+## 2026-08-08 — g3 fully closed (10/17); the stale-engine finding, corrected
+
+**ADMIRAL ERROR | I synced one skill and picked the wrong one.** At the last seam I reinstalled
+`constellation-reviewer` on "minimal blast radius" reasoning. **Eight installed skills carry a stale
+engine**, and the one driving the spine — **`constellation-workbench`** — was not among the one I
+fixed. Instance F then hit **#431 live** while closing `g3-integrate`: *"advancing is blocked until
+you request a refresh"*, the refusal landing on the advance that carries the handoff, **in the run
+that fixes exactly that.**
+
+**But the natural reading of that finding is wrong, and I checked before acting on it (rule 8).**
+Three engines, measured:
+
+| engine | bytes | `TRIP_HARD_GUARDED_VERBS` |
+|---|---|---|
+| installed (workbench) | 140,170 | **0** |
+| **main** | 146,457 | **0** |
+| branch worktree | 156,060 | **3** |
+
+**Syncing the installed engines from main would NOT have prevented that trip — main does not have
+the fix either.** #467 is unmerged; the fix lives only on the branch. So the trip was **expected
+behaviour, not an install defect**, and "the engine driving this run is the buggy one" is true of
+*main* as much as of the installed copy. What the stale install actually costs is the **wave 1-3**
+engine work (~6KB), not #431.
+
+**RULING | do NOT sync the spine-driving engines mid-run.** Two reasons: it **would not fix the
+reported symptom**, and swapping the engine underneath a live spine — after 10 gates of evidence
+were produced by the current one — risks the run's own evidence integrity, which is this wave's
+entire subject. **Routed to closeout, after #467 merges**, so the installed copies get wave 1-3 **and**
+#467 in one pass. My reviewer-only sync stands: that bundle does not drive the spine, and it fixed a
+demonstrated force-waive.
+
+**RULING | g5 MUST pin the engine binary by hash. Authorized, and it is the right call.** F's point:
+anything driven through the installed engine exercises the **old** code, so an acceptance gate that
+does not identify which binary it ran has proved nothing about the fix. That is a check-that-cannot-
+fail in the acceptance gate itself, caught before it shipped.
+
+**RULING | cite the live #431 round trip in g5 as CORROBORATION, not as a substitute.** A real trip
+happened to the **Commander on the real spine**, which is stronger than a staged scenario — but it
+was **not instrumented for verification**, and DC5 requires the resumed agent's work be verified
+against what the tripped agent was mid-way through. **g5 still runs its staged round trip**; the live
+incident is cited beside it. Adding evidence to a gate is not scope surgery, so g5's frozen scope is
+untouched.
+
+**The BLOCK was real, and the crew verified it before acting.** The mutation log declared **M15
+EQUIVALENT** on reasoning that enumerated `start` and `advance` but **never `block()`** — which
+carries no status guard while `blocked` sits outside `TERMINAL`, so `active_id()` moves **backwards**
+behind a later in-progress gate. F rebuilt it at the CLI with public verbs: shipped refuses
+`advance g2 --mechanical`, **the mutant prints `g2 -> complete`**. The gate argument g3 itself added
+at `checklist_engine.py:2857` had **zero coverage**. Rework was one test plus a log correction,
+**no source change** — and F **applied the mutation itself, watched the test go red, reverted,
+watched it go green.** The re-review then **falsified a number inside the correction**, and it
+re-measured. An equivalent-mutant claim is the easiest place in this whole method to hide, and it
+was caught by attacking it.
+
+**tc3 resolved, and it was a handoff field rather than a flaky suite.** The stated baseline
+`d376b786` is **not the diff's parent** — it spans 15 commits. Against the true parent `5a69a30b`
+the deltas are exactly **+17 passed, +125 subtests**. A number that looked like test flakiness was a
+mis-stated comparison point.
+
+**New triage candidates:** **tc4** `block()`'s missing status guard (**pre-existing, not ours**, and
+the M15 kill now depends on that state), **tc5** reopen-path advisory/guard divergence with
+overclaiming docstrings, **tc6** survey sidecar collision now across three runs.
+
+**10/17** — the count moved from 16 because the tc1 `amend` added `g3b-glossary`, whose command check
+F verified **failable** (exits 1 before the edit) rather than assuming it.
