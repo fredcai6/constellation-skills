@@ -81,6 +81,16 @@ All five confirmed MERGED via `gh pr view --json state`. **Never use an ancestry
 
 ## Still owed to Tommy at the wave-3 checkpoint
 
+0. **RE-FRAME BEFORE ASKING: the governor does not ship, so the band question was mis-posed.**
+   Measured: tracked `.claude/settings.json` wires `spine_rail.py` on `Stop`/`SessionStart`/
+   `PostToolUse` and wires `gauge_writer_hook.py` on **nothing**; `git ls-files .claude/` returns
+   `settings.json` only, so `settings.local.json` is untracked. **Every governor observation this
+   epic has made came from machine-local config.** The spec already ruled on this (critic F2, Tommy
+   2026-08-07: *"wire gauge_writer_hook into the TRACKED project settings so the governor ships like
+   spine_rail already does"*) and it is **#458**, off-chain and not done.
+   **The governor thread is four parts, three already written:** #458 (ships at all) · #264 (asserts
+   it is measuring — 1144 lines, **unmerged**) · #488 (stops it silencing itself — in flight) ·
+   #452 (attribution). Recommend landing them as one piece after wave 3.
 1. **The governor trip band at 17–21%.** Cost 6 of wave 2's 10 dispatches. A production default and a
    threshold question, so surfaced, not mine. Wave 3 gives the first **uncontaminated** Admiral-side
    measurement, because #488's fix restores my own gauge — the wave-2 number was taken while I was blind.
@@ -94,6 +104,22 @@ All five confirmed MERGED via `gh pr view --json state`. **Never use an ancestry
    fixed ground rather than steering a running crew.
 4. **#460's 22 doctrine candidates** — collected, nothing promoted. At
    `.agent-work/r418-460/crew-handoffs/g2-implement-result.md` § "Evidence 4". Promotion is always his call.
+
+## Done this session, beyond the wave launch
+
+- **Harvest before sweep — executed.** Four files existing **nowhere in the git object store** were
+  collected to `.agent-work/harvest-418-redux/`: `RETURN.md` from `b-420`/`d-422`/`g-425`, and
+  `h-447`'s **261 KB `AGENT_FEEDBACK.md`**. Identified by `h=$(git hash-object <f>); git cat-file -e
+  "$h"`, not by filename — which spared `h-447/.agent-work/LESSONS.md`, already in git. Disposition
+  (convert to episodes vs drop with a reason) is the closeout audit's call, deliberately open.
+- **A2's cut is HELD, deliberately**, per my own pre-ruling: A2 is cut against what B extended
+  *actually* leaves behind, and that is not known until wave 3 merges. Shape when its turn comes:
+  ~three issues — DC1-3 (refusal→instruction, #431 dissolves), DC4+DC6 (per-gate override exercised
+  once; the compliance signal), DC5 (the full trip→handoff→refresh→resume round trip) last.
+- **The defect family has three independent sources in this epic**, so it is the spine, not a theme
+  I proposed: critic **F8** (*"the purest check-that-cannot-fail in the document"* — *no absence is
+  evidence*), **A2's DC6** pricing it as a deliberate design cost (*"an instruction is satisfied or
+  ignored with identical traces"*), and wave 2's four field findings.
 
 ## Settled — do NOT re-derive
 
