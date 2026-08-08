@@ -4444,3 +4444,28 @@ directories."* An honest "no" written into the deliverable, not buried in a retu
 **#509 is correct and still held**, for one mechanical reason only: `m3-artifact-and-pr` is still
 `pending` and the lease is still active. **A PR being right is not the same as a crew being done**, and
 I am not going to break my own rule on the one PR where the crew has done everything I asked.
+
+### Early warning taken, not deferred — crew 4's in-progress engine reads my live spine cleanly
+
+The merge-order ruling says crew 4 goes last because it edits the engine driving this run. Rather than
+wait for the merge to find out, I pointed **its work-in-progress engine** at **my live spine**, using
+the pure projection so nothing could be written:
+
+```
+python <crew4-worktree>/scripts/checklist_engine.py --file <my spine> current
+REAL_EXIT=0     LEASE active: admiral-epic-418-redux     ACTIVE execute [in-progress]
+my spine dirty after: 0
+```
+
+**It parses my spine, reports my lease correctly, and mutates nothing.** As of `m4` complete — the
+Task-shape unification (#474/#475/#476) and the refusals counter (#427) already landed in that tree —
+the compatibility risk I flagged has not materialised.
+
+**The right weight for this: it is an early warning that came back clean, not a clearance.** #493
+(journal write) and the rest of `m5`-onward are still ahead of it, and the journal is the half most
+likely to bite, because my journal is **already written** and hash-chained. The post-merge re-run
+against my own spine stays mandatory and stays in the state note.
+
+Crew 4 is at `m5-503` with a heartbeat nine minutes old and `scripts/checklist_engine.py` +
+`tests/test_checklist_engine.py` modified — **its two owned files and nothing else**, consistent with
+the collision check. It has cleared m0 through m4 of a ten-item plan.
