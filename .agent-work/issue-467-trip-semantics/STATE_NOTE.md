@@ -23,6 +23,14 @@ wholesale — that note described the g4 rework, which is DONE and APPROVED.**
 - **suite baseline at `cc4aed99`, my own run:** `1867 passed, 2 skipped, 829 subtests, exit 0`
   (`/tmp/g5_suite_baseline.txt`). Matches the g4 number.
 
+## CORRECTION to my closing digest `w-15` — read this if you are cold-starting
+
+`w-15` says "everything I produced lives under `.agent-work/`, which is ignored". **That is wrong:
+`.agent-work/` is TRACKED here** (`git check-ignore` exits 1). I caught it right after the close and
+committed everything at **`27ae8563`**; `git status --porcelain` is empty there. No file under
+`scripts/` or `tests/` was touched — the engine blob is unchanged at
+`c281cb68eaac65d1169dd6737a6a322728df98eb`. ACCEPTANCE.md section 8 carries the same correction.
+
 ## The acceptance round trip — what I built and where it is
 
 Separate spine (NOT this run's spine), authored once and **never edited after agent A was

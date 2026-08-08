@@ -406,6 +406,32 @@ issue exists for — completed, and is not being reported on the strength of the
    matching the pattern g1-integrate pinned. If the Admiral wants it durable, that is a decision
    above me and I have not made it.
 
+---
+
+## 8. Correction to my own closing digest (`w-15`)
+
+The why-trail is append-only, so a wrong sentence in it cannot be edited. One sentence in `w-15`
+is wrong and is corrected here, where the next reader will meet it:
+
+> "Tree still clean; everything I produced lives under `.agent-work/`, which is ignored."
+
+**`.agent-work/` is NOT ignored in this repository — it is tracked.** `git check-ignore -v` on
+`ACCEPTANCE.md` exits 1 (no ignore rule matches). The gauge-writer hook's own comment ("only
+`.agent-work/` is ignored") is about a different assumption and I generalised it without checking,
+which is the mistake.
+
+Nothing was lost by it: I caught it immediately after the close, and everything this gate produced
+is committed at **`27ae8563`** — the acceptance spine and its journal, both agent logs, both
+verbatim prompts, the verifier, the probes, `ACCEPTANCE.md`, and the `evidence/g5-*.txt` files.
+`git status --porcelain` is empty at that commit.
+
+Re-running the g1 RED also rewrote its own tracked `red-repro/scratch/` fixtures; those changes are
+in the same commit and are expected residue of re-running the repro, not a source change. **No file
+under `scripts/` or `tests/` was touched by this gate:** the engine blob is still
+`c281cb68eaac65d1169dd6737a6a322728df98eb` at `27ae8563`, byte-identical to its value at
+`cc4aed99`, which is also why the hash pin quoted at the top of this document remains correct at the
+new HEAD.
+
 ## Artifacts
 
 | Path | What |
