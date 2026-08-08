@@ -3152,3 +3152,33 @@ acceptance verifier must **discriminate** because g5-review will break its input
 amended rule 7; **#504 deferred, not carried**; and **honest null is a complete deliverable** — "the
 round trip does not close, and here is the reading that proves it" is a result I will take, a
 manufactured pass is not.
+
+## FINDING | 2026-08-08T20:05:02Z | the gauge writer IS wired — this run's trips were real readings, not plants
+
+`commander-w4-467-i` proof-of-life carries a correction to a **confidence flag frozen into the g5 gate**,
+and it matters more than the gate's own wording suggested.
+
+The flag reads: *"#458: the gauge writer is not wired in tracked settings, so every reading in this
+acceptance is planted rather than harness-produced."* **Half true, and the false half is load-bearing.**
+`scripts/hooks/gauge_writer_hook.py` **is** wired — as a PostToolUse `*` matcher in **untracked**
+`.claude/settings.local.json`. So "no *tracked* setting wires it" is right; "therefore every reading is
+planted" does not follow.
+
+**It proved this live rather than by reading the file and inferring.** At `current` the gauge held
+`0.155212 @ 19:44:55Z` — its predecessor's trip reading, over hard. It claimed the lease (which creates
+the session#agent binding the hook keys on), and on its **next tool call** the hook overwrote the gauge
+with `0.058956 @ 19:55:24Z` carrying `identity_resolution_ms` — i.e. it took the **dispatched-agent
+path and resolved the new agent's own id**, not its parent's.
+
+**Consequence for the epic's claims, and it is a strengthening one:** the **three live #431 trips this
+run recorded were genuine harness-produced readings**, not plants. That is the difference between "the
+mechanism was exercised" and "the mechanism was simulated," and it is the difference on the exact
+question #266 asks.
+
+**What remains legitimately planted:** the ACCEPTANCE spine's over-threshold reading, deliberately,
+because that gate needs a controlled over-hard condition and its own imperative says *"planted,
+asserted."* The Commander will state that split in ACCEPTANCE.md rather than repeat the flag's blanket
+claim, and will assert the reading existed before every trip claim.
+
+**No reply sent.** It explicitly needs no decision, and a message to a live crew is a charge against its
+context budget — the lesson two of my own messages taught me when they pushed a Commander over the line.
