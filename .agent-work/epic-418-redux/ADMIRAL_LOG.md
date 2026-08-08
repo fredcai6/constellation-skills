@@ -814,3 +814,35 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   working tree — so the handoff survived on the *filesystem*, not on the DIGEST alone. And it
   fast-forwarded rather than merging, keeping history clean. A real round trip is a little more than
   "read `current` and continue"; the state note and the uncommitted tree carried real weight.
+
+- `2026-08-08` — `MERGE` — **PR #491 (#488 + #489) MERGED at `8b9330ea`.** Gate in order: `gh pr
+  checks 491` **exit 0** (`test pass 6m48s`) → independent review posted to the forge → merge →
+  **state confirmed `MERGED` via `gh pr view`, not via the merge command's exit code.**
+  **The review did something better than I asked for, and it is the best piece of work in this wave.**
+  I told it to verify the negative direction — that genuinely different gauge paths still skip. It
+  noticed that test **passes on both sides of the fix**, since that branch of the code is unchanged,
+  and said so: passing is not evidence the test has teeth. So it **mutation-tested the guard** —
+  disabled the skip branch outright (`if False and len(gauge_paths) > 1:`) — and confirmed the
+  negative-direction test goes **red**. That proves the test would catch a fix that merely stops
+  skipping, which is the regression no green run reveals.
+  That is the epic's own thesis applied one level up: it is not enough for the *code* to discriminate
+  the healthy and defective worlds; the *test* must too, and the only way to know is to build a
+  defective world and watch it fail. Nothing in the brief told it to mutate the source. Carrying this
+  to closeout as a **doctrine candidate**: when a test guards a branch the fix does not touch, prove
+  it fails by breaking that branch.
+  Both issues **auto-closed by the PR body's closing keywords**, so my prepared close commands
+  no-op'd — see the incident below. Evidence comments posted separately and verified.
+  Worktrees harvested (18 more files nowhere in git, including the driven `review.json` and the
+  Fowler pass) then swept; branches deleted.
+- `2026-08-08` — `INCIDENT` (**third** silent `gh` failure this session, same family): **`gh issue
+  close <n> --comment "<body>"` on an already-closed issue prints "already closed" and silently
+  discards the comment.** The PR body's closing keywords had already closed #488 and #489, so both
+  prepared evidence write-ups evaporated. I only caught it because I re-read the last comment on each
+  issue and grepped for the merge commit — both returned 0. Reposted with `gh issue comment -F` and
+  verified by re-reading; both now return 1.
+  **Three distinct silent `gh` failures in one session, all with success-looking output:** a
+  backticked code span executed as command substitution while the post succeeds truncated; an
+  unsupported `-F` flag accepted while the close does not happen; and a `--comment` discarded because
+  the primary action was a no-op. **The only thing that caught all three was re-reading the state
+  afterwards rather than trusting the command.** That is the same discipline whose absence produced
+  the false lease-release claim at the start of this run — and it is now three-for-three.
