@@ -545,6 +545,53 @@ def entity_symbol_join(m):
     return failures
 
 
+def page_location_matches_content(m):
+    """A page's title must agree with the directory it was written into.
+
+    `tc31`: nothing above ties a page's LOCATION to its CONTENT. Every check
+    in this module reads a page by its TITLE -- `page_accounting` proves every
+    title the store expects exists SOMEWHERE in the tree; `entity_symbol_join`
+    and `inbound_attribution` both start from `m.entity_pages`, which finds a
+    page by title too. None of them ask WHERE a page sits. Swap two pages'
+    file contents, or move one into a sibling module's directory, and every
+    title the store expects is still present somewhere -- COVERAGE holds,
+    COUNT holds, naming and inbound arithmetic both hold, because all four are
+    blind to location. `g4` adds a routing tier ON TOP of that same layout, so
+    this is where the gap closes rather than doubling.
+
+    The expected location comes out of each page's OWN title, never out of
+    `page_file` or any renderer index -- a check that asks the code under test
+    where its own output should live can only ever agree with it. A module
+    page's title is the module's own dotted name and must sit at
+    `<title>/INDEX.md`; an entity page's title is `<module>:<qualified name>`
+    and must sit inside `<module>/`, whatever its filename -- the filename
+    itself is `page_file`'s own case-fold disambiguation, which this check
+    does not re-derive, so it stays independent of that scheme too.
+
+    What it does NOT prove: that a MISNAMED page (right directory, wrong
+    filename for its title) is caught -- only that the DIRECTORY is right.
+    `no-empty-pages` and `page-accounting` together already constrain the
+    filename indirectly (a page at the wrong filename either collides or goes
+    missing); a dedicated filename-vs-title check is future work, not this
+    gate's."""
+    failures = []
+    for page in m.pages:
+        title = m.title_key(page)
+        if title is None:
+            continue
+        where = m.rel(page)
+        if title in m.modules:
+            if page.parent.name != title or page.name != "INDEX.md":
+                failures.append(f"{where}: titled module {title!r}, expected at "
+                                f"{title}/INDEX.md")
+        elif title in m.entities:
+            expected_dir = title.split(":", 1)[0]
+            if page.parent.name != expected_dir:
+                failures.append(f"{where}: titled entity {title!r}, expected under "
+                                f"{expected_dir}/, found under {page.parent.name}/")
+    return failures
+
+
 def inbound_attribution(m):
     """Every page's caller set must match an independent full scan of the store.
 
@@ -665,6 +712,7 @@ CHECKS = (
     ("page-accounting", page_accounting),
     ("refs-line-self-consistent", refs_line_self_consistent),
     ("entity-symbol-join", entity_symbol_join),
+    ("page-location-matches-content", page_location_matches_content),
     ("inbound-attribution", inbound_attribution),
     ("deterministic-rebuild", deterministic_rebuild),
 )

@@ -2204,5 +2204,165 @@ class IdsJsonlTests(unittest.TestCase):
         self.assertIn("widget-spin", buffer.getvalue())
 
 
+_SUBPKG_SOURCE = '''"""A module living inside a real subpackage."""
+
+
+def inside():
+    """Defined inside pkg.sub, which no other module shares."""
+    return 1
+'''
+
+_LOOSE_SOURCE = '''"""A module with no subpackage of its own."""
+
+
+def loose():
+    """Defined directly under pkg, no nesting."""
+    return 2
+'''
+
+
+def _make_nested_subpackage_repo(tmp: Path):
+    """One real subpackage (`pkg.sub`, exactly ONE member module — no other
+    module shares that prefix) and one loose module directly under `pkg`.
+
+    The minimal fixture that can tell a grouped bucket from a loose one, and
+    prove the grouping rule carries no minimum size: `pkg.sub` has exactly one
+    member and still gets its own heading. `pkg/sub/__init__.py` is
+    deliberately NOT created — the corpus is `git ls-files -- *.py`, not a
+    real import, so nothing here needs `pkg.sub` to be an importable package,
+    only a directory two files share."""
+    (tmp / "pkg" / "sub").mkdir(parents=True)
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "other.py").write_text(_LOOSE_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "sub" / "mod.py").write_text(_SUBPKG_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/other.py", "pkg/sub/mod.py", cwd=tmp)
+
+
+class TopIndexSecondTierTests(unittest.TestCase):
+    """`g4`: the top index gets a SECOND TIER so it routes instead of listing.
+
+    A cold reader must be able to learn the corpus's full breadth -- every
+    top-level package and its size -- before reading a single per-module
+    bullet, and within a package a module nested under a real subpackage must
+    group with it rather than sit interleaved with the package's own loose
+    modules.
+
+    THE TRAP this class is built against (critic F9): ~75% of the real
+    repo's entities are test code, and a tier that only works because of that
+    shape would look perfect here and fail on the next corpus. Every
+    assertion below is a property of dotted-name STRUCTURE -- how many
+    segments a module's own name carries, which prefixes repeat -- never a
+    name, a convention (`src/`, `test_`), or a count that only holds on this
+    corpus. `.agent-work/issue-456/evidence/g4_cross_corpus.py` demonstrates
+    the same structural rule on `f1Brainz` and `superCoolSpaceSim`."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _top_index(self, make):
+        make(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        return (self.repo / "map" / "INDEX.md").read_text(encoding="utf-8")
+
+    def test_top_index_lists_every_top_level_package_before_the_first_module_bullet(self):
+        """The measured failure this gate exists to fix: a trial agent read 60
+        lines of the flat list and never learned the corpus had a `tests`
+        package holding most of it. The overview must be readable before any
+        per-module bullet, so a bounded read still sees every package."""
+        text = self._top_index(_make_cross_module_repo)
+        lines = text.splitlines()
+
+        self.assertIn("## packages", lines, text)
+        overview_at = lines.index("## packages")
+        bullet_lines = [i for i, ln in enumerate(lines) if ln.startswith("- [")]
+        self.assertTrue(bullet_lines,
+                        "input precondition: the tree must contain at least one "
+                        "module bullet, or 'before the first bullet' is vacuous")
+
+        self.assertLess(overview_at, bullet_lines[0],
+                        "the package overview must appear before any per-module bullet")
+        self.assertIn("pkg: 3 modules, 3 entities", text,
+                      "the overview must show every top-level package's own size")
+
+    def test_top_index_groups_a_real_subpackage_under_its_own_heading_with_no_minimum_size(self):
+        """`pkg.sub` has exactly ONE member module and still gets a heading --
+        proof the grouping rule carries no absolute-count threshold (critic
+        F4): a group of one is not a special case, it is the same rule."""
+        text = self._top_index(_make_nested_subpackage_repo)
+
+        self.assertIn("### pkg.sub (1 modules, 1 entities)", text, text)
+        self.assertIn("[pkg.sub.mod](pkg.sub.mod/INDEX.md)", text)
+
+    def test_top_index_lists_a_loose_module_directly_with_no_subheading(self):
+        """A module with no subpackage of its own is listed the same way it
+        always was -- an honest report of a flat corpus, not a fallback."""
+        text = self._top_index(_make_nested_subpackage_repo)
+
+        self.assertIn("[pkg.other](pkg.other/INDEX.md)", text)
+        self.assertNotIn("### pkg.other", text)
+
+
+class TopIndexPageLocationTests(unittest.TestCase):
+    """`tc31`, owned by `g4`: nothing tied a page's LOCATION to its CONTENT --
+    a page could be swapped into another module's directory and every check
+    `g1`-`g3` shipped would still pass, because all of them read a page by its
+    TITLE, never by where it sits. The new top-index tier adds more routing
+    structure on top of that same layout, so this gate is where the gap either
+    closes or gets twice as wide; this class closes it."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_cross_module_repo(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _check(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = cli.main(["check", "--root", str(self.repo)])
+        return code, buf.getvalue()
+
+    def test_top_index_page_location_check_passes_on_an_intact_map(self):
+        """The positive control -- without it, a check that always failed
+        would satisfy the falsifier below just as well as a real one."""
+        code, out = self._check()
+        self.assertEqual(code, 0, out)
+        self.assertIn("ok   page-location-matches-content", out)
+
+    def test_top_index_page_location_check_catches_a_page_relocated_to_the_wrong_module_directory(self):
+        """The reproduction of `tc31` itself: physically move a built page
+        into a SIBLING module's directory, title unchanged. Every check
+        `g1`-`g3` shipped reads a page by its title and finds `pkg.callee:target`
+        still present in the tree -- none of them ask WHERE."""
+        moved_from = self.repo / "map" / "pkg.callee" / "target.md"
+        moved_to = self.repo / "map" / "pkg.far" / "target.md"
+        self.assertTrue(moved_from.exists(),
+                        "input precondition: the page to relocate must exist")
+        content = moved_from.read_text(encoding="utf-8")
+        self.assertEqual(content.splitlines()[0], "# pkg.callee:target",
+                         "input precondition: the page's own title still names its "
+                         "true module, or relocating it changes nothing this check reads")
+
+        moved_from.unlink()
+        moved_to.write_text(content, encoding="utf-8", newline="\n")
+
+        code, out = self._check()
+
+        self.assertNotEqual(code, 0, "a page titled for one module, sitting inside "
+                                     "another module's directory, passed `check`\n" + out)
+        self.assertIn("FAIL page-location-matches-content", out)
+        self.assertIn("pkg.callee:target", out)
+
+
 if __name__ == "__main__":
     unittest.main()

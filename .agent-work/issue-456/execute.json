@@ -1178,7 +1178,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-2",
+          "attested": {
+            "evidence": "e-g4-implement-2",
+            "note": "IMPLEMENTER_RESULT on disk, 19667 bytes, no unresolved blockers; crew verified fresh, plan 7/7."
+          }
         }
       ],
       "constraints": [
@@ -1208,11 +1213,58 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "artifact",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g4-implement-RESULT.md",
+            "crew": "constellation/issue-456/g4/implementer/attempt-1",
+            "crew_model": "sonnet",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Plan at .agent-work/issue-456/g4-implementer-plan.json, 7 items all complete.",
+            "suite": "1772 passed, 2 skipped, 672 subtests, 0 failed, 0 xfailed, EXIT=0. Baseline entering the gate was 1767/2/0/0: +5 (3 tier tests + 2 tc31 tests), skips unchanged.",
+            "gate_selector_verified": "tc38 rule applied again and held: -k 'top_index' selects 5 passed, 75 deselected, EXIT=0. Non-empty and covering the gate's work. Its RED state was 4 failed, 1 passed, 75 deselected, EXIT=1, so the selector demonstrably goes red.",
+            "check": "7 checks now, passed 7, EXIT=0 after a fresh build. The 7th is page-location-matches-content.",
+            "what_shipped": "render.top_index gains a packages overview (name, module count, entity count) before any per-module bullet, then per-package sections grouping modules under a subpackage heading wherever the corpus nests one. New render.module_group_key and _module_line. The tier logic carries exactly ONE predicate, len(m.split('.'))>=3 -- a per-module structural fact, not a corpus-size gate; the crew grepped and confirmed it is the only one, satisfying critic F4's no-absolute-thresholds constraint.",
+            "tc31_CLOSED": "checks.page_location_matches_content added and registered in CHECKS, real corpus 7/7. Its RED commit demonstrates the gap was real: before the fix, a page physically relocated into another module's directory passed check. Now check exits non-zero with FAIL page-location-matches-content.",
+            "COMMANDER_ERROR_FOUND_BY_CREW": "My handoff named C:/Programs/superCoolSpaceSim as one of two cross-corpus proofs of the corpus-shape trap. It is a C++/Obj-C repository with ZERO tracked .py files, so it indexes to 'no mappable modules found' -- 0 modules, 0 entities. It is a null/degenerate-input test, NOT a counter-shape test. That means only ONE corpus (f1Brainz, 1227 modules / 15037 entities, a genuine src/-layout shape unlike this repo's 75%-test shape) actually exercised the trap critic F9 named. The crew ran it rather than reading it and reported the shape honestly instead of dressing a null up as a pass. This is the FIFTH time on this run a crew has proven a Commander instruction wrong by measurement. The residual risk -- one real cross-corpus proof, not two -- is now the g4 review's named mandate.",
+            "cross_corpus_shapes": "this repo: the 75%-test shape; f1Brainz: 1227 modules / 15037 entities across docs 2/3, run_2025_collection 1/0, run_tests 1/17, scripts 235/1702, src 440/4228, tests 548/9087 -- not one giant bucket and not N buckets of one; superCoolSpaceSim: 0/0, no mappable modules.",
+            "red_before_green": "Held, with one honestly-declared exception: test_top_index_lists_a_loose_module_directly_with_no_subheading passed unchanged before and after and the crew named it a regression guard rather than a falsifier instead of silently counting it as one.",
+            "scope": "render.py, checks.py, tests/test_code_map.py, plus evidence scripts. checks.py sits outside the handoff's literal 'render module' wording but the handoff itself assigned tc31 to this gate and predicted this; it is code_map's own check registry where every prior location-adjacent check already lives -- the same narrow named exception g3 took.",
+            "g1_g2_g3_tripwires_held": "_make_collision_repo's INDEX collision still collides (fixture and PageAccountingInvariantTests untouched, assign_page_filenames never edited, class green in the full run). OWN_MODULE_NAMED_MUTATION and test_refs_lines_are_self_consistent_on_an_intact_map untouched and green. Page header loc() untouched -- no :<line>, still path, N lines. entity_symbol_join's two independent derivations untouched; the new check reads page titles and the store dicts only, never either derivation."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g4-implement-RESULT.md",
+            "crew": "constellation/issue-456/g4/implementer/attempt-1",
+            "crew_model": "sonnet",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Plan at .agent-work/issue-456/g4-implementer-plan.json, 7 items all complete.",
+            "suite": "1772 passed, 2 skipped, 672 subtests, 0 failed, 0 xfailed, EXIT=0. Baseline entering the gate was 1767/2/0/0: +5 (3 tier tests + 2 tc31 tests), skips unchanged.",
+            "gate_selector_verified": "tc38 rule applied again and held: -k 'top_index' selects 5 passed, 75 deselected, EXIT=0. Non-empty and covering the gate's work. Its RED state was 4 failed, 1 passed, 75 deselected, EXIT=1, so the selector demonstrably goes red.",
+            "check": "7 checks now, passed 7, EXIT=0 after a fresh build. The 7th is page-location-matches-content.",
+            "what_shipped": "render.top_index gains a packages overview (name, module count, entity count) before any per-module bullet, then per-package sections grouping modules under a subpackage heading wherever the corpus nests one. New render.module_group_key and _module_line. The tier logic carries exactly ONE predicate, len(m.split('.'))>=3 -- a per-module structural fact, not a corpus-size gate; the crew grepped and confirmed it is the only one, satisfying critic F4's no-absolute-thresholds constraint.",
+            "tc31_CLOSED": "checks.page_location_matches_content added and registered in CHECKS, real corpus 7/7. Its RED commit demonstrates the gap was real: before the fix, a page physically relocated into another module's directory passed check. Now check exits non-zero with FAIL page-location-matches-content.",
+            "COMMANDER_ERROR_FOUND_BY_CREW": "My handoff named C:/Programs/superCoolSpaceSim as one of two cross-corpus proofs of the corpus-shape trap. It is a C++/Obj-C repository with ZERO tracked .py files, so it indexes to 'no mappable modules found' -- 0 modules, 0 entities. It is a null/degenerate-input test, NOT a counter-shape test. That means only ONE corpus (f1Brainz, 1227 modules / 15037 entities, a genuine src/-layout shape unlike this repo's 75%-test shape) actually exercised the trap critic F9 named. The crew ran it rather than reading it and reported the shape honestly instead of dressing a null up as a pass. This is the FIFTH time on this run a crew has proven a Commander instruction wrong by measurement. The residual risk -- one real cross-corpus proof, not two -- is now the g4 review's named mandate.",
+            "cross_corpus_shapes": "this repo: the 75%-test shape; f1Brainz: 1227 modules / 15037 entities across docs 2/3, run_2025_collection 1/0, run_tests 1/17, scripts 235/1702, src 440/4228, tests 548/9087 -- not one giant bucket and not N buckets of one; superCoolSpaceSim: 0/0, no mappable modules.",
+            "red_before_green": "Held, with one honestly-declared exception: test_top_index_lists_a_loose_module_directly_with_no_subheading passed unchanged before and after and the crew named it a regression guard rather than a falsifier instead of silently counting it as one.",
+            "scope": "render.py, checks.py, tests/test_code_map.py, plus evidence scripts. checks.py sits outside the handoff's literal 'render module' wording but the handoff itself assigned tc31 to this gate and predicted this; it is code_map's own check registry where every prior location-adjacent check already lives -- the same narrow named exception g3 took.",
+            "g1_g2_g3_tripwires_held": "_make_collision_repo's INDEX collision still collides (fixture and PageAccountingInvariantTests untouched, assign_page_filenames never edited, class green in the full run). OWN_MODULE_NAMED_MUTATION and test_refs_lines_are_self_consistent_on_an_intact_map untouched and green. Page header loc() untouched -- no :<line>, still path, N lines. entity_symbol_join's two independent derivations untouched; the new check reads page titles and the store dicts only, never either derivation."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-review": {
@@ -2257,6 +2309,13 @@
       "why": "All five close criteria verified against the artifact, not the report. One schema carries all six fields; supplement.py is absent from scripts/code_map and the word supplement absent from .gitignore, cli.py and __init__.py, so the stage is gone not deprecated; LINE_BASE is declared and pinned by a flip-test; ids.jsonl is byte-identical under a 24-line code MOVE as well as the mint-two-rename-one exercise. The gate's own selector obeys the tc38 rule from both sides: it selects 21 tests (non-empty) and four of those tests were re-run RED from git archive snapshots, so it can go red. Suite 1767/2/0/0, fresh build then check 6/6 exit 0, tree clean, 0 map files tracked.",
       "mechanical": false,
       "ts": "2026-08-08T10:07:42.932975+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g4-implement",
+      "why": "Second tier shipped and tc31 closed with a real check whose RED commit proves the gap: a page relocated into another module directory previously passed check. The tier carries exactly one predicate, a per-module structural fact not a corpus-size gate, so critic F4 holds. Suite 1767 to 1772, check 7/7 exit 0, selector -k top_index selects 5 and was demonstrably red at 4 failed. CRITICAL RESIDUAL for the review: my handoff named superCoolSpaceSim as one of two cross-corpus proofs; it is a C++ repo with zero Python files that indexes to nothing, so it is a null test not a counter-shape test. Only one corpus, f1Brainz, actually exercised critic F9's trap. The crew found this by running it and reported the null honestly instead of dressing it as a pass.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:04:03.957252+00:00"
     }
   ],
   "amendments": [
