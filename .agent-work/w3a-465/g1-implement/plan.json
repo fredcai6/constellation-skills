@@ -414,13 +414,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "impl-w3a-465-g1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T05:42:25.479888+00:00",
     "last_heartbeat": "2026-08-08T06:09:24.481518+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T06:09:31.874350+00:00"
   },
   "amendments": [
     {

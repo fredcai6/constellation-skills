@@ -19,13 +19,14 @@
           "id": "c1",
           "statement": "orchestrator context + glossary loaded; plan intent and scope confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "orchestrator context + glossary read at the spine's context step; plan intent and scope confirmed against LO-465 and MISSION_FRAME.md"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -41,7 +42,8 @@
           "id": "p1",
           "statement": "plan intent and scope confirmed at e0-context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "confirmed at e0-context"
         }
       ],
       "postconditions": [
@@ -93,7 +95,30 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md",
+            "status": "complete",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-implement-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-implement",
+            "why_ref": "none",
+            "reason": "context governor HARD trip at 15%; work complete and reviewed APPROVE, PR 492 open; remaining work is engine bookkeeping only"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-review": {
@@ -185,5 +210,16 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+    "status": "active",
+    "claimed_at": "2026-08-08T06:10:20.382014+00:00",
+    "last_heartbeat": "2026-08-08T06:12:36.205144+00:00",
+    "claimed_by": "commander-delegated:w3a-465",
+    "worktree": "C:/Programs/wt-w3a-465",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
 }

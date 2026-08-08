@@ -107,3 +107,7 @@ on POSIX.
   record path"). Outside this dispatch's fence. Triage candidate.
 - The same file's prose says `py scripts/verify_interrogation.py`; #454 ruled `py` is never the
   pytest/python entry. Triage candidate.
+
+---
+
+The full dispatch result is at `.agent-work/w3a-465/RESULT.md` (verdict, evidence, the red, exit code, isolation proof, triage candidates, workflow feedback).

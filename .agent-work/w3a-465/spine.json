@@ -398,6 +398,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "execute",
+            "why_ref": "none",
+            "reason": "context governor HARD trip; issue #465 complete, reviewed APPROVE, PR 492 open; remaining work is engine bookkeeping named in STATE_NOTE.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -640,7 +651,7 @@
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T04:56:49.378282+00:00",
-    "last_heartbeat": "2026-08-08T05:11:32.794424+00:00",
+    "last_heartbeat": "2026-08-08T06:12:54.834407+00:00",
     "claimed_by": "commander-delegated:w3a-465",
     "worktree": "C:/Programs/wt-w3a-465",
     "previous_session_id": null,
