@@ -2951,3 +2951,49 @@ looks like a check it could make pass by writing it leniently. It is not, becaus
 imperative requires breaking the verifier's inputs and confirming it fails.** The check and the
 mutation-test of the check sit in different gates reviewed by different agents. That is the right shape
 and I am not flagging it.
+
+---
+
+## FINDING | 2026-08-08T17:57:10Z | g4-review returns BLOCK — the compliance signal is erased by the act the band ORDERS
+
+13/17. `g4-review` closed **BLOCK, 1 blocking finding**, and the Commander **reproduced it in its own
+shell with the reviewer's own probe** rather than accepting it on the report. Rule 8 applied by the crew
+without being told again.
+
+**B1 — three shipped mechanisms compose into a signal that cannot survive to the seam.**
+
+1. At/over hard, `advance --mechanical` is refused, so **the only legal close is `advance --why`**.
+2. `advance --why` **appends a new why-record**.
+3. `begin_over_line_records` matches **only entries keyed to the LIVE why-record**.
+
+Therefore the close the HARD band **orders** the agent to make supersedes **every ledger entry at once**.
+
+Measured at gauge 0.20 against hard 0.15: selector reads **1** after a refused begin, **2** after a
+released begin, **0 after the same agent closes that gate**. Across a 3-gate runaway with three
+over-the-line begins on disk, the rendered line **peaked at 2 and was ABSENT AT THE SEAM** —
+**byte-identical to a compliant agent that closed and stopped.** Green in both worlds, at exactly the
+place the next reader looks.
+
+**Two aggravations that make this the wave's most important find:**
+
+- The engine's own shipped line reads *"Closing this gate does not clear the record."* The Commander
+  closed that gate and it vanished. **The text asserts the opposite of the behaviour.**
+- Their own test — `test_compliance_line_is_absent_once_the_recorded_begin_is_superseded` — runs
+  **byte-for-byte the offender's path** and labels it *"a fresh agent"* in a comment. **It pins the
+  defect as intended.** A passing test that certifies the bug.
+
+**This is DC6 failing on the one limit that decides whether the observable survives to the seam**, and
+it is the **fifth specimen** of this epic's own subject inside #467 — the first four are in the crew's
+`CHECK_THAT_CANNOT_FAIL.md`, and this one is inside **the fix for them**. Everything else held: the
+reviewer constructed **17/17 defect shapes** and only this one landed.
+
+**Pre-ruling for the rework, so it is on record before the Commander proposes.** The obvious repair —
+widen the selector to match all why-records — is **refused in advance**. It resurrects superseded
+entries and converts a check that cannot fail into one that cannot **pass**, which is the mirror the
+crew's own document names. The repair must keep the ledger entry alive **across the mandated close**
+while still separating a runaway from a compliant agent. **How** is the Commander's call; it is
+implementation inside a gate it owns. If the repair needs the gate's done-conditions reworded rather
+than its code changed, that is plan surgery and it floats to me.
+
+**No dispatch.** The Commander is alive and `g4-integrate`'s own imperative already says BLOCK -> return
+for rework. Rule 7 holds.
