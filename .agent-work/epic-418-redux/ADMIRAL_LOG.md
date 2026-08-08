@@ -4202,3 +4202,40 @@ Not filing this as a new issue: it is the same subsystem as #452 (a bare-keyed a
 spines gets no reading) and #458 (the gauge ships nowhere), both open and both deferred to the governor
 thread by ruling. **Recorded as a second measurement on an existing finding, not as a new one** — the
 backlog does not need another issue, it needs this one to have evidence.
+
+### ERROR (mine) — my launch orders reproduced #409, which I had excluded from the wave that morning
+
+Every one of the five wave-5 launch orders carried the line *"Working notes: `notes-1.md`"* — **with
+no directory.** I wrote that having read #409 the same day and having deliberately left it out of the
+wave on the grounds that it needed a location ruling first.
+
+**Three crews, the same instruction, two different readings, both correct:**
+
+| crew | where it put the file |
+|---|---|
+| gates | `.agent-work/w5-gates/notes-1.md` |
+| docs | `.agent-work/impl-w5-docs-496-411/notes.md` |
+| addressing | **`notes-1.md`** — repo root |
+
+`git ls-files` counts **seven** already on main. Crew 3's would have been the eighth. Caught before
+merge and corrected by asking it to `git mv` into its work area.
+
+**The root cause is sharper than #409 states it, and I posted that to the issue.** The doctrine
+mandates the **filename** and says nothing about the **location** — *"named `notes-<n>.md` (never
+`findings-<n>.md`)"* is entirely about the name. So **an agent cannot be non-compliant either way**,
+and a check for "does a `notes-<n>.md` exist" passes identically wherever it landed.
+
+**The pairing worth keeping:** the `findings-<n>.md` half never drifts because the **harness refuses
+that basename** — the rule has a backstop that is not the agent's memory. The location half has no
+backstop and has drifted seven times. **A sweep that relocates the seven leaves the generator
+running.** The cheapest real fix is a declared home the instruction actually names —
+`.agent-work/<work-id>/notes-<n>.md`, which is where the two crews that inferred a location both put
+it independently, so the convention already exists in practice and is merely unwritten.
+
+**Correction to the crew was explicit that the ambiguity was mine, not its.** Its scope I verified
+rather than assumed: `commander-core.md`, `crew-dispatch.md`, both handoff templates, and a new
+`tests/test_crew_delivery_addressing.py` — no other crew's file, and **no `references/global-*.md`
+install-time copy**, which the installer would have silently overwritten. Its commit message names
+**#507 and #370 only**, correctly excluding #413.
+
+**PR #511 is up** (crew 3). Two PRs open now: #509 and #511. Neither merges while its crew is live.
