@@ -260,7 +260,8 @@
             "kind": "command",
             "command": "test -f .agent-work/issue-456/crew-handoffs/g5-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^scripts/code_map/checks.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-2"
         }
       ],
       "constraints": [
@@ -269,27 +270,50 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/issue-456/crew-handoffs/g5-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^scripts/code_map/checks.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "g5-remediate-impl-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T15:56:27.624556+00:00",
-    "last_heartbeat": "2026-08-08T16:46:25.784290+00:00",
+    "last_heartbeat": "2026-08-08T16:48:20.337813+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T16:48:26.152288+00:00"
   },
   "why_trail": [
     {
@@ -319,6 +343,13 @@
       "why": "Full suite green: 1781 passed, 2 skipped, 672 subtests, 0 failed in 356.75s (baseline+1, the new pinning test) -- confirmed independently by Commander too. Fresh build+check: modules 111, entities 3753, pages 3865 (baseline 3752/3864 +1 -- the new pinning test I wrote in m1 is itself a new mapped entity, since this repo's code_map indexes its own tests/ tree). check -> 7/7 exit 0. checks.py still imports nothing from render.py (independence intact, confirmed by grep). Re-ran measure_split.py against the fresh tree: exactly one cell moved by +1 (unused_test_defined 2340->2341, the new test itself, correctly bucketed as unused+test-defined since nothing calls it) -- the other five cells (88/2/449/873/0) are byte-identical to the handoff table, proving zero EXISTING entities were reclassified. Corrected m3's c2 hardcoded counts via amend (retext-check) since my own plan hadn't anticipated the self-indexing +1.",
       "mechanical": false,
       "ts": "2026-08-08T16:37:14.887238+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "Committed 588d5419 with 18 explicit paths: render.py, checks.py, tests/test_code_map.py, measure_split.py, the two new evidence files, this plan+journal, and the governor gauge dir -- git add -A never used, map/ verified untracked (git ls-files map = 0). IMPLEMENTER_RESULT written with the RED (1 failed, exit 1, exact AssertionError text) and GREEN (20 passed, exit 0) pinning-test evidence, the corrected split headline (88 genuinely unused production, not 2429), the full-suite number (1781/2/672/0), fresh build/check (7/7 exit 0, 111/3753/3865), the independence grep, and the +1 entity-count assumption fully explained (my own new test is a new mapped entity, not a reclassification -- all five other split cells unchanged).",
+      "mechanical": false,
+      "ts": "2026-08-08T16:48:20.337787+00:00"
     }
   ],
   "amendments": [
