@@ -577,3 +577,28 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   written or one-line. **Not acted on:** #458 is out of wave 3's scope and touching settings wiring
   mid-wave would shift ground under the crew editing that file. Surfaced at the boundary, and the
   trip-band question goes back to Tommy re-framed rather than as I first put it.
+
+- `2026-08-08` — `RULING` (A2 preparation; **deliberately NOT a cut**): read A2's section to be ready
+  when its turn comes. **Holding the cut**, because my own pre-ruling
+  `decision:a2-cut-at-its-turn` says A2 is cut against *what B extended actually leaves behind*, and
+  B extended does not complete until wave 3 merges. Cutting now would be cutting against a forecast.
+  **Shape, for when the turn comes:** six done-conditions, not one issue. DC1-3 are the refusal→
+  instruction conversion and #431's dissolution; DC4 is the per-gate override mechanism *exercised
+  at least once*; DC6 is the compliance signal; DC5 is the full round trip (trip → handoff → refresh
+  → resume, verified against what the tripped agent was mid-way through). DC5 and DC6 were both added
+  by critics (F11, F33/F21) precisely because DC1-3 are satisfiable while the thing A2 exists for
+  never happens. Provisionally **three issues**, with DC5 last because it tests the whole.
+  **The finding that matters more than the cut — the defect family is the spec's own organizing
+  concern, not a lens I noticed.** A2's DC6 states it as an explicit design cost, in the spec's own
+  words: *"a refusal is self-enforcing and self-recording, while an instruction is satisfied or
+  ignored with **identical traces**. Converting HARD from a refusal into a sentence removes the only
+  mechanism that could register an agent ignoring it."* That is the family stated exactly — a signal
+  whose value is identical in the healthy and defective worlds — and the spec pays for it deliberately
+  rather than tripping over it.
+  So the pattern now has **three independent sources** in this epic: the spec's F8 ruling (*"the
+  purest check-that-cannot-fail in the document"*), A2's DC6 as a priced design cost, and wave 2's
+  four field findings across four subsystems. It is not a theme I proposed and Tommy declined; it is
+  the thing #418 has been about since the spec was written. **That changes what I recommend at the
+  wave-3 boundary:** not "make the defect family a wave", but "the epic already has this as its
+  spine — the governor thread (#458/#264/#488/#452) is the instance where three of four parts are
+  already written." Recorded, not acted on.
