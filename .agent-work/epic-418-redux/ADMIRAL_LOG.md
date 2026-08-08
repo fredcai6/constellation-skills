@@ -2605,3 +2605,40 @@ TOLD** — the constraint I set, met exactly.
 **And the line I would put in front of Tommy:** E crossed hard after closing `g3-implement`, refused
 to start `g3-review`, and wrote — *"the fix now shipped in this tree would have refused me if I had
 tried. **I did not need the engine to refuse me.**"* Sixth clean seam, nothing lost.
+
+**RULING | I overruled myself on tc1: the crew's route is better and I adopted it.**
+I had said fix `GLOSSARY.md:13` as a **standalone commit outside any gate**. Instance E showed why
+that is the weaker option and I am taking its proposal instead: **one `amend` adding a small pending
+doc-fix task.** `amend` **adds pending gates without cascading**, so the work stays visible in the
+plan with evidence attached, rather than being an ungated commit no gate accounts for.
+
+It also showed my *earlier* placement was **mechanically impossible**, not merely suboptimal:
+reaching into closed g2 needs `reopen`, which **cascade-resets every downstream gate including the
+completed `g3-implement`** — and `reopen` is itself a **BEGIN-work verb that the fix shipped at g2
+now guards at hard**, which it was over. **The fix it built blocked the repair route to its own
+scope.** Closed twice over.
+
+**And it declined to self-authorize, for three reasons it put on the record**: it was over hard; plan
+surgery is not *"closing the gate I am in"*; and **I had just withdrawn a different amendment
+authorization, so helping itself to a new one on adjacent reasoning was exactly the move not to
+make.** That is the fifth time this wave a crew has declined something available to it, and the most
+disciplined instance — the reasoning is about *precedent*, not about the immediate case.
+
+**RULING | model tiers: adopted E's read verbatim.** `g3/g4/g5-review` **Opus** under the
+adversarial-review carve-out — the g2 reviewer's entire value came from *attacking* rather than
+confirming, rebuilding the pre-change engine from `git show 38f0b448^` instead of trusting saved RED
+files. **`g4-implement` Opus with the reason named in the dispatch**: an engine-only append-only trip
+ledger at mutating chokepoints is engine-semantics work where being subtly wrong is invisible — my
+second sanctioned reason, quoted back at me correctly. Everything else **Sonnet**.
+
+**On E's offer to share my error: partly accepted, and only partly.** It said the premise I ratified
+was **its own**, supplied *"with more confidence than my evidence supported."* True, and generous.
+But **ratifying is my job**, and the falsifier was one `grep` of the template — a check I had run on
+a different template an hour earlier. Its framing is the useful half: *the habit that caught it is
+the same one you named; it just needed applying one layer further down than either of us did.* Both
+of us stopped at the artifact and neither read the template that governs it. **That is the correction
+worth keeping, and it belongs to the pair, not to either of us alone.**
+
+**Instance E stopped after its idle notification (14:13:03Z), state verified in my own shell, then
+`commander-w4-467-f` dispatched.** Notification → stop → verify → dispatch, in that order. **8/16,
+`amendments: 1`, leases released, tree clean at `ad9e30e4`, next `g3-review`.**
