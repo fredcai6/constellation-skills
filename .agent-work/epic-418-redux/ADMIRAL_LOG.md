@@ -2458,3 +2458,51 @@ I trusted a signal that agreed with me instead of the one that could contradict 
 **No message sent to the crew.** Nothing needed doing, and a message would have cost it context for
 my own reassurance — the operating change I made after my own messages pushed instance B over its
 line.
+
+## 2026-08-08 — I ratified an unverified premise; the crew retracted it before spending it
+
+**ADMIRAL ERROR | I authorised a change to four frozen gates without checking the premise.**
+Instance E reported `g2-integrate.c3` as a structural trap propagated through the wave. I reasoned
+carefully about **blanket versus per-gate**, attached four conditions, insisted the check stay
+failable — and **never verified that the defect was structural at all.**
+
+It is not. The house vocabulary is **`APPROVE`/`BLOCK`**, per
+`constellation-commander/templates/REVIEWER_HANDOFF.template.md`, and **`c3` matches it exactly.**
+The `ACCEPT / ACCEPT WITH FINDINGS / REJECT` wording was **hand-written by the g1 commander into its
+own handoff** (`g1-reviewer-handoff.md:84`). So g1's gate became unpassable because that commander's
+handoff contradicted **its own frozen plan** — a one-off authoring slip, not a wave-wide defect.
+
+One `grep` of the template would have settled it, and **I had that exact habit available**: I ran
+precisely that check on `r6-fowler` an hour earlier and found the verb its reviewer believed did not
+exist. I did not apply it here. **Authorization WITHDRAWN**; no amendment to g2-g5. The g1 amendment
+stands on its own merits.
+
+**The retraction is worth more than the amendment would have been.** E was **holding an
+authorization from me** and checked the premise anyway rather than spending it. In a wave whose
+subject is *agents doing what they were told when nobody would notice*, **an agent handing back
+unused authority after finding its own case was wrong** is the cleanest demonstration available.
+Fourth time this wave a crew has declined something available to it.
+
+Accepted its mitigation: require `blocking_findings` in the payload and state that APPROVE means
+zero blocking findings — carrying g1's useful half into the **evidence** without touching a frozen
+check. And its standing correction, verbatim: **when a gate's `c3` looks unpassable, check the
+handoff against the template before concluding the plan is broken.**
+
+**RULING | tc1 pulled into g2's scope — fix it now, do not defer to triage.**
+`docs/agents/GLOSSARY.md:13` still reads *"HARD blocks `advance` until the agent requests a context
+refresh."* Three reasons this is not ordinary doc staleness: it is **the glossary every constellation
+agent reads**, and it does not merely describe the old behaviour — **it teaches the exact belief
+#431 came from**, from the canonical source, to every future agent. Shipping the fix while that line
+stands means shipping a change **the documentation denies** — the third doctrine-and-behaviour
+divergence this epic has found, and the previous two each cost a crew real work. And it is squarely
+DC1's territory, since DC1 is about **what the agent is told** and this is literally that.
+
+Scoped tightly: **that one line, nothing else in the glossary**, float rather than expand if
+accuracy requires touching neighbours.
+
+**g2-implement COMPLETE, committed `38f0b448`** — all five parts, seam held, verbs pure, closeout
+selector **0-collected/exit-5 → 25 passed / exit 0** in the Commander's own shell, **12 mutations
+logged with total failure counts**. Noted approvingly: the implementer **reported M11 as an honest
+limitation rather than dressing a 47-failure mutation as proof**, and found the glossary defect via
+an **unprompted blast-radius grep** which it **flagged rather than edited**. Both are the tells worth
+trusting the rest of the evidence on.
