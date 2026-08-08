@@ -1,5 +1,29 @@
 # Crash-resume state note — epic-418-redux
 
+> ## THE SIX RULES — re-read this block before every batch of commands
+>
+> Everything below this box is reference. **These six are the ones that have actually been broken,
+> by me, after I wrote them down.** This run's most repeated failure is not ignorance — it is
+> *written-down-and-ignored*, the human twin of the done-condition wave 4 is implementing: an
+> instruction satisfied or ignored with identical traces gets ignored, including by its author.
+> A 250-line note is a note whose rules get skipped. This block exists so that stops being true.
+>
+> 1. **Do NOT push after every log append.** `ci.yml` has no `paths-ignore`, so an
+>    `.agent-work`-only commit burns the full 8-minute suite. Commit locally; push at real
+>    boundaries. *(Broken twice: 6 concurrent runs starved PR #490 ~25 min; then 3 more today.)*
+> 2. **Re-derive every status claim from its source before citing it.** `gh issue view`, `gh pr
+>    view`, the forge — never this file's memory of it. *(Broken 3x: "A2 has no issue cut" across
+>    three waves; four wrong PR numbers; a stale skill I ran the whole epic on.)*
+> 3. **Never act on `REFRESH REQUESTED` alone** — prove the worktree is idle first. A served request
+>    reads as live. *(One command from destroying a healthy crew, then its replacement, in a loop.)*
+> 4. **Mutation-test every check before you trust it.** If it cannot go red, it is not a check.
+>    *(7 instances built by me in the epic about exactly this.)*
+> 5. **A piped `$?` is the pipe's exit code.** Redirect to a file or use `${PIPESTATUS[0]}`.
+>    *(Read a verifier REFUSAL as exit 0.)*
+> 6. **Never pass markdown to `gh` in a double-quoted string** — a backtick runs as command
+>    substitution and the post succeeds with the phrase silently deleted. Write a file, use `-F`.
+
+
 **WAVE 4 IS LAUNCHING: one Commander on #467 (A2, trip semantics). Do not dispatch a second.**
 
 - **step:** `execute` — in-progress (resumed 2026-08-08 on Tommy's *"keep rolling"*).
