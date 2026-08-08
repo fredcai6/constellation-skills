@@ -1793,3 +1793,54 @@ in the spine.** A cold successor gets the plan and not the ground rules.
 with `g1-review` `pending`, no crew running, `recover_crews` clean, everything committed, the
 reviewer handoff pre-authored so its successor dispatches rather than composes — and **released its
 lease** so the next claims without `--force`. Two Commanders, two clean handoffs, zero work lost.
+
+## 2026-08-08 — the gauge finding settles across three agents, and one of them recovered my lost measurement
+
+**Commander C resumed cleanly: lease claimed on BOTH `spine.json` and `execute.json` with no
+`--force` on either, `recover_crews.py` 1 crew / 0 unresolved, `g1-review.p1` attested, reviewer
+crew registered and dispatching against the handoff its predecessor pre-authored.** Its verdict on
+the cold start, verbatim: *"it sufficed — `execute.json current` alone was enough to act, and the
+spine's staleness cost me nothing because you warned me; without that warning it would have sent me
+to redo `start execute`."* **That is a qualified pass, not a clean one** — an index that works only
+because someone outside the system patched its gap — and I have told it to record it that way.
+
+**RULING | my "unmeasurable" verdict was itself too pessimistic. Commander C produced the clean run
+I thought my intervention had destroyed.** I logged that stopping the first Commander had confounded
+the severity question beyond recovery. But C arrived with **both predecessors already stopped**, and
+**still** met `CONTEXT 15% (>= hard)` against a gauge stamped `10:45:36Z` that was not its own —
+which then cleared to its own `0.0518` on its first mutating command, **with nobody intervening**.
+That is the uncontaminated measurement.
+
+**And it changes the mechanism, which changes the fix.** With nothing running, the symptom cannot be
+*"the outgoing agent keeps overwriting me."* It is that **`gauge.json` carries a bare last-written
+value with no notion of whose reading it is or when it went stale.** A successor is judged on its
+predecessor's fill until its own first tool call overwrites it. Settled statement, given to C for its
+section:
+
+> The gauge is a single-slot, unowned, undated-in-practice value. Two failure windows follow: a
+> **live overlap** while the outgoing agent is still taking tool calls, and a **stale-value window**
+> of at least one tool call at every handoff, even when nothing else is running. Both self-clear.
+> Neither is guarded, and the same shape is guaranteed at every trip because trip and resume share
+> a spine.
+
+**Consequence flagged to C, and it is the sharp one:** the proposed fix — *the writer should decline
+to write for an agent that does not hold the spine lease* — closes the **live overlap** window and
+**not** the stale-value one, because a stale value needs no writer at all. **A fix that closes one
+window and is reported as closing both is precisely the check-that-cannot-fail shape this wave
+exists to hunt.**
+
+**Severity, now settled across three independent agents:** real, structural, guaranteed at every
+handoff, **self-clearing**, and it cost this run nothing. **Not** *"the round trip cannot close."*
+Triage candidate; the frozen plan stays frozen.
+
+**Directed C NOT to rewrite `RESUME_OBSERVATION.md`.** It proposed adding its own section and
+flagging the correction rather than editing its predecessor's text, and I approved it emphatically:
+**three agents disagreeing in sequence, on the record, IS the finding.** Overwriting the earlier
+readings to produce one tidy account would delete the most valuable thing here — a claim made,
+downgraded by its own author, and then independently re-measured by a third party who had no stake
+in either version.
+
+**Asked for one line only C can write:** it **did not waive anything** — the band released on its
+own reading. A successor that had waived, or been told to waive, would have produced an
+**identical-looking green run**. That is DC6's entire argument, demonstrated on itself rather than
+argued.
