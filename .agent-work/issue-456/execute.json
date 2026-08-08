@@ -532,11 +532,47 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Commander context at 16-19%, at/over the engine's 15% hard limit; advance is mechanically refused. THE GATE'S WORK IS COMPLETE -- review returned APPROVE with 0 open findings (e-g1-review-1), refresh-request filed (e-g1-review-2). Nothing outstanding but the advance itself. RESUME: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), then resume execute, resume g1-review, advance g1-review, start+advance g1-integrate (c1 re-runs the full suite, ~8 min, expect 1729 passed / 2 skipped / 1 xfailed), then g2. Do NOT re-dispatch any g0 or g1 crew -- all ten are terminal. Read .agent-work/issue-456/STATE_NOTE.md first.",
+        "authority_needed": "parent agent",
+        "next_action": "",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g1-review-RESULT.md",
+            "crew": "constellation/issue-456/g1/reviewer/attempt-1",
+            "crew_verification": "run_crew.py --verify-result -> 'fresh (completed)'.",
+            "survey": "Driven end to end at .agent-work/issue-456/g1-review/review.json -- 7 items, all visited, consolidated APPROVE, 0 open findings.",
+            "suite": "1729 passed, 2 skipped, 1 xfailed, 651 subtests passed. Baseline 1709/2/0: +20 passed, 0 failed. xfail is not red. Reproduced by the reviewer in a cleared environment.",
+            "attack_mandate_discharged": "The reviewer was told explicitly that the implementer's own undesigned-attack pass does NOT discharge its own, because reproducing a falsifier its author designed proves only that probe works -- the shape that got past two reviewers at g0. It ran its own attacks and returned APPROVE with no surviving check that should have caught one.",
+            "xfail_guard_upheld": "The reviewer confirmed the implementer was RIGHT to overrule the Commander's handoff, and verified the mechanism directly: xfail(False, strict=True) over a passing body -> passed, which is exactly the Linux-CI failure my bare strict=True would have caused. Case sensitivity is probed at RUNTIME, never inferred from sys.platform. The XPASS-turns-red mechanism was verified end to end by simulating g2's rename ([XPASS(strict)], exit 1) and then restored byte-exact.",
+            "move_invariant_rule": "The reviewer quoted and judged the implementer's own rule for separating a move-invariant check from a baseline. Judgement: not a matter of taste, testable against any candidate check, and it classifies all six correctly. One carve-out in it is an exception TO the rule rather than an instance OF it and must be named as such -- recorded so later gates place their thresholds by a rule that has already been stress-tested rather than inventing one each time.",
+            "known_limits_carried_not_hidden": "Two limits the implementer found and did NOT narrow away, both re-confirmed by the reviewer and routed forward rather than closed here: tc31 -- nothing in g1 ties a page's LOCATION to its CONTENT (swapping two pages' contents, and renaming a page file, both pass all six checks); routed to g4, whose close criteria already demand a link-following graph walk. tc32 -- a green determinism run is NOT evidence that caller ordering is stable (a Counter is insertion-ordered and hash-seed-immune, so dropping its sort changes nothing observable under a hash-seed sweep); routed to g5, which must establish caller ordering by its own argument and must not cite g1's green as proof.",
+            "carry_forward": "python -m scripts.code_map check EXITS 1 on this repository, correctly, until g2 lands the rename. It is stated at the top of the module docstring. gs and any CI wiring must expect it and must not read it as a regression.",
+            "reviewer_out_of_scope": "One process observation: a rail that was actually run and passed can journal as a risk acceptance, which would misrepresent the record. Carried to triage."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-review-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-integrate": {
@@ -1881,7 +1917,14 @@
       "statement": "tc26: the render report's page count still cannot notice a zero-byte page -- rglob('*.md') counts a file that was created and never written. Raised by the g0 closing reviewer (A5). NOT a blocker at g0: it weakens only the one field the B3 docstring now explicitly forbids trusting, and g1's structural invariant subsumes it. Goes to g1 with tc17."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "g1-review",
+      "blocker": "Commander context at 16-19%, at/over the engine's 15% hard limit; advance is mechanically refused. THE GATE'S WORK IS COMPLETE -- review returned APPROVE with 0 open findings (e-g1-review-1), refresh-request filed (e-g1-review-2). Nothing outstanding but the advance itself. RESUME: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), then resume execute, resume g1-review, advance g1-review, start+advance g1-integrate (c1 re-runs the full suite, ~8 min, expect 1729 passed / 2 skipped / 1 xfailed), then g2. Do NOT re-dispatch any g0 or g1 crew -- all ten are terminal. Read .agent-work/issue-456/STATE_NOTE.md first.",
+      "authority_needed": "parent agent",
+      "next_action": ""
+    }
+  ],
   "why_trail": [
     {
       "id": "w-1",

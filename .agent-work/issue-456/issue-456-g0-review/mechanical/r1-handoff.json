@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "issue-456-g0-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 2,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g0-review-r1-handoff@54d78415d06c81a3b7844bc967cfd3422f619715",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g0-review",
+    "generated_at": "2026-08-07T22:25:37Z"
+  }
+}

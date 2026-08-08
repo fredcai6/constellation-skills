@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "e4725b0abf9f269157c70085fb0f378333845d6a"
+  },
+  "run": {
+    "work_id": "issue-456-g1-review",
+    "generated_at": "2026-08-08T01:43:37Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-reviewer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

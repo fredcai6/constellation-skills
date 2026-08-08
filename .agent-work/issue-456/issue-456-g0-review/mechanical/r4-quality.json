@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "issue-456-g0-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 2,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g0-review-r4-quality@42ed6ac2c2b42175a1acad9938801a9534d349eb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g0-review",
+    "generated_at": "2026-08-07T22:27:16Z"
+  }
+}

@@ -860,6 +860,21 @@
       "id": "tc30",
       "from": "execute",
       "statement": "tc30 run_crew.py --abandon --relaunch REGISTERS THE NEW ATTEMPT AND THEN HANGS trying to spawn it, leaving a phantom 'running' entry with nothing behind it. Measured at g1: the call timed out at 120s; attempt-2 was already in the registry as 'running', so the next --dispatch external was REFUSED as a duplicate naming a crew that had never started. Same family as tc22/tc25 -- the registry records intent to launch before the launch succeeds, and there is no state for 'registered but never spawned'. Workaround used: --abandon alone (which works), then dispatch the subagent by hand into the already-registered slot. CANDIDATE: make --relaunch register only after a successful spawn, or give the wrapper an explicit 'registered, not started' status that --dispatch can adopt instead of refusing."
+    },
+    {
+      "id": "tc31",
+      "from": "execute",
+      "statement": "tc31 NOTHING IN g1 TIES A PAGE'S LOCATION TO ITS CONTENT. Found by the g1 implementer's undesigned-attack pass: 11 attacks run, 4 survived. Swapping two pages' contents, and renaming a page file, BOTH pass all six g1 checks. The checks verify that the right set of pages exists and that each page is internally consistent, but never that a given page is at the path the map says it is. Deliberately NOT narrowed away in the gate's claims. ROUTE TO g4, whose close criteria already demand a link-following graph walk -- a walk that follows links from INDEX.md would catch both. Do not let g4 close without covering it."
+    },
+    {
+      "id": "tc32",
+      "from": "execute",
+      "statement": "tc32 A GREEN DETERMINISM RUN IS NOT EVIDENCE THAT CALLER ORDERING IS STABLE. Found by the g1 implementer: dropping a sorted() is not uniformly a determinism defect, because a Counter is insertion-ordered and hash-seed-immune, so removing its sort changes nothing observable under a PYTHONHASHSEED sweep. g1's determinism check is real and kills the sorted() drops that DO matter, but its green does not generalise. ROUTE TO g5, which owns caller-split determinism: g5 must establish caller ordering stability by its own argument and must not cite a green g1 determinism run as proof."
+    },
+    {
+      "id": "tc33",
+      "from": "execute",
+      "statement": "tc33 CHECKS THAT DEGRADE QUIETLY RATHER THAN LOUDLY -- four found by the g1 reviewer, none blocking, all real. The sharpest: respelling the inbound line makes refs-line-self-consistent return [] instead of going red, so a rename of the thing it parses silently empties its iteration set rather than failing. That is the 'wrong iteration set' route into a check that cannot fail, and it is the same family as the g0 defects. It is survivable today only because inbound-attribution catches that particular case, which is luck, not design. One assertion fixes it: require the iteration set to be non-empty on a corpus known to be non-empty. ROUTE: fold into gB or wherever the check family is next touched; do not let it sit because a sibling happens to cover it."
     }
   ],
   "blockers": [],
@@ -868,7 +883,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T01:08:32.793303+00:00",
+    "last_heartbeat": "2026-08-08T01:57:18.663061+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

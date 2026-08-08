@@ -1,0 +1,47 @@
+run(456): g0 remediation -- strip the position, count the tree
+
+Both g0 blockers fixed in scripts/code_map/render.py, each with a test
+watched failing first.
+
+B1, loc() at render.py:171-188. head is the bare file path now; the
+':<line>' is gone and ', N lines' stays. The handoff's second site,
+render.py:306, needed no change -- the module index already emitted
+'file, N lines' with no line number, so loc() was the only position
+emitter, and it has exactly one caller. Over-stripping fails the ruling
+as surely as under-stripping, so a second test pins the path and the
+size; mutating head to '' turns it red on all three fixture pages.
+
+B2, run() at render.py:400-436. The npages counter is gone from the write
+loop; 'pages' is sum(1 for _ in out.rglob("*.md")), read off the tree, so
+it cannot disagree with the tree. Deduplicating resolved path strings --
+the obvious alternative -- would NOT have fixed this repo: Verdict.md and
+verdict.md are two distinct strings and one file, so a set still reports
+3636.
+
+The count fixture had to force a collision or the assertion could not
+fail. It uses a class named INDEX, colliding with its own module's
+INDEX.md by exact path, which diverges on every platform; the real
+Verdict/verdict pair collides only on a case-insensitive filesystem and
+would prove nothing on Linux.
+
+Evidence. Real artifacts rendered into a temp tree, so map/ and .code-map/
+were never written: pages 3636 -> 3635 against an unchanged on-disk 3635.
+The Verdict page is still lost, which is the required outcome -- that is
+tc17 and it is g1's. Over the real corpus, 0 of 3522 entity-page headers
+carry a position and all 3522 kept both the path and the size. Full suite
+1709 passed / 2 skipped / 0 failed against the 1706/2/0 boundary, up by
+exactly the three tests added.
+
+Two findings not asked for. entity_pages in the same report still counts
+emit() calls and reads 3523 against 3522 real pages -- the identical
+defect, left alone per scope, recommended to g1 beside tc17. And a blunt
+position grep of the committed tree still returns two hits, both from one
+authored docstring in tests/test_checklist_engine.py naming
+checklist_engine.py:449 in its own prose; that is copied source text, not
+renderer output, and it is recorded in the test docstring so gs is not
+surprised by it.
+
+map/ remains deliberately untracked; it is staged at gs, last.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LCboWKhoAR3bNK3ixfbdgs

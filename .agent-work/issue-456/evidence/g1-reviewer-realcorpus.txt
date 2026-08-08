@@ -1,0 +1,17 @@
+﻿BUILD exit=0
+CHECK exit=1
+ok   no-empty-pages
+FAIL page-accounting: 2
+      scripts.run_skill_eval:Verdict: an entity the map claims and does not have
+      the tree holds 3726 pages; the store accounts for 3727 (1 top index + 112 module indexes + 3614 entities)
+ok   refs-line-self-consistent
+ok   entity-symbol-join
+ok   inbound-attribution
+ok   deterministic-rebuild
+FAILED 1 of 6 checks: page-accounting
+
+modules=112 entities=3614 pages=3726
+pages - 1 - modules = 3613   entity_pages(by title) = 3613
+case-INSENSITIVE collisions: 1 [('scripts.run_skill_eval:Verdict', 'scripts.run_skill_eval:verdict')]
+case-SENSITIVE   collisions: 0 []
+page_accounting failures: ['scripts.run_skill_eval:Verdict: an entity the map claims and does not have', 'the tree holds 3726 pages; the store accounts for 3727 (1 top index + 112 module indexes + 3614 entities)']

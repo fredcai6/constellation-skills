@@ -4,15 +4,24 @@ If this session dies, a fresh agent resumes from exactly these five lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch (the PID changes every time).
 
-- **step:** execute · item `g1-review` — **in-progress, reviewer crew
-  dispatched.** `g0` and `g1-implement` are both **complete**; do **not** reopen
-  either and do **not** re-dispatch any g0 crew or the g1 implementer.
+- **step:** execute · item `g1-review` — **BLOCKED AT A CONTEXT SEAM ONLY. The
+  gate's work is DONE.** The review returned **APPROVE with 0 open findings**
+  and is already attached as `e-g1-review-1`. `advance g1-review` was REFUSED
+  with "context at 16% is at/over the hard limit"; the refresh-request is filed
+  (`e-g1-review-2`). **NOTHING IS OUTSTANDING EXCEPT ENGINE BOOKKEEPING.**
 
-  Crew: handoff `crew-handoffs/g1-review.md`, slot
-  `constellation/issue-456/g1/reviewer/attempt-1`, result expected at
-  `crew-handoffs/g1-review-RESULT.md`. On APPROVE: attach as `review-result`
-  with `--field verdict=APPROVE`, then `start` + `advance g1-integrate`. On
-  BLOCK: fix at `g1` and re-review — do **not** attest around c2.
+  **A FRESH COMMANDER DOES EXACTLY THIS, IN ORDER:**
+  1. re-claim the lease `commander-issue-456` **idempotently** — same id, NOT a
+     takeover, no `--force`
+  2. `resume execute --reason "context refreshed"`
+  3. `resume g1-review --reason "context refreshed"`
+  4. `advance g1-review`
+  5. `start g1-integrate`, then `advance g1-integrate` (its c1 re-runs the suite,
+     ~8 min; expect `1729 passed, 2 skipped, 1 xfailed`)
+  6. continue at `g2`
+
+  **Do NOT re-dispatch any g0 or g1 crew** — all ten are terminal
+  (`recover_crews`: 0 unresolved). **Do NOT redo any g0 or g1 work.**
 
   **`g1` BUILD IS DONE AND COMMITTED** (`ba8e78aa` + `44eeb740`, pushed).
   `checks.py` rewritten, not ported: a `CHECKS` registry over a `MapUnderCheck`,
