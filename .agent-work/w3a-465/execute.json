@@ -1,0 +1,189 @@
+{
+  "work_id": "w3a-465",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope against LO-465 and .agent-work/w3a-465/MISSION_FRAME.md. Orchestrator context and glossary were read at the spine's context step; the map is DEGRADED-NO-MAP with a discharged receipt. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Affordance, byte-faithful writer, and the two prose corrections: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate and dispatch a subagent invoking constellation-implementer. Three changes, one coherent bite: (1) scripts/checklist_engine.py -- let amend's `retext-check` op run on a SURVEY checklist as well as a gated one, keeping add/drop/rescope gated-only (a conservative choice, not a type-level impossibility -- say so in the refusal message). State in the reviewer-facing prose what amend's --authority and --reason mean for a survey retext: the authority is the dispatching Commander, named in the reviewer handoff, never a string the reviewer invents. (2) scripts/checklist_engine.py save() -- preserve the target file's EXISTING line ending and write bytes; a file that does not yet exist, or one with mixed endings, gets LF. Scope is save() only; the journal append near line 2762 is out of scope and raised as a triage candidate. (3) skills/reviewer/ -- rewrite r6-fowler's imperative to name BOTH paths: resolve the real record path when you INSTANTIATE the survey, before you claim (the normal path), and use `amend --op retext-check` to repair it if the record moves or the path was wrong (the repair path). Do not make the exceptional route read as the documented route. Also correct SKILL.md's 'an open fail cannot consolidate to APPROVE' to state the --override-reason path. The line-ending test MUST be observed red before green. Both fixtures ship and both earn their place: on Windows the LF fixture is the discriminating one for THIS bug (text-mode write_text already emits CRLF here), and the CRLF fixture is the guard against the obvious over-correction of always writing LF. Three test shapes that cannot fail, all forbidden: building the LF fixture with write_text (on Windows it is born CRLF and the discriminating test silently degenerates); asserting on read_text output (universal newlines make `\r\n not in read_text()` vacuously true); asserting the saved bytes equal the fixture's bytes (save re-serialises with indent=2, so it fails for the wrong reason and gets loosened). Assert on read_bytes, scoped to line-ending bytes. Name which fixture goes red on which platform. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan intent and scope confirmed at e0-context",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "two-bin rule: the r6-fowler command postcondition is an enforced invariant and must stay a command check",
+        "an agent never hand-edits engine state; every fill this change sanctions goes through the engine",
+        "fence: only scripts/checklist_engine.py, skills/reviewer/**, and new tests under tests/ may be touched",
+        "do not touch tests/test_episode_negative_control.py, scripts/hooks/gauge_writer_hook.py, tests/test_verify_spec_confirmed.py (sibling dispatches own them)",
+        "the new tests live in tests/test_engine_survey_retext_and_newlines.py and are named by node id in g1-integrate's check -- a suite that never gained them must go RED, not green"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py \u2014 amend() line 2128, save() line 169, record() line 1887",
+          "skills/reviewer/templates/REVIEW_SURVEY.template.json r6-fowler",
+          "skills/reviewer/SKILL.md"
+        ],
+        "constraint": [
+          "docs/agents/GLOSSARY.md two-bin rule \u2014 prose alone enforces nothing",
+          "docs/agents/GLOSSARY.md spine \u2014 change it only through the engine",
+          "docs/agents/ORCHESTRATOR_CONTEXT.md \u2014 mechanism changes need targeted tests plus the broader suite"
+        ],
+        "decision": [
+          "retext-check lifts to survey; add/drop/rescope stay gated-only @grade: settled/read \u00b7 leans g1-implement \u00b7 settle: capture the current refusal, then the working op",
+          "the engine writes bytes and preserves the existing line ending @grade: settled/inherited \u00b7 leans g1-implement \u00b7 settle: LF and CRLF fixtures, red before green",
+          "the prose moves, not the --override-reason affordance @grade: settled/observed \u00b7 leans g1-implement \u00b7 settle: docs/CHECKLIST_SCHEMA.md:276"
+        ],
+        "evidence": [
+          "the placeholder is executed \u2014 record(pass) runs command postconditions",
+          "no verb can fill it \u2014 amend refuses a non-gated checklist",
+          "the engine rewrites line endings \u2014 one call on an LF checklist yields CRLF on Windows"
+        ],
+        "confidence_flags": [
+          "whole map absent (DEGRADED-NO-MAP); every claim must be grounded in an observed command result, not a structural assertion"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Affordance, byte-faithful writer, and the two prose corrections: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch a subagent invoking constellation-reviewer. Independently reproduce the red: the reviewer must itself observe the line-ending test failing against a text-mode writer, not accept the implementer's transcript. It must also confirm that lifting retext-check did not open add/drop/rescope on surveys, and that the rewritten r6-fowler imperative names a verb that actually works on a survey. It must inspect the returned survey's `amendments` audit array -- the safety argument for lifting retext-check rests on that trail, and a trail nothing reads is on paper. Name which fixture it observed red on which platform. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Affordance, byte-faithful writer, and the two prose corrections: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the full suite yourself and advance. BLOCK: send the implementer back for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the named new tests exist and pass alongside the full suite: retext-check works on a survey, add/drop/rescope still refuse one, and save() preserves an LF file's endings and a CRLF file's endings",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_engine_survey_retext_and_newlines.py::test_retext_check_works_on_a_survey tests/test_engine_survey_retext_and_newlines.py::test_add_drop_rescope_still_refuse_a_survey tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_lf_line_endings tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_crlf_line_endings && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}
