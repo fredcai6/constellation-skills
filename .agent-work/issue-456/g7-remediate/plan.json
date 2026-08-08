@@ -297,7 +297,8 @@
           "id": "c1",
           "statement": "commit created with explicit paths; tree clean for this gate's own scope; RESULT doc written at the named path",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Committed ffa959c5 (8 files, explicit paths) + fcc05946 (RESULT doc hash fill-in). Scoped files confirmed clean via git diff --quiet (not git status --porcelain, per this run's autocrlf constraint). RESULT doc written at .agent-work/issue-456/crew-handoffs/g7-remediate-RESULT.md."
         }
       ],
       "constraints": [
@@ -306,7 +307,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -322,7 +323,7 @@
     "session_id": "g7-remediate-attempt2",
     "status": "active",
     "claimed_at": "2026-08-08T23:10:48.446625+00:00",
-    "last_heartbeat": "2026-08-08T23:33:28.596105+00:00",
+    "last_heartbeat": "2026-08-08T23:36:41.093437+00:00",
     "claimed_by": "g7-remediator",
     "worktree": ".",
     "previous_session_id": null,
@@ -370,6 +371,13 @@
       "why": "Full suite 1831 passed/2 skipped/697 subtests/0 failed (+6 from baseline 1825, matching net new tests). Fresh build+check both exit 0, check 7/7.",
       "mechanical": false,
       "ts": "2026-08-08T23:33:19.826243+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-commit",
+      "why": "Committed ffa959c5 + fcc05946 with explicit paths, no git add -A. Tree clean for this gate's scope (git diff --quiet). RESULT doc written per required-evidence list. All 4 fixes landed and verified: tag staleness independent of anchors (disable-attack: 3/3 named tests catch removal, 0 survivors), alias not retire (round-trip proven end to end), widened AST pin test (live mutation attack: old check missed both new dispatch shapes, new check caught both), wording corrected in this crew's own docs.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:36:41.093437+00:00"
     }
   ]
 }
