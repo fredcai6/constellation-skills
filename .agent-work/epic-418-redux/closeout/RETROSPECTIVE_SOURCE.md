@@ -292,3 +292,33 @@ what was seen, what it cost, what worked around it. None of them is a rule.**
 36. **The Admiral's messages consumed a crew's remaining headroom**, moving it from 0.147 to 0.1536
     against a 0.15 limit. Direction from above is a charge against the context budget the design
     reserves for building the handoff.
+
+37. **Two Commanders mutated one run for four minutes and the lease did not stop it.** The Admiral
+    dispatched a successor while its predecessor was still awake. Nothing was lost, and the crew's
+    diagnosis was that this was luck: **every agent in the session shares one session id**, so
+    `claim` treats a teammate as an idempotent self-resume. One agent's lease release carried the
+    other's identity string.
+38. **A rule that gates an action fired; rules that must be remembered did not.** Seven written rules,
+    six broken by their own author the same day. The one that ever caught anything stood between the
+    Admiral and a dispatch — it blocked a relaunch that would have destroyed a healthy Commander,
+    before any evidence was weighed.
+39. **An empty source diff was produced by a crew deliberately stashing its own fix** to confirm its
+    new tests go red without it. Read from the diff alone, that is indistinguishable from 526 lines
+    destroyed. `git stash list` separated them in one command.
+40. **A monitor recommended relaunching a healthy Commander twice, on two different causes** — once
+    on a served refresh-request reading as live, once on "quiet" that was a Commander waiting on its
+    crew. Both times the recommendation was correct in form and wrong in fact.
+41. **Nine monitor defects shared one shape: a proxy standing in for a fact only the thing itself
+    reports.** File mtimes, a rendered string, a substring, a subprocess exit code, "quiet". Each was
+    right until the world produced the case where it wasn't, and every failure looked like health.
+42. **The Admiral ran to 54.9% fill against a 15% hard line and was never once asked to stop** — the
+    trip evaluates only on a gated verb, and an orchestrator sits inside one step for a whole epic.
+    It wrote its own handoff unprompted, which is the thing the design cannot compel.
+43. **A boundary verifier refused four consecutive times, every refusal on shape rather than
+    substance** — objects written as strings, and an issue id belonging to neither the completed nor
+    the open list when those must exactly partition the wave.
+44. **A wave-3 capability was complete and unreachable by the only role that needs it.** The
+    sanctioned verb existed and was documented in the engine schema, and appeared nowhere in the
+    reviewer's own skill. The reviewer force-waived a check it could have filled.
+45. **The same unpassable check was found latent in four further gates** by a crew that read ahead of
+    itself rather than meeting it four more times at four closing advances.
