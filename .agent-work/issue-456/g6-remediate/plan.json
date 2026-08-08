@@ -323,7 +323,8 @@
             "kind": "command",
             "command": "test -f .agent-work/issue-456/crew-handoffs/g6-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/extract.py$' && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-1"
         }
       ],
       "constraints": [
@@ -332,27 +333,40 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/issue-456/crew-handoffs/g6-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/extract.py$' && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 0,
+  "refusals": 1,
   "engine_session": {
     "session_id": "g6-remediate-impl-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T20:46:25.898728+00:00",
-    "last_heartbeat": "2026-08-08T21:06:54.107435+00:00",
+    "last_heartbeat": "2026-08-08T21:08:59.226294+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T21:09:04.841823+00:00"
   },
   "why_trail": [
     {
@@ -389,6 +403,13 @@
       "why": "Full suite run in background (bnfy40xtx), polled to completion (7m34s): 1807 passed, 2 skipped, 684 subtests passed, 0 failed, exit 0 -- baseline was 1805/2/683/0, delta is +2 passed (the two new tests added in m2/m3) and +1 subtest (the new subTest loop in the advisory-prefix test), no regressions. Fresh python -m scripts.code_map build --root . then check --root . in that order: build exit 0, stale_tags: [] (this repo's own anchors unchanged since the last real build, consistent), check 7/7 exit 0 including deterministic-rebuild.",
       "mechanical": false,
       "ts": "2026-08-08T21:06:33.674083+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5",
+      "why": "Committed cf36071f with explicit paths only (never git add -A): scripts/code_map/extract.py, scripts/code_map/render.py, tests/test_code_map.py, plus this plan's own engine-provenance files (.agent-work/issue-456/g6-remediate/plan.json + journal, .agent-work/issue-456/issue-456-g6-remediate/context+mechanical/) and the two evidence artifacts under .agent-work/issue-456/evidence/. Left untouched: the untracked map/ tree, other concurrently-running crews' bookkeeping (context/g6-implement.json, context/g6-review.json, mechanical/g6-implement.json, mechanical/g6-review.json, issue-456-g5-rereview/, issue-456-g6-review/, issue-456-gb-review/, evident_record.py), and execute.json.journal (Commander-owned, modified by someone else concurrently) -- none of those are mine to commit. Wrote IMPLEMENTER_RESULT to .agent-work/issue-456/crew-handoffs/g6-remediate-RESULT.md with all required evidence: selector 14/14, disable-attack before/after (9/12 green before, 0 survivors after), full suite 1807/2/684/0, fresh build+check 7/7.",
+      "mechanical": false,
+      "ts": "2026-08-08T21:08:59.226267+00:00"
     }
   ]
 }
