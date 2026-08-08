@@ -3968,3 +3968,48 @@ than truncated.
 The body now states: A2 complete and merged; DC2 done-by-different-means and **DC6 partial**, not
 rounded up; the follow-on cluster #500-#504; and **scope SETTLED** — one more wave, then close, with
 F/C/E as their own efforts.
+
+### FOUR crews tripped at gate boundaries — all four relaunched, and the shared defect is filed as #510
+
+**Not a failure mode. This is the machinery working, four times, and then hitting its own residual.**
+
+Crews 2 (readiness), 3 (addressing), 4 (engine) and 5 (docs) each HARD-tripped, each filed a
+refresh-request, each stood down cleanly rather than pushing through, and each **asked me explicitly**
+whether to push through anyway rather than deciding alone. Crew 2 put the reason precisely: *"that
+goes against the doctrine this exact epic wrote, so I want it as your explicit call, not mine."*
+
+**RULING: relaunch fresh, every time. Never push through a trip.** All four relaunched into their own
+worktree and spine, cold-started. Crew 5's predecessor deliberately did **not** release its lease so
+the re-claim would be idempotent — a good call I did not have to make.
+
+### FINDING #510 — three crews found the same deadlock independently, and #467's guarantee fails at a boundary
+
+`advance` refuses a `pending` gate ("must be in-progress"); `start` is the exact verb HARD guards.
+**At a gate boundary there is no legal verb.** Only `attach refresh-request` works — so the agent can
+say *it needs a refresh* but cannot write the **DIGEST**, because the DIGEST is written by `advance`.
+
+**I did not take the crews' word for the harm. Verified against three live spines:**
+
+| spine | trip point | `DIGEST:` in `current` |
+|---|---|---|
+| readiness | `init`→`context` boundary | present — but it is **`init`'s** digest; nothing of the tripped step |
+| engine | first gate of the run | **absent entirely** |
+| gates (contrast) | **mid-step**, at `plan` | full three-finding digest, exactly as #467 intends |
+
+So my own first assumption — *"a boundary trip writes no DIGEST"* — was **too strong**, and the
+verified version is sharper: a boundary trip writes no digest **of the tripped step**, and at the
+first gate of a run there is no digest at all. Filed as measured, not as reported.
+
+**The structural half, which is the part worth keeping.** The trip lands on the **first `current` of a
+session** because the `context`/`m0-context` gate's own imperative is *read the doctrine, run map
+orientation, read the issue bodies*. The agent does that **in its own context** — as instructed — then
+turns to the engine to record it, and the gauge reads a window the gate itself just filled.
+**An agent that does its first gate well arrives at the engine too full to record it.** Raising the
+threshold moves the boundary; it does not remove the shape.
+
+All three compensated by sending me long prose reports out-of-band, and crew 4 wrote its entire plan
+into the spine's task imperatives so the content would survive somewhere. **Well-behaved agents
+papering over a broken mechanism** — the exact pattern this epic exists to stop depending on.
+
+**#510 names the trap in its own acceptance:** a check asserting *"a refresh-request exists"* passes
+today, because the refresh-request is the part that already works. The absent thing is the DIGEST.
