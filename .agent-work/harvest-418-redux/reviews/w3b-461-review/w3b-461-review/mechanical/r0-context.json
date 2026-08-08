@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "mechanical": {
+    "run": "w3b-461-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3b-461-review-r0-context@4b63efc9ee241a1ffe35ab623b81c7a746e47dce",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3b-461-review",
+    "generated_at": "2026-08-08T05:14:57Z"
+  }
+}

@@ -743,3 +743,58 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   in the wave: a #488 fix that merely stops skipping is a regression **no green run will reveal**. The
   reviewer is told that if the crew's negative test would still pass with the skip removed entirely,
   that is a **blocking** finding. Guarding the guard.
+
+- `2026-08-08` — `MERGE` — **PR #490 (#461) MERGED at `ad149283`**, 05:30:28Z. Gate honoured in order:
+  `gh pr checks 490` **exit 0** (`test pass 7m27s`), independent review posted to the forge with a
+  re-derived APPROVE, then merge.
+  **HAZARD, and I nearly reported this merge as failed: `gh pr merge` exited 1 on a merge that
+  SUCCEEDED.** The non-zero came from `--delete-branch` failing — `cannot delete branch
+  'epic-418/w3b-461' used by worktree` — which happens *after* the merge. The exit code conflates
+  "the merge failed" with "the merge succeeded and cleanup did not." I checked the forge instead of
+  trusting it: `gh pr view 490 --json state,mergedAt` reads `MERGED`. **Never read `gh pr merge`'s
+  exit code as the merge verdict; ask the forge.** Same family as the ancestry test, and the same
+  family as everything else in this wave.
+- `2026-08-08` — `ADMIRAL ERROR` (correction to a claim I put in three launch orders and repeated to
+  Tommy): **PR #470's reviewers were almost certainly not negligent — the platform blocked them.**
+  The #490 reviewer found that `gh pr review --approve` is **refused** with *"Can not approve your own
+  pull request"*, because every agent in this run authenticates as the same `gh` identity and that
+  identity authored every PR. No second account or bot token exists here. It verified this against
+  `gh auth status` and the collaborator list.
+  I have been saying *"two independent reviewers returned APPROVE and neither posted to the forge"*
+  as if it were a discipline failure, and I wrote it into the wave-3 review brief as the thing that
+  brief exists to prevent. **The likelier explanation is that both hit this wall and gave up or
+  worked around it silently.** My framing blamed the agents for a platform refusal.
+  **Sanctioned substitute, now in force:** `gh pr review <N> --comment -F <file>`, with the verdict
+  stated plainly at the top of the body, since the review's `state` will read `COMMENTED` not
+  `APPROVED`. Relayed to the live #491 reviewer immediately so it does not burn a cycle rediscovering
+  it. **Doctrine candidate for closeout** — this belongs in the reviewer skill, not in one epic's
+  launch orders.
+
+- `2026-08-08` — `RULING` (I am extending my own narrowed grant; flagging it rather than doing it
+  quietly): **closed #461.** My Addendum R1 wrote *"Issue closing is now DELEGATED for wave 2's four
+  merged issues... Still surfaced for anything else"* — a narrowing **I** authored, not one Tommy
+  imposed. Tommy's two instructions were *"close the complete issues"* and *"id rather not clutter
+  the issue board."* I now read the first as a **standing preference** — completed work gets closed —
+  rather than a one-time grant of four specific numbers, because reading it the narrow way produces
+  exactly the clutter the second sentence rejects.
+  Cost of being wrong is one `gh issue reopen`. Cost of the alternative is a merged, reviewed,
+  verified issue sitting open on a board he said he doesn't want cluttered. **Flagged at the boundary
+  so he can overrule the reading, not just the instance.**
+- `2026-08-08` — `INCIDENT` (silent failure, caught by verifying rather than by an error):
+  **`gh issue close 461 --reason completed -F <file>` printed nothing, exited apparently fine, and
+  did not close the issue.** `gh issue close` has no `-F` flag; it took the unknown argument without
+  complaint. I only found it because I re-read the issue state afterwards instead of trusting the
+  command. Reran as `--comment "$(cat <file>)"` — safe from the backtick trap, because command
+  substitution output is not rescanned for expansions — and verified **CLOSED** plus the comment body
+  intact by re-reading both. **Two different `gh` flag hazards in one session, both silent:** a
+  backticked code span executed as command substitution while the post succeeds, and an unsupported
+  flag accepted while the action does not happen.
+- `2026-08-08` — `RULING` (repo hygiene, harvest before sweep, executed): swept
+  `C:/Programs/wt-w3b-461` and `C:/Programs/wt-rev-461` and deleted both branches — **after**
+  harvesting **18 files that existed nowhere in the git object store** to
+  `.agent-work/harvest-418-redux/reviews/w3b-461-review/`, verified byte-identical with `cmp`.
+  That set includes the **driven `review.json` survey — the only proof the review was actually driven
+  rather than asserted** — and `r6-fowler.json`. The latter is worth a second look: **#465 is about
+  `r6-fowler` shipping a placeholder no engine verb can fill, and this reviewer drove that exact gate
+  to a clean `verify_fowler_pass.py` exit 0.** That is a live datapoint for W3-A's design question,
+  now preserved instead of destroyed by the sweep it was one command away from.
