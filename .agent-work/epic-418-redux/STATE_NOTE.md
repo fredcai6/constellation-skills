@@ -65,6 +65,31 @@
 > **DO NOT re-poke a quiet crew.** Twice today disk silence looked like death and was reading. The
 > authoritative channel is the harness **idle notification**. Ask; never relaunch on an inference.
 >
+> ## THE TRIP-LOOP — the one that can silently eat this wave. Read before relaunching anything.
+>
+> **A fresh agent reads its PREDECESSOR'S gauge until its own first tool call lands.** The gauge is
+> written per checklist directory by a PostToolUse hook. Verified on crew 2: `gauge.json` said
+> `fill_fraction 0.190464, observed_at 23:18:53Z` — **nine minutes before that agent existed.**
+>
+> So a relaunched agent opens `current`, sees a number over the hard line that is **not its own**,
+> hands off, and you relaunch again. **Relaunch → inherit → trip → hand off → relaunch, forever, and
+> every cycle looks like correct doctrine being followed.** Four crews were relaunched inside a few
+> minutes on 2026-08-08; this was about to happen four times over.
+>
+> **EVERY relaunch dispatch must say:** the CONTEXT number in your first `current` is your
+> predecessor's — make any tool call, re-read, and **never file a refresh-request against a reading
+> you did not produce.** Open as #481 (stale reading outlives its session) and #477 (gauge read per
+> directory). Neither is fixed.
+>
+> **And `REFRESH REQUESTED:` is a marker left FOR the successor, not an instruction TO it.** The
+> successor **is** the refresh — it proceeds, it does not re-file. Nothing in `current` says whether a
+> request was already served (#500), so a fresh agent genuinely cannot tell. Say it in the dispatch.
+>
+> **#510 (filed 2026-08-08):** a HARD trip at a gate BOUNDARY has no legal verb — `advance` refuses a
+> `pending` gate, `start` is what HARD guards — so the refresh-request survives but **the DIGEST
+> cannot be written.** Expect boundary-tripped crews to hand off by prose message instead. That is
+> them compensating, not the mechanism working.
+>
 > | Crew | Worktree | Issues | Model |
 > |---|---|---|---|
 > | 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484, #446 | Opus, Commander |
