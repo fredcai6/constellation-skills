@@ -389,3 +389,55 @@ FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
 ```
 
 Branch baseline was 1721/4/643. +44 = 24 from g1 + 20 from g3.
+
+## Fifth turn — the guard's first live catch, answered by restating
+
+The Admiral replanted PR #486 onto current main and the guard went red on three records
+that #433 added after this branch was cut (merged as #485). Four offenders, all real. The
+Admiral declined to override and sent them back to be restated. Done.
+
+| assertion | was | grounding for the rewrite |
+|---|---|---|
+| `b433-render-directives-002.a5` | "**Do** the gate work that needs no `advance` ... then advance normally" | a3 (the engine refused every `advance` while `gauge.json` held the predecessor's reading) and a4 (the block persisted until the record aged past the staleness window rather than clearing on any action taken) |
+| `b433-render-directives-003.a5` | "**Pair** every negation postcondition with a positive one, and **scope** a grep ..." | a3, which records this exact re-authoring as done in this run, and a4, which records it as caught before execution |
+| `b433-render-directives-003.d2` | "**State** doc postconditions as what the document must now say ..." | a3 and d1 |
+
+All three grounded within their own records — no fact was invented. Applied through
+`apply_episode_delta.py --store-root episodes` with the `restate-assertion` op; each
+original is preserved verbatim on an appended history line. `git diff --stat episodes/`:
+2 files, 6 insertions, 3 deletions — exactly 3 statement lines replaced and 3 history
+lines appended. `b433-render-directives-001` was not touched; it never tripped.
+
+**The exception list is byte-unchanged.** These records could support a factual
+restatement and were written during this same wave, so excepting them would have been the
+grandfathering the list exists to refuse.
+
+```
+python scripts/verify_episode_observations.py --store-root episodes --strict
+274 statements examined, 0 unlisted, 11 excepted   EXIT=0
+
+FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
+1765 passed, 4 skipped, 679 subtests passed        EXIT=0
+```
+
+### A false negative found while doing this, and left standing
+
+`b433-render-directives-002.d2` — *"**Either bind** the record to its writing session ...,
+**or expose** a sanctioned engine verb ..."* — is the same shape as
+`issue-304-g3-005.d2`, which IS on the exception list, and the guard does **not** flag it:
+`bind` and `expose` are not in the closed verb lexicon. This is the honest limit the
+guard's own docstring declares, observed in the wild rather than argued in the abstract.
+
+It is left standing on purpose, because every route out is worse than reporting it:
+
+- Restating it factually would be a fabrication. It proposes two branches and a3/a4 record
+  that neither was taken — the block cleared by staleness, not by either remedy. It is
+  ungrounded in exactly the sense the five listed records are.
+- Excepting it is forbidden for #433 records, correctly.
+- Widening the lexicon to catch it would force one of the two above, and would require
+  re-measuring the whole corpus for new false positives.
+
+So the real question underneath it is the one already raised for
+`docs/EPISODE_STORE.md`'s own `governor-268-003.d2`: **may a `proposed-remedy` propose?**
+Three records now turn on that answer. It is a grammar question about the record kinds,
+not something this issue should settle by widening a regex.
