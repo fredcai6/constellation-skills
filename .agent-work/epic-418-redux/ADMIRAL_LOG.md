@@ -1647,3 +1647,80 @@ statement: **the reach-up signal has no notion of being served.** It cannot say 
 whether anyone answered — so it is simultaneously unreadable when it matters and unclearable when it
 does not. That is squarely DC6's territory: a mechanism whose observable does not track the
 condition it claims to report.
+
+## 2026-08-08 — THE ROUND TRIP CANNOT CLOSE: the epic's most important finding
+
+**Found by `commander-w4-467-b` from the far end of the handoff, where nobody had ever stood.**
+
+**#488 shipped last wave guarding ONE key resolving to MANY paths. This is the exact mirror — MANY
+keys resolving to ONE path — and it is unguarded.** The registry is keyed per-agent
+(`session#agent_id`, #419) precisely so readings are not misattributed, and then **every key
+resolves to one spine-derived gauge path, so last writer wins.**
+
+Measured by the successor from the transcripts the hook itself reads:
+
+| Agent | Tokens | Fill | Last turn |
+|---|---|---|---|
+| `commander-w4-467-b` (successor) | 64,577 | **6.5%** | 10:13:18Z |
+| `commander-w4-467` (tripped, idle) | 313,521 | **31.4%** | 10:12:40Z — **still emitting** |
+
+The predecessor kept stamping 31% over the successor's 6.5%; the successor *"watched my own 0.039
+get overwritten within one tool call."*
+
+**The consequence is structural, and it is the whole subject of DC5.** A resumed Commander inherits
+its predecessor's fill, is over the line **the instant it starts**, and its first `advance` is
+refused — told to hand off again. **As built, the round trip does not close. It loops.**
+
+**And this is not an edge case — the design guarantees it at every handoff**, because trip and
+resume necessarily share a spine. The successor's own words: *"That case is not an edge: it is the
+exact shape the design guarantees at every handoff."*
+
+**Only the far end could find this.** The predecessor demonstrated the first half of the round trip
+flawlessly and had no way to see it. DC5 exists precisely because conditions 1-3 are satisfiable
+while the far end is broken — and that is exactly what happened, in the run implementing DC5.
+
+### Action taken
+
+**Stopped `commander-w4-467`** on the successor's ask. It was idle, had handed off, and held no
+lease (force-claimed away) — its only remaining effect was corrupting its successor's reading.
+**Verified after: the spine's `gauge.json` reads 11.1% at 10:17:59Z — the successor's own value.**
+The successor asked rather than waiving, which was correct; I confirmed it must never waive a
+governor stop on its own judgement.
+
+### Three rulings
+
+**1. Do NOT widen the frozen plan.** The successor's fix direction is right — *the gauge writer
+should decline to write for an agent that does not hold the spine lease, and the engine already
+knows who owns the spine* — but it is a gauge-writer change, outside its gates. **Triage candidate;
+I carry it up.**
+
+**2. DC5 is now demonstrable and THE CAVEAT IS THE FINDING.** With the predecessor stopped the round
+trip can close, and it should be completed — but the accounting must state that **it closed only
+because the Admiral manually killed the predecessor's process, and unassisted it does not close.** A
+clean DC5 pass reported without that sentence would be **actively misleading**: it would tell every
+future reader the round trip works, when it works only under manual intervention that will not exist
+in the field. **The sentence is worth more than the pass.**
+
+**3. The predecessor's post-handoff augmentation — its flag was right and its remedy is approved.**
+It routed my rulings into `execute.json` and `CRITIC_TRIAGE.md` (`90dbd3c5`), then flagged
+**unprompted** that this enriched the successor's work area between handoff and start, and that as
+the interested party it should not judge whether that damaged the measurement. Ruled: **not a
+re-brief** — direction arriving after a handoff has to land somewhere and `current` had no channel
+for it — **but the augmentation is real**, so DC5's accounting names exactly what was added and by
+which commit. A stated caveat, never a silent one. That is the fifth-instance lesson applied by a
+subordinate to its own evidence, which is the only version that counts.
+
+### Routed to triage
+
+- **"The DIGEST is a one-slot mailbox that only the tripping agent can write, and only by
+  advancing."** The predecessor's phrasing, and a structural limit on the entire reach-up design.
+- **The reach-up signal has no notion of being served** — the three-defect statement.
+- **Many-keys-one-path in the gauge writer** — the finding above.
+
+### The convergence worth keeping
+
+Both Commanders, independently, from **opposite ends** of the same handoff, reached the same verdict:
+**cold-start-from-`current`-alone survives because the work area is rich, not because the DIGEST is
+sufficient.** The predecessor wrote it before going idle; the successor wrote it before reading the
+predecessor's file — *"sufficient as an index, not as a substitute."* Agreement across the boundary
+is stronger evidence than either alone, and both go in the accounting.
