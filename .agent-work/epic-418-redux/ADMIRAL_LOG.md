@@ -941,3 +941,28 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   crew, and not to dispatch a second reviewer for #492 (an independent one is already running). Both
   floated decisions were pre-answered in the relaunch brief so it would not re-litigate settled ground.
   **Second successful trip→handoff→refresh→resume of this wave.**
+
+- `2026-08-08` — `MERGE` — **PR #492 (#465) MERGED at `4da9bc9b`. WAVE 3 IS COMPLETE: four issues,
+  four merges, four closes, every one independently reviewed with a verdict posted to the forge.**
+  Gate in order: `gh pr checks 492` **exit 0** (`test pass 6m59s`) → review posted → merge → state
+  confirmed `MERGED` via the forge. #465 auto-closed by the PR body; evidence comment posted
+  separately and verified by re-reading (the third-gh-hazard drill, now routine).
+  **This review is the best of the three, and it raised the bar twice.** It mutation-tested the CRLF
+  guarantee in **both** directions — reverting `save()` to text mode turned the *LF* test red
+  (`churned an LF file to CRLF, 8 CRLF endings written`), and forcing `eol = b"\n"` turned the *CRLF*
+  test red (`wrote no CRLF endings at all`). Then it did something no brief asked for: it built a
+  throwaway survey **from the raw unedited template**, placeholder intact, claimed a lease, drove
+  r0→r5, and filled `r6-fowler` using **only the syntax the shipped docs now document** — proving a
+  reviewer meeting this cold can actually follow the instruction. It inspected `amendments[-1]`
+  directly rather than trusting the CLI's success message.
+  It also **caught an error in my own log**: I wrote `amend --op retext-check`. There is no `--op`
+  flag — ops travel in the `--delta` file. My phrasing came from the predecessor Commander's handoff,
+  and the reviewer verified the wrong shape appears in **neither** the shipped template nor the docs.
+  Corrected here; the artifacts were right and my summary of them was not.
+  Non-blocking Fowler findings, from an independent pass rather than the crew's all-`absent` record:
+  `long-method` on `amend()`'s new survey-guard block, and `shotgun-surgery` — one behaviour change
+  touching five doc sites. The second is the fence extension I ratified, correctly named as a cost.
+  One benign race noted honestly: the PR head moved to `4daafe05` mid-review; the reviewer diffed the
+  six reviewed files across both commits, found **zero difference** (the extra commit is `.agent-work`
+  bookkeeping), and said so rather than quietly ignoring it.
+  Reviewer worktree harvested — **36 more files that existed nowhere in git** — and swept.

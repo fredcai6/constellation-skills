@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "files": [],
+  "repo_rev": {
+    "commit": "6774e75e5543f88f97f7fdd2353fea1da0557b73"
+  },
+  "run": {
+    "work_id": "w3a-465-review",
+    "generated_at": "2026-08-08T06:22:35Z",
+    "roots": {
+      "skill": "C:/Programs/wt-rev-465",
+      "repo": "C:/Programs/wt-rev-465",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/wt-rev-465"
+    }
+  }
+}
