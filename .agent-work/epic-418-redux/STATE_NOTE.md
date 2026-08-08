@@ -31,9 +31,22 @@
 > exited **advance**, G2-verified, prelaunch exit 0. **Five crews, 21 issues.** This is the final wave
 > of epic #418; closeout follows it, then F (#424) becomes its own effort.
 >
+> **USE `python`, NEVER `py`.** Under the Bash tool they are different interpreters and `py` has NO
+> pytest — `py -m pytest` exits **nonzero** with `No module named pytest`, which reads exactly like a
+> red suite when no test ran. `py` is fine for the engine and verifier scripts (stdlib only); it is
+> specifically the suite it cannot run. This is #313, live. All five crews were corrected mid-flight.
+>
+> **COLLAPSE CLAIMS CORRECTED 2026-08-08 — the Admiral's were wrong.** #446 is **NOT** part of the
+> `archive.c2b` collapse (its body never mentions `<branch>`; `grep -c` → 0), and #501 ≡ #468 is
+> **partial**, not total. Crew 1 refuted both by obeying the confirm-against-the-body rule. **Do not
+> re-inherit the original three-way claim from any older document.**
+>
+> **CREW 1 IS NOW `commander-w5-gates-b`.** The first instance tripped at `plan` on a HARD reading,
+> wrote its refresh-request, committed `eff00abf` and stood down — working as designed, not a failure.
+>
 > | Crew | Worktree | Issues | Model |
 > |---|---|---|---|
-> | 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484+#446 | Opus, Commander |
+> | 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484, #446 | Opus, Commander |
 > | 2 readiness (R) | `epic418-w5-readiness` | #458 | Sonnet, Commander |
 > | 3 crew addressing | `epic418-w5-addressing` | #507+#370+#413 | Sonnet, implementer |
 > | 4 engine internals | `epic418-w5-engine` | #474 #475 #476 #479 #480 #427 #503 #493 #495 | Sonnet, implementer |

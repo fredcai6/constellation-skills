@@ -3776,3 +3776,45 @@ needs no edit. **Confirmed, and passed to the refresh in its dispatch.**
 
 **Zero ownership violations** across crews 1 and 5, checked by diffing their branches against the
 files each does not own.
+
+### Two additions to the interpreter finding, from the retired crew-1 instance — both sharper than mine
+
+It re-derived the split in its own worktree, then named two things my report did not:
+
+1. **They differ by minor version, not only by whether pytest is installed** — `py` is 3.12.13,
+   `python` is 3.14.3. So my line *"`py` is fine for the engine and the verifier scripts"* is true
+   **by luck, not by construction**: a stdlib behaviour change across two minors could let a verifier
+   pass by hand under `py` and fail at the gate under `python`. **That is #313 one layer down**, and
+   I stated the weaker claim.
+
+2. **The spine's own command postconditions already invoke `python`.** `execute.c2` is
+   `python scripts/verify_iterative_role_artifacts.py ...`; `init.c1` is `python scripts/init_work_area.py`.
+   **So the gates have been running 3.14 all along while agents hand-check the same scripts under `py`
+   — hand verification and gate verification were on different interpreters.**
+
+Point 2 applies to **me**, not only to crews: I have hand-run the role verifier, the replan verifier,
+the episode writer and the installer under `py` throughout this epic, while every command postcondition
+that matters ran under `python`. Nothing has diverged yet. **Nothing was checking that it hadn't.**
+This is "verify by re-running the failed command" with a twist — re-running it *by hand* can test a
+different world than the gate's.
+
+**It re-derived all three of its fix-B red repros under `python` 3.14.3 rather than asserting they
+were unaffected.** Identical results: worktree refusal, main-checkout refusal, installed-copy exit 0.
+**No finding in its return depends on the interpreter** — and that is now a measured statement rather
+than an assumption. Its fix-C repros are `sh -c` and never touch Python at all.
+
+It also recorded no pytest result of any kind this run — it tripped at `plan` before writing code — so
+there was nothing of its own to re-derive. It said so plainly instead of performing a re-check.
+
+### RULING — I will not assert the #507/#370/#413 collapse; crew 3 decides
+
+My collapse record today is **one for two**. #370 and #507 clearly share a root: an address correct
+when written and stale when read. **#413 may not.** In #413 the dispatching commander appears not to
+have handed off at all — it was simply absent from the reachable set, which is a *reachability*
+failure rather than a *staleness* failure. Same root or two defects presenting identically; I cannot
+tell from the body and **I am not going to guess twice in one day.**
+
+Told crew 3 explicitly: if all three collapse, name the shared root and close all three; **if #413 is
+distinct, say so and leave it open.** A partial is the correct answer when it is the true one. And I
+held myself to my own non-overridable rule out loud — confirm against the body, never against another
+agent's summary, **including the Admiral's.**
