@@ -1724,3 +1724,72 @@ Both Commanders, independently, from **opposite ends** of the same handoff, reac
 sufficient.** The predecessor wrote it before going idle; the successor wrote it before reading the
 predecessor's file — *"sufficient as an index, not as a substitute."* Agreement across the boundary
 is stronger evidence than either alone, and both go in the accounting.
+
+## 2026-08-08 — g1 lands; and I must CORRECT my own headline finding
+
+**ADMIRAL ERROR | I overclaimed the round-trip finding, and the crew that gave it to me downgraded
+it.** I logged, and told Tommy, that *"as built, the round trip cannot close — it loops."* The
+successor has since reported: **the gauge-attribution collision resolved itself once the predecessor
+genuinely went idle.** It is **time-bounded** — it lasts only while the outgoing agent is still
+emitting — not permanent, and the successor advanced two gates normally afterwards. Its words:
+*"materially less severe than I first reported."* The fix direction still stands as a triage
+candidate; the severity does not.
+
+**And my own intervention destroyed the ability to settle it.** I stopped `commander-w4-467` at
+~10:17 on the successor's ask. The successor now says *"you did not need to stop the predecessor
+after all"* — but **it cannot know that, and neither can I**, because the idleness it observed is
+the idleness I caused. I acted to unblock a crew, and in doing so confounded the measurement of the
+very defect being reported.
+
+So the honest record is **neither** of the two clean stories: not *"the round trip cannot close"*
+(overclaimed, by me) and not *"it resolves itself"* (unfalsifiable now, because I intervened). What
+stands: **many keys resolve to one gauge path, an outgoing agent's reading overwrites its
+successor's while it is still emitting, and how long that lasts unassisted was not measured.**
+Recorded that way in the closeout material, and I am correcting it to Tommy in the same terms I
+overclaimed it.
+
+That the crew **downgraded its own dramatic finding, against its own interest**, is worth more than
+the finding was.
+
+**g1 COMPLETE, committed `62f564c7`.**
+- `e0-context`: baseline re-measured in-worktree at `d376b786` — **1793 passed, 2 skipped, 683
+  subtests, real exit 0**, exact match to frozen. Real exit captured **by redirect, not from a
+  pipe**, which is the invariant that has bitten this run twice.
+- `g1-implement`: a dispatched implementer **reproduced #431 at unmodified HEAD, both faces**.
+  `git diff --stat -- scripts tests` empty, re-verified independently in the Commander's own shell.
+  **24 ASSERT OK / 0 FAIL**, real exit 0, rebuilds from nothing.
+- **Face A is the staleness property, not a bare refusal** — after running the exact `attach` the
+  refusal prints, HARD *releases* and the same output still reads `DIGEST: PRE-TRIP UNDERSTANDING`.
+  Asserted as an equality, with a **no-gauge counterfactual control** attributing the staleness to
+  the refusal alone. The planted reading is proved read by the engine's own `CONTEXT 30% (>= hard)`.
+  That control is the difference between demonstrating a defect and demonstrating a coincidence.
+- **Face B holds with a scope limit the implementer volunteered and asserted in its own script:**
+  `current` *does* still list the unmet postcondition at HARD, so the masking is scoped to the
+  `advance` refusal path. Narrow and honest, and volunteered rather than extracted.
+
+**FINDING | #431 in its worst shape, and it is the ORDINARY case.** The spine's DIGEST is **stale**:
+it still carries `w-4`, written two agents ago, instructing work that is already complete. Cause:
+`advance` is the only writer of `why_trail`, and `execute` spans all 16 gates with 13 remaining — so
+**a Commander that trips mid-step cannot update the spine's cold-start surface at all.**
+
+The first Commander tripped at a *step boundary* (`plan`→`execute`) and could close a gate to write
+its handoff. This one tripped **mid-`execute`, which is where nearly all the time goes.** The
+predecessor's write-up could not have found this because it never happened to it. Not in #467's six
+done-conditions; the Commander did **not** amend the frozen plan to work around it, which was right.
+
+Relaunch instruction corrected accordingly and carried into `commander-w4-467-c`'s dispatch: **read
+`execute.json current` for the real DIGEST, and `spine.json current` only for the reach-up flag.**
+
+**Verified triage candidate, now empirical rather than reasoned:** copy-pasting the refusal's literal
+`why_ref=<why-id>` placeholder **attaches with exit 0 and does not release HARD** — a **silent no-op
+on the exact command the engine prints**. Independently corroborates `TRIP_OBSERVATION.md` item 4.
+A remedy hint whose success signal is identical to its failure is this epic's defect family living
+inside the recovery path itself.
+
+**Also carried:** `LO-467.md` — which holds the environment invariants — **is reachable from nothing
+in the spine.** A cold successor gets the plan and not the ground rules.
+
+**Second clean seam in a row.** The Commander stopped **by choice** at 14.7% against a 15% line,
+with `g1-review` `pending`, no crew running, `recover_crews` clean, everything committed, the
+reviewer handoff pre-authored so its successor dispatches rather than composes — and **released its
+lease** so the next claims without `--force`. Two Commanders, two clean handoffs, zero work lost.
