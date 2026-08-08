@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": "2e6be4d6e162d34f41335b36586565c39c5cbb6b"
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": "9d34d8be6e74007724c60a537001e119f5576ffc"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "10c0027e40163ceebbaf0eaa5c9560c60df641c9"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "763806a49efae8694ef73539376d8927acb917f1"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "d376b786714fa3dc2e5825df3276abbe945e11fd"
+  },
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T09:32:30Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

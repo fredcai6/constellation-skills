@@ -1,0 +1,875 @@
+{
+  "work_id": "issue-467-trip-semantics",
+  "type": "gated",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-acceptance",
+    "g5-review",
+    "g5-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope against LO-467.md, issue #467's six done-conditions, .agent-work/issue-467-trip-semantics/MISSION_FRAME.md, and the cold-critic findings recorded in CRITIC_TRIAGE.md. Re-confirm main's green baseline in this worktree and record the real exit code. Then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed against LO-467 + #467 DC1-DC6 + the mission frame + the critic triage; green baseline re-measured with its real exit code",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "RED: reproduce #431's deadlock before any fix",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. Build a DISPOSABLE reproduction under .agent-work/issue-467-trip-semantics/red-repro/ that demonstrates #431 end to end AT THE CURRENT HEAD, with NO source change: a real gated spine, a planted over-HARD gauge.json, an agent that follows the shipped instruction (file a refresh-request at the tripping gate, then stop), and the assertion that the DIGEST a cold successor would read still names the PRE-TRIP understanding. Capture the literal engine output, including the refusal text. The RED must be the end-to-end staleness property, not merely 'advance raises' -- the shipped refusal already releases once a keyed refresh-request exists, so an exception-only repro would be reproducing the wrong thing. Also reproduce the SECOND face of the same defect: a gate that is in-progress with an unmet postcondition when the trip fires, where the agent is told 'advance is blocked, request a refresh' and never learns its real problem. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded; baseline green re-measured",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "NO source file under scripts/ or tests/ may be modified by this gate -- the RED must be observable at the unmodified HEAD. Prove it: `git diff --stat -- scripts tests` must be empty at the end of this gate.",
+        "The repro is disposable by construction (#467: 'the RED leaves no residue'). It must NOT be wired into the pytest suite and must NOT be presented as a regression test.",
+        "PROVE THE READING EXISTED. A silent governor and a governor with headroom are indistinguishable. Assert, in the captured output, that the planted gauge.json was actually read -- e.g. by showing the CONTEXT <n>% advisory the engine printed. A repro whose only evidence is that something did not happen has proved nothing.",
+        "Never use `py` to run pytest (#454). Use: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+        "A piped command's $? is the pipe's exit code. Redirect to a file and read it, or use ${PIPESTATUS[0]}."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py -- _trip_hard_gate (the refusal), advance (the sole why_trail writer), _digest / _latest_why_record (the DIGEST), _why_suffix (the cold-start surface), dispatch (the CLI chokepoint both bands ride)",
+          "scripts/gauge_reader.py -- read(), thresholds_for(), _PROFILES"
+        ],
+        "capability": [
+          "Trip two-band gate policy, HARD band -- docs/CHECKLIST_SCHEMA.md section 'Trip -- two-band context-gauge gate policy'"
+        ],
+        "constraint": [
+          "constraint:fail-safe-on-no-reading -- a missing/stale/corrupt reading collapses to None and never forces. The repro must PLANT a valid fresh reading and assert it was read.",
+          "constraint:no-absence-is-evidence -- assert a reading exists before any claim about trip behaviour."
+        ],
+        "decision": [
+          "decision:red-is-end-to-end-staleness -- the RED reproduces the stale-DIGEST-at-the-seam property, not the bare refusal. Why: the shipped refusal already releases on a keyed refresh-request, so an exception-only repro proves nothing about #431. @grade: settled/measured · leans g1-implement,g1-review",
+          "decision:red-leaves-no-residue -- the repro is disposable and is never promoted to a regression test. Why: source: #467 Evidence section. @grade: settled/inherited · leans g1-implement"
+        ],
+        "evidence": [
+          "claim:431-deadlock-real -- the literal engine output showing the stale DIGEST at the seam, with the planted reading quoted and its being-read proved"
+        ],
+        "confidence_flags": [
+          "docs/GAUGE_WRITER_HOOK.md describes a hook that does not ship (#458) -- plant the gauge file directly; do not depend on live hook wiring"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "RED: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. The review question is NOT 'does the repro run' -- it is 'is this RED genuine, and does it reproduce #431 rather than something adjacent?'. Specifically: was a fresh valid reading actually READ (show where the output proves it, rather than an absent gauge quietly no-opping)? Is the stale DIGEST the real consequence of the shipped instruction, or was the repro arranged to produce it? Would this repro go GREEN under the planned fix and RED again if the fix were reverted? Is `git diff --stat -- scripts tests` empty? Integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the RED against the same anchors, and decisively against constraint:no-absence-is-evidence"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "RED: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the repro yourself and confirm the RED reproduces in your hands, then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the tracked tree is untouched by this gate: engine and gauge tests still pass at HEAD",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "no source change was made by this gate",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git diff --stat -- scripts tests)\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "DC1/DC2/DC3: move the HARD guard off `advance` and onto the verbs that begin work",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. Ship the converged design: (a) remove the HARD pre-`advance` guard from dispatch, so closing the gate you are in is never governor-refused; (b) add the guard to `start` AND `reopen` -- the two verbs that BEGIN work at a gate (`start` opens a pending gate; `reopen` drives a complete gate back to in-progress and cascades) -- refusing at/over the resolved hard threshold until a non-superseded refresh-request targets that gate keyed to _latest_why_record's id, preserving #190's identity check; (c) at/over hard, refuse an `advance` that would record NOTHING: `--mechanical` is refused and `why_exempt` is suspended, so the gate cannot be closed without a real running understanding. This is not a refusal of the advance -- it is a refusal of silence, and its message names the compliant form. Without it a tripped agent closes its gate with a mechanical marker, `_latest_why_record` skips it, the DIGEST stays pre-trip, and #431 is reproduced AFTER the fix; (d) rewrite the HARD branch of the advisory on `current` so it reads as a CHANGED INSTRUCTION ('you did well -- close this gate carrying your handoff, request a refresh, and stop'), never as 'you are unsafe', and make `_refresh_attach_hint` emit the CONCRETE current why-record id instead of the literal `<why-id>` placeholder; (e) update docs/CHECKLIST_SCHEMA.md's Trip section so it describes the shipped behaviour. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the RED is on the record and reproduces",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Do NOT guard `resume`. It restores a BLOCKED gate to the status it held before (`pending`/`in-progress`) -- for an in-progress prior it returns the agent to the gate it is already mid-way through, which is exactly the 'closing your gate' case this design promises never to refuse. Verified against scripts/checklist_engine.py `resume`.",
+        "The bands ride the CLI boundary in dispatch. `start`, `reopen` and `advance` stay PURE -- their return values must not change, so the existing exact-equality tests keep passing. Do not move the seam; move which chokepoint on it the guard hangs from.",
+        "FIXED, not renegotiable: a missing or failed reading never forces a handoff; HARD means 'wrap up', never 'you are unsafe'; the reading is PUSHED by the engine, never fetched by the agent.",
+        "refresh-request payloads stay POINTERS ONLY: {seam, why_ref}. No copies of state. Do NOT add validation to `attach` -- a dangling why_ref already fails CLOSED (the identity predicate returns False and the agent stays guarded), so a refusal there is unasked scope on the highest-risk gate. Three cold critics converged on dropping it.",
+        "Do NOT change the global default thresholds in gauge_reader._PROFILES. That is a production default and is out of scope.",
+        "THE PERMANENT DC2 GUARD: the 'not refused' half must be pinned at `fill >= hard` with NO pending refresh-request anywhere in the spine, asserting the advance completes AND the digest updates to the why written at that gate. That single test is red against today's code and green only after this change, so it is the standing regression guard against the deadlock returning -- it does not depend on the disposable RED.",
+        "MUTATION-TEST EVERY GUARD YOU SHIP. For each new test: break the exact source branch it defends, and record (i) the branch you broke, (ii) that THE NAMED TEST failed, and (iii) the total count of tests that failed. A mutation that breaks forty unrelated tests does not demonstrate that this test defends that branch. Log to .agent-work/issue-467-trip-semantics/g2-mutation-log.md.",
+        "Existing Trip tests that pin HARD-refuses-`advance` must be re-aimed, not deleted. STATE THE COUNT of tests you changed and why each change is the fix rather than collateral.",
+        "TRIAGE CANDIDATE, do not build here -- decision pressure this gate may surface: whether the gate that trips with UNMET postconditions needs a mid-gate handoff channel -- carries no grade; `block --next` exists but `current` does not render its text. Raise as a triage candidate; do not build it here"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py -- dispatch (:2649, the chokepoint), _trip_hard_gate (:1439, the guard being moved), _trip_advisory (:1399, the instruction surface), _refresh_attach_hint (:1254), has_pending_refresh_request (:1146), start (:1821), reopen, resume, advance (:1854, and its why/mechanical branch at :1899)",
+          "docs/CHECKLIST_SCHEMA.md section 'Trip -- two-band context-gauge gate policy' -- the structural record this change makes stale"
+        ],
+        "capability": [
+          "Trip two-band gate policy, HARD band -- enforcement point moves; SOFT unchanged",
+          "why-capture / reach-up -- unchanged in shape, reachable at a trip for the first time"
+        ],
+        "constraint": [
+          "constraint:fail-safe-on-no-reading -- both bands no-op on a None reading",
+          "constraint:gated-only -- both bands are empty for surveys",
+          "constraint:gate-boundaries-only -- no mid-gate check",
+          "constraint:pure-verbs -- verb return strings unchanged"
+        ],
+        "decision": [
+          "decision:hard-guards-begin-not-close -- HARD refuses `start` and `reopen`, never `advance`; closing the gate you are in is the handoff. Why: converged from a 3-candidate design-it-twice panel, then corrected by the cold-critic panel (resume dropped, reopen added). Recorded in DIT_CONVERGENCE.md and CRITIC_TRIAGE.md. @grade: settled/measured · leans g2-implement,g2-review,g4-implement",
+          "decision:no-silent-close-at-hard -- at/over hard, `--mechanical` is refused and `why_exempt` is suspended. Why: without it the tripped agent writes a mechanical marker, _latest_why_record skips it, and the DIGEST stays pre-trip -- #431 reproduced after the fix. Found by the intent-fit critic. @grade: settled/measured · leans g2-implement"
+        ],
+        "evidence": [
+          "claim:dc2-two-way -- an advance carrying a handoff is not refused at/over hard with no pending request; beginning new work at/over hard IS refused. Both directions tested, and the first is the permanent deadlock guard.",
+          "claim:dc3-digest-fresh -- after the handoff-carrying advance, _digest names the understanding written AT the tripping gate, not the one before it."
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "DC1/DC2/DC3: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Verify independently: the DC2 two-way test really exercises both directions, and its 'not refused' half is pinned at fill >= hard with NO pending refresh-request (if it has one, it passes on both sides of the fix and is worthless); `--mechanical` at hard is genuinely refused, so the digest cannot go stale after the fix; `reopen` is guarded and `resume` is NOT; EVERY mutation in the log turns its NAMED test red, and the failure counts are stated -- re-run at least two yourself; the fail-safe on a None reading survives; verb return strings are unchanged; the count of re-aimed existing tests is stated with a per-test reason; and docs/CHECKLIST_SCHEMA.md now describes shipped behaviour rather than the old refusal. Integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors -- review verifies against the same anchors and independently re-runs mutations"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "DC1/DC2/DC3: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the full suite yourself and re-run at least one mutation to confirm it goes red in your hands, then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite passes against main's baseline (1793 passed, 2 skipped, 683 subtests at d376b786); any delta is explained",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the new begin-work guard tests EXIST and pass -- pytest exits 5 on an empty collection, so this cannot be satisfied by a gate that shipped no tests",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff'"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "DC4: per-gate threshold override, tighten-only, exercised once",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. Ship the per-gate override: (a) gauge_reader.thresholds_for(model, headroom_tokens=0) subtracts an absolute-token reserve from BOTH caps before dividing by the window, clamped at 0 so an override can only TIGHTEN, never loosen; (b) checklist_engine resolves the reserve with a SINGLE reader from tasks.<gate>.context_headroom_tokens only -- there is no checklist-config tier, because it would have zero users and one adapter is a hypothetical seam; a missing, malformed or negative value resolves to 0; (c) the SAME resolver feeds both the advisory and the begin-work guard, so the number the agent is SHOWN and the number it is JUDGED against cannot diverge; (d) exercise it once for real: the commander spine template's `execute` gate carries a headroom reserve -- the run's longest gate, whose imperative already tells the agent in prose to ensure context headroom before entering. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the HARD guard now sits on the begin-work verbs",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "TIGHTEN-ONLY is a safety property, not a style choice: the global default is a production default the Commander may not raise. An override that could loosen a threshold would let a gate opt out of the governor.",
+        "Do NOT edit _PROFILES itself. The graded default stays exactly one table.",
+        "Do NOT hand-author an override on every gate. #467: that would invent 68 ungraded placeholders. Exactly one real gate carries one.",
+        "Threshold ARITHMETIC lives in gauge_reader (the module that owns the window and the caps). The engine passes a token count and reads back a fraction; it computes no threshold. Recording the fraction gauge_reader returned is not arithmetic and does not breach constraint:no-threshold-values.",
+        "A NEGATIVE-ONLY TEST CANNOT FAIL: the test that asserts a malformed/negative override resolves to the default must, IN THE SAME TEST, assert a well-formed override resolving to a DIFFERENT number through the same resolver. Otherwise it passes with the whole mechanism dead-coded.",
+        "The neighbour-isolation assertion must assert BOTH sides: the overridden gate's behaviour changes AND a named neighbour's does not, at the same fill on the same model.",
+        "MUTATION-TEST EVERY GUARD, including the tighten-only clamp and the neighbour isolation. Each log line names the branch broken, the NAMED test that failed, and the total failure count. Log to .agent-work/issue-467-trip-semantics/g3-mutation-log.md.",
+        "An override on an uncalibrated model must fall back to the default rather than compute against a guessed window (#252)."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/gauge_reader.py -- thresholds_for (:124), _PROFILES (:76), _DEFAULT_PROFILE",
+          "scripts/checklist_engine.py -- the Trip section's threshold call sites",
+          "skills/commander/templates/COMMANDER_SPINE.template.json -- the `execute` gate, the one exercised override"
+        ],
+        "capability": [
+          "Trip thresholds -- today global-per-model; gains a per-gate tighten-only reserve"
+        ],
+        "constraint": [
+          "constraint:no-threshold-values -- the engine does not COMPUTE thresholds; gauge_reader does",
+          "constraint:tighten-only -- no override may raise a threshold",
+          "constraint:global-default-untouched -- _PROFILES is out of scope"
+        ],
+        "decision": [
+          "decision:gate-headroom-absolute-tokens -- the override is an absolute-token reserve, not a fill fraction. Why: all three independent design candidates converged on it: _PROFILES is already intent-first absolute because context-rot degradation tracks absolute token count, not window fraction, so a fractional override would reserve 5x more room on a 1M model than a 200K one from the same authored number. @grade: settled/measured · leans g3-implement,g3-review",
+          "decision:headroom-not-cap -- the override states what the GATE needs, so it survives a change to the production default. @grade: settled/measured · leans g3-implement",
+          "decision:no-config-tier -- gate-level only; the checklist-config tier is not shipped. Why: it would have zero users, and one adapter is a hypothetical seam (simplicity critic finding 3). @grade: settled/measured · leans g3-implement",
+          "decision:execute-gate-reserve-value -- the token reserve carried by the commander spine's `execute` gate. @grade: guess · leans g3-implement · settle: read the fill_fraction recorded in .agent-work/*/gauge.json across completed commander runs at the moment `execute` was started, and set the reserve to the observed cost of a median execute gate. NOT settled by this run's field data: the LO's crew-vs-Admiral trip spread is confounded by the ambiguous-binding silence documented in docs/GAUGE_WRITER_HOOK.md"
+        ],
+        "evidence": [
+          "claim:dc4-neighbour-isolation -- at one fill, on one model, the overridden gate's behaviour changes and a NAMED neighbour's does not. Asserted on both sides."
+        ],
+        "confidence_flags": [
+          "The LO's role-blindness reading (crews trip at 17-21%, the Admiral ran to 44% untripped) is CONFOUNDED: docs/GAUGE_WRITER_HOOK.md records that an orchestrator holding several spines under one key writes NO reading at all. Do not use it to justify a threshold value. Record it; do not act on it."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "DC4: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Verify: the clamp genuinely makes loosening unreachable -- try to loosen it and show you cannot; the malformed-value test carries a positive assertion through the same resolver in the same test, so it cannot pass with the mechanism dead-coded; the neighbour-isolation test asserts BOTH sides by name; _PROFILES is untouched; there is no checklist-config tier; the advisory and the guard read the same resolved number; and every mutation turns its NAMED test red -- re-run at least two yourself. Integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors -- review verifies against the same anchors, with particular weight on constraint:tighten-only and claim:dc4-neighbour-isolation"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "DC4: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the targeted tests yourself and confirm the neighbour-isolation assertion in your hands, then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "engine, gauge and template/installer tests pass",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py tests/test_init_work_area.py tests/test_install_constellation.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the per-gate override tests EXIST and pass -- pytest exits 5 on an empty collection",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py -k 'headroom or override'"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "DC6: make an over-threshold BEGIN mechanically observable",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. This gate pays #467's stated cost. READ THE SCOPE CAREFULLY, because the obvious reading of DC6 is a check that cannot fail: 'did a handoff artifact appear before the next advance' is TRUE BY CONSTRUCTION, since `advance` already refuses a non-exempt gate without a `--why`. The discriminating question is the other one: DID ANYONE BEGIN WORK WHILE OVER THE LINE? Ship: (a) an engine-only, append-only trip ledger on the spine -- one entry every time the HARD band is evaluated at a MUTATING chokepoint and found tripped, carrying {id, gate, verb, outcome, fill, hard, model, ts}, where outcome is `begin-refused` (no keyed refresh-request: the verb raised) or `begin-released` (a keyed refresh-request was present, so the verb proceeded WHILE STILL OVER THE LINE); (b) a pure predicate over the spine reporting whether any `begin-released` or `begin-refused` entry exists for the live understanding -- that is the non-compliance signal, and in the healthy world NO ledger entry exists at all, because the agent that was told to wrap up stopped and its successor's gauge reads below the line; (c) surface it by extending the EXISTING `_trip_advisory` HARD branch -- do not add a second render computing the same fact; (d) update docs/CHECKLIST_SCHEMA.md, and state the limit in (e) below there too. No verb may write a ledger entry. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the per-gate override resolver exists, so the ledger records the threshold actually in force at the gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "THE DISQUALIFIER: a compliance signal whose output is identical in the healthy and the defective world cannot discriminate, however correctly it runs. For EACH defect shape you claim to catch, construct the defective spine and name the field that differs.",
+        "SCOPED LIMIT, to be written into docs/CHECKLIST_SCHEMA.md rather than hidden: the engine CANNOT observe an agent that is told to wrap up and simply stops without running another verb. `main()` does not save on `current`, which is where the band is evaluated read-only, and there is no mid-gate check. That case remains visible to the invoker only as a stale DIGEST at the seam. Say so plainly; do not claim coverage you do not have.",
+        "MUTATION-TEST THE COMPLIANCE OBSERVABLE ITSELF. Break the branch that writes the ledger entry and show the NAMED test goes RED, with the total failure count. If a mutation leaves the test green, the test is the defect.",
+        "Any guard that loops must assert what it looped over -- state the count. A guard that passes on an empty set has not run.",
+        "The ledger is engine-written only. No CLI verb creates, edits or deletes an entry. Prove it: name every write site and show it is unreachable from `_run_verb`.",
+        "Fail-safe survives: no reading means no ledger entry AND no compliance claim -- silence must read as neither compliant nor non-compliant.",
+        "Backward compatibility: a spine with no ledger drives unchanged (setdefault on first write, the why_trail idiom).",
+        "Log mutations to .agent-work/issue-467-trip-semantics/g4-mutation-log.md.",
+        "TRIAGE CANDIDATE, do not build here -- decision pressure this gate may surface: whether handoff QUALITY (as opposed to presence) is observable at all -- carries no grade; shipped v1 doctrine is that reason quality is not policed. Triage candidate; do not build a quality judge here."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py -- dispatch (the mutating chokepoint; note main() skips save on `current`), the Trip section, _trip_advisory (:1399, the existing HARD render), _append_why (:1095, the append-only precedent)",
+          "docs/CHECKLIST_SCHEMA.md -- the shipped-behaviour record to update"
+        ],
+        "capability": [
+          "Trip HARD band -- gains a durable record of its own firing, which is what makes 'a trip fired' assertable instead of an absence"
+        ],
+        "constraint": [
+          "constraint:no-absence-is-evidence -- a silent governor and a governor with headroom are indistinguishable; the ledger separates them",
+          "constraint:check-that-cannot-fail -- assert against the behaviour, never against text describing it",
+          "constraint:fail-safe-on-no-reading",
+          "constraint:current-does-not-persist -- main() skips save when the verb is `current`, so the ledger is scoped to mutating verbs by construction"
+        ],
+        "decision": [
+          "decision:compliance-signal-is-the-over-threshold-begin -- the observable is 'work began while over the line', not 'a handoff artifact appeared'. Why: two independent cold critics found that the artifact-appeared reading is true by construction and therefore green in both worlds. @grade: settled/measured · leans g4-implement,g4-review",
+          "decision:trip-log-is-the-compliance-record -- an engine-only append-only ledger on the spine. Why: without it, 'the governor never tripped' and 'the governor never ran' are the same observation, which is the exact failure #467's evidence protocol forbids and which bit this epic for nine hours. @grade: settled/measured · leans g4-implement,g5-acceptance",
+          "decision:agents-cannot-author-their-own-compliance-record -- no verb writes a ledger entry. @grade: settled/human · leans g4-implement"
+        ],
+        "evidence": [
+          "claim:dc6-red-on-ignore -- an agent that begins work while over the line produces a spine that differs mechanically from a compliant one, and the difference is asserted in a test that goes RED when the recording branch is broken.",
+          "claim:dc6-scope -- the one non-compliance shape NOT covered (the agent that stops without acting) is named in the shipped docs, not left to be discovered."
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "DC6: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. This is the review that matters most in this run. The failure mode to hunt is a compliance signal that is green in both worlds. For EACH defect shape the implementer claims to catch, construct the defective spine YOURSELF and confirm the signal actually differs. Re-run EVERY mutation in the log, not a sample -- any mutation that leaves its named test green is a BLOCK. Verify: no CLI verb can write a ledger entry (check every write site); a None reading produces neither a compliant nor a non-compliant claim; the scoped limit (the agent that stops without acting) is written into docs/CHECKLIST_SCHEMA.md and not overclaimed; and `_trip_advisory` was extended rather than duplicated. Integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors -- review verifies against the same anchors, with decisive weight on constraint:check-that-cannot-fail and claim:dc6-red-on-ignore"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "DC6: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the full suite yourself AND independently break the ledger write branch to confirm the compliance test goes red in your hands -- do not accept this one on the report. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite passes; any delta from main's baseline is explained",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the compliance-observable tests EXIST and pass -- pytest exits 5 on an empty collection",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-acceptance": {
+      "id": "g5-acceptance",
+      "title": "DC5: the round trip, end to end, with two real agents",
+      "imperative": "REASONING/ACCEPTANCE GATE -- no implement crew. Crew waiver reason: the deliverable is an acceptance MEASUREMENT of the shipped mechanism whose instrument is two dispatched agents rather than a code change; a crew implementing it would sit between the measurement and the thing measured. It still gets an independent review (g5-review), because DC5 is the point of the whole issue. Drive it yourself: on a real spine with a planted, asserted over-threshold reading, agent A works a gate, trips, closes its gate carrying its handoff, files the refresh-request, and goes idle; agent B is dispatched COLD with the `current` output alone -- no separate handoff document, no re-briefing from your own memory of the run -- and completes what A was mid-way through. Record B's VERBATIM dispatch prompt in the acceptance record so the cold-start claim is falsifiable after the fact. Write a verifier script that reads the resulting spine and asserts mechanically: two distinct engine session ids acted, A's why-record exists at the tripping gate, B advanced a gate after A's last action, and the trip ledger holds the expected entries. Then re-run the g1 RED and record that it no longer reproduces. Verify #431 is dissolved with evidence; do NOT close it. Write .agent-work/issue-467-trip-semantics/ACCEPTANCE.md with a reading-exists assertion for every claim about trip behaviour and per-done-condition accounting DC1-DC6.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "DC1-DC4 and DC6 are shipped and integrated",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the acceptance verifier passes against the round-trip spine -- two distinct session ids, A's why-record at the tripping gate, B's advance after A's last action, the expected ledger entries",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python .agent-work/issue-467-trip-semantics/acceptance/verify_round_trip.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "ACCEPTANCE.md records the round trip with B's VERBATIM dispatch prompt, B's work verified item by item against what A was mid-way through, a reading-exists assertion for every trip claim, the RED's non-reproduction, #431 verified dissolved, and per-done-condition accounting DC1-DC6",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "NO ABSENCE IS EVIDENCE. Assert a reading existed before any claim about trip behaviour. If a run observes no trip, say which of the two you observed: a silent governor, or a governor with headroom.",
+        "DC5 IS THE POINT (LO-467 pre-ruling 2). It may not be reported `partial` on the strength of DC1-DC3 landing. Either the round trip completes, or it is returned to the Admiral as a scoped null naming the specific mechanism that failed to express -- never as 'this approach is impossible'. The LO records the round trip has already run by hand three times, so a failure to reproduce it mechanically is a defect in the mechanism, not evidence against the design.",
+        "Agent B is cold-started from `current` alone. Writing it a handoff document, or re-briefing it from your own memory of the run, invalidates the measurement -- which is why its verbatim prompt is recorded.",
+        "The round trip runs on a SEPARATE acceptance spine, not on this run's own spine.",
+        "Partial is an acceptable and honest verdict for DC1-DC4 and DC6. A blanket 'done' is not."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/checklist_engine.py -- the shipped begin-work guard, the ledger, the advisory; the `current` cold-start surface (_why_suffix)"
+        ],
+        "capability": [
+          "reach-up / refresh round trip -- trip, handoff, refresh, resume"
+        ],
+        "constraint": [
+          "constraint:no-absence-is-evidence",
+          "constraint:cold-start-from-current-alone",
+          "constraint:job-file-not-agent-file -- B reuses A's spine file; it is never copied or recreated"
+        ],
+        "decision": [
+          "decision:round-trip-is-the-point -- DC1-DC3 are all satisfiable while every tripped agent produces a useless handoff, because none of them look at the far end. Why: source: #467 done-condition 5 and LO-467 pre-ruling 2. @grade: settled/inherited · leans g5-acceptance"
+        ],
+        "evidence": [
+          "claim:dc5-round-trip -- B's completed work corresponds item by item to what A was mid-way through, verified mechanically and by inspection, not asserted."
+        ],
+        "confidence_flags": [
+          "#458: the gauge writer is not wired in tracked settings, so every reading in this acceptance is planted rather than harness-produced. State that limitation in ACCEPTANCE.md rather than overclaiming a live-governor demonstration."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "DC5: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. The question is whether the round trip HAPPENED, not whether ACCEPTANCE.md says it did. Verify: B's verbatim dispatch prompt contains nothing but the `current` output (if it carries any re-briefing, the measurement is void); the verifier script actually discriminates -- break its inputs and confirm it fails; the two session ids are genuinely distinct agents; B's completed work corresponds to what A was mid-way through rather than to something easier; every trip claim carries a reading-exists assertion; and the per-done-condition accounting is honest, with `partial` where partial is true. Integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ACCEPTANCE.md and the verifier exist",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g5-acceptance anchors -- review verifies the measurement, not the write-up"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "DC5: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the full suite yourself and record the real exit code with the command that produced it, then advance. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite passes; the real exit code is recorded with the command that produced it",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

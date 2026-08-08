@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "work_id": "issue-467-trip-semantics",
+  "root": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "91648354613daeb2d816fcdbef1c40340fb70ab11dc25fad57fd0f13d9a168c5",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/GAUGE_WRITER_HOOK.md",
+      "content_hash": "5d385fccfd2d149ebbf2970291bdd808c77b101fc477e1dcf9f578128b9ab1a7",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "7c8b5cba1b7301ab9a8f7cba60583b311e31a6719ba2f384e4af05661e046c64",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "68b68c35ea331b736499bbc5f862ded2b0fe98ebafd42274bd4ed13f8b380d8c",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "4c98eae16f4d7a2bb91996762ca7b8945ae85bd6d478ca6dc05313c3cc759ea2"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This repo carries no docs/architecture packet map at all (generated/map.json, index.md and the packets dir are all absent), so there is no structural map for the context-governor area; the Trip band policy, the gauge read side and the refresh-request flow are described only in docs/CHECKLIST_SCHEMA.md prose.",
+    "No decision anchors exist in a machine-readable form; the governor's decisions (fail-safe on missing reading, gated-only bands, CLI-boundary placement) are stated in schema prose and in code comments, so anchor_count is 0 and I cannot inherit graded decision anchors into the mission frame."
+  ],
+  "escalation": "Escalating to the Admiral (team-lead, epic #418): this is a skill-source repo with no packet map, so the map-first read is discharged against doctrine docs. Not asking for a map to be built inside #467 -- recording the substitution so the mission frame is honestly sourced.",
+  "emitted_at": "2026-08-08T09:33:15.952142+00:00",
+  "root_proof": "positive: .git entry present at root"
+}
