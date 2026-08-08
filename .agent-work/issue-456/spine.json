@@ -910,6 +910,21 @@
       "id": "tc40",
       "from": "execute",
       "statement": "tc40: 'add an extraction-window statement' appears in the g3 gate spec but is DEFINED NOWHERE in the run's artifacts. The g3 implementer designed it itself -- the per-file coverage boundary plus the home for the declared line base -- and flagged that a reviewer should check that design against intent rather than inherit it. This is the right disclosure and it must not be lost: the g3 reviewer has to judge whether the invented definition matches what the plan meant, because nothing else in the run can settle it. Generalisable: a gate spec phrase that names an artifact the run never defines will be silently invented by whoever implements it, and it will then read as settled."
+    },
+    {
+      "id": "tc41",
+      "from": "g3-review",
+      "statement": "The extraction-window statement's docstring overclaims. It says a reader can tell a fact absent from the code from a fact that was never looked at. That holds only for a consumer of the raw statement store. The g3 reviewer traced render.py's MODULES population and confirmed a parse-failed file leaves ZERO trace in the rendered map tree: no page, no index entry, no failure note. The only record is extract_report.json, which is gitignored and linked from no page. The coverage-boundary property is real but not realized for the map's actual audience, so the docstring describes a guarantee the shipped artifact does not give."
+    },
+    {
+      "id": "tc42",
+      "from": "g3-review",
+      "statement": "The reviewer checklist's Fowler item r6-fowler.c1 ships with a literal placeholder fowler-pass-record-path and no survey-legal verb can substitute the real path. Four consecutive reviewers on this run have force-waived the same check for the same reason. The rail itself ran and passed every time, so this is not a risk acceptance; it is a check whose text cannot be satisfied as written, which trains crews to waive. Routes to feedback on the reviewer skill, not to a gate."
+    },
+    {
+      "id": "tc43",
+      "from": "g3-review",
+      "statement": "The Bash tool in an isolated worktree refuses long quoted strings, so engine verbs taking free text (--finding, --reason, --summary, --why) fail on any message of real length. The g3 reviewer solved it by writing tiny subprocess wrapper scripts that read the text from a file and pass a list argv, avoiding shell quoting entirely. Every crew rediscovers this at full cost. Two fixes: adopt the wrapper pattern as standing worktree doctrine, and add --finding-file / --reason-file / --summary-file options to the engine so no one has to. Routes to feedback."
     }
   ],
   "blockers": [],
@@ -918,7 +933,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T09:26:36.994899+00:00",
+    "last_heartbeat": "2026-08-08T10:01:43.997093+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

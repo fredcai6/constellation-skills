@@ -1002,7 +1002,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT exists on disk at .agent-work/issue-456/crew-handoffs/g3-implement-RESULT.md (22336 bytes, verified by ls) and g3-implement is complete. REVIEW_RESULT also on disk (11979 bytes) and crew verified fresh."
         }
       ],
       "postconditions": [
@@ -1013,7 +1014,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-2",
+          "attested": {
+            "evidence": "e-g3-review-2",
+            "note": "REVIEW_RESULT returned, verdict APPROVE, blockers none. On disk at .agent-work/issue-456/crew-handoffs/g3-review-RESULT.md; crew verified fresh (completed)."
+          }
         }
       ],
       "constraints": [],
@@ -1022,11 +1028,64 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "artifact",
+          "payload": {
+            "status": "complete",
+            "verdict": "APPROVE",
+            "blockers": "none",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g3-review-RESULT.md",
+            "crew": "constellation/issue-456/g3/reviewer/attempt-1",
+            "crew_model": "sonnet -- first crew on this run dispatched below opus; the registry now records the model. Quality held: the review produced measured evidence, not an opinion.",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Survey driven end to end via the engine at .agent-work/issue-456/g3-review/review.json, 7 checks recorded, consolidated.",
+            "named_risk_RESOLVED": "The independence claim is TRUE, proved on the real 3711-entity corpus with mutations neither the implementer nor g2's reviewer chose. CONTROL (unmutated) -> check exit 0, 6/6, rules out an always-red check. SIDE A (extract.child_sym returns bare name, flattening every enclosing chain -- textually unlike the implementer's own lowercasing EXTRACTOR_RENAME_MUTATION) -> FAIL entity-symbol-join: 3896, FAILED 1 of 6. SIDE B (checks.SourceScan._walk stops treating ClassDef as a qualifying scope, dropping only the class prefix -- mechanically unlike the implementer's own all-levels SOURCE_SCAN_FLATTEN_MUTATION) -> FAIL entity-symbol-join: 4367, FAILED 1 of 6. Both isolated, no collateral check broken. Both sides load-bearing; the check is not a tautology. The gate's whole risk is retired.",
+            "commander_independent_check": "I did not take the APPROVE on trust. Verified: tree clean (git status and git diff --stat on scripts/ tests/ .gitignore both empty -- the reviewer mutated only throwaway package copies under temp dirs, so there was nothing to restore); fresh build then check -> ok entity-symbol-join, 6/6, exit 0. Read the reviewer's own attack script and confirmed it performs the two mutations it claims at the anchors it names, rather than reporting them.",
+            "tc34": "CLOSED, verified two independent ways. (1) The reviewer re-derived the count rather than copying it: git show 0d821d6f~1:scripts/code_map/supplement.py confirms its body-only descent is byte-identical to the script used, run against a fresh real-corpus build -> 8 gained, 0 lost, matching the implementer. Traced the first (scripts.checklist_engine:emit_step_manifest) to its source and confirmed its nearest shallower enclosing line is `except ImportError:` and a page now exists. (2) Its own with-block fixture (not the implementer's): definitions inside `with contextlib.suppress(Exception):` and inside `if True:` both land in the store, both get pages, both linked from INDEX.md, check 6/6.",
+            "ids_jsonl": "No position under a code MOVE -- the unchosen mutation. The reviewer moved a whole definition from line 6 to line 30 (24-line relocation, not a rename). Store line 6 -> 30; ids.jsonl byte-identical before and after.",
+            "tc40_extraction_window": "JUDGED, not decorative. LINE_BASE is declared per-file and genuinely consumed by two independent production read sites (render.source_line, checks.StoreScan.line_base) plus the entity_symbol_join position match, and pinned by a flip-test. loc/doc_body/all reach a real reader via the module index header and docstring. BUT its docstring overclaims: 'a reader can tell a fact absent from the code from a fact never looked at' holds only for a consumer of the raw store -- the reviewer traced render.py's MODULES population and confirmed a parse-failed file leaves ZERO trace in the rendered map tree (no page, no index entry, no failure note); the only record is the gitignored, unlinked extract_report.json. Not a blocker, filed as tc41.",
+            "numbers_reproduced": "Every claim independently re-run, all matching exactly: full suite 1767 passed / 2 skipped / 672 subtests / 0 failed; gate selector 21 passed, 54 deselected; fresh build+check exit 0 both, 6/6; render report modules=111 entities=3711 pages=3823 holes=2506 ids=0.",
+            "red_before_green_audited": "4 of 5 RED commits re-run from git archive snapshots (worktree never checked out): 8029a4ea line base 5 failed; 91da2500 schema value facts 3 failed / 11 passed (a real incremental RED, not a broken suite); 4246e87d tc34 2 failed with AssertionError text confirming the with-block page is genuinely absent pre-fix; 70b60555 ids.jsonl 5 failed. All four genuinely committed failing.",
+            "g1_g2_tripwires_held": "All re-verified directly, not read off the RESULT. _make_collision_repo's INDEX collision still fails page-accounting (test body read: asserts a nonzero exit AND the specific pkg.thing text, so not vacuous). OWN_MODULE_NAMED_MUTATION and test_refs_lines_are_self_consistent_on_an_intact_map green. Zero `:<line>` hits scanning every page header in a fresh map build -- the human's strip-the-line-numbers ruling holds. All 6 checks still registered in CHECKS.",
+            "scope": "git diff --name-only run by the reviewer: exactly scripts/code_map/{extract,render,checks,cli,__init__,supplement(deleted)}.py + .gitignore + tests/test_code_map.py. scripts/run_skill_eval.py byte-identical, empty diff -- the g2 ruling that production symbols are not renamed to suit the tool that reads them still holds. checks.py and cli.py sit outside the handoff's narrow wording but are forced by the merge itself (checks.py owned entity_symbol_join and read the supplement; cli.py wired the deleted stage); nothing in either changed beyond what removal requires.",
+            "fowler_pass": ".agent-work/issue-456/g3-review/fowler-pass.json, rail exit 0, 12/12 smells judged -- 2 flagged, 2 overridden with logged standards, 8 absent. Flagged as observations not blockers: extract.Extractor.emit grew 8 -> 9 parameters (no repo standard sanctions it); checks.SourceScan.unreadable is populated on parse failure but never read anywhere (grepped scripts/ and tests/, zero reads) -- collected-and-unused state.",
+            "new_candidates": "tc41 (extraction-window docstring overclaims what a map reader sees on a parse failure). Plus two workflow items the reviewer surfaced: the Fowler rail's r6-fowler.c1 ships a literal <fowler-pass-record-path> placeholder that no survey-legal verb can substitute, forcing a fourth consecutive reviewer to force-waive it; and the worktree's Bash refusal of long quoted strings, which the reviewer solved with tiny subprocess wrapper scripts (run_record.py / run_waive.py / run_consolidate.py) worth adopting as the standing pattern."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-review-2",
+          "type": "review-result",
+          "payload": {
+            "status": "complete",
+            "verdict": "APPROVE",
+            "blockers": "none",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g3-review-RESULT.md",
+            "crew": "constellation/issue-456/g3/reviewer/attempt-1",
+            "crew_model": "sonnet -- first crew on this run dispatched below opus; the registry now records the model. Quality held: the review produced measured evidence, not an opinion.",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Survey driven end to end via the engine at .agent-work/issue-456/g3-review/review.json, 7 checks recorded, consolidated.",
+            "named_risk_RESOLVED": "The independence claim is TRUE, proved on the real 3711-entity corpus with mutations neither the implementer nor g2's reviewer chose. CONTROL (unmutated) -> check exit 0, 6/6, rules out an always-red check. SIDE A (extract.child_sym returns bare name, flattening every enclosing chain -- textually unlike the implementer's own lowercasing EXTRACTOR_RENAME_MUTATION) -> FAIL entity-symbol-join: 3896, FAILED 1 of 6. SIDE B (checks.SourceScan._walk stops treating ClassDef as a qualifying scope, dropping only the class prefix -- mechanically unlike the implementer's own all-levels SOURCE_SCAN_FLATTEN_MUTATION) -> FAIL entity-symbol-join: 4367, FAILED 1 of 6. Both isolated, no collateral check broken. Both sides load-bearing; the check is not a tautology. The gate's whole risk is retired.",
+            "commander_independent_check": "I did not take the APPROVE on trust. Verified: tree clean (git status and git diff --stat on scripts/ tests/ .gitignore both empty -- the reviewer mutated only throwaway package copies under temp dirs, so there was nothing to restore); fresh build then check -> ok entity-symbol-join, 6/6, exit 0. Read the reviewer's own attack script and confirmed it performs the two mutations it claims at the anchors it names, rather than reporting them.",
+            "tc34": "CLOSED, verified two independent ways. (1) The reviewer re-derived the count rather than copying it: git show 0d821d6f~1:scripts/code_map/supplement.py confirms its body-only descent is byte-identical to the script used, run against a fresh real-corpus build -> 8 gained, 0 lost, matching the implementer. Traced the first (scripts.checklist_engine:emit_step_manifest) to its source and confirmed its nearest shallower enclosing line is `except ImportError:` and a page now exists. (2) Its own with-block fixture (not the implementer's): definitions inside `with contextlib.suppress(Exception):` and inside `if True:` both land in the store, both get pages, both linked from INDEX.md, check 6/6.",
+            "ids_jsonl": "No position under a code MOVE -- the unchosen mutation. The reviewer moved a whole definition from line 6 to line 30 (24-line relocation, not a rename). Store line 6 -> 30; ids.jsonl byte-identical before and after.",
+            "tc40_extraction_window": "JUDGED, not decorative. LINE_BASE is declared per-file and genuinely consumed by two independent production read sites (render.source_line, checks.StoreScan.line_base) plus the entity_symbol_join position match, and pinned by a flip-test. loc/doc_body/all reach a real reader via the module index header and docstring. BUT its docstring overclaims: 'a reader can tell a fact absent from the code from a fact never looked at' holds only for a consumer of the raw store -- the reviewer traced render.py's MODULES population and confirmed a parse-failed file leaves ZERO trace in the rendered map tree (no page, no index entry, no failure note); the only record is the gitignored, unlinked extract_report.json. Not a blocker, filed as tc41.",
+            "numbers_reproduced": "Every claim independently re-run, all matching exactly: full suite 1767 passed / 2 skipped / 672 subtests / 0 failed; gate selector 21 passed, 54 deselected; fresh build+check exit 0 both, 6/6; render report modules=111 entities=3711 pages=3823 holes=2506 ids=0.",
+            "red_before_green_audited": "4 of 5 RED commits re-run from git archive snapshots (worktree never checked out): 8029a4ea line base 5 failed; 91da2500 schema value facts 3 failed / 11 passed (a real incremental RED, not a broken suite); 4246e87d tc34 2 failed with AssertionError text confirming the with-block page is genuinely absent pre-fix; 70b60555 ids.jsonl 5 failed. All four genuinely committed failing.",
+            "g1_g2_tripwires_held": "All re-verified directly, not read off the RESULT. _make_collision_repo's INDEX collision still fails page-accounting (test body read: asserts a nonzero exit AND the specific pkg.thing text, so not vacuous). OWN_MODULE_NAMED_MUTATION and test_refs_lines_are_self_consistent_on_an_intact_map green. Zero `:<line>` hits scanning every page header in a fresh map build -- the human's strip-the-line-numbers ruling holds. All 6 checks still registered in CHECKS.",
+            "scope": "git diff --name-only run by the reviewer: exactly scripts/code_map/{extract,render,checks,cli,__init__,supplement(deleted)}.py + .gitignore + tests/test_code_map.py. scripts/run_skill_eval.py byte-identical, empty diff -- the g2 ruling that production symbols are not renamed to suit the tool that reads them still holds. checks.py and cli.py sit outside the handoff's narrow wording but are forced by the merge itself (checks.py owned entity_symbol_join and read the supplement; cli.py wired the deleted stage); nothing in either changed beyond what removal requires.",
+            "fowler_pass": ".agent-work/issue-456/g3-review/fowler-pass.json, rail exit 0, 12/12 smells judged -- 2 flagged, 2 overridden with logged standards, 8 absent. Flagged as observations not blockers: extract.Extractor.emit grew 8 -> 9 parameters (no repo standard sanctions it); checks.SourceScan.unreadable is populated on parse failure but never read anywhere (grepped scripts/ and tests/, zero reads) -- collected-and-unused state.",
+            "new_candidates": "tc41 (extraction-window docstring overclaims what a map reader sees on a parse failure). Plus two workflow items the reviewer surfaced: the Fowler rail's r6-fowler.c1 ships a literal <fowler-pass-record-path> placeholder that no survey-legal verb can substitute, forcing a fourth consecutive reviewer to force-waive it; and the worktree's Bash refusal of long quoted strings, which the reviewer solved with tiny subprocess wrapper scripts (run_record.py / run_waive.py / run_consolidate.py) worth adopting as the standing pattern."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -1038,7 +1097,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT on disk at .agent-work/issue-456/crew-handoffs/g3-review-RESULT.md, 11979 bytes, verdict APPROVE, blockers none; crew verified fresh (completed)."
         }
       ],
       "postconditions": [
@@ -1054,7 +1114,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
         },
         {
           "id": "c2",
@@ -1066,17 +1127,34 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-2",
+          "attested": {
+            "evidence": "e-g3-review-2",
+            "note": "Reviewer verdict is APPROVE with zero blockers, recorded in e-g3-review-2 and in the RESULT file's first line."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'schema or line_base or ids_jsonl' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-implement": {
@@ -2164,6 +2242,20 @@
       "why": "Route 1 taken and proven: the crew confirmed the trap was real (deleting the supplement collapses entity_symbol_join to identity) before choosing, then re-based the naming arm on a new checks.SourceScan that derives qualified names from source text, sharing no code path with the extractor. All five close criteria met; supplement.py deleted not deprecated; LINE_BASE=0 declared with a test that fails if the base flips; ids.jsonl is {id,s} with no position, exercised by mint-two-rename-one. Red-before-green held across five commits. tc34 closed by construction: 8 definitions the old node.body-only recursion could never see now have pages. Commander independently verified 1767 passed/2 skipped/0 failed, fresh build then check 6/6 exit 0, tree clean, 0 map files tracked. Independence of the re-based join is NOT yet commander-verified and is the review's named mandate.",
       "mechanical": false,
       "ts": "2026-08-08T09:26:57.263789+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g3-review",
+      "why": "APPROVE with no blockers; the gate's named risk is retired by measurement. The reviewer attacked entity_symbol_join on the real 3711-entity corpus with mutations neither the implementer nor g2's reviewer chose: a clean control (6/6, exit 0) rules out an always-red check; flattening extract.child_sym fails it at 3896; stopping SourceScan qualifying by ClassDef fails it at 4367. Both isolated to 1 of 6, so both sides are load-bearing and the check is not a tautology. tc34 closed, count re-derived independently (8 gained, 0 lost) plus an own with-block fixture. ids.jsonl byte-identical under a 24-line code MOVE, the mutation the implementer did not choose. tc40 judged: the extraction-window statement is genuinely consumed, but its docstring overclaims a reader-facing property that never reaches the rendered tree; filed as tc41, not a blocker. All numbers reproduced exactly; 4 of 5 RED commits re-run failing from git archive snapshots. Commander verified independently rather than on trust: tree clean, fresh build then check 6/6 exit 0, and the reviewer's attack script read and confirmed to perform the mutations it claims at the anchors it names. First crew dispatched at sonnet rather than opus; quality held.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:01:17.293791+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g3-integrate",
+      "why": "All five close criteria verified against the artifact, not the report. One schema carries all six fields; supplement.py is absent from scripts/code_map and the word supplement absent from .gitignore, cli.py and __init__.py, so the stage is gone not deprecated; LINE_BASE is declared and pinned by a flip-test; ids.jsonl is byte-identical under a 24-line code MOVE as well as the mint-two-rename-one exercise. The gate's own selector obeys the tc38 rule from both sides: it selects 21 tests (non-empty) and four of those tests were re-run RED from git archive snapshots, so it can go red. Suite 1767/2/0/0, fresh build then check 6/6 exit 0, tree clean, 0 map files tracked.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:07:42.932975+00:00"
     }
   ],
   "amendments": [

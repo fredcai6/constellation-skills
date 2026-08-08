@@ -1,0 +1,22 @@
+--- CONTROL (unmutated, real corpus) --- check exit=0
+   ok   entity-symbol-join
+   passed 6 checks
+--- SIDE A: extract.child_sym flattens the enclosing chain (every definition reads as module-level, module prefix kept) --- check exit=1
+   FAIL entity-symbol-join: 3896
+   FAILED 1 of 6 checks: entity-symbol-join
+   FAIL entity-symbol-join: 3896
+         scripts.apply_episode_delta/__init__.md: page is titled scripts.apply_episode_delta:__init__ but the source defines scripts.apply_episode_delta:_Transaction.__init__ at that position
+         scripts.apply_episode_delta/all_assertions.md: page is titled scripts.apply_episode_delta:all_assertions but the source defines scripts.apply_episode_delta:Episode.all_assertions at that position
+         scripts.apply_episode_delta/commit.md: page is titled scripts.apply_episode_delta:commit but the source defines scripts.apply_episode_delta:_Transaction.commit at that position
+--- SIDE B: checks.SourceScan stops qualifying by ClassDef --- check exit=1
+   FAIL entity-symbol-join: 4367
+   FAILED 1 of 6 checks: entity-symbol-join
+   FAIL entity-symbol-join: 4367
+         scripts.apply_episode_delta/_Transaction.__init__.md: page is titled scripts.apply_episode_delta:_Transaction.__init__ but the source defines scripts.apply_episode_delta:__init__ at that position
+         scripts.apply_episode_delta/_Transaction.commit.md: page is titled scripts.apply_episode_delta:_Transaction.commit but the source defines scripts.apply_episode_delta:commit at that position
+         scripts.apply_episode_delta/_Transaction.create.md: page is titled scripts.apply_episode_delta:_Transaction.create but the source defines scripts.apply_episode_delta:create at that position
+
+=== SUMMARY ===
+CONTROL: check exit=0
+SIDE_A_extractor_chain_flatten: check exit=1
+SIDE_B_sourcescan_class_blind: check exit=1

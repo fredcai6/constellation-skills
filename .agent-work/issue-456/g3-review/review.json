@@ -1,0 +1,197 @@
+{
+  "work_id": "issue-456-g3-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded reviewer global-crew.md + global-everyone.md doctrine, docs/agents/CREW_CONTEXT.md (python-not-py, UTF-8/LF writes, check-that-cannot-fail discipline) + GLOSSARY.md, the g3-review handoff in full, g3-implement-RESULT.md, the Commander's own b0575640 seam-verification note (tc39/tc40 filed), and git diff --stat 80cfc5c5~1..HEAD -- scripts/ tests/ .gitignore (8 files, 1136 insertions / 442 deletions). Confirmed independently: the phrase 'extraction-window' appears in DESIGN_SPEC.md, ISSUE_456.md, ownership-scope.md and gate-spec.json only as a bare task-list noun -- grepped all four, no definition of what it must contain or be for anywhere in the run's artifacts. Read checks.py (704 lines) and the relevant span of extract.py (Extractor.child_sym, self.encl) in full to plan the independence attack.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. THE ONE THING: independence of entity_symbol_join PROVEN with mutations the implementer never chose, run against the REAL corpus (not the synthetic _make_mixed_repo fixture), with a CONTROL to rule out an always-red check. Evidence: .agent-work/issue-456/evidence/g3-reviewer-independence-attack.{py,txt}.\n\nCONTROL (unmutated copy, real repo): check exit=0, 6/6, ok entity-symbol-join.\nSIDE A (extract.child_sym returns self.mod+':'+name, collapsing every definition to read as module-level -- a genuine chain-flatten, textually unlike the implementer's EXTRACTOR_RENAME_MUTATION .lower()): check exit=1, FAIL entity-symbol-join: 3896, FAILED 1 of 6 checks (isolated -- no other check went red).\nSIDE B (checks.SourceScan._walk stops treating ClassDef as a qualifying scope, so a METHOD's source-derived name drops its class prefix specifically -- mechanically unlike the implementer's SOURCE_SCAN_FLATTEN_MUTATION which flattens every level): check exit=1, FAIL entity-symbol-join: 4367, FAILED 1 of 6 checks (isolated).\nBoth sides independently falsify the check; neither mutation was the implementer's own.\n\ntc34 VERIFIED INDEPENDENTLY, two ways:\n(1) re-derived the deleted supplement.walk's node.body-only recursion FROM GIT HISTORY (git show 0d821d6f~1:scripts/code_map/supplement.py, confirmed byte-identical to what the implementer's own measure script used) and ran it against a FRESH build of the real corpus -- got the same 8 gained / 0 lost, independently reproduced not copied (.agent-work/issue-456/evidence/g3-reviewer-tc34-verify.{py,txt}); traced the first gained symbol (scripts.checklist_engine:emit_step_manifest) to its source line and confirmed by reading the file that its nearest shallower enclosing line is 'except ImportError:' (a compound-statement block) and that a page exists for it.\n(2) Built my OWN standalone with-block fixture (not the implementer's _make_schema_repo) -- a definition literally inside `with contextlib.suppress(Exception):` and one inside `if True:` -- both land in the store, both get a page, both are linked from their module INDEX.md, and full check passes 6/6 (.agent-work/issue-456/evidence/g3-reviewer-tc34-with-fixture.{py,txt}).\n\nids.jsonl UNDER A MOVE verified with my own fixture (not the implementer's mint-two-rename-one): moved the `spin` definition's whole block, anchor comment included, from line 6 to line 30 in the same file (24-line shift, a genuine relocation, not a rename) -- store line for the symbol changed 6->30, ids.jsonl is BYTE-IDENTICAL before and after (.agent-work/issue-456/evidence/g3-reviewer-ids-move.{py,txt}).\n\nEXTRACTION-WINDOW STATEMENT judged against intent: confirmed independently that the phrase is undefined anywhere in DESIGN_SPEC.md/ISSUE_456.md/ownership-scope.md/gate-spec.json (bare task-list noun only) -- the implementer's own flag is accurate. Judgement: NOT decorative for its named purpose -- LINE_BASE is genuinely declared per-file, consumed by two independent production read sites (render.source_line, checks.StoreScan.line_base) and by checks.StoreScan/SourceScan's position join, and is pinned by a flip-test. loc/doc_body/all also reach a real reader: module INDEX.md's 'path, N lines' header and docstring are sourced from the window statement, not recomputed. BUT the window's own docstring overclaims: 'a reader can tell a fact absent from the code from a fact that was never looked at' is true only for a CONSUMER OF THE RAW STORE (checks.py, or a future script diffing WINDOW-bearing modules against discover_corpus's file list) -- I traced render.py's MODULES population and confirmed a parse-failed file gets literally zero trace anywhere in the rendered map/ tree (no page, no index entry, no 'N files failed' note); the only record is extract_report.json under the gitignored .code-map/, which nothing in map/ points a reader at. So the coverage-boundary property is real but not YET realized for the map's actual audience (a page reader) -- filed as a triage candidate (tc41), not a blocker: the constraint literally named in this gate (declare the line base) is fully and demonstrably met, and 'add an extraction-window statement' does not itself promise reader-facing surfacing.\n\nStandard numbers, all independently reproduced: full suite 1767 passed / 2 skipped / 0 failed (358.5s, my own run, exact match); gate selector 21 passed / 54 deselected (my own run); fresh build+check exit 0, 6/6 including entity-symbol-join, on my own from-scratch build (.agent-work/issue-456/evidence/g3-reviewer-{full-suite,selector,build,check}.txt).\n\nDirectly spot-checked (not taken from the RESULT doc): supplement.py absent from scripts/code_map/; 'supplement' absent from .gitignore and from cli.py/__init__.py; read one 'contains' statement's d block off a fresh statements.jsonl and confirmed all six fields (kind, signature, end/span, doc_body, decorators, bases) plus one 'declares' statement's (annotation, value, form).\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Files touched 80cfc5c5~1..HEAD (git diff --name-only, run myself): exactly scripts/code_map/{extract,render,checks,cli,__init__,supplement}.py + .gitignore + tests/test_code_map.py, plus workbench artifacts under .agent-work/issue-456/. supplement.py shows as deleted. scripts/run_skill_eval.py has an EMPTY diff (git diff --stat over that path prints nothing) -- confirmed untouched, byte-identical.\n\nchecks.py and cli.py are outside the handoff's narrow \"store-schema and extractor modules\" wording, but the touch is forced by the merge itself: checks.py owned entity_symbol_join and read the supplement directly (it cannot keep doing either once supplement.py is gone), cli.py wired the now-deleted third stage. This is the same justification the implementer gave and it holds up against the diff -- nothing in either file changed beyond what removing the supplement stage requires (checks.py: SourceScan added, entity_symbol_join re-based, StoreScan.line_base plumbing for the declared base; cli.py: the supplement subcommand and stage wiring removed).\n\nAll named exclusions independently re-verified, not taken from the RESULT:\n- INDEX collision (g1's only cross-platform page-accounting falsifier): ran PageAccountingInvariantTests::test_the_invariant_goes_red_when_two_pages_resolve_to_one_file myself -- passes, and reading the test body confirms it asserts a NONZERO exit, 'FAIL page-accounting', and the specific 'pkg.thing' collision text; not vacuous.\n- OWN_MODULE_NAMED_MUTATION / test_refs_lines_are_self_consistent_on_an_intact_map: grepped both names verbatim in tests/test_code_map.py (lines 802, 830) and ran them -- green.\n- No ':<line>' in any page header: wrote a direct scan of every page in a fresh map/ build, checked the first three lines of each of 3823+ pages for a `.py:<digits>` pattern in the header region -- zero hits.\n- All 6 checks still registered in CHECKS: no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild -- read the tuple directly, nothing dropped. entity_symbol_join is RE-BASED (its second derivation moved from supplement.py to checks.SourceScan) but not weakened -- see r1-handoff's independence proof; if anything it gained a COVERAGE arm the old version did not have.\n\nNo scope drift beyond the two justified files. No blocker.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- every claimed number independently reproduced, plus RED-commit reproduction the RESULT doc did not itself carry.\n\nFULL SUITE (my own run): 1767 passed, 2 skipped, 672 subtests passed, 0 failed, 358.51s. Exact match to the RESULT's claim.\nGATE SELECTOR (my own run): 21 passed, 54 deselected, 11 subtests passed. Exact match ('schema or line_base or ids_jsonl').\nBUILD+CHECK (my own fresh build, tracked tree): build exit 0, check exit 0, 6/6 ok including entity-symbol-join.\nRENDER REPORT (read directly off my own fresh .code-map/render_report.json, not quoted from the RESULT): modules=111, entities=3711, pages=3823, entity_pages=3711, holes=2506, ids=0. Matches the RESULT's real-corpus numbers exactly.\n\nRED COMMITS -- 4 of the 5 named RED commits re-run from git-archive snapshots (worktree never checked out), independently, none taken on trust:\n- 8029a4ea (line base undeclared): StatementSchemaLineBaseTests -- 5 failed, 52 deselected.\n- 91da2500 (schema cannot say what a value is): StatementSchemaFactsTests -k schema -- 3 failed, 11 passed (the 3 new value/window tests fail, the pre-existing 11 still pass -- a real incremental RED, not a broken suite).\n- 4246e87d (tc34): OneSchemaCoverageTests -- 2 failed (both the with-block page test and its module-index-listing test), with the actual AssertionError text showing the with-block page is genuinely absent from the pre-fix tree.\n- 70b60555 (ids.jsonl empty by construction): IdsJsonlTests -- 5 failed, 52 deselected... (70 deselected actually, matches RESULT).\nAll four genuinely committed failing, not xfail-decorated or vacuously-passing.\n\nEVIDENCE FILES for the independence proof, tc34, and ids-under-move are all my own, fresh, and referenced from r1-handoff's finding: g3-reviewer-independence-attack.{py,txt}, g3-reviewer-tc34-verify.{py,txt}, g3-reviewer-tc34-with-fixture.{py,txt}, g3-reviewer-ids-move.{py,txt}, plus g3-reviewer-{full-suite,selector,build,check}.txt. All under .agent-work/issue-456/evidence/, all timestamped this run.\n\nNo blocker.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Checked every constraint the handoff names, against my own actions and the diff, not against the RESULT's say-so.\n\nSTDLIB ONLY: git diff 80cfc5c5~1..HEAD over extract.py/checks.py/render.py/cli.py shows exactly two new imports, both stdlib (`ast` in checks.py, `re` already there) plus one relative import (`from .extract import STATEMENTS_NAME, WINDOW`, appearing in both checks.py and render.py -- a filename and a predicate string, not naming code, consistent with r1's independence finding). No third-party package added.\n\nNO TIMINGS IN RUN REPORTS: read my own fresh .code-map/extract_report.json and render_report.json directly -- no timestamp/duration field in either (my grep hit was a false positive on the substring \"ts\" inside \"statements\", not a real timing field).\n\nNO `git add -A`: I never ran it -- every git command I issued this review was read-only (status, diff, show, archive) except the engine's own claim/record verbs, which do not touch git. `git diff --cached --stat` is empty: nothing is staged.\n\nF1BRAINZ / SUPERCOOLSPACESIM READ-ONLY: never referenced either path this review.\n\nWORK CONFINED TO THE WORKTREE: every path I read, wrote, or built into was under C:/Programs/constellation-skills/.claude/worktrees/issue-456 or an OS temp directory (my scratch mutation copies and scratch build outputs, all under %TEMP%, all cleaned up or ignored by git).\n\nRESTORE BYTE-EXACT / GIT STATUS CLEAN: I never mutated a TRACKED file. `git diff --stat -- scripts/ tests/ .gitignore` is empty (zero output) -- confirmed with my own command, not assumed. Every mutation this review performed (SIDE A, SIDE B, the ids-move fixture) ran against a throwaway COPY of scripts/code_map under a temp directory, never the checked-out tree, so there is nothing to restore and no sha256 pair to report -- the review's own design avoided the hazard rather than recovering from it. The only new bytes on disk are new, untracked evidence files under .agent-work/issue-456/evidence/ (fresh reviewer artifacts, not a mutation of anything that existed before) and the untracked map/ + .code-map/ build outputs from my own fresh build, exactly as the prior gates' reviews left them.\n\nNEVER FORCE-PUSH, NEVER MERGE TO MAIN: no push or merge command issued.\n\nNo blocker.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Map Impact notes check out against the diff and the evidence; no unreconciled divergence.\n\nStructural anchors named (extract.py schema owner, render.py one-store, checks.py SourceScan + re-based join, supplement.py removed, cli.py, __init__.py, .gitignore) are exactly the files r2-scope's own file list confirms -- nothing claimed that the diff does not show, nothing in the diff left unclaimed.\n\nTwo decisions are correctly promoted: line base = 0, declared (I read LINE_BASE and the extraction-window statement directly in extract.py, and confirmed via r1's evidence that it is genuinely consumed by two production read sites plus the join's position match, not merely declared and ignored); statement-line schema shape (folded facts under a `d` key on `contains`, a `declares` statement for values that deliberately does NOT create a page -- I read this distinction directly in extract.py and it matches the RESULT's framing exactly).\n\nThe claim/evidence line (\"the map now agrees with an independent read of the source on every definition's qualified name and position, over 3711 definitions\") is the entity_symbol_join claim, and r1-handoff's independence attack is a direct, harder test of exactly this claim -- it held under two mutations the implementer did not choose, on the real 3711-entity corpus.\n\nThe stated trust limitation (StoreScan and the renderer read the SAME store, so inbound_attribution audits the renderer against the store but not the store against the source) is accurate -- read directly in StoreScan's own docstring, unchanged framing from before this gate.\n\nNo architecture doc outside the generated map/ tree exists in this repo to reconcile against (no docs/architecture/ directory) -- the map IS the architecture record this issue is building, so there is nothing external for this change to have drifted from.\n\nTRIAGE CANDIDATES filed by this review:\n- tc41 (new, from r1-handoff): the extraction-window statement's own docstring claims a reader can distinguish \"absent from the code\" from \"never looked at,\" but that distinction is legible only to a consumer of the raw statement store (checks.py, or a future script) -- nothing in the rendered map/ tree surfaces a parse failure to a human page reader; extract_report.json is gitignored and unlinked from any page. Worth a later gate deciding whether the top INDEX should note \"N files could not be read.\"\n- tc40 (Commander-filed, b0575640): this review's judgement is the answer it asked for -- see r1-handoff's finding, \"EXTRACTION-WINDOW STATEMENT judged against intent.\" Not decorative; serves its named purpose (the declared line base) fully; the coverage-boundary framing overclaims relative to what a page reader actually sees (folded into tc41 above).\n- Carried forward from the implementer's own out-of-scope list, not mine to fix: the HARD context-band governor firing at ~16% fill (tc39, already filed); page_accounting's COUNT arm and entity_symbol_join's COVERAGE arm now overlapping (honest redundancy, a later gate's call); the `d` block's effect on statements.jsonl size (93,991 statements over 111 files, gitignored/rebuilt, a build-time observation not a defect).\n\nNo blocker.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2",
+          "waived": {
+            "authority": "reviewer",
+            "reason": "NOT a risk acceptance -- the rail was RUN and PASSED. \"python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g3-review/fowler-pass.json\" exits 0 with \"fowler pass ok (smells=12, flagged=[long-parameter-list, speculative-generality], overridden=[duplicated-code, primitive-obsession])\". Forced only because REVIEW_SURVEY.template.json ships c1 with a literal <fowler-pass-record-path> placeholder and no engine verb can replace it on a SURVEY controller: amend is refused (\"amend applies to gated checklists\") and attest is refused for an engine-checked command condition. Fourth consecutive reviewer to hit this on this run -- see .agent-work/issue-456/g0-review/review.json, g1-review/review.json, g2-review/review.json. Reported again in Workflow Feedback.",
+            "evidence": "e-r6-fowler-2",
+            "forced": true
+          }
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. All 12 baseline smells rendered a verdict; record at .agent-work/issue-456/g3-review/fowler-pass.json, rail exit 0: \"fowler pass ok (smells=12, flagged=['long-parameter-list', 'speculative-generality'], overridden=['duplicated-code', 'primitive-obsession'])\".\n\n2 flagged (observations, not blockers): (1) extract.Extractor.emit grew from 8 to 9 parameters this gate (the new d=None) -- no repo standard found that already sanctions this signature, unlike the two overridden smells, so it is a genuine long-parameter-list candidate rather than an accepted one. (2) checks.SourceScan.unreadable is populated on a parse failure but never consumed anywhere in the repo (grepped scripts/ and tests/, zero reads outside its own assignment) -- collected-and-unused state, worth wiring into a check or deleting.\n\n2 overridden, each with the standard that wins: duplicated-code, for SourceScan.module_of vs extract.mod_of (identical algorithm, written twice on purpose per SourceScan's own docstring) AND for StoreScan.__init__ vs render.load_stores both independently parsing statements.jsonl -- checks.py's module docstring (\"written a second time on purpose\") is the standard, and I did not take the override on faith: r1-handoff's real-corpus mutation attack broke each independently-written side and the check caught both, which is what an unverified override could not show. primitive-obsession, for the two sides of entity_symbol_join staying bare strings rather than a shared Symbol type -- same standard, same verification (3896 and 4367 failures on the real corpus, with a clean control in between).\n\n8 absent: long-method (entity_symbol_join is ~22 lines with two clear arms; refs_line_self_consistent, g2's own long-method override, is untouched by this diff -- confirmed by reading the actual diff hunk, not just the hunk header), large-class, feature-envy, data-clumps, shotgun-surgery (the diff removes a coordinated pattern, not an ongoing one), divergent-change (every file changes for exactly one named axis), message-chains, comments-as-deodorant (no new naming ambiguity in this diff's own identifiers; g2's still-open 'own' observation is unchanged and out of this gate's diff).\n\nENGINE MECHANISM NOTE, not a finding about the code: this survey's r6-fowler postcondition c1 ships with a literal `<fowler-pass-record-path>` placeholder in its command text and no engine verb can substitute the real path on a SURVEY controller -- amend is gated-only (\"amend applies to gated checklists\") and attest is refused for a command-kind condition (the engine runs the check itself). This is the same gap g0's, g1's and g2's reviews already hit and reported (g0-review/review.json, g1-review/review.json, g2-review/review.json). I am about to waive c1 with --force, same as those three, for the same reason: NOT a risk acceptance, the rail was run against the real record path and passed (exit 0, quoted above).\n",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "reviewer",
+            "reason": "NOT a risk acceptance -- the rail was RUN and PASSED. \"python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g3-review/fowler-pass.json\" exits 0 with \"fowler pass ok (smells=12, flagged=[long-parameter-list, speculative-generality], overridden=[duplicated-code, primitive-obsession])\". Forced only because REVIEW_SURVEY.template.json ships c1 with a literal <fowler-pass-record-path> placeholder and no engine verb can replace it on a SURVEY controller: amend is refused (\"amend applies to gated checklists\") and attest is refused for an engine-checked command condition. Fourth consecutive reviewer to hit this on this run -- see .agent-work/issue-456/g0-review/review.json, g1-review/review.json, g2-review/review.json. Reported again in Workflow Feedback.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. INDEPENDENCE OF entity_symbol_join PROVEN with mutations the implementer never chose, on the REAL corpus, with a clean control: SIDE A (extractor chain-flatten via self.mod+':'+name) -> check exit 1, 3896 failures; SIDE B (SourceScan blind to ClassDef nesting) -> check exit 1, 4367 failures; CONTROL (unmutated) -> check exit 0. tc34 independently re-measured two ways (git-history re-derivation on the real corpus: 8 gained/0 lost, matching the RESULT exactly; and my own with-block/if-block fixture, both get pages, both linked, check 6/6). ids.jsonl proven position-free under a genuine MOVE (24-line shift, not a rename) -- byte-identical before/after. Extraction-window statement judged: not decorative for its named purpose (the declared line base has real, tested, load-bearing consumers), but its own coverage-boundary claim overclaims relative to what a map reader actually sees -- filed as tc1/tc41. All close criteria met and independently reproduced: full suite 1767/2/0 (my own run, exact match), gate selector 21 passed (my own run), fresh build+check exit 0 6/6, 4 of 5 RED commits re-verified genuinely failing from git-archive snapshots. Scope held: only the justified files touched, run_skill_eval.py byte-identical, all named exclusions (INDEX collision, no :<line>, all 6 checks present) reconfirmed directly. Fowler pass 12/12, rail exit 0: 2 flagged (emit's growing parameter list; SourceScan.unreadable collected-and-unused), 2 overridden with logged, verified standards (duplicated-code and primitive-obsession, both re-justified by the independence attack rather than taken on faith), 8 absent. No blockers. One new triage candidate filed (tc1 this survey / tc41 run-wide numbering). Constraints held: stdlib only, no git add -A, nothing mutated outside temp scratch copies, git status clean, no push/merge."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "tc41: the extraction-window statement's own docstring claims a reader can tell a fact absent from the code from a fact never looked at, but that distinction is legible only to a consumer of the raw statement store -- nothing in the rendered map/ tree surfaces a parse failure to a human page reader (extract_report.json is gitignored and unlinked from any page). Worth a later gate deciding whether the top INDEX should note \"N files could not be read\" or the docstring should be softened to name its actual consumer."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g3-reviewer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T09:31:26.575372+00:00",
+    "last_heartbeat": "2026-08-08T09:57:23.694864+00:00",
+    "claimed_by": "constellation/issue-456/g3/reviewer/attempt-1",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T09:59:16.161145+00:00"
+  }
+}

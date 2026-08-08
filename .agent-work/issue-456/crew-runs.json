@@ -323,7 +323,7 @@
     "gate": "g3",
     "role": "reviewer",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/issue-456/g3/reviewer/attempt-1",
     "backend": "external",
     "pid": null,
@@ -333,10 +333,12 @@
     "stdout": ".agent-work/issue-456/crew-runs/g3-reviewer-attempt-1.stdout.txt",
     "stderr": ".agent-work/issue-456/crew-runs/g3-reviewer-attempt-1.stderr.txt",
     "started_at": "2026-08-08T09:28:44.795276+00:00",
-    "last_heartbeat": "2026-08-08T09:28:44.795276+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-08T09:58:57.435171+00:00",
+    "completed_at": "2026-08-08T09:58:57.435171+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "sonnet"
+    "model": "sonnet",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

@@ -4,16 +4,22 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: `g3-review`
-- **PID**: external dispatch (Agent-tool subagent, no OS PID)
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g3-review-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: `g4-implement` (pending, nothing dispatched)
+- **PID**: none in flight — parked at a CLEAN GATE BOUNDARY
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g4-implement-RESULT.md` (not yet written)
 - **lease**: `commander-issue-456` — re-claim IDEMPOTENTLY (same id, NOT a takeover, no `--force`)
 
 ## Where the run is
 
-CLOSED: `g0`, `g1`, `g2`. `g3-implement` **complete** (advanced 2026-08-08).
-IN FLIGHT: `g3-review` — reviewer dispatched at **model `sonnet`** (see below).
-REMAINING: `g3-integrate`, then `g4 g5 gb g6 g7 g8 gs`, then
+CLOSED: `g0`, `g1`, `g2`, **`g3`** (all three items advanced 2026-08-08; the
+engine re-ran `g3-integrate`'s command check itself and it passed).
+NEXT: `g4` — the top index must ROUTE, not list. Gate task: a flat list of every
+module is not a routing surface; the trial agent read 60 lines and learned
+nothing. Add a second tier. **Corpus-shape trap named by critic F9: 75% of this
+repo's entities are test code, so a tier that only works for `src/` will look
+fine here and fail elsewhere.** `g4` also owns `tc31` (nothing ties a page's
+location to its content).
+REMAINING AFTER: `g5 gb g6 g7 g8 gs`, then
 `reconcile → triage → review → feedback → archive`. **Release the lease LAST.**
 
 ## Resume recipe
@@ -43,21 +49,18 @@ defect this run is hunting); try haiku on a mechanical gate and **measure it**.
 Pass `--model sonnet` to `run_crew.py` so the registry records it, and set
 `model: "sonnet"` on the Agent call.
 
-## What the g3 reviewer must attack
+## g3 — RESOLVED, for the record
 
-1. **The re-based join — this is the gate's whole risk.** `g3` deleted one of the
-   two independent derivations `entity_symbol_join` compared. The crew took route 1
-   and re-based the naming arm on a new `checks.SourceScan` deriving qualified
-   names from source text. **The Commander has verified the numbers but NOT the
-   independence.** The reviewer must break each side in turn with mutations the
-   implementer did NOT choose and show the check goes red for each.
-2. **Whether `tc34` closed** — a definition inside a `with` block must now get a
-   page. Reproducer committed RED at `4246e87d`. Claim: 8 definitions the old
-   `node.body`-only recursion could never see now have pages. Verify the count.
-3. **`ids.jsonl` carries no position under a code MOVE** (the crew's own exercise
-   renames; a move is the unchosen mutation).
-4. **`tc40`** — "extraction-window statement" is named in the spec and defined
-   nowhere; the implementer invented a definition and said so. Judge vs intent.
+The gate's whole risk (deleting one of the two independent derivations
+`entity_symbol_join` compared) is **retired by measurement**. The reviewer
+attacked the re-based check on the real 3711-entity corpus with mutations
+neither the implementer nor `g2`'s reviewer chose: control green 6/6;
+flattening `extract.child_sym` → `FAIL entity-symbol-join: 3896`; stopping
+`checks.SourceScan._walk` qualifying by `ClassDef` → `FAIL: 4367`. Both
+isolated to 1 of 6 — both sides load-bearing, not a tautology.
+`tc34` closed (8 gained / 0 lost, re-derived, plus an own with-block fixture).
+`ids.jsonl` byte-identical under a 24-line code MOVE. `tc40` judged — filed as
+`tc41`, non-blocking.
 
 ## Standing rules
 

@@ -1,0 +1,19 @@
+warning: in the working copy of 'pkg2/blocks.py', LF will be replaced by CRLF the next time Git touches it
+build exit: 0
+store contains symbols: ['pkg2.blocks:reviewer_if_block_definition', 'pkg2.blocks:reviewer_with_block_definition']
+  pkg2.blocks:reviewer_with_block_definition in store: True
+  pkg2.blocks:reviewer_with_block_definition page exists: True (C:\Users\fredc\AppData\Local\Temp\g3rev-with-4ol053m3\map\pkg2.blocks\reviewer_with_block_definition.md)
+  pkg2.blocks:reviewer_with_block_definition linked from module index: True
+  pkg2.blocks:reviewer_if_block_definition in store: True
+  pkg2.blocks:reviewer_if_block_definition page exists: True (C:\Users\fredc\AppData\Local\Temp\g3rev-with-4ol053m3\map\pkg2.blocks\reviewer_if_block_definition.md)
+  pkg2.blocks:reviewer_if_block_definition linked from module index: True
+
+check exit: 0
+ok   no-empty-pages
+ok   page-accounting
+ok   refs-line-self-consistent
+ok   entity-symbol-join
+ok   inbound-attribution
+ok   deterministic-rebuild
+passed 6 checks
+

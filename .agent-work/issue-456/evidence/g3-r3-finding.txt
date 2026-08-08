@@ -1,0 +1,17 @@
+PASS -- every claimed number independently reproduced, plus RED-commit reproduction the RESULT doc did not itself carry.
+
+FULL SUITE (my own run): 1767 passed, 2 skipped, 672 subtests passed, 0 failed, 358.51s. Exact match to the RESULT's claim.
+GATE SELECTOR (my own run): 21 passed, 54 deselected, 11 subtests passed. Exact match ('schema or line_base or ids_jsonl').
+BUILD+CHECK (my own fresh build, tracked tree): build exit 0, check exit 0, 6/6 ok including entity-symbol-join.
+RENDER REPORT (read directly off my own fresh .code-map/render_report.json, not quoted from the RESULT): modules=111, entities=3711, pages=3823, entity_pages=3711, holes=2506, ids=0. Matches the RESULT's real-corpus numbers exactly.
+
+RED COMMITS -- 4 of the 5 named RED commits re-run from git-archive snapshots (worktree never checked out), independently, none taken on trust:
+- 8029a4ea (line base undeclared): StatementSchemaLineBaseTests -- 5 failed, 52 deselected.
+- 91da2500 (schema cannot say what a value is): StatementSchemaFactsTests -k schema -- 3 failed, 11 passed (the 3 new value/window tests fail, the pre-existing 11 still pass -- a real incremental RED, not a broken suite).
+- 4246e87d (tc34): OneSchemaCoverageTests -- 2 failed (both the with-block page test and its module-index-listing test), with the actual AssertionError text showing the with-block page is genuinely absent from the pre-fix tree.
+- 70b60555 (ids.jsonl empty by construction): IdsJsonlTests -- 5 failed, 52 deselected... (70 deselected actually, matches RESULT).
+All four genuinely committed failing, not xfail-decorated or vacuously-passing.
+
+EVIDENCE FILES for the independence proof, tc34, and ids-under-move are all my own, fresh, and referenced from r1-handoff's finding: g3-reviewer-independence-attack.{py,txt}, g3-reviewer-tc34-verify.{py,txt}, g3-reviewer-tc34-with-fixture.{py,txt}, g3-reviewer-ids-move.{py,txt}, plus g3-reviewer-{full-suite,selector,build,check}.txt. All under .agent-work/issue-456/evidence/, all timestamped this run.
+
+No blocker.
