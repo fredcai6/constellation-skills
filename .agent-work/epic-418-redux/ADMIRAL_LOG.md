@@ -2825,3 +2825,46 @@ answered once #467's acceptance evidence lands, rather than close silently.
 mid-flight (+91 engine / +329 test lines, 12.6% fill, writing). Cheap fixes are now *filed scope*, not
 *wave-4 scope* — they sequence after #467 lands, so the wave under measurement is not perturbed by
 work discovered while measuring it.
+
+---
+
+## FINDING | 2026-08-08T16:17:42Z | the wave-launch gate cannot run as the spine instructs it — filed #501
+
+Dry-ran the boundary verifier early, to avoid another shape-refusal round trip. It found a different
+failure than the one I went looking for.
+
+```
+python C:/Programs/constellation-skills/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux
+  -> REFUSED: installed public verifier is missing: C:\Programs\constellation-replan\scripts\verify_replan.py   exit=1
+
+python C:/Users/fredc/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux
+  -> iterative role artifact ok                                                                            exit=0
+```
+
+The repo path is the one **this spine's own `execute` imperative names.** Root cause:
+`_installed_skills_root()` guards with `skill_root.name.startswith("constellation-")` to assert
+"you are running from an installed skill" — and **the repository is named `constellation-skills`**, so
+the guard passes on the checkout and returns `C:/Programs` as the skills root. **The predicate matches
+the one directory it most needs to reject.** Signal identical in the healthy and defective worlds:
+**fourth instance of this epic's own subject found today**, this one inside the gate that refuses wave
+launches.
+
+**Two rules fired on me while finding it, and both changed the outcome.**
+
+- **Rule 5.** My first run printed `exit=0` — that was `head`'s exit through the pipe, not the
+  verifier's. Re-run unpiped: **exit=1**. Had I trusted it I would have recorded a passing gate.
+- **Rule 8.** Before calling it broken, I ran the command that would show it FINE — the installed copy —
+  and it exits 0. So the finding is not "the verifier is broken" but "**it resolves by a name pattern
+  that the repo satisfies**", which is a different and cheaper fix.
+
+**Second, quieter defect, same issue.** `verify_admiral_prelaunch` takes its `boundary_id` from
+`NEXT_WAVE.json`, which still holds **w3-to-w4**. So that `exit=0` is real but is about the boundary I
+already crossed. **I am not to read it as "w4-to-close is clear."** Recorded here because a stale pass
+read as a fresh one is exactly how a gate stops gating.
+
+**Operating change, effective now:** every `admiral-prelaunch` invocation for the rest of this run uses
+the **installed** copy, and I re-derive `boundary_id` from `NEXT_WAVE.json` and confirm it names the
+boundary I am actually crossing before believing any exit code.
+
+Crew unaffected and unperturbed — `g4-implement` still in flight (tests 329 -> 688 lines, engine +109,
+`docs/CHECKLIST_SCHEMA.md` written, a mutation harness `_m4_tests.py` in its work dir).
