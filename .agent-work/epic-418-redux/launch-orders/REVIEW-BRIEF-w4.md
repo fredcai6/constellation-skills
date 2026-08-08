@@ -39,12 +39,40 @@ over-threshold gate.* If you cannot find a mechanical signal, or if the only thi
 compliance and non-compliance is prose in an imperative, **that is a BLOCK** — it is the exact
 defect this whole epic exists to find, shipped inside the fix for it.
 
+## THE SHIPPED DESIGN — updated 2026-08-08, after the plan froze
+
+**This brief was pre-written before the design existed. Read this section or you will flag a defect
+that is not there.**
+
+The crew did **not** build machinery to tell two kinds of `advance` apart. Its design-it-twice panel
+found the issue's premise did not match the engine: **no `advance` ever begins work — `start` does.**
+So:
+
+> **HARD stops refusing `advance` and refuses the verbs that BEGIN work: `start` and `reopen`
+> — NOT `resume`, which returns you to a gate you are already mid-way through.**
+
+Closing the gate you are in is always allowed and **is** the handoff: `advance --why` already fails
+closed on silence, and that `--why` already **is** the DIGEST. The governor was refusing the one
+verb that writes the handoff. **Zero new CLI surface**, so #424 pays nothing for this.
+
+Two traps its cold critics caught — **do not let them back in**:
+1. *"Did a handoff artifact appear before the next advance"* is **true by construction** (advance
+   already refuses a non-exempt gate without `--why`) — **green in both worlds.** The observable is
+   now *"did anyone BEGIN work while over the line"*, where the compliant world produces **no ledger
+   entry at all**.
+2. `advance --mechanical` would reproduce #431 after the fix, because `_latest_why_record` skips
+   mechanical markers and the DIGEST would stay pre-trip. At/over hard it is now refused and
+   `why_exempt` is suspended.
+
+**The Admiral approved this departure and required it be reported as `done-by-different-means`.**
+If the return claims DC2 done-as-written, that is a finding.
+
 ## Check each done-condition against the diff, not against the crew's summary
 
 | DC | What must be true | The failure to look for |
 |---|---|---|
 | 1 | An at/over-threshold gate **changes what the agent is told**, not refuses its verb | prose changed, behaviour unchanged |
-| 2 | The engine **distinguishes** an advance carrying a handoff from one starting new work, and refuses only the second. *#467 says it cannot express this today* | one direction tested, not both |
+| 2 | Over threshold, **`start`/`reopen` are refused and `advance` is not** — tested **both ways**. (Departure from the issue's literal text, approved) | one direction tested; or `resume` wrongly caught, which would strand an agent mid-gate |
 | 3 | The DIGEST is written on the handoff-carrying advance; **#431 dissolves** | asserted, not demonstrated |
 | 4 | Per-gate thresholds: one graded default **plus an override mechanism existing and exercised at least once** — one gate demonstrably overridden, its neighbours unchanged | a default shipped and no per-gate mechanism; or 68 hand-authored ungraded placeholders |
 | 5 | **The round trip completes**: trip → handoff → refresh → resume, resumed work verified against what the tripped agent was mid-way through | DC1-3 green while every handoff is useless — #467 says so explicitly |
@@ -54,6 +82,40 @@ defect this whole epic exists to find, shipped inside the fix for it.
 a useless handoff or none at all, because none of them look at the far end. Continuity across a trip
 is the only thing this redesign is for."* A partial return that lands DC1-3+DC6 honestly and floats
 DC4/DC5 is acceptable. A return that lands DC1-3 and *claims* the round trip is not.
+
+## Field evidence gathered DURING this dispatch — check the return accounts for it
+
+All of this was measured live while the fix was being built. A return that ignores it is incomplete.
+
+1. **The Commander tripped on #467 while implementing #467** — asserted reading `0.2758`,
+   `claude-opus-5`, hard `0.15`, engine printed `CONTEXT 28% (>= hard)`. It handed off, committed
+   first, and a cold successor resumed from `current` alone. **That is DC5's round trip, run live.**
+   Its write-up is `TRIP_OBSERVATION.md` in the work area — the review should confirm the return
+   actually harvests it rather than citing it.
+2. **The trip only evaluates when a gated verb is attempted.** Both the Commander (0.2758) and the
+   Admiral (0.2629) sat well over hard; only the one that reached a gate was ever asked. So **DC1 is
+   satisfied for gate-crossing roles and structurally silent for long-single-gate roles** — an
+   Admiral inside `execute` for a whole epic begins nothing and is never asked. The Admiral ruled
+   this is **not** a defect in the fix and **not** grounds to widen #467, but required one line in
+   the DC1 accounting stating the boundary. **Check that line exists.**
+3. **Three defects in the reach-up signal, found by the crew and by the Admiral:**
+   - `REFRESH REQUESTED:` is **active-gate-keyed**, so a compliant gate-closing handoff **erases its
+     own signal** unless a second request is filed at the resume gate. Nothing documents this.
+   - The records are **permanent evidence attachments with empty `ts`**, so a **served** request
+     reads as live until its gate is started. This nearly caused the Admiral to relaunch a healthy
+     Commander in a loop.
+   - `_refresh_attach_hint` emits the literal placeholder `why_ref=<why-id>`, but `current` never
+     displays the id — **the one sanctioned reach-up move requires over-reading `spine.json`**,
+     which `global-everyone.md` calls a violation.
+
+   Together: **the reach-up signal has no notion of being served.** These were routed to triage, not
+   all fixed in #467. Confirm the return says which were fixed and which were carried, rather than
+   leaving it ambiguous.
+4. **The launch order's own handoff instruction was unsatisfiable**, and so is
+   `global-everyone.md` §reach-up — *"write a refresh-request AND make sure `current` carries the
+   DIGEST"* cannot both be obeyed, because only `advance` writes a why-record. **#431 propagated
+   into the doctrine written on top of it.** If the diff touches that doctrine text, that is in
+   scope and approved, not creep.
 
 ## Two things not to mis-flag
 
