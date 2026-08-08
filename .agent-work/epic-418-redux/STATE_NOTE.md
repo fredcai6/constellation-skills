@@ -1,13 +1,19 @@
 # Crash-resume state note — epic-418-redux
 
-**WAVE 3 IN FLIGHT. Four agents have run; two are live right now. Do not re-dispatch anything
-without checking the worktrees and the forge first.**
+**WAVE 3: three of four issues MERGED and CLOSED. Only #465 remains in flight.**
 
 | Dispatch | Issue(s) | State |
 |---|---|---|
-| W3-B | #461 | **MERGED** PR #490 -> `ad149283`. Reviewed on the forge (APPROVE, re-derived). **Issue CLOSED.** Both worktrees harvested and swept. |
-| W3-C | #488 + #489 | **PR #491 open**, CI running, **review LIVE** in `C:/Programs/wt-rev-488489`. Crew tripped, was relaunched, completed the full round trip and released its lease. |
-| W3-A | #465 | 1 commit, 8 dirty, still implementing. Chose the **affordance** path on evidence (NOT a new engine verb — so no shared-interface change and nothing to surface). |
+| W3-B | #461 | **MERGED** PR #490 -> `ad149283`. Reviewed on the forge. **CLOSED.** Worktrees harvested + swept. |
+| W3-C | #488 + #489 | **MERGED** PR #491 -> `8b9330ea`. Reviewed on the forge. **CLOSED.** Worktrees harvested + swept. |
+| W3-A | #465 | **LIVE** in `C:/Programs/wt-w3a-465`, ~14% fill, 1 commit + 8 dirty. Chose the **affordance** path on evidence — NOT a new engine verb, so no shared-interface change and nothing to surface. |
+
+**Remaining to close the wave:** #465 returns -> provision a reviewer worktree at its PR head ->
+dispatch using `launch-orders/REVIEW-BRIEF-w3.md` -> gate -> merge -> harvest -> sweep -> close ->
+then the `w3-to-w4` boundary packet, then `closeout`.
+
+**The Admiral's own gauge should now work** — #488's fix is in `main`. If `gauge-skip.json` still says
+`ambiguous-binding` after the next tool call, that is a finding, not a nuisance.
 
 **Merge gate, in order, honoured for #490 and to be repeated for #491:** `gh pr checks <n>` exit 0 →
 independent review posted to the forge → merge → **verify MERGED via `gh pr view --json state`** →
