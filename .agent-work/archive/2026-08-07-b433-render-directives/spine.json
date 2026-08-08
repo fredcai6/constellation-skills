@@ -815,13 +815,14 @@
   "refusals": 7,
   "engine_session": {
     "session_id": "commander-b433-render-directives",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-07T21:37:06.212179+00:00",
     "last_heartbeat": "2026-08-08T00:57:01.624714+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T00:57:28.066052+00:00"
   },
   "why_trail": [
     {
