@@ -617,3 +617,22 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   reveals; (3) the verdict is **posted to the forge with `-F <file>`**, both because a session-only
   verdict is what went wrong on #470 and because a backticked code span in a quoted `gh` argument is
   executed as command substitution and posts silently truncated — which happened to me on #264 today.
+
+- `2026-08-08` — `RULING` (measurement started, and an independent corroboration of #488): **the wave-3
+  crews' own gauges are writing, and mine is not — which is #488's mechanism observed from the other
+  side.** W3-A and W3-C each hold exactly **one** binding and both produce readings; I hold **two**
+  bindings that resolve to **one** path and produce none. Same hook, same machine, same session
+  minute. That is the cleanest possible confirmation that the skip is triggered by binding *count*
+  and not by any real ambiguity, and it arrived without my constructing anything.
+  First live readings, 05:10Z: **W3-A (#465, Opus) 11.6%** · **W3-C (#488/#489, Sonnet) 15.5%**.
+  W3-C is inside a whisker of the 17–21% band with five files dirty, so a trip before it commits is
+  likely; I am positioned to relaunch rather than to discover it afterwards.
+  **Now recording a series** to `.agent-work/epic-418-redux/evidence/w3-gauge-series.tsv`
+  (`observed_at · dispatch · model · fill`, sampled each minute). Wave 2's trip-band evidence was
+  four dispatch counts and no fill numbers at all, taken while the orchestrator was blind. This is
+  the first per-crew fill series this epic has had, and it is what turns Tommy's trip-band question
+  from a judgement call into a measured one.
+  **Caveat recorded now rather than discovered later:** these readings come from
+  `.claude/settings.local.json`, which is untracked. The series describes crews on *this machine*,
+  not crews on a fresh clone, where the writer is not wired at all (#458). The measurement is real;
+  its population is one laptop.
