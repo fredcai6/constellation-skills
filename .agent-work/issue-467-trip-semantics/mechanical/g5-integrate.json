@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g5-integrate",
+  "mechanical": {
+    "run": "issue-467-trip-semantics",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 10,
+    "spine-step": "g5-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-g5-integrate@395a54656a824b7274df0c13f0b2dd759e348eab",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T21:08:08Z"
+  }
+}

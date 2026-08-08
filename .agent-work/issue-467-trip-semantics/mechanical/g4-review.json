@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g4-review",
+  "mechanical": {
+    "run": "issue-467-trip-semantics",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 7,
+    "spine-step": "g4-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-g4-review@dc15eedcef15bbbeba03d8325d19573e2e0620bd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T17:10:40Z"
+  }
+}

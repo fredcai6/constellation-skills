@@ -1,0 +1,17 @@
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json claim --session-id acc-7f3d1b
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+claimed lease acc-7f3d1b -> active
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json start a2 --session-id acc-7f3d1b
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+a2 -> in-progress
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json advance a2 --why "Appended items 4 (delta), 5 (echo), and 6 (NONCE: 4b3dc4 -- the nonce carried in the a1 agent's closing DIGEST) to roundtrip.md, preserving the existing heading and items 1-3 unchanged. roundtrip.md now holds all six required items with item 6 carrying the 6-hex nonce, satisfying c1." --session-id acc-7f3d1b
+RAIL: Release is your last journaled action. Run `release`; do not claim it.
+
+a2 -> complete
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json release --session-id acc-7f3d1b
+released lease acc-7f3d1b

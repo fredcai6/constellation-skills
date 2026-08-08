@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g2-implement",
+  "mechanical": {
+    "run": "issue-467-trip-semantics",
+    "project": "constellation-skills",
+    "role": "commander-w4-467-e",
+    "refusals": 6,
+    "spine-step": "g2-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-g2-implement@bd640143a4abf85b0b6df1246e633ce8e9a375ed",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T11:31:46Z"
+  }
+}

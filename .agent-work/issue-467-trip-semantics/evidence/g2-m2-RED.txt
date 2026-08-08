@@ -1,0 +1,37 @@
+...F...F...........                                                      [100%]
+================================== FAILURES ===================================
+__ TripHardGuardsBeginNotClose.test_handoff_mechanical_close_refused_at_hard __
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_handoff_mechanical_close_refused_at_hard>
+
+    def test_handoff_mechanical_close_refused_at_hard(self):
+        """`--mechanical` records no understanding, so `_latest_why_record` skips it
+        and the next agent cold-starts from a pre-trip digest — #431 reproduced after
+        the fix. At/over hard the mechanical close is refused by name."""
+        cl = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+>           with self.assertRaises(E.EngineError) as ctx:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: EngineError not raised
+
+tests\test_checklist_engine.py:3585: AssertionError
+__ TripHardGuardsBeginNotClose.test_handoff_why_exempt_is_suspended_at_hard ___
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_handoff_why_exempt_is_suspended_at_hard>
+
+    def test_handoff_why_exempt_is_suspended_at_hard(self):
+        """A `why_exempt` gate normally closes silently. At/over hard the exemption is
+        SUSPENDED — and suspended means the understanding is actually RECORDED, not
+        merely demanded: a --why that the engine accepted but never wrote to the
+        why_trail would leave the digest just as stale."""
+        cl = self._three_gates(why_exempt=True)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+>           with self.assertRaises(E.EngineError) as ctx:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: EngineError not raised
+
+tests\test_checklist_engine.py:3598: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_handoff_mechanical_close_refused_at_hard
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_handoff_why_exempt_is_suspended_at_hard
+2 failed, 17 passed, 347 deselected in 2.56s

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g2",
+  "mechanical": {
+    "run": "red-repro-431-probe-escape",
+    "project": "constellation-skills",
+    "role": "repro-431",
+    "refusals": 0,
+    "spine-step": "g2",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-red-repro-431-probe-escape-g2@824ea40b304f57d373c0c2f2603bc3096025664b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "red-repro-431-probe-escape",
+    "generated_at": "2026-08-08T10:53:01Z"
+  }
+}

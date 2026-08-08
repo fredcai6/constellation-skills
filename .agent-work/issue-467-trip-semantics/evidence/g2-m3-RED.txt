@@ -1,0 +1,83 @@
+....F.F...F....F.........                                                [100%]
+================================== FAILURES ===================================
+_ TripHardGuardsBeginNotClose.test_handoff_hard_advisory_reads_as_a_changed_instruction _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_handoff_hard_advisory_reads_as_a_changed_instruction>
+
+    def test_handoff_hard_advisory_reads_as_a_changed_instruction(self):
+        """#431 is an instruction-conformance defect, so the fix is verified on what
+        the agent is TOLD. At HARD the advisory must read as a changed instruction —
+        close this gate carrying your handoff, request a refresh, stop — and never as
+        an alarm about being unsafe or blocked."""
+        cl = self._g2_pending_after_g1()  # g2 active/pending, live why-record w-1
+        out = self._hard_advisory(cl, self.over_hard)
+>       self.assertEqual(out, (
+            f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
+            f"You have taken this as far as this context can carry it — now close THIS "
+            f"gate carrying your handoff (`advance g2 --why \"<understanding>\"`), "
+            f"request a refresh, and stop. A fresh agent picks up from your DIGEST; do "
+            f"not begin work at another gate. Request the refresh with: attach g2 "
+            f"--type refresh-request --field seam=g2 --field why_ref=w-1"
+        ))
+E       AssertionError: '\nCO[16 chars]rd): `advance` is BLOCKED until you request a [101 chars]off.' != '\nCO[16 chars]rd): your instruction has changed. You have ta[324 chars]=w-1'
+E         
+E       - CONTEXT 20% (>= hard): `advance` is BLOCKED until you request a refresh. Run: attach g2 --type refresh-request --field seam=g2 --field why_ref=<why-id>  — then hand off.
+E       + CONTEXT 20% (>= hard): your instruction has changed. You have taken this as far as this context can carry it — now close THIS gate carrying your handoff (`advance g2 --why "<understanding>"`), request a refresh, and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate. Request the refresh with: attach g2 --type refresh-request --field seam=g2 --field why_ref=w-1
+
+tests\test_checklist_engine.py:3672: AssertionError
+_ TripHardGuardsBeginNotClose.test_handoff_hard_advisory_with_refresh_already_requested_reads_as_an_instruction _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_handoff_hard_advisory_with_refresh_already_requested_reads_as_an_instruction>
+
+    def test_handoff_hard_advisory_with_refresh_already_requested_reads_as_an_instruction(self):
+        cl = self._g2_pending_after_g1()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        out = self._hard_advisory(cl, self.over_hard)
+>       self.assertEqual(out, (
+            f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, "
+            f"and the refresh for g2 is already requested. Close THIS gate carrying "
+            f"your handoff (`advance g2 --why \"<understanding>\"`) and stop. A fresh "
+            f"agent picks up from your DIGEST; do not begin work at another gate."
+        ))
+E       AssertionError: '\nCO[16 chars]rd): refresh already requested for g2 — hand o[24 chars]ing.' != '\nCO[16 chars]rd): your instruction has changed, and the ref[192 chars]ate.'
+E         
+E       - CONTEXT 20% (>= hard): refresh already requested for g2 — hand off now; do not keep working.
+E       + CONTEXT 20% (>= hard): your instruction has changed, and the refresh for g2 is already requested. Close THIS gate carrying your handoff (`advance g2 --why "<understanding>"`) and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate.
+
+tests\test_checklist_engine.py:3687: AssertionError
+_ TripHardGuardsBeginNotClose.test_handoff_refresh_hint_carries_the_concrete_why_id _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_handoff_refresh_hint_carries_the_concrete_why_id>
+
+    def test_handoff_refresh_hint_carries_the_concrete_why_id(self):
+        """The literal `<why-id>` placeholder cost four separate agents a silent
+        no-op: `attach ... --field why_ref=<why-id>` exits 0 and records a request
+        that matches no understanding, so the identity check never releases. The hint
+        must emit the real id, and fall back to the placeholder only when there is no
+        live why-record to name."""
+        self.assertEqual(
+>           E._refresh_attach_hint("g2", "w-7"),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            "attach g2 --type refresh-request --field seam=g2 --field why_ref=w-7")
+E       TypeError: _refresh_attach_hint() takes 1 positional argument but 2 were given
+
+tests\test_checklist_engine.py:3711: TypeError
+_ TripHardGuardsBeginNotClose.test_trip_begin_refusal_names_the_concrete_why_id _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_trip_begin_refusal_names_the_concrete_why_id>
+
+    def test_trip_begin_refusal_names_the_concrete_why_id(self):
+        cl = self._g2_pending_after_g1()  # live why-record is w-1
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+>       self.assertIn("--field why_ref=w-1", str(ctx.exception))
+E       AssertionError: '--field why_ref=w-1' not found in 'g2: context at 15% is at/over the hard limit, so this is not the moment to BEGIN work here — finish and close the gate you are already in, then request a refresh so a fresh agent starts this one. Run: attach g2 --type refresh-request --field seam=g2 --field why_ref=<why-id>'
+
+tests\test_checklist_engine.py:3723: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_handoff_hard_advisory_reads_as_a_changed_instruction
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_handoff_hard_advisory_with_refresh_already_requested_reads_as_an_instruction
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_handoff_refresh_hint_carries_the_concrete_why_id
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_trip_begin_refusal_names_the_concrete_why_id
+4 failed, 21 passed, 346 deselected in 2.89s

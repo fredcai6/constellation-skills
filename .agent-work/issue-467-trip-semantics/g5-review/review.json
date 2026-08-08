@@ -1,0 +1,189 @@
+{
+  "work_id": "g5-review-467",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, project CREW_CONTEXT.md; handoff g5-reviewer-handoff.md read in full.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "g5-acceptance did what the task statement asked: real spine, agent A tripped/refused/handed-off, agent B dispatched cold from current alone and completed a2, verifier + self-test authored, RED re-run and confirmed non-reproducing, #431 confirmed dissolved and left open, ACCEPTANCE.md written with reading-exists ledger and DC1-DC6 accounting. Independently reproduced: PROMPT-B.txt sha256 matches claim; spine.json a1/a2 imperative text matches build_acceptance_spine.py's authored strings verbatim (no post-hoc edit -- confirmed no engine verb writes the imperative field); journal shows A's last action 20:08:25, B's first 20:11:11, no overlap; nonce 4b3dc4 count matches claim exactly (A log 0, roundtrip.md-pre-B 0, spine.json 2, B log 1, PROMPT-A 0); re-ran RED repro (exit 1, NOT reproduced), close-side probe (exit 0, 3 moves at one reading), DC4 neighbour probe (exit 0), anti-vacuity check (exit 5 on empty pattern, exit 0 real pattern) -- all matched claimed evidence exactly. #431 confirmed OPEN on GitHub, #504 confirmed OPEN. TRIP_HARD_GUARDED_VERBS={start,reopen} and the gate-is-None early return in _trip_advisory both confirmed directly in source, matching DC2/DC6 claims.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope respected: git show --stat confirms both g5-acceptance commits (27ae8563, 6bc971e5) touch only .agent-work/ paths -- no file under scripts/ or tests/. Engine blob hash confirmed unchanged (c281cb68eaac65d1169dd6737a6a322728df98eb) at both commits. Crew waiver for A/B independently confirmed present in execute.json's g5-acceptance imperative text itself, not just asserted in the handoff -- so the missing run_crew.py entries are by design, not scope creep. Verifier correctly stays out of scripts/ per Admiral ruling (not promoted); this reviewer made no attempt to promote it. My own review activity: did not mutate .agent-work/acceptance-467/ (git diff --stat empty), did not touch execute.json/spine.json/gauge.json/STATE_NOTE.md myself (pre-existing 7-line execute.json diff predates my session). Re-ran the RED repro per C7, which rewrote tracked red-repro/scratch/ fixtures as the handoff predicted -- reported under non-blocking findings, and reverted before finishing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All cited evidence independently reproduced, non-piped, exit status read directly: full suite 1867 passed/2 skipped/829 subtests/exit 0 (matches claim exactly, my own run took 487s); verifier 9/9 exit 0; self-test 9/9 rejections exit 0; RED repro exit 1 NOT reproduced with all 3 pre-asserts OK; close-side probe exit 0, 3/3 moves as claimed; DC4 neighbour probe exit 0; anti-vacuity exit 5 on empty pattern and exit 0 on real pattern (34 passed). Beyond the shipped --self-test, I ran 11 of my own attacks against the verifier using a temp copy of the real inputs: 2 correctly rejected empty-list edge cases (no vacuous pass), 1 control mutation of an unread field correctly still passed (verifier is precisely scoped, not brittle), 1 fill==hard boundary correctly accepted, 1 benign duplicate-entry mutation correctly tolerated, 1 extra deliverable line correctly rejected by V7's exact-length check, 1 nonce-case mismatch correctly rejected by V8, 1 seam-case mismatch correctly rejected by V6 -- BUT found two genuine gaps: (a) V1's session-id distinctness check is naive string equality with no normalization -- a spine where B's id is a case- or whitespace-varied copy of A's id still reads as 'two distinct sessions' and passes all 9 checks; (b) V8's nonce-containment check is a bare substring test () -- a doctored why-record containing the nonce as incidental noise (not as an actual statement) also passes all 9 checks. Neither gap is masked behind an earlier check (both attacks sail through all 9 assertions cleanly, unlike the predecessor's found override-hidden-behind-fill gap, which I re-confirmed is now fixed via the isolated mutation). Neither gap undermines THIS run's actual verdict: the real session ids are genuinely distinct random hex (acc-89f734 / acc-7f3d1b, no case games), and the real nonce-transfer claim is independently confirmed by direct count (not solely by V8) -- A's log 0, roundtrip.md-pre-B 0, spine.json 2 legitimate why-records, B's log 1 -- reproduced myself both via git-tracked grep and a full working-tree walk, both giving identical counts. A's log redaction is genuinely explained inline, not silently scrubbed. Reported as hardening findings for the verifier, not as blockers on the round trip's reality.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints honored: no-absence-is-evidence -- ACCEPTANCE.md section 0 ledger R1-R6 all trace to engine-written trip_ledger entries or printed advisories, all independently reproduced by me; the gauge-writer asymmetry (silent for A, live for B) is stated plainly rather than smoothed over. cold-start-from-current-alone -- PROMPT-B.txt is the current output verbatim (sha256 confirmed), no re-briefing language found on inspection. job-file-not-agent-file -- spine.json a1/a2 imperative strings match build_acceptance_spine.py's authored A1/A2 constants byte for byte; no engine verb writes the imperative field (grepped scripts/checklist_engine.py, no match); builder refuses a second run (read source). DC5-not-partial-on-DC1-4 -- DC5 is reported done on its own dedicated evidence chain (verifier + independent nonce/timestamp checks), not inferred from the other DCs landing. Windows/CRLF discipline followed throughout (normalized comparisons, never raw working-tree bytes). Never piped pytest before reading exit status; every pytest run redirected to a file with 0 echoed after. Fowler pass completed and cleared the rail (scripts/verify_fowler_pass.py exit 0): duplicated-code flagged (check_gate.py vs verify_round_trip.py V7 re-implement the same roundtrip.md shape rule independently -- drift risk) and long-method flagged (verify()'s 140-line V1-V9 body, minor/non-blocking) as real findings; speculative-generality overridden with a logged repo-standard citation (no-speculative-abstraction) for the probes' duplicated run()/gate() helpers.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "DC2's done-by-different-means departure (engine draws the line between verbs, not between two modes of advance) is already surfaced plainly in ACCEPTANCE.md 5a and independently confirmed against source (TRIP_HARD_GUARDED_VERBS={start,reopen}); this is a real architectural divergence from #467's literal text but it is named, not buried, so no further reconciliation action is needed from this review beyond flagging it as already-handled. Four items flagged as triage candidates below (out of this gate's scope, not blockers): (1) gauge-writer asymmetry -- silent for agent A with no skip record explaining why; (2) verifier promotion to scripts/ -- already an Admiral-deferred decision, restated as still open; (3) my own two verifier hardening findings -- V1 session-id equality should normalize/validate id shape, V8 nonce-containment should assert an anchored pattern (e.g. the literal 'the nonce is <hex>' phrasing) rather than bare substring containment; (4) check_gate.py and verify_round_trip.py's V7 independently re-implement the same roundtrip.md shape rule -- worth a shared source of truth if either script is ever promoted.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/issue-467-trip-semantics/g5-review/fowler-pass-record.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass complete against the new acceptance/measurement scripts. Record at .agent-work/issue-467-trip-semantics/g5-review/fowler-pass-record.json; verify_fowler_pass.py exits 0. 12/12 smells visited: 2 flagged (duplicated-code -- check_gate.py vs verify_round_trip.py V7 re-implement the same roundtrip.md shape rule with separately-authored, driftable logic; long-method -- verify()'s 140-line V1-V9 body, minor/non-blocking), 1 overridden (speculative-generality -- probes' duplicated run/gate helpers, subordinated to references/global-crew.md no-speculative-abstraction standard for disposable single-use scripts, reasoned in the record), 9 absent.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/issue-467-trip-semantics/g5-review/fowler-pass-record.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "The DC5 round trip genuinely happened. Independently reproduced every cited command with real, non-piped exit codes: verifier 9/9, self-test 9/9, RED non-repro exit 1, close-side probe exit 0, DC4 neighbour probe exit 0, anti-vacuity exit 5/0, full suite 1867p/2s/829subtests/exit0. Confirmed PROMPT-B.txt sha256 and byte-identity with ACCEPTANCE.md's quoted block; confirmed the a1/a2 gate imperatives are unedited job-file content authored before A ran (matched build_acceptance_spine.py's constants verbatim, and no engine verb writes the imperative field); confirmed no time overlap between A's last action and B's first (journal); confirmed the nonce-containment counts exactly as claimed via an independent worktree-wide walk. Ran 11 of my own attacks against the verifier beyond the shipped --self-test and found two real but non-blocking hardening gaps (V1 naive session-id string equality, V8 bare substring nonce match) -- neither is masked behind an earlier check, and neither undermines this run's actual evidence since the real ids and nonce transfer are independently corroborated outside the verifier. Confirmed #431 is open (not closed) and #504 is open (tc19, deferred by ruling) via GitHub. Confirmed TRIP_HARD_GUARDED_VERBS={start,reopen} and the gate-is-None early return in _trip_advisory directly in source, matching the DC2/DC6 claims. Fowler pass cleared the rail with 2 flagged (non-blocking) and 1 logged override. No blocking findings."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "Gauge writer was silent for agent A on the acceptance spine with no skip record explaining why; A's two ledger entries (tl-1, tl-2) are judged against a planted reading rather than a live one. Already self-reported in ACCEPTANCE.md sec 0/7 as a triage candidate; restated here for the reviewer record."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "verify_round_trip.py V1's session-distinctness check and V8's nonce-containment check are weak: V1 is naive string equality (a case- or whitespace-varied copy of one agent's id passes as 'distinct'); V8 is a bare substring test (a doctored why-record with the nonce present only as incidental noise, not as an actual statement, still passes). Found via reviewer's own attacks, not the shipped --self-test. Hardening candidate if/when the verifier is ever promoted to scripts/ or reused."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "check_gate.py's a1/a2 postcondition check and verify_round_trip.py's V7 assertion independently re-implement the identical shape rule for roundtrip.md (same regex, same expected lines) with separately-authored logic that could drift. Worth a shared helper if either script is promoted out of the acceptance work area."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g5-reviewer-467-attempt1",
+    "status": "released",
+    "claimed_at": "2026-08-08T20:42:19.255292+00:00",
+    "last_heartbeat": "2026-08-08T21:03:30.784272+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T21:04:50.997919+00:00"
+  }
+}

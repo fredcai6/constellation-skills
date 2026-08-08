@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-render-green",
+  "mechanical": {
+    "run": "issue-467-g4-rework",
+    "project": "constellation-skills",
+    "role": "implementer:g4-rework",
+    "refusals": 1,
+    "spine-step": "m4-render-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-g4-rework-m4-render-green@fb6e9386194c1b6992216b6a8f0926285e904a9e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-g4-rework",
+    "generated_at": "2026-08-08T18:25:27Z"
+  }
+}

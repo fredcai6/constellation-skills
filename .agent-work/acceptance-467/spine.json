@@ -1,0 +1,185 @@
+{
+  "work_id": "acceptance-467",
+  "type": "gated",
+  "items": [
+    "a1",
+    "a2"
+  ],
+  "tasks": {
+    "a1": {
+      "id": "a1",
+      "title": "round trip: first half",
+      "imperative": "ACCEPTANCE ROUND TRIP (issue #467) -- gate a1 of 2.\n\nHOW TO DRIVE THIS SPINE. Working directory is\nC:/Programs/constellation-skills-wt/epic418-a2-467 -- cd there first. Every engine\ncommand has exactly this shape:\n\n  python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json <VERB> [ARGS] --session-id <YOUR-SESSION-ID>\n\nYOUR-SESSION-ID is an id you invent RIGHT NOW and reuse for every command you run:\nthe letters `acc-` followed by six random hexadecimal characters. Do not reuse an id\nyou find written anywhere, and do not use the harness session id. Your first command\nis `claim --session-id <YOUR-SESSION-ID>`; add `--force` only if claim reports the\nlease is held by a different id.\n\nLOG EVERYTHING. Append to\nC:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/log-<YOUR-SESSION-ID>.txt\nthe exact command line and the COMPLETE output of EVERY engine command you run,\nincluding the ones the engine refuses. A refusal is data, not a failure: record it\nin full and then do what it tells you to do. Never work around a refusal.\n\nTHE WORK FOR a1. Run `start a1`, then create the file\nC:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/roundtrip.md\ncontaining exactly these four lines and nothing else:\n\n  # Round trip 467\n  1. alpha\n  2. bravo\n  3. charlie\n\nTHE NONCE. Invent a nonce now: six random hexadecimal characters. Write it NOWHERE\non disk -- not in roundtrip.md, not in your log file, not in any other file. It must\nexist in exactly one place when you are done: the closing understanding you hand to\nthe engine in the next step.\n\nCLOSING a1. When the four lines are on disk, close the gate with:\n\n  advance a1 --why \"<your understanding>\"\n\nYour understanding must state what you completed, that the nonce is <your nonce>,\nand what still remains. Write it for an agent that has never seen this run and will\nbe handed nothing but the engine's `current` output -- that agent is real and it is\nnext.\n\nTHEN STOP. After a1 closes, run `start a2`. If the engine refuses it, run the exact\ncommand its refusal prints, then run `release --session-id <YOUR-SESSION-ID>` and\nSTOP. Do NOT do gate a2's work, even if you have room. Then report what you did.",
+      "context_headroom_tokens": 149000,
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "roundtrip.md holds the heading and items 1-3, and nothing more",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/check_gate.py a1"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-a1-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {},
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-a1-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "a1",
+            "why_ref": "setup-no-live-why"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-a1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/check_gate.py a1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "a2": {
+      "id": "a2",
+      "title": "round trip: second half",
+      "imperative": "ACCEPTANCE ROUND TRIP (issue #467) -- gate a2 of 2, the last gate.\n\nThe agent that worked gate a1 is gone. Everything you need is in this output.\n\nHOW TO DRIVE THIS SPINE. Working directory is\nC:/Programs/constellation-skills-wt/epic418-a2-467 -- cd there first. Every engine\ncommand has exactly this shape:\n\n  python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json <VERB> [ARGS] --session-id <YOUR-SESSION-ID>\n\nYOUR-SESSION-ID is an id you invent RIGHT NOW and reuse for every command you run:\nthe letters `acc-` followed by six random hexadecimal characters. Do not reuse an id\nyou find written anywhere, and do not use the harness session id. Your first command\nis `claim --session-id <YOUR-SESSION-ID>`; add `--force` only if claim reports the\nlease is held by a different id.\n\nLOG EVERYTHING. Append to\nC:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/log-<YOUR-SESSION-ID>.txt\nthe exact command line and the COMPLETE output of EVERY engine command you run,\nincluding the ones the engine refuses. A refusal is data, not a failure: record it\nin full and then do what it tells you to do. Never work around a refusal.\n\nTHE WORK FOR a2. Run `start a2`, then APPEND to the existing file\nC:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/roundtrip.md\nexactly these three lines, in this order, after the lines already there:\n\n  4. delta\n  5. echo\n  6. NONCE: <nonce>\n\n<nonce> is the six-hexadecimal-character nonce the previous agent carried in its\nclosing understanding. It is written in NO file anywhere on disk. Read it out of the\nDIGEST line in this output. If you cannot find it there, do not invent one and do\nnot guess -- stop and report that the digest did not carry it.\n\nDo not alter the heading or lines 1-3.\n\nCLOSING a2. Close with `advance a2 --why \"<your understanding>\"`, then run\n`release --session-id <YOUR-SESSION-ID>`, then report what you did.",
+      "context_headroom_tokens": 149000,
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "roundtrip.md holds items 1-6 with item 6 carrying a 6-hex nonce",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/check_gate.py a2"
+          },
+          "override_policy": {
+            "allowed": false
+          },
+          "satisfied": true,
+          "satisfied_by": "e-a2-2"
+        }
+      ],
+      "constraints": [],
+      "anchors": {},
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-a2-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "a2",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-a2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/check_gate.py a2",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "a1",
+      "why": "Completed gate a1 (ACCEPTANCE ROUND TRIP, issue #467): created .agent-work/acceptance-467/roundtrip.md containing exactly the four required lines -- heading '# Round trip 467' and items 1. alpha, 2. bravo, 3. charlie -- and nothing else. The nonce is 4b3dc4. Remaining: gate a2 of 2 is untouched -- not started, no work done. This session (acc-89f734) hit the hard context line with a refresh already requested for a1, so it is closing this gate with this handoff and stopping; it will attempt 'start a2' only to observe the engine's refusal, then release the lease per instructions. The next agent should run the engine's 'current' command first and proceed from gate a2 with no assumptions beyond what 'current' reports.",
+      "mechanical": false,
+      "ts": "2026-08-08T20:07:15.559817+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "a2",
+      "why": "Appended items 4 (delta), 5 (echo), and 6 (NONCE: 4b3dc4 -- the nonce carried in the a1 agent's closing DIGEST) to roundtrip.md, preserving the existing heading and items 1-3 unchanged. roundtrip.md now holds all six required items with item 6 carrying the 6-hex nonce, satisfying c1.",
+      "mechanical": false,
+      "ts": "2026-08-08T20:11:33.521356+00:00"
+    }
+  ],
+  "refusals": [],
+  "engine_session": {
+    "session_id": "acc-7f3d1b",
+    "status": "released",
+    "claimed_at": "2026-08-08T20:11:03.464766+00:00",
+    "last_heartbeat": "2026-08-08T20:11:33.521374+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T20:11:38.920144+00:00"
+  },
+  "amendments": [],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "a1",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.05,
+      "hard": 0.001,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-08T20:06:34.928275+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "a2",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.05,
+      "hard": 0.001,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-08T20:08:10.635139+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "a2",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.0359,
+      "hard": 0.001,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-08T20:11:11.588179+00:00"
+    }
+  ]
+}

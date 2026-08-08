@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-predicate",
+  "mechanical": {
+    "run": "g4-implement-trip-ledger-467",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-predicate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g4-implement-trip-ledger-467-m2-predicate@e11e25a33d76ce8a73c511c68c8ff681850ef540",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g4-implement-trip-ledger-467",
+    "generated_at": "2026-08-08T16:03:46Z"
+  }
+}

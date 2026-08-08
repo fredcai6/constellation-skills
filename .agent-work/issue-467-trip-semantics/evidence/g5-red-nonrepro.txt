@@ -1,0 +1,158 @@
+repro_431.py  mode=all
+engine under test (UNMODIFIED HEAD): C:\Programs\constellation-skills-wt\epic418-a2-467\scripts\checklist_engine.py
+scratch root (wiped and rebuilt from nothing): C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch
+
+==============================================================================
+HARNESS -- the planted gauge is proved to have been READ
+==============================================================================
+built scratch spine: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\gauge-read\spine.json
+  (gauge sibling path the engine will resolve: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\gauge-read\gauge.json)
+
+$ checklist_engine.py --file spine.json claim --session-id repro-431-gauge --claimed-by repro-431 --worktree C:\Programs\constellation-skills-wt\epic418-a2-467
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| claimed lease repro-431-gauge -> active
+| (exit 0)
+
+$ checklist_engine.py --file spine.json start g1 --session-id repro-431-gauge
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| g1 -> in-progress
+| (exit 0)
+
+$ checklist_engine.py --file spine.json attest g1 --cond c1 --which postconditions --note seam contract written --session-id repro-431-gauge
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| attested g1.c1
+| (exit 0)
+
+$ checklist_engine.py --file spine.json advance g1 --why PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None. --session-id repro-431-gauge
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| g1 -> complete
+| (exit 0)
+
+$ checklist_engine.py --file spine.json start g2 --session-id repro-431-gauge
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| g2 -> in-progress
+| (exit 0)
+
+$ checklist_engine.py --file spine.json attest g2 --cond c1 --which postconditions --note reader failure modes enumerated --session-id repro-431-gauge
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| attested g2.c1
+| (exit 0)
+
+--- with NO gauge planted, the engine says nothing about context ---
+$ checklist_engine.py --file spine.json current
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| LEASE active: repro-431-gauge (by repro-431, heartbeat 2026-08-08T20:12:48.471096+00:00)
+| ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
+| 1/1 met
+| next: advance g2 --why "<understanding>" (or --mechanical)
+| DIGEST: PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None.
+| (exit 0)
+
+  [ASSERT OK  ] no CONTEXT advisory before the gauge exists
+--- plant it as a SIBLING of the spine and ask again ---
+planted gauge: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\gauge-read\gauge.json
+  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T20:12:43.587419Z"}
+
+$ checklist_engine.py --file spine.json current
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| LEASE active: repro-431-gauge (by repro-431, heartbeat 2026-08-08T20:12:48.471096+00:00)
+| ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
+| 1/1 met
+| next: advance g2 --why "<understanding>" (or --mechanical)
+| DIGEST: PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None.
+| CONTEXT 30% (>= hard): your instruction has changed. You have taken this as far as this context can carry it — now close THIS gate carrying your handoff (`advance g2 --why "<understanding>"`), request a refresh, and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate. Request the refresh with: attach g2 --type refresh-request --field seam=g2 --field why_ref=w-1
+| (exit 0)
+
+  [ASSERT OK  ] the engine now prints its OWN 'CONTEXT <n>% (>= hard)' advisory
+              engine said: 'CONTEXT 30% (>= hard): your instruction has changed. You have taken this as far as this context can carry it — now close THIS gate carrying your handoff (`advance g2 --why "<understanding>"`), request a refresh, and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate. Request the refresh with: attach g2 --type refresh-request --field seam=g2 --field why_ref=w-1'
+  [ASSERT OK  ] the number is the one we planted
+
+The reading was read. Silence before / advisory after, same spine, same session -- so a later 'nothing happened' can never be confused with a silent governor.
+
+==============================================================================
+FACE A -- the DIGEST a cold successor reads is stale by one gate
+==============================================================================
+built scratch spine: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-a\spine.json
+  (gauge sibling path the engine will resolve: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-a\gauge.json)
+
+$ checklist_engine.py --file spine.json claim --session-id repro-431-a --claimed-by repro-431 --worktree C:\Programs\constellation-skills-wt\epic418-a2-467
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| claimed lease repro-431-a -> active
+| (exit 0)
+
+$ checklist_engine.py --file spine.json start g1 --session-id repro-431-a
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| g1 -> in-progress
+| (exit 0)
+
+$ checklist_engine.py --file spine.json attest g1 --cond c1 --which postconditions --note seam contract written --session-id repro-431-a
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| attested g1.c1
+| (exit 0)
+
+$ checklist_engine.py --file spine.json advance g1 --why PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None. --session-id repro-431-a
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| g1 -> complete
+| (exit 0)
+
+$ checklist_engine.py --file spine.json start g2 --session-id repro-431-a
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| g2 -> in-progress
+| (exit 0)
+
+$ checklist_engine.py --file spine.json attest g2 --cond c1 --which postconditions --note reader failure modes enumerated --session-id repro-431-a
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| attested g2.c1
+| (exit 0)
+
+--- context fills up here: plant a fresh at-or-over-HARD reading ---
+planted gauge: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-a\gauge.json
+  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T20:12:44.914573Z"}
+
+--- step 1: `current` -- prove the planted reading was actually READ ---
+$ checklist_engine.py --file spine.json current
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| LEASE active: repro-431-a (by repro-431, heartbeat 2026-08-08T20:12:49.901694+00:00)
+| ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
+| 1/1 met
+| next: advance g2 --why "<understanding>" (or --mechanical)
+| DIGEST: PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None.
+| CONTEXT 30% (>= hard): your instruction has changed. You have taken this as far as this context can carry it — now close THIS gate carrying your handoff (`advance g2 --why "<understanding>"`), request a refresh, and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate. Request the refresh with: attach g2 --type refresh-request --field seam=g2 --field why_ref=w-1
+| (exit 0)
+
+  [ASSERT OK  ] the engine printed its own CONTEXT (>= hard) advisory, so the planted reading was read (no-absence-is-evidence discharged)
+              engine said: 'CONTEXT 30% (>= hard): your instruction has changed. You have taken this as far as this context can carry it — now close THIS gate carrying your handoff (`advance g2 --why "<understanding>"`), request a refresh, and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate. Request the refresh with: attach g2 --type refresh-request --field seam=g2 --field why_ref=w-1'
+  [ASSERT OK  ] the advisory reports the planted fill, not some other number
+              planted fill_fraction=0.3 -> expected '30%' in 'CONTEXT 30% (>= hard): your instruction has changed. You have taken this as far as this context can carry it — now close THIS gate carrying your handoff (`advance g2 --why "<understanding>"`), request a refresh, and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate. Request the refresh with: attach g2 --type refresh-request --field seam=g2 --field why_ref=w-1'
+  [ASSERT OK  ] g2's postconditions are ALL satisfied, so nothing but the gauge can block this advance
+              engine's own postcondition tally: '1/1 met'
+--- step 2: the agent tries to advance g2 carrying its CURRENT understanding ---
+$ checklist_engine.py --file spine.json advance g2 --why CURRENT UNDERSTANDING: g2 found the reader's None path is reached from three distinct failure modes, so the retry belongs in the caller, not the reader. --session-id repro-431-a
+| RAIL: Release is your last journaled action. Run `release`; do not claim it.
+| 
+| g2 -> complete
+| (exit 0)
+
+
+REPRO FAILED (scoped to this check): expected a refusal from `advance g2 --why CURRENT UNDERSTANDING: g2 found the reader's None path is reached from three distinct failure modes, so the retry belongs in the caller, not the reader. --session-id repro-431-a`, got exit 0
+
+==============================================================================
+RESULT: NOT reproduced under these conditions (mode=all)
+==============================================================================
+
+transcript written: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\transcript-all.txt

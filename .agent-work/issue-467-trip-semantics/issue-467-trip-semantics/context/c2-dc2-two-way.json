@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "c2-dc2-two-way",
+  "files": [],
+  "repo_rev": {
+    "commit": "38f0b448226bfbb4b8e3b97f4616a0e638ae7f6a"
+  },
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T12:53:52Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

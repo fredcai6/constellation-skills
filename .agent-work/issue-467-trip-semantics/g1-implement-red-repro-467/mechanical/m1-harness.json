@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-harness",
+  "mechanical": {
+    "run": "g1-implement-red-repro-467",
+    "project": "constellation-skills",
+    "role": "g1-implementer",
+    "refusals": 1,
+    "spine-step": "m1-harness",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-red-repro-467-m1-harness@bb206e58f1bcc32824447275461225590efb5dee",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement-red-repro-467",
+    "generated_at": "2026-08-08T10:27:11Z"
+  }
+}

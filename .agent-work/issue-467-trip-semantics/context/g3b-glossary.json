@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3b-glossary",
+  "files": [],
+  "repo_rev": {
+    "commit": "cca83cc64009ef3990b29adfaecf33b972021e00"
+  },
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T15:39:22Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

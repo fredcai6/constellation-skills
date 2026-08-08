@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g4-integrate",
+  "mechanical": {
+    "run": "issue-467-trip-semantics",
+    "project": "constellation-skills",
+    "role": "commander-w4-467-h",
+    "refusals": 9,
+    "spine-step": "g4-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-g4-integrate@d1de0696fce28c194b6d8ab6c840775debdc61ab",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T18:11:51Z"
+  }
+}

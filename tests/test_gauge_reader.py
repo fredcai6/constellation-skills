@@ -433,5 +433,88 @@ class ThresholdsForTests(unittest.TestCase):
             self.assertLess(soft, hard)
 
 
+class ThresholdsHeadroomOverrideTests(unittest.TestCase):
+    """#467 (a): the per-gate context-headroom override. `thresholds_for` takes an
+    absolute-token reserve, subtracts it from BOTH caps before dividing by the
+    window, and clamps so the override can only ever TIGHTEN.
+
+    TIGHTEN-ONLY IS A SAFETY PROPERTY, not a style choice: an override that could
+    RAISE a threshold would let a gate opt out of the governor. So the sweep below
+    is hostile (negatives, a huge negative, absurd positives) and asserts the
+    returned pair is never above the un-overridden pair for ANY input."""
+
+    # Every value the hostile sweep tries. Negatives and zero must be no-ops;
+    # positives must tighten or clamp; none may ever loosen.
+    HOSTILE_RESERVES = (-10 ** 12, -150_000, -1, 0, 1, 79_999, 150_000, 10 ** 12)
+    SHIPPED_MODELS = ("claude-opus-5", "claude-opus-4-8", "claude-sonnet-5",
+                      "claude-fable-5", "claude-haiku-4-5-20251001",
+                      "some-unlisted-model")
+
+    def setUp(self):
+        self.m = load("gauge_reader")
+
+    def test_headroom_reserve_tightens_both_caps(self):
+        # claude-opus-5 is (1_000_000, 80_000, 150_000). A 30K reserve comes off
+        # BOTH caps before the division -- literals written independently here,
+        # never read back off the table (that would be circular).
+        self.assertEqual(self.m.thresholds_for("claude-opus-5"), (0.08, 0.15))
+        self.assertEqual(self.m.thresholds_for("claude-opus-5", 30_000), (0.05, 0.12))
+        # ... and on the 200K model, the same absolute reserve bites HARDER as a
+        # fraction, which is the whole point of an absolute-token reserve:
+        # (90_000-30_000)/200_000, (140_000-30_000)/200_000.
+        self.assertEqual(
+            self.m.thresholds_for("claude-haiku-4-5-20251001", 30_000), (0.30, 0.55))
+
+    def test_headroom_override_of_zero_is_exactly_the_shipped_default(self):
+        # The production default is a floor no gate may lower: a zero (or omitted)
+        # reserve must reproduce the shipped pair exactly, for every model.
+        for model in self.SHIPPED_MODELS:
+            self.assertEqual(self.m.thresholds_for(model, 0),
+                             self.m.thresholds_for(model))
+
+    def test_headroom_reserve_larger_than_a_cap_clamps_at_zero(self):
+        # A reserve bigger than the soft cap floors THAT fraction at 0.0 without
+        # going negative, while the hard cap keeps tightening on its own terms.
+        self.assertEqual(self.m.thresholds_for("claude-opus-5", 100_000), (0.0, 0.05))
+        # A reserve bigger than both caps floors both -- the tightest possible
+        # gate (trip immediately), never a negative fraction.
+        self.assertEqual(self.m.thresholds_for("claude-opus-5", 10 ** 9), (0.0, 0.0))
+
+    def test_headroom_override_can_only_tighten_never_loosen(self):
+        # THE safety property, swept hostilely: across every shipped model and
+        # every reserve above, the overridden pair is never ABOVE the default
+        # pair. A raised threshold would mean a gate opting OUT of the governor.
+        for model in self.SHIPPED_MODELS:
+            base_soft, base_hard = self.m.thresholds_for(model)
+            for reserve in self.HOSTILE_RESERVES:
+                with self.subTest(model=model, reserve=reserve):
+                    soft, hard = self.m.thresholds_for(model, reserve)
+                    self.assertLessEqual(soft, base_soft)
+                    self.assertLessEqual(hard, base_hard)
+                    self.assertGreaterEqual(soft, 0.0)
+                    self.assertGreaterEqual(hard, 0.0)
+                    if reserve <= 0:
+                        # A negative reserve is a NO-OP, not a loosening: it
+                        # resolves to exactly the shipped default.
+                        self.assertEqual((soft, hard), (base_soft, base_hard))
+
+    def test_headroom_override_never_judges_an_uncalibrated_model(self):
+        # #252 guard, restated under the override: `thresholds_for` stays TOTAL
+        # (an arbitrary model string still yields a usable pair, computed off
+        # _DEFAULT_PROFILE's own 200K window -- (80_000-30_000)/200_000 and
+        # (130_000-30_000)/200_000), but that pair must never be reached from a
+        # real READING. An uncalibrated model yields no reading at all, so no
+        # override can ever be judged against a guessed window.
+        self.assertEqual(self.m.thresholds_for("some-unlisted-model", 30_000), (0.25, 0.50))
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "gauge.json"
+            path.write_text(json.dumps({
+                "schema_version": 1, "fill_fraction": 0.42,
+                "model": "some-unlisted-model",
+                "observed_at": (NOW - timedelta(minutes=5)).isoformat(),
+            }), encoding="utf-8")
+            self.assertIsNone(self.m.read(path, now=NOW, max_age=MAX_AGE))
+
+
 if __name__ == "__main__":
     unittest.main()

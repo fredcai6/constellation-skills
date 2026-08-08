@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-log-correction",
+  "mechanical": {
+    "run": "g3-rework-headroom-override-467",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m2-log-correction",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-rework-headroom-override-467-m2-log-correction@065028661d86aaeac9ae54570952b18000880549",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-rework-headroom-override-467",
+    "generated_at": "2026-08-08T15:03:14Z"
+  }
+}

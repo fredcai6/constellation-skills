@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "g5-review-467",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g5-review-467-r2-scope@7e4c6834ef1c3140c75be110956a279e41e5d56e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g5-review-467",
+    "generated_at": "2026-08-08T20:59:44Z"
+  }
+}

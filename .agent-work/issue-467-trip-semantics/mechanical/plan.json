@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "mechanical": {
+    "run": "issue-467-trip-semantics",
+    "project": "constellation-skills",
+    "role": "commander-w4-467",
+    "refusals": 6,
+    "spine-step": "plan",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-plan@68140fcba778852f4dead9bb781004b005bcb89e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T10:07:25Z"
+  }
+}

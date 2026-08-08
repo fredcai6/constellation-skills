@@ -1,0 +1,96 @@
+{
+  "work_id": "issue-467-trip-semantics",
+  "gate": "g2-review",
+  "diff_ref": "commit 38f0b448 on epic-418/a2-467-trip-semantics -- scripts/checklist_engine.py (+154 changed lines), tests/test_checklist_engine.py (+441), docs/CHECKLIST_SCHEMA.md (+18)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/constellation-reviewer/references/global-crew.md, the handoff's Constraints (constraint:pure-verbs) and Authority sections",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "advance() is now ~110 lines and its why-capture region carries three mutually exclusive recording branches (if require_why / elif not why_exempt / else). The new branch is only ~10 lines, but it pushed a function that was already long past the point where the recording policy is readable in one pass. Extracting the decision -- e.g. a small _why_record_decision(t, why, mechanical, require_why) returning (append?, mechanical?, refusal_or_None) -- would let advance() read as: prove postconditions, decide the record, apply it. NON-BLOCKING: the branch is correct, exhaustively tested (M4/M5), and pre-existing length is not this gate's debt to pay.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The engine module is module-level functions, no classes. The new test class TripHardGuardsBeginNotClose carries 21 methods, but it has exactly one responsibility (the #467 band-semantics change), matching the file's established one-class-per-behaviour-cluster convention (TripTwoBandGatePolicy, RefreshRequestIdentity, TripRealGaugeFileWiring). A cohesive fixture is not a large class in Fowler's sense.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "Mild and local, inside advance(): _append_why(cl, iid, why=why.strip(), mechanical=False) now appears twice (require_why branch and the non-exempt branch), and the guard expression (why or \"\").strip() appears three times in the same function. The two call sites can drift -- if a future change adds a field to the why record, one site can be updated and the other missed, and the failure mode is a silently absent understanding, which is precisely #431. NON-BLOCKING, but it is the same class of drift the gate's own _trip_hard_band_reading consolidation was introduced to prevent, applied one level down.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "This change REDUCED it. Pre-change, _trip_hard_gate reached into _gauge_reader.thresholds_for(reading.model) and compared reading.fill_fraction itself. Post-change that knowledge lives in _trip_hard_band_reading and _trip_hard_gate asks only 'is the band active'. The guard no longer envies the reader.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "The triple (cl, iid, base_dir) travels together through _trip_hard_gate, _trip_hard_band_reading, start, reopen, advance and dispatch -- a textbook clump that a ctx object would absorb.",
+      "override": {
+        "repo_standard": "constraint:pure-verbs, named in the handoff's Constraints and documented in docs/CHECKLIST_SCHEMA.md ('the verb functions stay pure -- their return values are unchanged, so existing exact-equality tests keep passing'); reinforced by the handoff's Authority section, which lists 'any change to the pure-verb seam' as a decision the implementer must not make alone.",
+        "reason": "The clump IS the engine's verb calling convention: every verb is a pure function of (state, item id, base_dir). Introducing a context object would change every verb signature -- the exact seam the handoff froze and placed outside this gate's authority. The standard subordinates the smell because the repetition is the contract, not an accident of growth."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Verbs are bare strings throughout, and the new TRIP_HARD_GUARDED_VERBS = {\"start\", \"reopen\"} is a set of string literals rather than an enum or a verb type.",
+      "override": {
+        "repo_standard": "global-crew.md, Implementation discipline: 'Match the surrounding code's naming, labeling, and in-file documentation conventions -- the project's specific conventions are the local delta.' The sibling precedent is immediate and literal: MUTATING_VERBS at scripts/checklist_engine.py:70, a module-level set of the same verb strings, sits nine lines above the new constant.",
+        "reason": "The new constant is an exact structural copy of the convention already governing verb sets in this module, and the verb strings are the argparse subcommand names -- they are the external CLI contract, not an internal domain type waiting to be modelled. Introducing an enum for one set while MUTATING_VERBS stays a string set would make the file less consistent, not more."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "overridden",
+      "finding": "advance() now takes 7 parameters (cl, iid, from_child, base_dir, why, mechanical, require_why) -- over the threshold at which Fowler recommends a parameter object.",
+      "override": {
+        "repo_standard": "constraint:pure-verbs plus the handoff's Authority section ('You must not decide alone: ... any change to the pure-verb seam'). docs/CHECKLIST_SCHEMA.md now documents the shape explicitly: 'a require_why flag dispatch passes into advance ... a direct non-dispatch call to advance is unaffected because require_why defaults to False'.",
+        "reason": "A parameter object here would be a seam change the implementer was explicitly forbidden to make alone. Adding one defaulted keyword was the minimum that carries the band decision across the CLI boundary while leaving every direct caller byte-identical -- which I verified: no verb return string changed, and the whole 1815-test suite is green. The implementer also documented and defended the alternative it rejected (a second pre-verb guard in dispatch) in Assumption 1, on the sound ground that only advance can append to the why_trail, so a dispatch-level refusal would demand a --why that advance then discards on an exempt gate. The standard subordinates the smell because the shorter signature was not reachable without authority this gate did not hold."
+      }
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "REAL, and it drew blood. The single fact 'HARD blocks advance' was mirrored in four hand-maintained places: the engine's Trip module-header comment (:1217ff), docs/CHECKLIST_SCHEMA.md's Trip section, that file's start/advance/reopen verb-table rows, and docs/agents/GLOSSARY.md:13. Changing one behaviour required editing all four; three were updated and the fourth was missed. I confirmed the miss with my own blast-radius grep -- GLOSSARY.md:13 still reads 'HARD blocks `advance` until the agent requests a context refresh', which is now false and is the glossary every constellation agent reads. The implementer found it too, correctly declined to edit it (out of allowed scope), and escalated. NON-BLOCKING for this gate because the escalation was the right move and the file was outside scope, but the smell is the root cause of triage candidate tc1 and it will recur on the next Trip change unless the mirrored prose gets a single source or a freshness check.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "scripts/checklist_engine.py is ~2900 lines hosting leasing, journaling, the doctrine rail, why-capture, the Trip bands, state projection and every verb. It changes for many unrelated reasons, and this gate touched it for one more.",
+      "override": {
+        "repo_standard": "The engine's distribution model, enforced by scripts/install_constellation.py: checklist_engine.py is one canonical file copied verbatim into ten skill bundles (line 100 and the per-role bundle table at :163ff; 9 installed copies confirmed under ~/.claude/skills/*/scripts/). CREW_CONTEXT.md 'Editing The Skill Corpus' establishes that per-role copies are generated, never hand-edited.",
+        "reason": "The single-file shape is a deliberate packaging constraint -- each skill loads the engine by file path with no package install -- so splitting the module is a corpus-architecture decision, not a refactor available inside a bounded gate. The standard subordinates the smell because the alternative is not 'better structure', it is a different distribution mechanism. Worth noting the change actively resisted the smell where it could: the band decision was consolidated into one predicate rather than duplicated at the two call sites."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The longest chains in the diff are one hop: _gauge_reader.thresholds_for(reading.model), reading.fill_fraction, rec[\"id\"] if rec else None. No navigation through intermediate objects.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Checked each new degree of freedom for a live consumer rather than assuming one. _trip_hard_band_reading has two real production call sites (:1514, :2806), confirmed by re-running the wiring grep. require_why's default is exercised by every direct caller in the suite. The <why-id> fallback in _refresh_attach_hint is not dead: my PROBE E reached it on an all-why_exempt spine and executed the emitted command, and it is pinned by two tests. Nothing here is a hook waiting for a future caller.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The diff is comment-heavy: the Trip module header grew ~14 lines, _refresh_attach_hint's docstring went 3 -> 9 lines, advance() gained a 12-line comment block for a 10-line branch, and dispatch gained 8 lines. On ratio alone this reads as prose compensating for structure -- and the extract-a-named-helper alternative noted under long-method would carry some of that meaning in a name instead.",
+      "override": {
+        "repo_standard": "global-crew.md, Implementation discipline: 'Match the surrounding code's ... in-file documentation conventions.' The engine's established convention is dense why-comments citing the issue that produced the rule (#179, #182, #190, #191 all appear this way in surrounding code). Reinforced by CREW_CONTEXT.md's Verification Discipline, which treats the reason a guard exists as load-bearing knowledge.",
+        "reason": "These comments record DECISION RATIONALE, not a paraphrase of the code: why advance is deliberately absent from the guarded set, what breaks without the no-silent-close rule (the _latest_why_record skip that yields a pre-trip DIGEST), and why the <why-id> placeholder was a silent no-op across four runs. That is exactly the knowledge that was lost between #182 and #431 and cost this issue. Fowler's smell is a comment standing in for unclear code; these stand in for a design record that has no other home in a single-file engine. Logged rather than flagged, with the extract-a-name option recorded above so it is not lost."
+      }
+    }
+  ],
+  "rail_exception": null
+}

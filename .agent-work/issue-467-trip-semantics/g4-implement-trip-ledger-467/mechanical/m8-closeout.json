@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m8-closeout",
+  "mechanical": {
+    "run": "g4-implement-trip-ledger-467",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m8-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g4-implement-trip-ledger-467-m8-closeout@3fd3f7a18bc5778c4d19c8b05834c4cff1eaa21b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g4-implement-trip-ledger-467",
+    "generated_at": "2026-08-08T16:56:50Z"
+  }
+}

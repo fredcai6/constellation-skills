@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "g3-rework-headroom-override-467",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-rework-headroom-override-467-m0-context@d91291a9ec5742c743cbcdc9ffd643b7c1b1ad3d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-rework-headroom-override-467",
+    "generated_at": "2026-08-08T15:01:44Z"
+  }
+}

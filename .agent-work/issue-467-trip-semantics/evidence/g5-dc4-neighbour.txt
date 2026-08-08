@@ -1,0 +1,11 @@
+planted fill = 0.05 (BELOW the shipped hard line 0.15)
+
+--- start p1  (declares NO override)                   -> exit 0
+    p1 -> in-progress
+
+--- start p2  (declares context_headroom_tokens=149000) -> exit 1
+    REFUSED: p2: context at 5% is at/over the hard limit, so this is not the moment to BEGIN work here — finish and close the gate you are already in, then request a refresh so a fresh agent starts this
+
+trip_ledger: [{"id": "tl-1", "gate": "p2", "verb": "start", "outcome": "begin-refused", "fill": 0.05, "hard": 0.001, "model": "claude-sonnet-5", "why_ref": null, "ts": "2026-08-08T20:19:03.662833+00:00"}]
+
+PASS: at one and the same reading of 0.05, the gate carrying the override tripped and its neighbour did not.

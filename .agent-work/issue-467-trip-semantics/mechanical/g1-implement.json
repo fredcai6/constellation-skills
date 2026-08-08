@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-implement",
+  "mechanical": {
+    "run": "issue-467-trip-semantics",
+    "project": "constellation-skills",
+    "spine-step": "g1-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-g1-implement@4beaaa64c3394be13504d0f032cdada34a3cd17c",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T10:22:36Z"
+  }
+}

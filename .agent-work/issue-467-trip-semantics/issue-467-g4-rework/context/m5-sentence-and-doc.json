@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m5-sentence-and-doc",
+  "files": [],
+  "repo_rev": {
+    "commit": "28dd434c26de25af3285b010fdc0cd3d290f77e4"
+  },
+  "run": {
+    "work_id": "issue-467-g4-rework",
+    "generated_at": "2026-08-08T18:29:07Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}
