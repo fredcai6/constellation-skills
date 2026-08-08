@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "files": [],
+  "repo_rev": {
+    "commit": "b481f936f4677a65528ec3e306fc273de8640531"
+  },
+  "run": {
+    "work_id": "w3c-488-489-review",
+    "generated_at": "2026-08-08T05:29:38Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-reviewer",
+      "repo": "C:/Programs/wt-rev-488489",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/wt-rev-488489"
+    }
+  }
+}
