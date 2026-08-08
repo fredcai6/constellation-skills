@@ -318,6 +318,14 @@ from the forge.**
 - **Never use an ancestry test to decide whether anything merged.** Squash-merge returns the same
   answer for merged and abandoned. Ask the forge. Likewise `git diff origin/main..HEAD` in a
   worktree lists files where *main* is ahead — it reads like your branch reverted them.
+- **Liveness has TWO channels; use the right one for the question.** Filesystem writes in the
+  worktree say *something* is alive — but a crew's writes look identical to its Commander's, so it
+  cannot tell "Commander idle, waiting on a crew" from "Commander dead, crew running on." The
+  **harness pushes an idle notification** when a dispatched agent finishes; it fired for instances A
+  (`10:12:41Z`) and B (`10:48:51Z`). **Its silence is informative precisely because it has
+  demonstrably delivered** — an unproven channel's silence would mean nothing, which is the
+  absence-as-evidence trap. Push, never pull: do not go looking for an answer the harness already
+  sends you.
 - **The lease field is not a liveness signal in either direction** (147 tracked spines, 18 `active`,
   1 live). Nor is the heartbeat: a Commander read 27 minutes stale while actively journaling its
   inner checklist. What discriminates: `find <worktree> -newermt "-6 minutes" -type f`.
