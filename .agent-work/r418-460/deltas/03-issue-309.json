@@ -1,0 +1,19 @@
+{
+  "work_id": "r418-460-g2-implement",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "issue-309-001",
+      "assertion": "d2",
+      "statement": "This sweep's decoy was one the target lens's own guardrail already named as an exclusion, so the 0% noise figure measured lens discipline rather than realistic noise from realistically-instructed viewpoints.",
+      "history": "issue #460 gate g2 -- restated from a forward-aimed deontic ('a future coherence-sweep design ... should seed a decoy ...') into the observation the record itself makes; grounded in d1 (\"Well-instructed viewpoints (given an explicit 'do not flag two independent policy choices as a contradiction' guardrail) are, by construction, resistant to a decoy engineered around exactly that shape -- the 0% noise result measures lens discipline, not an absence of noise risk in the underlying pathway\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-309-002",
+      "assertion": "d2",
+      "statement": "A triage candidate was filed proposing that docs/EPISODE_STORE.md section 1 drop or caveat the now-stale git-check-ignore transcript for .agent-work/ specifically -- the store's own root (episodes/, never under .agent-work/) is unaffected by this staleness, only the illustrative contrast against .agent-work/ is now wrong -- rather than the doc being edited directly this run, a doctrine-text edit being out of this issue's Allowed Scope.",
+      "history": "issue #460 gate g2 -- restated from a forward-aimed deontic ('section 1 should be updated ...') into what the run actually did; grounded in the assertion's own record of its disposition (\"Filed as a triage candidate rather than edited directly this run (doctrine-text edit is out of this issue's Allowed Scope)\") and in a3 (\"EPISODE_STORE.md section 1's own claim about .agent-work/'s ignore status is now stale\")"
+    }
+  ]
+}

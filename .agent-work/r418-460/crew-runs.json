@@ -46,5 +46,29 @@
     "model": "opus",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/r418-460/g2-implement/implementer/attempt-1",
+    "work_id": "r418-460",
+    "gate": "g2-implement",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/r418-460/g2-implement/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/r418-460",
+    "handoff": ".agent-work/r418-460/crew-handoffs/g2-implement-handoff.md",
+    "result": ".agent-work/r418-460/crew-handoffs/g2-implement-result.md",
+    "stdout": ".agent-work/r418-460/crew-runs/g2-implement-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/r418-460/crew-runs/g2-implement-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-08T00:14:40.206348+00:00",
+    "last_heartbeat": "2026-08-08T00:42:36.277306+00:00",
+    "completed_at": "2026-08-08T00:42:36.277306+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

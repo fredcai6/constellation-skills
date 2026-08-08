@@ -222,7 +222,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
         },
         {
           "id": "cR",
@@ -234,7 +235,12 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1",
+          "attested": {
+            "evidence": "e-g1-integrate-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -249,7 +255,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -272,6 +278,28 @@
             "seam": "g1-integrate",
             "why_ref": "w-3",
             "note": "HARD context trip at 153K against the calibrated 150K cap for claude-opus-5 (gauge fill_fraction 0.153, observed fresh). Second commander on this spine to trip at a gate seam. g1 is DONE and verified in the Commander's own hands -- reviewer APPROVE, Rework 1 mutation re-run by me (pre-rework GREEN, post-rework RED, source restored byte-for-byte), tests/test_episode_store.py 130 passed 1 skipped exit 0. Only the g1-integrate advance itself is outstanding; the successor re-runs it first. Gate handoffs for g2 are already written."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q --color=no tests/test_episode_store.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q --color=no tests/test_episode_store.py",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -899,6 +927,13 @@
       "why": "Independent reviewer verdict APPROVE with the load-bearing property verified by code reading and by mutation, not taken on the implementer's word. Its first triage candidate -- the allowlist is not test-pinned, so a later widening could silently reopen the evidence-destruction hole -- is being closed by a bounded rework before integrate; the other two are logged as candidates.",
       "mechanical": false,
       "ts": "2026-08-07T23:32:55.157733+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Third commander, fresh context, cold-started from this file. g1 is integrated: reviewer APPROVE (e-g1-integrate-1) with the load-bearing property reproduced by mutation, and the M4 rework already committed in c9d9dd7c and pinned by three tests including a behavioural refusal. I re-ran the c1 command check myself in this session. The restate-assertion op is the accepted departure from the launch order's false baseline -- the store grows records, it never rewrites statement text -- and the Admiral ratified it. Moving to g2: restate the prescriptive canon records using that op.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:13:47.920437+00:00"
     }
   ]
 }

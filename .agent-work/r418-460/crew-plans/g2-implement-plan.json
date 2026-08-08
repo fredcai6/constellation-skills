@@ -1,0 +1,368 @@
+{
+  "work_id": "r418-460-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-inventory",
+    "m2-first-write",
+    "m3-restate-rest",
+    "m4-check-447",
+    "m5-verify-report"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md if present, the g2-implement handoff, docs/EPISODE_STORE.md record grammar, and episodes/README.md. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + episode-store grammar + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-inventory": {
+      "id": "m1-inventory",
+      "title": "Inventory and classify all 48 records",
+      "imperative": "Derive the 48/32/16 counts by command over episodes/active/. Read every record in FULL. Classify each agent-supplied and diagnosis assertion as OBSERVATION or INSTRUCTION under the handoff's wording standard, and for each INSTRUCTION decide GROUNDED (naming the sibling assertion that grounds a factual rewrite) or UNGROUNDED (naming the reason). Record the classification table at .agent-work/r418-460/deltas/classification.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff verified complete, store grammar and writer contract read"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "classification.md exists and names all 48 episode ids",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-460 && test $(for f in episodes/active/*.md; do b=$(basename $f .md); grep -qF \"$b\" .agent-work/r418-460/deltas/classification.md && echo hit; done | wc -l) -eq 48"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-inventory-1"
+        }
+      ],
+      "constraints": [
+        "never hand-edit episodes/",
+        "do not invent facts"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-inventory-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-460 && test $(for f in episodes/active/*.md; do b=$(basename $f .md); grep -qF \"$b\" .agent-work/r418-460/deltas/classification.md && echo hit; done | wc -l) -eq 48",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-first-write": {
+      "id": "m2-first-write",
+      "title": "First restatement through the writer; prove the write path",
+      "imperative": "Author the first delta JSON under .agent-work/r418-460/deltas/, dry-run it with python scripts/apply_episode_delta.py --delta <f> --store-root episodes --dry-run, read the log, then apply for real with --store-root episodes. Confirm git status --short episodes/ actually shows the change (this is the guard against the writer silently building a store outside the repo).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "classification complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "classification of all 48 records complete; 27 grounded, 5 ungrounded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "episodes/ shows a tracked modification produced by the writer",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-460 && git status --short episodes/ | grep -q '^ M episodes/active/'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-first-write-1"
+        }
+      ],
+      "constraints": [
+        "--store-root episodes on EVERY invocation",
+        "restate-assertion op only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-first-write-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-460 && git status --short episodes/ | grep -q '^ M episodes/active/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-restate-rest": {
+      "id": "m3-restate-rest",
+      "title": "Restate the remaining grounded instructions in the 32 pre-#447 records",
+      "imperative": "Apply the remaining grounded restatements across issue-304-g3-*, issue-308-*, issue-309-* through the writer, always with --store-root episodes. Leave every UNGROUNDED statement untouched. Verify no episodes/ file was hand-edited: every changed file is traceable to a named delta file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "write path proven",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "first delta applied; write path proven against episodes/ in the repo"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all planned pre-#447 restatements applied; every restated assertion carries a history line quoting the original verbatim",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-460 && git diff --stat episodes/ | tail -1 | grep -q 'changed'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-restate-rest-1"
+        }
+      ],
+      "constraints": [
+        "--store-root episodes on EVERY invocation",
+        "do not invent facts",
+        "do not write docs/agents/*"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-restate-rest-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-460 && git diff --stat episodes/ | tail -1 | grep -q 'changed'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-check-447": {
+      "id": "m4-check-447",
+      "title": "Check the 16 issue-447 records rather than assume them",
+      "imperative": "Read all 16 issue-447-* records in full and classify their assertions under the same standard. Restate any that plainly instruct AND are grounded; report the rest. Record the verdict for all 16 in the classification file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "pre-#447 restatements applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "27 pre-447 restatements applied and verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all 16 issue-447 records checked and a per-record verdict recorded",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-460 && test $(grep -c 'issue-447-' .agent-work/r418-460/deltas/classification.md) -ge 16"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-check-447-1"
+        }
+      ],
+      "constraints": [
+        "do not assume the 447 records are clean"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-check-447-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-460 && test $(grep -c 'issue-447-' .agent-work/r418-460/deltas/classification.md) -ge 16",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify-report": {
+      "id": "m5-verify-report",
+      "title": "Run the suite and write IMPLEMENTER_RESULT",
+      "imperative": "Run FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests once, capturing the real exit code. Write IMPLEMENTER_RESULT to .agent-work/r418-460/crew-handoffs/g2-implement-result.md with all seven required evidence items: the 48/32/N count derived by command, the per-restatement grounding table, the UNGROUNDED list, the doctrine-candidate list, git diff --stat episodes/ plus the no-hand-edit argument, the delta files and writer invocations, and the suite result with its real exit code.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all restatements applied and 447 checked",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "27 restatements applied; all 16 issue-447 records checked clean"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written with the count, grounding table, UNGROUNDED list, doctrine candidates, diffstat and suite exit code",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/r418-460 && grep -q 'UNGROUNDED' .agent-work/r418-460/crew-handoffs/g2-implement-result.md && grep -q '48 examined' .agent-work/r418-460/crew-handoffs/g2-implement-result.md && grep -q 'store-root episodes' .agent-work/r418-460/crew-handoffs/g2-implement-result.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "never py for pytest",
+        "do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Full suite is red on exactly one test, tests/test_episode_negative_control.py::test_canon_episode_store_untouched, which asserts git status --porcelain episodes/ is empty. Issue #460's deliverable IS uncommitted changes to episodes/ (24 files), and this crew does not commit. Proved content-independent and clean-tree-passing: with episodes/ stashed the test passes on this same tree (1 passed in 0.42s), and the work was restored intact afterwards (24 files, 54 insertions, 27 deletions). Everything else is green: 1744 passed, 4 skipped, 677 subtests. The 27 restatements are complete and verified.",
+        "authority_needed": "Commander r418-460 -- tests/ is outside this gate's Allowed Scope (episodes/active/*.md via the writer plus delta JSONs), so amending the guard is a scope and test-authorship decision above this crew",
+        "next_action": "Preferred, zero-change: commit episodes/ and re-run the suite; the guard goes green the moment the store is committed. Durable, separate issue: narrow the guard to its stated intent (constraint:throwaway-consolidation -- assert nothing THIS test module wrote reached canon) rather than asserting the whole store is clean. Filed as triage candidate tc1. IMPLEMENTER_RESULT is written in full at .agent-work/r418-460/crew-handoffs/g2-implement-result.md.",
+        "prior_status": "in-progress"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-report-1",
+          "type": "command-output",
+          "payload": {
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit_code": "1",
+            "summary": "1 failed, 1744 passed, 4 skipped, 677 subtests passed in 426.93s",
+            "artifact": ".agent-work/r418-460/evidence/g2-implement-pytest.txt"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m5-verify-report",
+      "statement": "tests/test_episode_negative_control.py::test_canon_episode_store_untouched asserts git status --porcelain episodes/ is empty, so it goes red for ANY uncommitted change to episodes/ -- including the sanctioned writer output that issue #460 exists to produce. Its own docstring scopes it to constraint:throwaway-consolidation (proving that test module's synthetic consolidation never reached canon), which the sibling assertion REPO_ROOT not in seeded_store[root].parents already establishes. Proved content-independent: it reads only git status, and with episodes/ stashed clean it passes on this same tree. Narrow it to the module's own artifacts, or make it tolerate a working tree the running gate owns."
+    }
+  ],
+  "blockers": [
+    {
+      "item": "m5-verify-report",
+      "blocker": "Full suite is red on exactly one test, tests/test_episode_negative_control.py::test_canon_episode_store_untouched, which asserts git status --porcelain episodes/ is empty. Issue #460's deliverable IS uncommitted changes to episodes/ (24 files), and this crew does not commit. Proved content-independent and clean-tree-passing: with episodes/ stashed the test passes on this same tree (1 passed in 0.42s), and the work was restored intact afterwards (24 files, 54 insertions, 27 deletions). Everything else is green: 1744 passed, 4 skipped, 677 subtests. The 27 restatements are complete and verified.",
+      "authority_needed": "Commander r418-460 -- tests/ is outside this gate's Allowed Scope (episodes/active/*.md via the writer plus delta JSONs), so amending the guard is a scope and test-authorship decision above this crew",
+      "next_action": "Preferred, zero-change: commit episodes/ and re-run the suite; the guard goes green the moment the store is committed. Durable, separate issue: narrow the guard to its stated intent (constraint:throwaway-consolidation -- assert nothing THIS test module wrote reached canon) rather than asserting the whole store is clean. Filed as triage candidate tc1. IMPLEMENTER_RESULT is written in full at .agent-work/r418-460/crew-handoffs/g2-implement-result.md."
+    }
+  ],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "g2-impl-r418-460",
+    "status": "released",
+    "claimed_at": "2026-08-08T00:16:52.473335+00:00",
+    "last_heartbeat": "2026-08-08T00:40:49.257321+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T00:41:36.900550+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff g2-implement-handoff.md is complete: task, protected intent, test mode, scope (48/32/16), the wording standard with its one task-intent exemption, the hard no-invented-facts rule, allowed scope, exclusions, constraints, required evidence 1-7, authority, stop conditions, return format. Store grammar read: episodes/README.md (writer is the only write path; no rules live in the store) and docs/EPISODE_STORE.md sections 2-3 (record shape, canonical worked record at :171 showing task-intent in bare infinitive by convention). Writer contract read: restate-assertion accepts exactly op/id/assertion/statement/history; the history line is built by the writer from the parsed original, caller supplies only the reason.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:17:43.478257+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-inventory",
+      "why": "All 48 records read in full. 27 grounded instructions identified for restatement (26 workaround a5, 5 proposed-remedy d2 -- 22 a5 plus 5 d2 = 27), 5 UNGROUNDED, the rest observational. All 16 issue-447 records CHECKED not assumed: every assertion is past tense with a real subject, no diagnosis bin exists in any of them, 0 restatements needed. The 2 second-person hits in the store are both quotations of the artifact under study in issue-304-g3-005, not the record addressing a reader.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:24:41.529354+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-first-write",
+      "why": "First delta (.agent-work/r418-460/deltas/01-issue-308-001.json) dry-ran clean then applied with --store-root episodes. git status --short episodes/ shows ' M episodes/active/issue-308-001.md', so the writer wrote into the repo store and not into the installed skill directory. The diff confirms the restate-assertion contract: the statement line changed and a history line was appended carrying the original verbatim, with kind/strength/lifecycle-standing untouched.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:26:43.124103+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-restate-rest",
+      "why": "All 27 grounded restatements applied through apply_episode_delta.py --store-root episodes across 4 delta files (01-issue-308-001, 02-issue-304-g3, 03-issue-309, 04-issue-308), each dry-run clean first. 24 files changed, 54 insertions, 27 deletions -- exactly 27 statement lines replaced and 27 history lines appended, with no other line touched, proving no hand-edit. The 24 changed files are byte-identical as a set to the 24 episode ids the delta files name. 5 UNGROUNDED statements left untouched. query_episodes.py enumerate still parses the whole store, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:29:32.326645+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-check-447",
+      "why": "All 16 issue-447 records CHECKED in full, not assumed. 80 statements across them (5 kinds x 16, no record carries a diagnosis bin -- verified by grep -l '## Diagnosis' returning 0). Every a1 is a bare-infinitive or past-tense task-intent; every a2-a5 has a real grammatical subject in past tense. No imperative-mood clause, no second person, no forward-aimed deontic: the only modal hits are 6 descriptive or counterfactual uses of 'never' ('the gate command never runs', 'could never have XPASSed'). 0 restatements needed; 0 issue-447 files appear in git status. Per-record verdicts recorded in classification.md.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:29:58.438461+00:00"
+    }
+  ]
+}

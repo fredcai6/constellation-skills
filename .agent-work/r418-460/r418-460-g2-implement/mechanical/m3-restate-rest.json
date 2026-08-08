@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-restate-rest",
+  "mechanical": {
+    "run": "r418-460-g2-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m3-restate-rest",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-r418-460-g2-implement-m3-restate-rest@1e9063d0cff64ceb172f5b9e7a3d241c0c701994",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "r418-460-g2-implement",
+    "generated_at": "2026-08-08T00:28:10Z"
+  }
+}
