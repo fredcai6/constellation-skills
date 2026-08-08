@@ -191,12 +191,8 @@ def save(path: Path, data: dict) -> None:
     **A file that does not exist yet, or one with MIXED endings, gets LF.** Mixed is
     not a preference the engine can read, so it normalises rather than guesses.
     """
+    # NEGATIVE CONTROL (reviewer-injected): the "just always write LF" over-correction.
     payload = (json.dumps(data, indent=2) + "\n").encode("utf-8")
-    eol = _dominant_newline(path)
-    if eol != b"\n":
-        # json.dumps escapes any literal CR as \r, so no b"\r" survives in the
-        # serialised bytes and this replace cannot produce b"\r\r\n".
-        payload = payload.replace(b"\n", eol)
     Path(path).write_bytes(payload)
 
 
