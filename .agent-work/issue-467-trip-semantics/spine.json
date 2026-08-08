@@ -343,7 +343,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Cold-resume Commander commander-w4-467-b: plan approved and FROZEN by predecessor (spine plan step advanced with why-record w-4); context headroom verified by direct measurement of my own agent transcript -- 64,577 tokens = 6.5% of the 1M window, well under the 0.15 hard cap (the 31% the engine reads is the predecessor agent's reading, written to the shared spine-keyed gauge.json; reported to team-lead); constellation-commander skill loaded and active in this context."
         },
         {
           "id": "p2",
@@ -352,7 +353,8 @@
             "kind": "command",
             "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py issue-467-trip-semantics"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "postconditions": [
@@ -394,7 +396,7 @@
         }
       },
       "child_checklist": "execute.json",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -405,6 +407,17 @@
           "payload": {
             "seam": "execute",
             "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_state_note.py issue-467-trip-semantics",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -650,7 +663,7 @@
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T10:09:35.626162+00:00",
-    "last_heartbeat": "2026-08-08T10:09:35.626162+00:00",
+    "last_heartbeat": "2026-08-08T10:15:32.413687+00:00",
     "claimed_by": "commander-w4-467-b",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,

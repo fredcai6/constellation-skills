@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1",
+  "files": [],
+  "repo_rev": {
+    "commit": "90dbd3c5e9e903b0f89032f5e97fec00ebc76ff6"
+  },
+  "run": {
+    "work_id": "red-repro-431-gauge-read",
+    "generated_at": "2026-08-08T10:40:39Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

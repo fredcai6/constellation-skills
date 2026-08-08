@@ -1,0 +1,112 @@
+repro_431.py  mode=face-b
+engine under test (UNMODIFIED HEAD): C:\Programs\constellation-skills-wt\epic418-a2-467\scripts\checklist_engine.py
+scratch root (rebuilt from nothing): C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch
+
+==============================================================================
+FACE B -- the HARD refusal hides an unmet postcondition
+==============================================================================
+built scratch spine: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-b\spine.json
+  (gauge sibling path the engine will resolve: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-b\gauge.json)
+
+$ checklist_engine.py --file spine.json claim --session-id repro-431-b --claimed-by repro-431 --worktree C:\Programs\constellation-skills-wt\epic418-a2-467
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| claimed lease repro-431-b -> active
+| (exit 0)
+
+$ checklist_engine.py --file spine.json start g1 --session-id repro-431-b
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| g1 -> in-progress
+| (exit 0)
+
+$ checklist_engine.py --file spine.json attest g1 --cond c1 --which postconditions --note seam contract written --session-id repro-431-b
+| RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+| 
+| attested g1.c1
+| (exit 0)
+
+$ checklist_engine.py --file spine.json advance g1 --why PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None. --session-id repro-431-b
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| g1 -> complete
+| (exit 0)
+
+$ checklist_engine.py --file spine.json start g2 --session-id repro-431-b
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| g2 -> in-progress
+| (exit 0)
+
+$ checklist_engine.py --file spine.json attest g2 --cond c1 --which postconditions --note reader failure modes enumerated --session-id repro-431-b
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| attested g2.c1
+| (exit 0)
+
+--- g2 is in-progress with c2 UNMET. Context fills up. ---
+planted gauge: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-b\gauge.json
+  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T10:30:51.809017Z"}
+
+$ checklist_engine.py --file spine.json current
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| LEASE active: repro-431-b (by repro-431, heartbeat 2026-08-08T10:30:56.800048+00:00)
+| ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
+| postconditions:
+|   c2 [unmet] null — retry relocated to the caller and shown green
+| 1/2 met
+| next: attest g2 --cond c2 --which postconditions
+| DIGEST: PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None.
+| CONTEXT 30% (>= hard): `advance` is BLOCKED until you request a refresh. Run: attach g2 --type refresh-request --field seam=g2 --field why_ref=<why-id>  — then hand off.
+| (exit 0)
+
+  [ASSERT OK  ] the planted reading was read (engine's own CONTEXT advisory)
+              engine said: 'CONTEXT 30% (>= hard): `advance` is BLOCKED until you request a refresh. Run: attach g2 --type refresh-request --field seam=g2 --field why_ref=<why-id>  — then hand off.'
+--- what the agent IS told ---
+$ checklist_engine.py --file spine.json advance g2 --why CURRENT UNDERSTANDING: g2 found the reader's None path is reached from three distinct failure modes, so the retry belongs in the caller, not the reader. --session-id repro-431-b
+| RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.
+| 
+| REFUSED: g2: context at 30% is at/over the hard limit — advancing is blocked until you request a refresh, so work is handed off at a seam rather than lost to a runaway. Run: attach g2 --type refresh-request --field seam=g2 --field why_ref=<why-id>
+| (exit 1)
+
+  [ASSERT OK  ] the refusal it gets is the HARD-band one
+  [ASSERT OK  ] the HARD refusal never mentions the unmet postcondition
+              the agent is told to hand off, not that its gate was unfinishable
+--- what the agent WOULD have been told, with the gauge below HARD ---
+planted gauge: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-b\gauge.json
+  {"schema_version": 1, "fill_fraction": 0.02, "model": "claude-opus-5", "observed_at": "2026-08-08T10:30:52.013809Z"}
+
+$ checklist_engine.py --file spine.json current
+| RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+| 
+| LEASE active: repro-431-b (by repro-431, heartbeat 2026-08-08T10:30:56.800048+00:00)
+| ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
+| postconditions:
+|   c2 [unmet] null — retry relocated to the caller and shown green
+| 1/2 met
+| next: attest g2 --cond c2 --which postconditions
+| DIGEST: PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None.
+| (exit 0)
+
+  [ASSERT OK  ] below HARD, the engine prints no HARD advisory (the governor is quiet, not absent -- the same file is still there and still read)
+$ checklist_engine.py --file spine.json advance g2 --why CURRENT UNDERSTANDING: g2 found the reader's None path is reached from three distinct failure modes, so the retry belongs in the caller, not the reader. --session-id repro-431-b
+| RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.
+| 
+| REFUSED: g2: postconditions unmet ['c2'] Recovery: attest g2 --cond c2 --which postconditions --note "<verification>". Do not edit the JSON — use the engine.
+| (exit 1)
+
+  [ASSERT OK  ] the hidden refusal is the postcondition one
+              this is the agent's REAL problem
+  [ASSERT OK  ] the two refusals are different instructions
+  [ASSERT OK  ] and the masking is one-way: the postcondition refusal was reachable only once the HARD band stopped firing
+
+HONEST SCOPE of Face B -- what is masked and what is not:
+  [ASSERT OK  ] `current` DOES still list the unmet postcondition even at HARD, so the masking is scoped to the `advance` REFUSAL path, not to the whole engine
+              an agent that reads `current` can still see c2; an agent that follows the refusal's own instruction ('request a refresh, then hand off') acts on the refusal text and hands off believing context was its only blocker
+
+FACE B REPRODUCED: the HARD guard runs before the postcondition check, so one instruction masks the other.
+
+==============================================================================
+RESULT: reproduced -- every assertion held (mode=face-b)
+==============================================================================

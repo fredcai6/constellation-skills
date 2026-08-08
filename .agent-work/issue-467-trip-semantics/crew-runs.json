@@ -1,0 +1,26 @@
+[
+  {
+    "crew_id": "constellation/issue-467-trip-semantics/g1-implement/implementer/attempt-1",
+    "work_id": "issue-467-trip-semantics",
+    "gate": "g1-implement",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/issue-467-trip-semantics/g1-implement/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+    "handoff": ".agent-work/issue-467-trip-semantics/crew-handoffs/g1-implementer-handoff.md",
+    "result": ".agent-work/issue-467-trip-semantics/crew-handoffs/g1-implementer-result.md",
+    "stdout": ".agent-work/issue-467-trip-semantics/crew-runs/g1-implement-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/issue-467-trip-semantics/crew-runs/g1-implement-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-08T10:22:51.577389+00:00",
+    "last_heartbeat": "2026-08-08T10:41:31.320256+00:00",
+    "completed_at": "2026-08-08T10:41:31.320256+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
+  }
+]

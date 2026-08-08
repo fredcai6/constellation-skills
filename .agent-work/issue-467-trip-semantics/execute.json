@@ -30,13 +30,14 @@
           "id": "c1",
           "statement": "plan intent and scope confirmed against LO-467 + #467 DC1-DC6 + the mission frame + the critic triage; green baseline re-measured with its real exit code",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Plan intent and scope confirmed against LO-467.md (read in full from C:/Programs/constellation-skills/.agent-work/epic-418-redux/launch-orders/LO-467.md), issue #467's six done-conditions (gh issue view 467, read verbatim), MISSION_FRAME.md, and CRITIC_TRIAGE.md including the three binding Admiral rulings and the binding retraction of LO-467 field-evidence item 2. Green baseline re-measured in this worktree at HEAD d376b786: 1793 passed, 2 skipped, 683 subtests passed in 327.20s; REAL exit code 0 captured by redirecting to a file and appending $? (not a piped exit code). Evidence: .agent-work/issue-467-trip-semantics/evidence/e0-baseline.txt. Two scope notes recorded: MISSION_FRAME.md line 85 is stale (says the band refuses start/resume; critic findings 3+4 changed this to start/reopen -- execute.json and the DIGEST are authoritative); and a gauge-attribution defect found on the resume, written up in RESUME_OBSERVATION.md and floated to the Admiral, is outside #467's six done-conditions and is being carried as a triage candidate, not fixed."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -52,7 +53,8 @@
           "id": "p1",
           "statement": "execution context loaded; baseline green re-measured",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e0-context closed complete: execution context loaded (LO-467, #467 DC1-DC6, MISSION_FRAME, CRITIC_TRIAGE) and baseline re-measured green -- 1793 passed, 2 skipped, 683 subtests, real exit 0, evidence/e0-baseline.txt."
         }
       ],
       "postconditions": [
@@ -63,7 +65,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1",
+          "attested": {
+            "evidence": "e-g1-implement-1",
+            "note": "Load-bearing evidence checked by me, not taken on report: (1) git diff --stat -- scripts tests empty, re-verified independently in my own shell -- the RED is observable at unmodified HEAD; (2) the planted reading was PROVED READ -- the engine's literal 'CONTEXT 30% (>= hard)' is in the transcript (planted 0.30 vs opus-5 hard 0.15, gauge planted as sibling of the SCRATCH spine, live spine/gauge untouched); (3) Face A is end-to-end staleness, not a bare refusal -- after the agent runs the exact attach the refusal prints, HARD RELEASES and the same output still reads 'DIGEST: PRE-TRIP UNDERSTANDING', asserted as an equality, with a no-gauge counterfactual control attributing the staleness to the refusal alone. Face B holds with a self-asserted scope limit the implementer volunteered: current DOES still list c2 [unmet] at HARD, so the masking is scoped to the advance refusal path. 24 ASSERT OK / 0 FAIL, real exit 0, one rebuild-from-nothing command. Suite at baseline 1793/2/683, real exit 0. No unresolved blockers, no stop conditions hit. New verified triage candidate: copy-pasting the refusal's literal why_ref=<why-id> placeholder attaches with exit 0 but does NOT release HARD -- a silent no-op on the exact command the engine prints; this is what g2(d) already plans to fix, now confirmed empirically."
+          }
         }
       ],
       "constraints": [
@@ -86,8 +93,8 @@
           "constraint:no-absence-is-evidence -- assert a reading exists before any claim about trip behaviour."
         ],
         "decision": [
-          "decision:red-is-end-to-end-staleness -- the RED reproduces the stale-DIGEST-at-the-seam property, not the bare refusal. Why: the shipped refusal already releases on a keyed refresh-request, so an exception-only repro proves nothing about #431. @grade: settled/measured · leans g1-implement,g1-review",
-          "decision:red-leaves-no-residue -- the repro is disposable and is never promoted to a regression test. Why: source: #467 Evidence section. @grade: settled/inherited · leans g1-implement"
+          "decision:red-is-end-to-end-staleness -- the RED reproduces the stale-DIGEST-at-the-seam property, not the bare refusal. Why: the shipped refusal already releases on a keyed refresh-request, so an exception-only repro proves nothing about #431. @grade: settled/measured \u00b7 leans g1-implement,g1-review",
+          "decision:red-leaves-no-residue -- the repro is disposable and is never promoted to a regression test. Why: source: #467 Evidence section. @grade: settled/inherited \u00b7 leans g1-implement"
         ],
         "evidence": [
           "claim:431-deadlock-real -- the literal engine output showing the stale DIGEST at the seam, with the planted reading quoted and its being-read proved"
@@ -98,11 +105,22 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g1-implementer-result.md",
+            "summary": "RED reproduced at unmodified HEAD, both faces; 24 ASSERT OK / 0 FAIL, real exit 0; git diff --stat -- scripts tests empty; CONTEXT 30% (>= hard) proves the planted reading was read; Face A asserts the stale pre-trip DIGEST after HARD releases, with a no-gauge counterfactual control"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-review": {
@@ -255,8 +273,8 @@
           "constraint:pure-verbs -- verb return strings unchanged"
         ],
         "decision": [
-          "decision:hard-guards-begin-not-close -- HARD refuses `start` and `reopen`, never `advance`; closing the gate you are in is the handoff. Why: converged from a 3-candidate design-it-twice panel, then corrected by the cold-critic panel (resume dropped, reopen added). Recorded in DIT_CONVERGENCE.md and CRITIC_TRIAGE.md. @grade: settled/measured · leans g2-implement,g2-review,g4-implement",
-          "decision:no-silent-close-at-hard -- at/over hard, `--mechanical` is refused and `why_exempt` is suspended. Why: without it the tripped agent writes a mechanical marker, _latest_why_record skips it, and the DIGEST stays pre-trip -- #431 reproduced after the fix. Found by the intent-fit critic. @grade: settled/measured · leans g2-implement"
+          "decision:hard-guards-begin-not-close -- HARD refuses `start` and `reopen`, never `advance`; closing the gate you are in is the handoff. Why: converged from a 3-candidate design-it-twice panel, then corrected by the cold-critic panel (resume dropped, reopen added). Recorded in DIT_CONVERGENCE.md and CRITIC_TRIAGE.md. @grade: settled/measured \u00b7 leans g2-implement,g2-review,g4-implement",
+          "decision:no-silent-close-at-hard -- at/over hard, `--mechanical` is refused and `why_exempt` is suspended. Why: without it the tripped agent writes a mechanical marker, _latest_why_record skips it, and the DIGEST stays pre-trip -- #431 reproduced after the fix. Found by the intent-fit critic. @grade: settled/measured \u00b7 leans g2-implement"
         ],
         "evidence": [
           "claim:dc2-two-way -- an advance carrying a handoff is not refused at/over hard with no pending request; beginning new work at/over hard IS refused. Both directions tested, and the first is the permanent deadlock guard.",
@@ -424,10 +442,10 @@
           "constraint:global-default-untouched -- _PROFILES is out of scope"
         ],
         "decision": [
-          "decision:gate-headroom-absolute-tokens -- the override is an absolute-token reserve, not a fill fraction. Why: all three independent design candidates converged on it: _PROFILES is already intent-first absolute because context-rot degradation tracks absolute token count, not window fraction, so a fractional override would reserve 5x more room on a 1M model than a 200K one from the same authored number. @grade: settled/measured · leans g3-implement,g3-review",
-          "decision:headroom-not-cap -- the override states what the GATE needs, so it survives a change to the production default. @grade: settled/measured · leans g3-implement",
-          "decision:no-config-tier -- gate-level only; the checklist-config tier is not shipped. Why: it would have zero users, and one adapter is a hypothetical seam (simplicity critic finding 3). @grade: settled/measured · leans g3-implement",
-          "decision:execute-gate-reserve-value -- the token reserve carried by the commander spine's `execute` gate. @grade: guess · leans g3-implement · settle: read the fill_fraction recorded in .agent-work/*/gauge.json across completed commander runs at the moment `execute` was started, and set the reserve to the observed cost of a median execute gate. NOT settled by this run's field data: the LO's crew-vs-Admiral trip spread is confounded by the ambiguous-binding silence documented in docs/GAUGE_WRITER_HOOK.md"
+          "decision:gate-headroom-absolute-tokens -- the override is an absolute-token reserve, not a fill fraction. Why: all three independent design candidates converged on it: _PROFILES is already intent-first absolute because context-rot degradation tracks absolute token count, not window fraction, so a fractional override would reserve 5x more room on a 1M model than a 200K one from the same authored number. @grade: settled/measured \u00b7 leans g3-implement,g3-review",
+          "decision:headroom-not-cap -- the override states what the GATE needs, so it survives a change to the production default. @grade: settled/measured \u00b7 leans g3-implement",
+          "decision:no-config-tier -- gate-level only; the checklist-config tier is not shipped. Why: it would have zero users, and one adapter is a hypothetical seam (simplicity critic finding 3). @grade: settled/measured \u00b7 leans g3-implement",
+          "decision:execute-gate-reserve-value -- the token reserve carried by the commander spine's `execute` gate. @grade: guess \u00b7 leans g3-implement \u00b7 settle: read the fill_fraction recorded in .agent-work/*/gauge.json across completed commander runs at the moment `execute` was started, and set the reserve to the observed cost of a median execute gate. NOT settled by this run's field data: the LO's crew-vs-Admiral trip spread is confounded by the ambiguous-binding silence documented in docs/GAUGE_WRITER_HOOK.md"
         ],
         "evidence": [
           "claim:dc4-neighbour-isolation -- at one fill, on one model, the overridden gate's behaviour changes and a NAMED neighbour's does not. Asserted on both sides."
@@ -595,9 +613,9 @@
           "constraint:current-does-not-persist -- main() skips save when the verb is `current`, so the ledger is scoped to mutating verbs by construction"
         ],
         "decision": [
-          "decision:compliance-signal-is-the-over-threshold-begin -- the observable is 'work began while over the line', not 'a handoff artifact appeared'. Why: two independent cold critics found that the artifact-appeared reading is true by construction and therefore green in both worlds. @grade: settled/measured · leans g4-implement,g4-review",
-          "decision:trip-log-is-the-compliance-record -- an engine-only append-only ledger on the spine. Why: without it, 'the governor never tripped' and 'the governor never ran' are the same observation, which is the exact failure #467's evidence protocol forbids and which bit this epic for nine hours. @grade: settled/measured · leans g4-implement,g5-acceptance",
-          "decision:agents-cannot-author-their-own-compliance-record -- no verb writes a ledger entry. @grade: settled/human · leans g4-implement"
+          "decision:compliance-signal-is-the-over-threshold-begin -- the observable is 'work began while over the line', not 'a handoff artifact appeared'. Why: two independent cold critics found that the artifact-appeared reading is true by construction and therefore green in both worlds. @grade: settled/measured \u00b7 leans g4-implement,g4-review",
+          "decision:trip-log-is-the-compliance-record -- an engine-only append-only ledger on the spine. Why: without it, 'the governor never tripped' and 'the governor never ran' are the same observation, which is the exact failure #467's evidence protocol forbids and which bit this epic for nine hours. @grade: settled/measured \u00b7 leans g4-implement,g5-acceptance",
+          "decision:agents-cannot-author-their-own-compliance-record -- no verb writes a ledger entry. @grade: settled/human \u00b7 leans g4-implement"
         ],
         "evidence": [
           "claim:dc6-red-on-ignore -- an agent that begins work while over the line produces a spine that differs mechanically from a compliant one, and the difference is asserted in a test that goes RED when the recording branch is broken.",
@@ -771,7 +789,7 @@
           "constraint:job-file-not-agent-file -- B reuses A's spine file; it is never copied or recreated"
         ],
         "decision": [
-          "decision:round-trip-is-the-point -- DC1-DC3 are all satisfiable while every tripped agent produces a useless handoff, because none of them look at the far end. Why: source: #467 done-condition 5 and LO-467 pre-ruling 2. @grade: settled/inherited · leans g5-acceptance"
+          "decision:round-trip-is-the-point -- DC1-DC3 are all satisfiable while every tripped agent produces a useless handoff, because none of them look at the far end. Why: source: #467 done-condition 5 and LO-467 pre-ruling 2. @grade: settled/inherited \u00b7 leans g5-acceptance"
         ],
         "evidence": [
           "claim:dc5-round-trip -- B's completed work corresponds item by item to what A was mid-way through, verified mechanically and by inspection, not asserted."
@@ -878,5 +896,21 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "e0 closed by cold-resume Commander commander-w4-467-b. Baseline re-measured GREEN at HEAD d376b786: 1793 passed, 2 skipped, 683 subtests, REAL exit 0 (evidence/e0-baseline.txt). Plan confirmed against LO-467, #467 DC1-DC6, MISSION_FRAME, CRITIC_TRIAGE (incl. 3 binding Admiral rulings + the binding retraction of LO-467 field-evidence item 2 -- the 17-21% vs 44% role-blindness reading is WITHDRAWN, do not cite it). NEXT: g1-implement -- dispatch constellation-implementer with the handoff already written at crew-handoffs/g1-implementer-handoff.md to build the DISPOSABLE RED repro under red-repro/. The RED must be end-to-end DIGEST STALENESS (face A) plus the masked-postcondition face (face B), NOT a bare 'advance raises' -- the shipped refusal already releases on a keyed refresh-request, so an exception-only repro proves nothing. NO source change in g1: git diff --stat -- scripts tests must be empty. TWO STANDING TRAPS: DC6's observable is 'did anyone BEGIN work while over the line' (begin-refused/begin-released ledger), never 'did a handoff artifact appear' (true by construction); and at/over hard, advance --mechanical must be refused and why_exempt suspended, else #431 reproduces after the fix via _latest_why_record skipping mechanical markers. STALE ARTIFACT: MISSION_FRAME.md line 85 says the band refuses start/resume -- superseded, it is start/reopen (resume returns you to a gate you are already mid-way through and is never refused). RESUME-SIDE FINDING, floated to the Admiral, outside the six DCs: two live spine-rail bindings (tripped agent + successor) resolve to ONE spine-derived gauge.json, so the outgoing agent's high reading clobbers the successor's until it truly goes idle; ambiguous-binding guards one-key-many-paths, not many-keys-one-path. Written up in RESUME_OBSERVATION.md. Env invariants: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests (never py, #454); never trust a piped $?.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:22:18.100396+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "g1-implement CLOSED. RED reproduced at unmodified HEAD, both faces, by a dispatched implementer; result at crew-handoffs/g1-implementer-result.md, repro at red-repro/repro_431.py (--all | --face a | --face b | --assert-gauge-read), 24 ASSERT OK / 0 FAIL, real exit 0, rebuilds from nothing. GUARD HELD: git diff --stat -- scripts tests EMPTY, re-verified in my own shell. READING PROVED READ: engine's literal 'CONTEXT 30% (>= hard)' in the transcript, planted 0.30 vs opus-5 hard 0.15, gauge planted beside the SCRATCH spine (live spine/gauge untouched). FACE A is the staleness property, not a bare refusal: after the agent runs the exact attach the refusal prints, HARD RELEASES ('refresh already requested for g2') and the same output STILL reads 'DIGEST: PRE-TRIP UNDERSTANDING' -- asserted as an equality, with a no-gauge counterfactual control attributing the staleness to the refusal alone. FACE B holds with a scope limit the implementer volunteered and asserted in the script: current DOES still list c2 [unmet] at HARD, so the masking is scoped to the advance refusal path, not the whole engine -- reviewers must not read it wider. Suite at baseline 1793/2/683 real exit 0. NEXT: g1-review -- dispatch an INDEPENDENT reviewer; per critic finding R1 the independent read is the one guard against a MANUFACTURED RED, which is this epic's central defect, so the reviewer's first job is to decide whether face A really is staleness rather than a dressed-up exception. NEW VERIFIED TRIAGE CANDIDATE from g1: copy-pasting the refusal's literal 'why_ref=<why-id>' placeholder ATTACHES with exit 0 but does NOT release HARD -- a silent no-op on the exact command the engine prints. That is the defect g2(d) already plans to fix (emit the concrete why-id), now confirmed empirically, and it independently corroborates TRIP_OBSERVATION.md item 4. STANDING TRAPS unchanged: DC6's observable is 'did anyone BEGIN work while over the line', never 'did a handoff artifact appear'; and at/over hard, advance --mechanical must be refused and why_exempt suspended.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:42:37.344790+00:00"
+    }
+  ]
 }
