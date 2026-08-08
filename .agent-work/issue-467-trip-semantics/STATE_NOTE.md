@@ -35,14 +35,25 @@ this issue's fix **(b)** refuses. **This is a clean seam, not an interruption.**
 
 ## THE FINDING OF MY SHIFT — the instrument driving this run is the buggy one
 
-**The INSTALLED workbench engine is PRE-#467.**
+**BOTH INSTALLED ENGINE BUNDLES ARE PRE-#467.** Measured by me, all three in one command:
 
 ```
-installed  ~/.claude/skills/constellation-workbench/scripts/checklist_engine.py
-           140170 bytes   sha256 9c05192f0feb3d4d   NO TRIP_HARD_GUARDED_VERBS at all
-repo       <worktree>/scripts/checklist_engine.py
-           156060 bytes   sha256 ccbc247e0de0dcaa
+workbench bundle  ~/.claude/skills/constellation-workbench/scripts/checklist_engine.py
+                  140170 bytes  sha256 9c05192f0feb3d4d  TRIP_HARD_GUARDED_VERBS: ABSENT
+reviewer bundle   ~/.claude/skills/constellation-reviewer/scripts/checklist_engine.py
+                  146457 bytes  sha256 e997cd2a3e6e766a  TRIP_HARD_GUARDED_VERBS: ABSENT
+repo (worktree)   <worktree>/scripts/checklist_engine.py
+                  156060 bytes  sha256 ccbc247e0de0dcaa  TRIP_HARD_GUARDED_VERBS: PRESENT
 ```
+
+**Correction to what I wrote earlier in this note, and to what the Admiral believed.** The reviewer
+bundle was reinstalled at the previous seam and the Admiral reported it "byte-identical to the repo
+engine". **It is not** — 146457 vs 156060 bytes, and structurally pre-#467. The reinstall did fix
+the specific staleness it was aimed at (that bundle now supports `amend` on surveys, and the g3
+reviewer used it without force-waiving), so it is *newer* than the workbench copy — just not
+current. **The g3 reviewer caught this itself and filed it as NB-6**, and it deliberately verified
+all g3 engine behaviour against the **repo** copy rather than its own bundle, which is why its
+findings stand.
 
 Every Commander on this run has driven the spine with the engine that **has** the #431 bug — and I
 **hit that bug live**, in the run that fixes it. Closing `g3-integrate` was refused with:
@@ -135,6 +146,40 @@ choice the plan left open; **engine-semantics work where being subtly wrong is i
 - Anything more mechanical — **Sonnet**. The g3 rework implementer ran on Sonnet against a
   demonstrated target and did it cleanly.
 
+## HANDOFF DOCTRINE — two lessons both g3 reviewers reported independently
+
+Fold these into `feedback`; they are cheap and both cost real time.
+
+1. **A criterion asking for a suite delta must name the diff's PARENT commit, not a run-start
+   commit.** That one field produced the ±1 subtest mystery that cost two agents real work before
+   the first g3 reviewer settled it by extracting the true parent `5a69a30b` and the post commit
+   into clean sibling trees.
+2. **"Do not modify `scripts/` or `tests/`" is in direct tension with "re-run at least two
+   mutations yourself" — two reviewers in a row hit it.** Both resolved it well and differently, and
+   the handoff should sanction a method rather than leave each reviewer to invent one: the first
+   used `git archive` snapshots into temp trees (which also yields a controlled parent baseline for
+   free, but carries constant git-oracle failures from having no `.git`); the second used a
+   counterfactual probe script under its own review directory importing the shipped engine and the
+   test module's helpers (no missing-`.git` noise, no baseline subtraction). **Prefer the second for
+   "is this test vacuous"; prefer the first when a cross-commit baseline is needed.**
+
+## SURVEY TRIAGE CANDIDATES — do NOT lose these at the `triage` step
+
+`execute.json` carries six candidates (`tc1`–`tc6`). The **review surveys carry seven more** that are
+not on `execute.json`, and they will be missed unless read directly:
+
+- `.agent-work/issue-467-trip-semantics/g3-review/review.json` — **5 candidates**, including one
+  worth acting on: `thresholds_for`'s docstring claims its guarantee holds "for every input", which
+  is false for non-real-number arguments (`Decimal('NaN')` raises; an object with custom
+  `__gt__`/`__rsub__` defeats both clamps and produced `(1000.08, 1000.15)`). **Unreachable from any
+  shipped path** — the fix is to reword to "every real-number input", not to add a guard. Also a
+  Fowler duplicated-code flag: `thresholds_for(model, _gate_headroom_tokens(...))` is written twice
+  (`:1485`, `:1542`), and one private helper would make "shown == judged" *structural* and delete
+  M11/M12's failure mode entirely.
+- `.agent-work/issue-467-trip-semantics/g3-rework-review/review.json` — **2 candidates** (the M15
+  TOTAL label, **already fixed by me**, and the absent `_block_ns` test helper — one call site,
+  correctly not abstracted).
+
 ## OPEN, for the Admiral — carry these up, do not decide them
 
 - **The stale installed engine (above).** Reinstall, or rule that the run continues on it
@@ -174,7 +219,7 @@ Three of them did not survive first contact.
 
 ## REMAINING INSTRUMENT DEFECTS FOR THE EPIC LEDGER
 
-1. **The stale installed workbench engine** — above. The reviewer bundle was reinstalled at the last
+1. **Both installed engine bundles are stale** — above. The reviewer bundle was reinstalled at the last
    seam; **the workbench bundle was not**, and it is the one driving the spine.
 2. **Review surveys collide.** The two g3 reviews would have overwritten each other's sidecars; I
    avoided it only by naming the second survey directory `g3-rework-review/` by hand. The first g3
