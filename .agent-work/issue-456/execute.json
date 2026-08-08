@@ -442,7 +442,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
         }
       ],
       "constraints": [
@@ -473,11 +474,32 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "artifact": ".agent-work/issue-456/crew-handoffs/g1-implement-RESULT.md",
+            "crew": "constellation/issue-456/g1/implementer/attempt-2 (successor to attempt-1, which parked cleanly at a context seam)",
+            "crew_verification": "run_crew.py --verify-result -> 'fresh (completed)'.",
+            "blockers": "none unresolved",
+            "what_shipped": "scripts/code_map/checks.py REWRITTEN, not ported. It was print-only: every function printed, run() ended in a literal 'return 0', and its own docstring admitted it gated nothing. Now a CHECKS registry over a MapUnderCheck reading the stores and pages directly; run() returns 1 on any failure; a missing tree or store is a FAILURE, not a skip. Six checks ship.",
+            "falsifiability": "Every one of the six was shown RED under a mutation of the property it guards, with a nonzero exit, each against an unmutated positive control, and each mutation applied to a COPIED package so the shipped tree was never touched. Then every one was attacked ONCE MORE with a mutation its author did not design for it -- including the predecessor's three, which had only ever been attacked by their own author. That second pass is the standing lesson from g0 being applied rather than quoted.",
+            "determinism_design": "The rebuild check runs two builds in SEPARATE PROCESSES with PYTHONHASHSEED 0 vs 1. A single process shares one seed and structurally cannot observe this class of bug -- a nondeterminism check run in-process would have been another check that cannot fail. Killed by dropping a sorted(): 'same length, different bytes'.",
+            "inbound_attribution": "A page's caller set is compared against an independent StoreScan -- a second derivation, not the same expression twice. Killed two ways: dropping 'reads' ('says 4 inbound sites, the store has 5') and caller-misattribution ('names [] as callers, the store has [pkg.far]').",
+            "red_invariant": "The accounting invariant is asserted and RED BY DESIGN: pages - 1 - modules = 3648 - 1 - 112 = 3535 against entity_pages 3536, because Verdict.md exists with no verdict.md beside it. g2 owns the rename. Marked strict-xfail so the XPASS turns the suite red when g2 lands and forces the marker off.",
+            "crew_caught_a_defect_in_my_instruction": "IMPORTANT, and a correction to the Commander. I specified a BARE xfail(strict=True). The crew proved that would XPASS on a case-sensitive filesystem -- on Linux both Verdict.md and verdict.md exist, so the invariant is GREEN today and strict XPASS is a failure. My instruction would have turned CI red on Linux while looking correct on this Windows machine. The crew gated the marker on CASE_INSENSITIVE_FS instead. This is the second time at this run that a crew has correctly overruled a Commander handoff; both times the crew was right, and both times it was caught by running the thing rather than reading it.",
+            "suite": "1729 passed, 2 skipped, 1 xfailed, 651 subtests passed. Baseline was 1709 passed / 2 skipped / 0 failed: +20 passed, 0 failed. Gate subsets: -k 'determinism or invariant' -> 8 passed, 1 xfailed.",
+            "consequence_for_later_gates": "python -m scripts.code_map check NOW EXITS 1 on this repository, correctly, until g2 fixes the collision. Any later gate or CI wiring that runs `check` must expect exit 1 until then -- gs in particular. Flagged so it is not mistaken for a regression."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-review": {
@@ -489,7 +511,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received (e-g1-implement-1); crew attempt-2 verified 'fresh (completed)'."
         }
       ],
       "postconditions": [
@@ -509,7 +532,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1887,6 +1910,13 @@
       "why": "g0 CLOSED -- the code map now runs behind a real entrypoint. Package + CLI run extract -> render end to end on this repo; discovery enumerates exactly the mappable corpus with .agent-work/ excluded; the bundling question is RESOLVED on the record (option (b), install_constellation.py:123-137, four guards falsified in two directions), not deferred. Three findings across two BLOCK reviews, all closed: B1 line numbers stripped from page headers per Tommy's ruling (0 of 3535 headers carry a position, all 3535 keep path + ', N lines'); B2 the report's page count no longer counts write calls; B3 the docstring at tests/test_code_map.py:127 no longer claims a tree-derived count can be wrong. A THIRD closing review returned APPROVE (e-g0-integrate-1, crew attempt-3, verified 'fresh (completed)' -- the first g0 crew to verify cleanly through the tool). It attacked with SEVEN mutations no author chose, all RED, and found no fourth cannot-fail sibling. I did not take it on trust: I ran a mutation of my own choosing and on no crew's list -- EXCLUDED_PREFIXES emptied -- and got 4 failed, exit 1, restored byte-identical (sha256 bed4ccf35900e0e8 both sides), baseline back to 17 passed. FOUND AND FIXED AT THIS GATE, AFFECTING ALL 11: c1 was authored as two commands joined by the prose word 'AND' and so could only ever fail through the engine's POSIX shell. Repaired in all 11 gates via amend/retext-check -- ' && ' plus env -u FORCE_COLOR -u PYTHONIOENCODING on each half per tc3/tc7 -- and filed as tc29. The check that just passed is therefore the FIRST time a gate's c1 actually executed. STANDING LESSON for the remaining ten gates: reproducing a falsifier its author designed proves only that probe works; attack with a mutation the author did NOT choose. NOT DONE HERE BY RULING: the pages-minus-1-minus-modules vs entity_pages invariant (3535 vs 3536, the lost Verdict/verdict page) is real and goes to g1 with tc17 -- asserting it today ships RED, because g2 owns the rename. tc24 corrects tc18 (root is 'sizes', feeding three fields; counting the tree again is NOT the fix). New: tc26 zero-byte pages, tc27 no IMPLEMENTER_RESULT when the Commander does the fix itself, tc28 preconditions attested before the artifact satisfying them existed (a fair catch against me), tc29 the unrunnable check.",
       "mechanical": false,
       "ts": "2026-08-08T00:42:39.970954+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g1-implement",
+      "why": "g1 BUILD DONE. checks.py rewritten, not ported -- it was print-only with a literal 'return 0' whose own docstring admitted it gated nothing. Now a CHECKS registry over a MapUnderCheck; run() returns 1 on any failure; a missing tree or store is a FAILURE, not a skip. SIX checks ship. Every one shown RED under a mutation of the property it guards with a nonzero exit, each against an unmutated positive control, each mutation applied to a COPIED package so the shipped tree was never touched -- and then every one attacked ONCE MORE with a mutation its author did not design for it, including the predecessor crew's three. That is g0's standing lesson applied rather than quoted. Determinism is measured across two SEPARATE PROCESSES with PYTHONHASHSEED 0 vs 1, because a single process shares one seed and structurally cannot see that bug class; killed by dropping a sorted(). Inbound attribution compares a page's caller set against an independent StoreScan -- a second derivation, not the same expression twice. THE ACCOUNTING INVARIANT IS ASSERTED AND RED BY DESIGN: 3648-1-112=3535 vs entity_pages 3536, the Verdict/verdict collision, owned by g2, strict-xfail so the XPASS forces the marker off when g2 lands. THE CREW CORRECTLY OVERRULED MY HANDOFF: I specified a BARE xfail(strict=True); on a case-sensitive filesystem both pages exist, the invariant is green, and strict XPASS is a failure -- my instruction would have turned CI red on Linux while looking right on this Windows box. Gated on CASE_INSENSITIVE_FS instead. Second time this run a crew has overruled a Commander handoff and been right; both times by running the thing rather than reading it. Suite 1729 passed / 2 skipped / 1 xfailed, +20 passed and 0 failed against the 1709 baseline. CARRY FORWARD: 'python -m scripts.code_map check' now exits 1 on this repo, correctly, until g2 fixes the collision -- gs and any CI wiring must expect that and not read it as a regression. Predecessor attempt-1 parked cleanly at a context seam and attempt-2 finished on its plan; tc30 filed against --abandon --relaunch, which registered attempt-2 and then hung without spawning it.",
+      "mechanical": false,
+      "ts": "2026-08-08T01:39:11.919989+00:00"
     }
   ],
   "amendments": [

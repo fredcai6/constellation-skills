@@ -4,32 +4,41 @@ If this session dies, a fresh agent resumes from exactly these five lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch (the PID changes every time).
 
-- **step:** execute · item `g1-implement` — **in-progress, implementer crew
-  dispatched.** **`g0` IS FULLY CLOSED** on an APPROVE verdict
-  (`e-g0-integrate-1`); do **not** reopen it and do **not** re-dispatch any g0
-  crew — all seven are terminal (`recover_crews`: 0 unresolved).
+- **step:** execute · item `g1-review` — **in-progress, reviewer crew
+  dispatched.** `g0` and `g1-implement` are both **complete**; do **not** reopen
+  either and do **not** re-dispatch any g0 crew or the g1 implementer.
 
-  Crew: handoff `crew-handoffs/g1-implement.md`, slot
-  `constellation/issue-456/g1/implementer/attempt-1`, result expected at
-  `crew-handoffs/g1-implement-RESULT.md`.
+  Crew: handoff `crew-handoffs/g1-review.md`, slot
+  `constellation/issue-456/g1/reviewer/attempt-1`, result expected at
+  `crew-handoffs/g1-review-RESULT.md`. On APPROVE: attach as `review-result`
+  with `--field verdict=APPROVE`, then `start` + `advance g1-integrate`. On
+  BLOCK: fix at `g1` and re-review — do **not** attest around c2.
 
-  **`g1` REWRITES `scripts/code_map/checks.py`** — today every function prints
-  and `run()` ends in a literal `return 0`, so a broken map passes. Three
-  families only: nonzero exit on failure; determinism (double build
-  byte-identical); structural assertions provable by mutation (caller set vs an
-  independent full scan; referenced-by count vs its own list). Corpus-count
-  thresholds and render-shape baselines belong to `gB`, NOT here.
+  **`g1` BUILD IS DONE AND COMMITTED** (`ba8e78aa` + `44eeb740`, pushed).
+  `checks.py` rewritten, not ported: a `CHECKS` registry over a `MapUnderCheck`,
+  `run()` returns 1 on any failure, a missing tree or store is a FAILURE not a
+  skip. **Six checks**, each shown RED under a mutation of the property it
+  guards and each attacked again with a mutation its author did not design for.
+  Determinism is measured across **two separate processes** with `PYTHONHASHSEED`
+  0 vs 1 — one process shares a seed and structurally cannot see that bug class.
+  Suite **1729 passed / 2 skipped / 1 xfailed** (+20, 0 failed, vs the 1709
+  baseline).
 
-  **THE KEY CALL IN THIS GATE, already made and written into the handoff:** the
-  best check available is RED today. `pages - 1 - modules` = 3535 vs
-  `entity_pages` = 3536, differing by exactly the `Verdict`/`verdict` filename
-  collision. `g1` ASSERTS it; `g2` owns the rename that fixes it. It ships as
-  `xfail(strict=True)` so that when `g2` lands the rename the XPASS turns the
-  suite red and forces the marker off — the defect cannot be silently left
-  behind and the check cannot be silently left disabled. `tc26` (a zero-byte
-  page is invisible to `rglob`) folds in here too. **Do NOT "fix"
-  `entity_pages` by counting the tree again** — `tc24` corrects `tc18`; the root
-  is `sizes`, which feeds three fields.
+  **CARRY FORWARD TO EVERY LATER GATE:** `python -m scripts.code_map check` now
+  **exits 1 on this repository, correctly**, until `g2` fixes the filename
+  collision. `gs` and any CI wiring must expect that and must not read it as a
+  regression.
+
+  **The red-by-design invariant:** `pages - 1 - modules` = 3535 vs
+  `entity_pages` = 3536, the `Verdict`/`verdict` collision, owned by `g2`,
+  asserted as strict-xfail so the XPASS forces the marker off when `g2` lands.
+  **The crew correctly overruled my handoff here:** I specified a BARE
+  `xfail(strict=True)`; on a case-sensitive filesystem both pages exist, the
+  invariant is green, and strict XPASS is a failure — it would have turned CI
+  red on Linux while looking right on this Windows box. It is gated on
+  `CASE_INSENSITIVE_FS` instead. **Do NOT "fix" `entity_pages` by counting the
+  tree again** — `tc24` corrects `tc18`; the root is `sizes`, which feeds three
+  fields.
 
   **ALL 11 GATE COMMAND CHECKS WERE REPAIRED** at `g0-integrate` (`tc29`): each
   was authored as two commands joined by the prose word `AND` and could only

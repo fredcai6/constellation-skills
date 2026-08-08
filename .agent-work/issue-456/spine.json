@@ -855,6 +855,11 @@
       "id": "tc29",
       "from": "execute",
       "statement": "tc29 A CHECK THAT COULD ONLY EVER FAIL SHIPPED IN THE PLAN, IN ALL 11 GATES. Every gate's c1 postcondition was authored as two shell commands joined by the prose word 'AND'. The engine runs command checks verbatim through a POSIX shell, so the text always died with 'file or directory not found: AND' regardless of the tests. This is the mirror image of the defect shape g0 and g1 exist to hunt: a check that cannot go green is as informationless as one that cannot go red, and nothing between planning and g0-integrate caught it -- gen_execute.py did not validate that a command check parses, and the plan review did not run one. Repaired under amend authority commander (' AND ' -> ' && ', plus env -u FORCE_COLOR -u PYTHONIOENCODING on each half, per tc3/tc7). CANDIDATE: have the engine, or gen_execute.py, refuse to accept a command-kind check whose text does not parse as a shell command -- or at minimum dry-run each command check once at plan time."
+    },
+    {
+      "id": "tc30",
+      "from": "execute",
+      "statement": "tc30 run_crew.py --abandon --relaunch REGISTERS THE NEW ATTEMPT AND THEN HANGS trying to spawn it, leaving a phantom 'running' entry with nothing behind it. Measured at g1: the call timed out at 120s; attempt-2 was already in the registry as 'running', so the next --dispatch external was REFUSED as a duplicate naming a crew that had never started. Same family as tc22/tc25 -- the registry records intent to launch before the launch succeeds, and there is no state for 'registered but never spawned'. Workaround used: --abandon alone (which works), then dispatch the subagent by hand into the already-registered slot. CANDIDATE: make --relaunch register only after a successful spawn, or give the wrapper an explicit 'registered, not started' status that --dispatch can adopt instead of refusing."
     }
   ],
   "blockers": [],
@@ -863,7 +868,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T00:35:47.621650+00:00",
+    "last_heartbeat": "2026-08-08T01:08:32.793303+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
