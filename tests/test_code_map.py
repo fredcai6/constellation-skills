@@ -21,7 +21,9 @@ exercising the filter.
 import contextlib
 import io
 import json
+import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -32,12 +34,69 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.code_map import cli, discovery  # noqa: E402
+from scripts.code_map import checks, cli, discovery  # noqa: E402
+
+CODE_MAP = ROOT / "scripts" / "code_map"
 
 
 def _git(*args, cwd):
     return subprocess.run(("git",) + args, cwd=str(cwd), check=True,
                           capture_output=True, text=True)
+
+
+class HarnessError(AssertionError):
+    """The mutation did not land. NOT a killed check -- a broken harness.
+
+    Same rule as tests/test_mutation_floor.py: a substitution that silently
+    fails to match produces a run that is indistinguishable from a passing one,
+    so the harness must fail LOUDLY instead of reporting a green."""
+
+
+def mutated_package(tmpdir, module, subs):
+    """A COPY of scripts/code_map with `subs` applied to one of its modules.
+
+    The copy is what lets a check be attacked without touching the shipped
+    tree: `python -m scripts.code_map` run from `tmpdir` imports the mutated
+    package, and `checks.PACKAGE_HOST` is derived from the module's own
+    location, so the determinism check inside the copy rebuilds through the
+    copy too.
+
+    Every substitution must occur exactly once in the original and zero times
+    after, and the replacement's count must go UP by exactly one -- a count
+    delta, not `in`, so a replacement that already appears elsewhere cannot fake
+    the assertion."""
+    dest = Path(tmpdir) / "scripts" / "code_map"
+    shutil.copytree(CODE_MAP, dest, ignore=shutil.ignore_patterns("__pycache__"))
+    original = (CODE_MAP / module).read_text(encoding="utf-8")
+    text = original
+    for old, new in subs:
+        if original.count(old) != 1:
+            raise HarnessError(
+                f"HARNESS ERROR: anchor occurs {original.count(old)} time(s) in "
+                f"{module}, expected exactly 1. The module was edited without "
+                f"updating this harness. This is NOT a caught mutation.\n  anchor: {old!r}")
+        text = text.replace(old, new, 1)
+    for old, new in subs:
+        if text.count(old) != 0:
+            raise HarnessError(f"HARNESS ERROR: {old!r} survived the substitution")
+        if text.count(new) != original.count(new) + 1:
+            raise HarnessError(
+                f"HARNESS ERROR: replacement {new!r} did not increase by exactly one "
+                f"(before={original.count(new)}, after={text.count(new)})")
+    (dest / module).write_text(text, encoding="utf-8", newline="\n")
+    return Path(tmpdir)
+
+
+def run_code_map(host, *args):
+    """`python -m scripts.code_map <args>` against the package under `host`.
+
+    `python`, never `py`: the launcher has no pytest and no way to reach this
+    package, and its failure reads like a clean run."""
+    env = dict(os.environ)
+    env.pop("FORCE_COLOR", None)
+    env.pop("PYTHONIOENCODING", None)
+    return subprocess.run([sys.executable, "-m", "scripts.code_map", *args],
+                          cwd=str(host), capture_output=True, text=True, env=env)
 
 
 def _make_repo(tmp: Path):
@@ -116,6 +175,78 @@ def _make_collision_repo(tmp: Path):
     (tmp / "pkg" / "thing.py").write_text(_COLLIDING_SOURCE, encoding="utf-8", newline="\n")
     _git("init", "-q", cwd=tmp)
     _git("add", "pkg/__init__.py", "pkg/thing.py", cwd=tmp)
+
+
+_IMPORTING_SOURCE = '''"""A module with enough imports that a hash-ordered listing visibly churns."""
+import collections
+import json
+import os
+import pathlib
+import re
+import subprocess
+import sys
+import textwrap
+
+
+def gather():
+    """Name every import, so the extractor records each one."""
+    return (collections, json, os, pathlib, re, subprocess, sys, textwrap)
+'''
+
+
+def _make_import_repo(tmp: Path):
+    """A repo whose module imports eight stdlib names.
+
+    Eight, not one: the determinism mutation below drops a `sorted()` around a
+    SET of import names, and a one- or two-element set orders the same under
+    every hash seed — the fixture has to be wide enough for the mutation to
+    show."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "wide.py").write_text(_IMPORTING_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/wide.py", cwd=tmp)
+
+
+_CALLEE_SOURCE = '''"""The module other modules point at."""
+
+
+def target():
+    """Called from this module and from another."""
+    return 1
+
+
+def near():
+    """Calls target from inside its own module."""
+    return target() + target()
+'''
+
+_FAR_SOURCE = '''"""A module that calls and reads across the module boundary."""
+from pkg.callee import target
+
+
+def far():
+    """Call it twice, then hand the function itself back."""
+    target()
+    target()
+    return target
+'''
+
+
+def _make_cross_module_repo(tmp: Path):
+    """A repo whose inbound edges span both directions the rendered line
+    distinguishes.
+
+    `pkg.callee:target` is called twice from its OWN module and called twice
+    plus read once from another, so its page has to say five sites in two
+    modules while naming only the other one. A fixture with references in one
+    direction only would let a check that drops half of them still pass."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "callee.py").write_text(_CALLEE_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "far.py").write_text(_FAR_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/callee.py", "pkg/far.py", cwd=tmp)
 
 
 #: A source position in a rendered page: a Python file path with a line number
@@ -240,6 +371,228 @@ class RenderedPageFormatTests(unittest.TestCase):
             with self.subTest(page=page.name):
                 self.assertIn("pkg/thing.py", header)
                 self.assertRegex(header, r", \d+ lines\b")
+
+
+class CheckExitCodeTests(unittest.TestCase):
+    """Gate g1: `check` must EXIT NON-ZERO on a map that lies.
+
+    Until g1 every check printed and `run()` ended in a literal `return 0`, so a
+    completely broken map passed. These tests are the floor under that: an
+    intact map exits 0, and a map with a page that exists but holds nothing
+    exits non-zero.
+
+    The empty page is `tc26`: the page count is `rglob("*.md")`, which counts a
+    file that was created and never written, so a zero-byte page is invisible in
+    every count the render report publishes."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_entity_repo(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _check(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = cli.main(["check", "--root", str(self.repo)])
+        return code, buf.getvalue()
+
+    def test_check_exits_zero_on_an_intact_map(self):
+        """The positive control. Without it, a `check` that always failed would
+        satisfy every other test in this class."""
+        code, out = self._check()
+        self.assertEqual(code, 0, out)
+
+    def test_check_exits_non_zero_when_a_page_is_empty(self):
+        page = self.repo / "map" / "pkg.thing" / "Widget.md"
+        self.assertTrue(page.read_text(encoding="utf-8").strip(),
+                        "input precondition: the page must have content to remove, "
+                        "or emptying it changes nothing and this test cannot fail")
+
+        page.write_text("", encoding="utf-8", newline="\n")
+
+        code, out = self._check()
+        self.assertNotEqual(code, 0, "an empty page passed `check`\n" + out)
+        self.assertIn("Widget.md", out)
+
+
+#: The renderer sorts a SET of import names before printing it. Drop the sort
+#: and the page tree's content starts depending on the interpreter's string
+#: hash seed — the classic build non-determinism, and invisible inside a single
+#: process because a seed is fixed for that process's life.
+HASH_ORDER_MUTATION = (
+    ('    ext = sorted({o.rstrip(":").replace(":", ".") for o, res in imps if res == "external"})\n',
+     '    ext = list({o.rstrip(":").replace(":", ".") for o, res in imps if res == "external"})\n'),
+)
+
+
+class DeterminismTests(unittest.TestCase):
+    """Gate g1: two builds from unchanged source must be byte-identical.
+
+    The comparison is over BYTES, and any non-empty diff is the failure. The
+    run report carries no timings for exactly this reason; adding one would put
+    a differing byte on every run and make this check unusable.
+
+    The red proof is a real mutation run end to end, not an assertion that one
+    would fail: a COPY of scripts/code_map has its `sorted()` removed, the whole
+    pipeline is rebuilt through the copy, and `check` must exit non-zero. The
+    unmutated copy is exercised first, so a red below is attributable to the
+    mutation rather than to running from a copy at all."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_import_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _package(self, subs=()):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        return mutated_package(tmp.name, "render.py", subs)
+
+    def test_two_builds_from_unchanged_source_are_byte_identical(self):
+        m = checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
+        self.assertEqual(checks.deterministic_rebuild(m), [])
+
+    def test_determinism_reports_every_differing_path_not_a_boolean(self):
+        """A reader needs to know WHICH page moved."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        left, right = Path(tmp.name) / "l", Path(tmp.name) / "r"
+        for tree in (left, right):
+            tree.mkdir()
+            (tree / "same.md").write_text("same\n", encoding="utf-8", newline="\n")
+        (left / "moved.md").write_text("a\n", encoding="utf-8", newline="\n")
+        (right / "moved.md").write_text("b\n", encoding="utf-8", newline="\n")
+        (left / "gone.md").write_text("x\n", encoding="utf-8", newline="\n")
+        (right / "extra.md").write_text("y\n", encoding="utf-8", newline="\n")
+
+        diff = checks.tree_diff(left, right)
+
+        self.assertEqual(len(diff), 3, diff)
+        self.assertTrue(any(d.startswith("gone.md:") for d in diff), diff)
+        self.assertTrue(any(d.startswith("extra.md:") for d in diff), diff)
+        self.assertTrue(any(d.startswith("moved.md:") for d in diff), diff)
+        self.assertFalse(any(d.startswith("same.md") for d in diff), diff)
+
+    def test_determinism_baseline_an_unmutated_package_copy_passes(self):
+        """The positive control for the mutation below."""
+        host = self._package()
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertEqual(proc.returncode, 0,
+                         "HARNESS ERROR: the unmutated copy does not pass its own "
+                         f"checks, so no red below proves anything\n{proc.stdout}\n{proc.stderr}")
+
+    def test_determinism_goes_red_when_the_renderer_orders_pages_by_hash(self):
+        host = self._package(HASH_ORDER_MUTATION)
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: a renderer whose output depends on the "
+                            f"interpreter's hash seed passed `check`\n{proc.stdout}")
+        # "FAIL deterministic-rebuild", not "deterministic-rebuild": the bare
+        # name also appears on the passing line, so it would match a red caused
+        # by some other check entirely.
+        self.assertIn("FAIL deterministic-rebuild", proc.stdout)
+        self.assertIn("INDEX.md", proc.stdout)
+
+
+#: Inbound edges are `calls` AND `reads`. Count only the calls and every page
+#: that is handed around as a value under-reports who depends on it.
+DROP_READS_MUTATION = (
+    ('            if p in ("calls", "reads"):\n',
+     '            if p in ("calls",):\n'),
+)
+
+#: Attribute an inbound edge to the module that OWNS the target instead of the
+#: module the call came from. Every caller then looks local, and the page reads
+#: "this module only" -- a map that hides every cross-module dependency while
+#: still reporting a plausible number.
+WRONG_CALLER_MUTATION = (
+    ("                inbound[o][intern(modof(s))] += 1\n",
+     "                inbound[o][intern(modof(o))] += 1\n"),
+)
+
+
+class InboundAttributionTests(unittest.TestCase):
+    """Gate g1: a page's caller set must match an independent full scan.
+
+    The renderer builds its inbound index while loading the store;
+    `checks.StoreScan` builds one again from the raw statements, and the
+    comparison is against the RENDERED PAGE rather than against the renderer's
+    own dictionary — a check that reads its expected value out of the code under
+    test can only ever agree with it.
+
+    Both mutations below are silent by design: the map still builds, every page
+    still renders, and the number on the page is still plausible. Nothing but a
+    second derivation can tell them from the truth."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_cross_module_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _package(self, subs=()):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        return mutated_package(tmp.name, "render.py", subs)
+
+    def _map(self):
+        return checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
+
+    def test_caller_sets_agree_with_an_independent_scan_of_the_store(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        m = self._map()
+
+        stated = [checks.parse_refs(line)
+                  for page, _ in m.entity_pages
+                  for line in checks.refs_lines(m.text(page))]
+        self.assertTrue(
+            any(r and r.sites > 1 and r.modules > 1 and r.named for r in stated),
+            "input precondition: some page must be referenced from more than one "
+            "module, or this check compares nothing but empty caller sets and "
+            "cannot fail")
+
+        self.assertEqual(checks.inbound_attribution(m), [])
+
+    def test_caller_count_goes_red_when_the_renderer_forgets_reads(self):
+        host = self._package(DROP_READS_MUTATION)
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: a page under-reporting its inbound "
+                            f"sites passed `check`\n{proc.stdout}")
+        self.assertIn("FAIL inbound-attribution", proc.stdout)
+        self.assertIn("inbound sites", proc.stdout)
+
+    def test_caller_modules_go_red_when_the_renderer_misattributes_the_caller(self):
+        host = self._package(WRONG_CALLER_MUTATION)
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: a map that credits every caller to the "
+                            f"callee's own module passed `check`\n{proc.stdout}")
+        self.assertIn("FAIL inbound-attribution", proc.stdout)
+        self.assertIn("as callers", proc.stdout)
 
 
 class DiscoveryTests(unittest.TestCase):

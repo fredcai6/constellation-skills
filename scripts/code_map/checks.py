@@ -1,211 +1,397 @@
-"""Print-only diagnostics over the built map: non-ASCII provenance, entity
-reconciliation, store-only definition sites, and the function-local-import
-measurement.
+"""Checks over the built map that CAN FAIL.
 
-These PRINT. They assert nothing and they never set an exit code, so a broken
-map does not fail a run today. Gate g1 rewrites them into real checks; this
-port exists only to keep the `check` subcommand wired and the numbers readable
-in the meantime.
+`check` exits non-zero when any invariant below is violated. Before gate g1
+every function here printed a measurement, asserted nothing, and `run()` ended
+in a literal `return 0`, so a completely broken map passed. The measurements are
+gone: they were diagnostics wearing a suite's clothes.
 
-The prototype's fourth section is DROPPED. It spot-checked one hardcoded file
-of another repository (`scripts/validate_segment_map_662.py`) and printed one
-named page from it, so there is nothing here for it to look at. What it
-demonstrated -- that every top-level def in a source file gets a page -- is a
-real check, and it belongs in g1's rewrite as a rule over the whole corpus
-rather than as one file's spot check.
+What belongs here
+-----------------
+A **move-invariant** relates two independently-derived facts and holds at any
+corpus size: `pages - 1 - modules == entity_pages`, a page's caller list against
+a second scan of the store, a page that exists and holds nothing. It survives
+every later gate that changes the map's shape, because it never mentions the
+shape's numbers.
 
-Both prototype halves (`checks.py` and `checks2.py`) are folded into this one
-module; they read the same two stores and split only because they were written
-on different days.
+A **baseline** pins a remembered constant -- "103 modules", "3411 entities", a
+page's rendered text, the header format, the section order. It goes red at every
+gate that legitimately moves the map, so it would be deleted rather than
+believed. Baselines belong to `gB`, after the last gate that moves the numbers.
+
+The distinction is not "does it mention a count". It is: does the expected value
+come from a memory of this corpus, or from the map itself?
+
+What these checks read
+----------------------
+The store and the supplement DIRECTLY, never through `render.load_stores`. A
+check whose expected value is computed by the code under test can only ever
+agree with it, which is not a check. So the store scan below is written a second
+time on purpose, and it is compared against the RENDERED PAGES -- the artifact a
+reader actually gets -- rather than against the renderer's own in-memory state.
+
+What they do NOT prove is recorded honestly beside each check.
 """
-import ast
 import collections
 import json
 import os
 import pathlib
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
 
-from .discovery import discover_corpus
 from .extract import STATEMENTS_NAME
 from .supplement import SUPPLEMENT_NAME
 
+#: How many offending items a failing check names before it summarizes. A check
+#: reports every failure it found in its count; it prints the first few.
+MAX_REPORTED = 10
 
-def _statements(artifacts):
-    with open(pathlib.Path(artifacts) / STATEMENTS_NAME, encoding="utf-8") as f:
-        for line in f:
-            yield json.loads(line)
-
-
-def non_ascii_provenance(supp, out):
-    """(b) every non-ASCII line in the page tree should trace to a docstring or
-    a source value the renderer copied through."""
-    ent, mods = supp["entities"], supp["modules"]
-    docstring_text = set()
-    for m, ms in mods.items():
-        for fld in ("doc_summary", "doc_body"):
-            if ms.get(fld):
-                docstring_text.update(ms[fld].split("\n"))
-    for k, e in ent.items():
-        for fld in ("doc_summary", "doc_body"):
-            if e.get(fld):
-                docstring_text.update(e[fld].split("\n"))
-        for a in (e.get("attrs") or []):
-            if a.get("value"):
-                docstring_text.add(a["value"])
-            if a.get("annotation"):
-                docstring_text.add(a["annotation"])
-    for m, ms in mods.items():
-        for a in (ms.get("attrs") or []):
-            if a.get("value"):
-                docstring_text.add(a["value"])
-            if a.get("annotation"):
-                docstring_text.add(a["annotation"])
-    # attr/doc text gets whitespace-collapsed or truncated in the renderer
-    collapsed = {" ".join(t.split()) for t in docstring_text}
-
-    nonascii = []
-    unexplained = []
-    npages = 0
-    for f in sorted(pathlib.Path(out).rglob("*.md")):
-        npages += 1
-        for i, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
-            if any(ord(c) > 127 for c in line):
-                nonascii.append((str(f), i, line))
-                probe = " ".join(line.strip().lstrip("- ").split())
-                if not any(probe in c or c in probe for c in collapsed):
-                    unexplained.append((str(f), i, line[:90]))
-
-    print("== (b) non-ASCII ==")
-    print("pages scanned:", npages)
-    print("non-ascii lines:", len(nonascii))
-    print("not traceable to a docstring/source value:", len(unexplained))
-    for t in unexplained[:15]:
-        print("   ", ascii(t))
+#: The directory that holds the `scripts` package, so a rebuild can be launched
+#: as `python -m scripts.code_map` in a FRESH process. Taken from this module's
+#: own location, so a mutated copy of the package rebuilds through the mutated
+#: copy -- which is what lets a mutation test drive this check at all.
+PACKAGE_HOST = pathlib.Path(__file__).resolve().parents[2]
 
 
-def reconciliation(root, supp, artifacts):
-    """(c) statements `contains` vs the supplement's AST walk.
+class MapUnderCheck:
+    """The built map, loaded the way a reader gets it: pages off disk, and the
+    stores read straight from their files.
 
-    Reconcile on SOURCE POSITION, not symbol: the store's symbols are not
-    unique (D2 flattens nested names), so a symbol-keyed dict silently loses
-    sites."""
-    ent, mods = supp["entities"], supp["modules"]
+    Deliberately not a wrapper over `render.py`. The renderer's indexes are the
+    thing under test; rebuilding them here from the same source is what makes a
+    disagreement meaningful."""
+
+    def __init__(self, root, artifacts, out):
+        self.root = pathlib.Path(root)
+        self.artifacts = pathlib.Path(artifacts)
+        self.out = pathlib.Path(out)
+        self._supplement = None
+        self._pages = None
+        self._scan = None
+        self._text = {}
+
+    # -- the stores ------------------------------------------------------
+
+    @property
+    def supplement(self):
+        if self._supplement is None:
+            self._supplement = json.loads(
+                (self.artifacts / SUPPLEMENT_NAME).read_text(encoding="utf-8"))
+        return self._supplement
+
+    @property
+    def entities(self):
+        return self.supplement["entities"]
+
+    @property
+    def modules(self):
+        return self.supplement["modules"]
+
+    def statements(self):
+        with open(self.artifacts / STATEMENTS_NAME, encoding="utf-8") as f:
+            for line in f:
+                yield json.loads(line)
+
+    @property
+    def scan(self):
+        """The store read a SECOND time -- see `StoreScan`."""
+        if self._scan is None:
+            self._scan = StoreScan(self.statements())
+        return self._scan
+
+    def symbol_of(self, key):
+        """The store symbol for a supplement key, joined on (file, line).
+
+        The renderer performs the same join to decide whose inbound edges a page
+        shows. Re-deriving it here is not independent OF the join -- it is the
+        same two facts read twice -- so `entity_symbol_join` cross-checks the
+        join's result against the entity's own name instead of trusting it."""
+        entity = self.entities[key]
+        module = self.modules.get(key.split(":", 1)[0])
+        if module is None:
+            return None
+        return self.scan.defined_at.get((module["file"], entity["line"]))
+
+    # -- the page tree ---------------------------------------------------
+
+    @property
+    def pages(self):
+        """Every page in the tree, sorted. The same `rglob` the render report
+        counts with -- that is the point: the report's number is checked against
+        what the tree is STRUCTURALLY required to hold, not against itself."""
+        if self._pages is None:
+            self._pages = sorted(self.out.rglob("*.md"))
+        return self._pages
+
+    def text(self, page):
+        if page not in self._text:
+            self._text[page] = page.read_text(encoding="utf-8")
+        return self._text[page]
+
+    def title_key(self, page):
+        """What a page SAYS it is about: its title line.
+
+        Pages are classified by this rather than by filename, so a page that
+        landed on another page's path is still read as the entity it
+        describes."""
+        lines = self.text(page).splitlines()
+        if lines and lines[0].startswith("# "):
+            return lines[0][2:].strip()
+        return None
+
+    @property
+    def entity_pages(self):
+        """(page, supplement key) for every page whose title names an entity."""
+        out = []
+        for page in self.pages:
+            key = self.title_key(page)
+            if key in self.entities:
+                out.append((page, key))
+        return out
+
+    def rel(self, path):
+        return path.relative_to(self.out).as_posix()
+
+
+class StoreScan:
+    """A second reading of the statement store, written from the schema rather
+    than borrowed from `render.load_stores`.
+
+    Two facts are collected:
+
+    - `defined_at`  (file, 1-based line) -> store symbol, from `contains`. The
+      store's `q.line` is 0-based and the schema does not say so (defect D1,
+      owned by g3), hence the +1.
+    - `inbound`     target symbol -> {caller module: sites}, from every `calls`
+      and `reads` statement that did not resolve locally.
+
+    **What a disagreement here does and does not prove.** This scan and the
+    renderer read the SAME store and share its two schema conventions. So this
+    catches the renderer losing, miscounting or misattributing what the store
+    says -- and it does NOT audit the store against the source. An extractor
+    that never recorded a call, or recorded it at the wrong line, agrees with
+    itself and passes. That is a real limit, stated rather than narrowed away."""
+
+    def __init__(self, statements):
+        self.defined_at = {}
+        self.inbound = collections.defaultdict(collections.Counter)
+        for st in statements:
+            predicate = st["p"]
+            if predicate == "contains":
+                q = st["q"]
+                self.defined_at[(q["file"], q["line"] + 1)] = st["o"]
+            elif predicate in ("calls", "reads") and st.get("res") != "local":
+                caller_module = st["s"].split(":", 1)[0]
+                self.inbound[st["o"]][caller_module] += 1
+
+
+# ------------------------------------------------------- the rendered line
+# The ONE place that knows how a page spells its inbound references. Every
+# check below works in terms of what the line MEANS -- sites, distinct caller
+# modules, and which of them are named -- so a later gate that respells it
+# updates this and nothing else.
+
+REFS_PREFIX = "referenced by: "
+REFS_NONE = "none found"
+REFS_SELF_ONLY = re.compile(r"^(\d+) sites, this module only$")
+REFS_MODULES = re.compile(r"^(\d+) sites in (\d+) modules \((.*)\)$")
+
+#: sites: total inbound edges. modules: how many distinct modules they came
+#: from. named: the modules the line actually spells out -- the renderer omits
+#: the page's own module from that list, so `named` can be one short of
+#: `modules` by design.
+Refs = collections.namedtuple("Refs", "sites modules named")
+
+
+def parse_refs(line):
+    """The rendered inbound line as numbers, or None when it is not one of the
+    forms this map writes."""
+    body = line[len(REFS_PREFIX):].strip()
+    if body == REFS_NONE:
+        return Refs(0, 0, ())
+    match = REFS_SELF_ONLY.match(body)
+    if match:
+        return Refs(int(match.group(1)), 1, ())
+    match = REFS_MODULES.match(body)
+    if match:
+        named = tuple(n.strip() for n in match.group(3).split(",") if n.strip())
+        return Refs(int(match.group(1)), int(match.group(2)), named)
+    return None
+
+
+def refs_lines(text):
+    return [ln for ln in text.splitlines() if ln.startswith(REFS_PREFIX)]
+
+
+# ------------------------------------------------------------------ checks
+# Each check takes a MapUnderCheck and returns a list of human-readable
+# failures. An empty list is a pass. No check raises to signal a failure --
+# a raise is a broken check, and `run` lets it through rather than swallowing
+# it into a pass.
+
+
+def no_empty_pages(m):
+    """A page that exists and holds nothing is a page the map counts and a
+    reader cannot use.
+
+    `tc26`: the render report's `pages` is `rglob("*.md")`, which counts a file
+    that was created and never written, so a zero-byte page is invisible in
+    every number the report publishes. This is the check that sees it."""
+    return [f"{m.rel(p)}: page has no content"
+            for p in m.pages
+            if not p.read_text(encoding="utf-8").strip()]
+
+
+def inbound_attribution(m):
+    """Every page's caller set must match an independent full scan of the store.
+
+    Three facts per page, all compared against the second scan rather than
+    against the renderer: how many inbound sites, how many distinct modules
+    they came from, and which modules those are (less the page's own, which the
+    renderer leaves out of the list because the count already says `this
+    module`).
+
+    This is the check that notices a map that lies about who uses what -- the
+    single thing an agent reads the map FOR."""
+    failures = []
+    for page, key in m.entity_pages:
+        where = m.rel(page)
+        lines = refs_lines(m.text(page))
+        if len(lines) != 1:
+            failures.append(f"{where}: {len(lines)} inbound lines, expected exactly 1")
+            continue
+        stated = parse_refs(lines[0])
+        if stated is None:
+            failures.append(f"{where}: cannot read the inbound line: {lines[0]!r}")
+            continue
+
+        symbol = m.symbol_of(key)
+        truth = m.scan.inbound.get(symbol, {}) if symbol is not None else {}
+        own_module = key.split(":", 1)[0]
+        expected_named = tuple(sorted(set(truth) - {own_module}))
+
+        if stated.sites != sum(truth.values()):
+            failures.append(f"{where}: page says {stated.sites} inbound sites, "
+                            f"the store has {sum(truth.values())}")
+        if stated.modules != len(truth):
+            failures.append(f"{where}: page says {stated.modules} calling modules, "
+                            f"the store has {len(truth)}")
+        if tuple(sorted(stated.named)) != expected_named:
+            failures.append(f"{where}: page names {list(stated.named)} as callers, "
+                            f"the store has {list(expected_named)}")
+    return failures
+
+
+def _build_into(root, workdir, hash_seed):
+    """Build `root` into `workdir` in a FRESH PROCESS. Returns the page tree, or
+    a failure string.
+
+    A fresh process is the whole point. Set iteration order and dict rehashing
+    vary with the interpreter's string hash seed, and a seed is fixed for the
+    life of a process -- so two builds inside ONE process share it and a
+    hash-ordered listing looks perfectly stable. The two seeds are pinned to
+    different values rather than left to per-process randomization so the check
+    exercises that difference every run instead of once in a while."""
+    out = pathlib.Path(workdir) / "map"
+    proc = subprocess.run(
+        [sys.executable, "-m", "scripts.code_map", "build", "--root", str(root),
+         "--artifacts", str(pathlib.Path(workdir) / "artifacts"), "--out", str(out)],
+        cwd=str(PACKAGE_HOST), capture_output=True, text=True,
+        env={**os.environ, "PYTHONHASHSEED": hash_seed},
+    )
+    if proc.returncode != 0:
+        return None, (f"rebuild (PYTHONHASHSEED={hash_seed}) exited "
+                      f"{proc.returncode}: {proc.stderr.strip()[-400:]}")
+    return out, None
+
+
+def _tree(root):
+    """relative posix path -> bytes, for every page in a rendered tree."""
     root = pathlib.Path(root)
-    cont_at = {}
-    nstmt = 0
-    for st in _statements(artifacts):
-        if st["p"] == "contains":
-            nstmt += 1
-            cont_at[(st["q"]["file"], st["q"]["line"] + 1)] = st["o"]   # D1: +1
-    supp_at = {(mods[k.split(":", 1)[0]]["file"], e["line"]): k for k, e in ent.items()}
-    print()
-    print("== (c) reconciliation ==")
-    print("store `contains` statements:", nstmt, "at", len(cont_at), "distinct positions")
-    print("distinct store symbols:",
-          len({v for v in cont_at.values()}), "(fewer than positions = D2 collisions)")
-    print("supplement entities:", len(ent), "at", len(supp_at), "distinct positions")
-    print("supplement positions with no store contains:", len(set(supp_at) - set(cont_at)))
-    store_only = sorted(set(cont_at) - set(supp_at))
-    print("store positions with no supplement entity:", len(store_only))
-    parent_kind = collections.Counter()
-    for f, ln in store_only:
-        try:
-            tree = ast.parse((root / f).read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        for n in ast.walk(tree):
-            for c in ast.iter_child_nodes(n):
-                if isinstance(c, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) \
-                        and c.lineno == ln:
-                    parent_kind[type(n).__name__] += 1
-    print("   their enclosing node:", dict(parent_kind),
-          "-- control-flow bodies the supplement's walk skips;",
-          "Module/ClassDef ones are same-name redefinitions the supplement dict shadows")
-    namediff = [(cont_at[p], supp_at[p]) for p in set(cont_at) & set(supp_at)
-                if cont_at[p] != supp_at[p]]
-    print("same position, different symbol (D2):", len(namediff))
-    for a, b in sorted(namediff)[:5]:
-        print("    store:", a, "\n    supp :", b)
+    return {p.relative_to(root).as_posix(): p.read_bytes()
+            for p in root.rglob("*") if p.is_file()}
 
 
-def store_only_sites(root, supp, artifacts):
-    """What the store sees that the supplement's body-walk does not."""
-    ent, mods = supp["entities"], supp["modules"]
-    root = pathlib.Path(root)
-    spos = {(mods[k.split(":", 1)[0]]["file"], e["line"]) for k, e in ent.items()}
-    store_only = []
-    for st in _statements(artifacts):
-        if st["p"] == "contains":
-            p = (st["q"]["file"], st["q"]["line"] + 1)
-            if p not in spos:
-                store_only.append((p, st["o"]))
-    print()
-    print("== store-only definition sites (%d) ==" % len(store_only))
-    for (f, ln), sym in sorted(store_only)[:6]:
-        try:
-            src = (root / f).read_text(encoding="utf-8").splitlines()
-        except Exception:
-            continue
-        ctx = "".join(x.strip() + " | " for x in src[max(0, ln - 3):ln])
-        print(f"  {f}:{ln}  {sym}\n     ...{ctx[:110]}")
+def tree_diff(left, right):
+    """Every path on which two rendered trees disagree. Empty list = identical.
+
+    Not a boolean: the failure a reader needs is WHICH page moved."""
+    a, b = _tree(left), _tree(right)
+    out = []
+    for path in sorted(set(a) - set(b)):
+        out.append(f"{path}: in the first build only")
+    for path in sorted(set(b) - set(a)):
+        out.append(f"{path}: in the second build only")
+    for path in sorted(set(a) & set(b)):
+        if a[path] != b[path]:
+            out.append(f"{path}: {len(a[path])} bytes vs {len(b[path])} bytes"
+                       if len(a[path]) != len(b[path])
+                       else f"{path}: same length, different bytes")
+    return out
 
 
-def function_local_imports(root, artifacts, files):
-    """Defect D4: names bound by a function-scoped import, and how many
-    local-resolved calls/reads are one of them."""
-    root = pathlib.Path(root)
-    local_imported = collections.defaultdict(set)   # file -> {name}
-    nfiles = 0
-    for rel in files:
-        f = rel.replace("\\", "/")
-        try:
-            tree = ast.parse((root / f).read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        for fn in ast.walk(tree):
-            if not isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                continue
-            for n in ast.walk(fn):
-                if isinstance(n, (ast.Import, ast.ImportFrom)):
-                    for a in n.names:
-                        if a.name != "*":
-                            local_imported[f].add(a.asname or a.name.split(".")[0])
-        if local_imported.get(f):
-            nfiles += 1
+def deterministic_rebuild(m):
+    """Two builds from unchanged source must produce BYTE-IDENTICAL page trees.
 
-    lost = collections.Counter()
-    total_local = 0
-    for st in _statements(artifacts):
-        if st.get("res") != "local" or st["p"] not in ("calls", "reads"):
-            continue
-        total_local += 1
-        f = st["q"]["file"]
-        name = st["o"].split(":", 1)[1] if ":" in st["o"] else st["o"]
-        if name in local_imported.get(f, ()):
-            lost[st["p"]] += 1
+    Any non-empty diff is the failure. Nothing in a run report carries a
+    timestamp or a duration precisely so this diff can cover the whole tree --
+    do not add one.
 
-    print()
-    print("== function-local imports (defect D4) ==")
-    print("files with at least one function-scoped import:", nfiles, "of", len(files))
-    print("distinct names bound by function-scoped imports:",
-          sum(len(v) for v in local_imported.values()))
-    print("local-resolved calls/reads whose name is one of them:", dict(lost),
-          "total", sum(lost.values()))
-    if total_local:
-        print("as a share of all local calls/reads:",
-              round(100.0 * sum(lost.values()) / total_local, 2), "%")
+    This does not touch the tree at `--out`: it builds twice into scratch and
+    compares those two against each other, so it is a statement about the
+    pipeline rather than about whether the committed tree happens to be
+    fresh."""
+    workdir = tempfile.mkdtemp(prefix="code-map-determinism-")
+    try:
+        first, err = _build_into(m.root, pathlib.Path(workdir) / "a", "0")
+        if err:
+            return [err]
+        second, err = _build_into(m.root, pathlib.Path(workdir) / "b", "1")
+        if err:
+            return [err]
+        return tree_diff(first, second)
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
 
+
+CHECKS = (
+    ("no-empty-pages", no_empty_pages),
+    ("inbound-attribution", inbound_attribution),
+    ("deterministic-rebuild", deterministic_rebuild),
+)
+
+
+# ------------------------------------------------------------------- stage
 
 def run(root, artifacts, out):
-    """Print every diagnostic. Always returns 0 -- these do not gate anything
-    until g1 rewrites them."""
-    artifacts = pathlib.Path(artifacts)
-    supp = json.loads((artifacts / SUPPLEMENT_NAME).read_text(encoding="utf-8"))
-    if os.path.isdir(out):
-        non_ascii_provenance(supp, out)
-    else:
-        print("== (b) non-ASCII ==")
-        print("no page tree at", out, "-- run `build` first")
-    reconciliation(root, supp, artifacts)
-    store_only_sites(root, supp, artifacts)
-    function_local_imports(root, artifacts, discover_corpus(root))
+    """Run every check over the built map. Returns 0 when all pass, 1 otherwise.
+
+    A check stage that cannot look must not report success -- a missing page
+    tree or a missing store is a failure, not a skip."""
+    m = MapUnderCheck(root, artifacts, out)
+    missing = [str(p) for p in (m.out, m.artifacts / SUPPLEMENT_NAME,
+                                m.artifacts / STATEMENTS_NAME) if not p.exists()]
+    if missing:
+        print("FAIL cannot check: nothing built at " + ", ".join(missing)
+              + " -- run `build` first")
+        return 1
+
+    failed = []
+    for name, check in CHECKS:
+        failures = check(m)
+        if failures:
+            failed.append(name)
+            print(f"FAIL {name}: {len(failures)}")
+            for line in failures[:MAX_REPORTED]:
+                print("      " + line)
+            if len(failures) > MAX_REPORTED:
+                print(f"      ... and {len(failures) - MAX_REPORTED} more")
+        else:
+            print(f"ok   {name}")
+    if failed:
+        print(f"FAILED {len(failed)} of {len(CHECKS)} checks: " + ", ".join(failed))
+        return 1
+    print(f"passed {len(CHECKS)} checks")
     return 0
