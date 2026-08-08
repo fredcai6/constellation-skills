@@ -176,15 +176,54 @@ the fix, which is the good kind of finding. #497/#498 are maintainability, expli
 
 Crew triage candidates tc19-tc24 are recorded in the issue's own spine and carried in `RETROSPECTIVE_SOURCE.md`; tc19 is #504.
 
+## Wave 5 — the final wave, launched 2026-08-08 (21 issues, in flight)
+
+**Authorized by Tommy at the wave-4 checkpoint**, against a score of the epic's own five
+done-conditions rather than the wave list: DC3 met, DC2 substantially met, DC1 mechanism done but
+shipping not, DC4 and DC5 untouched. Then widened by him to include the #474-#480 group.
+
+**Eight of the 21 close as duplicate collapses, and no collapse is visible from the issue titles.**
+Every one was confirmed against the issue **body**, and every launch order carries that as a
+NOT-OVERRIDABLE rule — a title-level sweep here is a check that cannot fail.
+
+| Crew | Issues | Fixes | Disposition |
+|---|---|---|---|
+| **1** bookend gates (Opus, Commander) | #506, **#501+#468**, **#439+#484+#446** | 3 | In flight |
+| **2** readiness, workstream R (Sonnet, Commander) | #458 | 1 | In flight |
+| **3** crew addressing (Sonnet, implementer) | **#507+#370+#413** | 1 | In flight |
+| **4** engine internals (Sonnet, implementer) | #474 #475 #476 #479 #480 #427 #503 #493 #495 | ~9 | In flight |
+| **5** docs (Sonnet, implementer) | #496+#411 | 2 | In flight |
+
+**The three collapses, verified against bodies:**
+
+| Collapse | Shared root |
+|---|---|
+| #501 ≡ #468 | same function, same line — `_installed_skills_root()`, `verify_iterative_role_artifacts.py:53`. Filed once from outside, once from the spine's own imperative. |
+| #439 ≡ #484 ≡ #446 | all three are the **same postcondition**, `archive.c2b`. Two are the unsubstituted `<branch>` placeholder; the third is that it accepts only an OPEN PR. |
+| #507 ≡ #370 ≡ #413 | one defect, three filings, **three different epics** — a crew cannot address the Commander that dispatched it. |
+
+**Two of the 21 were already this epic's own findings**, filed in wave 4 and now being fixed rather
+than carried: #501 and #503. **#506 was filed against the gate that would otherwise have forced a
+waiver to close this very epic**, and crew 1 is fixing it. That is the retire-what-you-subsume
+obligation doing exactly what it was written to do.
+
+**Explicitly left out, with reasons:** #264 (rebase over 211 commits — a scope change, and #452/#444
+belong with it), #409 (cheap only once the working-notes location is ruled), #429, #500/#502/#504
+(each needs design thought). #504 in particular stays deferred and is what keeps DC6 partial.
+
 ## Summary of routing
 
 | Disposition | Count |
 |---|---|
 | Merged / closed | 19 (+4 from waves 0-1) |
-| In flight | 0 |
-| Escalated — awaiting Tommy | 3 workstreams + #264 |
+| In flight — wave 5 | 21 |
+| Deferred to their own efforts by ruling | 3 workstreams (F #424, C #421, E #423) + #264 |
 | Dissolved with #467 — closed | 1 |
 | Deferred with ruling | 30 |
 | Open by construction | 1 (#418) |
 
-**Zero unrouted.** Re-derived at the wave-4 boundary, 2026-08-08.
+**Zero unrouted.** Re-derived at the `close-to-w5` boundary, 2026-08-08.
+
+**Scope is settled and nothing is escalated.** F, C and E are no longer "awaiting Tommy" — he ruled
+at the wave-4 checkpoint that they become their own efforts after this epic closes. The only open
+item in this ledger is wave 5 itself.
