@@ -15,13 +15,30 @@ Two tests:
   misroutes once the Commander relaunches again before the crew DELIVERS: lookup
   resolves toward the retired origin of the lineage, never the live head.
 
-- `test_b_...` proves the FIX: the job/gate-addressed result path is the real
-  delivery, discovered by the REAL `run_crew.py` / `recover_crews.py` production
-  functions (no mocks) from the durable registry + result artifact alone. A
-  simulated relaunch — a fresh reload of the registry from disk, sharing no
-  Python-level identity with the dispatching instance — discovers the completed
-  crew regardless of which Commander instance is asking, because no agent name
-  appears anywhere in the discovery path.
+- `test_b_...` proves the FIX MECHANISM: the job/gate-addressed result path is
+  the real delivery, discovered by the REAL `run_crew.py` / `recover_crews.py`
+  production functions (no mocks) from the durable registry + result artifact
+  alone. A simulated relaunch — a fresh reload of the registry from disk,
+  sharing no Python-level identity with the dispatching instance — discovers the
+  completed crew regardless of which Commander instance is asking, because no
+  agent name appears anywhere in the discovery path.
+
+IMPORTANT — what these two tests do NOT cover: `run_crew.py`/`recover_crews.py`
+are untouched by this change (`git diff <base>..HEAD -- scripts/run_crew.py
+scripts/recover_crews.py` is empty) — the job-addressed mechanism `test_b_...`
+exercises already worked before this fix, which is the whole premise of the fix
+(the bug was doctrine text mis-describing which channel is load-bearing, not
+missing machinery). Both tests above PASS unmodified on `main` before this
+change; they characterize/pin existing machinery, they do not and cannot fail
+on a reverted fix, because the fix itself is not code.
+
+The actual fix is PROSE in four documents (`commander-core.md`,
+`crew-dispatch.md`, both handoff templates), which no runtime test can reach.
+`DoctrineNamesJobAddressedDelivery` below is the regression guard for that: it
+reads the shipped doctrine/template text directly and fails if the job-addressed
+delivery language regresses out of it. It proves the TEXT is present, nothing
+about whether an agent reads or follows it — weak evidence, offered as that
+rather than dressed up as behavioral proof.
 """
 from __future__ import annotations
 
@@ -183,6 +200,56 @@ class JobAddressedDeliverySurvivesRelaunch(unittest.TestCase):
                     f"{asking_instance} failed to discover the completed crew "
                     f"via the durable registry alone",
                 )
+
+
+class DoctrineNamesJobAddressedDelivery(unittest.TestCase):
+    """The actual fix in this change is PROSE, not code — see the module
+    docstring. `test_a_...`/`test_b_...` above characterize/pin machinery that
+    already worked on unmodified `main`; they cannot detect a reverted doctrine
+    sentence. This class is the regression guard for the prose itself: it reads
+    the shipped doctrine and handoff-template text directly and fails if the
+    job-addressed delivery language regresses out of it.
+
+    Weak by nature and offered as that: this proves the TEXT is present, not
+    that any agent reads or follows it. It is, however, real: run it against
+    `main` before this PR's doctrine edits and it fails, because the old text
+    is what it fails on (verified manually against `ea854471` -- `commander-
+    core.md` there still reads 'must be told ... to deliver its result via
+    SendMessage' and neither doctrine file nor either template names a
+    job-addressed path)."""
+
+    DOCTRINE_FILES = [
+        ROOT / "skills" / "commander" / "references" / "commander-core.md",
+        ROOT / "skills" / "commander" / "references" / "crew-dispatch.md",
+    ]
+    TEMPLATE_FILES = [
+        ROOT / "skills" / "commander" / "templates" / "IMPLEMENTER_HANDOFF.template.md",
+        ROOT / "skills" / "commander" / "templates" / "REVIEWER_HANDOFF.template.md",
+    ]
+
+    def test_doctrine_drops_the_old_load_bearing_line_and_names_the_write_as_delivery(self):
+        texts = {p: p.read_text(encoding="utf-8") for p in self.DOCTRINE_FILES}
+        for path, text in texts.items():
+            self.assertNotIn(
+                "must be told", text,
+                f"{path.name}: the old load-bearing 'must be told ... SendMessage' "
+                f"instruction has returned",
+            )
+        joined = "\n".join(texts.values())
+        self.assertTrue(
+            "job-addressed" in joined or "job/gate-addressed" in joined,
+            "neither commander-core.md nor crew-dispatch.md names the "
+            "job-addressed delivery path",
+        )
+
+    def test_handoff_templates_name_the_crew_handoffs_result_path_as_delivery(self):
+        for path in self.TEMPLATE_FILES:
+            text = path.read_text(encoding="utf-8")
+            self.assertIn(
+                "crew-handoffs", text,
+                f"{path.name}: no longer names the crew-handoffs/<gate>-<role>"
+                f"-result.md delivery path in its Return Format section",
+            )
 
 
 if __name__ == "__main__":
