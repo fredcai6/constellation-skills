@@ -251,7 +251,8 @@
           "id": "c2",
           "statement": "IMPLEMENTER_RESULT written, work committed on issue-456/code-map, git status free of stray edits -- manual attest",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT written to .agent-work/issue-456/crew-handoffs/g2-implement-RESULT-2.md (the dispatch's path; m4's imperative names the attempt-1 path, which is left intact). Work committed on issue-456/code-map: 80702615 (a RED, inherited), 6d5b3131 (a GREEN), fd9170f5 (b RED), 103d03b5 (b GREEN), 4ea174b3 (c RED), cdfd8213 (c GREEN + xfail marker deleted), b1583f48 (result). Every stage was an explicit path list; git add -A never used. git status holds only map/ (staged at gs by design) and .agent-work/g1-implement/ + .agent-work/g2-implement/, both untracked before this attempt began. git diff HEAD -- scripts/ tests/ is EMPTY: no stray probe edit. Three triage candidates filed as tc1-tc3."
         }
       ],
       "constraints": [
@@ -293,7 +294,7 @@
     "session_id": "g2-implementer-attempt-1",
     "status": "active",
     "claimed_at": "2026-08-08T04:55:30.791316+00:00",
-    "last_heartbeat": "2026-08-08T05:52:39.132606+00:00",
+    "last_heartbeat": "2026-08-08T05:54:53.860688+00:00",
     "claimed_by": "implementer",
     "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
     "previous_session_id": null,

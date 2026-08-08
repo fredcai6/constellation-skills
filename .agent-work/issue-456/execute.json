@@ -682,7 +682,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
         }
       ],
       "constraints": [
@@ -711,11 +712,29 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g2-implement-RESULT-2.md",
+            "crew": "constellation/issue-456/g2/implementer/attempt-2",
+            "verified": "run_crew.py --verify-result -> fresh (completed)",
+            "suite": "1744 passed, 2 skipped, 0 xfailed, 0 failed (was 1729/2/1xfail); +15",
+            "check_exit": "0 after a fresh build, 6/6 checks ok (was exit 1)",
+            "defects": "all three red-then-green, each reproducer committed FAILING before its fix: (a) 6d5b3131, (b) 103d03b5, (c) cdfd8213 which also DELETED the strict-xfail marker",
+            "scope_note": "checks.py touched beyond the named allowed scope, justified in the result: (a) strengthens entity_symbol_join to a whole-symbol comparison, (b) changes what the rendered inbound line says and checks.py holds the one block documenting how a page spells it. Two g1 checks STRENGTHENED, none weakened.",
+            "ruling_not_falsified": "Commander ruling on (c) stands -- no production symbol renamed in run_skill_eval.py"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-review": {
@@ -2004,6 +2023,13 @@
       "why": "g1 integrated on an APPROVE verdict with 0 open findings. c1 re-run by the engine itself, not attested around it. The gate ships six falsifiable checks replacing a print-only module whose run() ended in a literal return 0. Carry-forward for every later gate: python -m scripts.code_map check now EXITS 1 on this repository, correctly, until g2 lands the Verdict/verdict rename -- gs and any CI wiring must not read that as a regression.",
       "mechanical": false,
       "ts": "2026-08-08T04:46:11.059083+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g2-implement",
+      "why": "g2 build complete across two implementer attempts; attempt-1 parked cleanly at a context seam with defect (a) red-committed and all three fixes designed, attempt-2 resumed the SAME plan and lease idempotently and drove all five items to complete. All three defects red-then-green with each reproducer committed FAILING first. Suite 1729/2/1xfail -> 1744/2/0xfail, +15. check exits 0 after a fresh build, 6/6. The strict-xfail marker is deleted, forced by its own strict flag exactly as g1 designed. Two g1 checks were STRENGTHENED rather than weakened, and the two g1 tripwires that sat in the path of the obvious (b) fix were routed around by the design note's alternative. Commander ruling on (c) not falsified -- no production symbol renamed. Handoff defects tc36 corrected for the successor; tc34/tc35/tc37 filed.",
+      "mechanical": false,
+      "ts": "2026-08-08T05:55:49.404218+00:00"
     }
   ],
   "amendments": [

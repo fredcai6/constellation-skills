@@ -890,6 +890,11 @@
       "id": "tc36",
       "from": "execute",
       "statement": "tc36: TWO defects in the Commander's own g2 handoff, both found by the crew through measurement, both corrected in the attempt-2 handoff. (1) It described the four D2 collisions as 'same-depth siblings' implying four PAGE-level merges; they are four STORE-SYMBOL merges and only three are two-page merges (see tc34). A crew hunting four page pairs would find three and wrongly conclude its own measurement was broken. (2) It prescribed 'env -u FORCE_COLOR -u PYTHONIOENCODING python ...' as the verification form, which the Bash tool REFUSES in a worktree-isolated session ('runs env with -m, whose effect on the command it wraps cannot be verified'). Correct hand-run form is 'unset FORCE_COLOR PYTHONIOENCODING && python ...'; the engine's own POSIX command checks are unaffected. PROCESS LESSON, generalizable beyond this run: a handoff that names an exclusion ('do not weaken any check the previous gate shipped') without naming WHERE the tripwires are makes each successor rediscover them at full cost. The crew named this as the single most expensive thing it rediscovered. Later gate handoffs must carry a per-defect list of the prior gate's tests and mutation anchors that constrain the fix."
+    },
+    {
+      "id": "tc37",
+      "from": "execute",
+      "statement": "tc37: class_member still keys on the BARE class name. resolve_attr's self.x / cls.x branches call class_member(self.clsstack[-1], attr), which walks build_table's module-level class records -- so for a NESTED class that lookup can read a same-named MODULE-LEVEL class's member set. Zero occurrences in this corpus and the fallback beneath it is now correct via clsyms, so this is LATENT, not live. The same len(clsstack) == 1 gate that g2's R2a now carries would close it. Found by the g2 implementer while fixing D2; recorded rather than fixed, because fixing a latent path with no corpus instance would ship an unfalsifiable change."
     }
   ],
   "blockers": [],
@@ -898,7 +903,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T05:12:38.420505+00:00",
+    "last_heartbeat": "2026-08-08T05:55:24.645782+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

@@ -4,7 +4,30 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch (the PID changes every time).
 
-- **step:** execute · item `g2-implement` — dispatching the g2 implementer.
+- **step:** execute · item `g2-review` — dispatching the g2 REVIEWER.
+
+  **`g2-implement` IS COMPLETE.** Two attempts: attempt-1 parked cleanly at a
+  context seam with defect (a) red-committed; attempt-2 resumed the SAME plan and
+  lease idempotently and finished all three. **Do NOT re-dispatch either.** All
+  three defects red-then-green, each reproducer committed FAILING first:
+  `80702615`/`6d5b3131` (a), `fd9170f5`/`103d03b5` (b), `4ea174b3`/`cdfd8213` (c).
+  Suite **1729/2/1xfail → 1744 passed, 2 skipped, 0 xfailed, 0 failed** (+15).
+  `python -m scripts.code_map check` now **exits 0**, 6/6 — the earlier
+  carry-forward that it correctly exits 1 is now SPENT and no longer applies.
+  The strict-xfail marker is deleted, forced off by its own strict flag exactly
+  as g1 designed.
+
+  **HIGHEST-RISK ITEM FOR THE REVIEWER:** (a) makes the store symbol equal the
+  supplement key *by construction*, and the same change STRENGTHENED
+  `entity_symbol_join` to a whole-symbol comparison. If both sides are now
+  computed by one code path, that check may have become a check that cannot
+  fail — the exact defect this run exists to stamp out. The review handoff
+  names it as item 1.
+
+  **TWO THINGS THAT MUST NOT HAVE BEEN FIXED:** `_make_collision_repo`'s `INDEX`
+  collision must STILL collide (it is g1's only cross-platform falsifier for
+  `page-accounting`), and no production symbol may be renamed in
+  `scripts/run_skill_eval.py`.
 
   **g0 ✅ and g1 ✅ ARE BOTH CLOSED AND INTEGRATED. Do NOT re-dispatch any g0 or
   g1 crew** — all ten are terminal (`recover_crews`: 10 crews, 0 unresolved).
@@ -47,8 +70,8 @@ dispatch (the PID changes every time).
 - **slug:** work-id `issue-456` · branch `issue-456/code-map` (pushed to origin)
   · worktree `C:/Programs/constellation-skills/.claude/worktrees/issue-456`
 - **next command:** `python C:/Users/fredc/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/issue-456/execute.json current` — then re-claim lease `commander-issue-456` idempotently (same id, NOT a takeover, no `--force`) and drive `execute.json` from `current`. Note: `--session-id` goes AFTER the verb, `--file` BEFORE it. Before any crew: `python scripts/recover_crews.py issue-456`, then dispatch only via `python scripts/run_crew.py --dispatch external --verify-result`.
-- **pid:** none — the g2 implementer is an Agent-tool subagent, not an OS
-  process. Registry entry: `constellation/issue-456/g2/implementer/attempt-1`.
+- **pid:** none — the g2 reviewer is an Agent-tool subagent, not an OS
+  process. Registry entry: `constellation/issue-456/g2/reviewer/attempt-1`.
   Recover with `python scripts/recover_crews.py issue-456`; a `resumable` crew
   is resumed in place via `SendMessage` to its agent id, a `needs-abandon` one
   via `run_crew.py --abandon <session> --relaunch`.
