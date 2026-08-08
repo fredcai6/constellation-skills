@@ -2182,3 +2182,19 @@ instances wrote it.** So the engine's own record cannot tell my Commanders apart
 identity problem, solved for the governor and still live in the journal. I am reading **journal verbs
 and gate states**, not the lease field, and I am not inferring which instance did what from the
 record. Recorded so a successor does not try.
+
+**Attribution, from the journal rather than the lease field.** Instance C's idle notification landed
+**11:20:45**; `advance g1-integrate` is stamped **11:22:10** — *after* it. **So instance D ran the
+closing advance**, which means my collision correction reached it and it did the right thing:
+verified the existing amendment rather than authoring a second one. It then opened g2
+(`attach g2-implement`, 11:23:05). **The fix-building has started.**
+
+**Stopped instance C**, now that it is idle with both leases released and nothing further owed. A
+finished-but-still-live predecessor is exactly the live-overlap window the crews characterised, and
+this time stopping costs no measurement — the gauge finding is settled across three agents, so there
+is nothing left to confound. (Contrast with my earlier stop of instance A, which *did* confound it.)
+
+**Live sighting of the stale-value window.** The worktree gauge last wrote at **11:20:29** while D
+has been issuing engine commands through 11:23:05. A successor reads a value that is not its own
+until its own hook writes. Exactly as characterised, observed in real time rather than reconstructed
+— and a reminder not to read that number as D's.
