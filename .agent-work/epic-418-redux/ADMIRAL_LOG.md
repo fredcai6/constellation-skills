@@ -874,3 +874,15 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   **1789 passed / 2 skipped / 683 subtests / exit 0 in 469s.** Exactly the wave-2 baseline of 1782
   plus the 7 tests wave 3 added, with no drift. That is now the green baseline for #465's merge and
   for closeout.
+
+- `2026-08-08` — `WAVE PROGRESS` — W3-A (#465) at `execute [in-progress]`, next `attest execute
+  --cond c1`; five gates remain (reconcile, triage, review, feedback, archive). Alive and iterating
+  (working-tree count moving 11→13→12), at 15% fill against a **soft** advisory. Its plan is frozen
+  as one gate carrying three coupled changes: the survey retext-check affordance, a byte-faithful
+  save, and two prose corrections.
+  **Its own cold critic caught that its integrate gate could not fail** and it now names the four new
+  test node ids. That is the wave's organizing defect appearing *inside a crew's own process*, found
+  by the crew rather than by me — a fifth independent instance, and the first one caught before it
+  shipped rather than after.
+  Not intervening. It is inside its latitude, the design choice it made (affordance, not a new verb)
+  needs no surfacing, and steering a running Commander is the thing doctrine forbids.
