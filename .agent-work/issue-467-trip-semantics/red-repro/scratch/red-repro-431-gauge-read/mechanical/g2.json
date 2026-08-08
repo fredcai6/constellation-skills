@@ -10,12 +10,12 @@
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-red-repro-431-gauge-read-g2@862083f16614d8026df09c94ef91b6ef29c69795",
+    "context-manifest-ref": "ctx-red-repro-431-gauge-read-g2@b16c05e46d5b9125a36e7cda8174a28d6d44bc33",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "red-repro-431-gauge-read",
-    "generated_at": "2026-08-08T11:21:25Z"
+    "generated_at": "2026-08-08T20:12:48Z"
   }
 }

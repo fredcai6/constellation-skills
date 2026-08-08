@@ -3,11 +3,11 @@
   "step": "g1",
   "files": [],
   "repo_rev": {
-    "commit": "17c06f1609836f7b5dd30b4cadb455d16c5b379a"
+    "commit": "cc4aed99b09f9a35f3fcddb930a7869b5246dafc"
   },
   "run": {
     "work_id": "red-repro-431-face-a",
-    "generated_at": "2026-08-08T11:21:25Z",
+    "generated_at": "2026-08-08T20:12:49Z",
     "roots": {
       "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
       "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",

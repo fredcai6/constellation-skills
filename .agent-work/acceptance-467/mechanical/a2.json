@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "a2",
+  "mechanical": {
+    "run": "acceptance-467",
+    "project": "constellation-skills",
+    "role": "agent",
+    "spine-step": "a2",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-acceptance-467-a2@700f30182eef81b2bab065b3333462bdc14a3706",
+    "artifact-ref": []
+  },
+  "refused": [
+    "refusals"
+  ],
+  "run": {
+    "work_id": "acceptance-467",
+    "generated_at": "2026-08-08T20:11:11Z"
+  }
+}

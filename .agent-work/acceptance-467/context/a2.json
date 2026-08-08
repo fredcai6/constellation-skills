@@ -1,13 +1,13 @@
 {
   "contract": 1,
-  "step": "g1",
+  "step": "a2",
   "files": [],
   "repo_rev": {
-    "commit": "17c06f1609836f7b5dd30b4cadb455d16c5b379a"
+    "commit": "cc4aed99b09f9a35f3fcddb930a7869b5246dafc"
   },
   "run": {
-    "work_id": "red-repro-431-face-a-counterfactual",
-    "generated_at": "2026-08-08T11:21:27Z",
+    "work_id": "acceptance-467",
+    "generated_at": "2026-08-08T20:11:11Z",
     "roots": {
       "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
       "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",

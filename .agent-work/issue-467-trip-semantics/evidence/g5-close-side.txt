@@ -1,0 +1,15 @@
+READING EXISTS -- the engine's own words:
+  CONTEXT 5% (>= hard): your instruction has changed, and the refresh for q1 is already requested. Close THIS gate carrying your handoff (`advance q1 --why "<understanding>"`) and st
+
+1. start q2                  -> exit 1
+   REFUSED: q2: context at 5% is at/over the hard limit, so this is not the moment to BEGIN work here — finish and close the gate you are already in, then request a refres
+
+2. advance q1 --mechanical   -> exit 1
+   REFUSED: q1: context is at/over the hard limit, so this gate cannot be closed silently — a mechanical or why-less close records no understanding, and the next agent wou
+
+3. advance q1 --why '...'    -> exit 0
+   q1 -> complete
+
+   digest after the close: 'the handoff-carrying close, which is the whole point'
+
+PASS: over the line, a BEGIN is refused, a SILENT close is refused, and the handoff-carrying close completes and freshens the digest.

@@ -1,15 +1,15 @@
 {
   "contract": 1,
-  "step": "g1",
+  "step": "g5-acceptance",
   "files": [],
   "repo_rev": {
-    "commit": "17c06f1609836f7b5dd30b4cadb455d16c5b379a"
+    "commit": "cc4aed99b09f9a35f3fcddb930a7869b5246dafc"
   },
   "run": {
-    "work_id": "red-repro-431-face-b",
-    "generated_at": "2026-08-08T11:21:28Z",
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T20:24:11Z",
     "roots": {
-      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "skill": "C:/Programs/constellation-skills",
       "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
       "durable": "C:/Programs/constellation-skills"
     },

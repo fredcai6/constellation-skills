@@ -1,244 +1,61 @@
 # Crash-resume state note — issue-467-trip-semantics
 
-**Written by `commander-w4-467-g` at the `g4-integrate` seam. Replaces `commander-w4-467-f`'s note
-wholesale — its content is either carried below or is now done.**
+**Written by `commander-w4-467-i` at `g5-acceptance`. Replaces `commander-w4-467-g`'s note
+wholesale — that note described the g4 rework, which is DONE and APPROVED.**
 
-## READ THIS FIRST — g4-review is CLOSED with a BLOCK. The rework has NOT been started.
+## Where the run is
 
-- **step:** spine `execute` (in-progress) · `execute.json` gate **`g4-integrate` — `pending`, NOT
-  started.** **13/17 complete:** `e0-context`, all three `g1-*`, `g2-*`, `g3-*`, `g3b-glossary`,
-  `g4-implement`, `g4-review`. `amendments: 2`. 17 gates. Remaining 4: `g4-integrate`,
-  `g5-acceptance`, `g5-review`, `g5-integrate`.
+- **step:** spine `execute` (in-progress) · `execute.json` gate **`g5-acceptance` — `complete`.**
+  **15/17 complete.** Remaining 2: **`g5-review`** (ACTIVE, pending) and `g5-integrate`.
+- **I TRIPPED AND STOPPED at 0.201541 >= hard 0.15**, my own live harness-written reading. I closed
+  `g5-acceptance` carrying the full handoff (`w-15` — read it, it is the brief), filed the
+  refresh-request `e-g5-review-1` against `g5-review` keyed to `w-15`, and released both leases.
+  **This is a clean seam, not an interruption. Fourth live #431 on this run.**
+- **next command:** `python C:/Programs/constellation-skills/scripts/checklist_engine.py --file
+  .agent-work/issue-467-trip-semantics/execute.json current` — its `DIGEST:` is the whole handoff.
 - **slug:** issue-467-trip-semantics · branch `epic-418/a2-467-trip-semantics` · worktree
-  `C:/Programs/constellation-skills-wt/epic418-a2-467`.
-- **engine lease:** **RELEASED** on both `spine.json` and `execute.json`. Claim each **without
-  `--force`** — every agent in this session shares `session_01TTKPTbD6nnMt7jFWw9GtjX`, so `claim`
-  takes the idempotent-resume path. Mutating verbs need
-  `--session-id session_01TTKPTbD6nnMt7jFWw9GtjX`. **Verify with the raw JSON, not with this line.**
-- **pid:** none — foreground, nothing running. Crew backend is `external` (record-only registry +
-  Agent-tool subagent), so there is no process to kill or resume.
-  `recover_crews.py issue-467-trip-semantics` → 11 crews, **0 unresolved**.
-- **refresh-request:** `e-g4-review-2`, concrete **`why_ref=w-12`**. Read the raw `why_trail` for
-  yourself; do not trust this line.
-- **next command:** claim both leases, then **`start g4-integrate`** and run the rework. The verdict
-  is `BLOCK`, so `g4-integrate`'s job is **return for rework**, not closeout.
+  `C:/Programs/constellation-skills-wt/epic418-a2-467` · HEAD `cc4aed99`, tree clean at start.
+- **engine leases:** RELEASED. Previously claimed by me on both `spine.json` and `execute.json` with
+  `--session-id session_01TTKPTbD6nnMt7jFWw9GtjX` (no `--force`; every agent in this harness
+  session shares that id, so `claim` takes the idempotent-resume path). **Verify against the raw
+  JSON, not against this line.**
+- **pid:** none — foreground. Agents A and B are synchronous Agent-tool subagents.
+- **suite baseline at `cc4aed99`, my own run:** `1867 passed, 2 skipped, 829 subtests, exit 0`
+  (`/tmp/g5_suite_baseline.txt`). Matches the g4 number.
 
-## Why I stopped here
+## The acceptance round trip — what I built and where it is
 
-I crossed **hard** (fill **0.169769** ≥ **0.15**, my own fresh reading) while closing `g4-review`. I
-closed that gate carrying my full understanding and stopped. The rework is **new work** and `start`
-is a **begin-work** verb — opening a gate at/over hard is the exact violation this issue's fix
-refuses. **This is a clean seam, not an interruption.**
+Separate spine (NOT this run's spine), authored once and **never edited after agent A was
+dispatched**, because editing it between A and B would smuggle a briefing to B:
 
-**This is the SECOND live #431 on this run.** The pre-#467 engine driving the spine refused the
-`advance` that *carries the handoff* — the exact defect this branch fixes — and I released it the
-engine's own prescribed way with the concrete `why_ref=w-12`. **Two live specimens now exist, both
-to Commanders, both on the real spine.** See "Open, for the Admiral".
+- `.agent-work/acceptance-467/spine.json` — 2 gates `a1`, `a2`.
+- `.agent-work/acceptance-467/check_gate.py` — the gates' `command` postcondition, strict about
+  exact file content.
+- `.agent-work/issue-467-trip-semantics/build_acceptance_spine.py` — the authoring script; it
+  REFUSES to run twice.
+- `.agent-work/acceptance-467/gauge.json` — planted fallback reading; the harness gauge writer
+  overwrites it with each acting agent's own live fill once that agent claims the lease.
 
-## THE BLOCK — read this before you touch anything
+**The trip is engineered to fire on a LIVE reading, not on a plant.** Both gates declare
+`context_headroom_tokens: 149000`, so the per-gate hard line is `1_000/1_000_000 = 0.001` and any
+real reading is at/over hard. Verified in force: at a planted fill of **0.05** — well BELOW the
+shipped 0.15 default — `current` renders the HARD band. That is impossible without the override.
 
-**B1: the close the HARD band ORDERS the agent to make is guaranteed to clear the compliance signal,
-and the shipped line says the opposite.**
+`a1` carries a **pre-attached refresh-request** (`e-a1-1`, seam=a1) so agent A can `start a1` at
+all; without it the begin-work guard refuses the first gate and nothing can run. That is the real
+relaunch shape, not a contrivance: a fresh agent starting the gate a refresh was requested for is
+exactly what I am on this run.
 
-Three shipped mechanisms compose:
+## The one rule that voids the measurement
 
-1. at/over hard, `advance --mechanical` is refused, so the **only legal close is `advance --why`**;
-2. that appends a **new why-record**;
-3. `begin_over_line_records` matches only entries keyed to the **live** why-record.
+**Agent B's dispatch prompt must contain NOTHING but the `current` output.** No summary, no
+pointer, no help. `g5-review` reads B's actual prompt. If you are resuming me and B has not been
+dispatched yet, re-derive `current` and paste it alone.
 
-So **the mandated close supersedes every ledger entry at once.**
+## Ordering ruling I am holding
 
-**I reproduced this myself** with the reviewer's own probe
-(`.agent-work/issue-467-trip-semantics/g4-review/probe_clearing.py` — run it, it takes seconds).
-At gauge 0.20 / hard 0.15:
-
-| after | selector | rendered line |
-|---|---|---|
-| a refused begin at `g2` | 1 | present |
-| a released begin at `g2` | 2 | present |
-| **the same agent closes `g2`** | **0** | **gone** |
-
-Across a 3-gate runaway with **3** over-the-line begins on disk, the rendered line peaked at **2**
-and was **ABSENT AT THE SEAM** — byte-identical to a compliant agent that closed and stopped.
-**Green in both worlds, at exactly the place the next reader looks.**
-
-The engine's own line ends *"Closing this gate does not clear the record."* I closed that gate and it
-vanished. The schema doc says the understanding moves on when *"a fresh agent records its own
-`why`"* — **the mechanism cannot tell a fresh agent from the offender**, and the offender's own close
-is the likeliest superseder in exactly the runaway the ledger was built for. Their own test
-`test_compliance_line_is_absent_once_the_recorded_begin_is_superseded` runs **byte-for-byte the
-offender's path** and labels it "a fresh agent" in a comment — **it pins the defect as intended
-behaviour.**
-
-### The fix space — narrow, cheap, and the keying is NOT in it
-
-**The reviewer explicitly does not ask the keying to change: close criterion (b) is correctly
-implemented.** Three cheap exits, and they compose:
-
-1. **Correct the sentence** to what is true.
-2. **Declare this limit as plainly as the other three are declared** (the three existing ones are
-   present and honest — this is criterion 5's actual failure).
-3. **Render a HISTORICAL read alongside the live one.** Every entry is already on disk and the ledger
-   is append-only, so **no new state is needed** — and it keeps `(b)`'s live-keyed predicate exactly
-   as frozen while letting the observable survive the supersede.
-
-**My recommendation to the rework implementer: do all three**, because (1)+(2) alone leave the
-observable honest but *defeated at the seam*, which is DC6's one job. **(3) is an addition to frozen
-criterion (b) — I floated it to the Admiral and the answer had not arrived when I tripped.** If the
-Admiral reverses it, dropping the historical clause is a one-line change; ship (1)+(2) regardless.
-
-## WHAT ELSE THE REVIEW FOUND — all of it good news
-
-- **17/17 defect shapes discriminate**, constructed by the reviewer itself with hand-built spines,
-  clock-stamped gauges and real CLI subprocesses.
-- **19/19 mutations re-run and killed**, tree clean after every revert.
-- Write-site claim and its `ast` method independently verified; every evidence number reproduced.
-- **A1 — keep `why_ref`, but BOTH arguments originally offered for it were wrong.** Take the
-  reviewer's reasoning, not the implementer's:
-  - **The timestamp argument is weak.** The implementer said re-derivation would be fragile at
-    "second granularity"; `_now()` is **microsecond** precision. **Do not repeat this claim** — I
-    relayed it upward before the review corrected it.
-  - **N7 is not evidence for the field.** Setting `why_ref: None` is behaviourally the same as
-    dead-coding the selector (N11), so N7 proves the *keying* is load-bearing but **cannot
-    distinguish "record it" from "derive it"** — which is the actual question.
-  - **The real reason:** `_latest_why_record` is **not a function of ordering**. A record is live
-    only if no *later* reopen-marker names its gate, so a reopen appended **after** the trip changes
-    any "as of now" derivation. Critic finding 14 is wrong on the **supersede rule**, not on
-    granularity.
-- **A3 — the declared TDD deviation STRENGTHENS the guarantee.** Deleting the selector gives
-  `AttributeError`, which proves nothing; dead-coding it to `return []` keeps the API and removes
-  only the behaviour. A5 — the `amend` record is honest.
-- **NB4, carry into the rework:** two further absence tests also survive N11. Their "positive control
-  in the same test" asserts the **ledger entry exists**, not that the **signal renders**, so it does
-  not defend against a dead selector. Both are killed by other mutations, so coverage is real — the
-  *claim* is looser than stated. `CHECK_THAT_CANNOT_FAIL.md:172` also claims "every one of this
-  gate's 25 tests" is two-world, which the implementer's own declared negative-only test contradicts.
-
-## TWO CORRECTIONS AGAINST MY OWN HANDOFF — carry them, they are fair
-
-1. **The shape count is 12 numbered rows, not 11.** My handoff said 11 and told the reviewer to count
-   for itself. It did. One that trusted the number would have under-constructed by one and never
-   known.
-2. **My trap-6 engine byte-size (156060) matches nothing on disk** — the file is **161503** bytes in
-   this CRLF checkout and **158377** as a blob. A size that cannot confirm you have the right file is
-   useless for the one job a size has. **Use
-   `git rev-parse HEAD:scripts/checklist_engine.py` instead** — and note this is exactly the
-   checkable pin **`g5` is required to produce**, so it solves two problems.
-
-## MODEL TIERS — Admiral ruling, binding
-
-Sonnet by default; **Opus needs a named reason in the dispatch**.
-
-- **`g4` rework implementer — Sonnet.** The target is demonstrated and narrow (a sentence, a declared
-  limit, one extra render clause over state that already exists). The g3 rework ran this way against
-  a demonstrated target and did it cleanly.
-- **The g4 re-review — Opus** (adversarial-review carve-out). It must re-run
-  `probe_clearing.py` itself and confirm the seam is no longer silent.
-- **`g5-review` — Opus.**
-
-## BASELINES — pinned to the commit they were measured at
-
-| Command | At parent `9997c32d` | At `f74ef422` (g4 head) |
-|---|---|---|
-| `pytest -q tests` | **1833 passed, 2 skipped, 808 subtests** | **1858 passed, 2 skipped, 821 subtests** |
-| `pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'` | **exit 5**, 384 deselected | **25 passed, 384 deselected, 13 subtests** |
-
-Delta **+25 passed, +13 subtests** — exactly the selector's own collection, and the 384 deselected is
-unchanged, so all 25 tests are genuinely new. **I measured every one of these myself.**
-
-**Standing handoff rule, twice-reported and now applied twice:** a criterion asking for a suite delta
-must name the **diff's parent commit**. Do not restate a baseline without the commit it was measured
-at.
-
-## WHICH ENGINE — Admiral ruling, settled, do not re-litigate
-
-`installed workbench` / `main` — **no fix**. `branch worktree` — **HAS the fix**.
-
-- **Drive the spine with `python C:/Programs/constellation-skills/scripts/checklist_engine.py`**
-  (main's). **Do not switch the driving instrument mid-run** — that is plan surgery.
-- **`g5-acceptance` is the exception and the point:** it must exercise the **branch worktree** engine
-  explicitly and **pin the binary by hash** (`git rev-parse HEAD:scripts/checklist_engine.py`),
-  naming which one it ran. Acceptance evidence produced through a pre-#467 bundle proves nothing.
-- **Do not reinstall anything.** Both installed bundles are pre-#467; that goes to closeout.
-
-## STANDING TRAPS — do not spend context rediscovering these
-
-1. **#431 is instruction-conformance, not a deadlock.** A test worded *"the advance is no longer
-   blocked"* passes in **both** worlds. **Verify on what the agent is TOLD.**
-2. **DC6's observable is "did anyone BEGIN work while over the line"**, never "did a handoff artifact
-   appear" — that is true by construction.
-3. **The gauge is discarded if `observed_at` is in the future (clock skew) or older than 30 minutes**
-   — it collapses to "no gauge" and any scenario built on it goes **vacuously green**. Generate
-   fixture timestamps from the clock.
-4. **A negative-only test cannot fail.** Ask of every test: *what would this do if the mechanism were
-   deleted?*
-5. **The printed `<why-id>` placeholder is literal** — attaching it verbatim exits 0 and silently
-   does nothing. Read the real id from the raw `why_trail`.
-6. **`main()` does not save on `current`.**
-7. **Write reviewer handoffs in `APPROVE` / `BLOCK`.** Every `*-integrate.c3` matches that literal.
-8. **`execute.json["tasks"]` is a dict keyed by id; `["items"]` is a list of id STRINGS.** Iterating
-   `items` gives you strings, not tasks.
-9. **A grep for `^FAILED` misses pytest's `SUBFAILED` lines.** The g4 reviewer's `FAILED`-only regex
-   produced two apparent mutation survivors that were not. A `FAILED`-only distribution command can
-   manufacture a false BLOCK on this suite.
-
-## SANCTIONED METHOD for re-running mutations — keep using this one route
-
-Commit first; apply the mutation directly to `scripts/checklist_engine.py`; run the **named** test;
-**revert with `git checkout -- scripts/checklist_engine.py`** and confirm `git diff --stat` is clean
-before the next. Scratch probes go under the crew's **own** review directory. **Do not** use
-`git archive` temp trees — no cross-commit baseline is needed here and a tree with no `.git` produces
-constant git-oracle noise. Both g4 crews used this route cleanly; it resolved a tension that caught
-two reviewers in a row.
-
-## TRUST ORDER
-
-1. The raw task JSON and `current` — **authoritative**.
-2. This note — a *pointer*, correct only as of its timestamp.
-3. `MISSION_FRAME.md`, `LO-467.md` — **stale until proven otherwise**.
-
-## OPEN, for the Admiral — carry these up, do not decide them
-
-- **Whether the rework may add a HISTORICAL render** (fix-space item 3). It is an addition to frozen
-  criterion (b). **Floated; unanswered when I tripped.** Ship (1)+(2) regardless.
-- **A1 — the ninth field `why_ref`, which reverses critic-panel finding 14.** Floated; unanswered.
-  Both the reviewer and I recommend **keep** — but the reviewer **rejects the evidence originally
-  offered** (N7's 12-test radius is coupling, not load-bearingness).
-- **THE g5 QUESTION, now much stronger and still unanswered: two live #431 trips have now happened
-  to Commanders on the real spine** — `commander-w4-467-f` at `g3-integrate` and me at `g4-review`.
-  `g5-acceptance` plans a *staged* round trip with two dispatched agents. Real ones already
-  happened. **May they be cited as acceptance evidence?** g5's scope is frozen, so it is not the
-  Commander's call. **This is the one I most want answered** — it is two gates away.
-- **The stale installed engine bundles** — reinstall at closeout, or rule that the run continues on
-  them deliberately.
-- **`decision:execute-gate-reserve-value` (30000) is `@grade: guess` and its authored settle
-  experiment is NOT RUNNABLE** — confirmed independently four times. **Cheaper replacement, ready to
-  route:** log `(gate, fill_fraction)` at each gate boundary.
-- **`docs/CHECKLIST_SCHEMA.md` under-documents the Task object by one optional key**
-  (`context_headroom_tokens`). Natural home is this run's `reconcile` step.
-
-## TRIAGE CANDIDATES — `tc1`–`tc13` are now ALL on `execute.json`
-
-I flagged the g4 candidates into the engine rather than leaving them in survey files, because "the
-survey candidates get missed" has bitten this run twice. **`tc1` CLOSED** (shipped as
-`g3b-glossary`), **`tc3` RESOLVED** (the parent-commit baseline). Live: `tc2`, `tc4` (`block()`'s
-missing status guard — **pre-existing, not ours, and the M15 kill now DEPENDS on that state**),
-`tc5`, `tc6` (survey sidecar collision — **now WIDER than filed**: driving the survey at `g4-review/`
-*also* made the engine create `issue-467-trip-semantics-g4-review/{context,mechanical}/`, a **second
-sidecar path derived from `work_id` rather than from the survey directory**. Two different fields
-produce two different paths, so renaming the directory by hand does not avoid the collision — it only
-moves one of them. The stray tree is committed at the seam; do not be confused by it),
-`tc7` (a lint for the `| tail` class of unfailable check),
-`tc8` (the `git status`/`git diff` renormalization disagreement that silently drops a test target),
-`tc9`–`tc13` (from the g4 review: `--authority` accepts any string so "human ratification" is
-enforced by nothing; N15/N16 share one point of coverage; a crashing mutation is not a kill; the Trip
-section assembles the band judgment by hand at three sites; `outcome` is a bare string).
-
-**Still only in survey files:** `g3-review/review.json` (5, including `thresholds_for`'s docstring
-overclaiming "for every input") and `g3-rework-review/review.json` (2).
-
-## If you trip
-
-Commit at the seam, file the `refresh-request` with the **concrete** why-id from the raw `why_trail`,
-rewrite this note, release **both** leases, go idle. **Nine predecessors have now done this cleanly
-and none lost work.** Do not push through, and **do not `start` new work over the line.**
+Drive the RUN spine with MAIN's engine (`C:/Programs/constellation-skills/scripts/checklist_engine.py`).
+`g5-acceptance` is the deliberate exception and exercises the **branch** engine
+(`scripts/checklist_engine.py` inside the worktree), pinned by
+`git rev-parse HEAD:scripts/checklist_engine.py` **re-derived at the moment of use** — never
+copied forward from any document, including this one.

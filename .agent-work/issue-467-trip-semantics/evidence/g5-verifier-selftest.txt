@@ -1,0 +1,22 @@
+SELF-TEST -- each mutation must make the verifier FAIL.
+
+  [REJECTED] V1 one agent did everything
+             -> V1: the same session id 'acc-oneagent' closed both the first and the last gate -- one agent did the whole thing, so no round trip was measured
+  [REJECTED] V2 no begin was ever refused
+             -> V2: the trip ledger holds no `begin-refused` entry, so no agent was ever actually stopped at a gate boundary
+  [REJECTED] V2 the handoff carries no understanding
+             -> V2: why-record w-1 carries no understanding (mechanical=True) -- the successor would cold-start from silence
+  [REJECTED] V4 B acted before A finished
+             -> V4: B's advance at 2000-01-01T00:00:00+00:00 is not after A's last action at 2026-08-08T20:08:25.897461+00:00 -- the two agents overlapped, so this is not a handoff
+  [REJECTED] V5 the refused gate was never resumed
+             -> V5: no `begin-released` entry at 'a2' AFTER the refusal -- the refused gate was never resumed by anyone
+  [REJECTED] V5 the override was not in force
+             -> V5: ledger entry tl-1 records fill 0.05 BELOW hard 0.15 -- the engine recorded a trip that was not over the line
+  [REJECTED] V5 the override was not in force (isolated)
+             -> V5: ledger entry tl-1 was judged against hard 0.15, not below the shipped 0.15 -- the per-gate override was NOT in force, so this trip proves nothing about the override
+  [REJECTED] V6 the request is keyed to nothing
+             -> V6: no pending refresh-request for 'a2' keyed to w-1 -- the successor was released by something other than the handoff
+  [REJECTED] V8 B invented the nonce
+             -> V8: the nonce 'deadbe' in the deliverable does not appear in A's why-record w-1 -- B invented it rather than reading it from the handoff, so nothing was actually carried across the seam
+
+SELF-TEST PASSED: all 9 broken round trips were rejected.
