@@ -39,6 +39,13 @@
 > | 4 engine internals | `epic418-w5-engine` | #474 #475 #476 #479 #480 #427 #503 #493 #495 | Sonnet, implementer |
 > | 5 docs | `epic418-w5-docs` | #496+#411 | Sonnet, implementer |
 >
+> **LAUNCH ORDERS ARE NOT IN THE WORKTREES — READ THEM FROM THE MAIN CHECKOUT.** I cut the worktrees
+> from `ea854471` and committed the orders afterwards at `197ad5b0`, so every dispatch prompt named a
+> path that resolves to nothing. They live at
+> `C:/Programs/constellation-skills/.agent-work/epic-418-redux/launch-orders/LO-w5-c{1..5}-*.md`,
+> read-only for crews. Correction was messaged to crews 2-5; crew 1 found it itself.
+> **Fresh Admiral: next time commit the orders BEFORE cutting the worktrees.**
+>
 > **THE ONE THING THAT CAN VOID THIS WAVE'S DELIVERABLE:** **crew 4 is the sole writer of
 > `scripts/checklist_engine.py` and `tests/test_checklist_engine.py` for the whole wave.** Nine of its
 > issues live there. If any other crew is given a task that touches those two files, stop and re-cut the
