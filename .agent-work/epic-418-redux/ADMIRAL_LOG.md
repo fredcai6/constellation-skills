@@ -2329,3 +2329,36 @@ The two numbers are not the same thing and I ran them together, so both stated p
 had the exact number available by one command and reported a remembered impression instead. Rule 2
 in the state note says *re-derive every status claim from its source before citing it* — I wrote that
 rule this morning, about this failure, and then broke it while describing that failure.
+
+**INCIDENT | my monitor told me to relaunch a healthy Commander. Second time, different cause,
+caught by my own rules.** The watcher fired `REFRESH_REQUESTED and worktree idle -- ACTIONABLE,
+relaunch cold`. **Instance E was fine.** Verified before acting, per rule 3:
+
+- **leases ACTIVE**, held by `commander-w4-467-e` — a handing-off Commander releases them
+- **fill 8.8%** against a 15% hard line — **it cannot have tripped**
+- **no idle notification** on the harness push channel, which is authoritative
+- last journal verb `start g2-implement` at 11:31:46, worktree quiet ~10 minutes
+
+**It was quiet because it had dispatched an implementer crew and was waiting.** That is exactly the
+*"Commander idle-waiting vs Commander dead"* case I identified earlier and **deliberately declined to
+patch on speculation** — and it has now happened for real. The refresh signal itself was instance D's
+**already-served** request for `g2-implement`, re-rendering because g2 became the active gate.
+
+**Rule 7 is what actually stopped me**, not my judgement: *never dispatch until the predecessor's
+idle notification has arrived.* No notification had arrived, so the dispatch was blocked before I
+ever weighed the evidence. **A rule written four hours ago, after a different failure, caught this
+one.** That is the first time this run a written-down rule fired instead of being read past — and it
+is the answer to the *written-down-and-ignored* pattern: the rule worked because it gates an
+**action**, not because I remembered to consult it.
+
+**Fixed the instrument, fourth revision.** Idle is not tripped. A Commander waiting on a crew goes
+quiet for tens of minutes while perfectly alive — the worktree writes are its *crew's*, and while
+the crew is thinking there are none at all. The monitor now requires the **tripped shape**, not mere
+quiet: refresh signal **and** ≥15 min quiet **and** (leases released **or** fill ≥ 0.14). It also
+treats an unreadable fill as *unknown*, never as *safe*. Verified against live state before
+re-arming: `fill=0.088`, active-within-15min → **"refresh present but SERVED — do NOT relaunch."**
+
+**Ninth instance of the family from my own instruments, and the pattern in them is now clear:**
+every one has been a **proxy** — file mtimes, a rendered string, a substring, a subprocess exit,
+"quiet" — standing in for a fact only the thing itself can report. Each proxy was right until the
+world produced a case where it wasn't, and every failure looked identical to health.
