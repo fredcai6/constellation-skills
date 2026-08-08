@@ -846,3 +846,25 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   the primary action was a no-op. **The only thing that caught all three was re-reading the state
   afterwards rather than trusting the command.** That is the same discipline whose absence produced
   the false lease-release claim at the start of this run — and it is now three-for-three.
+
+- `2026-08-08` — `RULING` (**the fix verified on its own author, immediately, and the reading is the
+  most useful number this wave produced**): minutes after #491 merged, `gauge-skip.json` is **gone**
+  from my work area and `gauge.json` reads a fresh live value:
+  `{"fill_fraction": 0.329733, "model": "claude-opus-5", "observed_at": "2026-08-08T05:44:48.452Z"}`.
+  **My governor came back on the moment the fix landed**, on the same two-binding configuration
+  (spine + latitude survey) that had silenced it since 20:58Z the previous evening. That is the
+  cleanest possible acceptance test: the defect was found on this agent, fixed by a crew this agent
+  dispatched, and closed by observing this agent recover — no fixture, no reconstruction.
+  **And the number is the finding.** I am at **33% fill** — roughly **double** the 17-21% band at
+  which every crew in this epic has HARD-tripped. I have been running an entire wave, blind, at a
+  fill that would have stopped any of my Commanders twice over.
+  **This sharpens the trip-band recommendation rather than reversing it.** I already argued the band
+  is not the problem, because W3-C's trip cost only a relaunch of mechanical work. This adds the other
+  half: the orchestrator tier has been operating far past that band with no trip and no visible harm,
+  which means the band is **not calibrated per role** — one threshold is applied to an implementer
+  finishing a bounded fix and to an Admiral holding an epic's whole context. A2's done-condition 4 is
+  exactly this: *thresholds are per-gate, one graded default plus an override mechanism existing and
+  exercised at least once.* **Wave 3 just produced the first evidence that the default is wrong for
+  at least one role**, which is the "gate where it has bitten" that DC4's override is meant for.
+  Recorded as the answer to take to Tommy at the boundary: not "retune 17-21%", but "the band is
+  role-blind, and here is the measurement that shows it."
