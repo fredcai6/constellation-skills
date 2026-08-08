@@ -42,11 +42,46 @@ identically. Before relying on any status claim in this file, `gh issue view` it
 Boundary `w3-to-w4` recorded, `decision=replan`, `launch_id=wave4-a2-trip-semantics`,
 `admiral-prelaunch` **exit 0**.
 
-## Remaining after wave 4
+## Remaining after wave 4 — CORRECTED against the LIVE skill, 2026-08-08
 
-`execute` postconditions c1/c2/c3, then **`closeout`** only: lessons-auditor dispatch, cartographer
-reconcile, harvest-before-sweep, repo hygiene, epic summary, user acceptance — then `release` the
-lease as the **very last** action.
+**My loaded copy of the Admiral skill was STALE for this entire run** — this epic rewrote the skill
+it runs under (#447, #460) and my copy predates the rewrite. Re-read the installed copy at
+`C:/Users/fredc/.claude/skills/constellation-admiral/SKILL.md`; it matches the repo apart from one
+install-time path substitution. **The live closeout has FIVE substeps, not seven:**
+
+1. **Record the epic retrospective as EPISODES — written by ME, no subagent.** One episode per
+   distinct thing that happened; not one per wave, not a summary. **An episode is a record, not a
+   rule** — write what you observed; a rule for a future agent belongs in `docs/agents/*` and is
+   Tommy's call. #460's guard enforces this mechanically. Only write path:
+   `apply_episode_delta.py --store-root episodes`. Prove with `verify_episode_captured.py` before
+   advancing. Source material: `closeout/RETROSPECTIVE_SOURCE.md` (17 routed candidates).
+   **Dogfood sweep: DONE** — `closeout/feedback-sweep-2026-08-08.md`, clean.
+2. **Cartographer reconcile** — hand it the epic's net change. **This is the only dispatch closeout
+   needs.** Net change computed: base `cbd9aee8`, **106 files, +10,864 / -4,229** excluding
+   `.agent-work` and `episodes`.
+3. **Harvest before sweep** — for wave 4's worktree only. Everything else is already swept.
+4. **Repo hygiene** — worktrees swept (**never `governor-264`**), `ADMIRAL_LOG` archived under
+   `.agent-work/archive/`.
+5. **Epic summary; user acceptance closes the run.**
+
+Then `advance` closeout, and **`release` the lease as the very last action**.
+
+**The old "durable trio" harvest model is gone.** `episodes/` is a tracked repo-root path, so a
+committed episode already survives `git worktree remove`. Verified: **60 episodes tracked**,
+including `w3a-465-001..006`.
+
+**Verified, so it is not re-investigated:** the tracked `.agent-work/CONSTELLATION_FEEDBACK.md` has
+**no entries after 2026-08-05**, and waves 2-3 added none. **This is not a loss.** The commander
+`feedback` gate now requires an **episode** (postcondition c1, checked by
+`verify_episode_captured.py`), not that export. And only **one** wave-3 dispatch ran a Commander
+spine at all — #465 (`constellation-commander-delegated`); **#461 and #488/#489 were
+implementer-with-plan** dispatches per right-sizing doctrine, and implementers have no feedback
+gate. Six episodes from one Commander is exactly correct. No gate was skipped.
+
+**Residual defect noted, live doctrine:** Admiral closeout substep 3 still says to harvest a
+commander's worktree-local `CONSTELLATION_FEEDBACK.md`, but the commander spine no longer requires
+producing one. The retirement propagated to substep 1 and to the commander's gate, and left substep
+3 protecting an artifact nothing writes. Closeout candidate.
 
 ## Worktrees — sweep verdict
 

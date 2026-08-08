@@ -1344,3 +1344,41 @@ Not fixed here, and the reason is the contract, not the difficulty: R2 authorize
 this wave**, and this is a behaviour change to a shipped installer that needs a test. Recommending
 it at the wave-4 checkpoint as a cheap fix under R1's standing preference. Recorded in the
 disposition ledger alongside #454.
+
+**RULING | reloaded the live Admiral skill and corrected my remaining plan against it.** Having
+proved my copy was stale, continuing to run from it would have been the same error a second time.
+The live closeout has **five** substeps, not the seven I had been working to. Deltas that matter:
+substep 1 is episodes written by me; the **cartographer reconcile is the only dispatch closeout
+needs**; and the "durable trio" harvest model is gone, because `episodes/` is a tracked repo-root
+path that survives `git worktree remove` by construction. State note rewritten against the live
+text.
+
+**Chased a suspected data loss to a clean negative — recorded so nobody re-opens it.** The live
+harvest substep protects each commander's worktree-local `CONSTELLATION_FEEDBACK.md`, so I checked
+whether waves 2-3 had lost theirs to the sweeps. The tracked export has **no entries after
+2026-08-05** and waves 2-3 added none, across roughly ten dispatches that found a dozen real defects
+in the constellation's own tooling. That looked bad.
+
+It is not a loss, and the reason is specific rather than reassuring:
+
+- The commander `feedback` gate **no longer asks for that export**. Its postcondition c1 requires an
+  **episode** — *"an episode in the store records this work id"* — checked by
+  `verify_episode_captured.py`. Episodes are tracked at the repo root and survive sweeps.
+- Only **one** wave-3 dispatch ran a Commander spine at all: **#465**
+  (`constellation-commander-delegated`). **#461 and #488/#489 were `constellation-implementer`
+  dispatches**, right-sized per doctrine — their launch orders say so in their own words
+  (*"not a full Commander -- this is small and bounded"*). Implementers have no feedback gate.
+- **60 episodes are tracked in main, including `w3a-465-001..006`.** Six episodes from the one
+  Commander is exactly the correct count.
+
+So: no gate skipped, nothing swept away, and specifically **not** an instance of #432. Worth
+recording as a null with its reasoning, because the surface reading — *ten dispatches, zero
+feedback entries* — is alarming and someone will re-derive it.
+
+**FINDING | live Admiral doctrine carries a dangling reference of its own.** Closeout substep 3
+still instructs the Admiral to harvest a commander's worktree-local `CONSTELLATION_FEEDBACK.md`
+before sweeping, while the commander spine no longer requires the commander to write one. The #447
+retirement propagated into substep 1 and into the commander's gate, and left substep 3 guarding an
+artifact nothing produces. Smaller sibling of the lessons-auditor dangling reference above, same
+family, and found the same way — by checking a mandate against the thing it names rather than
+reading past it. Closeout candidate, not fixed here.
