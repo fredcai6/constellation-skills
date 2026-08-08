@@ -798,3 +798,19 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   `r6-fowler` shipping a placeholder no engine verb can fill, and this reviewer drove that exact gate
   to a clean `verify_fowler_pass.py` exit 0.** That is a live datapoint for W3-A's design question,
   now preserved instead of destroyed by the sweep it was one command away from.
+
+- `2026-08-08` — `RULING` (positive control completed): **W3-C's refresh round trip closed
+  successfully, end to end.** Trip at 16% on `m3-verify` → `refresh-request` + DIGEST written →
+  cold successor claimed the same worktree and plan file at 4% fill → verified the predecessor's
+  fixes intact rather than redoing them → full suite `1789 passed / 2 skipped / 683 subtests / exit 0`
+  → PR #491 opened → `advance m3-verify` (the engine re-ran the suite as its own postcondition check)
+  → `DONE: no open items` → **lease released last**.
+  **That is A2's DC5 — trip, handoff, refresh, resume, with the resumed agent's work verified against
+  what the tripped agent was mid-way through — demonstrated end to end, before A2 has an issue cut.**
+  The spec adds DC5 precisely because DC1-3 are all satisfiable while continuity never happens once.
+  It happened once here, by hand, and it cost one relaunch of mechanical work.
+  Two details worth keeping for whoever cuts A2: the successor **found the predecessor's work entirely
+  uncommitted** (branch 10 behind `origin/main`, zero commits of its own) and recovered it from the
+  working tree — so the handoff survived on the *filesystem*, not on the DIGEST alone. And it
+  fast-forwarded rather than merging, keeping history clean. A real round trip is a little more than
+  "read `current` and continue"; the state note and the uncommitted tree carried real weight.
