@@ -164,7 +164,8 @@
           "id": "c1",
           "statement": "notes + result written, branch pushed, PR opened",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "notes.md + IMPLEMENTER_RESULT.md written; commit a4ad153a pushed to epic-418/w5-docs; PR #509 opened: https://github.com/fredcai6/constellation-skills/pull/509"
         },
         {
           "id": "c2",
@@ -173,17 +174,30 @@
             "kind": "command",
             "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-artifact-and-pr-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-artifact-and-pr-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -193,13 +207,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "impl-w5-docs-496-411",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T22:56:13.084622+00:00",
-    "last_heartbeat": "2026-08-08T22:58:22.961461+00:00",
+    "last_heartbeat": "2026-08-08T23:17:05.103391+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T23:17:24.552769+00:00"
   },
   "why_trail": [
     {
@@ -222,6 +237,13 @@
       "why": "Verified #411 against source and it holds; dropped the _shared row from TREND_SNAPSHOT.md's per-role table, added a note stating 19 roles and explaining the bundled-shared-surface effect, without fabricating new per-role attribution numbers.",
       "mechanical": false,
       "ts": "2026-08-08T22:58:16.524553+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-artifact-and-pr",
+      "why": "notes.md + IMPLEMENTER_RESULT.md written; full suite green as sanity check; commit a4ad153a pushed to epic-418/w5-docs; PR #509 opened.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:17:05.103357+00:00"
     }
   ]
 }
