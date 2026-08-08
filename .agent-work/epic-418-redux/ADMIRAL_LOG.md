@@ -3487,3 +3487,30 @@ it is not**, because the honest waiver exists as a fallback precisely so no repo
 
 **Told crew 2 in writing:** its first deliverable is a **discrepancy, not code** — workstream R and
 #458's own body specify different things, and neither noticed until this checkpoint.
+
+### ERROR (mine) — every launch order was addressed to a path that did not exist
+
+**Caught by `commander-w5-gates` within minutes of dispatch, in its proof-of-life, unprompted.**
+
+I provisioned all five worktrees from `ea854471`, then committed the launch orders at `197ad5b0` —
+**after** the branches were cut. So no worktree contained its own order, and every dispatch prompt
+told its crew to read a path inside its worktree that resolves to nothing. Five for five.
+
+Crew 1 recovered on its own by reading the order from the main checkout and said so plainly:
+
+> a Commander told to "read your launch order first, in your worktree" would have found nothing there
+> — that is itself a provisioning gap of the kind this wave is about.
+
+**It is right, and the observation is sharper than the error.** The order was correct when written and
+stale by the time it was read, and *nothing in the provisioning step checks that the artifact a
+dispatch names actually exists at the address it names.* A worktree that exists, a branch that exists
+and an order that exists all passed their checks independently; the **binding between them** is what
+nothing verified. That is a check that cannot fail, sitting in this wave's own launch machinery — and
+crew 3 is fixing the same shape one tier down (a handoff addressed to a name that has moved).
+
+**Correction issued** to crews 2–5 by direct message with the absolute main-checkout path, marked
+read-only, before any of them could hit it. Crew 1 needed none.
+
+**Ordering rule, for the retrospective:** commit the launch orders **before** cutting the worktrees,
+or cut the worktrees from the commit that contains them. The dispatch step should verify the order is
+readable **at the address the prompt gives**, not merely that the file was written somewhere.
