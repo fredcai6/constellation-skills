@@ -1563,3 +1563,43 @@ DIGEST is sufficient."* **A run without durable artifacts would have lost this.*
 3. `grade_lint.py` fails `GL001 UNGRADED_DECISION` on any string in `anchors.decision[]`, including
    the "decision pressure" entries `EXECUTE_PLAN.template.json` explicitly says carry no grade —
    **the template and the linter contradict each other.**
+
+**FINDING | I re-derived the claim I retracted, and the corrected version says something different
+and more useful.** The retraction stands — *"the Admiral ran to 44% with no trip"* was unsound
+because no reading was asserted. **#488's fix means I now have the reading it lacked:**
+`fill_fraction 0.26286`, `claude-opus-5`, `10:11:26Z`, `gauge.json` present and **no
+`gauge-skip.json`** — a single live binding, measured rather than absent.
+
+| Role | Asserted fill | Over hard (0.15)? | Tripped? |
+|---|---|---|---|
+| #467 Commander | 0.2758 | yes | **yes, at the `plan` boundary** |
+| Admiral (me) | 0.2629 | yes | **no** |
+
+**Both over the line by a similar margin; only one was ever asked.** So the band is **not**
+role-blind — both roles cross the same threshold at nearly the same fill. **The evaluation points
+are role-asymmetric.** A Commander crosses ten gates in a run and meets the question repeatedly; an
+Admiral sits inside `execute` for an entire epic — one gate, many hours, many waves — and can run
+arbitrarily far past the limit without being asked once. The governor's question reaches the role
+already handing off at seams, and skips the role holding the most irreplaceable context in the fleet.
+
+**This inherits into the shipped fix unchanged**, and I have told the Commander so: refusing the
+verbs that *begin* work is the right shape, but an Admiral deep inside `execute` begins nothing.
+**DC1 is satisfied for gate-crossing roles and structurally silent for long-single-gate roles.**
+
+Ruled: **not a reason to widen #467, and not a defect in the fix.** It is the honest boundary of
+what the fix covers. Asked for one line in the DC1 accounting stating it, with both readings as
+evidence — better the return states the boundary than that someone later assumes DC1 was universal.
+Left the Commander free to route it to triage instead if it judges that better fit, saying which and
+why.
+
+Worth recording how this arrived: **a wave-3 fix (#488) produced the wave-4 measurement that
+corrected the wave-4 Admiral's own retracted claim.** The improvement loop closing inside a single
+run, twice over — the crew refuted me, and the tooling it fixed last wave is what let me answer
+properly this wave.
+
+**Positive control held on the relaunch: nothing was at risk.** The tripped Commander **committed
+before going idle** (`d32712bd plan(467): freeze the A2 gate plan; record a live trip on #467
+itself`), so the frozen plan, the DIT convergence, the critic triage and the trip write-up were all
+in git before the handoff. That is the clean-seam sequencing I asked for at dispatch, obeyed without
+being reminded, and it is why the cold start had a rich work area to land in — which the predecessor
+itself named as the reason the doctrine works at all.
