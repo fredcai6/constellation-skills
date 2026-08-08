@@ -1,125 +1,46 @@
 # Crash-resume state note — epic-418-redux
 
-**WAVE 3: three of four issues MERGED and CLOSED. #465's PR is open and under review — that is the
-last thing standing between here and the boundary.**
+**WAVE 3 IS COMPLETE AND MERGED. `execute` is BLOCKED on contract expiry. Do not dispatch anything.**
 
-| Dispatch | Issue(s) | State |
-|---|---|---|
-| W3-B | #461 | **MERGED** PR #490 -> `ad149283`, reviewed on the forge, **CLOSED**, worktrees harvested + swept |
-| W3-C | #488 + #489 | **MERGED** PR #491 -> `8b9330ea`, reviewed on the forge, **CLOSED**, worktrees harvested + swept |
-| W3-A | #465 | **PR #492 open** at `6774e75e`; review **LIVE** in `C:/Programs/wt-rev-465`. Commander still holds its own spine at `execute` with reconcile/triage/review/feedback/archive pending. |
-
-**Green main: `1789 passed / 2 skipped / 683 subtests / exit 0`** — batched re-verification on the
-final merged tree, 469s. #492's branch predates both merges, so it will report a **lower** count; that
-delta is explained by the missing merges, not a regression.
-
-**#465's fix is NOT a new engine verb** — it lifts the existing `amend --op retext-check` onto a
-survey. No shared-interface change, nothing to surface. Removal was ruled out on evidence: deleting
-the placeholder deletes the check.
-
-**Remaining:** #492 review -> gate on `gh pr checks` exit 0 -> merge -> verify MERGED via the forge ->
-harvest + sweep `wt-w3a-465` and `wt-rev-465` -> close #465 -> `w3-to-w4` boundary packet ->
-`closeout`.
-
-**MY GAUGE WORKS AGAIN** (#488's fix landed): last reading **0.3297 at 05:44:48Z**. That is ~2x the
-17-21% band every crew trips at. Watch it now that it is readable, and hand off on judgement.
-
-**Merge gate, in order, honoured for #490 and to be repeated for #491:** `gh pr checks <n>` exit 0 →
-independent review posted to the forge → merge → **verify MERGED via `gh pr view --json state`** →
-harvest the worktrees → sweep → close the issue.
-
-**Two silent `gh` hazards, both hit this session:**
-- **`gh pr merge` exits 1 on a merge that SUCCEEDED** when `--delete-branch` fails (a worktree holds
-  the branch). Cleanup runs after the merge. **Never read its exit code as the merge verdict.**
-- **`gh issue close -F <file>` accepts the unsupported flag, prints nothing, and does not close.**
-  Use `--comment "$(cat <file>)"` — command-substitution output is not rescanned, so it is also safe
-  from the backtick trap.
-
-**Self-approve is blocked by GitHub** — every agent authenticates as the same identity, which authored
-every PR. `gh pr review --approve` is refused. Sanctioned substitute: `--comment -F <file>` with the
-verdict stated at the top of the body. **This probably explains #470's "missing" reviews last wave —
-a platform refusal, not reviewer negligence. Correct that claim wherever it appears.**
-
-**If you are resuming cold:** W3-C's lease `impl-w3c-488-489` is still held and its gate is still
-`in-progress` — that is the **refresh** shape, not a dead crew. Do not force-claim it or restart it
-from zero; read `current` on `C:/Programs/wt-w3c-488-489/.agent-work/w3c-488-489/IMPLEMENTER_PLAN.json`
-and continue from there. Its PR body is already drafted at `.agent-work/w3c-488-489/pr-body.md`.
-
-- **step:** `execute` — in-progress. Remaining after `execute`: `closeout` only.
-- **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` ==
-  `origin/main`, pushed, working tree clean — verify with `git rev-parse --short HEAD` and
-  `git rev-parse --short origin/main` as **separate** invocations (a compound one returns
-  "fatal: Needed a single revision"). A literal hash in this field is wrong the moment this file is
-  committed, since committing it advances main; it was stale twice for exactly that reason.
+- **step:** `execute` — **blocked**. Remaining after `execute`: `closeout` only.
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
-  — then poll the three worktrees below.
-- **pid:** three background Agent dispatches; no OS pids to chase. Recover from their worktrees.
-- **expected artifact:** one result artifact + PR per dispatch.
+  — then get the contract refreshed before anything else. Resume with
+  `resume execute --session-id admiral-epic-418-redux --reason "<why the blocker cleared>"`.
+- **pid:** one agent still live — see "Still running" below. No other agents in flight.
+- **expected artifact:** a refreshed latitude contract, then A2's cut, then `closeout`.
 
-**Green main: `476e044d` → 1782 passed, 2 skipped, 683 subtests, exit 0** (real exit code captured).
-Wave-3 branches are cut from `c0ad5ecd`, which adds only `.agent-work` records on top, so the
-baseline holds.
+**GREEN MAIN: `1793 passed, 2 skipped, 683 subtests, exit 0`** (483s, real exit code captured) — the
+wave-2 baseline of 1782 plus 11 new tests (7 from #491, 4 from #492). This is the closeout baseline.
 
-## Wave 3 — in flight
+## Wave 3 — all four merged, closed, and reviewed on the forge
 
-| Dispatch | Issue(s) | Worktree | Branch | Shape / tier | Owns |
-|---|---|---|---|---|---|
-| W3-A | #465 | `C:/Programs/wt-w3a-465` | `epic-418/w3a-465` | full Commander / Opus | `skills/constellation-reviewer/**`, `scripts/checklist_engine.py` |
-| W3-B | #461 | `C:/Programs/wt-w3b-461` | `epic-418/w3b-461` | implementer / Sonnet | `tests/test_episode_negative_control.py` |
-| W3-C | #488 + #489 | `C:/Programs/wt-w3c-488-489` | `epic-418/w3c-488-489` | implementer / Sonnet | `scripts/hooks/gauge_writer_hook.py`, `tests/test_verify_spec_confirmed.py` |
-
-Fences verified disjoint before launch. `verify_worktree_isolation.py` on all three: exit 0,
-"3 distinct worktrees". Launch orders at `.agent-work/epic-418-redux/launch-orders/LO-465.md`,
-`LO-461.md`, `LO-488-489.md`.
-
-**The wave's single organizing instruction, in all three orders:** build the defective world and
-observe the current code getting it wrong *before* fixing. Green alone is not evidence for any of
-these four issues — green is what the broken version does too.
-
-## Boundary w2-to-w3 — recorded and verified
-
-`decision=replan`. Packets at `transitions/w2-to-w3/{REPLAN_INPUT,REPLAN_RESULT}.json`;
-`CURRENT_TRUTH.md` and `WAVE_REVIEW.md` rendered by the verifier.
-`verify_iterative_role_artifacts.py admiral-prelaunch` **exit 0** — run from the INSTALLED copy at
-`C:/Users/fredc/.claude/skills/constellation-admiral/scripts/` per #468.
-
-**Four shape errors it refused before passing**, all mine, all worth knowing next boundary:
-1. `blocks` naming an issue outside the current wave's issue list.
-2. `completed_outcomes` as strings — must be objects `{issue_id, outcome, evidence}`.
-3. A non-wave issue (#470) in `completed_outcomes`: completed ∪ open must **exactly partition** the
-   current wave's issue ids.
-4. `material_changes` as strings — must be objects `{surface, before, after, reason}`, and a
-   `surface` in `{intent_and_why, definition_of_done, good_enough, hard_constraints,
-   fixed_decisions}` additionally demands `applicable: false` plus an escalation packet.
-
-## Contract — refreshed AND amended, 2026-08-08
-
-Base contract + **Addendum R1**. Two messages from Tommy, minutes apart:
-
-> *"you can keep running, you're compacted. close the complete issues, and get on into wave 3.
-> 461 & 465 is good"*
-
-> *"woah, feel free to add easy or useful fixes to wave 3. id rather not clutter the issue board or
-> delay fixes that are easy to just knock out now"*
-
-- Issue closing: **delegated for #433/#436/#460/#464 only**; surfaced for everything else.
-- Wave 3: **#461 + #465 + #488 + #489**. The second message reversed my own hold on the latter two.
-- **Standing preference established: a genuinely cheap fix gets done in the current wave, not filed
-  and deferred.** The board is for what needs deciding, not for what needs typing.
-- **New expiry: the wave-3 boundary, or 72h from 2026-08-08T03:00Z.**
-
-## Wave 2 — closed out
-
-| Issue | PR | Merge | Tracker |
+| Issue | PR | Merge | Review |
 |---|---|---|---|
-| #433 | #485 | `538d5fd7` | **CLOSED** |
-| #436 | #472 | `7bc3f8c2` | **CLOSED** |
-| #460 | #487 | `476e044d` | **CLOSED** |
-| #464 | #473 | `0b4a11a7` | **CLOSED** |
-| — | #470 | `e8c735af` | Admiral's own fixture-path repair |
+| #461 | #490 | `ad149283` | APPROVE, posted |
+| #488 | #491 | `8b9330ea` | APPROVE, posted |
+| #489 | #491 | `8b9330ea` | APPROVE, posted |
+| #465 | #492 | `4da9bc9b` | APPROVE, posted |
 
-All five confirmed MERGED via `gh pr view --json state`. **Never use an ancestry test** — squash-merging
-#470 orphaned base `73b4517`, so ancestry returns the same answer for merged and abandoned.
+Boundary `w3-to-w4` recorded, `decision=replan`, `admiral-prelaunch` verifier **exit 0**.
+
+## STILL RUNNING — do not sweep this worktree
+
+**`C:/Programs/wt-w3a-465`** — W3-A's continuation Commander (`commander-w3a-465-b`) is still driving
+its own spine's bookkeeping at gate `execute`. Its PR is **merged** and #465 is **closed**, so the
+epic outcome is settled and nothing waits on it. But: **harvest its trio before sweeping**, and check
+its lease is released or the agent confirmed dead first. All other wave-3 worktrees are harvested and
+swept; their branches are deleted.
+
+## Why blocked — three reasons, one refresh clears them
+
+1. The contract expired at this boundary (Addendum R1: *"the wave-3 boundary, or 72h"*), and its own
+   clause forbids further dispatch across the expiry.
+2. **`closeout` itself needs a dispatch** — the lessons auditor — so this blocks the very next spine
+   step, not just wave 4.
+3. **A2 has no issue cut**, and cutting it is `scope change`, which the contract marks **surfaced**.
+
+Deliberately NOT done: wave-4 launch orders, and A2's cut. Their content is the question the expiry
+handed to Tommy.
 
 ## Still owed to Tommy at the wave-3 checkpoint
 

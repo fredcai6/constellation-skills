@@ -967,3 +967,25 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   bookkeeping), and said so rather than quietly ignoring it.
   Reviewer worktree harvested — **36 more files that existed nowhere in git** — and swept.
 - TRANSITION | boundary=w3-to-w4 | decision=replan | verified
+
+- `2026-08-08` — `RULING` (final batched re-verification): full suite on merged `main` after all four
+  wave-3 merges: **1793 passed / 2 skipped / 683 subtests / exit 0 in 483s.** That is the wave-2
+  baseline of 1782 plus 11 new tests — 7 from #491 and 4 from #492 — with no drift. **This is the
+  green baseline for closeout.**
+- `2026-08-08` — `RULING` (honest stop, bubbled through the engine rather than by going quiet):
+  **blocking `execute`.** Wave 3 is complete and its boundary is recorded and G2-verified. What
+  remains needs authority I do not have:
+  1. **The latitude contract expired at this boundary by its own terms** (Addendum R1: *"the wave-3
+     boundary, or 72h"*), and its expiry clause says crossing it forces a contract-refresh decision
+     **before further dispatch**.
+  2. **`closeout` requires a dispatch** — the lessons-auditor subagent — so it cannot start on a
+     stale contract either. This is not a wave-4 problem; it blocks the very next spine step.
+  3. **A2 has no issue cut**, and cutting it is `scope change`, which the contract marks **surfaced**.
+  I am **not** writing the wave-4 launch orders, and I have deliberately not cut A2, for the same
+  reason I did not write the `w2-to-w3` packet early last time: its content is the question the
+  expiry just handed to Tommy, and authoring it would be me answering it on his behalf.
+  **One thing genuinely outstanding and not blocked on him:** W3-A's continuation Commander is still
+  driving its own spine's bookkeeping in `C:/Programs/wt-w3a-465` (lease `commander-w3a-465-b`, gate
+  `execute`). Its PR is merged and its issue closed, so the epic outcome is settled — but **that
+  worktree must not be swept until it finishes**, and its trio must be harvested first. Recorded in
+  the state note.
