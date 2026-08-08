@@ -1,8 +1,32 @@
-# Lessons-audit run brief — epic #418 (`epic-418-redux`)
+# Epic retrospective source — epic #418 (`epic-418-redux`)
 
-**Status: DRAFT through wave 3. Wave 4 (#467) is in flight — its section is a marked slot and this
-brief is not dispatchable until it is filled.** Compiled by the Admiral for the closeout
-lessons-audit dispatch (`constellation-lessons-auditor`, fresh context).
+> **REPURPOSED 2026-08-08. This was written as a run brief for a `constellation-lessons-auditor`
+> dispatch. That skill does not exist** — this epic's own **#447** retired it, replacing
+> `LESSONS.md` and `AGENT_FEEDBACK.md` with `episodes/`. I was working from a stale copy of the
+> Admiral skill, loaded before this epic rewrote it. Live closeout substep 1 is *"Record the epic
+> retrospective as **episodes**"*, written **by the Admiral itself** via `apply_episode_delta.py`
+> and proven with `verify_episode_captured.py` — **no subagent**.
+>
+> The content below is not wasted: it is exactly the raw material substep 1 wants. **But the rule it
+> must now obey is different, and stricter.**
+
+**THE RULE THAT CHANGED — read before writing a single episode.** From live doctrine:
+
+> *An episode is a record, not a rule: write what you observed, and do **not** write a rule for a
+> future agent to follow — a rule to follow belongs in `docs/agents/*` and is a human's call.*
+
+Several candidates below are phrased as *rules* because I drafted them for an auditor whose job was
+to route lessons into permanent homes. **As episodes they must be rewritten as observations.** Not a
+formality: **#460's guard enforces it mechanically**, and it already caught a wave-3 crew writing an
+episode whose remedy opened with an imperative verb. Anything below that reads "always do X" is a
+`docs/agents/*` proposal for Tommy, **not** an episode.
+
+- **One episode per distinct thing that happened** — not one per wave, and not a summary.
+- **Only write path:** `apply_episode_delta.py --store-root episodes` on every invocation.
+- **Prove capture** with `verify_episode_captured.py` before advancing.
+
+**Status: covers waves 0-3. Wave 4 (#467) is in flight — section G is a marked slot and the
+retrospective is not complete until it is filled.**
 
 ---
 
