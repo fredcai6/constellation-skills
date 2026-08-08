@@ -2903,3 +2903,20 @@ Also corroborates the #266 comment: `g3-integrate` carries a real recorded trip 
 *"Tripped at fill 0.168164 (>= hard 0.15, claude-opus-5) while trying to CLOSE g3-integrate"*.
 
 Crew still in `g4-implement`, alive, ~70 min on the wave's largest gate. Not perturbed.
+
+## PROGRESS | 2026-08-08T17:16:20Z | g4-implement CLOSED — 12/17, now g4-review
+
+Shipped `20240f44` + `f74ef422` on parent `9997c32d`: an engine-only append-only **trip ledger** for
+BEGINs over the hard line, written only inside `_trip_hard_gate`, recording both begin-refused and
+begin-released. Closed with an `implementer-result` evidence item (crew `.../g4-implement/implementer/attempt-1`).
+
+**The g3 handoff defect is fixed in practice.** Why-record `w-12` names its **parent commit** rather
+than just the diff — the correction two g3 reviewers reported independently and I carried into this
+Commander's dispatch. It applied without being reminded again.
+
+Gate also produced the deliverable I made a condition of it: `CHECK_THAT_CANNOT_FAIL.md`, documenting
+**four specimens inside #467 alone**, one of them the Commander's own near-miss caught by two cold
+critics before any code was written. Its claim — four instances, four artifacts, four actors, all of
+whom knew the issue was about that defect, is a **base rate, not an anecdote** — is corroborated from
+my side by #313/#501/#502 today. Recorded in `closeout/RETROSPECTIVE_SOURCE.md` §49, **not** in the
+crew's artifact, which stays theirs.
