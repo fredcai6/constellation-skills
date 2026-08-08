@@ -1964,3 +1964,21 @@ speculation while nothing is wrong.
 `probe3-scratch/probe-literal/` with a paired `red-repro-431-probe-literal/`, independently
 reproducing the literal-`<why-id>`-placeholder defect the crews reported rather than taking their
 word — plus `fowler-pass.json`. Three probe generations and a quality pass on one gate.
+
+**CORRECTION to the note above: the harness channel exists, and I have been receiving it all
+along.** I wrote that asking the harness whether an agent is alive was "the right shape, not built."
+It is already built and already arriving: the harness **pushes an idle/completion notification** when
+a dispatched agent finishes. I received one for instance A and one for instance B, at
+`10:12:41Z` and `10:48:51Z`. **I have received none for instance C — which is the positive statement
+that C is alive**, from a channel independent of the filesystem.
+
+So the discriminator I said I lacked is: *filesystem activity says something is working; the absence
+of an idle notification, paired with a notification channel I have demonstrably received on,
+says the Commander specifically is.* The pairing matters — an unproven channel that has never
+delivered would make "no notification" mean nothing, which is the absence-as-evidence trap. Mine has
+delivered twice today, so its silence carries information.
+
+**This is the push-not-pull shape stated in the governor doctrine** — *the reading is pushed by the
+engine on tool use, never fetched by the agent* — and I spent a tool call trying to *pull* an answer
+the harness had already *pushed* me twice. Recorded because the epic is about mechanisms whose
+signal you have to know how to read, and I misread my own.
