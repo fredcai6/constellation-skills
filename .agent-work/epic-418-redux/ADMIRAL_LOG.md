@@ -3435,3 +3435,55 @@ because #458's own Fixed section says the check reports and never silently repai
 thought). Expected net: **156 → ~135.**
 
 - TRANSITION | boundary=close-to-w5 | decision=advance | verified
+
+## 2026-08-08 — WAVE LAUNCH: wave 5, five crews, 21 issues
+
+**Boundary.** `close-to-w5`, trigger `material_exception`, decision **advance**, applicable true,
+escalation null. `verify_replan` G1+G2 **exit 0**; `admiral-prelaunch` **exit 0** via the installed
+verifier. `execute` resumed off its blocked state — **the gate closed without a waiver**, because the
+scope decision made `advance` the honest exit rather than because anything was bent.
+
+**The w4-to-close `stop` exit stands, unedited.** Editing an exited verdict to fit a new scope is the
+doctored-verdict failure this epic exists to remove. The input changed — a human scope decision
+arriving after wave 4 had already exited — which is precisely what `material_exception` is for.
+
+**RULING — install sync before dispatch (pre-cleared at contract time).** Measured first: **all nine**
+installed bundles carried engine blob `819ef205…`/`30b41e98…` against main's `c281cb68…` — i.e. **none
+of them had #467**. Crews would have driven spines on an engine where a HARD trip still refuses
+`advance`: the exact bug this wave's predecessor fixed. Re-installed `--agent claude --scope user
+--force`; **9 in sync, 0 stale**, verified by `git hash-object` per bundle, not by the installer's own
+report. **`--wire-hooks` deliberately NOT passed** — `settings.json` is a hard constraint of this
+epic, and whether the gauge writer ships is #458's question, which is crew 2's to answer.
+
+**Incidental corroboration for crew 2, unprompted:** the installer's own dry-run ends with *"Context
+Governor hooks: UNWIRED — no PostToolUse entry for gauge_writer_hook.py … so the Context Governor
+never fires."* The installer already knows. Nothing asks it. That is #458 in one line.
+
+**Five worktrees provisioned and verified**, all at `ea854471`, one per crew, never two into one.
+
+| Crew | Worktree | Issues | Model |
+|---|---|---|---|
+| 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484+#446 | Opus, Commander |
+| 2 readiness (R) | `epic418-w5-readiness` | #458 | Sonnet, Commander |
+| 3 crew addressing | `epic418-w5-addressing` | #507+#370+#413 | Sonnet, implementer |
+| 4 engine internals | `epic418-w5-engine` | #474 #475 #476 #479 #480 #427 #503 #493 #495 | Sonnet, implementer |
+| 5 docs | `epic418-w5-docs` | #496+#411 | Sonnet, implementer |
+
+**RULING — crew 4 is the sole writer of `checklist_engine.py` and its tests for the whole wave.** Nine
+of its issues live there. #493 and #495 were moved **into** crew 4 for this reason after they read as
+repo-wide hygiene, and crew 5 exists **only** so #496 — a doc fix whose subject is `save()` — cannot
+pull a second writer into that file. Every order names what it does *not* own and says that a fix
+needing another crew's file is a **float, not a decision**.
+
+**RULING — the duplicate-collapse rule is in every relevant order, NOT OVERRIDABLE.** Confirm each
+collapse against the issue **body** before closing. Three of the wave's collapses (#501≡#468,
+#439≡#484≡#446, #507≡#370≡#413) are **invisible from the titles**, and last wave a comment was posted
+on #371 from a plausible title-reading and had to be corrected. A title-level check here is a check
+that cannot fail, in a wave about checks that cannot fail.
+
+**Told crew 1 in writing, up front:** #506 is the fix that lets this epic close its own `execute`
+gate without a waiver against Tommy's name — **and that this is not a reason to report it done when
+it is not**, because the honest waiver exists as a fallback precisely so no report has to soften.
+
+**Told crew 2 in writing:** its first deliverable is a **discrepancy, not code** — workstream R and
+#458's own body specify different things, and neither noticed until this checkpoint.
