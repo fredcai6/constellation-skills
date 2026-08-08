@@ -3382,3 +3382,56 @@ cold critic panel), g4's B1 (caught by the g4 reviewer), and g5's V1/V8 (caught 
 inside the instrument built to make DC5 falsifiable). **In all three the author could not see it and an
 independent cold reader could.** That is an argument about process, not about any of the three authors,
 and it belongs in the epic retrospective.
+
+---
+
+## 2026-08-08 — CHECKPOINT: Tommy authorizes wave 5, then widens it
+
+**Presented at the checkpoint:** the epic scored against its own five done-conditions from
+`REVISED_SPEC.md` §"The epic's five done-conditions, all of them" — **not** against the wave list,
+which flatters the run. Honest score: **DC3 met; DC2 substantially met; DC1 mechanism done but
+shipping not (every governor reading this epic took came from an untracked `settings.local.json`);
+DC4 and DC5 untouched.** Also surfaced: 117 open issues when the spec was written, **156 today**, and
+the structural consequence nobody had written down — **E is specified to run on "what survives the
+redux", so it cannot run while the redux runs.**
+
+**DECISION (Tommy):** one more wave, then close and set up for F. Then, on reading the subset:
+*"feeling maximalist, add the 474-480 group to crew 4."*
+
+**RULING — wave 5 composition, 21 issues, 5 dispatches.** Three duplicate collapses verified against
+issue **bodies**, not titles (the titles do not show it):
+
+| Collapse | Evidence |
+|---|---|
+| #501 ≡ #468 | same function, same line — `_installed_skills_root()`, `verify_iterative_role_artifacts.py:53`. #468 filed from outside, #501 from the spine's own imperative. |
+| #439 ≡ #484 ≡ #446 | all three are the **same postcondition**, `archive.c2b`. Two are the unsubstituted `<branch>` placeholder; the third is that it accepts only an OPEN PR, so the success case forces `--force`. |
+| #507 ≡ #370 ≡ #413 | one defect, three filings, three epics — a crew cannot address the Commander that dispatched it. |
+
+- **Crew 1** (Commander, Opus) — the bookend gates: #506, #501+#468, #439+#484+#446. **6 issues, 3 fixes.**
+- **Crew 2** (Commander, Sonnet) — #458, workstream R. **1 issue**, moves DC1.
+- **Crew 3** (implementer-with-plan, Sonnet) — crew addressing: #507+#370+#413. **3 issues, 1 fix.**
+- **Crew 4** (implementer-with-plan, Sonnet) — `checklist_engine.py` internals: #474 #475 #476 #479 #480 #427 #503 #493 #495. **9 issues.**
+- **Crew 5** (implementer-with-plan, Sonnet) — docs only: #496 #411. **2 issues.**
+
+**Why crew 4 is one crew and not two.** Nine of these land in `checklist_engine.py`. Splitting them
+by theme would put two writers in one file in one wave, against my own doctrine. #493 and #495 were
+moved *into* crew 4 for the same reason — they read as repo-wide hygiene but the journal append and
+at least one of the six writers are in that file. Crew 5 is docs-only precisely so it cannot collide.
+
+**RULING — the dogfood dependency, stated up front.** #506's fix is what lets this epic close its
+`execute` gate without a waiver against Tommy's name. If crew 1 misses on #506 we are back to the
+waiver; that is a known, accepted single point of failure and it is **not** a reason for crew 1 to
+report #506 done when it is not.
+
+**RULING — #458's done-condition drift, surfaced not silently resolved.** Workstream R says *"a fresh
+clone produces a reading with no machine-local config"*; #458's body says *"one command answers whether
+the project is constellation-ready."* Those are different deliverables — one closes the gap, the other
+makes it visible. Crew 2's first job is the discrepancy, not code. Standing ruling, overridable by the
+Commander with a stated reason: **build the check; treat wiring as a separate, opt-in decision** —
+because #458's own Fixed section says the check reports and never silently repairs.
+
+**Left out with reasons:** #264 (rebase over 211 commits — scope change, and #452/#444 belong with it),
+#409 (cheap only once the working-notes location is ruled), #429, #500/#502/#504 (all need design
+thought). Expected net: **156 → ~135.**
+
+- TRANSITION | boundary=close-to-w5 | decision=advance | verified

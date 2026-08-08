@@ -26,25 +26,42 @@
 >
 > **4. Then read the NINE rules.** They are the ones I broke *after writing them down*.
 >
-> **WHERE IT IS RIGHT NOW (2026-08-08, refresh at each launch):** **14/17 gates.** Three left:
-> `g5-acceptance` -> `g5-review` -> `g5-integrate`. Live Commander is **`commander-w4-467-i`**, launched
-> at the g5-acceptance seam. Three predecessors (g, h, and one before) each tripped, handed off cleanly,
-> and stopped — **that is working as designed, not a failure.**
+> **WHERE IT IS RIGHT NOW (2026-08-08, refresh at each launch):** **WAVE 5 — the last wave.** Wave 4
+> is merged and closed (#467 via PR #505 at `c875ee23`; #431 dissolved). The boundary `close-to-w5`
+> exited **advance**, G2-verified, prelaunch exit 0. **Five crews, 21 issues.** This is the final wave
+> of epic #418; closeout follows it, then F (#424) becomes its own effort.
 >
-> **THE ONE THING THAT CAN VOID THIS WAVE'S DELIVERABLE:** at `g5-acceptance`, agent **B's dispatch
-> prompt must contain NOTHING but the `current` output.** No summary, no context, no helpful pointer.
-> A prompt that helps B tests something other than the claim. If you see one, the measurement is void.
+> | Crew | Worktree | Issues | Model |
+> |---|---|---|---|
+> | 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484+#446 | Opus, Commander |
+> | 2 readiness (R) | `epic418-w5-readiness` | #458 | Sonnet, Commander |
+> | 3 crew addressing | `epic418-w5-addressing` | #507+#370+#413 | Sonnet, implementer |
+> | 4 engine internals | `epic418-w5-engine` | #474 #475 #476 #479 #480 #427 #503 #493 #495 | Sonnet, implementer |
+> | 5 docs | `epic418-w5-docs` | #496+#411 | Sonnet, implementer |
+>
+> **THE ONE THING THAT CAN VOID THIS WAVE'S DELIVERABLE:** **crew 4 is the sole writer of
+> `scripts/checklist_engine.py` and `tests/test_checklist_engine.py` for the whole wave.** Nine of its
+> issues live there. If any other crew is given a task that touches those two files, stop and re-cut the
+> assignment — do not let two writers into one file and plan to resolve it at merge.
+>
+> **THE DOGFOOD DEPENDENCY:** **#506 (crew 1) is what lets this epic close its own `execute` gate
+> without a waiver against Tommy's name.** Known single point of failure, accepted. It is **not** a
+> reason to accept a soft report on #506; if crew 1 misses it, take the waiver honestly.
+>
+> **Three of the 21 are duplicate collapses, and none is visible from the titles** — #501≡#468 (same
+> function, same line), #439≡#484≡#446 (all `archive.c2b`), #507≡#370≡#413 (one defect, three epics).
+> **Before closing any of the eight, re-confirm the collapse against the issue BODY.** A title-level
+> check here is a check that cannot fail.
 >
 > **NEVER copy an engine hash forward from any document, including this one.** Pin with
 > `git rev-parse HEAD:scripts/checklist_engine.py`, re-derived at the moment of use. Byte-size pins are
 > unusable — a predecessor's own trap-6 size matched nothing on disk.
 >
-> **What this run is:** epic #418 wave 4, one Commander on **#467** (A2, trip semantics), worktree
-> `C:/Programs/constellation-skills-wt/epic418-a2-467`. **Never dispatch a second into it.**
-> **What is owed to Tommy:** ONLY scope past A2 (#424/#421/#423). The four cheap fixes are
-> **settled** — 2026-08-08 he said "include cheap fixes in your plans", and they are now routed to
-> the tracker (new **#500**; comments on **#313/#442/#371/#266**) as scope sequenced AFTER #467.
-> They are NOT wave-4 scope. **Nothing else is blocked on him.**
+> **What this run is:** epic #418 **wave 5**, five crews in five separate worktrees.
+> **Never dispatch a second Commander into any one of them.**
+> **What is owed to Tommy: NOTHING. Scope is settled** — 2026-08-08 he ruled one more wave, then close,
+> with F/C/E as separate efforts afterwards, and then widened crew 4 to include #474–#480. There is no
+> open question for him. **Do not stop to ask; run the wave, then closeout, then release the lease last.**
 >
 > **The Admiral is never asked to stop.** The trip only evaluates on a gated verb, and this role sits
 > inside `execute` for the entire epic. I wrote this at **54.9% fill** against a 15% hard line, having

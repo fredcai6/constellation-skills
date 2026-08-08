@@ -181,12 +181,12 @@
         }
       },
       "child_checklist": null,
-      "status": "blocked",
+      "status": "in-progress",
       "status_detail": {
         "blocker": "execute.c3 cannot pass at a boundary that correctly exits stop. c3 runs admiral-prelaunch, which requires NEXT_WAVE to authorize a launch and refuses any decision that is not advance or replan. Wave 4 is complete and whether a wave 5 exists is a human scope decision (F #424 / C #421 / E #423). Proven by construction: with a valid launch_id and trigger the check still refuses with 'only advance or replan may authorize NEXT_WAVE'. Changing the decision to advance to satisfy the gate would be falsifying a boundary verdict to fit a check -- the exact thing I forbade my own Commanders.",
         "authority_needed": "human (Tommy) -- epic scope decision",
         "next_action": "Tommy decides: continue the epic into F/C/E (then the boundary is honestly advance and c3 passes), or close at A2 (then c3 needs a waive on his authority, and the unpassable-on-stop gate is filed as a defect).",
-        "prior_status": "in-progress"
+        "resume_reason": "Scope decision settled by Tommy at the wave-4 checkpoint: one more wave (wave 5), then close. The boundary that could not exit was re-derived as a NEW material_exception boundary close-to-w5 with decision=advance, G2-verified, and admiral-prelaunch exits 0 -- so c3 now passes untouched. The w4-to-close stop exit stands unedited; #506 records the underlying gate defect and is in wave 5's scope."
       },
       "result": null,
       "finding": null,
@@ -301,20 +301,13 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "execute",
-      "blocker": "execute.c3 cannot pass at a boundary that correctly exits stop. c3 runs admiral-prelaunch, which requires NEXT_WAVE to authorize a launch and refuses any decision that is not advance or replan. Wave 4 is complete and whether a wave 5 exists is a human scope decision (F #424 / C #421 / E #423). Proven by construction: with a valid launch_id and trigger the check still refuses with 'only advance or replan may authorize NEXT_WAVE'. Changing the decision to advance to satisfy the gate would be falsifying a boundary verdict to fit a check -- the exact thing I forbade my own Commanders.",
-      "authority_needed": "human (Tommy) -- epic scope decision",
-      "next_action": "Tommy decides: continue the epic into F/C/E (then the boundary is honestly advance and c3 passes), or close at A2 (then c3 needs a waive on his authority, and the unpassable-on-stop gate is filed as a defect)."
-    }
-  ],
+  "blockers": [],
   "refusals": 8,
   "engine_session": {
     "session_id": "admiral-epic-418-redux",
     "status": "active",
     "claimed_at": "2026-08-08T04:39:39.773550+00:00",
-    "last_heartbeat": "2026-08-08T21:56:49.887325+00:00",
+    "last_heartbeat": "2026-08-08T22:46:28.058936+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
