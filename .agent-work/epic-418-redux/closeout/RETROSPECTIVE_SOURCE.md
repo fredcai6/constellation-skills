@@ -266,3 +266,29 @@ what was seen, what it cost, what worked around it. None of them is a rule.**
 - **Sibling ids raised from different worktrees for the same defect are `confirm`s** of the existing
   lesson (or an `amend` to reword it), **not** new `add`s. A new slug for the same defect forks its
   identity.
+
+31. **A reviewer found the mirror of the epic's whole subject: a check that cannot PASS.** The run
+    had been hunting checks that stay green in both worlds. `r6-fowler`'s c1 ships a literal
+    `<fowler-pass-record-path>` in its command, which a POSIX shell reads as a redirect from a
+    nonexistent file, so it always fails. A gate's `verdict: "APPROVE"` disagreed with the frozen
+    handoff's `ACCEPT WITH FINDINGS` vocabulary, so it too could not pass. **Both were headed for a
+    waiver rather than a fix, which is how they survive.**
+32. **An adversarial reviewer reframed the defect it was reviewing.** Its probe showed the blocked
+    `advance` succeeds after the attach and writes a fresh DIGEST — so #431 is an
+    **instruction-conformance** defect, not a mechanical deadlock: the engine permits the verb and
+    in the same breath tells the agent not to run it. The repro had narrated this in prose rather
+    than asserting it, and the reviewer said so.
+33. **A wave-3 fix was complete and unreachable by the only role that needs it.** `amend` with a
+    `retext-check` op is the sanctioned way to fill that placeholder, shipped by #465. It is
+    documented in `docs/CHECKLIST_SCHEMA.md` and appears nowhere in the reviewer's SKILL.md, repo or
+    installed. The reviewer force-waived instead. **Third built-but-not-wired instance in this epic.**
+34. **The handoff protocol swept disposable evidence into permanent history.** 29 `red-repro/` files
+    became tracked, so every re-run dirties 25 tracked files against a `red-leaves-no-residue`
+    decision. `--diff-filter=A` puts all 29 in the predecessor's seam commit at its trip, not in any
+    `git add` by the implementer — **the implementer's claim was true when written and the
+    Admiral's commit-at-the-seam instruction falsified it.** Nobody priced that cost.
+35. **A Commander refused to fabricate an artifact to satisfy a gate**, and floated for a ruling
+    instead — the second time in the wave a crew declined an available green.
+36. **The Admiral's messages consumed a crew's remaining headroom**, moving it from 0.147 to 0.1536
+    against a 0.15 limit. Direction from above is a charge against the context budget the design
+    reserves for building the handoff.
