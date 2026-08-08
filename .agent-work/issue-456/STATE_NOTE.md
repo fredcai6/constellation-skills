@@ -4,9 +4,75 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`g7-implement`** — handoff NOT yet written
-- **PID**: none in flight. All four g6 crews closed via `--verify-result`.
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g7-implement-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: **`g7` REMEDIATION IN FLIGHT**
+- **PID**: crew `constellation/issue-456/g7/implementer/attempt-2` running (dispatched ~23:05Z). All earlier g6/g7 crews closed via `--verify-result`.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g7-remediate-RESULT.md`
+
+## 🔴 RESUME HERE — `g7` blocked, rework running
+
+**Engine state:** `g7-implement` complete. `g7-review` NOT yet advanced — its
+REVIEW_RESULT (verdict **BLOCK**) is on disk at
+`.agent-work/issue-456/crew-handoffs/g7-review-RESULT.md`, reviewer committed it
+at `888a6807`. Build is at `0d1af801` (+ `1c70a0af`, `14197f69`).
+
+**Next commands, in order:**
+1. Poll `.agent-work/issue-456/crew-handoffs/g7-remediate-RESULT.md`.
+2. Verify independently — suite, both selectors, fresh `build` then `check`, and
+   **re-run the crew's own tag-staleness disable attack yourself**.
+3. Close the crew: `run_crew.py --verify-result constellation/issue-456/g7/implementer/attempt-2`.
+   (Registry gotcha: `recover_crews.py` can say 0 unresolved while a launch is
+   REFUSED as duplicate. `--verify-result` is the correct close for a crew that
+   finished; `--abandon` misrecords a success.)
+4. Re-review via **`SendMessage` to the existing `g7-reviewer`** (context intact)
+   after registering `g7/reviewer/attempt-2`. Do NOT self-grade the repair.
+5. `g7-review` (attest `c1`, evidence type `review-result`) → `g7-integrate`
+   (`c1` command re-run by `advance`; `c2` needs verdict **APPROVE**).
+6. Then `g8`, then `gs`. Then reconcile, triage, review, feedback, archive.
+   **RELEASE THE LEASE LAST.**
+
+### Why g7 blocked — TWO things, the second bigger than the review scored it
+
+**(a) retire vs alias — RULED: alias.** The crew retired `Assumption:`/
+`Constraint:` (TAG_START stopped matching them). The only real corpus is
+f1Brainz PR #733 — **4 `Constraint`, 1 `Rejected`, 1 `Rationale`, 0 anchors** —
+so retire silently kills 4 of 6 real tags: no error, no warning, invisible to the
+detector meant to catch tags going wrong. The spec's survival law ("a tag
+survives when a tool visibly consumes it") is not neutral once applied to text
+that already exists. Self-inflicted proof: the cull broke this gate's OWN worked
+example, forcing a mid-gate substitution in the join test's docstring.
+**Tommy was told and can reverse it.**
+
+**(b) THE STALENESS MECHANISM NEVER WATCHED TAGS.** Commander-verified in the
+code, not inferred: `extract.run()`'s diff reads only `st["p"] == "anchored"`;
+tags emit as `p == "tag"`; `span_hash` is persisted only in `Extractor.anchor()`.
+The join test's fixture `_STALE_TAG_SOURCE` gives its function **both** a
+`[rate-double]` anchor and a `Rationale:` tag — **the flag fires because of the
+anchor**. Real corpus has zero anchors ⇒ not one real tag would ever be watched.
+That is critic IF4/TS8's original problem untouched, in the corpus it was raised
+to protect, and a **test passing for the wrong reason** — the third variation on
+this run of a check that cannot fail. The reviewer scored it as a phrasing
+correction; it is not. **Required proof: a test on an entity with a tag and NO
+anchor, plus a disable attack on the new emission.**
+
+### One review finding OVERRULED, with reasoning (do not re-litigate)
+The reviewer called wall-clock timings in `g7-implement-RESULT.md` a violation of
+"the run report carries no timings." That constraint's own rationale is *"so the
+determinism diff can cover it"* — it governs `render_report.json`, not
+human-facing markdown. My handoff quoted it unscoped, which invited the reading.
+
+### Verified numbers at the g7 build boundary (Commander-run)
+Suite **1825 passed, 2 skipped, 692 subtests, 0 failed**. `-k 'comment_tags'`
+**18** (baseline 0 by design). `-k 'stale_tag'` **15** (was 14). Fresh `build`
+then `check` **7/7 exit 0**. The crew never filled in its own suite number —
+backgrounded it, stalled ~20 min on buffered output, unstuck by a `SendMessage`
+nudge carrying the figures. Same stall pattern as earlier crews.
+
+### Candidates filed this gate
+`tc11` the landing-zone ruling (against `gs`). `tc12` the cull test is honest but
+**low-information** — a KEEP outcome was never realistically reachable, so the
+decision was really made by author-convergence data, not render necessity;
+tc38-family, but about the *decision procedure*. Reviewer also filed: `See:` tags
+render as literal text not links; tag/anchor binding-granularity asymmetry.
 
 ## ⚖️ HUMAN RULING 2026-08-08 — what of `map/` gets committed at `gs`
 
