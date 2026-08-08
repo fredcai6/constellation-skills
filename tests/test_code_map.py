@@ -20,7 +20,9 @@ a filter test over an input with nothing to filter passes without ever
 exercising the filter.
 """
 
+import ast
 import contextlib
+import difflib
 import io
 import json
 import os
@@ -36,7 +38,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.code_map import checks, cli, discovery, extract, render  # noqa: E402
+from scripts.code_map import checks, cli, discovery, extract, render, thresholds  # noqa: E402
 
 CODE_MAP = ROOT / "scripts" / "code_map"
 
@@ -2716,6 +2718,610 @@ class TopIndexPageLocationTests(unittest.TestCase):
                                      "another module's directory, passed `check`\n" + out)
         self.assertIn("FAIL page-location-matches-content", out)
         self.assertIn("pkg.callee:target", out)
+
+
+class HoleRatioBaselineTests(unittest.TestCase):
+    """Gate `gb`, threshold family 1: holes/entities against
+    `thresholds.HOLE_RATIO_CEILING`.
+
+    Against the REAL corpus, built fresh into scratch so the committed `map/`
+    tree is not touched. See `thresholds.HOLE_RATIO_CEILING`'s own docstring
+    for the derivation (measured on this repo AND on f1Brainz, a different
+    shape and scale) and the one-line action for when it fires."""
+
+    _tmp = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        scratch = Path(cls._tmp.name)
+        env = dict(os.environ)
+        env.pop("FORCE_COLOR", None)
+        env.pop("PYTHONIOENCODING", None)
+        proc = subprocess.run(
+            [sys.executable, "-m", "scripts.code_map", "build", "--root", str(ROOT),
+             "--artifacts", str(scratch / "artifacts"), "--out", str(scratch / "map")],
+            cwd=str(ROOT), capture_output=True, text=True, env=env)
+        if proc.returncode != 0:
+            cls._tmp.cleanup()
+            raise AssertionError("HARNESS ERROR: the real-corpus build failed, so "
+                                 f"nothing below is evidence\n{proc.stderr[-2000:]}")
+        cls.report = json.loads(
+            (scratch / "artifacts" / "render_report.json").read_text(encoding="utf-8"))
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls._tmp is not None:
+            cls._tmp.cleanup()
+
+    def test_baseline_hole_ratio_stays_under_the_regression_ceiling(self):
+        holes, entities = self.report["holes"], self.report["entities"]
+        self.assertGreater(entities, 0,
+                           "input precondition: the real corpus must define entities, "
+                           "or a 0/0 ratio would not test anything")
+        ratio = holes / entities
+        self.assertLessEqual(
+            ratio, thresholds.HOLE_RATIO_CEILING,
+            f"holes/entities = {ratio:.3f} ({holes}/{entities}) crossed the "
+            f"{thresholds.HOLE_RATIO_CEILING} regression ceiling -- see "
+            "thresholds.HOLE_RATIO_CEILING's docstring for what to open first")
+
+
+class HoleRatioBaselineFalsifierTests(unittest.TestCase):
+    """Proves `HoleRatioBaselineTests` can actually fail. A ceiling that never
+    goes red on anything is indistinguishable from no ceiling at all.
+
+    `_make_entity_repo`'s three entities (`Widget`, `Widget.spin`, `helper`)
+    all carry docstrings, so an intact build reports 0 holes -- the positive
+    control. Mutating `render.summary_of` to always return `None` is a
+    docstring-extraction regression in miniature: every entity loses its
+    summary, holes/entities goes from 0.0 to 1.0, and the ceiling must catch
+    that."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_entity_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_baseline_ceiling_holds_on_an_intact_map(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        report = json.loads(
+            (self.repo / ".code-map" / "render_report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report["holes"], 0,
+                         "input precondition: the fixture's entities must all carry "
+                         "docstrings, or the falsifier below proves nothing")
+        ratio = report["holes"] / report["entities"]
+        self.assertLessEqual(ratio, thresholds.HOLE_RATIO_CEILING)
+
+    def test_baseline_ceiling_trips_when_docstring_extraction_breaks(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        host = mutated_package(tmp.name, "render.py",
+                               [("return docs.get(key)", "return None")])
+
+        proc = run_code_map(host, "build", "--root", str(self.repo))
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        report = json.loads(
+            (self.repo / ".code-map" / "render_report.json").read_text(encoding="utf-8"))
+
+        self.assertGreater(report["entities"], 0,
+                           "input precondition: the fixture must define entities, or a "
+                           "ratio of 0/0 would not test anything")
+        ratio = report["holes"] / report["entities"]
+        self.assertGreater(
+            ratio, thresholds.HOLE_RATIO_CEILING,
+            "MUTANT SURVIVED: summary_of() always returning None (every docstring "
+            f"lost) produced holes/entities = {ratio:.3f}, which did not cross the "
+            "ceiling -- the check cannot fail")
+
+
+def _template_literal_constants(source):
+    """Every string literal `render.py`'s OWN SOURCE authors directly --
+    `ast.Constant` string nodes wherever they occur, including the literal
+    segments of an f-string (`JoinedStr`'s `Constant` children), since a
+    literal's text is fixed at parse time and can never carry a runtime
+    interpolated value -- MINUS render.py's own module/class/function
+    docstrings, which document the module for a developer and never reach a
+    rendered page.
+
+    This is EXACT-LINE PROVENANCE by construction, not a substring match
+    against rendered page text: a node returned here is, by where it sits in
+    render.py's own AST, text the renderer authored itself. Text that reaches
+    a page through an f-string's `{expr}` part (a docstring summary, a
+    symbol name, a file path, an attribute value) is never a `Constant` at
+    that interpolation site -- it is the runtime VALUE of `expr`, invisible
+    to this scan -- so source content copied onto a page is categorically out
+    of scope, never something this function has to tell apart from template
+    text after the fact."""
+    tree = ast.parse(source)
+    docstring_ids = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            if (node.body and isinstance(node.body[0], ast.Expr)
+                    and isinstance(node.body[0].value, ast.Constant)
+                    and isinstance(node.body[0].value.value, str)):
+                docstring_ids.add(id(node.body[0].value))
+    return [node for node in ast.walk(tree)
+            if isinstance(node, ast.Constant) and isinstance(node.value, str)
+            and id(node) not in docstring_ids]
+
+
+class TemplateAsciiProvenanceTests(unittest.TestCase):
+    """Gate `gb`, threshold family 2: `thresholds.TEMPLATE_ASCII_INVARIANT`.
+
+    386 of this repo's rendered pages ARE non-ASCII today, every one traced
+    to pre-existing docstring prose reproduced VERBATIM from source (an
+    em-dash in `scripts/agent_work_root.py`) -- correct behaviour, since the
+    map must not censor source text. A check that grepped rendered pages for
+    non-ASCII bytes would be the twitchy version the handoff explicitly
+    rejects: it cannot tell "the renderer wrote this" from "the renderer
+    copied this out of a docstring" without re-deriving provenance from
+    scratch, and would fire on ordinary source-content churn forever.
+
+    So this reads `render.py`'s own AST instead (`_template_literal_
+    constants`) and asserts every literal segment it authors itself is
+    ASCII. It never reads a rendered page at all -- provenance is decided at
+    the SOURCE, where "wrote it myself" vs "copied it from elsewhere" is
+    categorical rather than inferred."""
+
+    def test_ascii_render_py_authors_no_non_ascii_template_text(self):
+        source = (CODE_MAP / "render.py").read_text(encoding="utf-8")
+        offenders = [(node.lineno, repr(node.value))
+                     for node in _template_literal_constants(source)
+                     if not node.value.isascii()]
+        self.assertEqual(
+            offenders, [],
+            f"non-ASCII literal(s) authored directly in render.py's own template "
+            f"text (thresholds.TEMPLATE_ASCII_INVARIANT): {offenders} -- open the "
+            "named line(s) and replace the character. This is NEVER the fix for a "
+            "non-ASCII rendered PAGE -- that is source content and belongs untouched")
+
+
+class TemplateAsciiProvenanceFalsifierTests(unittest.TestCase):
+    """Proves the invariant above can actually fail, and that it stays blind
+    to the exact case it must not censor."""
+
+    def test_ascii_scan_catches_a_non_ascii_character_spliced_into_a_template_literal(self):
+        source = (CODE_MAP / "render.py").read_text(encoding="utf-8")
+        self.assertEqual(source.count("counted: calls and reads"), 1,
+                         "input precondition: the anchor must occur exactly once "
+                         "in render.py, or the mutation below is not the mutation "
+                         "this test claims to apply")
+        mutated = source.replace("counted: calls and reads",
+                                 "counted — calls and reads", 1)
+
+        offenders = [(node.lineno, repr(node.value))
+                     for node in _template_literal_constants(mutated)
+                     if not node.value.isascii()]
+
+        self.assertNotEqual(
+            offenders, [],
+            "MUTANT SURVIVED: an em-dash spliced into REFS_LEGEND's own literal "
+            "text was not caught")
+
+    def test_ascii_scan_stays_blind_to_non_ascii_text_reaching_a_page_through_interpolation(self):
+        """The positive control for the thing this check must NOT do: censor
+        source content. `EXTERNAL` stands in for a docstring summary loaded
+        from the statement store at runtime -- exactly like a real one, it
+        never appears as a literal in the "render.py" source being scanned;
+        only its IMPORT does. `entity_page` interpolates it, so the rendered
+        page this fixture stands in for would carry the em-dash -- correct
+        behaviour, since the map must not censor source text -- while the
+        source text actually scanned carries none."""
+        external_module_source = (
+            'EXTERNAL = "an em—dash, reproduced verbatim from source"\n')
+        self.assertFalse(external_module_source.isascii(),
+                         "input precondition: EXTERNAL must actually be non-ASCII, "
+                         "or this test cannot tell a real exclusion from a vacuous one")
+
+        render_like_source = (
+            'from fixture_external import EXTERNAL\n'
+            'def entity_page(key):\n'
+            '    return f"{key}: {EXTERNAL} -- literal ascii suffix"\n'
+        )
+        offenders = [node for node in _template_literal_constants(render_like_source)
+                     if not node.value.isascii()]
+        self.assertEqual(offenders, [],
+                         "a name threaded through an f-string's {expr} part is not "
+                         "a Constant at its use site, and must never be treated as "
+                         "one -- only the FILE that actually authors the literal "
+                         "(never reached by this scan) may carry non-ASCII text")
+
+
+_RECALL_BASE_SOURCE = '''"""Base module: definitions read and called from elsewhere."""
+
+
+GREETING = "hello"
+
+
+def helper(x):
+    """Add one."""
+    return x + 1
+
+
+class Thing:
+    """Holds a value."""
+
+    def __init__(self):
+        self.value = 0
+
+    def bump(self):
+        """Reads and writes self.value; calls helper; reads GREETING."""
+        self.value = helper(self.value)
+        return GREETING
+'''
+
+_RECALL_USER_SOURCE = '''"""User module: cross-module and same-module calls, reads and writes."""
+
+from .base import GREETING, helper, Thing
+
+TABLE = {}
+
+
+def use_it():
+    """Calls cross-module helper and Thing(); reads cross-module GREETING;
+    calls same-module helper2; writes a module-level dict entry."""
+    thing = Thing()
+    result = helper(1)
+    doubled = helper2(2)
+    TABLE["k"] = result
+    return GREETING, thing, result, doubled
+
+
+def helper2(n):
+    """Same-module helper."""
+    return n * 2
+'''
+
+
+def _make_recall_fixture_repo(tmp: Path):
+    """Two small, hand-authored modules exercising real-shaped calls, reads
+    and writes: cross-module and same-module calls, a cross-module constant
+    read, a `self.attr` read/write pair, and a subscript write (which also
+    reads its own base name -- see `RECALL_GROUND_TRUTH`'s docstring)."""
+    (tmp / "fixture_pkg").mkdir()
+    (tmp / "fixture_pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "fixture_pkg" / "base.py").write_text(
+        _RECALL_BASE_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "fixture_pkg" / "user.py").write_text(
+        _RECALL_USER_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "fixture_pkg/__init__.py", "fixture_pkg/base.py",
+         "fixture_pkg/user.py", cwd=tmp)
+
+
+#: Gate `gb`, threshold family 3: the HAND-LABELED ground truth `RecallFloorTests`
+#: measures recall against. Every tuple below is this implementer's own manual
+#: read of `_RECALL_BASE_SOURCE` / `_RECALL_USER_SOURCE` against
+#: `extract.py`'s documented resolution rules (R1-R8) -- there is no automated
+#: oracle behind any of these three lists, `writes` included: this pipeline is
+#: stdlib only (no SCIP), and the design-time SCIP cross-check was blind to
+#: `writes` anyway (DESIGN_SPEC TS7). Eleven edges total, small enough to
+#: re-verify by hand in one sitting -- NOT a claim that this generalizes past
+#: the patterns actually present here (plain calls, class instantiation,
+#: `self.attr` read/write, a module-level constant read, a subscript write).
+#: `s` is the CALLER symbol, `o` the CALLEE symbol; both must appear on an
+#: `internal`-resolved statement of the named predicate for the edge to count
+#: as matched.
+RECALL_GROUND_TRUTH = {
+    "calls": (
+        ("fixture_pkg.base:Thing.bump", "fixture_pkg.base:helper"),
+        ("fixture_pkg.user:use_it", "fixture_pkg.base:Thing"),
+        ("fixture_pkg.user:use_it", "fixture_pkg.base:helper"),
+        ("fixture_pkg.user:use_it", "fixture_pkg.user:helper2"),
+    ),
+    "reads": (
+        ("fixture_pkg.base:Thing.bump", "fixture_pkg.base:GREETING"),
+        ("fixture_pkg.base:Thing.bump", "fixture_pkg.base:Thing.value"),
+        ("fixture_pkg.user:use_it", "fixture_pkg.base:GREETING"),
+        ("fixture_pkg.user:use_it", "fixture_pkg.user:TABLE"),
+    ),
+    "writes": (
+        ("fixture_pkg.base:Thing.__init__", "fixture_pkg.base:Thing.value"),
+        ("fixture_pkg.base:Thing.bump", "fixture_pkg.base:Thing.value"),
+        # `TABLE["k"] = result` -- a subscript write emits BOTH a "reads" edge
+        # for the base name (counted above) AND this "writes" edge, suffixed
+        # `[]` by `extract._store`'s Subscript branch.
+        ("fixture_pkg.user:use_it", "fixture_pkg.user:TABLE[]"),
+    ),
+}
+
+
+def _recall_by_predicate(statements, ground_truth=RECALL_GROUND_TRUTH):
+    """predicate -> (matched, total) against `ground_truth`, checking that an
+    `internal`-resolved statement of exactly that shape exists somewhere in
+    `statements`. `total` is always `len(ground_truth[predicate])`, never a
+    count read off the corpus -- this is recall against a FIXED hand-labeled
+    set, not a self-referential count that could never fail to agree with
+    itself."""
+    found = {(st["p"], st["s"], st["o"]) for st in statements if st.get("res") == "internal"}
+    out = {}
+    for predicate, edges in ground_truth.items():
+        matched = sum(1 for s, o in edges if (predicate, s, o) in found)
+        out[predicate] = (matched, len(edges))
+    return out
+
+
+class RecallFloorTests(unittest.TestCase):
+    """Gate `gb`, threshold family 3: `thresholds.RECALL_FLOORS`, one floor per
+    predicate (`calls`, `reads`, `writes`), measured against
+    `RECALL_GROUND_TRUTH` -- see its docstring for the derivation and its
+    stated confidence (a small hand-labeled fixture, not a statistical sample
+    of the whole extractor's error surface)."""
+
+    _tmp = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        cls.repo = Path(cls._tmp.name)
+        _make_recall_fixture_repo(cls.repo)
+        proc = run_code_map(CODE_MAP.parents[1], "extract", "--root", str(cls.repo),
+                            "--artifacts", str(cls.repo / ".code-map"))
+        if proc.returncode != 0:
+            cls._tmp.cleanup()
+            raise AssertionError(f"HARNESS ERROR: fixture extraction failed, so nothing "
+                                 f"below is evidence\n{proc.stderr[-2000:]}")
+        cls.recall = _recall_by_predicate(statements_of(cls.repo / ".code-map"))
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls._tmp is not None:
+            cls._tmp.cleanup()
+
+    def test_recall_ground_truth_fixture_actually_exercises_all_three_predicates(self):
+        """Input precondition: an empty ground-truth list for a predicate would
+        pass any floor vacuously."""
+        for predicate in ("calls", "reads", "writes"):
+            self.assertGreater(len(RECALL_GROUND_TRUTH[predicate]), 0,
+                               f"the {predicate} ground truth is empty; the floor "
+                               f"for it cannot mean anything")
+
+    def test_recall_meets_its_committed_floor_for_every_predicate(self):
+        for predicate, floor in thresholds.RECALL_FLOORS.items():
+            matched, total = self.recall[predicate]
+            ratio = matched / total
+            self.assertGreaterEqual(
+                ratio, floor,
+                f"{predicate} recall = {ratio:.3f} ({matched}/{total}) fell under "
+                f"the committed floor {floor} -- see thresholds.RECALL_FLOORS's "
+                f"docstring for what to open first")
+
+
+class RecallFloorFalsifierTests(unittest.TestCase):
+    """Proves the floor above can actually fail, and stays scoped to the
+    predicate it was supposed to catch.
+
+    The mutation retargets ONE anchor -- `_store`'s `self._ref(t, "writes")`,
+    the Name/Attribute write branch -- from `"writes"` to `"reads"`. That
+    breaks exactly 2 of the 3 hand-labeled `writes` edges (both `self.value`
+    attribute writes); the third (`TABLE["k"] = ...`'s subscript write) is
+    emitted by a DIFFERENT line and stays intact, so this is a real
+    predicate-dropping regression, not a wholesale extractor breakage -- and
+    `calls`/`reads` recall must stay exactly where they were, proving the
+    mutation did not accidentally widen its own damage."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_recall_fixture_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_recall_floor_trips_when_the_extractor_drops_a_predicate(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        host = mutated_package(tmp.name, "extract.py",
+                               [('            self._ref(t, "writes")',
+                                 '            self._ref(t, "reads")')])
+
+        proc = run_code_map(host, "extract", "--root", str(self.repo),
+                            "--artifacts", str(self.repo / ".code-map"))
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        recall = _recall_by_predicate(statements_of(self.repo / ".code-map"))
+
+        writes_matched, writes_total = recall["writes"]
+        self.assertLess(
+            writes_matched / writes_total, thresholds.RECALL_FLOORS["writes"],
+            "MUTANT SURVIVED: misclassifying attribute writes as reads did not "
+            "push writes recall under its floor")
+        for predicate in ("calls", "reads"):
+            matched, total = recall[predicate]
+            self.assertGreaterEqual(
+                matched / total, thresholds.RECALL_FLOORS[predicate],
+                f"the writes-only mutation also broke {predicate} recall, which "
+                "means the falsifier is not scoped to the predicate it claims")
+
+
+def _make_churn_fixture_repo(tmp: Path, n=8):
+    """`n` independent single-function caller modules, all calling ONE shared
+    function defined in `hub.py` -- a small, fast, fully-controlled stand-in
+    for BOTH real-corpus edit classes `ChurnRatioTests` measures: an ordinary
+    local edit (edit `hub.py`'s own docstring -- touches its own page and
+    nothing else's) and a widely-referenced-symbol rename (rename `shared`
+    -- touches every one of the `n` callers' own pages, one line each)."""
+    pkg = tmp / "churn_pkg"
+    pkg.mkdir()
+    (pkg / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (pkg / "hub.py").write_text(
+        '"""Hub module: one function every other module calls."""\n\n\n'
+        'def shared(x):\n'
+        '    """Do the shared thing."""\n'
+        '    return x + 1\n',
+        encoding="utf-8", newline="\n")
+    names = ["hub.py"]
+    for i in range(n):
+        (pkg / f"mod{i}.py").write_text(
+            f'"""Module {i}."""\n\n'
+            f'from .hub import shared\n\n\n'
+            f'def func{i}(x):\n'
+            f'    """Do thing {i}."""\n'
+            f'    return shared(x)\n',
+            encoding="utf-8", newline="\n")
+        names.append(f"mod{i}.py")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "churn_pkg/__init__.py", *[f"churn_pkg/{nm}" for nm in names], cwd=tmp)
+    return names
+
+
+def _diff_line_count(a_text, b_text):
+    """Added-or-removed lines between two texts, unified-diff style -- the
+    SAME unit the design process measured churn in at cycle-4 (98 map lines
+    vs 84 source lines), never a page or byte count."""
+    diff = difflib.unified_diff(a_text.splitlines(), b_text.splitlines(), lineterm="")
+    return sum(1 for ln in diff if ln.startswith(("+", "-")) and not ln.startswith(("+++", "---")))
+
+
+def _map_diff_lines(root_a, root_b):
+    """Total added-or-removed lines across every page that differs between
+    two rendered trees."""
+    def pages(root):
+        return {p.relative_to(root).as_posix(): p.read_text(encoding="utf-8")
+                for p in root.rglob("*.md")}
+    a, b = pages(root_a), pages(root_b)
+    return sum(_diff_line_count(a.get(path, ""), b.get(path, ""))
+              for path in sorted(set(a) | set(b)) if a.get(path) != b.get(path))
+
+
+class ChurnRatioTests(unittest.TestCase):
+    """Gate `gb`, threshold family 4: `thresholds.CHURN_RATIO_CEILING_LOCAL_EDIT`
+    / `_RENAME`, on the small, fast, fully-controlled `_make_churn_fixture_repo`.
+
+    THE REAL-CORPUS MEASUREMENT lives in this gate's IMPLEMENTER_RESULT, not
+    here: rebuilding this repo's real 3865-page tree and an isolated-worktree
+    rename of `tests.test_checklist_engine:gated` (212 real callers,
+    identified by inbound scan rather than guessed) is exactly the kind of
+    one-time, expensive-to-repeat evidence `g5`'s `measure_split.py` already
+    set precedent for -- reported once, not re-run every suite invocation.
+    Measured there: local edit 1.27x, rename 1.02x, both under the 3x
+    ceiling -- the ceiling HELD, on the first-ever measurement of the rename
+    case. This class instead proves the MECHANISM behaves the same way at a
+    scale fast enough to run on every `pytest` invocation, using the exact
+    same `map diff lines / source diff lines` unit."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_churn_fixture_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _build(self, out_name):
+        artifacts = self.repo / f".code-map-{out_name}"
+        out = self.repo / out_name
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["build", "--root", str(self.repo),
+                             "--artifacts", str(artifacts), "--out", str(out)])
+        self.assertEqual(code, 0, f"HARNESS ERROR: build into {out_name} failed")
+        return out
+
+    def test_churn_local_edit_stays_under_the_ceiling(self):
+        before = self._build("map-before")
+        hub = self.repo / "churn_pkg" / "hub.py"
+        source_before = hub.read_text(encoding="utf-8")
+        source_after = source_before.replace(
+            '"""Do the shared thing."""',
+            '"""Do the shared thing.\n\n    Extended by one ordinary docstring line."""')
+        self.assertNotEqual(source_before, source_after,
+                            "input precondition: the edit must actually change the file")
+        hub.write_text(source_after, encoding="utf-8", newline="\n")
+        after = self._build("map-after")
+
+        source_diff = _diff_line_count(source_before, source_after)
+        map_diff = _map_diff_lines(before, after)
+        self.assertGreater(source_diff, 0,
+                           "input precondition: a 0-line source diff makes any ratio undefined")
+        ratio = map_diff / source_diff
+        self.assertLessEqual(
+            ratio, thresholds.CHURN_RATIO_CEILING_LOCAL_EDIT,
+            f"local-edit churn ratio {ratio:.2f} ({map_diff}/{source_diff}) crossed "
+            f"the {thresholds.CHURN_RATIO_CEILING_LOCAL_EDIT}x ceiling")
+
+    def test_churn_widely_referenced_rename_stays_under_the_ceiling(self):
+        before = self._build("map-before")
+        files = sorted((self.repo / "churn_pkg").glob("*.py"))
+        sources_before = {f: f.read_text(encoding="utf-8") for f in files}
+        total_source_diff = 0
+        for f, text in sources_before.items():
+            new_text, n = re.subn(r"\bshared\b", "shared_v2", text)
+            if n:
+                f.write_text(new_text, encoding="utf-8", newline="\n")
+                total_source_diff += _diff_line_count(text, new_text)
+        self.assertGreater(total_source_diff, 0,
+                           "input precondition: the rename must actually change the fixture")
+        after = self._build("map-after")
+
+        map_diff = _map_diff_lines(before, after)
+        ratio = map_diff / total_source_diff
+        self.assertLessEqual(
+            ratio, thresholds.CHURN_RATIO_CEILING_RENAME,
+            f"rename churn ratio {ratio:.2f} ({map_diff}/{total_source_diff}) crossed "
+            f"the {thresholds.CHURN_RATIO_CEILING_RENAME}x ceiling")
+
+
+class ChurnRatioFalsifierTests(unittest.TestCase):
+    """Proves the ceiling above can actually fail, on a realistic defect
+    class: a corpus-WIDE statistic accidentally leaking into every page,
+    instead of the per-module one the header is supposed to show.
+
+    The mutation changes ONE word: `module_index`'s `holes = sum(1 for k in
+    members if not summary_of(k))` -- correctly scoped to THIS module's own
+    members -- to `entities`, the whole corpus. After that, deleting a SINGLE
+    docstring anywhere changes the number every module's INDEX.md prints,
+    because they are all now printing the same corpus-wide count. A tiny,
+    local-looking edit ripples across every page in the fixture -- exactly
+    the shape the churn ceiling exists to catch."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_churn_fixture_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_churn_ceiling_trips_when_a_corpus_wide_count_leaks_into_every_page(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        host = mutated_package(
+            tmp.name, "render.py",
+            [("holes = sum(1 for k in members if not summary_of(k))",
+              "holes = sum(1 for k in entities if not summary_of(k))")])
+
+        before = run_code_map(host, "build", "--root", str(self.repo),
+                              "--artifacts", str(self.repo / ".code-map-before"),
+                              "--out", str(self.repo / "map-before"))
+        self.assertEqual(before.returncode, 0, before.stderr)
+
+        hub = self.repo / "churn_pkg" / "hub.py"
+        source_before = hub.read_text(encoding="utf-8")
+        source_after = source_before.replace(
+            '    """Do the shared thing."""\n', '')
+        self.assertNotEqual(source_before, source_after,
+                            "input precondition: the edit must actually drop a docstring")
+        hub.write_text(source_after, encoding="utf-8", newline="\n")
+
+        after = run_code_map(host, "build", "--root", str(self.repo),
+                             "--artifacts", str(self.repo / ".code-map-after"),
+                             "--out", str(self.repo / "map-after"))
+        self.assertEqual(after.returncode, 0, after.stderr)
+
+        source_diff = _diff_line_count(source_before, source_after)
+        map_diff = _map_diff_lines(self.repo / "map-before", self.repo / "map-after")
+        self.assertGreater(source_diff, 0,
+                           "input precondition: a 0-line source diff makes any ratio undefined")
+        ratio = map_diff / source_diff
+        self.assertGreater(
+            ratio, thresholds.CHURN_RATIO_CEILING_LOCAL_EDIT,
+            f"MUTANT SURVIVED: a corpus-wide count leaking into every module's INDEX.md "
+            f"produced churn ratio {ratio:.2f} ({map_diff}/{source_diff}), which did not "
+            "cross the ceiling")
 
 
 if __name__ == "__main__":

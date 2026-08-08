@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-recall-floor",
+  "files": [],
+  "repo_rev": {
+    "commit": "bd932921280eea54edc250f5f1229472acfe2773"
+  },
+  "run": {
+    "work_id": "issue-456-gb-implement",
+    "generated_at": "2026-08-08T17:54:19Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}
