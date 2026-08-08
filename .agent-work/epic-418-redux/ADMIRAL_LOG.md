@@ -4013,3 +4013,47 @@ papering over a broken mechanism** — the exact pattern this epic exists to sto
 
 **#510 names the trap in its own acceptance:** a check asserting *"a refresh-request exists"* passes
 today, because the refresh-request is the part that already works. The absent thing is the DIGEST.
+
+### NEAR-MISS — the trip-loop, caught because a fresh Commander doubted its own reading
+
+`commander-w5-readiness-b` opened with the right instinct rather than the obedient one:
+
+> it shows the context step still ACTIVE/pending with a REFRESH REQUESTED flag from my predecessor's
+> hard trip (CONTEXT 19%, >= hard line) ... whether I should proceed through context normally, or
+> whether the rail's "close this gate and stop" instruction is stale guidance meant for the tripped
+> session.
+
+**Both halves of its doubt were correct, and I verified the first from the file rather than reasoning
+about it:**
+
+```
+.agent-work/issue-458-readiness/gauge.json
+  fill_fraction 0.190464   observed_at 2026-08-08T23:18:53Z    <- ~9 min before that agent existed
+```
+
+**The 19% was its predecessor's.** The gauge is written per checklist directory by a PostToolUse hook,
+so **a fresh agent reads the previous agent's value until its own first tool call lands.** It
+inherited an exhaustion that was not its own. That is **#481** (a stale reading outlives its session)
+and **#477** (the gauge is read per directory), both open and neither fixed.
+
+**The failure this avoided is a trip-loop, and it would have eaten the wave:** relaunch → inherit the
+stale number → trip → hand off → relaunch, forever, with every cycle looking like correct doctrine
+being followed. Four crews were relaunched within the same few minutes, so this was about to happen
+**four times over.**
+
+**Action: pre-emptive correction to all three other refreshes** before any of them looked at a
+`current`. Told each one plainly — the number is not yours, make any tool call and re-read, and **do
+not file a refresh-request against a reading you did not produce.**
+
+**Second half of its question, and it is #500 exactly.** A `REFRESH REQUESTED:` line is a **marker
+left FOR the successor, not an instruction TO it** — the predecessor filed it, stood down, and I
+relaunched in response. **The successor IS the refresh.** But a refresh-request has **no served
+state**, so nothing in `current` can tell a fresh agent whether the request it is looking at has
+already been answered. It had to ask me because the engine cannot say. That is the cleanest live
+demonstration of #500 this run has produced, and it came from an agent asking instead of guessing.
+
+**Fed back into the work:** told crew 2 to carry the experience into its own design — *"engine present
+and runnable" cannot mean "a value was read."* It was handed a nine-minute-old number with no
+staleness marker and no way to tell it was not its own. A readiness check that reports an observation
+should report **when** it was made and **by whom**; a reading with no provenance is the exact shape
+that just bit it.
