@@ -194,12 +194,12 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "blocked",
       "status_detail": {
-        "blocker": "Review returned BLOCK with two blockers (e-g0-review-2). B2 is mine to fix and is scoped: render.py:397-419 counts write_text CALLS not distinct output paths, so render_report.json 'pages' cannot go wrong; it reads 3636 while the tree holds 3635 and this gate's own checks.py prints 3635. B1 is NOT mine to settle: every rendered page carries a source position, contradicting 'nothing committed carries a position', which is the recorded disposition of SY1, a BLOCKING critic finding ruled at the confirm gate with settled/human provenance. My ruling 4 dropped the position-cache ignore entry on a premise the reviewer verified as TRUE but whose correct reading is that a human-confirmed deliverable lost its owning gate when the queue was cut to nine. Escalated to the human as a straight either/or; the run does not proceed past g0 until it is answered, because map/ is committed at gs and eight gates of downstream work would otherwise build on a page format that has to change.",
+        "blocker": "COMMANDER CONTEXT ONLY -- no work remains at this gate. All three reviewer findings are closed and independently verified: B1 (0 of 3535 entity-page headers carry a position), B2 (count no longer counts write calls), B3 (the docstring no longer claims the count can be wrong). Full suite 1709 passed / 2 skipped / 0 failed, re-run by me in a cleared environment after the final edit. Everything committed and pushed to issue-456/code-map at 853be2bc; map/ confirmed untracked. The single remaining action, 'advance g0-review', is refused solely because the commander gauge reads 0.194 against a 0.15 hard limit. Refresh-request already filed at e-g0-review-6. This is a context seam, not a work blocker, and it is bubbled rather than left in-progress so the run does not read as abandoned.",
         "authority_needed": "parent agent",
-        "next_action": "On the human's answer, dispatch ONE remediation implementer pass covering both blockers together rather than two passes: (1) B2 -- make render count distinct output paths, and add a test that READS render_report.json and asserts its pages field equals the .md files on disk, a check that can actually go red; (2) B1 -- whichever of (a) assign-and-do the suffix removal or (b) amend-the-ruling the human picks. Then resume g0-review and re-review. Already ruled and needing no further decision: the Verdict/verdict page collision is filed as tc17 and assigned to g1, whose charter is a check stage that can fail; g2 owns any renaming. Established fact that lowers the cost of option (a): .code-map/statements.jsonl already carries per-statement file/line/col and is already gitignored, so the rebuildable position store the ruling calls for substantially exists and (a)'s remaining work is dropping the page suffix plus a test, not building a cache.",
-        "resume_reason": "Resuming to work the half of the BLOCK that does not depend on the human. B2, the page count that cannot go wrong, is fully determined regardless of which way B1 is answered, so it goes to a remediation implementer now rather than idling behind the decision. B1 stays escalated and recorded at e-g0-review-2; g0 does not advance until the human answers it."
+        "next_action": "A fresh commander re-claims lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), reads STATE_NOTE.md, then runs: resume g0-review --reason 'context refreshed', then advance g0-review, then g0-integrate. Do NOT redo any g0 work and do NOT re-dispatch any g0 crew -- all six are terminal. NOTE tc25 before attempting any dispatch at g0/implementer: that slot is undispatchable, refusing with 'duplicate crew' while naming a completed crew as running, and --abandon does not clear it because slot reuse left four entries under one id. Remaining after g0: g1 g2 g3 g4 g5 gb g6 g7 g8 gs, then reconcile, triage (drain tc1-tc25), review, feedback, archive -- release the lease LAST. Push and a full non-draft PR are pre-approved; merge to main is NOT.",
+        "prior_status": "in-progress"
       },
       "result": null,
       "finding": null,
@@ -1803,7 +1803,14 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "g0-review",
+      "blocker": "COMMANDER CONTEXT ONLY -- no work remains at this gate. All three reviewer findings are closed and independently verified: B1 (0 of 3535 entity-page headers carry a position), B2 (count no longer counts write calls), B3 (the docstring no longer claims the count can be wrong). Full suite 1709 passed / 2 skipped / 0 failed, re-run by me in a cleared environment after the final edit. Everything committed and pushed to issue-456/code-map at 853be2bc; map/ confirmed untracked. The single remaining action, 'advance g0-review', is refused solely because the commander gauge reads 0.194 against a 0.15 hard limit. Refresh-request already filed at e-g0-review-6. This is a context seam, not a work blocker, and it is bubbled rather than left in-progress so the run does not read as abandoned.",
+      "authority_needed": "parent agent",
+      "next_action": "A fresh commander re-claims lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), reads STATE_NOTE.md, then runs: resume g0-review --reason 'context refreshed', then advance g0-review, then g0-integrate. Do NOT redo any g0 work and do NOT re-dispatch any g0 crew -- all six are terminal. NOTE tc25 before attempting any dispatch at g0/implementer: that slot is undispatchable, refusing with 'duplicate crew' while naming a completed crew as running, and --abandon does not clear it because slot reuse left four entries under one id. Remaining after g0: g1 g2 g3 g4 g5 gb g6 g7 g8 gs, then reconcile, triage (drain tc1-tc25), review, feedback, archive -- release the lease LAST. Push and a full non-draft PR are pre-approved; merge to main is NOT."
+    }
+  ],
   "why_trail": [
     {
       "id": "w-1",
