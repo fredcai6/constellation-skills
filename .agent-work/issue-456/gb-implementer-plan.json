@@ -336,7 +336,8 @@
           "id": "c1",
           "statement": "closing selector collects the new tests by name; full suite green; fresh build+check 7/7 exit 0 -- manual attest with evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Attested by the Commander on first-hand evidence, not on the crew's report. The gb implementer crew completed every deliverable m5 asks for and then ended without closing its own bookkeeping, leaving this item in-progress and its lease dangling; the underlying work is done and independently verified, so the honest close is to attest what was actually measured rather than leave a completed gate looking abandoned.\n\nClosing selector, run by hand against tests/test_code_map.py (the file the gate's own command targets, NOT the whole tests/ directory): -k 'baseline or churn or recall or ascii' collects 13 and all 13 pass, exit 0. That is the pre-gb baseline of 1 plus exactly the 12 new test methods, so every new test is caught by the selector by name -- the tc47/tc38 discipline this item exists to enforce. Note the crew was right and my handoff was wrong: I claimed the baseline collected 17; it collected 1, because my scan had run the selector against the whole tests/ directory instead of the single file. Commander error, caught by the crew.\n\nFull suite: 1793 passed, 2 skipped, 672 subtests passed, 0 failed at the gb boundary. Re-verified green again after g6 landed on top: 1805 passed, 2 skipped, 683 subtests, 0 failed.\n\nFresh build then check, in that order because check reads a stale tree otherwise: build exit 0, check 7/7 all ok, exit 0, deterministic-rebuild included.\n\nIMPLEMENTER_RESULT exists at .agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md and carries the four-family disposition: all four shipped as-specified, none dropped and none widened to force a measurement to pass. Hole ratio ceiling 0.90 against a measured 0.673 here and 0.572 on f1Brainz; both churn ceilings 3.0 against measured 1.27x local edit and 1.02x rename; recall floors 1.0 per predicate including writes; template-ASCII as an AST-scanned invariant over render.py's own literals rather than the explicitly rejected substring match against rendered pages.\n\nDownstream state confirming this gate genuinely closed: the gb review returned APPROVE after an initial correct BLOCK on a missing action line, which was fixed and independently re-verified by that same reviewer rather than self-graded, and gb-integrate is complete on the Commander spine."
         },
         {
           "id": "c2",
@@ -345,7 +346,8 @@
             "kind": "command",
             "command": "test -f .agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-close-2"
         }
       ],
       "constraints": [
@@ -354,11 +356,33 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-verify-close-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-verify-close",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -368,13 +392,14 @@
   "refusals": 4,
   "engine_session": {
     "session_id": "gb-implementer-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T17:40:35.080959+00:00",
-    "last_heartbeat": "2026-08-08T18:02:56.777036+00:00",
+    "last_heartbeat": "2026-08-08T19:43:44.397320+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T19:43:56.485037+00:00"
   },
   "why_trail": [
     {
@@ -411,6 +436,13 @@
       "why": "m4 done: both churn ratios measured on the real corpus (local edit 1.27x, rename 1.02x, both under 3x, ceiling confirmed not falsified). thresholds.py updated with the real numbers and the structural explanation for why rename churn stays near 1x. ChurnRatioTests + ChurnRatioFalsifierTests added (fast synthetic mechanism tests). Isolated worktrees cleaned up (git worktree remove). Selector -k churn: 3 passed; full gate selector -k 'baseline or churn or recall or ascii': 13 passed (verified pre-gb baseline was 1, not the 17 the handoff claimed -- a real handoff discrepancy to flag in workflow feedback, not fatal since the selector demonstrably collects and passes a non-zero, verified count). REMAINING: m5 -- run the closing selector by hand once more, run the FULL suite (background+poll), fresh build+check 7/7, write gb-implement-RESULT.md with the four-family disposition (all four shipped as-specified, none dropped/widened) plus workflow feedback (context governor hit 4x, the 17-vs-1 selector discrepancy).",
       "mechanical": false,
       "ts": "2026-08-08T18:02:47.224826+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-verify-close",
+      "why": "Closing out the gb implementer's own plan on first-hand Commander evidence. The crew delivered everything m5 requires and then ended without finishing its bookkeeping, leaving this item in-progress and its lease dangling on a gate that is in fact complete and approved. Leaving it open would misreport a finished gate as abandoned, so the honest resolution is to attest what was actually measured and advance.\n\nVerified directly rather than accepted from the crew's report: the closing selector, run by hand against tests/test_code_map.py rather than the whole tests/ directory, collects 13 and all 13 pass at exit 0 -- the pre-gb baseline of 1 plus exactly the 12 new methods, so every new test is caught by name, which is the tc47/tc38 discipline this item exists to enforce. Full suite 1793 passed 2 skipped 672 subtests 0 failed at the gb boundary, and still green at 1805 passed 2 skipped 683 subtests 0 failed after g6 landed on top. Fresh build then check, in that order because check reads a stale tree otherwise: 7/7 ok, exit 0, deterministic-rebuild included. IMPLEMENTER_RESULT exists and carries the four-family disposition -- all four shipped as-specified, none dropped and none widened to force a measurement to pass.\n\nThe gate this plan serves is already closed downstream on the Commander spine: the review returned APPROVE after a correct and narrow BLOCK on a missing action line, which I fixed and the same reviewer independently re-verified rather than my self-grading it, and gb-integrate is complete.\n\nOne correction belongs in this record because the crew earned it: my handoff claimed the closing selector collected 17 at baseline. It collected 1. My scan had run the selector against the whole tests/ directory instead of the single file the gate's command targets. The crew checked rather than trusted and was right.",
+      "mechanical": false,
+      "ts": "2026-08-08T19:43:44.397301+00:00"
     }
   ]
 }
