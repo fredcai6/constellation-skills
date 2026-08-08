@@ -354,7 +354,8 @@
           "id": "p1",
           "statement": "the suite is green and the implementation is committed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "full suite green; implementation committed at 20240f44"
         }
       ],
       "postconditions": [
@@ -365,7 +366,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/g4-mutation-log.md && grep -c 'RED' .agent-work/issue-467-trip-semantics/g4-mutation-log.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-mutations-1"
         },
         {
           "id": "c2",
@@ -374,7 +376,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && git diff --quiet -- scripts/checklist_engine.py && echo clean"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-mutations-2"
         }
       ],
       "constraints": [
@@ -382,11 +385,34 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m6-mutations-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/g4-mutation-log.md && grep -c 'RED' .agent-work/issue-467-trip-semantics/g4-mutation-log.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-mutations-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && git diff --quiet -- scripts/checklist_engine.py && echo clean",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m7-cannot-fail": {
@@ -398,7 +424,8 @@
           "id": "p1",
           "statement": "the mutation evidence exists to draw on",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2/g3/g4 mutation logs and CRITIC_TRIAGE.md read"
         }
       ],
       "postconditions": [
@@ -409,7 +436,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/CHECK_THAT_CANNOT_FAIL.md && grep -c '^## ' .agent-work/issue-467-trip-semantics/CHECK_THAT_CANNOT_FAIL.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m7-cannot-fail-1"
         }
       ],
       "constraints": [
@@ -417,11 +445,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m7-cannot-fail-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/CHECK_THAT_CANNOT_FAIL.md && grep -c '^## ' .agent-work/issue-467-trip-semantics/CHECK_THAT_CANNOT_FAIL.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m8-closeout": {
@@ -433,7 +473,8 @@
           "id": "p1",
           "statement": "all deliverables exist",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "engine change committed at 20240f44; g4-mutation-log.md, CHECK_THAT_CANNOT_FAIL.md and g4-implementer-result.md all written; schema doc updated"
         }
       ],
       "postconditions": [
@@ -444,7 +485,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m8-closeout-3"
         },
         {
           "id": "c2",
@@ -453,7 +495,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md && grep -q 'two-world' .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m8-closeout-4"
         }
       ],
       "constraints": [
@@ -461,27 +504,73 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m8-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-closeout-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md && grep -q 'two-world' .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-closeout-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-closeout-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md && grep -q 'two-world' .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 1,
+  "refusals": 2,
   "engine_session": {
     "session_id": "g4-impl-467",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T15:56:57.710213+00:00",
-    "last_heartbeat": "2026-08-08T16:29:21.873728+00:00",
+    "last_heartbeat": "2026-08-08T16:57:31.238043+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T16:57:38.492701+00:00"
   },
   "why_trail": [
     {
@@ -525,6 +614,27 @@
       "why": "CHECKLIST_SCHEMA.md now documents the trip_ledger (storage-model line, field table, both outcomes, the begin-released honesty note, the two deliberate non-write-sites), the pure selector and its keying to the live understanding, the fail-safe that an empty result is not a claim of compliance, backward compatibility, engine-written-only, and the limit verbatim. I also corrected a line the change falsified: the Trip section said a HARD refusal 'never mutates state', which is no longer true. The gate refused once because the limit sentence wrapped across two lines and its own grep check could not match -- fixed by unwrapping, not by weakening the check.",
       "mechanical": false,
       "ts": "2026-08-08T16:29:21.873693+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-mutations",
+      "why": "19 mutations, all 19 killed by their named test, every revert confirmed clean before the next. No equivalent mutants declared. The four that decide the gate: N11 (selector dead-coded -- what negative-only tests would survive), N9 (keying dropped -- caught by a test whose two worlds hold an identical ledger), N18 (write site reachable from a verb -- read off the call graph with ast, so it cannot drift), N8 (a compliance claim made on silence -- the fail-safe mutated from the claim side, which closes g2's M11 gap for the ledger's half).",
+      "mechanical": false,
+      "ts": "2026-08-08T16:40:51.566473+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-cannot-fail",
+      "why": "CHECK_THAT_CANNOT_FAIL.md written as a first-class artifact: the shape of the defect (a missing contrast, not a wrong assertion), why it is invisible from the inside, FOUR specimens from this one issue (the Commander's DC6, g3's M5, g3's M15's false EQUIVALENT, and my own piped pytest exit code), what caught each and what did not, and a procedural list. I flagged one disagreement with the framing: four specimens by four forewarned actors is a base rate, not an irony, so the countermeasure has to be mechanical rather than attentional -- and three of the four live in verification machinery, the tier nobody verifies.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:42:34.797785+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-closeout",
+      "why": "Closeout complete. Wiring grep: _append_trip_entry has 2 external call sites (both in _trip_hard_gate), begin_over_line_records has 1 (in _trip_advisory) -- non-zero, no stop condition. Frozen closeout selector collects and passes: 25 passed, 384 deselected, 13 subtests (it exited 5 at 9997c32d). Full suite 1858 passed / 2 skipped / 821 subtests = the baseline 1833/2/808 plus exactly my 25 tests and 13 subtests. 19 mutations, all 19 killed by their named test. Result carries the two-world table, the write-site proof, and every limit I could not make discriminate.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:57:31.238018+00:00"
     }
   ],
   "amendments": [
