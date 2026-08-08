@@ -4415,3 +4415,32 @@ boundary verdict to satisfy a check.
 
 Pinned in `STATE_NOTE.md` under its own heading rather than buried in the close sequence, because a
 fresh Admiral would meet the merge before it met the close.
+
+### VERIFIED — #509's rework is correct, and the crew's reasoning was better than mine
+
+`8f3a6f54 rework(#411): restore verbatim _shared row, move correction into the note`. Checked by
+comparing the file on both sides rather than reading the diff:
+
+```
+_shared row present on MAIN:   1
+_shared row present on BRANCH: 1
+```
+
+**The fenced block is byte-faithful to the command printed above it again**, and the correction now
+lives entirely in the surrounding note.
+
+**And the justification the crew found is stronger than the one I gave.** I argued from a general
+principle — do not falsify a record. It cited **the file's own §0 reproducibility contract**: *"every
+figure below is derived from a git command, and the command is printed next to its output so the
+successor can re-derive."* **The file had already promised the property I was arguing for.** That is a
+better argument because it is the document's own commitment rather than my preference, and I did not
+know it was there.
+
+It also answered a pre-ruling I had not pressed — whether anything stops the miscount recurring — and
+answered it **honestly in the negative**, in the artifact itself: *"Nothing here stops the mistake
+recurring... The propagation path #411 names is closed only if the command itself excludes `_`-prefixed
+directories."* An honest "no" written into the deliverable, not buried in a return.
+
+**#509 is correct and still held**, for one mechanical reason only: `m3-artifact-and-pr` is still
+`pending` and the lease is still active. **A PR being right is not the same as a crew being done**, and
+I am not going to break my own rule on the one PR where the crew has done everything I asked.
