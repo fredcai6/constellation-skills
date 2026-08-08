@@ -3663,3 +3663,40 @@ notification — said running, and the authoritative channel was right. Recorded
 `RETROSPECTIVE_SOURCE.md` §52 with the point that matters: **the cost of getting this wrong leaves no
 trace.** A relaunch would have destroyed thirty minutes of loaded context and the successor's run
 would have looked completely normal, with nothing anywhere recording that a healthy agent was killed.
+
+### INCIDENT — `py` cannot run the suite, and I found it by running a baseline I did not need
+
+I kicked off a suite run on current main purely to have a green baseline ready before the first merge.
+It came back **exit 1**: `No module named pytest`. On a main I had every reason to believe was green.
+
+```
+py     -> C:\Users\fredc\.cache\codex-runtimes\...\python.exe   import pytest -> ModuleNotFoundError
+python -> C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\python.exe   pytest 9.0.2
+```
+
+**`py` and `python` are different interpreters under the Bash tool, and only one can run the suite.**
+
+**This is #313, happening to me, in the middle of the wave whose subject is checks that cannot fail.**
+`py` passes every probe anyone would reach for — it starts, it exits 0 on `--help`, and it has driven
+**this entire epic**: the engine, `verify_replan`, `apply_episode_delta`, `install_constellation`, the
+role verifier. All stdlib. The one thing it cannot do is the one thing the check exists to assure.
+
+**The dangerous part is the exit code, not the missing module.** `py -m pytest` exits **nonzero**,
+which reads as *the suite is red*. I only caught it because the tree was known-green; on a tree where
+a red was plausible it would have been attributed to the change under test. And any agent that pipes
+the output loses the real exit code anyway — a trap this run has already hit twice.
+
+**Action, immediately, before adjudicating anything:** all five crews sent an explicit correction —
+use `python -m pytest`, never `py` — with the instruction to **re-derive any red, green, or exit code
+that came from a `py` invocation**, because a red produced by a missing pytest is not a red. Two crews
+got issue-specific versions: crew 4 because nine changes in one file means it runs the suite most, and
+crew 2 because **#458's readiness list literally contains "engine present and runnable"** and this is a
+live case of an interpreter that starts, runs scripts, and still cannot run the suite. I told crew 2 to
+decide what "runnable" should mean and to state the choice either way rather than inheriting the weaker
+probe.
+
+Live reproduction posted to **#313**, including the observation that a fix hardcoding `py` would
+inherit the defect, and cross-referencing **#373** (`py` is a silent no-op under the PowerShell tool) —
+**two tools, two failure modes, one token.**
+
+**Baseline re-run under `python` and in flight.** No merge happens until it returns green.
