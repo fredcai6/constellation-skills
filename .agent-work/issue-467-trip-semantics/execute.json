@@ -563,7 +563,8 @@
           "id": "p1",
           "statement": "the HARD guard now sits on the begin-work verbs",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "The HARD guard now sits on the begin-work verbs. Shipped and closed at g2 (commits 38f0b448, 5a69a30b): TRIP_HARD_GUARDED_VERBS = {start, reopen} at the dispatch chokepoint, and dispatch no longer calls the guard on advance. Verified independently by an opus reviewer (APPROVE, 0 blocking) which rebuilt the pre-change engine and ran the new tests against it (16 failed / 9 passed, the permanent DC2 guard red for the right reason), and verified in my own shell: mutation M3 (advance put back into the guarded set) -> 6 FAILED with the named DC2 guard among them; closeout selector 25 passed exit 0; full suite 1815 passed / 2 skipped / 683 subtests exit 0."
         }
       ],
       "postconditions": [
@@ -574,7 +575,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
         }
       ],
       "constraints": [
@@ -619,11 +621,24 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g3-implementer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g3-implement/implementer/attempt-1",
+            "verified": "run_crew.py --verify-result -> fresh (completed)",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-review": {
@@ -1068,6 +1083,11 @@
       "id": "tc2",
       "from": "g2-implement",
       "statement": "tc2: whether a gate that trips with UNMET postconditions needs a mid-gate handoff channel. 'block --next' exists but 'current' does not render its text. Carries no grade. Raised per the frozen g2 plan, deliberately not built here."
+    },
+    {
+      "id": "tc3",
+      "from": "g3-implement",
+      "statement": "tc4: full-suite SUBTEST total is off by one and it is NOT this issue's diff. The g3 implementer measured the pre-change baseline itself with its diff stashed and got 682 subtests, one BELOW the 683 recorded at g2-integrate and in the g3 handoff; both post-change runs agreed at 806 while its two files add 125 (30->155), i.e. +124. So the tree produces 682 or 683 depending on something other than this change -- most likely the same test_context_manifest clean-file filter that produced the -1 at g2 (it filters to files clean in the working tree, so a stash or a dirty file moves the count). Flagged, not chased."
     }
   ],
   "blockers": [],
@@ -1120,6 +1140,13 @@
       "why": "g2 CLOSED. Verdict APPROVE, 0 blocking. I VERIFIED IN MY OWN SHELL rather than accepting the crew's numbers. c1 full suite: 1815 passed, 2 skipped, 683 subtests, real exit 0 -- and note the 683: the implementer's reported -1 subtest was its bisected prediction that the delta was test_context_manifest's clean-file filter reacting to a dirty scripts/checklist_engine.py, and that it would vanish on commit. It did. I did not accept that prediction, I tested it, and it held; +22 over the 1793 baseline is exactly the new tests. c2 closeout selector: 25 passed, 346 deselected, real exit 0 -- it collected 0 and exited 5 before this gate, so the empty-collection trap is genuinely cleared. c3 APPROVE artifact attached, verified fresh. MUTATION M3 RE-RUN BY ME, the one that matters: I put advance back into TRIP_HARD_GUARDED_VERBS, and the distribution derived mechanically was 6 FAILED with the permanent DC2 guard test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest among them -- exactly the log's claim, on both the count and the named test. Restoring from my backup left scripts/checklist_engine.py out of git status entirely, so the mutation left no residue. WHY THIS GATE ACTUALLY PROVES SOMETHING, which was the standing risk: the reviewer did not trust the implementer's saved RED files. It rebuilt the pre-change engine from git show 38f0b448^ and ran the NEW tests against it -- 16 failed / 9 passed, the DC2 guard red for the right reason, the 9 survivors all declared falsifiable-half companions. And it audited _refresh_requests_anywhere against has_pending_refresh_request, confirming a STRICT SUPERSET that does not filter superseded, so the no-pending-request precondition cannot miss a request that would lift the guard. Without that audit the whole assertion would have been decorative. PROBE D ran the #431 scenario on both engines side by side: old tells the agent advance is BLOCKED and hands it the literal why_ref=<why-id>, rc 1, gate stuck, digest pre-trip; new tells it its instruction has CHANGED, hands a working command with the concrete id, rc 0, gate closes, digest fresh, zero refresh-requests in the spine, next gate still refused. That is the fix verified on what the agent is TOLD and on whether anyone BEGAN work over the line -- not on whether the verb returns 0, which was never the defect. CARRIED INTO g3: tc1 -- docs/agents/GLOSSARY.md:13 still reads 'HARD blocks advance until the agent requests a context refresh', now FALSE, independently confirmed by the reviewer's own grep, root-caused as shotgun surgery (the same fact mirrored in four hand-maintained places, three updated and one missed), rated must-fix before epic #418 closes by both crews and by me. It is outside g2's frozen scope; floated to the Admiral. tc2 mid-gate handoff channel, tc3 from the review survey. NON-BLOCKING WORTH ACTING ON: no test executes the emitted refresh hint -- (d)'s guard is an assertEqual on rendered text, which is against this repo's own execute-the-generated-advice rule, and it is the exact shape of the <why-id> trap that has now burned five instances. TWO INSTRUMENT DEFECTS FOR THE EPIC LEDGER: the reviewer skill's INSTALLED engine bundle is stale and refuses amend on surveys (that is why the g1 reviewer force-waived its Fowler postcondition -- the repo engine supports it and this reviewer's amend worked first try; re-run install_constellation.py), and the two review surveys share item ids so their mechanical sidecars collide -- g1's were overwritten by g2's run, visible in my git status. NEXT: g3.",
       "mechanical": false,
       "ts": "2026-08-08T13:13:10.221035+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "g3-implement CLOSED. All four parts shipped by an independent opus implementer, no stop conditions hit, result verified fresh. (a) thresholds_for(model, headroom_tokens=0) subtracts an absolute-token reserve from both caps with two non-negative clamps. (b) ONE resolver _gate_headroom_tokens(cl, gate), tasks.<gate>.context_headroom_tokens only; missing/malformed/negative/config-tier all resolve to 0. (c) that same resolver feeds BOTH threshold call sites -- _trip_advisory (the number shown) and _trip_hard_band_reading (the number judged, which backs the begin-work guard AND g2's no-silent-close rule), so shown and judged cannot diverge. (d) exactly one gate carries an override: the spine's execute gate, context_headroom_tokens 30000. THE TWO VACUOUS-TEST TRAPS WERE BOTH DEFEATED, and not by assertion -- by mutation. The negative-only test carries its positive control in the same test through the same resolver, and M5 PROVES the control is load-bearing: dead-coding the resolver leaves all twelve negative assertions passing and only the control catches it (9 failed). THE ADMIRAL'S BINDING DC4 CONDITION IS MET: both sides asserted by name at one fill (12%) on one model (claude-opus-5) -- execute refuses, reconcile does not -- three ways (unit guard, CLI boundary, advisory text), the strongest being that the NEIGHBOUR's advisory is byte-identical to the no-override text while the overridden gate's is asserted not equal. Killed by M9 (reserve leaks to all gates, 7 failed) and M13 (guard judges the wrong gate, 1 failed). Tighten-only is structural in two independent layers and was attacked directly with -1, -1e308, -inf, nan, True, -0.0: nothing loosens; M1 drops the clamp and 18 subtests go red while NOTHING ELSE in the suite notices. 16 mutations, 15 killed by a named test, 1 declared EQUIVALENT rather than faked -- M15 has no narrow mutation because advance refuses a non-in-progress gate and start refuses a non-active one, so args.id == active_id in every reachable state; that is the second gate running where a crew declared a limitation instead of dressing up a blast-radius mutation, and it is the behaviour I want. Wiring grep: 2 production call sites, the advisory (:1486) and the guard (:1543) -- exactly the two that (c) requires, so the resolver is not shipped-inert on either side. Suites: 571 passed (four-suite), 20 passed / 125 subtests on the frozen headroom-or-override selector, full 1832 passed / 2 skipped / 806 subtests. Passed-count delta is exactly +17, its 17 new tests. RESERVE VALUE 30000, still @grade guess and honestly reasoned: execute is the gate that cannot be abandoned halfway; the only datum available bounds a gate's cost in the tens of thousands but cannot separate it from the resume baseline, so it supports a RANGE and 30K is its low end -- it moves execute's begin-work line 15%->12% and advisory 8%->5% on opus-5, leaves every other gate at the shipped default, and behaves sanely on the 200K model (30%/55%). Reasoning sits in context_headroom_note beside the value. SETTLE EXPERIMENT: I confirmed independently, and the implementer confirmed again, that the AUTHORED experiment is NOT RUNNABLE -- gauge.json keeps only the latest reading and the per-gate context manifests carry no fill. A cheaper replacement exists and I carry it to the Admiral: log (gate, fill_fraction) at each gate boundary, and after a handful of commander runs the number becomes measurable. The retracted role-blindness reading was used for nothing. tc3 flagged: the full-suite SUBTEST total is off by one and is NOT this diff -- the implementer measured 682 with its diff stashed against the 683 recorded at g2, so the tree yields either depending on the test_context_manifest clean-file filter. NEXT: g3-review. I am at fill 0.1478, just under hard 0.15.",
+      "mechanical": false,
+      "ts": "2026-08-08T14:08:23.182838+00:00"
     }
   ],
   "refusals": 6,
@@ -1127,7 +1154,7 @@
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T11:30:51.929485+00:00",
-    "last_heartbeat": "2026-08-08T13:13:10.221035+00:00",
+    "last_heartbeat": "2026-08-08T14:08:23.182838+00:00",
     "claimed_by": "commander-w4-467-e",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,

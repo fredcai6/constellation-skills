@@ -1,0 +1,395 @@
+{
+  "work_id": "g3-implement-headroom-override-467",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-headroom-param",
+    "m2-resolver",
+    "m3-one-number",
+    "m4-spine-reserve",
+    "m5-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and read both threshold call sites",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the g3 handoff, and the two live threshold call sites in scripts/checklist_engine.py (_trip_advisory, _trip_hard_band_reading) plus thresholds_for in scripts/gauge_reader.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); block and return if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + both call sites read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-headroom-param": {
+      "id": "m1-headroom-param",
+      "title": "(a) thresholds_for takes an absolute-token reserve and can only TIGHTEN",
+      "imperative": "TDD. Write tests in tests/test_gauge_reader.py (every name matching 'headroom' or 'override') that fail against today's thresholds_for(model): a well-formed reserve lowers BOTH caps' fractions; a reserve larger than a cap clamps that fraction at 0.0; and a hostile sweep (negative, huge-negative, zero) can never return a fraction ABOVE the un-overridden pair, for every model in the table. Observe them RED, attest c1, then add headroom_tokens=0 to thresholds_for with the two clamps (reserve clamped non-negative; each cap clamped non-negative) and make them GREEN. Do NOT touch _PROFILES.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new gauge_reader headroom tests written and observed failing against the old signature",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "thresholds_for(model, headroom_tokens=0) subtracts from both caps, clamps at 0, cannot loosen; gauge_reader suite green",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_gauge_reader.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-headroom-param-1"
+        }
+      ],
+      "constraints": [
+        "_PROFILES untouched",
+        "tighten-only is structural, not merely untested",
+        "thresholds_for stays a total function"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-headroom-param-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_gauge_reader.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-resolver": {
+      "id": "m2-resolver",
+      "title": "(b) One gate-level resolver in the engine; missing/malformed/negative -> 0",
+      "imperative": "TDD. Write tests in tests/test_checklist_engine.py (names matching 'headroom' or 'override') for a single resolver reading tasks.<gate>.context_headroom_tokens ONLY. The malformed/negative test MUST carry, in the SAME test and through the SAME resolver, a well-formed override resolving to a DIFFERENT number -- a resolve-to-default-only test passes with the mechanism dead-coded. Observe RED, attest c1, then add the resolver and make GREEN. No checklist-config tier; no threshold arithmetic in the engine.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed: thresholds_for accepts a reserve",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: resolver tests written and observed failing (no resolver exists yet)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "single gate-level resolver; missing/malformed/negative -> 0 AND well-formed -> a different number, same test",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'headroom or override'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-resolver-1"
+        }
+      ],
+      "constraints": [
+        "gate-level only",
+        "engine computes no threshold"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-resolver-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'headroom or override'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-one-number": {
+      "id": "m3-one-number",
+      "title": "(c) Advisory and begin-work guard read the SAME resolved number + DC4 neighbour isolation",
+      "imperative": "TDD. Write tests (names matching 'headroom' or 'override') that at ONE fill, on ONE model, in the band between the overridden hard and the default hard: the overridden gate's advisory says '>= hard' AND its begin-work guard refuses -- while a NAMED neighbour gate with no override does neither. Both sides asserted by name. Observe RED, attest c1, then wire the resolver into BOTH call sites (_trip_advisory and _trip_hard_band_reading) and make GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed: the resolver exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: neighbour-isolation and same-number tests written and observed failing before the call sites are wired",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "one resolved number feeds advisory + guard; named neighbour unaffected at the same fill on the same model",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py -k 'headroom or override'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-one-number-1"
+        }
+      ],
+      "constraints": [
+        "extend _trip_hard_band_reading, never add a second at/over-hard path"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-one-number-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py -k 'headroom or override'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-spine-reserve": {
+      "id": "m4-spine-reserve",
+      "title": "(d) The commander spine's execute gate carries exactly one reserve",
+      "imperative": "Add context_headroom_tokens to the execute gate ONLY in skills/commander/templates/COMMANDER_SPINE.template.json, with an inline comment-bearing companion note stating the reasoning and that the value is a revisable guess. Exactly one gate. Then run the template/installer suites and reconcile them only if the template edit legitimately requires it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 landed: the mechanism is live end to end",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "execute gate carries a reserve; exactly one gate in the template does; template + installer suites green",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_init_work_area.py tests/test_install_constellation.py && test \"$(grep -c 'context_headroom_tokens' skills/commander/templates/COMMANDER_SPINE.template.json)\" = \"1\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-spine-reserve-1"
+        }
+      ],
+      "constraints": [
+        "exactly one gate carries an override"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-spine-reserve-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_init_work_area.py tests/test_install_constellation.py && test \"$(grep -c 'context_headroom_tokens' skills/commander/templates/COMMANDER_SPINE.template.json)\" = \"1\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-closeout": {
+      "id": "m5-closeout",
+      "title": "Mutation log, wiring grep, frozen closeout selector, full suite, result artifact",
+      "imperative": "Mutation-test every guard shipped (tighten-only clamp, resolver validation, neighbour isolation, both call sites), logging branch broken / NAMED failing test / TOTAL failure count to .agent-work/issue-467-trip-semantics/g3-mutation-log.md; declare honestly where no narrow mutation exists. Run the wiring grep and state the external call-site count for every new symbol, showing BOTH the advisory and the guard. Run the frozen closeout selector and the full suite, explain any delta from 1815 passed / 2 skipped / 683 subtests, and write the result artifact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mutation log written with per-mutation total failure counts; wiring grep run and counted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "frozen closeout selector collects the new tests and passes; full suite green",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py -k 'headroom or override' && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-closeout-1"
+        },
+        {
+          "id": "c3",
+          "statement": "mutation log and implementer result artifact both exist and are non-empty",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/issue-467-trip-semantics/g3-mutation-log.md && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g3-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-closeout-2"
+        }
+      ],
+      "constraints": [
+        "do not commit -- the Commander commits at the gate seam"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py -k 'headroom or override' && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-closeout-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/issue-467-trip-semantics/g3-mutation-log.md && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g3-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g3-impl-467",
+    "status": "released",
+    "claimed_at": "2026-08-08T13:19:50.113717+00:00",
+    "last_heartbeat": "2026-08-08T14:06:49.297853+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T14:06:57.457313+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "g3: handoff complete; both threshold call sites read -- _trip_advisory:1448 and _trip_hard_band_reading:1494 both call thresholds_for(reading.model); plan is a per-gate tighten-only reserve wired into exactly those two.",
+      "mechanical": false,
+      "ts": "2026-08-08T13:20:04.341410+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-headroom-param",
+      "why": "(a) landed: thresholds_for(model, headroom_tokens=0) subtracts an absolute reserve from both caps with two non-negative clamps -- negative reserve is a no-op, huge reserve floors at 0.0; RED was 52 failed/1 passed on the selector, now 50 passed + 48 subtests.",
+      "mechanical": false,
+      "ts": "2026-08-08T13:21:38.612859+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-resolver",
+      "why": "(b) landed: _gate_headroom_tokens reads tasks.<gate>.context_headroom_tokens only; missing/malformed/negative/config-tier all -> 0, and the same test carries the positive control (30_000 -> 30_000). RED 15 failed, now 6 passed + 12 subtests on the frozen selector.",
+      "mechanical": false,
+      "ts": "2026-08-08T13:23:05.209163+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-one-number",
+      "why": "(c) landed: _gate_headroom_tokens feeds BOTH _trip_advisory and _trip_hard_band_reading (which now takes the gate it is asked about; begin-guard passes the gate being begun, advance passes args.id, both default to active_id). DC4 both-sides green: execute at 12% refuses, reconcile at the same 12% on the same model does not, and the neighbour advisory is byte-identical to the no-override text. RED 6 failed -> 18 passed on the frozen selector.",
+      "mechanical": false,
+      "ts": "2026-08-08T13:26:50.091793+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-spine-reserve",
+      "why": "(d) landed: the commander spine's execute gate -- and only that gate -- carries context_headroom_tokens 30000, with an adjacent context_headroom_note stating the reasoning and that the number is a revisable guess whose settle experiment is not runnable from existing artifacts. Installer/template suites 138 passed, 380 subtests, no reconciliation needed.",
+      "mechanical": false,
+      "ts": "2026-08-08T13:29:06.126326+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-closeout",
+      "why": "g3 closeout: 16 mutations (15 killed by a NAMED test, M15 declared equivalent with reasoning), wiring grep shows 2 production call sites for the resolver -- the advisory and the guard -- and 1 authored key in the shipped templates; frozen selector collects 20 tests; full suite 1832 passed / 2 skipped / 806 subtests, delta explained against a baseline I measured myself. Reserve = 30000, graded guess, reasoning next to it.",
+      "mechanical": false,
+      "ts": "2026-08-08T14:06:49.297824+00:00"
+    }
+  ]
+}

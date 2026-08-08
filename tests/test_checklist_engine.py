@@ -3736,6 +3736,272 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
         self.assertTrue(E.dispatch(cl, _start_ns("g2"), base_dir=None).endswith("g2 -> in-progress"))
 
 
+class GateHeadroomOverrideResolverTests(unittest.TestCase):
+    """#467 (b): ONE resolver for the per-gate context-headroom reserve, read from
+    `tasks.<gate>.context_headroom_tokens` and NOWHERE else. There is deliberately
+    no checklist-config tier: it would have zero users, and one adapter is a
+    hypothetical seam, not a real one. A missing, malformed, or negative value
+    resolves to 0 -- the shipped default, which no gate may lower."""
+
+    def _cl(self, **overrides):
+        cl = gated(g1=gate("g1", "in-progress"), g2=gate("g2", "pending"))
+        for iid, value in overrides.items():
+            cl["tasks"][iid]["context_headroom_tokens"] = value
+        return cl
+
+    def test_wellformed_headroom_override_is_read_from_its_own_gate_only(self):
+        cl = self._cl(g1=30_000)
+        self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 30_000)
+        # The neighbour declares nothing, so it reserves nothing. A per-gate knob
+        # that leaked onto its siblings would not be per-gate.
+        self.assertEqual(E._gate_headroom_tokens(cl, "g2"), 0)
+        # No gate named / no such gate -> 0, so the resolver is total.
+        self.assertEqual(E._gate_headroom_tokens(cl, None), 0)
+        self.assertEqual(E._gate_headroom_tokens(cl, "no-such-gate"), 0)
+
+    def test_no_checklist_config_tier_supplies_a_headroom_override(self):
+        # decision:no-config-tier -- gate-level ONLY. A value parked at the
+        # checklist root or in `config` must be invisible to the resolver, so a
+        # run-wide reserve cannot be smuggled in behind the per-gate one.
+        cl = self._cl()
+        cl["context_headroom_tokens"] = 30_000
+        cl["config"]["context_headroom_tokens"] = 30_000
+        self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 0)
+        self.assertEqual(E._gate_headroom_tokens(cl, "g2"), 0)
+
+    def test_malformed_or_negative_headroom_override_resolves_to_the_default_but_a_wellformed_one_does_not(self):
+        """BOTH halves, in ONE test, through the SAME resolver -- deliberately.
+
+        A test asserting only that a malformed value resolves to the default
+        CANNOT FAIL: resolving to the default is exactly what a missing feature
+        does, so it passes with the whole mechanism dead-coded. The positive
+        control below is what makes the negative half mean anything."""
+        malformed = ("30000", None, True, False, 1.5, float("nan"), [], {}, object())
+        for value in malformed:
+            with self.subTest(value=repr(value)):
+                cl = self._cl(g1=value)
+                self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 0)
+        for value in (-1, -30_000, -10 ** 12):
+            with self.subTest(value=value):
+                cl = self._cl(g1=value)
+                self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 0)
+        # POSITIVE CONTROL, same resolver, same fixture shape: a well-formed
+        # override resolves to a DIFFERENT number than the default it falls back
+        # to above. Without this assertion every line above would still pass
+        # against a resolver that always returned 0.
+        cl = self._cl(g1=30_000)
+        self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 30_000)
+        self.assertNotEqual(E._gate_headroom_tokens(cl, "g1"), 0)
+
+
+class GateHeadroomOverrideTripTests(unittest.TestCase):
+    """#467 (c)+(d): the resolved reserve reaches BOTH the number the agent is SHOWN
+    (`_trip_advisory`) and the number it is JUDGED against (`_trip_hard_band_reading`,
+    which backs the begin-work guard and the no-silent-close rule), so the two can
+    never diverge.
+
+    Every assertion below runs at ONE fill on ONE model, and names BOTH sides: the
+    overridden gate's behaviour changes AND the neighbour's does not. Proving only
+    that the overridden gate trips earlier would be satisfied by giving every gate
+    an override, which is precisely the failure this pins against.
+
+    Numbers are INDEPENDENT literals for claude-opus-5 (1M window, 80K soft, 150K
+    hard), never read back off the profile table -- that would be circular."""
+
+    GATE = "execute"          # the overridden gate: the run's longest
+    NEIGHBOUR = "reconcile"   # the named neighbour: declares nothing, reserves nothing
+    MODEL = "claude-opus-5"
+    RESERVE = 50_000
+    DEFAULT_SOFT, DEFAULT_HARD = 0.08, 0.15        # 80_000/1M, 150_000/1M
+    OVERRIDDEN_SOFT, OVERRIDDEN_HARD = 0.03, 0.10  # (80_000-50_000)/1M, (150_000-50_000)/1M
+    FILL = 0.12  # ONE fill, strictly between OVERRIDDEN_HARD and DEFAULT_HARD
+
+    def setUp(self):
+        # Pin the band arithmetic this fixture depends on, so a later profile edit
+        # breaks HERE with a clear reason rather than quietly making every
+        # assertion below vacuous.
+        self.assertEqual(E._gauge_reader.thresholds_for(self.MODEL),
+                         (self.DEFAULT_SOFT, self.DEFAULT_HARD))
+        self.assertEqual(E._gauge_reader.thresholds_for(self.MODEL, self.RESERVE),
+                         (self.OVERRIDDEN_SOFT, self.OVERRIDDEN_HARD))
+        self.assertLess(self.OVERRIDDEN_HARD, self.FILL)
+        self.assertLess(self.FILL, self.DEFAULT_HARD)
+
+    def _cl(self, reserve=RESERVE, execute_status="in-progress"):
+        # PASS_COMMAND postconditions so `advance` is legal (a gated gate needs at
+        # least one); why_exempt (gate()'s default) so a clean close needs no --why,
+        # which is what makes the no-silent-close assertion below discriminating.
+        cl = gated(execute=gate(self.GATE, execute_status, command=PASS_COMMAND),
+                   reconcile=gate(self.NEIGHBOUR, "pending", command=PASS_COMMAND))
+        if reserve is not None:
+            cl["tasks"][self.GATE]["context_headroom_tokens"] = reserve
+        return cl
+
+    def _gauge(self, fill=FILL):
+        return mock.patch.object(E, "_read_gauge",
+                                 return_value=_reading(fill, self.MODEL))
+
+    # --- DC4: the overridden gate changes AND the neighbour does not -------- #
+    def test_headroom_override_trips_its_own_gate_and_not_its_neighbour(self):
+        """The binding condition. SAME checklist, SAME fill, SAME model, both sides
+        named: `execute` (reserve 50K) is at/over hard and refuses to be begun,
+        while `reconcile` (no reserve) is nowhere near hard and begins freely."""
+        cl = self._cl()
+        with self._gauge():
+            with self.assertRaises(E.EngineError) as ctx:
+                E._trip_hard_gate(cl, self.GATE, Path("."))
+            # ... and the neighbour, at that same 12%, is not refused at all.
+            self.assertIsNone(E._trip_hard_gate(cl, self.NEIGHBOUR, Path(".")))
+            # The band decision itself, read straight from the single place that
+            # makes it: a Reading for the overridden gate, None for the neighbour.
+            self.assertIsNotNone(E._trip_hard_band_reading(cl, Path("."), self.GATE))
+            self.assertIsNone(E._trip_hard_band_reading(cl, Path("."), self.NEIGHBOUR))
+        self.assertIn("12% is at/over the hard limit", str(ctx.exception))
+
+    def test_headroom_override_neighbour_is_unaffected_through_the_cli_boundary(self):
+        """The same both-sides discrimination end to end through `dispatch`, where
+        the guard actually rides: `start execute` REFUSES and leaves the gate
+        pending, `start reconcile` succeeds -- one fill, one model."""
+        cl = self._cl(execute_status="pending")
+        with self._gauge():
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns(self.GATE), base_dir=Path("."))
+            self.assertEqual(cl["tasks"][self.GATE]["status"], "pending")
+            # Advance past the overridden gate so the neighbour is the active one,
+            # then begin it at the SAME 12% fill: it opens normally.
+            neighbour_cl = copy.deepcopy(cl)
+            neighbour_cl["tasks"][self.GATE]["status"] = "complete"
+            msg = E.dispatch(neighbour_cl, _start_ns(self.NEIGHBOUR), base_dir=Path("."))
+        self.assertTrue(msg.endswith(f"{self.NEIGHBOUR} -> in-progress"), msg)
+
+    def test_headroom_override_changes_the_advisory_for_its_gate_only(self):
+        """What the agent is SHOWN, both sides named at one fill: active `execute`
+        reads the HARD instruction; active `reconcile` reads the ordinary SOFT
+        advisory and never the hard one."""
+        cl = self._cl()
+        with self._gauge():
+            overridden = E._trip_advisory(cl, Path("."))
+            neighbour_cl = copy.deepcopy(cl)
+            neighbour_cl["tasks"][self.GATE]["status"] = "complete"
+            neighbour = E._trip_advisory(neighbour_cl, Path("."))
+        self.assertIn(">= hard", overridden)
+        self.assertIn("your instruction has changed", overridden)
+        self.assertIn(f"advance {self.GATE}", overridden)
+        # The neighbour at the SAME 12%: above its own soft (8%), nowhere near its
+        # own hard (15%) -- i.e. exactly what it says with no override in play.
+        self.assertIn(">= soft", neighbour)
+        self.assertNotIn(">= hard", neighbour)
+
+    def test_headroom_override_neighbour_advisory_is_byte_identical_to_no_override(self):
+        """Stronger form of the not-its-neighbours half: the neighbour's advisory
+        with an override on `execute` is EXACTLY the text it has when no override
+        exists anywhere. Not merely 'still soft' -- unchanged."""
+        with_override = self._cl()
+        with_override["tasks"][self.GATE]["status"] = "complete"
+        without_override = self._cl(reserve=None)
+        without_override["tasks"][self.GATE]["status"] = "complete"
+        with self._gauge():
+            self.assertEqual(E._trip_advisory(with_override, Path(".")),
+                             E._trip_advisory(without_override, Path(".")))
+            # And the overridden gate's own advisory is NOT what it would be
+            # without the override -- so the equality above is discrimination,
+            # not a mechanism that does nothing.
+            self.assertNotEqual(E._trip_advisory(self._cl(), Path(".")),
+                                E._trip_advisory(self._cl(reserve=None), Path(".")))
+
+    # --- (c): shown number and judged number cannot diverge ----------------- #
+    def test_headroom_override_moves_the_advisory_and_the_guard_together(self):
+        """DEMONSTRATED, not asserted: sweep the whole fill range against several
+        reserves and require the advisory's HARD branch and the begin-work guard's
+        refusal to agree on EVERY sample. If the two ever read different resolved
+        numbers, some sample in the sweep separates them."""
+        seen = set()
+        for reserve in (0, 20_000, 50_000, 79_999, 140_000):
+            for fill in (0.0, 0.01, 0.02, 0.03, 0.05, 0.08, 0.0999, 0.10,
+                         0.12, 0.1499, 0.15, 0.30, 1.0):
+                cl = self._cl(reserve=reserve)
+                with self.subTest(reserve=reserve, fill=fill):
+                    with self._gauge(fill):
+                        advisory_says_hard = ">= hard" in E._trip_advisory(cl, Path("."))
+                        try:
+                            E._trip_hard_gate(cl, self.GATE, Path("."))
+                            guard_refuses = False
+                        except E.EngineError:
+                            guard_refuses = True
+                    self.assertEqual(advisory_says_hard, guard_refuses)
+                    seen.add(advisory_says_hard)
+        # The sweep must actually cross the line in both directions, or the
+        # equality above would hold vacuously.
+        self.assertEqual(seen, {True, False})
+
+    def test_headroom_override_also_governs_the_no_silent_close_rule(self):
+        """The third consumer of the same resolved number (g2's no-silent-close
+        rule, which rides `_trip_hard_band_reading` through `advance`'s
+        `require_why`): at 12% the overridden gate may not close in silence, while
+        the neighbour -- why_exempt, same fill, same model -- still may."""
+        cl = self._cl()
+        with self._gauge():
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _advance_ns(self.GATE), base_dir=Path("."))
+            self.assertEqual(cl["tasks"][self.GATE]["status"], "in-progress")
+            msg = E.dispatch(cl, _advance_ns(self.GATE, why="handing off at execute"),
+                             base_dir=Path("."))
+            self.assertIn(f"{self.GATE} -> complete", msg)
+            # The named neighbour at the same fill closes silently, as it always has.
+            E.dispatch(cl, _start_ns(self.NEIGHBOUR), base_dir=Path("."))
+            msg = E.dispatch(cl, _advance_ns(self.NEIGHBOUR), base_dir=Path("."))
+        self.assertIn(f"{self.NEIGHBOUR} -> complete", msg)
+
+    def test_headroom_override_defaults_to_the_active_gates_reserve(self):
+        """Asked without a gate, the band decision falls back to the ACTIVE gate --
+        the same gate `_trip_advisory` reports on, which is what keeps the shown
+        number and the judged number identical. Failing OPEN here (resolving to no
+        reserve when the caller names no gate) would silently drop an expensive
+        gate's protection, so the default is fail-tight, not fail-open."""
+        cl = self._cl()  # `execute` is active AND carries the reserve
+        with self._gauge():
+            self.assertIsNotNone(E._trip_hard_band_reading(cl, Path(".")))
+            # ... and with no override anywhere, the same call at the same fill is
+            # below hard -- so the line above is the reserve talking, not the fill.
+            self.assertIsNone(E._trip_hard_band_reading(self._cl(reserve=None), Path(".")))
+
+    def test_shipped_spine_template_carries_exactly_one_headroom_override(self):
+        """(d) exercised for real, against the SHIPPED template rather than a
+        fixture: the commander spine's `execute` gate -- the run's longest, and the
+        one whose imperative already tells the agent in prose to ensure context
+        headroom before entering -- carries a reserve, and NO other gate does.
+
+        The "no other gate" half is the load-bearing one: handing every gate an
+        override would invent a table of ungraded placeholders and destroy the
+        per-gate meaning of the knob. The reserve is read here through the REAL
+        resolver, so the authored number and the number the governor uses cannot
+        drift apart."""
+        spine = json.loads((ROOT / "skills" / "commander" / "templates"
+                            / "COMMANDER_SPINE.template.json").read_text(encoding="utf-8"))
+        carriers = [iid for iid, t in spine["tasks"].items()
+                    if "context_headroom_tokens" in t]
+        self.assertEqual(carriers, ["execute"])
+        reserve = E._gate_headroom_tokens(spine, "execute")
+        self.assertGreater(reserve, 0)
+        self.assertEqual(reserve, spine["tasks"]["execute"]["context_headroom_tokens"])
+        # Every other gate keeps the shipped default, named explicitly.
+        for iid in ("plan", "reconcile", "review", "archive"):
+            self.assertEqual(E._gate_headroom_tokens(spine, iid), 0)
+        # The value is a documented guess, not a bare magic number: the reasoning
+        # lives next to it so a later run can revise it in one obvious place.
+        self.assertIn("GUESS", spine["tasks"]["execute"]["context_headroom_note"])
+
+    # --- fail-safe: an override never manufactures a trip ------------------- #
+    def test_headroom_override_never_trips_without_a_reading(self):
+        """A reserve is a tightening of a reading, never a substitute for one: with
+        no gauge reading, an overridden gate is as ungoverned as any other."""
+        cl = self._cl()
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            self.assertEqual(E._trip_advisory(cl, Path(".")), "")
+            self.assertIsNone(E._trip_hard_gate(cl, self.GATE, Path(".")))
+            self.assertIsNone(E._trip_hard_band_reading(cl, Path("."), self.GATE))
+
+
 class FormatAgeTests(unittest.TestCase):
     """_format_age: whole seconds/minutes/hours, pure arithmetic + string
     formatting -- the unit boundaries (60s, 3600s) are unit conversion, never

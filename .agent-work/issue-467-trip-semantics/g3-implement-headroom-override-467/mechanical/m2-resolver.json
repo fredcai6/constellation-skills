@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-resolver",
+  "mechanical": {
+    "run": "g3-implement-headroom-override-467",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-resolver",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-implement-headroom-override-467-m2-resolver@d4672a36c1f3fc3d0afa5f686c161d925916f8a3",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-implement-headroom-override-467",
+    "generated_at": "2026-08-08T13:22:05Z"
+  }
+}

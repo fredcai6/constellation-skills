@@ -1274,6 +1274,38 @@ def _read_gauge(base_dir: Path | None):
     return _gauge_reader.read(path)
 
 
+def _gate_headroom_tokens(cl: dict, gate: str | None) -> int:
+    """The absolute-token context reserve `gate` declares for itself, or 0 (#467).
+
+    THE SINGLE READER of the override, and it reads ONE place:
+    `tasks.<gate>.context_headroom_tokens`. A gate that is known to be expensive
+    declares how much room it needs left over, and the governor holds it to that
+    -- while remaining structurally incapable of asking for LESS than the shipped
+    default (the tighten-only clamps live in `gauge_reader.thresholds_for`, the
+    module that owns the window and the caps; this function only reads a number
+    and never computes a threshold, per constraint:no-threshold-values).
+
+    NO CHECKLIST-CONFIG TIER (decision:no-config-tier): a run-wide reserve would
+    have zero users today, and a seam with one hypothetical adapter is a guess,
+    not a boundary. A value parked in `config` or at the checklist root is simply
+    not read.
+
+    Total and fail-safe, exactly like the rest of this section: no gate named, an
+    unknown gate, a missing key, a malformed value (anything that is not a plain
+    int -- `bool` is excluded even though it is an int subclass, so a stray
+    `true` cannot become a 1-token reserve), or a negative value all resolve to
+    0, which means "the shipped default", never "no governor"."""
+    if not gate:
+        return 0
+    task = (cl.get("tasks") or {}).get(gate)
+    if not isinstance(task, dict):
+        return 0
+    raw = task.get("context_headroom_tokens")
+    if not isinstance(raw, int) or isinstance(raw, bool) or raw < 0:
+        return 0
+    return raw
+
+
 def _refresh_attach_hint(gate: str, why_id: str | None = None) -> str:
     """The exact `attach` command that raises a refresh-request for `gate` — the
     remedy both bands point the agent at (payload is pointers only: seam + why_ref,
@@ -1445,7 +1477,13 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # (#271), or the gauge file's own raw facts if `read()` rejected it.
         # See _no_reading_advisory for the dispatch order and why.
         return _no_reading_advisory(base_dir)
-    soft, hard = _gauge_reader.thresholds_for(reading.model)
+    # #467: the ACTIVE gate's own headroom reserve tightens the pair this advisory
+    # is computed from — the same resolver, and so the same number, the begin-work
+    # guard is about to judge the agent against (`_trip_hard_band_reading`). The
+    # engine passes a token count and reads back fractions; it computes no
+    # threshold itself (constraint:no-threshold-values).
+    soft, hard = _gauge_reader.thresholds_for(reading.model,
+                                              _gate_headroom_tokens(cl, gate))
     fill = reading.fill_fraction
     if fill >= hard:
         # Identity-aware (#190): a NEW trip must carry its OWN fresh refresh-request
@@ -1479,19 +1517,30 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     return ""
 
 
-def _trip_hard_band_reading(cl: dict, base_dir: Path | None):
+def _trip_hard_band_reading(cl: dict, base_dir: Path | None, gate: str | None = None):
     """The gauge Reading when this checklist is in the HARD band right now, else
     None. One place decides "are we at/over hard", so the begin-work guard
     (`_trip_hard_gate`) and the no-silent-close rule (`advance`'s `require_why`)
     can never disagree about it. Fail-safe by construction: surveys and a
     missing/stale reading both yield None, which every caller reads as "band
-    inactive" — HARD never forces on an absent reading."""
+    inactive" — HARD never forces on an absent reading.
+
+    `gate` (#467) is the gate the question is being asked ABOUT — the one being
+    begun, or the one being closed — because the hard line is now per-gate: it is
+    tightened by that gate's own `context_headroom_tokens` reserve, resolved by
+    `_gate_headroom_tokens` and applied by `gauge_reader.thresholds_for`. It
+    defaults to the ACTIVE gate, which is the gate `_trip_advisory` reports on, so
+    the number the agent is SHOWN and the number it is JUDGED against come from
+    the same resolver on the same gate and cannot diverge. A reserve can only
+    TIGHTEN (the clamps live in `thresholds_for`), so an override can never turn
+    a Reading in the hard band into a None."""
     if cl.get("type") != GATED:
         return None
     reading = _read_gauge(base_dir)
     if reading is None:
         return None
-    _, hard = _gauge_reader.thresholds_for(reading.model)
+    _, hard = _gauge_reader.thresholds_for(
+        reading.model, _gate_headroom_tokens(cl, gate or active_id(cl)))
     if reading.fill_fraction < hard:
         return None
     return reading
@@ -1511,7 +1560,9 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
     refreshes the lease."""
     if not iid:
         return
-    reading = _trip_hard_band_reading(cl, base_dir)
+    # #467: judged against the reserve declared by the gate being BEGUN — an
+    # expensive gate's "I need this much room" is a statement about entering IT.
+    reading = _trip_hard_band_reading(cl, base_dir, iid)
     if reading is None:
         return
     # Identity-aware release (#190): the pending refresh-request must be keyed to the
@@ -2803,7 +2854,8 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
         return advance(cl, args.id, from_child=getattr(args, "from_child", None),
                        base_dir=base_dir, why=getattr(args, "why", None),
                        mechanical=getattr(args, "mechanical", False),
-                       require_why=_trip_hard_band_reading(cl, base_dir) is not None)
+                       require_why=_trip_hard_band_reading(
+                           cl, base_dir, getattr(args, "id", None)) is not None)
     if v == "record":
         return record(cl, args.id, args.result, args.finding, base_dir=base_dir)
     if v == "consolidate":
