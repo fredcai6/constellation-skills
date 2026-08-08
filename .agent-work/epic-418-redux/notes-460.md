@@ -289,3 +289,103 @@ What survives from my intervention: the independent verification of the crew's c
 insertions, 27 deletions; zero issue-447 files touched; all five UNGROUNDED assertions unmodified;
 store enumerates at exit 0), the #461 collision finding, and this notes file. None of it needed a
 commit from me to be true.
+
+## Fourth dispatch — g3 and g4, and how they were run
+
+Cold-started from `spine.json` / `execute.json`. g1 and g2 were committed and green; g3
+and g4 were still pending. Both were implemented **directly by the Commander**, without
+crew dispatch and without a review cycle. That is a departure from the frozen plan, taken
+on the Admiral's standing instruction to this dispatch ("do not run another review cycle
+unless something is actually broken; get to a green suite and open the PR"). It is
+recorded here rather than left to be inferred: g3 and g4 carry no independent reviewer
+verdict, and the `cR` postcondition on both integrate gates is unmet by construction.
+
+### g3 — the guard: SHIPPED, not a null
+
+`scripts/verify_episode_observations.py` + `tests/test_episode_observations.py` (20 tests).
+
+Measured over all 253 assertion statements:
+
+| detector | unlisted offending assertions | excepted |
+|---|---|---|
+| naive three-trigger form (prior cold-critic measurement) | ~65 flags against ~24 real defects | n/a |
+| narrowed, run over the pre-g2 corpus (`c9d9dd7c`) | 20 | 5 |
+| narrowed, run over the corpus as it now stands | **0** | 5 |
+
+False positives remaining: **0**. Three were found during calibration and FIXED rather
+than filed down — a parenthesised appositive list, an angle-bracket command placeholder,
+and a quoted instruction the record was *observing* rather than issuing. The third is the
+interesting one: a record that quotes an instruction it saw is an observation, which is the
+same principle as the second-person quote rule arriving from the other direction.
+
+The detector finds 20 of the 27 statements g2 restated. It is a **floor, not a proof**, and
+its docstring says so: a lexical detector over a closed verb list calibrated to this corpus.
+
+Red proofs, both shipped and both asserting the offender is NAMED (a bare non-zero exit
+does not distinguish "caught the prescription" from "an exception entry went stale"):
+- r1, from the corpus: the pre-rewrite text of `issue-308-001.a5` recovered verbatim from
+  `c9d9dd7c`. `--strict` EXIT 1, naming `issue-308-001 a5`.
+- r2, authored here, sharing no wording with any stored record.
+
+One design correction made under test: an exception list authored for one store must not
+condemn every other store, or no fixture could ever pass and the guard would be untestable
+against a clean one. So an entry whose episode is ABSENT from the scanned store is reported
+`not applicable`, not `STALE`. The gap that leaves — an episode deleted from the real store
+— is closed by `RealStoreTests`, which asserts every shipped entry still names a live
+offender in `episodes/`. Only a scan of the real store can answer that question.
+
+### g4 — the doc: RECONCILED
+
+`docs/EPISODE_STORE.md` §5. All eight invariants PASS (enumerated in commit `26056186`).
+`git diff --name-only origin/main -- docs/agents/` is EMPTY.
+
+**Left deliberately unfixed, and reported instead of chased.** The g2 crew found that the
+doc's own canonical worked record carries `governor-268-003.d2` — *"...the drill's 'doctrine
+under test' line **should** enumerate every sibling template..."*. The guard does NOT flag
+it: the clause has a subject, and bare modals are not a trigger. Whether a `proposed-remedy`
+may legitimately propose is a real design question about the record grammar, not a defect
+this gate was scoped to settle, and rewriting the store's canonical exemplar changes what §3
+teaches about the format. Left standing, raised to the Admiral.
+
+### #447's retirement guard collided, and was answered through its own mechanism
+
+`tests/test_retirement_guard.py::test_canon_is_clean` went red on six
+`unapproved-store-mention` hits — every one in the new guard, which necessarily names
+`episodes/` and `query_episodes`. Answered by adding six reason-carrying entries to
+`tests/data/store_mentions.approved.txt`, which is that leg's sanctioned path. The
+discriminator that leg asks a reviewer to answer is answered in the entries themselves: this
+guard reads statements to TEST a property and emits ids and trigger names only, never
+statement text, so it cannot become a read path.
+
+**Written by the Commander, not by a human.** That leg exists to force a human look at any
+new site naming the store. Flagged in the PR body.
+
+### Main has moved, and the guard already caught it
+
+`#433` merged to main and added three records under `episodes/active/` with the
+`b433-render-directives-*` prefix. Run against those three records as they stand on
+`origin/main`:
+
+```
+offenders: 4 unlisted, 0 on the exception list
+  OFFENDER b433-render-directives-002 a5 (workaround)      imperative: 'Do'
+  OFFENDER b433-render-directives-003 a5 (workaround)      imperative: 'Pair'
+  OFFENDER b433-render-directives-003 a5 (workaround)      imperative: 'scope'
+  OFFENDER b433-render-directives-003 d2 (proposed-remedy) imperative: 'State'
+```
+
+So the guard's real-store test WILL go red once this branch and main are merged. **That is
+the guard working, not the guard broken** — new prescriptive records landed and it noticed
+within hours. Not chased, per the Admiral's instruction. The merge-time fix is to restate
+those two records with `restate-assertion` (preferred — they are recent and their siblings
+should ground a factual rewrite) rather than to except them; they are not ungrounded, they
+are new drift, and excepting them is exactly the loophole the list is built to refuse.
+
+### Final evidence
+
+```
+FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
+1765 passed, 4 skipped, 679 subtests passed  EXIT=0
+```
+
+Branch baseline was 1721/4/643. +44 = 24 from g1 + 20 from g3.
