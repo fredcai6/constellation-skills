@@ -3700,3 +3700,79 @@ inherit the defect, and cross-referencing **#373** (`py` is a silent no-op under
 **two tools, two failure modes, one token.**
 
 **Baseline re-run under `python` and in flight.** No merge happens until it returns green.
+
+### REFRESH — crew 1 tripped at `plan`, handed off cleanly, relaunched as `commander-w5-gates-b`
+
+`commander-w5-gates` was refused `start plan` on a HARD reading (16% fill against the 0.15 band),
+attached a `refresh-request` to `plan` against why-record `w-3`, committed and pushed at `eff00abf`,
+and stood down. **This is #467 working**: the band guarded a verb that BEGINS work, the handoff got
+written, and `current` carries `REFRESH REQUESTED:`. Not blocked, not dead.
+
+Relaunched a **fresh** Commander into the **same worktree and spine file**, cold-started from
+`current` alone — no handoff document, no re-briefing from my memory of the run. Only two facts it
+cannot derive from the spine were passed: use `python` not `py`, and where its launch order actually
+lives.
+
+### CORRECTION — my duplicate collapse was wrong, and my own non-overridable rule caught me
+
+I wrote *"confirm every collapse against the issue BODY, never the title"* as a NOT-OVERRIDABLE
+pre-ruling for the crews. **Crew 1 obeyed it and it caught the Admiral.**
+
+| My claim | Truth | Re-derived by me |
+|---|---|---|
+| #439 ≡ #484 ≡ #446, "all the same postcondition" | **#439 ≡ #484 holds. #446 is DISTINCT** — same postcondition, but it never mentions `<branch>` and neither fix subsumes the other. | `gh issue view 446 ... \| grep -c "<branch>"` → **0** |
+| #501 ≡ #468 | **Partial, not total** — #501 carries a boundary-freshness sub-ask that #468 has no counterpart for. | crew 1's interrogation record, quoted per-issue |
+
+Wave 5 is still 21 issues; what I got wrong is the number of **distinct defects**, which is 4 for
+crew 1 and not 3. `DISPOSITIONS.md` corrected. **I had read #446's body earlier this session and still
+wrote the three-way collapse** — reading is not the same as checking, and the rule I imposed on others
+is the one that found it.
+
+### FINDING (crew 1, verified independently by me) — #484's own suggested fix is a check that cannot fail
+
+The best thing to come out of the wave so far, and it inverts two issues.
+
+**`archive.c2b` does not fail the way #439 and #484 say.** The engine runs check text through `sh -c`,
+where the unquoted `<` in `--head <branch>` is **input redirection**: `sh: line 1: branch: No such
+file or directory`, exit 1. **`gh` is never invoked at all.** Both bodies assert it "returns an empty
+list" / "asks GitHub for PRs named `<branch>`". Neither happens.
+
+**And the fix both issues propose would make it worse.** The engine's verdict is **returncode-only**
+(`checklist_engine.py:832`). I ran #484's own suggested command myself:
+
+```
+$ gh pr list --head 'no-such-branch-xyz-418' --state open --json number --jq 'length > 0'
+false
+REAL_EXIT=0
+```
+
+**Prints `false`, exits 0.** So substituting the branch while keeping that `--jq` expression converts
+a check that **cannot pass** into one that **cannot fail** — and that command is #484's suggested
+replacement, verbatim, in the issue that coined "it is a check that cannot pass" for this repo.
+Crew 1's replacement compares the count in the shell so the exit code carries the verdict, verified
+red and green across four real branches covering no-PR, MERGED and CLOSED-unmerged.
+
+**Second finding, in neither issue:** `_installed_skills_root()` doesn't only wrongly *pass* in the
+main checkout — it wrongly *refuses* in every Commander worktree, because a worktree directory is not
+named `constellation-*`, and `COMMANDER_SPINE`'s own `execute.c2` runs the vendored copy from exactly
+there. **So fix B must resolve a real installed corpus, not merely improve the refusal message** —
+message-only satisfies #468, fails #501's acceptance, and leaves `execute.c2` permanently red for
+every Commander. Crew 1 noted its own run will hit it.
+
+**Third:** #501's freshness sub-ask deferred **with a falsification, not skipped**. Crew 1 designed the
+stateless variant (refuse unless `NEXT_WAVE.boundary_id` is the last verified `TRANSITION` in the log),
+then killed it against **this live epic's own artifacts**: run early, the new boundary is not logged
+yet, so the stale boundary *is* the last entry. **Green in exactly the world it was written to catch.**
+Routed `recommend-and-defer`; #501's stated Acceptance is met without it.
+
+### RULING — my pre-ruling 1 on #506 was wrong; crew 1's correction stands
+
+I framed #506's options 1 and 2 as alternatives. They are not. A `stop` packet is refused by **two**
+clauses, and `_next_wave()`'s nonempty-`launch_id` requirement (`verify_iterative_role_artifacts.py:115`)
+fires **before** the authorization clause at 145-148 is ever reached. **Option 1 alone leaves the gate
+unclosable unless someone writes a dummy `launch_id`** — which is precisely the falsification my own
+pre-ruling 6 forbids. Crew 1 takes 1+2 combined, keeping the mode name so `ADMIRAL_SPINE.template.json`
+needs no edit. **Confirmed, and passed to the refresh in its dispatch.**
+
+**Zero ownership violations** across crews 1 and 5, checked by diffing their branches against the
+files each does not own.

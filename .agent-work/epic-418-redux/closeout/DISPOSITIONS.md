@@ -182,7 +182,7 @@ Crew triage candidates tc19-tc24 are recorded in the issue's own spine and carri
 done-conditions rather than the wave list: DC3 met, DC2 substantially met, DC1 mechanism done but
 shipping not, DC4 and DC5 untouched. Then widened by him to include the #474-#480 group.
 
-**Eight of the 21 close as duplicate collapses, and no collapse is visible from the issue titles.**
+**Seven of the 21 close as duplicate collapses** (corrected down from eight), **and no collapse is visible from the issue titles.**
 Every one was confirmed against the issue **body**, and every launch order carries that as a
 NOT-OVERRIDABLE rule — a title-level sweep here is a check that cannot fail.
 
@@ -198,8 +198,8 @@ NOT-OVERRIDABLE rule — a title-level sweep here is a check that cannot fail.
 
 | Collapse | Shared root |
 |---|---|
-| #501 ≡ #468 | same function, same line — `_installed_skills_root()`, `verify_iterative_role_artifacts.py:53`. Filed once from outside, once from the spine's own imperative. |
-| #439 ≡ #484 ≡ #446 | all three are the **same postcondition**, `archive.c2b`. Two are the unsubstituted `<branch>` placeholder; the third is that it accepts only an OPEN PR. |
+| #501 ≈ #468 | same function, same line — `_installed_skills_root()`, `verify_iterative_role_artifacts.py:53`. **Partial, not total:** #501 additionally carries a boundary-freshness sub-ask with no counterpart in #468, deferred with a falsification rather than skipped. |
+| #439 ≡ #484 | the unsubstituted `<branch>` placeholder. **CORRECTED 2026-08-08: #446 is NOT part of this collapse** — same postcondition, but its body never mentions `<branch>` (`grep -c` → 0) and neither fix subsumes the other. The Admiral asserted a three-way collapse; crew 1, obeying the confirm-against-the-body rule, refuted it. |
 | #507 ≡ #370 ≡ #413 | one defect, three filings, **three different epics** — a crew cannot address the Commander that dispatched it. |
 
 **Two of the 21 were already this epic's own findings**, filed in wave 4 and now being fixed rather
