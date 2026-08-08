@@ -17,18 +17,20 @@
 > stale by construction). **Wait for the idle notification, STOP the predecessor, then dispatch.** In
 > that order. Rule 7 below; it is the only rule that has ever actually caught anything.
 >
-> **4. Then read the seven rules.** They are the ones I broke *after writing them down*.
+> **4. Then read the NINE rules.** They are the ones I broke *after writing them down*.
 >
 > **What this run is:** epic #418 wave 4, one Commander on **#467** (A2, trip semantics), worktree
 > `C:/Programs/constellation-skills-wt/epic418-a2-467`. **Never dispatch a second into it.**
-> **What is owed to Tommy:** scope past A2 (#424/#421/#423), and four cheap fixes — see
-> "Still owed" below. **Nothing else is blocked on him.**
+> **What is owed to Tommy:** ONLY scope past A2 (#424/#421/#423). The four cheap fixes are
+> **settled** — 2026-08-08 he said "include cheap fixes in your plans", and they are now routed to
+> the tracker (new **#500**; comments on **#313/#442/#371/#266**) as scope sequenced AFTER #467.
+> They are NOT wave-4 scope. **Nothing else is blocked on him.**
 >
 > **The Admiral is never asked to stop.** The trip only evaluates on a gated verb, and this role sits
 > inside `execute` for the entire epic. I wrote this at **54.9% fill** against a 15% hard line, having
 > never been prompted once. Watch it yourself; nothing else will.
 
-> ## THE SEVEN RULES — the ones I have actually broken. Run rule 2 first.
+> ## THE NINE RULES — the ones I have actually broken. Run rule 2 first.
 >
 > Everything below this box is reference. **These are the ones that have actually been broken,
 > by me, after I wrote them down.** This run's most repeated failure is not ignorance — it is
