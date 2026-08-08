@@ -2384,3 +2384,21 @@ make the compliance signal mechanical.
 Also derived and worth having in one place: 4/16 gates, `amendments: 1`, `g2-implement` in-progress,
 lease **active** by instance E, fill **8.8%**, main drift since the branch base **0 files** (so no
 rebase will be needed), `#467` OPEN, no PR yet, CI clear.
+
+**Pre-staged the `w4-to-close` boundary packet's SHAPE, deliberately not its content.** The
+`w2-to-w3` verifier refused **four times in a row, every refusal on shape rather than substance**:
+`completed_outcomes` as strings instead of `{issue_id, outcome, evidence}` objects;
+`material_changes` as strings; an issue id in neither `completed` nor `open` (they must **exactly
+partition** the wave's ids); and a `blocks` naming an issue outside the wave. Each cost a round trip
+**at a boundary**, which is where this run's Commanders keep tripping.
+
+`transitions/w4-to-close/REPLAN_INPUT.SKELETON.json` now carries the correct shapes derived from the
+**previously accepted** `w3-to-w4` packet — `current_wave.issue_ids = ["467"]`, the three unlaunched
+workstreams (#424, #421, #423) as `{id, kind}` objects, `repo_state` inherited — with
+`completed_outcomes`, `wave_evidence`, `discrepancies` and `open_current_wave_issue_ids` **empty on
+purpose** and the classification→action mapping written into the file as comments-in-code.
+
+**This decides nothing.** Outcomes, discrepancies and dispositions are exactly the questions the
+boundary asks, and authoring them before the wave lands would be answering them early — the same
+reason I refused to pre-write the `w2-to-w3` *result* packet. What is pre-staged is only the shape
+the verifier checks mechanically, so the boundary costs a fill rather than four refusals.
