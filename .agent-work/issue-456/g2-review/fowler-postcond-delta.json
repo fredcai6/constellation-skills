@@ -1,0 +1,19 @@
+{
+  "ops": [
+    {
+      "op": "set_postconditions",
+      "id": "r6-fowler",
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g2-review/fowler-pass.json"
+          },
+          "satisfied": false
+        }
+      ]
+    }
+  ]
+}

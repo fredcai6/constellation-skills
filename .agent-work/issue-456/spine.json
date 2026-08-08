@@ -895,6 +895,11 @@
       "id": "tc37",
       "from": "execute",
       "statement": "tc37: class_member still keys on the BARE class name. resolve_attr's self.x / cls.x branches call class_member(self.clsstack[-1], attr), which walks build_table's module-level class records -- so for a NESTED class that lookup can read a same-named MODULE-LEVEL class's member set. Zero occurrences in this corpus and the fallback beneath it is now correct via clsyms, so this is LATENT, not live. The same len(clsstack) == 1 gate that g2's R2a now carries would close it. Found by the g2 implementer while fixing D2; recorded rather than fixed, because fixing a latent path with no corpus instance would ship an unfalsifiable change."
+    },
+    {
+      "id": "tc38",
+      "from": "execute",
+      "statement": "tc38: SECOND instance of an integrate check that could only ever FAIL, and the first was tc29. g2-integrate c1's selector -k 'symbol_identity or referenced_by' matched ZERO tests; pytest deselects all and exits 5, so the check was informationless in the same way a check that cannot fail is -- just from the other side. Root cause: the gate spec's selectors were written in snake_case against test CLASS names that are CamelCase, and nothing verified a non-empty selection. g0 and g1 escaped only because 'discovery or cli' and 'determinism or invariant' happen to match. STANDING RULE for the remaining gates (g3 g4 g5 gb g6 g7 g8 gs): before advancing any *-integrate, run its -k selector by hand and confirm it selects a NON-EMPTY set, then confirm that set can go red. A gate whose selector matches nothing will refuse to advance and the failure will look like broken code rather than a broken check -- which is how it presented here. Also: tell each gate's implementer in its handoff what its integrate selector is, so the crew names its test classes to match."
     }
   ],
   "blockers": [],
@@ -903,7 +908,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T05:55:24.645782+00:00",
+    "last_heartbeat": "2026-08-08T06:31:51.571864+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

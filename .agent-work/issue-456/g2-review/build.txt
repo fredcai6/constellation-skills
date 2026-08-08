@@ -1,0 +1,34 @@
+pass1: 112 modules indexed
+statements: 92160 over 112 files (0 failures)
+entities: 3648 modules: 112 failures: 0
+{
+ "modules": 112,
+ "entities": 3648,
+ "pages": 3761,
+ "entity_pages": 3648,
+ "holes": 2480,
+ "alias_missing": 0,
+ "median_entity_page_lines": 16,
+ "largest_5": [
+  [
+   71,
+   "tests.test_apply_lessons_delta:ApplyLessonsDeltaTests"
+  ],
+  [
+   55,
+   "tests.test_episode_fields:EscalatedReopenIsNotAReopenTests"
+  ],
+  [
+   55,
+   "scripts.code_map.checks:page_accounting"
+  ],
+  [
+   55,
+   "scripts.checklist_engine:repo_revision"
+  ],
+  [
+   54,
+   "scripts.apply_episode_delta:_Transaction.commit"
+  ]
+ ]
+}

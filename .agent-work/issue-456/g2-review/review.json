@@ -1,0 +1,204 @@
+{
+  "work_id": "issue-456-g2-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: reviewer global-everyone.md + global-crew.md doctrine, the g2 review handoff, STATE_NOTE, g2-design-note, both implementer RESULTs, and the full diff dc1199b4..HEAD across extract.py/render.py/checks.py/tests. Diff is 461 insertions / 83 deletions over 4 files.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. All 7 close criteria met and independently reproduced. (1) Four named D2 collisions resolve to 8 distinct symbols carrying the enclosing METHOD -- RED commit 80702615 re-run from a git-archive snapshot of that commit names all four as SUBFAILED, exit 1; they pass at HEAD. (2) class-in-function arm has a synthetic test (FunctionNestedSymbolIdentityTests, pkg.nested:outer.Bundle) with its 0-occurrence status stated in the RESULT and the fixture docstring. (3) refs count and list reconcile via '+ N in this module' and every inbound line carries REFS_LEGEND -- verified on a fixture I built: 'referenced by: 5 sites in 2 modules (pkg.far) + 2 in this module'. (4) Case-only collisions impossible by construction, proven with MY OWN pair of a different shape (nested Box.Item/Box.item and a three-way THING/thing/Thing) -- 9 pages, 0 folds, 0 broken links, check 6/6. (5) strict-xfail deleted (grep: no xfail/CASE_INSENSITIVE_FS/COLLISION_XFAIL_REASON remain). (6) check exits 0. (7) full suite green.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Files touched dc1199b4..HEAD: only scripts/code_map/{checks,extract,render}.py + tests/test_code_map.py + workbench artifacts. scripts/run_skill_eval.py is byte-identical (git diff --stat empty); 'class Verdict' (line 178) and 'def verdict' (line 407) are both still there -- the Commander ruling was complied with, not silently overruled. The out-of-scope checks.py touch is JUSTIFIED: (b) strictly requires it, because adding '+ N in this module' to the rendered line makes checks.REFS_MODULES fail to parse and the check would go red for the wrong reason; (a) requires it in the weaker sense that the old check's docstring asserted D2 was unfixed and its leaf comparison was blind to a D2 regression -- I proved that by running it (attack a2). Named exclusions: _make_collision_repo's INDEX collision STILL collides (my own INDEX fixture: page-accounting FAILS, 'a module index the map claims and does not have', exit 1); supplement.walk's compound-statement blindness untouched; no line-base or page-header change; no ':<line>' position in any page header (the sole map/*.md hit for '.py:NNN' is inside a rendered source docstring, not a header field -- header form is '<kind>, <path>, N lines'); map/ still untracked; git status shows zero modified tracked files. One test appears removed by name but is a RENAME with the body intact (test_this_repo_declares_two_entities_whose_pages_share_one_filename -> ..._whose_names_differ_only_by_case); no g1 test deleted, all 6 checks still in the CHECKS registry. Minor scope observation, not a blocker: inbound_attribution also gained a new own-module failure mode, which is a strengthening the exclusions allow.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- every claimed number independently reproduced, none accepted on the report's word. FULL SUITE: my own run, 1744 passed / 2 skipped / 659 subtests passed / 0 failed / 0 xfailed, exit 0. Claim matched exactly. CHECK: fresh 'build' then 'check' -> exit 0, 6/6 ok. MAP TREE: 3761 pages, 0 case-only folds within any directory, exactly two disambiguated filenames (Verdict~7f6e5a6e.md, verdict~860360ac.md). RED COMMITS -- each re-run at its own commit from a git-archive snapshot, worktree never checked out: 80702615 exit 1 (9 failed, 2 passed, all four D2 collisions SUBFAILED by name); fd9170f5 exit 1 (3 failed, RefsAccounting); 4ea174b3 exit 1 (1 failed, 'pkg.book:Ledger: an entity the map claims and does not have'). All three were genuinely committed failing. EVIDENCE FILES: all seven under .agent-work/issue-456/evidence/ exist, are fresh (2026-08-07 22:03-22:51), and their contents match what the RESULT quotes. ARM POPULATIONS on the real corpus, so neither new arm is vacuous: 12 pages carry the 'modules (...) + N in this module' form (the exactly-one-unnamed arm) and 7 carry the modules form with no own clause (the exactly-zero arm); 1271 self-only and 2358 'none found'. TEST ACCOUNTING reconciles: 10 new tests in this diff range + 5 for (a) landed at 80702615 (before the diff base) + the xfail becoming a pass = +15, i.e. 1729 -> 1744.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. The gate's own constraint is 'checks must be able to fail', and I attacked it with mutations neither implementer designed. HIGHEST-RISK ITEM, entity_symbol_join cannot-fail: NOT a check that cannot fail, proven three ways. (i) Every one of the implementer's own join mutants attacks supplement.py; I attacked the OTHER side. Restoring the exact D2 defect inside extract.child_sym -- supplement.py untouched -- makes the check go RED: on my synthetic nested fixture 3 failures; on the REAL repository 25 failures, which is exactly the 25 store/supplement mismatches the design note measured before the fix. The two derivations are genuinely two code paths (extract.Extractor.child_sym via self.encl vs supplement.walk via its own prefix recursion, different modules, no shared helper). (ii) I ran the same regression with the OLD leaf comparison restored in checks.py: 6/6 PASSED. So the strengthening is precisely what catches D2 -- it bought a real falsifier, it did not launder one. (iii) A third, undesigned supplement-side mutation (chain truncation, not the implementer's lowercase rename) also goes red, 5 failures. REFS RULE, both arms red and neither vacuous: forcing gap=2 with own>0 -> 'exactly one counted module -- its own -- must go unnamed, but 2 of 3 are'; forcing gap=0 with own>0 -> 'but 0 of 1 are'; dropping a named module and inflating the module count both hit the exactly-zero arm -> 'a line that attributes no sites to its own module must name every module it counts'. STRENGTHENED, NOT WEAKENED, proven by running: my drop-a-named-module mutant is GREEN on refs-line-self-consistent under g1's old 'at most one unnamed' rule and RED under g2's; and g1's old failure mode (gap>1) is still caught by both. All 12 g1 mutant tests pass; all 6 checks still in the CHECKS registry; zero failures.append removed. (c) GENERALITY: my own case-only family in a shape the implementer never used -- a pair nested inside a class (Box.Item / Box.item, dotted qualified names) plus a three-way module-level fold (Thing/thing/THING) -- yields 9 pages, all disambiguated correctly, Box.Item.use left undisambiguated because its folded name is unique, 0 folds, 0 broken links, check 6/6. Filename uses hashlib.sha1, never builtin hash(); I swapped in hash() and deterministic-rebuild caught it (12 failures), so that check has no hole. Stdlib only; no new dependency.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Map Impact notes check out against the diff and the evidence. Structural anchors named (extract.child_sym/clsyms, render.assign_page_filenames/page_file/refs_line/REFS_LEGEND, checks.py grammar + two check bodies) are exactly the anchors the diff touches -- nothing claimed that is not there, nothing there that is not claimed. Three decisions are correctly promoted from candidate to measured: symbol identity for function-nested definitions (store symbol EQUALS the supplement key; the 25->0 mismatch figure is real -- I re-measured it by restoring the defect and getting 25 back), referenced-by semantics, and page identity. The 'checks must be able to fail' constraint is genuinely reinforced, not just asserted -- the INDEX collision was deliberately left in place and I confirmed it still loses a page. Three docstrings that asserted a now-fixed defect were rewritten rather than left lying; render.py's module docstring, entity_symbol_join's and refs_line_self_consistent's rule statements all now describe the shipped behavior. TRIAGE CANDIDATES, all out of scope and correctly routed, none of them mine to fix: tc1 supplement.walk descends node.body only, so a definition inside with/if/try/for gets no page and any check iterating supplement keys is blind to it -- I confirmed the mechanism by reading supplement.walk; tc2 the INDEX page-filename family, which must stay broken until g1's page-accounting falsifier is rebuilt on a different collision; tc3 class_member still keys on the bare class name, latent at 0 occurrences. I add one OBSERVATION of my own, not a blocker and not new to this gate: refs_line_self_consistent and refs_lines both identify the inbound line by the literal prefix 'referenced by: ', so a rendered docstring line beginning with that exact string would be parsed as an inbound line. Pre-existing shape, unchanged by g2 -- worth a triage note at a later gate, not a reason to hold g2.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2",
+          "waived": {
+            "authority": "reviewer",
+            "reason": "NOT a risk acceptance -- the rail was RUN and PASSED. 'python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g2-review/fowler-pass.json' exits 0 with 'fowler pass ok (smells=12, flagged=[comments-as-deodorant], overridden=[long-method, duplicated-code, primitive-obsession, speculative-generality])'; evidence e-r6-fowler-1. Forced only because REVIEW_SURVEY.template.json ships c1 with a literal <fowler-pass-record-path> placeholder and no engine verb can replace it on a SURVEY controller: amend is refused ('amend applies to gated checklists') and attest is refused for an engine-checked condition. Third consecutive reviewer to hit this on this run -- see .agent-work/issue-456/g0-review/review.json and g1-review/review.json. Reported again in Workflow Feedback.",
+            "evidence": "e-r6-fowler-2",
+            "forced": true
+          }
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. All 12 baseline smells rendered a verdict; record at .agent-work/issue-456/g2-review/fowler-pass.json, rail exit 0. 1 flagged, 4 overridden with logged standards, 7 absent. FLAGGED (observation, not a blocker): inside refs_line_self_consistent the local  means the page's own MODULE NAME while  three lines later means the COUNT of sites attributed to that module -- one word, two meanings, one function, against the repo's one-name-per-thing rule; rename the local to own_module. OVERRIDDEN, each with the standard that wins: long-method on refs_line_self_consistent (eight branches must stay individually reachable and individually named in  output, which is what the gate's mutants select on); duplicated-code on the byte-identical REFS_LEGEND in render.py and checks.py (de-duplicating it would make the legend assertion compare the renderer's string to itself and never fail); primitive-obsession on stringly-typed symbols (a shared Symbol type would have to live in a module both AST passes import, and that shared path is exactly what would make entity_symbol_join unable to fail -- the defect this gate hunts); speculative-generality on clsyms and N-way fold groups (a corpus-shaped fix is the hand-maintained list CREW_CONTEXT forbids, and I demonstrated the generality with my own fixture rather than taking it on faith). Two smells the diff REMOVES: shotgun-surgery, because three sites that each spelled a page filename now read one page_file index; and message-chains, because the join's double split/rsplit is gone.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "evidence",
+          "payload": {
+            "kind": "rail-run",
+            "command": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g2-review/fowler-pass.json",
+            "exit_code": "0",
+            "output": "fowler pass ok: .agent-work/issue-456/g2-review/fowler-pass.json (smells=12, flagged=['comments-as-deodorant'], overridden=['long-method', 'duplicated-code', 'primitive-obsession', 'speculative-generality'])",
+            "record": ".agent-work/issue-456/g2-review/fowler-pass.json"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "reviewer",
+            "reason": "NOT a risk acceptance -- the rail was RUN and PASSED. 'python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g2-review/fowler-pass.json' exits 0 with 'fowler pass ok (smells=12, flagged=[comments-as-deodorant], overridden=[long-method, duplicated-code, primitive-obsession, speculative-generality])'; evidence e-r6-fowler-1. Forced only because REVIEW_SURVEY.template.json ships c1 with a literal <fowler-pass-record-path> placeholder and no engine verb can replace it on a SURVEY controller: amend is refused ('amend applies to gated checklists') and attest is refused for an engine-checked condition. Third consecutive reviewer to hit this on this run -- see .agent-work/issue-456/g0-review/review.json and g1-review/review.json. Reported again in Workflow Feedback.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. All 7 close criteria met; every claimed number independently reproduced; every named exclusion held. HIGHEST-RISK ITEM CLEARED WITH EVIDENCE: entity_symbol_join is NOT a check that cannot fail. The two sides are two code paths (extract.child_sym via self.encl vs supplement.walk via its own prefix recursion, different modules, no shared helper). Breaking the STORE side alone -- the side none of the shipped join mutants touches -- turns the check RED: 3 failures on a synthetic nested fixture, 25 on the REAL repository, which is exactly the 25 mismatches the design note measured before the fix. Running the same regression with the OLD leaf comparison restored passes 6/6, so the strengthening is precisely what catches D2. A third undesigned supplement-side truncation also goes red. MUST-NOT-HAVE-BEEN-FIXED, both held: my own class INDEX fixture still loses a page (FAIL page-accounting, exit 1), so g1's only cross-platform falsifier retains its ability to fail; scripts/run_skill_eval.py is byte-identical with class Verdict and def verdict untouched. REFS RULE strengthened not weakened, proven by running: my drop-a-named-module mutant is GREEN under g1's old at-most-one rule and RED under g2's; both new arms go red with distinct messages; neither is vacuous on the real corpus (12 pages exercise the exactly-one arm, 7 the exactly-zero arm). (c) IS GENERAL: my own case-only family in an unused shape -- a pair nested inside a class plus a three-way module-level group -- disambiguates correctly with 0 folds and 0 broken links; hashlib not hash(), and swapping in hash() is caught by deterministic-rebuild. RED COMMITS: all three re-run at their own commit from git-archive snapshots, all exit 1. NUMBERS: 1744 passed / 2 skipped / 0 failed / 0 xfailed; check exit 0, 6/6; 3761 pages, 0 case-only folds, exactly 2 disambiguated filenames. No :<line> in any page header, map/ still untracked, git status clean of stray edits. checks.py scope overrun justified and judged sound. Fowler pass 12/12, rail exit 0, 1 flagged / 4 overridden / 7 absent. NO BLOCKERS. Two triage candidates filed (own/own_module naming; the 'referenced by: ' prefix could mis-parse a rendered docstring line). REVIEW_RESULT at .agent-work/issue-456/crew-handoffs/g2-review-RESULT.md"
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r6-fowler",
+      "statement": "Rename the local variable own to own_module in checks.refs_line_self_consistent. It currently means the page's own MODULE NAME while stated.own three lines below means the COUNT of sites attributed to that module. Cosmetic, no behaviour change, but it is the one place in this diff where a reader has to hold two meanings for one word."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "checks.refs_lines and checks.refs_line_self_consistent both identify a page's inbound line by the literal prefix 'referenced by: '. A rendered source docstring whose line begins with that exact string would be parsed as an inbound line and would fail the new legend rule. Pre-existing shape, not introduced by g2, and no such docstring exists in the corpus today; worth pinning with a fixture at a later gate."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g2-reviewer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T05:58:08.462508+00:00",
+    "last_heartbeat": "2026-08-08T06:19:42.338779+00:00",
+    "claimed_by": "constellation/issue-456/g2/reviewer/attempt-1",
+    "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T06:19:57.657927+00:00"
+  }
+}

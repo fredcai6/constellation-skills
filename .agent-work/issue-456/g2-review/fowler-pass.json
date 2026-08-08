@@ -1,0 +1,92 @@
+{
+  "work_id": "issue-456-g2-review",
+  "diff_ref": "git diff dc1199b4..HEAD -- scripts/code_map/{extract,render,checks}.py tests/test_code_map.py (gate g2: symbol identity, referenced-by accounting, page identity)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline, Evidence You Owe Back), docs/agents/GLOSSARY.md, scripts/code_map/checks.py module docstring (What these checks read), skills/constellation-reviewer/references/global-everyone.md, references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "refs_line_self_consistent's body grew from ~25 to ~46 lines and now carries eight sequential validation branches, each appending its own message. That is long by Fowler's measure and the obvious refactor is a rule table.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, Verification Discipline: 'A check that cannot fail is indistinguishable from one that passed' and 'Any guard that loops must assert what it looped over'; plus scripts/code_map/checks.py's module docstring, which requires each check to record beside itself what it does NOT prove.",
+        "reason": "Every branch is a separately reachable failure mode whose message is what a reader of `check` output greps for, and the gate's mutation tests select on those exact strings. Folding them into a table would put the message text one indirection away from the rule that emits it and make it harder, not easier, to prove each arm can go red -- which is the property this gate exists to protect. I confirmed the branches are individually reachable by running mutants against four of them. The flat shape is also the shape all six checks in the module already use, so extracting one would break the module's uniformity for no verification gain."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No new class. Extractor gained one two-line method (child_sym) and one parallel stack (clsyms) while three multi-branch symbol expressions collapsed to one call, so its symbol logic is net smaller. MapUnderCheck and StoreScan are unchanged.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "REFS_LEGEND is declared twice, byte-identical, in render.py and in checks.py. The self.x and cls.x branches of resolve_attr remain textually identical to each other (pre-existing, and the diff touches one line in each).",
+      "override": {
+        "repo_standard": "scripts/code_map/checks.py module docstring: 'A check whose expected value is computed by the code under test can only ever agree with it, which is not a check'; and docs/agents/CREW_CONTEXT.md, Verification Discipline: 'Assert against behaviour, never against text that describes it.'",
+        "reason": "This is the one place where de-duplicating would destroy the thing being verified. If checks.py imported REFS_LEGEND from render.py, the legend assertion would compare the renderer's string to itself and could never fail. The duplication is deliberate independence, it is documented as such at both sites, and RefsAccountingTests pins the two copies to each other so they cannot silently drift. The resolve_attr twins are pre-existing and out of this gate's scope."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The changed check bodies use MapUnderCheck's published interface (pages, text, rel, title_key, entities, scan) exactly as designed; that interface exists to be the check's data source. assign_page_filenames works only on the keys handed to it and reaches into nothing.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No new tuple of parameters travels together. The one candidate moved the other way: Refs gained a fourth field (own) rather than the count being passed alongside the namedtuple, so the clump was absorbed into the object that already existed for it.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Supplement keys and store symbols are both bare strings, and this gate's central assertion is `key != symbol` on them. A Symbol value type would make that comparison type-checked instead of stringly-typed, and page filenames are likewise raw strings assembled by concatenation.",
+      "override": {
+        "repo_standard": "scripts/code_map/checks.py module docstring: the checks read 'the store and the supplement DIRECTLY, never through render.load_stores... So the store scan below is written a second time on purpose.'",
+        "reason": "A shared Symbol type would have to live in a module both extract.py and supplement.py import, and that shared construction path is exactly what would make entity_symbol_join unable to fail -- the defect this gate was dispatched to hunt. I verified the risk is real and currently absent by breaking each derivation independently and watching the check go red both times (25 failures on the real corpus from the store side alone). Keeping the two spellings as plain strings produced by two unshared code paths is the property under test, not an oversight. The store is also a JSONL wire format of plain strings, so the primitive is the schema."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "No function in the diff takes more than two parameters: child_sym(name), assign_page_filenames(keys), refs_line(key, mod), _case_tag(name).",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The diff removes an instance rather than adding one. Three sites each independently spelled a page filename as key.split(':',1)[1] + '.md' -- run()'s emit, entity_page's child list, and module_index's walk -- so changing the naming rule meant changing three places in lockstep. All three now read one page_file index built once in load_stores, and I confirmed by test that the links moved with the files (0 broken links across my case-collision fixture and 3761 real pages).",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "checks.py changes for two reasons in this diff (the join comparison and the inbound-line grammar), which looks divergent, but both are the same axis -- what the rendered map is required to say -- and the rendered-line block already documents itself as the single place that knows how a page spells its inbound references. extract.py changes only for name resolution and render.py only for output naming.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The diff deletes the worst chain in the file: key.split(':',1)[1].rsplit('.',1)[-1] and its twin on symbol are gone, replaced by a direct equality. The remaining key.split(':',1)[1].lower() is two string operations, not a chain of object navigation.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "overridden",
+      "finding": "Two constructs are generality this corpus does not use. The clsyms stack exists to spell class-qualified symbols correctly for nested classes and classes-defined-in-functions, of which this repository has measured zero. assign_page_filenames disambiguates fold groups of any size when the corpus has exactly one group, of size two.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list. A list of characters, filenames or call sites drifts from the predicate the code actually applies, and the gap is silent.' Reinforced by the gate's own handoff, which requires the (c) fix to be general rather than a special case for Verdict/verdict.",
+        "reason": "A corpus-shaped fix here IS the hand-maintained list the standard forbids: naming the Verdict/verdict pair, or assuming class nesting never happens, would drift silently the first time the corpus changed. Both constructs are exercised by synthetic tests rather than left unrun, and the 0-occurrence status of the class-in-function arm is stated plainly in the implementer's result instead of being hidden. I tested the generality myself with a case-only family the implementer never used -- a pair nested inside a class and a three-way module-level group -- and it held, which is what makes this generality demonstrated rather than speculative."
+      }
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "The docstring volume itself is not deodorant -- checks.py's documented standard requires each check to record what it does NOT prove, and these comments carry measurements and decisions, not apologies. But one genuine instance: inside refs_line_self_consistent the local name `own` means 'the page's own MODULE NAME' while `stated.own` three lines later means 'the COUNT of sites attributed to the own module'. Two meanings, one word, one function, and the prose in the branch messages is doing the work a distinct name would do -- this cuts against the repo's one-name-per-thing rule (constellation-how-to-talk, docs/agents/GLOSSARY.md). Non-blocking observation: rename the local to own_module. Recorded as an observation on the review, not a blocker, because it is a readability nit in code whose behaviour I verified by mutation.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

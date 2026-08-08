@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-integrate",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "spine-step": "g2-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g2-integrate@5aa2f1dd692bb70363b4786ef9040a8a7327a6d3",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T06:22:07Z"
+  }
+}

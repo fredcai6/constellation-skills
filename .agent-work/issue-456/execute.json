@@ -746,7 +746,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2-implement is complete and its IMPLEMENTER_RESULT exists on disk (.agent-work/issue-456/crew-handoffs/g2-implement-RESULT-2.md, status complete), verified by run_crew.py --verify-result -> fresh (completed) BEFORE this attestation. All three defects landed red-then-green across six commits. Attested only after the satisfying artifact existed -- the tc28 rule."
         }
       ],
       "postconditions": [
@@ -757,7 +758,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
         }
       ],
       "constraints": [],
@@ -766,11 +768,35 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g2-review-RESULT.md",
+            "crew": "constellation/issue-456/g2/reviewer/attempt-1",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Survey driven end to end, 7/7, consolidated, lease released.",
+            "highest_risk_item_cleared": "The Commander named one risk above all others: defect (a) makes the store symbol equal the supplement key BY CONSTRUCTION while the same change strengthened entity_symbol_join to a whole-symbol comparison, so the fix itself could have turned a working check into a check that cannot fail. The reviewer proved it cannot: the two sides are genuinely two code paths (extract.child_sym via self.encl vs supplement.walk's own prefix recursion -- different modules, no shared helper, joined only on (file, line)). Every join mutant in the SHIPPED suite attacks supplement.py, so the reviewer attacked the OTHER side: restoring the exact D2 defect inside extract.child_sym with supplement.py untouched turns the check RED -- 3 failures synthetic, 25 on the real repository, matching the 25 mismatches the design note measured before the fix. Re-running that same regression with the OLD leaf comparison restored passes 6/6, so the strengthening BOUGHT a falsifier rather than laundering one.",
+            "attack_independence": "The reviewer's mutation harness is written independently of tests/test_code_map.py (.agent-work/issue-456/g2-review/attack.py) so a defect in the implementer's harness could not hide inside the reviewer's. Every mutation it ran is one neither implementer chose.",
+            "must_not_have_been_fixed_both_held": "(1) A fresh `class INDEX` fixture still loses a page (FAIL page-accounting, exit 1), so g1's only cross-platform falsifier for page-accounting keeps its ability to fail. (2) scripts/run_skill_eval.py is byte-identical; class Verdict and def verdict untouched -- the Commander ruling on (c) was not falsified by either crew.",
+            "strengthened_not_weakened": "Proven by running, not reading: a drop-a-named-module mutant is GREEN under g1's old 'at most one unnamed' rule and RED under g2's. Both new arms go red with distinct messages and neither is vacuous -- 12 real pages exercise the exactly-one arm, 7 the exactly-zero arm.",
+            "generality_of_c": "The reviewer invented its own case-only family in a shape neither implementer used -- a pair nested inside a class (dotted names) plus a three-way module-level group -- and it disambiguates correctly: 0 folds, 0 broken links. hashlib confirmed; swapping in builtin hash() is caught by deterministic-rebuild, so that guard has no hole either.",
+            "red_commits_verified": "All three RED commits re-run AT THEIR OWN COMMIT via git archive snapshots (the worktree was never checked out) and all exit 1. 'Committed failing' is verified, not taken on the implementer's word.",
+            "suite": "1744 passed, 2 skipped, 0 failed, 0 xfailed. check exit 0, 6/6. Map tree 3761 pages, 0 case-only folds, exactly 2 disambiguated filenames. No :<line> in any page header. map/ untracked, zero modified tracked files.",
+            "scope_overrun_judged": "checks.py was touched beyond the named allowed scope. The reviewer judged the justification rather than accepting it: (b) strictly requires it, and (a) requires it in a sense the reviewer verified by running.",
+            "commander_independent_attack": "The Commander did NOT take the APPROVE on trust. I ran one mutation on no crew's list, aimed at the tc33 quiet-degradation shape applied to the NEW legend line: respelled ' + {own} in this module' to ' + {own} within this same module' in render.py, leaving every number correct. Result: 8 failed, 44 passed -- across InboundAttribution, RefsLineSelfConsistency, RefsAccounting AND EntitySymbolJoin. The new line therefore CANNOT degrade quietly, which is the failure mode tc33 named. Restored byte-exact from a pre-mutation copy; git status clean on scripts/ and tests/; render.py sha256 e2a80ed606e85052fd252fb8ae3767020b1def30c479b396291008623547de3f.",
+            "carry_forward": "The old carry-forward that `python -m scripts.code_map check` correctly exits 1 is now SPENT. It exits 0, 6/6. Later gates and gs must expect exit 0, and `check` reads a STALE tree at <root>/map -- run build first or the exit code means nothing.",
+            "reviewer_workflow_notes": "Four items, two worth carrying: `build --artifacts/--out` is the safe way to run a real-corpus attack without clobbering the map/ tree that gs stages; and the Fowler rail's postcondition placeholder has now forced a bogus `waive --force` on three reviewers in a row."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-integrate": {
@@ -782,7 +808,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT exists on disk NOW (.agent-work/issue-456/crew-handoffs/g2-review-RESULT.md, 16395 bytes, first line 'VERDICT: APPROVE'), read before attesting. Crew verified fresh (completed)."
         }
       ],
       "postconditions": [
@@ -791,14 +818,15 @@
           "statement": "D2 HAS TWO ARMS and both must close (found by the plan panel, verified: reference/d2_arms.txt). ARM 1 -- closure inside a method, 31 occurrences here, 4 collisions: each of the 4 named collisions resolves to a distinct symbol that CARRIES THE METHOD NAME, asserted on the SYMBOL STRING not the collision count, red-then-green. ARM 2 -- class defined inside a function, which visit_ClassDef emits as mod:Name as if module-level because it has NO enclosing-chain branch at all: ZERO occurrences on this corpus, so it cannot go red here at any threshold and a PURPOSE-BUILT FIXTURE is the only route, exactly like BOM. OVER-QUALIFICATION GUARD: the 75 naive mod.name clashes are correctly distinct today, so sibling-class setUp must keep mod:Class.setUp and gain no spurious segment -- their disappearance is the alarm, not the goal, because a fix re-keying by file position would zero the collision count while corrupting 1,776 method symbols. AND count and module list agree on every page with the semantics stated. NOT SUFFICIENT: closing on '4 -> 0' ships arm 2 unwritten.",
           "check": {
             "kind": "command",
-            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'symbol_identity or referenced_by' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'SymbolIdentity or RefsAccounting or CaseOnlyPageIdentity' -q"
           },
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-3"
         },
         {
           "id": "c2",
@@ -810,17 +838,64 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g2-review-RESULT.md",
+            "crew": "constellation/issue-456/g2/reviewer/attempt-1",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Survey driven end to end, 7/7, consolidated, lease released.",
+            "highest_risk_item_cleared": "The Commander named one risk above all others: defect (a) makes the store symbol equal the supplement key BY CONSTRUCTION while the same change strengthened entity_symbol_join to a whole-symbol comparison, so the fix itself could have turned a working check into a check that cannot fail. The reviewer proved it cannot: the two sides are genuinely two code paths (extract.child_sym via self.encl vs supplement.walk's own prefix recursion -- different modules, no shared helper, joined only on (file, line)). Every join mutant in the SHIPPED suite attacks supplement.py, so the reviewer attacked the OTHER side: restoring the exact D2 defect inside extract.child_sym with supplement.py untouched turns the check RED -- 3 failures synthetic, 25 on the real repository, matching the 25 mismatches the design note measured before the fix. Re-running that same regression with the OLD leaf comparison restored passes 6/6, so the strengthening BOUGHT a falsifier rather than laundering one.",
+            "attack_independence": "The reviewer's mutation harness is written independently of tests/test_code_map.py (.agent-work/issue-456/g2-review/attack.py) so a defect in the implementer's harness could not hide inside the reviewer's. Every mutation it ran is one neither implementer chose.",
+            "must_not_have_been_fixed_both_held": "(1) A fresh `class INDEX` fixture still loses a page (FAIL page-accounting, exit 1), so g1's only cross-platform falsifier for page-accounting keeps its ability to fail. (2) scripts/run_skill_eval.py is byte-identical; class Verdict and def verdict untouched -- the Commander ruling on (c) was not falsified by either crew.",
+            "strengthened_not_weakened": "Proven by running, not reading: a drop-a-named-module mutant is GREEN under g1's old 'at most one unnamed' rule and RED under g2's. Both new arms go red with distinct messages and neither is vacuous -- 12 real pages exercise the exactly-one arm, 7 the exactly-zero arm.",
+            "generality_of_c": "The reviewer invented its own case-only family in a shape neither implementer used -- a pair nested inside a class (dotted names) plus a three-way module-level group -- and it disambiguates correctly: 0 folds, 0 broken links. hashlib confirmed; swapping in builtin hash() is caught by deterministic-rebuild, so that guard has no hole either.",
+            "red_commits_verified": "All three RED commits re-run AT THEIR OWN COMMIT via git archive snapshots (the worktree was never checked out) and all exit 1. 'Committed failing' is verified, not taken on the implementer's word.",
+            "suite": "1744 passed, 2 skipped, 0 failed, 0 xfailed. check exit 0, 6/6. Map tree 3761 pages, 0 case-only folds, exactly 2 disambiguated filenames. No :<line> in any page header. map/ untracked, zero modified tracked files.",
+            "scope_overrun_judged": "checks.py was touched beyond the named allowed scope. The reviewer judged the justification rather than accepting it: (b) strictly requires it, and (a) requires it in a sense the reviewer verified by running.",
+            "commander_independent_attack": "The Commander did NOT take the APPROVE on trust. I ran one mutation on no crew's list, aimed at the tc33 quiet-degradation shape applied to the NEW legend line: respelled ' + {own} in this module' to ' + {own} within this same module' in render.py, leaving every number correct. Result: 8 failed, 44 passed -- across InboundAttribution, RefsLineSelfConsistency, RefsAccounting AND EntitySymbolJoin. The new line therefore CANNOT degrade quietly, which is the failure mode tc33 named. Restored byte-exact from a pre-mutation copy; git status clean on scripts/ and tests/; render.py sha256 e2a80ed606e85052fd252fb8ae3767020b1def30c479b396291008623547de3f.",
+            "carry_forward": "The old carry-forward that `python -m scripts.code_map check` correctly exits 1 is now SPENT. It exits 0, 6/6. Later gates and gs must expect exit 0, and `check` reads a STALE tree at <root>/map -- run build first or the exit code means nothing.",
+            "reviewer_workflow_notes": "Four items, two worth carrying: `build --artifacts/--out` is the safe way to run a real-corpus attack without clobbering the map/ tree that gs stages; and the Fowler rail's postcondition placeholder has now forced a bogus `waive --force` on three reviewers in a row."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'symbol_identity or referenced_by' -q",
+            "exit": 5,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'SymbolIdentity or RefsAccounting or CaseOnlyPageIdentity' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-implement": {
@@ -2030,6 +2105,20 @@
       "why": "g2 build complete across two implementer attempts; attempt-1 parked cleanly at a context seam with defect (a) red-committed and all three fixes designed, attempt-2 resumed the SAME plan and lease idempotently and drove all five items to complete. All three defects red-then-green with each reproducer committed FAILING first. Suite 1729/2/1xfail -> 1744/2/0xfail, +15. check exits 0 after a fresh build, 6/6. The strict-xfail marker is deleted, forced by its own strict flag exactly as g1 designed. Two g1 checks were STRENGTHENED rather than weakened, and the two g1 tripwires that sat in the path of the obvious (b) fix were routed around by the design note's alternative. Commander ruling on (c) not falsified -- no production symbol renamed. Handoff defects tc36 corrected for the successor; tc34/tc35/tc37 filed.",
       "mechanical": false,
       "ts": "2026-08-08T05:55:49.404218+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g2-review",
+      "why": "g2 reviewed APPROVE with no blockers (e-g2-review-1). The Commander-named highest-risk item is cleared with real-corpus evidence rather than argument: entity_symbol_join's two sides are genuinely two code paths, and since every join mutant in the shipped suite attacks supplement.py, the reviewer attacked the OTHER side -- restoring the D2 defect inside extract.child_sym turns the check RED with 25 failures on the real repo, matching the 25 mismatches measured before the fix, while the OLD leaf comparison passes 6/6 on the same regression. The strengthening bought a falsifier rather than laundering one. Both must-not-have-been-fixed items held: the INDEX collision still collides (g1's only cross-platform page-accounting falsifier keeps its ability to fail) and run_skill_eval.py is byte-identical. All three RED commits re-verified failing AT their own commit via git archive. I did not take the APPROVE on trust: my own undesigned mutation, respelling the new legend clause while leaving every number correct, produced 8 failures across four test classes -- so the new line cannot degrade quietly, which retires the tc33 shape for it. Restored byte-exact, tree clean.",
+      "mechanical": false,
+      "ts": "2026-08-08T06:21:57.744010+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g2-integrate",
+      "why": "g2 integrated on an APPROVE verdict with no blockers. The gate fixed three defects that all shared one shape -- the map stating something specific, confident and untrue: merged symbols whose caller sets unioned, a count that disagreed with its own list, and a page that silently overwrote another. Suite 1729/2/1xfail -> 1744/2/0xfail; check exits 0, 6/6. The strict-xfail g1 planted did its job -- it XPASSed the moment the fix landed and forced its own removal. c1 first REFUSED and the cause was the check, not the code: its selector matched zero tests so it could only ever fail (tc38, second instance after tc29). Corrected to a selector that picks exactly the 14 tests the gate added, proven still able to go red before installing. CARRY-FORWARD UPDATE: the old note that check correctly exits 1 is SPENT -- it exits 0 now, and check reads a STALE tree at <root>/map so build must run first or the exit code means nothing.",
+      "mechanical": false,
+      "ts": "2026-08-08T06:40:09.886610+00:00"
     }
   ],
   "amendments": [
@@ -2049,6 +2138,14 @@
         "retext-check g7-integrate.c1",
         "retext-check g8-integrate.c1",
         "retext-check gs-integrate.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-08T06:31:39.304967+00:00",
+      "reason": "g2-integrate c1's test selector -k 'symbol_identity or referenced_by' matches ZERO tests -- pytest deselects all 52 and exits 5, so the check could only ever FAIL regardless of the code. That is the same informationless shape as a check that cannot fail, arriving from the other side, and the same class of defect as tc29 (the prose word AND). The gate's work is correct: the crews named their classes RealCorpusNestedSymbolIdentityTests, FunctionNestedSymbolIdentityTests, RefsAccountingTests and CaseOnlyPageIdentityTests, which the underscored selector cannot match. Corrected to -k 'SymbolIdentity or RefsAccounting or CaseOnlyPageIdentity', which selects exactly 14 tests -- precisely the 14 the implementer reports adding (5 for defect a, 5 for b, 4 for c), an independent corroboration that the selector now covers the gate's actual work and nothing else. NOT WEAKENED: I proved the corrected selector can still go red before installing it -- under my legend-respelling mutation it returns '2 failed, 12 passed', and render.py was restored byte-exact (sha256 e2a80ed606e85052fd252fb8ae3767020b1def30c479b396291008623547de3f, git status clean).",
+      "authority": "commander",
+      "ops": [
+        "retext-check g2-integrate.c1"
       ]
     }
   ]
