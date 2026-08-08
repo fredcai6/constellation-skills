@@ -1229,3 +1229,62 @@ mutation-testing discipline I have been putting in every launch order since wave
 Routed to the closeout brief under D9. The general form now has a second half worth keeping:
 *key a monitor on something that changes when the watched thing changes* — **and make the monitor's
 own failure louder than its silence.**
+
+## 2026-08-08 — repo hygiene, done while wave 4 runs (no fence contact)
+
+**Worktrees swept: 7 removed, 2 retained deliberately.** Removed `epic418-a-419`, `epic418-a2-440`,
+`epic418-b-420`, `epic418-d-422`, `epic418-g-425`, `epic418-h-447`, `verify-w0` — all rc=0.
+Retained: `epic418-a2-467` (wave 4, live) and **`governor-264` (DO NOT SWEEP)**. The `.proto-*`
+trees and `.claude/worktrees/*` (including `issue-456`, the code-map work) are not this epic's and
+were not touched.
+
+**RULING | I mutation-tested my own sweep gate before letting it authorize a deletion.** The
+content check returned **CLEAN for all seven** worktrees, and seven-for-seven is exactly the result
+I should not trust on its own word — a checker that always says CLEAN is indistinguishable from one
+that works. Dropped a canary file of unique content into `verify-w0`, re-ran: `AT-RISK ... HOLD`.
+Removed it, re-ran: `CLEAN`. Only then did I sweep.
+
+**FINDING | and the check I trusted would not have caught the hazard I was actually guarding
+against.** The harvest content test (`git hash-object` + `git cat-file -e`) proves a file exists
+nowhere in git. It is the right test for **uncommitted** work — and it is blind to **committed but
+unmerged** work, because those blobs *are* in the object store, sitting on the branch. That is
+precisely governor-264's shape: 3 commits, 1144 lines, every blob happily resolvable by
+`cat-file -e`. **The test that protected the harvest would have waved governor-264 through.** Two
+different hazards need two different tests; I had been treating one as covering both.
+
+Second gate added and likewise controlled: commits-ahead plus non-`.agent-work` file diff vs main,
+with **governor-264 as the positive control** — it reports `ahead=3, uniquefiles=2` while the six
+swept branches report `0/0`. A control that lights up is the only reason to believe a null.
+
+**Branches: 6 deleted on verified evidence, 4 retained with a reason.**
+
+Deleted (`ahead=0`, `uniquefiles=0`, work fully in main): `a-419-governor-identity`,
+`a2-440-binding-cwd`, `b-420-engine-channel`, `d-422-wire-invariants`, `g-425-file-defects`,
+`h-447-episodes-retirement`. Three of those six showed **NO-PR** on the forge, which I treated as a
+stop rather than a shrug — they landed by direct commit to main under the contract's commit
+authority, and the 0/0 check is what cleared them, not the absence of a PR.
+
+**ADMIRAL ERROR | my wave-2 ledger named the wrong PRs for four issues.** Chasing the four
+remaining branches, the forge returned `#483 CLOSED merged=null`, `#486 CLOSED merged=null`,
+`#471 CLOSED merged=null`, `#469 CLOSED merged=null` — **closed unmerged**, against issues I had
+recorded as merged. The *outcome* was right and nothing is missing: the work was relaunched on
+fresh ground per stop-and-relaunch doctrine and landed via **replant** branches. Corrected mapping:
+
+| Issue | PR I recorded | PR that actually merged | Branch |
+|---|---|---|---|
+| #433 | #483 (closed, unmerged) | **#485** | `b-433-replant` |
+| #436 | #469 (closed, unmerged) | **#472** | `d-436-replant` |
+| #460 | #486 (closed, unmerged) | **#487** | `b-460-replant` |
+| #464 | #471 (closed, unmerged) | **#473** | `b-464-replant` |
+
+All four issues verified **CLOSED** on the forge. Cause: when I relaunched those Commanders onto
+replant branches I carried the *original* PR numbers forward in my ledger and never re-derived them
+after the merge. Same root as this morning's A2 error — **a claim written once and never re-checked
+against its source.** It reads identically whether or not it is still true. Third instance today.
+
+**Retained deliberately, dispositioned:** `b-433-render-directives`, `b-460-episodes-observations`,
+`b-464-lesson-field-rename`, `d-436-enumeration-falsification` — the **pre-replant attempts**. Their
+successors merged, so nothing is owed, but they are the only surviving record of the abandoned
+attempt and nobody has diffed them against their replacements. Deleting is irreversible and buys
+nothing today; keeping costs nothing. Routed to the closeout audit as a decision with evidence
+rather than settled by me at 09:00 on hygiene grounds.
