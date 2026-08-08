@@ -1,0 +1,267 @@
+{
+  "work_id": "g3-rework-headroom-override-467",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red-green-test",
+    "m2-log-correction",
+    "m3-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load handoff, reviewer finding B-1, and the M15 log entry",
+      "imperative": "Read the g3 rework handoff in full (.agent-work/issue-467-trip-semantics/crew-handoffs/g3-rework-implementer-handoff.md), the reviewer's finding B-1, the current M15 entry in g3-mutation-log.md, block()/TERMINAL/advance()/_trip_hard_band_reading in scripts/checklist_engine.py, and the GateHeadroomOverrideTripTests fixture pattern (including its _read_gauge patch) in tests/test_checklist_engine.py. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + B-1 + M15 entry + block()/TERMINAL/_trip_hard_band_reading + GateHeadroomOverrideTripTests fixture pattern read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red-green-test": {
+      "id": "m1-red-green-test",
+      "title": "One test reaching the g1-blocked/g2-in-progress state through public verbs, RED under M15, GREEN on shipped",
+      "imperative": "TDD, no source change. Add one test to tests/test_checklist_engine.py that reaches the state through public verbs only (start g1, advance g1, start g2, block g1, advance g2 --mechanical) and asserts the silent close of g2 is refused while active_id(cl) is the blocked g1. Patch _read_gauge the way GateHeadroomOverrideTripTests does (never hand-write observed_at). Apply the M15 mutation (drop the gate argument at checklist_engine.py:2857-2858) to a scratch copy or in place temporarily, run ONLY this new test, observe RED, attest c1 with the pasted red output and failure count, revert the mutation, then run the same test against the shipped code for c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff and B-1 read"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new test observed FAILING against the M15 mutant (gate argument dropped from require_why's _trip_hard_band_reading call) -- manual attest with pasted output and failure count",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed under M15 mutant (dropped gate arg at checklist_engine.py:2857-2858): 1 failed, 383 deselected -- AssertionError: EngineError not raised (advance g2 --mechanical closed silently). Mutation reverted and verified clean via git diff --stat -- scripts (no output)."
+        },
+        {
+          "id": "c2",
+          "statement": "new test passes against the shipped (unmutated) source",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-red-green-test-1"
+        }
+      ],
+      "constraints": [
+        "no change under scripts/",
+        "do not add blocked to TERMINAL",
+        "do not add a status guard to block()",
+        "reach the state through public verbs only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-red-green-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-log-correction": {
+      "id": "m2-log-correction",
+      "title": "Correct the M15 entry: state the kill, name the test, give the total, note the correction",
+      "imperative": "Edit .agent-work/issue-467-trip-semantics/g3-mutation-log.md's M15 entry: replace the EQUIVALENT declaration with the kill -- the named test, the total failure count from m1's red run, and a sentence noting this corrects the earlier EQUIVALENT claim (also asserted in f9925be6's commit message). Do not silently rewrite it as if it always said this. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed: the test exists, is proven red under the mutant and green on shipped code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 landed: RED under mutant (1 failed/383 deselected), GREEN on shipped (1 passed/383 deselected)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "M15 entry states KILLED, names the test, gives the total, and notes the correction against the prior EQUIVALENT claim",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "the log is an audit record: correct visibly, do not quietly rewrite history"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-closeout": {
+      "id": "m3-closeout",
+      "title": "Full required suites green, scripts/ untouched, result artifact written",
+      "imperative": "Run the two required suite selectors from the handoff's close criteria 5 and 6, confirm `git diff --stat` shows no change under scripts/, and write the IMPLEMENTER_RESULT to .agent-work/issue-467-trip-semantics/crew-handoffs/g3-rework-implementer-result.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed: log corrected",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 landed: M15 log entry corrected"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "close-criterion 5 suite passes",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py tests/test_init_work_area.py tests/test_install_constellation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-closeout-1"
+        },
+        {
+          "id": "c2",
+          "statement": "close-criterion 6 selector passes and collects",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py -k 'headroom or override'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-closeout-2"
+        },
+        {
+          "id": "c3",
+          "statement": "git diff --stat shows no change under scripts/; result artifact written and non-empty",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git diff --stat -- scripts)\" && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g3-rework-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-closeout-3"
+        }
+      ],
+      "constraints": [
+        "do not commit -- the Commander commits at the gate seam",
+        "do not touch execute.json, spine.json, STATE_NOTE.md"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py tests/test_init_work_area.py tests/test_install_constellation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-closeout-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py -k 'headroom or override'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-closeout-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(git diff --stat -- scripts)\" && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g3-rework-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g3-rework-impl-467",
+    "status": "released",
+    "claimed_at": "2026-08-08T15:01:38.408469+00:00",
+    "last_heartbeat": "2026-08-08T15:06:32.134935+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T15:06:38.896837+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete (task/intent/scope/exclusions/evidence/test-mode/stop-conditions all present). Reviewer B-1 confirmed: block() has no status guard, blocked not in TERMINAL, active_id() can move backwards behind a later in-progress gate. Fixture matches CLI repro exactly (g1 no override, g2 context_headroom_tokens=50000, claude-opus-5, fill 0.02->0.12). GateHeadroomOverrideTripTests already patches _read_gauge via mock.patch.object(E,'_read_gauge',...) -- reusing that pattern avoids the future-observed_at clock-skew trap.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:02:01.969426+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red-green-test",
+      "why": "New test test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate added to GateHeadroomOverrideTripTests. RED under M15 mutant: 1 failed, 383 deselected. GREEN on shipped code: 1 passed, 383 deselected. Mutation applied and reverted in place; git diff --stat -- scripts confirmed clean before and after.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:03:03.553881+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-log-correction",
+      "why": "M15 entry corrected in place: EQUIVALENT declaration replaced with KILLED, names test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate, total 1 failed/383 deselected, and a CORRECTION paragraph explains what the original reasoning missed (block() has no status guard) and that both the entry and f9925be6's commit message were wrong. Summary section updated from '15 killed / 1 declared equivalent' to '16 killed'.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:03:52.518999+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-closeout",
+      "why": "Close-criterion 5 suite: 572 passed, 535 subtests. Close-criterion 6 selector: 21 passed, 413 deselected, 125 subtests. git diff --stat -- scripts empty (mutation reverted cleanly). Result artifact written to g3-rework-implementer-result.md.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:06:32.134899+00:00"
+    }
+  ]
+}

@@ -165,20 +165,43 @@ at HEAD with the diff stashed: 416 passed, 30 subtests).
 - **NAMED test red:** `GateHeadroomOverrideTripTests::test_headroom_override_defaults_to_the_active_gates_reserve`
 - **TOTAL: 1 failed**, 432 passed. Narrow.
 
-## M15 — advance's `require_why` naming the gate being closed — **NO NARROW MUTATION; DECLARED**
+## M15 — advance's `require_why` naming the gate being closed — **KILLED**
 
 - **Branch broken:** `require_why=_trip_hard_band_reading(cl, base_dir, getattr(args, "id", None))`
   → `require_why=_trip_hard_band_reading(cl, base_dir)`.
-- **NAMED test red:** none.
-- **TOTAL: 0 failed**, 433 passed.
-- **Declared limitation, not a claim of specificity.** I could not write a test that
-  separates these two expressions, and I do not believe an honest one exists: `advance`
-  refuses any gate that is not `in-progress`, and `start` refuses to open a gate that is not
-  the active one, so in every reachable state the gate being advanced IS the active gate and
-  `args.id == active_id(cl)`. I judge this an **equivalent mutant** and am reporting it as
-  such rather than manufacturing an unreachable fixture (`g1` blocked while `g2` is
-  in-progress) to kill it. The explicit argument stays because it states the intent at the
-  call site and stops being equivalent the moment either refusal changes.
+- **NAMED test red:**
+  `GateHeadroomOverrideTripTests::test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate`
+- **TOTAL: 1 failed**, 433 passed, 155 subtests — measured under this log's own Method above (the
+  file pair, no `-k`), the same way every other entry here is measured. Narrow. *(Corrected by the
+  Commander after the rework re-review's NB-1. The first draft of this line read "383 deselected
+  (frozen `headroom or override` selector)", which mislabelled its provenance twice: this log's
+  Method applies no `-k` at all, and that selector deselects 413, not 383 — 383 was the deselect
+  count of a single-test run. I re-measured under the Method before rewriting it. The pair's green
+  baseline is 434 passed with this rework's new test, 433 without.)*
+- **CORRECTION (g3 rework 2, reviewer finding B-1):** this entry originally declared M15 an
+  **equivalent mutant** on the reasoning that `advance` refuses any gate that is not
+  `in-progress` and `start` refuses to open a gate that is not the active one, so in every
+  reachable state the gate being advanced IS the active gate and `args.id == active_id(cl)`.
+  **That reasoning is false and the fixture is reachable, not manufactured.** It enumerated
+  `start` and `advance` but never `block()` (`checklist_engine.py:2116`), which carries **no
+  status guard** — it will block an already-`complete` gate — and `blocked` is **not** in
+  `TERMINAL` (`{"complete", "skipped"}`, `:63`). So `active_id()` can move **backwards**,
+  behind a later gate that is already `in-progress`: advance `g1` to `complete`, start `g2`
+  (which carries the override), then `block g1` — `active_id(cl)` now reports `g1` again even
+  though `g2` is the gate being closed. Under the mutation, `advance g2 --mechanical` reads
+  `_trip_hard_band_reading(cl, base_dir)` with no gate argument, which defaults to
+  `active_id(cl)` (i.e. `g1`, which carries no reserve and is well under its default hard
+  line at the fixture's 12% fill) instead of `g2` (whose overridden hard line the 12% fill is
+  over), so the no-silent-close refusal never fires and `g2` closes silently. The reviewer
+  reproduced this independently at the CLI against the shipped engine before this correction
+  was made; the named test above reaches the same state through public verbs
+  (`start`/`advance`/`start`/`block`/`advance`) and is RED under this mutation (1 failed) and
+  GREEN on shipped code (1 passed). The prior EQUIVALENT declaration, and the commit message
+  of `f9925be6` asserting it ("1 declared EQUIVALENT rather than faked"), were both wrong.
+  This entry is corrected in place, visibly, rather than rewritten as if it had always said
+  this. The explicit `args.id` argument this mutation removes is exactly what makes the
+  no-silent-close rule judge the gate actually being closed rather than whatever gate
+  `active_id()` happens to report.
 
 ---
 
@@ -197,9 +220,12 @@ at HEAD with the diff stashed: 416 passed, 30 subtests).
 
 ## Summary
 
-16 mutations, 15 killed by a named test, 1 declared equivalent (M15) with its reasoning.
-Two (M3, M4) have a wide blast radius that is attributable to a deliberate fixture `setUp`
-assertion, declared above rather than dressed up. The three mutations that matter most —
-M1 (loosening becomes possible), M5 (the mechanism dead-coded), M9 (the reserve leaks onto
-every gate) — are each killed by a test written specifically because that failure mode
-would otherwise pass unnoticed.
+16 mutations, all 16 killed by a named test. M15 was originally logged as a declared
+equivalent mutant; g3 rework 2 (reviewer finding B-1) found that declaration false and
+corrected it in place above — the reasoning missed `block()`, and the fixture it called
+unreachable is reachable through public verbs. Two (M3, M4) have a wide blast radius that
+is attributable to a deliberate fixture `setUp` assertion, declared above rather than
+dressed up. The four mutations that matter most — M1 (loosening becomes possible), M5 (the
+mechanism dead-coded), M9 (the reserve leaks onto every gate), M15 (the no-silent-close rule
+judges the wrong gate) — are each killed by a test written specifically because that failure
+mode would otherwise pass unnoticed.

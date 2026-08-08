@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "c2-nonvacuous",
+  "mechanical": {
+    "run": "issue-467-trip-semantics-g3-rework-review",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 0,
+    "spine-step": "c2-nonvacuous",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-g3-rework-review-c2-nonvacuous@a13454b4a29f9857b55932b5a76eccc519468851",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-trip-semantics-g3-rework-review",
+    "generated_at": "2026-08-08T15:15:58Z"
+  }
+}

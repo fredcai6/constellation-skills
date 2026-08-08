@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "c3-public-verbs",
+  "files": [],
+  "repo_rev": {
+    "commit": "eb78a1cfd50b67010641571381fa0319a5e4e738"
+  },
+  "run": {
+    "work_id": "issue-467-trip-semantics-g3-rework-review",
+    "generated_at": "2026-08-08T15:15:58Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-reviewer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

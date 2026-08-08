@@ -3952,6 +3952,44 @@ class GateHeadroomOverrideTripTests(unittest.TestCase):
             msg = E.dispatch(cl, _advance_ns(self.NEIGHBOUR), base_dir=Path("."))
         self.assertIn(f"{self.NEIGHBOUR} -> complete", msg)
 
+    def test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate(self):
+        """B-1 (g3 rework 2, mutation M15). The no-silent-close rule's band decision
+        must be read for the gate NAMED in the `advance`, never for whatever
+        `active_id()` reports -- M15's declared-EQUIVALENT reasoning claimed those
+        two are always the same gate. They are not: `block()` carries no status
+        guard and `blocked` is not in `TERMINAL`, so `active_id()` can sit BEHIND a
+        later in-progress gate. Reached through public verbs only -- start/advance/
+        start/block/advance -- the same sequence the reviewer reproduced at the
+        CLI: g1 (no override) is advanced to complete, then BLOCKED (legal --
+        block() has no status guard); g2 (carrying the override) is started while
+        g1 is still open and is left in-progress. `active_id(cl)` then reports g1,
+        even though the gate being CLOSED is g2."""
+        cl = gated(
+            g1=gate("g1", "pending", command=PASS_COMMAND, why_exempt=True),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=True),
+        )
+        cl["tasks"]["g2"]["context_headroom_tokens"] = self.RESERVE
+        # Low fill while g1 is opened/closed and g2 is opened, so neither begin-work
+        # guard (start is TRIP_HARD_GUARDED) refuses -- the fill rises to FILL (12%)
+        # only AFTER g2 is already under way, exactly as the CLI reproduction did.
+        with self._gauge(fill=0.0):
+            E.dispatch(cl, _start_ns("g1"), base_dir=Path("."))
+            E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
+            E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        with self._gauge():  # FILL=0.12: over g2's overridden hard, under g1's default hard
+            E.dispatch(cl, types.SimpleNamespace(
+                verb="block", id="g1", blocker="upstream authority", authority="human",
+                next_action="wait", session_id=None,
+            ), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g1"]["status"], "blocked")
+            # The divergence M15 declared unreachable: the ACTIVE gate is g1, but
+            # the gate being CLOSED below is g2.
+            self.assertEqual(E.active_id(cl), "g1")
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _advance_ns("g2", mechanical=True), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+        self.assertIn("cannot be closed silently", str(ctx.exception))
+
     def test_headroom_override_defaults_to_the_active_gates_reserve(self):
         """Asked without a gate, the band decision falls back to the ACTIVE gate --
         the same gate `_trip_advisory` reports on, which is what keeps the shown

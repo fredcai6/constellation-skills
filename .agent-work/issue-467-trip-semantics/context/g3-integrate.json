@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-integrate",
+  "files": [],
+  "repo_rev": {
+    "commit": "eb78a1cfd50b67010641571381fa0319a5e4e738"
+  },
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T14:55:52Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-workbench",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

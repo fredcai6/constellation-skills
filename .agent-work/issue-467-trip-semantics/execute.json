@@ -715,7 +715,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received for g3: verdict BLOCK, blocking_findings 1, at .agent-work/issue-467-trip-semantics/crew-handoffs/g3-reviewer-result.md. Verified fresh via run_crew.py --verify-result constellation/issue-467-trip-semantics/g3-review/reviewer/attempt-1 -> fresh (completed). Attached as e-g3-review-2 and e-g3-integrate-1; g3-review is complete. Opening this gate on a BLOCK: per the frozen imperative it returns the implementer for rework rather than advancing."
         }
       ],
       "postconditions": [
@@ -731,7 +732,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-3"
         },
         {
           "id": "c2",
@@ -745,7 +747,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-4"
         },
         {
           "id": "c3",
@@ -757,17 +760,65 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "blocking_findings": "0",
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g3-rework-reviewer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g3-review/reviewer/attempt-3",
+            "verified": "run_crew.py --verify-result -> fresh (completed); commander independently re-ran the M15 mutation, the new test (GREEN on shipped / RED under mutation, scripts reverted clean), both closeout suites, and NB-1's corrected total"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-integrate",
+            "why_ref": "w-9",
+            "note": "Tripped at fill 0.168164 (>= hard 0.15, claude-opus-5) while trying to CLOSE g3-integrate. why_ref is the concrete w-9 read from the raw why_trail -- not the engine's literal <why-id> placeholder, which attaches with exit 0 and silently does nothing. THE INSTRUMENT THAT REFUSED ME IS THE STALE ONE, and this is worth the Admiral's attention: the INSTALLED workbench engine at ~/.claude/skills/constellation-workbench/scripts/checklist_engine.py is PRE-#467 -- 140170 bytes, sha256 9c05192f0feb3d4d, and it contains NO TRIP_HARD_GUARDED_VERBS at all -- while the repo engine in this worktree is 156060 bytes, sha256 ccbc247e0de0dcaa. So the engine driving this run is the one WITH the #431 bug, and I just hit that bug live, in the run that fixes it: it refused the advance that CARRIES my handoff, which is exactly the defect. I am NOT switching instruments mid-run to get around it -- that is plan surgery outside the frozen plan and it is the Admiral's call. I am taking the engine's own prescribed release path instead. After this attach I will close g3-integrate carrying my full understanding, commit, rewrite the state note, release both leases and stop. I will NOT start g3b-glossary: start is a begin-work verb and I am over hard."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py tests/test_init_work_area.py tests/test_install_constellation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py -k 'headroom or override'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-implement": {
@@ -1166,6 +1217,21 @@
       "id": "tc3",
       "from": "g3-implement",
       "statement": "tc4: full-suite SUBTEST total is off by one and it is NOT this issue's diff. The g3 implementer measured the pre-change baseline itself with its diff stashed and got 682 subtests, one BELOW the 683 recorded at g2-integrate and in the g3 handoff; both post-change runs agreed at 806 while its two files add 125 (30->155), i.e. +124. So the tree produces 682 or 683 depending on something other than this change -- most likely the same test_context_manifest clean-file filter that produced the -1 at g2 (it filters to files clean in the working tree, so a stash or a dirty file moves the count). Flagged, not chased."
+    },
+    {
+      "id": "tc4",
+      "from": "g3-review",
+      "statement": "block() carries NO status guard -- it will block an already-complete gate -- and 'blocked' is not in TERMINAL, so active_id() can move BACKWARDS behind a later in-progress gate. Pre-existing, NOT this issue's to fix, and #467's g3 rework now DEPENDS on that state to reach its M15 kill. Flagged twice independently (g3 review NB-5, g3 rework re-review). Whoever eventually tightens block() must know that a test guards this state."
+    },
+    {
+      "id": "tc5",
+      "from": "g3-review",
+      "statement": "A reachable advisory/guard divergence on the reopen path: current's advisory is computed for the ACTIVE gate while the begin-work guard judges the gate being opened, so the shown number and the judged number can differ. Fail-safe in direction, but the thresholds_for/_trip_hard_band_reading docstrings overclaim that shown and judged 'cannot diverge'. I saw it in my own M15 repro: current read '12% ... hand off here at g1' off the unoverridden active gate while the advance guard correctly judged g2. Non-blocking; the docstring is the defect, not the behaviour."
+    },
+    {
+      "id": "tc6",
+      "from": "g3-integrate",
+      "statement": "The two g3 review surveys write their mechanical sidecars into a directory derived from the survey name, and the first g3 review also left an orphan '.agent-work/issue-467-trip-semantics/issue-467-trip-semantics-g3-review/' tree carrying a duplicate r0-context.json. Same family as the known g1/g2 survey-id collision. Cosmetic for a verdict, corrupting for an audit trail -- three runs now."
     }
   ],
   "blockers": [],
@@ -1232,14 +1298,21 @@
       "why": "g3-review CLOSED with a BLOCK -- 1 blocking finding, and the finding is correct: I reproduced it end to end in my own shell before accepting it. B-1: the mutation log's M15 'EQUIVALENT' declaration is FALSE. Its reasoning enumerates start and advance but not block(), which carries no status guard and leaves 'blocked' outside TERMINAL, so active_id moves BACKWARDS behind a later in-progress gate. My repro, public verbs only, shipped engine at HEAD: two gates, g2 carrying context_headroom_tokens 50000 (hard 10% vs the 15% default on claude-opus-5); start g1 / advance g1 / start g2 / fill 0.02 -> 0.12 / block g1 -- now active_id is the BLOCKED g1 while the gate being closed is g2. SHIPPED refuses 'advance g2 --mechanical' with the no-silent-close message; the M15 mutant (drop the gate argument at checklist_engine.py:2857) prints 'g2 -> complete' on the identical fixture at the identical fill. So the gate argument g3 itself added has ZERO coverage, and deleting it silently disables this issue's own no-silent-close guarantee for the gate being closed. THE SHIPPED CODE IS CORRECT -- rework is one test plus a corrected log entry, no source change. Eight of nine close criteria PASS, verified by attack not by reading: 26 hostile values swept through the real resolver with nothing loosening; a four-way experiment showing the anti-vacuity positive control is the only discriminator; neighbour isolation asserted both sides by name four ways; _PROFILES byte-identical; exactly one override repo-wide; four mutations re-run with totals matching the log. Two things carried up: tc3 is RESOLVED and its cause was a handoff field -- the stated baseline d376b786 is not the diff's parent but spans 15 commits, and against the true parent 5a69a30b the deltas are exactly +17 passed and +125 subtests, so the stray one lived in the stated baseline, not the diff; and a reachable advisory/guard divergence on the reopen path (fail-safe direction, docstring overclaims) filed non-blocking. I also SAW that divergence in my own repro: current's advisory read '12% ... hand off here at g1' off the unoverridden active gate while the advance guard correctly judged g2. NEXT: g3-integrate opens on a BLOCK, so it returns the implementer for rework (attempt-2, Sonnet -- mechanical execution against a demonstrated target) rather than advancing.",
       "mechanical": false,
       "ts": "2026-08-08T14:55:05.522096+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "DC4 CLOSED. g3 went BLOCK -> rework -> APPROVE, and I verified every load-bearing step in my own shell rather than on report. THE BLOCK WAS RIGHT: the mutation log declared M15 an EQUIVALENT mutant on reasoning that enumerated start and advance but never block(), which carries no status guard while 'blocked' sits outside TERMINAL -- so active_id() moves BACKWARDS behind a later in-progress gate. I reproduced it with public verbs at the CLI before accepting the finding (shipped REFUSES 'advance g2 --mechanical' at 12% with g2 carrying a 50000 reserve; the mutant prints 'g2 -> complete'), which meant the gate argument g3 itself added at checklist_engine.py:2857 had ZERO coverage and deleting it silently disabled this issue's own no-silent-close guarantee for the gate being closed. REWORK, no source change: one test, test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate, reaching that state through start/advance/start/block/advance, plus the M15 log entry corrected from EQUIVALENT to KILLED with a VISIBLE correction note rather than a quiet rewrite -- f9925be6's commit message asserted the equivalence too, and the log now says so. MY OWN VERIFICATION: applied the M15 mutation myself, watched the new test go RED, reverted, watched it go GREEN, confirmed git diff --stat -- scripts empty both times; ran both closeout suites (572 passed/535 subtests; 21 passed/413 deselected/125 subtests). The independent re-reviewer proved the test is NOT vacuous -- the same fixture WITHOUT the block leaves active_id == g2 and is refused under shipped AND mutant, so a no-divergence fixture kills nothing -- and NOT manufactured: every step driven through E.dispatch, the only direct JSON write being the authored override. The test also ASSERTS the divergence, so future silent vacuity turns it red. ONE NON-BLOCKING FINDING I FIXED MYSELF rather than ship a wrong number in an evidence doc: the corrected M15 TOTAL said '383 deselected (frozen headroom-or-override selector)', mislabelling its provenance twice -- this log's Method applies no -k at all, and that selector deselects 413, not 383. I re-measured under the log's own Method (1 failed, 433 passed, 155 subtests) and rewrote the line with the correction recorded in place. Eight of nine original criteria passed by attack and are closed. Triage: tc4 block()'s missing status guard (pre-existing, NOT ours, and the M15 kill now DEPENDS on that state -- whoever tightens block() must know a test guards it), tc5 the reopen-path advisory/guard divergence where the docstring overclaims (I saw it in my own repro: current advised on g1 while the guard judged g2), tc6 the survey sidecar collision, three runs running. tc3 RESOLVED: the stray subtest lived in the stated baseline d376b786, which spans 15 commits and is not the diff's parent; against the true parent 5a69a30b the deltas are exactly +17 passed and +125 subtests. I AM TRIPPED AND STOPPING HERE, and the trip itself is evidence: fill 0.168164 >= hard 0.15. The engine that refused my advance is the INSTALLED workbench engine, which is PRE-#467 (140170 bytes, sha 9c05192f0feb3d4d, no TRIP_HARD_GUARDED_VERBS) while the repo engine is 156060 bytes, sha ccbc247e0de0dcaa. So this run has been driven throughout by the engine WITH the #431 bug, and I hit that bug live: it refused the advance that CARRIES the handoff. I released it the engine's own prescribed way -- a refresh-request keyed to the concrete w-9 -- rather than switching instruments mid-run, which is the Admiral's call, not mine. NEXT: g3b-glossary, the amended tc1 gate. Do NOT start it over the line.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:27:51.764153+00:00"
     }
   ],
-  "refusals": 6,
+  "refusals": 7,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T14:15:38.844412+00:00",
-    "last_heartbeat": "2026-08-08T14:55:05.522096+00:00",
+    "last_heartbeat": "2026-08-08T15:27:51.764153+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
