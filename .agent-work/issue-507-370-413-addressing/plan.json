@@ -212,7 +212,7 @@
             "command": "python -m pytest tests/test_crew_delivery_addressing.py -q"
           },
           "satisfied": true,
-          "satisfied_by": "e-m4-acceptance-test-2"
+          "satisfied_by": "e-m4-acceptance-test-4"
         }
       ],
       "constraints": [
@@ -221,7 +221,9 @@
       "directives": null,
       "child_checklist": null,
       "status": "complete",
-      "status_detail": {},
+      "status_detail": {
+        "reopen_reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine."
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -233,7 +235,12 @@
             "why_ref": "w-4"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034371+00:00"
+          }
         },
         {
           "id": "e-m4-acceptance-test-2",
@@ -244,10 +251,41 @@
             "shell": "posix"
           },
           "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034382+00:00"
+          }
+        },
+        {
+          "id": "e-m4-acceptance-test-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-acceptance-test",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034385+00:00"
+          }
+        },
+        {
+          "id": "e-m4-acceptance-test-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_crew_delivery_addressing.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
           "ts": ""
         }
       ],
-      "rework_count": 0
+      "rework_count": 1
     },
     "m5-pr-and-issues": {
       "id": "m5-pr-and-issues",
@@ -259,7 +297,7 @@
           "statement": "acceptance test green",
           "check": null,
           "satisfied": true,
-          "satisfied_by": "m4-acceptance-test complete: tests/test_crew_delivery_addressing.py 2/2 green, c2 command check passed"
+          "satisfied_by": "m4-acceptance-test re-closed with DoctrineNamesJobAddressedDelivery added; 4/4 green, c2 command re-verified"
         }
       ],
       "postconditions": [
@@ -268,7 +306,7 @@
           "statement": "PR opened citing a closing keyword ONLY for the issue(s) m1 confirmed collapse; any distinct issue is referenced (not closed) with a comment explaining the distinction and the symptom-only relief",
           "check": null,
           "satisfied": true,
-          "satisfied_by": "PR #511 opened (epic-418/w5-crew-addressing -> main), body cites Closes #507 + Closes #370 only, quotes each issue's collapse argument, references #413 plainly (Related to #413, not a closing keyword) with the distinct-root-cause explanation and Pre-Ruling 3 lineage note. Comments posted on all three issues (507, 370, 413) with the matching collapse-confirmation / distinction text. No issue manually closed."
+          "satisfied_by": "PR #511 body updated (gh pr edit) to add the honesty caveat: the original two test classes pass unmodified on main (mechanism untouched by this fix); new DoctrineNamesJobAddressedDelivery class is the real red-then-green evidence for the actual (prose) fix, verified failing on ea854471's doctrine/template text and passing on this PR's. Still cites Closes #507 + Closes #370 only, #413 referenced plainly. Issue comments unchanged (already accurate, no re-post needed)."
         },
         {
           "id": "c2",
@@ -278,7 +316,7 @@
             "command": "gh pr view epic-418/w5-crew-addressing --json number,url"
           },
           "satisfied": true,
-          "satisfied_by": "e-m5-pr-and-issues-2"
+          "satisfied_by": "e-m5-pr-and-issues-4"
         }
       ],
       "constraints": [
@@ -287,7 +325,9 @@
       "directives": null,
       "child_checklist": null,
       "status": "complete",
-      "status_detail": {},
+      "status_detail": {
+        "superseded_by_reopen": "m4-acceptance-test"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -299,10 +339,41 @@
             "why_ref": "w-5"
           },
           "produced_by": "engine",
-          "ts": ""
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034397+00:00"
+          }
         },
         {
           "id": "e-m5-pr-and-issues-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "gh pr view epic-418/w5-crew-addressing --json number,url",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034399+00:00"
+          }
+        },
+        {
+          "id": "e-m5-pr-and-issues-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-pr-and-issues",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-pr-and-issues-4",
           "type": "command-output",
           "payload": {
             "cmd": "gh pr view epic-418/w5-crew-addressing --json number,url",
@@ -319,17 +390,17 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 5,
+  "refusals": 6,
   "engine_session": {
-    "session_id": "impl-w5-addressing-b",
+    "session_id": "impl-w5-addressing-c",
     "status": "released",
-    "claimed_at": "2026-08-08T23:29:00.569977+00:00",
-    "last_heartbeat": "2026-08-08T23:43:08.240247+00:00",
+    "claimed_at": "2026-08-08T23:49:58.914911+00:00",
+    "last_heartbeat": "2026-08-08T23:51:42.548117+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
     "takeover_reason": null,
-    "released_at": "2026-08-08T23:43:15.949365+00:00"
+    "released_at": "2026-08-08T23:51:42.778373+00:00"
   },
   "trip_ledger": [
     {
@@ -375,6 +446,39 @@
       "model": "claude-sonnet-5",
       "why_ref": "w-5",
       "ts": "2026-08-08T23:40:21.257557+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "m4-acceptance-test",
+      "verb": "reopen",
+      "outcome": "begin-refused",
+      "fill": 0.2528,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-08T23:49:59.127910+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "m4-acceptance-test",
+      "verb": "reopen",
+      "outcome": "begin-released",
+      "fill": 0.2528,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-08T23:50:08.688378+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "m5-pr-and-issues",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2649,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-08T23:51:23.820209+00:00"
     }
   ],
   "amendments": [
@@ -446,6 +550,34 @@
       "why": "Committed and pushed epic-418/w5-crew-addressing (0148638d). PR #511 opened citing Closes #507 + Closes #370 only, quoting each body's collapse argument; #413 referenced plainly (not closed) with the distinct-root-cause explanation and symptom-relief note; Pre-Ruling 3 lineage-resolves-to-origin bug noted in the PR body. Comments posted on #507, #370, #413 matching the PR's framing. c2 command check (gh pr view) verified green. No issue manually closed -- merge does it. All five gates (m0-m5... m0-m4 already complete) done; plan complete.",
       "mechanical": false,
       "ts": "2026-08-08T23:43:08.240226+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m4-acceptance-test",
+      "reopen": true,
+      "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+      "ts": "2026-08-08T23:50:09.034405+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m5-pr-and-issues",
+      "reopen": true,
+      "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+      "ts": "2026-08-08T23:50:09.034409+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m4-acceptance-test",
+      "why": "Added DoctrineNamesJobAddressedDelivery to tests/test_crew_delivery_addressing.py (commit bd31f69c): reads the shipped doctrine/template text directly, fails if the job-addressed delivery language regresses. Verified genuinely red against ea854471's pre-fix doctrine/template text (2 failed, matching old 'must be told' wording + absent job-addressed language) and green against the fix (4 passed total). Module docstring now states plainly that the original two tests (misroute characterization, job-addressed-mechanism proof) pass unmodified on main because run_crew.py/recover_crews.py are untouched by this fix -- the fix is prose, and this new class is the regression guard reaching that prose specifically. c2 command re-verified (4 passed). Proceeding to re-close m5 with the same PR/comments, now backed by accurate evidence.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:50:28.667079+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m5-pr-and-issues",
+      "why": "PR #511 body edited via gh pr edit to plainly state the two mechanism tests pass unmodified on main (run_crew.py/recover_crews.py untouched -- the fix is prose) and to present the new DoctrineNamesJobAddressedDelivery class as the actual red-then-green evidence for the doctrine change (failed on ea854471's text, passes on the fix). c2 command re-verified (gh pr view). Plan re-complete after Admiral's cold-review rework cycle on m4/m5.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:51:42.548095+00:00"
     }
   ]
 }
