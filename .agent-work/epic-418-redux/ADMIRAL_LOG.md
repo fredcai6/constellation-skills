@@ -3051,3 +3051,37 @@ get withdrawn in practice. In this epic they did, so I noted it as option 3 and 
 the fix for those four, one in the authority mechanism. Plus three of mine today (#313 probe, #501
 launch gate, #502 provenance chain), which sit in **verification and provisioning machinery** rather
 than in the work — the layer whose whole job is to be trustworthy and which nothing reports on.
+
+---
+
+## RULING | 2026-08-08T19:11:25Z | rule 7 is unenforceable by the tier that needs it — amended, not waived
+
+`commander-w4-467-h` reached up: its rework implementer `impl-467-g4rw` was done (result written,
+registry `completed`, `--verify-result` -> `fresh (completed)`, disk unchanged), **it never received the
+idle notification, and `TaskStop` refused — "owned by main session."** It asked me to stop the crew so
+it could satisfy rule 7 before dispatching the re-reviewer, kept working the commit meanwhile, and said
+it would proceed if the wait became the larger risk. That is exactly right on all three counts.
+
+**The structural fact I had not seen:** dispatch flows through my session, so **a Commander can never
+stop the crew it dispatched.** Rule 7 — my most load-bearing rule, the only one that has ever caught
+anything — is **written for a tier that lacks the capability to obey it.** Its author never noticed
+because the author is the one tier that *can* call `TaskStop`.
+
+**Amended rule 7 (not waived — the hazard is real, the ritual was overfit):** the rule exists to stop
+two agents mutating one spine concurrently. A crew whose result is **written and verified** is not
+mutating anything. So for a Commander: result written + registry `completed` + `--verify-result` fresh +
+disk unchanged **IS** the idle determination. Ask the Admiral for the stop, keep working, and **dispatch
+anyway after ~10 minutes of no answer, logging that you did.** For the Admiral, unchanged: notification
+or equivalent evidence, stop, then dispatch. **Do not let a ritual outlive its hazard.**
+
+Stopped `t0jeujpx9` and released it to dispatch. Directed the re-reviewer at the two ways this fix can
+be wrong while looking right: (1) **the pinned test** — adding a historical line does not by itself
+unpin `test_compliance_line_is_absent_once_the_recorded_begin_is_superseded`, and it must be shown to
+**discriminate**, not merely still pass; (2) **mutation-test the new line** — break
+`begin_over_line_records_historical` and confirm the seam goes red, because **a second observable added
+to fix an unobservable one is precisely where this defect class gets introduced**, and this issue
+already has one specimen that arrived that way.
+
+Rework on its face: additive historical selector + a second rendered `TRIP HISTORY` line, live keying
+untouched per ruling 2, World H vs World D no longer byte-identical, suite **1867 passed / 2 skipped /
+exit 0**. Accepted pending the independent re-review.
