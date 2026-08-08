@@ -549,3 +549,31 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   store now. Whether they convert to episodes or are dropped with a reason is the lessons audit's
   call at closeout. Collecting is reversible; deciding is not, and the sweep was the only clock.
   **Nothing swept.** `governor-264` is untouched and flagged DO NOT SWEEP.
+
+- `2026-08-08` — `ADMIRAL ERROR` + `RULING` (correction to my own framing, and a material correction
+  to something I have been surfacing to Tommy):
+  **1. I filed #488 as a fresh discovery. The symptom was already recorded.** The revised spec's
+  critic finding **F2**, dated 2026-08-07, says: *"multi-spine attribution silences it for exactly the
+  role that runs epics (this epic's Admiral ran a full day with the gauge silent)."* Written down
+  before I hit it. What was genuinely new is the **mechanism** — binding count vs distinct-path count.
+  I should have read the spec's own findings before claiming novelty; the epic had already seen this.
+  **2. The spec also already carries the accepted fix for the whole class**, in finding **F8**, whose
+  ruling calls it *"the purest check-that-cannot-fail in the document"*: **no absence is evidence —
+  assert a reading EXISTS before any claim about trip behaviour**, because a silent governor and a
+  governor with headroom are otherwise indistinguishable. That is precisely what #264's unmerged
+  `test_ladder_fill_series_is_non_decreasing_and_actually_moves` implements. **#264 is F8's
+  implementation, already written, sitting unmerged.**
+  **3. MATERIAL — the governor does not ship, and I have been asking Tommy to rule on a band measured
+  from configuration that does not exist for anyone else.** Measured, not assumed: tracked
+  `.claude/settings.json` wires `spine_rail.py` on `Stop`, `SessionStart` and `PostToolUse`, and wires
+  `gauge_writer_hook.py` on **nothing**. `git ls-files .claude/` returns `settings.json` **only** —
+  `settings.local.json` is untracked. So every governor observation this epic has made, including the
+  17–21% trip band, came from **machine-local config**. The band question presumes the governor
+  reaches ordinary sessions; on a fresh clone it reaches none of them.
+  F2's accepted ruling already says what to do — *"wire gauge_writer_hook into the TRACKED project
+  settings so the governor ships like spine_rail already does"* — and that is **#458**, off-chain.
+  **Four parts, one thread:** #458 (ships at all) · #264 (asserts it is measuring — written, unmerged)
+  · #488 (stops it silencing itself — in flight) · #452 (attribution proper). Three of the four are
+  written or one-line. **Not acted on:** #458 is out of wave 3's scope and touching settings wiring
+  mid-wave would shift ground under the crew editing that file. Surfaced at the boundary, and the
+  trip-band question goes back to Tommy re-framed rather than as I first put it.
