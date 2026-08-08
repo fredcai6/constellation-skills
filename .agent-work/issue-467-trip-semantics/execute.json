@@ -674,7 +674,19 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g3-review",
+            "why_ref": "w-8",
+            "note": "Tripped at fill 0.153181 (>= hard 0.15, claude-opus-5) AFTER closing g3-implement and BEFORE starting g3-review. g3-review is still 'pending' and NO reviewer crew was dispatched -- deliberate: 'start' is a BEGIN-work verb, and opening a gate at/over hard is exactly the DC6 violation this issue's own fix (b) refuses. The compliant reading is 'do not open g3-review', not 'open it and hand off mid-gate'. This is a clean seam, not an interruption. Successor: claim BOTH spine.json and execute.json without --force (shared session id -> idempotent resume), attest g3-review p1 (the IMPLEMENTER_RESULT is attached as e-g3-implement-1 and verified fresh), then start g3-review and dispatch the reviewer against the frozen g3-review imperative. g3-implement is CLOSED and committed at f9925be6; do NOT redo it and do NOT re-run its mutations to 'check'. why_ref is the concrete w-8, read from execute.json's raw why_trail -- the engine's printed <why-id> is a literal placeholder that attaches exit 0 and silently does nothing."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -1154,7 +1166,7 @@
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T11:30:51.929485+00:00",
-    "last_heartbeat": "2026-08-08T14:08:23.182838+00:00",
+    "last_heartbeat": "2026-08-08T14:09:05.404146+00:00",
     "claimed_by": "commander-w4-467-e",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,
