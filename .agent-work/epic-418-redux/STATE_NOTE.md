@@ -1,7 +1,18 @@
 # Crash-resume state note — epic-418-redux
 
-**WAVE 3 IS IN FLIGHT: three dispatches, four issues. Do not re-dispatch without checking the
-worktrees first.**
+**WAVE 3 IN FLIGHT. Four agents have run; two are live right now. Do not re-dispatch anything
+without checking the worktrees and the forge first.**
+
+| Dispatch | Issue(s) | State as of 05:35Z |
+|---|---|---|
+| W3-B | #461 | **DONE — PR #490 open.** Reviewer dispatched into `C:/Programs/wt-rev-461` (branch `review/w3-461`, at PR head `fa1378ed`). **LIVE** |
+| W3-C | #488 + #489 | tripped the governor at 16% on `m3-verify`, filed `refresh-request`, **relaunched** into the same worktree + `IMPLEMENTER_PLAN.json`. Both fixes code-complete and verified; only PR + result artifact remain. **LIVE** |
+| W3-A | #465 | 1 commit, still working, no PR yet |
+
+**If you are resuming cold:** W3-C's lease `impl-w3c-488-489` is still held and its gate is still
+`in-progress` — that is the **refresh** shape, not a dead crew. Do not force-claim it or restart it
+from zero; read `current` on `C:/Programs/wt-w3c-488-489/.agent-work/w3c-488-489/IMPLEMENTER_PLAN.json`
+and continue from there. Its PR body is already drafted at `.agent-work/w3c-488-489/pr-body.md`.
 
 - **step:** `execute` — in-progress. Remaining after `execute`: `closeout` only.
 - **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` ==
