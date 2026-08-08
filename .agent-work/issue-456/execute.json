@@ -1944,7 +1944,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g6-implement-1",
+          "attested": {
+            "evidence": "e-g6-implement-1",
+            "note": "IMPLEMENTER_RESULT returned at .agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md with no unresolved blockers. The crew delivered the whole gate task -- span hashing at extraction, a slug-keyed diff against the previous statements.jsonl read before it is overwritten, and a stale-anchor surface in the run report the reviewer already reads -- and committed its work at 55b95314 rather than leaving it loose.\n\nVerified first-hand rather than accepted from the report. Full suite green at the gate boundary as the gate's own constraint requires: 1805 passed, 2 skipped, 683 subtests, 0 failed. Fresh build then check in that order, because check reads a stale tree otherwise: 7/7 ok, exit 0, deterministic-rebuild among them -- so the new report field does not perturb the determinism check, which was the specific risk of adding a field to a report that a diff covers. The closing selector -k 'stale_tag' collects 12 and all 12 pass, against a pre-gate baseline of 0 by design, so every new test is caught by name; that is the tc47/tc38 discipline and it holds here. git log confirms the commit, and the working tree is clean.\n\nTwo dispositions are recorded honestly rather than papered over, and both belong in the review's sights. The detector reports nothing stale against this codebase, which is the correct result and not a null: there are no authored tags yet, so nothing exists that could be stale. It follows that the mechanism has only ever been exercised against a stand-in, and validating it against genuine tag text belongs to g7 -- which the crew checked rather than assumed, confirming g7 mints its tags through the same slug allocator, so g7 joins on slug and needs no rework here.\n\nOne place the crew overruled my handoff and I accepted it: I had reasoned a bare local-variable rename should not trip the flag, and the crew argued tag prose can name a local variable, so a rename of one silently invalidates the tag. That is defensible and it is the safer direction of error for a staleness flag. The named blind spot that remains is deliberate: docstring-only and comment-only edits are invisible to the span hash by construction.\n\nSole reservation, carried to the reviewer rather than resolved here: this is the first build of a design signed accepted-untested at confirm, so the two judgement calls -- whether slug-match really constitutes the \"text did not change\" half of the rule rather than begging the question, and whether advisory-only is right when a flag that never fails the build can be ignored forever -- are review questions, not blockers on the build."
+          }
         }
       ],
       "constraints": [
@@ -1973,11 +1978,33 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g6-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md",
+            "blockers": "none",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g6-implement-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g6-implement",
+            "why_ref": "w-22"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g6-review": {
@@ -2682,6 +2709,13 @@
       "why": "gb closes on an APPROVE, revised from a correct BLOCK. This run's checks could always go red; from here they have committed values to go red against. Four threshold families now live in scripts/code_map/thresholds.py, every one a ratio or run-time invariant rather than an absolute count, and every one carrying its own one-line statement of what a human should open when it fires -- which is the human's ruling made mechanical rather than aspirational.\n\nThe gate answered the question it was created to answer. Churn under a widely-referenced-symbol rename had been signed off at design confirm as accepted-untested; it is now measured at 1.02x against a 3.0 ceiling and it held, for a structural reason rather than by luck. A pure identifier rename changes one line per call site on both sides of the ratio, so the diff-lines ratio stays near 1x however many callers exist, even though 217 of 3865 pages change. Measured in pages instead of lines, the honest finding would have been that the rename blew the ceiling, and it would have been wrong -- an artifact of the unit, not a regression. The reviewer independently re-measured a real 80-call-site production symbol at 0.5x and ran three synthetic rename shapes that all landed identically at 1.545x, so the 1:1 relationship survives reordering and length changes.\n\nThe looseness question I set the review is answered in the affirmative: the reviewer built its own realistic partial regression, disabling docstring emission on one code path rather than globally, and drove the hole ratio to 0.933 past the 0.90 ceiling. A generous ceiling that still fires on a plausible bug is a sharp tripwire, not a decorative one.\n\nThe BLOCK was narrow and correct: one of the five thresholds carried no action line, against this gate's explicit constraint. My own grep had shown four lines against five thresholds and I missed the gap. I fixed the wording myself because a one-line documentation change did not justify a fresh crew, then handed it straight back to the same reviewer rather than grading my own work; it confirmed the wording is actionable, confirmed the diff purely additive with no regression, and on being asked whether its scan had been exhaustive re-verified all five thresholds carry an action line 1:1.\n\nClosing at: suite 1793 passed 2 skipped 672 subtests 0 failed, closing selector 13 passed exit 0, fresh build then check 7/7 exit 0. One candidate carried to triage: a dead unconsumed constant that duplicates a live docstring, filed as duplication with silent-drift risk rather than as a missing derivation, because the derivation a human actually reads is stated.",
       "mechanical": false,
       "ts": "2026-08-08T19:05:51.222627+00:00"
+    },
+    {
+      "id": "w-23",
+      "gate": "g6-implement",
+      "why": "Advancing g6-implement because its one postcondition is genuinely met and independently verified, not because the crew said so. The IMPLEMENTER_RESULT is on disk with no unresolved blockers, and I re-ran the gate's own checks myself rather than reading its numbers back: full suite 1805 passed 2 skipped 683 subtests 0 failed, which satisfies this gate's explicit full-suite constraint; fresh build then check 7/7 exit 0 with deterministic-rebuild included, which is the specific risk a new report field carries and it did not fire; closing selector -k 'stale_tag' 12 passing against a designed baseline of 0, so no new test is invisible to the command that closes this gate.\n\nWhat ships is the gate task as written: the enclosing entity span is hashed at extraction, the previous statements.jsonl is read before being overwritten so a rebuild can diff by slug, and a stale-anchor line surfaces in the run report the reviewer already reads rather than in a new surface nobody looks at. That is the IF4/TS8 remedy in the place the critics asked for it.\n\nI advance with two questions deliberately left open for the reviewer instead of answered by me, because this is the first build of a design the human signed accepted-untested and self-grading it would defeat the point. Whether slug-match really constitutes the 'text did not change' half of the rule or quietly begs the question, and whether advisory-only is the right severity when a flag that cannot fail the build can be ignored indefinitely, are review calls. The reviewer should also attack reformatting immunity with a mutation the crew did not choose, since reproducing the author's own falsifier proves only that the author's probe works.\n\nTwo limits are recorded rather than hidden. The detector finds nothing stale here, which is correct and not a null result -- there are no authored tags yet, so nothing exists that could be stale -- and it follows that the mechanism has only been exercised against a stand-in, with validation against real tag text belonging to g7. Docstring-only and comment-only edits are invisible to the span hash by construction. Neither blocks the build; both belong in front of a reviewer.",
+      "mechanical": false,
+      "ts": "2026-08-08T20:14:18.009176+00:00"
     }
   ],
   "amendments": [

@@ -4,18 +4,38 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`g6-review`** — NOT yet dispatched
-- **PID**: none in flight. `recover_crews.py` → 24 crews, **0 unresolved**.
+- **step**: `execute` (in-progress) · **slug**: **`g6-review`** — handoff WRITTEN, dispatching now
+- **PID**: crew `constellation/issue-456/g6/reviewer/attempt-1` dispatching. Before this: `recover_crews.py` → 24 crews, **0 unresolved**, no g6/reviewer entry.
 - **expected artifact**: `.agent-work/issue-456/crew-handoffs/g6-review-RESULT.md`
 
 ## NEXT ACTION, ready to fire
 
-**`g6`'s BUILD is done, Commander-verified and pushed at `cb99a901`.** Still open:
-`g6-implement`'s `c1` (attest + advance), then **write and dispatch the `g6`
-review handoff**, then `g6-integrate`. Then `g7`, `g8`, `gs`.
+**`g6-implement` is CLOSED** — `c1` attested via evidence `e-g6-implement-1`
+(refresh-request `e-g6-implement-2`, why `w-22`), `g6-implement -> complete`.
+The build was Commander-verified and pushed; the crew committed at `55b95314`.
 
-`g6-implement.p1` is already **attested**. Implement handoff:
-`.agent-work/issue-456/crew-handoffs/g6-implement.md`.
+Now: **dispatch the `g6` review** —
+`python scripts/run_crew.py --dispatch external --work-id issue-456 --gate g6 --role reviewer --model sonnet`
+with handoff `.agent-work/issue-456/crew-handoffs/g6-review.md` (written).
+Then `g6-integrate` on an APPROVE. Then `g7`, `g8`, `gs`.
+
+### What the g6 review handoff asks for — do not let it come back thin
+
+Four questions, in the handoff verbatim: (1) does slug-match really constitute
+the "text did not change" half of the rule, or beg the question, given `g7`
+introduces prose that can change under a fixed slug; (2) is advisory-only right,
+and does printing the literal word `FAIL` while exiting 0 collide with `check`'s
+output convention; (3) attack reformatting immunity with mutations the crew did
+NOT choose (quote style, line-splitting, default-arg value, statement reorder,
+type annotation, literal→expression, loop→comprehension) — reproducing the
+author's own falsifier proves only the author's probe works; (4) **the sharp
+one** — the crew disclosed that 7 of its 10 "does-not-flag" assertions passed
+VACUOUSLY during red. Verify the shipped negatives now have a positive control:
+disable flag emission on one path, rebuild, count how many of the 12 go red. If
+most stay green they are checks that cannot fail — tc38/tc47 class, BLOCK-worthy.
+
+Also flagged to the reviewer: the RESULT's Scope section says "16 new tests"
+while its own Evidence section and my independent run both say **12**.
 
 ## `g6` BUILD — what landed, and what the reviewer should attack
 
