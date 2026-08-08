@@ -356,3 +356,47 @@ the instruments that judge the work.
 
 Route: the crew's artifact stays theirs and is not to be edited by me. This observation belongs in the
 epic retrospective as the **outer** frame around it.
+
+---
+
+## §50 — The binding is what nothing checks (wave 5 launch, 2026-08-08)
+
+**Specimen, Admiral-side, caught by a Commander in its first sixty seconds.**
+
+I provisioned five worktrees from `ea854471`, then committed the five launch orders at `197ad5b0`.
+Every dispatch prompt then told its crew to read its order at a path **inside its own worktree** — a
+path that resolved to nothing, five times out of five.
+
+`commander-w5-gates` recovered on its own and reported it unprompted:
+
+> a Commander told to "read your launch order first, in your worktree" would have found nothing there
+> — that is itself a provisioning gap of the kind this wave is about.
+
+**Why it belongs in the retrospective and not just the log.** Three preconditions were checked and all
+three passed:
+
+| Checked | Result |
+|---|---|
+| the worktree exists and is provisioned | pass |
+| the branch exists at the intended base | pass |
+| the launch order exists and is complete | pass |
+
+**Nothing checked the binding between them.** Each artifact was verified in isolation, against itself,
+and the composite claim — *this crew can read this order at this address* — was never asserted by
+anyone. That is a **check that cannot fail** in its purest form: the three green lights are identical
+in the world where the dispatch works and the world where it is unreadable.
+
+**The recursion is the point.** This wave contains a crew (#507/#370/#413) whose entire job is that a
+handoff addressed to a name that has since moved cannot be delivered. I made the same error one tier
+up, in the act of dispatching that crew, in the same hour — an address that was correct when written
+and stale when read. Neither the author of the address nor the address itself is wrong at any single
+moment; **the two are simply never compared.**
+
+That is now **four tiers** of the same shape in one epic: the first DC6 observable, g4's B1, g5's
+V1/V8, and this. In every one, the author could not see it and an independent cold reader could. The
+process claim this supports is not "authors are careless" — it is that **a composite invariant needs a
+reader who holds both halves at once**, and an author never does.
+
+**Concrete delta, cheap:** commit launch orders **before** cutting worktrees, or cut worktrees from
+the commit containing them; and have the dispatch step assert the order is readable **at the address
+the prompt gives**, not that the file was written somewhere.
