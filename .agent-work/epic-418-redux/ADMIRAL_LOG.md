@@ -170,6 +170,34 @@ What carries forward, and must not be re-derived:
   twice, and a Commander that stops to rebase would burn its remaining context on my mistake. So the
   order states the conflict is expected, tells them not to rebase, and takes the replant onto me.
 
+
+- `2026-08-07` — **PR #485 merged** (`538d5fd7`), squash. **#433 is done — the wave's chain head.**
+  Replant of #483; gated on check exit code (0 non-SUCCESS), verified MERGED at the forge.
+
+  What it actually shipped, and why the Opus tier was right: the naive fix — un-excluding
+  `directives` from the existing `TaskFieldCompleteness` property — **would have been a check that
+  cannot fail**, because `_flatten` returns `[]` for the nested-dict shape every populated block in
+  the corpus carries. It would have reported clean while rendering nothing. The inventory that
+  settled render-vs-delete was an **enumeration, not an assumption**: 2955 gates scanned, 8 populated
+  `directives` blocks found. And the golden asserts against the **shipped** Commander spine's execute
+  gate rather than a synthetic fixture, so it fails if the real template stops carrying the field.
+
+  Epic done-condition 2 — "`current` carries each instruction exactly once and renders every
+  populated gate block" — moves from *not met* to substantially met with this.
+
+- `2026-08-07` — `INCIDENT`: **#460 tripped a THIRD time** (21%, `execute` gate again). Fourth
+  dispatch. 9 commits and a completed reviewer/rework cycle already banked. Its fourth order strips
+  the mission to one instruction — **finish and open the PR** — and explicitly rules that a partial
+  rewrite with an honest count of what was and was not done is a **complete deliverable**, while a
+  fifth dispatch is not. That is the honest-null clause applied to effort rather than to a result.
+
+- `2026-08-07` — `RULING`: **#433's three new episode records are not a fence violation.** Its PR
+  writes `episodes/active/b433-render-directives-00{1,2,3}.md` — its own closeout records under its
+  own work-id prefix — while #460 is rewriting the existing canon records. New files, distinct names,
+  no overlap. Flagged to #460 so any guard it ships tolerates them, but not treated as a collision
+  and not held against either commander. The fence was written to stop two writers editing the same
+  records, and that did not happen.
+
 ## Merges` heading while appending the baseline
   ruling — my replacement text dropped the heading it was anchored on. Caught when the next edit
   could not find it. No data lost (the section was empty); heading restored below. Cost: one

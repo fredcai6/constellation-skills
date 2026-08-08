@@ -1,16 +1,18 @@
 # Crash-resume state note — epic-418-redux
 
-**Wave 2 is MID-FLIGHT. Two agents are still working. Read the replant recipe below before
+**Wave 2 is NEARLY DONE. Only #460 remains, on its FOURTH dispatch.**
+
+**One agent is working. Read the replant recipe below before
 touching any wave-2 PR — every one of them will report CONFLICTING, and it is not their fault.**
 
-- **step:** `execute` — in progress. **3 PRs merged** (#470, #472, #473). #433 and #460 still working. Remaining after `execute`: `closeout`.
+- **step:** `execute` — in progress. **4 wave PRs merged** (#470, #472, #473, #485). Only **#460** remains. Remaining after `execute`: `closeout`.
 - **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` at
-  **`0b4a11a7`** (= `origin/main`, pushed)
+  **`538d5fd7`** (= `origin/main`, pushed)
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
   — then poll `r418-433` / `r418-460` for their PRs and REPLANT each per the recipe below
 - **pid:** two live background subagents (`cmd-433b`, `cmd-460b`), harness-managed, no OS pids.
   Poll by worktree writes and `gh pr list`, never by waiting on a completion signal alone.
-- **expected artifact:** PRs from #433 and #460 — both will need the replant recipe
+- **expected artifact:** a PR from #460 — it WILL need the replant recipe
 
 ## Landed so far
 
@@ -20,6 +22,8 @@ touching any wave-2 PR — every one of them will report CONFLICTING, and it is 
 | #472 | #436 enumeration falsification | **MERGED** `7bc3f8c2` |
 | #469 | #436, original | closed — superseded by #472 (squash-orphan, not rework) |
 | #473 | #464 rename (replant of #471) | **MERGED** `0b4a11a7` |
+| #485 | #433 render directives (replant of #483) | **MERGED** `538d5fd7` |
+| #483 | #433, original | closed — superseded by #485 |
 | #471 | #464, original | closed — superseded by #473 (squash-orphan, not rework) |
 | — | #433, #460 | agents still working in their worktrees |
 
@@ -39,14 +43,14 @@ git apply --3way /tmp/x.patch
 # 3. verify, commit, push, PR, then close the original as superseded
 ```
 Get the changed-path list with `git diff --name-only 73b4517 origin/<their-branch>`.
-Worked cleanly twice: #436 → #472, #464 → #473.
+Worked cleanly three times: #436→#472, #464→#473, #433→#485.
 
 **Never use an ancestry test to decide whether a wave-2 branch merged** — under squash-merge it
 returns the same answer for merged and abandoned. Ask the forge (`gh pr view <n> --json state`).
 
 ## Settled — do NOT re-derive
 
-- **Green baseline is now `0b4a11a7`.** Expect **1726 passed, 2 skipped** (1723/2 after #470's fix,
+- **Green baseline is now `538d5fd7`.** Expect **1726 passed, 2 skipped** (1723/2 after #470's fix,
   plus #436's 3 new tests). The earlier "1721 passed, 4 skipped" was **my own breakage**, not
   environment-conditional: archiving the run moved `REVISED_SPEC.md` out from under a hardcoded
   fixture path. Fixed in #470 (fixture now found by glob).
@@ -76,10 +80,10 @@ returns the same answer for merged and abandoned. Ask the forge (`gh pr view <n>
 
 ## Owed to Tommy at the next checkpoint
 
-1. The governor trip band at 17–21% — observation, not a decision I took.
+1. The governor trip band at 17–21%. **Measured cost: 3 dispatches for #433, 4 (so far) for #460**, 2 for #436, 1 for #464. This is the single largest drag on the wave.
 2. Two reviewer dispatches stalled with no artifacts; #470 merged on self-verified falsification
    evidence instead of independent review. He should know the review never landed.
 3. #460 will return **doctrine candidates** — records that look like real rules. Promoting any of
    them into `docs/agents/*` is his call, always.
 
-_Updated: 2026-08-07T23:52:00Z_
+_Updated: 2026-08-08T01:10:00Z_
