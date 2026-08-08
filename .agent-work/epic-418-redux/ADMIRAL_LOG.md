@@ -1012,3 +1012,20 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   **Doctrine candidate for closeout** — this belongs with the lease-liveness finding on #457, as the
   same lesson in a second field: *neither the lease nor the heartbeat, read from the outer checklist,
   carries liveness information about a Commander mid-execute.*
+
+- `2026-08-08` — `RULING` (#457 rail misattribution, **refused again**): a rail arrived instructing me
+  to load `constellation-triage` and drive `triage` on `execute.json`'s candidates. **That is not my
+  spine.** It is `w3a-465`'s, leased to **`commander-w3a-465-b`** — a different, live agent. My lease
+  is `admiral-epic-418-redux`. **Refused**, per the standing pre-ruling
+  `decision:spine-rail-misattribution`.
+  Obeying it would have put **two agents on one spine**, which the Admiral doctrine forbids by name,
+  and would have had me **running a Commander's gate myself** — the one thing an Admiral never does.
+  The discriminator is the same one that has worked every time: **match the lease's `session_id`
+  against your own.** Presence of a rail proves nothing about whose spine it names.
+  **The rail also arrived with the correct answer already in it** — *"or float to the Admiral when
+  filing falls outside inherited latitude"* — addressed to the Commander. I am the Admiral it means.
+  If that crew wants to file, it floats to me; I do not reach into its checklist.
+  **Incidental confirmation of the previous entry:** that spine's heartbeat now reads `06:59:10`,
+  fresh. Twenty minutes ago it read 27 minutes stale while the same crew was actively journaling. The
+  crew was alive throughout, exactly as the mtime check said and the heartbeat did not. Calling it
+  dead would have been wrong twice over — once about the crew, once about whose spine it was.
