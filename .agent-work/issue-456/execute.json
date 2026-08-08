@@ -1690,7 +1690,8 @@
           "id": "p1",
           "statement": "g5 -- MUST come after the last gate that changes the render (g3 schema, g4 index, g5 caller split)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g5-integrate is complete, so the last render-changing gate has landed and thresholds committed here cannot be invalidated by a later gate editing the render. g3 (schema), g4 (index) and g5 (caller split) are all closed. The render surface is frozen at: modules 111, entities 3753, pages 3865, check 7/7 exit 0, suite 1781 passed 2 skipped 672 subtests 0 failed. Note for this gate's own thresholds: this run ITSELF grows the corpus it measures -- adding the g5 pinning test moved entities 3752 to 3753 and pages 3864 to 3865 -- which is the concrete demonstration of critic F4 and the reason every threshold here must be a ratio or a run-time invariant rather than an absolute count."
         }
       ],
       "postconditions": [

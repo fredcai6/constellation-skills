@@ -4,9 +4,13 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`gb`** — next gate, NOT yet started
-- **PID**: none in flight. All crews resolved.
+- **step**: `execute` (in-progress) · **slug**: `gb-implement` — **DISPATCHED** 2026-08-08
+- **PID**: crew `constellation/issue-456/gb/implementer/attempt-1`, Agent name
+  `gb-implementer`, model `sonnet`. Recover with `SendMessage` to that name
+  (externally dispatched — nudge in place, never relaunch).
 - **expected artifact**: `.agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md`
+- `gb-implement.p1` already **attested**. Handoff written at
+  `.agent-work/issue-456/crew-handoffs/gb-implement.md`.
 
 ## `g5` IS CLOSED — `g5-integrate -> complete` on an APPROVE
 
@@ -32,6 +36,30 @@ inside that very class RED at exit 1.
 `c1`/`c2` command postcondition **by hand** and confirm any test selector collects
 a **non-zero** count. Exit 5 is "no tests collected" — categorically different
 from a red, and it looks like diligence.
+
+### ALL REMAINING SELECTORS ALREADY SCANNED — done 2026-08-08, do not redo
+
+Scanner: `C:/Users/fredc/.claude/jobs/9cbc67f4/tmp/scan_selectors.py`.
+
+| gate | closing selector | collects today |
+|---|---|---|
+| `gb-integrate` | `baseline or churn or recall or ascii` | **17** ✅ |
+| `g6-integrate` | `stale_tag` | **0** (rc 5) |
+| `g7-integrate` | `comment_tags` | **0** (rc 5) |
+| `g8-integrate` | `bom or docstring` | **2** ✅ |
+| `gs-integrate` | `map_tree_freshness` | **0** (rc 5) |
+
+**The three zeroes are NOT `tc47` defects.** Those gates have not been built yet,
+so the selector is a **specification**: "this gate must produce a test matching
+this name." That is red-by-absence, a legitimate grade-B falsifier.
+
+**But this is EXACTLY how `g5`'s trap formed** — `g5`'s crew created its tests as
+`ProductionTestCallerSplitTests` while the plan waited on `caller_split`, and the
+mismatch only surfaced at close. So: **every remaining implementer handoff MUST
+state the gate's exact closing selector and require the new tests to match it**,
+and the crew must run that selector by hand and report the count. `g6`, `g7` and
+`gs` each need a test whose name contains, respectively, `stale_tag`,
+`comment_tags`, `map_tree_freshness`.
 
 ### Engine details learned this gate
 
