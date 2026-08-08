@@ -158,15 +158,33 @@ the fix, which is the good kind of finding. #497/#498 are maintainability, expli
 
 ---
 
+## Wave 4 additions (2026-08-08)
+
+| Issue | Disposition | Where it went |
+|---|---|---|
+| **#467** | **Merged and closed** | PR #505 -> `c875ee23`. A2 complete; DC6 partial by ruling. |
+| **#431** | **Closed — verified dissolved** | RED no longer reproduces; four live trips this run cited as confirmation. |
+| **#500** | Filed, deferred | Refresh-request has no served state and the compliant handoff erases its own signal. |
+| **#501** | Filed, deferred | The wave-launch gate cannot run as its own spine instructs (`_installed_skills_root` accepts the repo). |
+| **#502** | Filed, deferred | No provenance record names the engine build that produced a gate; four builds live. |
+| **#503** | Filed, deferred | `--authority` on amend/waive is validated only as non-empty. |
+| **#504** | Filed, deferred by explicit ruling | Trip ledger goes silent at closeout. Not fixed in-wave: it would have voided the review the rework earned. **This is what keeps DC6 partial.** |
+| **#313** | Commented — root cause attached | The installer's interpreter probe proves an interpreter *starts*, not that it can run the suite. |
+| **#442** | Commented | The printed remedy does not merely read badly — it exits 0 while doing nothing. |
+| **#371** | Commented twice | Second instance recorded, then corrected: the g1 seam was two *vocabularies*, a check that cannot PASS. |
+| **#266** | Commented — falsified | The trip has now fired on correct readings four times. Recommended close-as-answered. |
+
+Crew triage candidates tc19-tc24 are recorded in the issue's own spine and carried in `RETROSPECTIVE_SOURCE.md`; tc19 is #504.
+
 ## Summary of routing
 
 | Disposition | Count |
 |---|---|
-| Merged / closed | 17 (+4 from waves 0-1) |
-| In flight | 1 |
+| Merged / closed | 19 (+4 from waves 0-1) |
+| In flight | 0 |
 | Escalated — awaiting Tommy | 3 workstreams + #264 |
-| Dissolves with #467 | 1 |
-| Deferred with ruling | 25 |
+| Dissolved with #467 — closed | 1 |
+| Deferred with ruling | 30 |
 | Open by construction | 1 (#418) |
 
-**Zero unrouted.**
+**Zero unrouted.** Re-derived at the wave-4 boundary, 2026-08-08.

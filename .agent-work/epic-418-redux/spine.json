@@ -130,13 +130,15 @@
           "id": "c1",
           "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c2",
           "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, transition exits, and errors logged",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c3",
@@ -179,12 +181,12 @@
         }
       },
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "blocked",
       "status_detail": {
-        "blocker": "Latitude contract expired at the wave-3 boundary by its own terms. Wave 3 is complete: #461, #465, #488, #489 all merged, closed and independently reviewed with verdicts posted to the forge; main green at 1793 passed / 2 skipped / 683 subtests / exit 0; boundary w3-to-w4 recorded, decision=replan, admiral-prelaunch verifier exit 0. No further dispatch is authorised -- and closeout itself needs one (the lessons auditor), so this blocks the next spine step, not just wave 4. Cutting A2 is additionally a surfaced scope decision. Awaiting Tommy's contract refresh.",
-        "authority_needed": "parent agent",
-        "next_action": "",
-        "resume_reason": "Tommy refreshed the contract in session: 'keep rolling'. Recorded as Addendum R2 -- new expiry at epic close; the closeout lessons-auditor dispatch is authorized; A2's cut deliberately NOT taken (he was asked and did not rule, so it goes to him at the epic summary). All three blocker reasons cleared or correctly deferred: expiry refreshed, closeout dispatch granted, scope decision routed to acceptance rather than assumed."
+        "blocker": "execute.c3 cannot pass at a boundary that correctly exits stop. c3 runs admiral-prelaunch, which requires NEXT_WAVE to authorize a launch and refuses any decision that is not advance or replan. Wave 4 is complete and whether a wave 5 exists is a human scope decision (F #424 / C #421 / E #423). Proven by construction: with a valid launch_id and trigger the check still refuses with 'only advance or replan may authorize NEXT_WAVE'. Changing the decision to advance to satisfy the gate would be falsifying a boundary verdict to fit a check -- the exact thing I forbade my own Commanders.",
+        "authority_needed": "human (Tommy) -- epic scope decision",
+        "next_action": "Tommy decides: continue the epic into F/C/E (then the boundary is honestly advance and c3 passes), or close at A2 (then c3 needs a waive on his authority, and the unpassable-on-stop gate is filed as a defect).",
+        "prior_status": "in-progress"
       },
       "result": null,
       "finding": null,
@@ -213,6 +215,17 @@
         },
         {
           "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-4",
           "type": "command-output",
           "payload": {
             "cmd": "python C:/Programs/constellation-skills/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux",
@@ -288,13 +301,20 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
-  "refusals": 5,
+  "blockers": [
+    {
+      "item": "execute",
+      "blocker": "execute.c3 cannot pass at a boundary that correctly exits stop. c3 runs admiral-prelaunch, which requires NEXT_WAVE to authorize a launch and refuses any decision that is not advance or replan. Wave 4 is complete and whether a wave 5 exists is a human scope decision (F #424 / C #421 / E #423). Proven by construction: with a valid launch_id and trigger the check still refuses with 'only advance or replan may authorize NEXT_WAVE'. Changing the decision to advance to satisfy the gate would be falsifying a boundary verdict to fit a check -- the exact thing I forbade my own Commanders.",
+      "authority_needed": "human (Tommy) -- epic scope decision",
+      "next_action": "Tommy decides: continue the epic into F/C/E (then the boundary is honestly advance and c3 passes), or close at A2 (then c3 needs a waive on his authority, and the unpassable-on-stop gate is filed as a defect)."
+    }
+  ],
+  "refusals": 8,
   "engine_session": {
     "session_id": "admiral-epic-418-redux",
     "status": "active",
     "claimed_at": "2026-08-08T04:39:39.773550+00:00",
-    "last_heartbeat": "2026-08-08T09:24:09.674063+00:00",
+    "last_heartbeat": "2026-08-08T21:56:49.887325+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

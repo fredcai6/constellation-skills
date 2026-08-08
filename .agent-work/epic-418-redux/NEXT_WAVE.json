@@ -1,5 +1,5 @@
 {
   "boundary_id": "w4-to-close",
   "launch_id": null,
-  "trigger": "wave-4-complete-decision-stop"
+  "trigger": "wave_boundary"
 }

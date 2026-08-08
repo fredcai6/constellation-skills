@@ -3289,3 +3289,46 @@ launch and refuses any decision that is not `advance`/`replan`; with `stop` ther
 authorize. I validated the packet **directly against the same `verify_replan` module the prelaunch check
 loads** — the installed copy at `~/.claude/skills/constellation-replan/`, per #501, since the repo copy
 resolves the wrong skills root.
+
+---
+
+## BLOCKED | 2026-08-08T21:57:50Z | execute.c3 cannot pass at a stop boundary — bubbled to Tommy, filed #506
+
+**And the fixed engine tripped ME while I was closing the gate.** `current` on the epic spine read
+**CONTEXT 28% (>= hard)** and said *"your instruction has changed... close THIS gate carrying your
+handoff... do not begin work at another gate."* That is main's **post-merge** engine — an instruction,
+not a refusal — **working on its own Admiral within the hour of merging.** The Admiral is normally never
+asked, because the trip evaluates only on a gated verb and this role sits inside `execute` for a whole
+epic. Closing the gate is the one gated verb it reaches.
+
+**c1 attested** (DISPOSITIONS.md updated with wave 4: #467 merged, #431 closed, #500-#504 filed,
+comments on #313/#442/#371/#266 — **zero unrouted, re-derived**). **c2 attested.** **c3 refused**, and it
+cannot be made to pass:
+
+```
+launch_id = null              -> REFUSED: launch_id must be a nonempty string
+launch_id = "probe"           -> REFUSED: trigger is invalid
+trigger  = "wave_boundary"    -> REFUSED: only advance or replan may authorize NEXT_WAVE
+```
+
+Each refusal fixed, the next appeared, ending at the one that **cannot be fixed without changing the
+boundary's verdict.** c3 runs `admiral-prelaunch`, which is a **launch authorization** check being used
+as a **gate closure** check. Those are different questions. A wave that completes with no next wave
+exits `stop`, and `stop` can never satisfy it — **so the gate cannot be closed by a run that finishes.**
+
+**I did not take either available shortcut.** Changing the decision from `stop` to `advance` would make
+c3 green instantly and would be **falsifying a boundary verdict to fit a check** — the exact thing I
+forbade my own Commanders three launch orders in a row. Waiving it rests on `--authority`, which #503
+established is enforced by nothing, and I withdrew blanket amendment authorization earlier in this run.
+So: **`block`, bubbled to the parent**, which is what the spine's own guidance offers for an honest stop.
+
+**Filed #506. Twelfth specimen, and it is in the Admiral spine's own gate** — a check that cannot PASS,
+whose realistic failure mode is worse than one that cannot fail, because a red check under time pressure
+invites a waiver or a doctored verdict rather than a fix.
+
+**This changes the standing of the scope question I have been calling non-blocking. It is now blocking,
+and only for this gate.** If Tommy continues the epic into F (#424) / C (#421) / E (#423), the boundary
+is honestly `advance`, NEXT_WAVE names a real wave, and c3 passes with nothing bent. If he closes at A2,
+c3 needs a waive **on his authority**, and #506 is the defect that forced it.
+
+Wave 4 itself is **complete and merged** — nothing about this block touches that.
