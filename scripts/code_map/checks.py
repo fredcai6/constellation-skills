@@ -385,13 +385,14 @@ def entity_symbol_join(m):
 
     Comparing the join's OUTPUT against the entity's own name is what makes this
     a check rather than a restatement: the join is re-derived here from the same
-    two facts, so it is not independent OF the join, but the leaf name is a
-    third fact neither pass shares with the other.
+    two facts, so it is not independent OF the join, but the name is a third fact
+    neither pass shares with the other.
 
-    Leaf name, not the whole symbol: the store truncates the enclosing chain for
-    entities nested inside a function (defect D2, owned by `g2`), so the chains
-    legitimately differ today and the leaf does not. That keeps this check from
-    going red at `g2` for the wrong reason.
+    The WHOLE symbol, not just the leaf: since `g2` fixed D2, `extract.py` names
+    every definition as its enclosing scope's symbol plus its own name, so the
+    store symbol equals the supplement's qualified key for every entity in the
+    corpus. Comparing leaves would let the two passes disagree about the whole
+    enclosing chain -- exactly the merge D2 was -- and still pass.
 
     An entity that joins to NO symbol is a failure too: the renderer falls back
     to the key, and the page then shows no docstring and no callers from the
@@ -404,11 +405,9 @@ def entity_symbol_join(m):
             failures.append(f"{where}: {key} joins to no store symbol, so the page "
                             f"carries nothing the store knows about it")
             continue
-        want = key.split(":", 1)[1].rsplit(".", 1)[-1]
-        got = symbol.split(":", 1)[-1].rsplit(".", 1)[-1]
-        if want != got:
+        if key != symbol:
             failures.append(f"{where}: page is titled {key} but the store symbol at "
-                            f"that position is {symbol} ({got!r}, not {want!r})")
+                            f"that position is {symbol}")
     return failures
 
 

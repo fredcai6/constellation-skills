@@ -2,8 +2,8 @@
 
 The module list is DERIVED from the extraction, not hardcoded. The entity tree
 is driven by the supplement's structurally-correct keys, joined to the store's
-symbols on (file, line); see D2 below. The top INDEX groups modules by
-top-level package so it stays a routing surface as the module count grows.
+symbols on (file, line). The top INDEX groups modules by top-level package so it
+stays a routing surface as the module count grows.
 
 Importing this module has no side effects: the prototype loaded both stores at
 import time, which made the module unimportable without a built store and
@@ -12,12 +12,12 @@ impossible to run twice against different roots. `load_stores()` now owns that.
 Defects carried, each owned by a later gate:
   D1 the store's q.line is 0-based and the schema does not say so, so every
      line read out of a statement gets +1. Gate g3.
-  D2 the store's `contains` symbol truncates the enclosing chain for entities
-     nested inside a function -- a class defined in a function is named as if
-     module-level, and a function defined in a method is named against the
-     class, dropping the method. Pages are therefore keyed by the supplement's
-     qualified name, and the store's symbol is looked up through a (file, line)
-     join. Gate g2.
+D2 is FIXED (gate g2): `extract.py` now names every definition as its enclosing
+scope's symbol plus its own name, so the store's symbol equals the supplement's
+qualified key. Pages are still keyed by the supplement's key and the store symbol
+is still reached through the (file, line) join, but that join is now a redundancy
+check between two agreeing passes rather than a translation between two spellings
+-- `checks.entity_symbol_join` compares the WHOLE symbol because of it.
 
 Output layout:
   map/INDEX.md                       top index, grouped by package

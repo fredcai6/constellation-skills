@@ -264,6 +264,11 @@ class Extractor(ast.NodeVisitor):
         self.scope = Scope("module")
         self.encl = [self.mod + ":"]     # enclosing transformer stack
         self.clsstack = []
+        # enclosing class SYMBOLS, pushed in lockstep with clsstack, so a
+        # resolver that spells a class-qualified name spells the same string
+        # the definition was emitted under -- including for a class that is
+        # itself nested inside another class or inside a function.
+        self.clsyms = []
         for k, v in self.table.defs.items():
             self.scope.bind(k, "def")
         for k in self.table.imports:
@@ -285,6 +290,20 @@ class Extractor(ast.NodeVisitor):
     def here(self):
         return self.encl[-1]
 
+    def child_sym(self, name):
+        """The symbol of a definition named `name` in the CURRENT scope.
+
+        One rule for every definition: the enclosing scope's own symbol plus
+        this name. `self.encl` already carries exactly that -- `"mod:"` at
+        module level, the enclosing definition's own symbol otherwise -- so a
+        closure in a method is `mod:Class.method.closure` and a class defined
+        in a function is `mod:func.Class`. The result equals `supplement.py`'s
+        qualified key by construction, which is what lets
+        `checks.entity_symbol_join` compare whole symbols rather than leaves.
+        """
+        base = self.here()
+        return base + name if base.endswith(":") else base + "." + name
+
     # -------------------------------------------------------- name resolution
     def resolve_name(self, node):
         """ast.Name -> (symbol, res, why)"""
@@ -301,9 +320,12 @@ class Extractor(ast.NodeVisitor):
         # R2a: directly inside a class body, the class namespace wins over the
         # module namespace. Inside a *method* it does not -- Python skips the
         # class scope there -- so this is gated on the innermost scope.
-        if (self.scope.kind == "class" and self.clsstack
+        # `build_table` records MODULE-LEVEL classes only, so the member-set
+        # lookup is gated on a module-level class: for a nested class it would
+        # silently read a same-named module-level class's members.
+        if (self.scope.kind == "class" and len(self.clsstack) == 1
                 and name in self.table.classes.get(self.clsstack[-1], ())):
-            return "%s:%s.%s" % (self.mod, self.clsstack[-1], name), "internal", None
+            return "%s.%s" % (self.clsyms[-1], name), "internal", None
         if name in self.table.defs:
             return "%s:%s" % (self.mod, name), "internal", None
         if name in self.table.imports:
@@ -385,12 +407,12 @@ class Extractor(ast.NodeVisitor):
             r = self.class_member(self.clsstack[-1], attr)
             if r:
                 return r, "internal", None
-            return "%s:%s.%s" % (self.mod, self.clsstack[-1], attr), "internal", None
+            return "%s.%s" % (self.clsyms[-1], attr), "internal", None
         if isinstance(base, ast.Name) and base.id == "cls" and self.clsstack:
             r = self.class_member(self.clsstack[-1], attr)
             if r:
                 return r, "internal", None
-            return "%s:%s.%s" % (self.mod, self.clsstack[-1], attr), "internal", None
+            return "%s.%s" % (self.clsyms[-1], attr), "internal", None
         dotted = _dotted(base)
         if dotted:
             head = dotted.split(".")[0]
@@ -497,8 +519,7 @@ class Extractor(ast.NodeVisitor):
         return self.out
 
     def visit_ClassDef(self, node):
-        sym = "%s:%s" % (self.mod, node.name) if not self.clsstack else \
-              "%s:%s.%s" % (self.mod, self.clsstack[-1], node.name)
+        sym = self.child_sym(node.name)
         self.emit(self.here(), "contains", sym, node.lineno - 1, node.col_offset, "internal")
         doc = ast.get_docstring(node)
         if doc:
@@ -511,6 +532,7 @@ class Extractor(ast.NodeVisitor):
         for d in node.decorator_list:
             self.visit(d)
         self.clsstack.append(node.name)
+        self.clsyms.append(sym)
         prev = self.scope
         self.scope = Scope("class", prev, node.name)
         self.encl.append(sym)
@@ -518,15 +540,11 @@ class Extractor(ast.NodeVisitor):
             self.visit(c)
         self.encl.pop()
         self.scope = prev
+        self.clsyms.pop()
         self.clsstack.pop()
 
     def _func(self, node):
-        if self.clsstack:
-            sym = "%s:%s.%s" % (self.mod, self.clsstack[-1], node.name)
-        elif len(self.encl) > 1:
-            sym = self.here() + "." + node.name
-        else:
-            sym = "%s:%s" % (self.mod, node.name)
+        sym = self.child_sym(node.name)
         self.emit(self.here(), "contains", sym, node.lineno - 1, node.col_offset, "internal")
         doc = ast.get_docstring(node)
         if doc:
