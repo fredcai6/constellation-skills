@@ -38,6 +38,54 @@ that cannot fail.
 | R2 | intent-fit | g5 licenses "partial is acceptable", so DC5 could be reported unearned. | Half accepted, half rejected: partial stays honest reporting for DC1-DC4 and DC6, but **DC5 is now excluded from it** — it completes, or it returns to the Admiral as a scoped null naming the specific mechanism. |
 | R3 | testability | "The agent that kept working" is unobservable by construction (gate-boundaries-only), yet g4 asks the implementer to enumerate its own defect shapes. | Partly right, and the redefinition in finding 1 is the answer: the agent that kept working must eventually run `start` or `reopen`, and *that* is observable. The mid-gate stretch remains unobservable and is now a stated limit, not a claim. |
 
+## ADMIRAL RULINGS — 2026-08-08: all three APPROVED, none reversed
+
+Read this before the section below it. That section is what I *asked*; this is what was
+*answered*. Every condition is binding and has been written into `execute.json` as a gate
+constraint.
+
+1. **DC2 by verb choice — APPROVED.** *Condition:* report it as **done-by-different-means**,
+   never as done-as-written, with the reasoning inline in the per-done-condition accounting. A
+   reviewer must be able to see the departure without reading the DIT. → `g5-acceptance`.
+2. **The "no residue" over-statement — APPROVED, and it improves the issue.** Not a spec
+   challenge; #467 was pessimistic about its own RED. *Condition:* say plainly in ACCEPTANCE.md
+   and in the return that the claim was over-stated and this pin is the correction, so the
+   finding is visible rather than buried in a passing test. → `g5-acceptance`.
+3. **The production-template override — APPROVED.** Acceptable because DC4 mandates exercising
+   exactly one, it is tighten-only so it can only fail in the conservative direction, and it is
+   graded `guess` with a named settle experiment. *Condition, straight from DC4's literal
+   text:* show the override changes that gate's behaviour **and not its neighbours'** — a test
+   proving only that the overridden gate trips earlier has **not** met DC4. Name the settle
+   experiment in the return so the Admiral can route it. → `g3-implement`. The Admiral is
+   disclosing this to Tommy at the wave-4 checkpoint as a behaviour change shipping for every
+   future commander run; that is disclosure, not a hold.
+
+**Binding retraction — the Admiral withdrew his own field evidence.** LO-467's item 2 (crews
+trip at 17-21%, the Admiral ran to 44% untripped) is **retracted** and must not be used for
+anything. My refutation was accepted: `no trip at 44%` and `no gauge at 44%` are
+indistinguishable without an asserted live reading, and the engine's own projection had in fact
+printed `CONTEXT GAUGE SILENT ... too old (or otherwise rejected) to trust as a live reading`
+at that path. What survives is stronger and stands alone: **this Commander's own asserted,
+live, single-binding reading of `0.194023`** (`claude-opus-5`, 2026-08-08T09:49:48Z), recorded
+by the Admiral at `.agent-work/epic-418-redux/evidence/w4-467-gauge-observation.md`. That is
+DC4's *"overrides only where a gate has bitten"*, exercised, with no comparison needed.
+
+**Two write-ups the Admiral values above the fix itself:**
+
+- **`CHECK_THAT_CANNOT_FAIL.md`** — my own first DC6 observable was a check that cannot fail,
+  true by construction, caught by my own cold panel before any code was written. To be written
+  up properly as a first-class artifact, not compressed to a line. Required deliverable of
+  `g4`.
+- **The anti-vacuity gate check** (`pytest -k` exiting 5 on an empty collection). Being routed
+  as a doctrine candidate. The return must say where it lives **and how it was verified to
+  actually fire** — an unfired anti-vacuity check is itself a check that cannot fail. → `g5`.
+
+**Provenance note on `execute.json`.** These conditions were added after `plan` closed but
+before `execute` was ever started: the file had never been driven by the engine — no lease, no
+evidence, every gate `pending` — so this is still authoring, not a mid-run hand-edit of a
+frozen plan. Once `execute` starts, the ban stands and any further change goes through the
+engine's `amend` verb.
+
 ## Surfaced to the Admiral — decided under Commander's-call latitude, open to reversal
 
 1. **DC2 is satisfied by verb choice, not by two kinds of `advance`.** #467's words are "an advance that starts new work above threshold is refused". Under the shipped engine no advance ever starts work — `start` does. My reading refuses `start`/`reopen` and never refuses an `advance`. The intent-fit critic called this "defensible under Open (Commander's call)" and it is the reading I have taken; it is the one place my plan departs from the issue's literal text, and I would rather you knew than discovered it at return.

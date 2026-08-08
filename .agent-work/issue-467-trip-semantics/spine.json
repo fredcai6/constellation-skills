@@ -649,9 +649,9 @@
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
-    "claimed_at": "2026-08-08T09:31:10.536469+00:00",
-    "last_heartbeat": "2026-08-08T10:07:52.243462+00:00",
-    "claimed_by": "commander-w4-467",
+    "claimed_at": "2026-08-08T10:09:35.626162+00:00",
+    "last_heartbeat": "2026-08-08T10:09:35.626162+00:00",
+    "claimed_by": "commander-w4-467-b",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,
     "takeover_reason": null

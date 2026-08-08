@@ -404,7 +404,10 @@
         "A NEGATIVE-ONLY TEST CANNOT FAIL: the test that asserts a malformed/negative override resolves to the default must, IN THE SAME TEST, assert a well-formed override resolving to a DIFFERENT number through the same resolver. Otherwise it passes with the whole mechanism dead-coded.",
         "The neighbour-isolation assertion must assert BOTH sides: the overridden gate's behaviour changes AND a named neighbour's does not, at the same fill on the same model.",
         "MUTATION-TEST EVERY GUARD, including the tighten-only clamp and the neighbour isolation. Each log line names the branch broken, the NAMED test that failed, and the total failure count. Log to .agent-work/issue-467-trip-semantics/g3-mutation-log.md.",
-        "An override on an uncalibrated model must fall back to the default rather than compute against a guessed window (#252)."
+        "An override on an uncalibrated model must fall back to the default rather than compute against a guessed window (#252).",
+        "ADMIRAL CONDITION (wave-4 ruling, approved 2026-08-08): DC4 is met only by the *and not its neighbours* half. A test that proves only that the overridden gate trips earlier has NOT met DC4 -- the failure mode DC4 guards is 68 hand-authored ungraded placeholders, and only the neighbour assertion discriminates against it. Assert both sides by name, at the same fill, on the same model.",
+        "ADMIRAL CONDITION: name the settle experiment for decision:execute-gate-reserve-value explicitly in the Commander's return, so the Admiral can route it.",
+        "ADMIRAL RETRACTION, binding: the launch order's item-2 comparison (crews trip at 17-21% / the Admiral ran to 44% untripped) has been RETRACTED by the Admiral and must not be used for anything. The engine's own projection had reported CONTEXT GAUGE SILENT at that path. What survives, and is sufficient on its own, is this Commander's OWN asserted live single-binding reading of 0.194023 (claude-opus-5, 2026-08-08T09:49:48Z) recorded at .agent-work/epic-418-redux/evidence/w4-467-gauge-observation.md -- that is the exercised 'a gate has bitten' evidence DC4 asks for."
       ],
       "anchors": {
         "structural": [
@@ -574,7 +577,8 @@
         "Fail-safe survives: no reading means no ledger entry AND no compliance claim -- silence must read as neither compliant nor non-compliant.",
         "Backward compatibility: a spine with no ledger drives unchanged (setdefault on first write, the why_trail idiom).",
         "Log mutations to .agent-work/issue-467-trip-semantics/g4-mutation-log.md.",
-        "TRIAGE CANDIDATE, do not build here -- decision pressure this gate may surface: whether handoff QUALITY (as opposed to presence) is observable at all -- carries no grade; shipped v1 doctrine is that reason quality is not policed. Triage candidate; do not build a quality judge here."
+        "TRIAGE CANDIDATE, do not build here -- decision pressure this gate may surface: whether handoff QUALITY (as opposed to presence) is observable at all -- carries no grade; shipped v1 doctrine is that reason quality is not policed. Triage candidate; do not build a quality judge here.",
+        "ADMIRAL CONDITION (wave-4 ruling): the finding that this Commander's OWN first DC6 observable was a check that cannot fail -- true by construction because `advance` already refuses a non-exempt gate without `--why`, found independently by two cold critics, and green in both worlds -- is to be written up PROPERLY as a first-class artifact, not compressed to a line. An epic about checks that cannot fail, whose Commander nearly shipped one inside the fix for it and whose own cold panel caught it, is the most valuable thing this run can produce. Home: .agent-work/issue-467-trip-semantics/CHECK_THAT_CANNOT_FAIL.md, and it is a required deliverable of this gate."
       ],
       "anchors": {
         "structural": [
@@ -749,7 +753,10 @@
         "DC5 IS THE POINT (LO-467 pre-ruling 2). It may not be reported `partial` on the strength of DC1-DC3 landing. Either the round trip completes, or it is returned to the Admiral as a scoped null naming the specific mechanism that failed to express -- never as 'this approach is impossible'. The LO records the round trip has already run by hand three times, so a failure to reproduce it mechanically is a defect in the mechanism, not evidence against the design.",
         "Agent B is cold-started from `current` alone. Writing it a handoff document, or re-briefing it from your own memory of the run, invalidates the measurement -- which is why its verbatim prompt is recorded.",
         "The round trip runs on a SEPARATE acceptance spine, not on this run's own spine.",
-        "Partial is an acceptable and honest verdict for DC1-DC4 and DC6. A blanket 'done' is not."
+        "Partial is an acceptable and honest verdict for DC1-DC4 and DC6. A blanket 'done' is not.",
+        "ADMIRAL CONDITION (wave-4 ruling): report DC2 as **done-by-different-means**, never as done-as-written, with the reasoning inline. #467's literal text describes a distinction the shipped engine does not have -- no `advance` begins work, `start` does. A reviewer must be able to see the departure without reading the DIT. The honest accounting is what makes the departure defensible rather than quiet.",
+        "ADMIRAL CONDITION: state plainly in ACCEPTANCE.md and in the return that #467's Evidence section OVER-STATED its 'the RED leaves no residue' claim, and that the standing pin (fill >= hard with NO pending refresh-request, asserting the advance completes and the digest updates) is the correction. The finding must be visible, not buried in a passing test.",
+        "ADMIRAL CONDITION: report where the anti-vacuity gate check lives (`pytest -k` exiting 5 on an empty collection) and how it was verified to actually FIRE -- i.e. demonstrate the exit-5 refusal against a pattern that collects nothing. The Admiral is routing it as a doctrine candidate; an unfired anti-vacuity check is itself a check that cannot fail."
       ],
       "anchors": {
         "structural": [
