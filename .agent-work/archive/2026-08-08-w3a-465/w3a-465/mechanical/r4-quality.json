@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "w3a-465",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer w3a-465 g1",
+    "refusals": 1,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3a-465-r4-quality@e949e16016e0b74c97e2578478dba45c8ced8506",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3a-465",
+    "generated_at": "2026-08-08T06:06:42Z"
+  }
+}

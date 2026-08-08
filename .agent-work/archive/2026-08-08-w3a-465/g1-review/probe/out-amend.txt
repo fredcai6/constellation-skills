@@ -1,0 +1,1 @@
+amended: retext-check r6-fowler.c1 (authority Commander w3a-465)

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "plan",
+  "files": [],
+  "repo_rev": {
+    "commit": "c0ad5ecd41696e19864006b44c175fff1724c4ce"
+  },
+  "run": {
+    "work_id": "w3a-465",
+    "generated_at": "2026-08-08T05:10:28Z",
+    "roots": {
+      "skill": "C:/Programs/wt-w3a-465",
+      "repo": "C:/Programs/wt-w3a-465",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/wt-w3a-465"
+    }
+  }
+}

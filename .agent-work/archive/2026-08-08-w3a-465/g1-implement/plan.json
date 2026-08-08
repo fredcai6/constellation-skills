@@ -1,0 +1,461 @@
+{
+  "work_id": "w3a-465-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-newlines",
+    "m2-amend-survey",
+    "m3-reviewer-prose",
+    "m4-integrate",
+    "m5-doc-correction"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md if present, the handoff at .agent-work/w3a-465/g1-implement/HANDOFF.md, and the two captured reds at .agent-work/w3a-465/red/amend-refusal.txt. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + captured reds loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "why_exempt": true
+    },
+    "m1-newlines": {
+      "id": "m1-newlines",
+      "title": "save() preserves the file's existing dominant line ending",
+      "imperative": "TDD. FIRST write tests/test_engine_survey_retext_and_newlines.py with the two line-ending node ids test_save_preserves_lf_line_endings and test_save_preserves_crlf_line_endings, build each fixture with write_bytes, assert on read_bytes scoped to line-ending bytes only, and OBSERVE the discriminating one FAIL against the unmodified save(). Record which fixture went red on which platform and paste the output. THEN change save() in scripts/checklist_engine.py to detect the target file's dominant existing line ending and write bytes with it; a nonexistent or mixed-ending file gets LF, stated in the docstring. Scope is save() only.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the discriminating line-ending test written and OBSERVED FAILING against the unmodified save(), platform and fixture named, output captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "TDD green: both line-ending tests pass after the save() fix",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_lf_line_endings tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_crlf_line_endings"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-newlines-1"
+        }
+      ],
+      "constraints": [
+        "Forbidden test shape 1: building the LF fixture with write_text \u2014 use write_bytes",
+        "Forbidden test shape 2: asserting on read_text() \u2014 assert on read_bytes()",
+        "Forbidden test shape 3: asserting saved bytes equal fixture bytes \u2014 scope the assertion to line-ending bytes",
+        "Do not touch the journal append near line 2762",
+        "Do not use py for pytest (#454); FORCE_COLOR=3 gives false reds"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-newlines-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_lf_line_endings tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_crlf_line_endings",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "why_exempt": true
+    },
+    "m2-amend-survey": {
+      "id": "m2-amend-survey",
+      "title": "amend accepts an all-retext-check delta on a survey; add/drop/rescope still refuse",
+      "imperative": "TDD. FIRST append the two amend node ids test_retext_check_works_on_a_survey and test_add_drop_rescope_still_refuse_a_survey to the same test file and OBSERVE them failing (the two prior reds at .agent-work/w3a-465/red/amend-refusal.txt already cover the CLI-level refusal; do not redo those). THEN relax amend()'s opening type gate in scripts/checklist_engine.py so a delta whose ops are ALL retext-check is accepted on a survey, while add/drop/rescope stay gated-only with a refusal message saying this is a conservative choice, not a type-level impossibility. Then drive a REAL survey through the CLI: observe amend --op retext-check working on it, and add/drop/rescope still refused. Attach that live CLI transcript as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete: save() line-ending fix in and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: both amend tests written and observed failing against the unmodified amend()",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "TDD green: both amend tests pass after the amend() type-gate relaxation",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_engine_survey_retext_and_newlines.py::test_retext_check_works_on_a_survey tests/test_engine_survey_retext_and_newlines.py::test_add_drop_rescope_still_refuse_a_survey"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-amend-survey-1"
+        },
+        {
+          "id": "c3",
+          "statement": "live CLI on a REAL survey: amend --op retext-check observed working, add/drop/rescope observed still refusing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "add/drop/rescope stay gated-only",
+        "The refusal message must frame the limit as conservative, not type-impossible",
+        "Never hand-edit a checklist JSON file; drive the engine",
+        "Do not change consolidate()",
+        "Do not refactor the engine beyond these two edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-amend-survey-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_engine_survey_retext_and_newlines.py::test_retext_check_works_on_a_survey tests/test_engine_survey_retext_and_newlines.py::test_add_drop_rescope_still_refuse_a_survey",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "why_exempt": true
+    },
+    "m3-reviewer-prose": {
+      "id": "m3-reviewer-prose",
+      "title": "The two reviewer prose corrections",
+      "imperative": "Rewrite r6-fowler's imperative in skills/reviewer/templates/REVIEW_SURVEY.template.json to name BOTH paths with the normal instantiation-time path leading and the amend repair path clearly secondary, and say the authority is the dispatching Commander named in the reviewer handoff, never a string the reviewer invents. Keep the placeholder token and keep the command postcondition. Then correct skills/reviewer/SKILL.md line 28 so an open fail is not stated as an absolute bar to APPROVE: consolidate() refuses it UNLESS --override-reason is supplied, and the sentence must push a reviewer with a real out-of-scope finding toward neither a wrong BLOCK nor a silently downgraded finding. consolidate() itself is unchanged.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete: the engine can perform the action the new prose names",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "template names both paths and the repair route is the amend verb; SKILL.md no longer states the absolute bar and names override-reason",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'amend --delta' skills/reviewer/templates/REVIEW_SURVEY.template.json && grep -qi 'instantiate' skills/reviewer/templates/REVIEW_SURVEY.template.json && grep -q 'override-reason' skills/reviewer/SKILL.md && ! grep -q 'an open fail cannot consolidate to APPROVE' skills/reviewer/SKILL.md && grep -q 'verify_fowler_pass.py' skills/reviewer/templates/REVIEW_SURVEY.template.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-reviewer-prose-2"
+        }
+      ],
+      "constraints": [
+        "The r6-fowler command postcondition is an enforced invariant (two-bin rule) and stays a command check -- do not delete it",
+        "Keep the placeholder token in the shipped template",
+        "Do not touch skills/interrogator/** -- identical defect, outside this fence, already a triage candidate",
+        "Do not let the repair path read as the documented route"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-reviewer-prose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'amend --delta' skills/reviewer/templates/REVIEW_SURVEY.template.json && grep -q 'instantiate' skills/reviewer/templates/REVIEW_SURVEY.template.json && grep -q 'override-reason' skills/reviewer/SKILL.md && ! grep -q 'an open fail cannot consolidate to APPROVE' skills/reviewer/SKILL.md && grep -q 'verify_fowler_pass.py' skills/reviewer/templates/REVIEW_SURVEY.template.json",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-reviewer-prose-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'amend --delta' skills/reviewer/templates/REVIEW_SURVEY.template.json && grep -qi 'instantiate' skills/reviewer/templates/REVIEW_SURVEY.template.json && grep -q 'override-reason' skills/reviewer/SKILL.md && ! grep -q 'an open fail cannot consolidate to APPROVE' skills/reviewer/SKILL.md && grep -q 'verify_fowler_pass.py' skills/reviewer/templates/REVIEW_SURVEY.template.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "why_exempt": true
+    },
+    "m4-integrate": {
+      "id": "m4-integrate",
+      "title": "Full suite green; result artifact written",
+      "imperative": "Run the full suite and capture its REAL exit code (use ${PIPESTATUS[0]} if piped). Enumerate by command every artifact that asserts something about the amend type gate or the save() write mode, and record any that fall outside allowed scope as triage candidates. Write .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md with every required evidence item: the line-ending red with platform and fixture named, the same test green, the live amend CLI evidence both ways, the full-suite real exit code, a Map Impact section, and a Workflow Feedback section. Do not commit; do not open a PR.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1, m2, m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes with a real exit code of 0",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-integrate-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT.md written with all four required evidence items, Map Impact, and Workflow Feedback",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md && grep -q 'Map Impact' .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md && grep -q 'Workflow Feedback' .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-integrate-2"
+        }
+      ],
+      "constraints": [
+        "Do not commit; leave changes in the working tree; do not open a PR"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md && grep -q 'Map Impact' .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md && grep -q 'Workflow Feedback' .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "why_exempt": true
+    },
+    "m5-doc-correction": {
+      "id": "m5-doc-correction",
+      "title": "Commander-authorised scope extension: correct the five gated-only doc claims",
+      "imperative": "Under the Commander's explicit ruling on tc1, correct the five enumerated sites so they describe what the engine now does: amend applies to gated checklists, and retext-check is additionally available on a survey where it is the ONLY permitted op (add/drop/rescope stay gated-only as a conservative choice). Sites: docs/CHECKLIST_SCHEMA.md ~43, ~63, ~280, ~372 and skills/workbench/references/checklist-engine.md ~62. Surgical edits only -- correct the claim, do not rewrite surrounding sections. Then re-grep to confirm no SIXTH site says gated-only, re-run the full suite for a real exit code, and append a Scope extension section to IMPLEMENTER_RESULT.md.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no remaining site claims amend is gated-only; both files describe the survey retext-check allowance",
+          "check": {
+            "kind": "command",
+            "command": "! grep -rn 'gated only' docs/CHECKLIST_SCHEMA.md skills/workbench/references/checklist-engine.md | grep -qi amend && ! grep -qi 'gated checklists only' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' skills/workbench/references/checklist-engine.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-doc-correction-3"
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green after the doc correction; Scope extension section appended to IMPLEMENTER_RESULT.md",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'Scope extension' .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-doc-correction-4"
+        }
+      ],
+      "constraints": [
+        "Do not touch skills/interrogator/**, tests/test_episode_negative_control.py, scripts/hooks/gauge_writer_hook.py, tests/test_verify_spec_confirmed.py",
+        "Leave tc2, tc3, tc4 alone -- Commander is passing them up, not fixing them",
+        "Do not commit; do not open a PR"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-doc-correction-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -rn 'gated only' docs/CHECKLIST_SCHEMA.md skills/workbench/references/checklist-engine.md | grep -qi amend && ! grep -qi 'gated checklists only' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' skills/workbench/references/checklist-engine.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-doc-correction-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'Scope extension' .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-doc-correction-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -rn 'gated only' docs/CHECKLIST_SCHEMA.md skills/workbench/references/checklist-engine.md | grep -qi amend && ! grep -qi 'gated checklists only' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' skills/workbench/references/checklist-engine.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-doc-correction-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -q 'Scope extension' .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m4-integrate",
+      "statement": "Docs now contradict the code: 5 places assert amend is gated-only (docs/CHECKLIST_SCHEMA.md:43,63,280,372 and skills/workbench/references/checklist-engine.md:62). Enumerated by grep, not memory. All outside issue #465's allowed scope (scripts/checklist_engine.py, skills/reviewer/**, tests/). The reviewer template now tells a reviewer to run amend on a survey while the schema doc says amend is gated-only."
+    },
+    {
+      "id": "tc2",
+      "from": "m4-integrate",
+      "statement": "Same line-ending defect class, out of scope for #465: the engine journal append still opens text mode (scripts/checklist_engine.py append_journal_entry, jp.open('a', encoding='utf-8') with newline=None), so every journal line is CRLF on Windows and LF on POSIX."
+    },
+    {
+      "id": "tc3",
+      "from": "m4-integrate",
+      "statement": "Same line-ending defect class in five other repo JSON writers that pass encoding but not newline='\\n', against CREW_CONTEXT's explicit rule: scripts/collect_feedback.py:290,365; scripts/install_constellation.py:911,1182; scripts/build_architecture_map.py:385. Only scripts/file_issue_set.py:214 gets it right."
+    },
+    {
+      "id": "tc4",
+      "from": "m4-integrate",
+      "statement": "skills/interrogator zc-consolidate carries the reviewer's open-fail-cannot-APPROVE defect word for word; fenced out of #465 and already raised. Restated here because the reviewer half is now fixed and the two have diverged."
+    }
+  ],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "impl-w3a-465-g1",
+    "status": "released",
+    "claimed_at": "2026-08-08T05:42:25.479888+00:00",
+    "last_heartbeat": "2026-08-08T06:09:24.481518+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T06:09:31.874350+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-08T05:22:46.434471+00:00",
+      "reason": "my check text grepped for 'instantiate' case-sensitively; the template says INSTANTIATE -- an authoring error in the check, not in the prose",
+      "authority": "Commander w3a-465 (LO-465)",
+      "ops": [
+        "retext-check m3-reviewer-prose.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-08T05:42:25.747200+00:00",
+      "reason": "Commander w3a-465 ruled on tc1: fix it now rather than defer. Shipping a prose/affordance fix that opens five NEW contradictions would be the same defect one tier up. Fence extended by exactly this one item.",
+      "authority": "Commander w3a-465 (LO-465)",
+      "ops": [
+        "added m5-doc-correction"
+      ]
+    },
+    {
+      "ts": "2026-08-08T05:42:45.803808+00:00",
+      "reason": "tighten the c1 check text: use grep -q inside the negation so the check tests exit status cleanly and leaks no output",
+      "authority": "Commander w3a-465 (LO-465)",
+      "ops": [
+        "retext-check m5-doc-correction.c1"
+      ]
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m5-doc-correction",
+      "why": "tc1 is closed in-diff rather than deferred: five doc claims across two files now match the engine's real amend applicability. The re-grep leaves exactly one 'gated-only' hit and it is the new sentence's own correct use of the term for add/drop/rescope; find confirms neither doc has a duplicate copy that could still carry the stale claim. The shipped reviewer template already used the true --delta shape, so the handoff's nonexistent --op flag was never propagated. Suite unchanged at 1786 passed, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-08T06:09:24.481488+00:00"
+    }
+  ]
+}

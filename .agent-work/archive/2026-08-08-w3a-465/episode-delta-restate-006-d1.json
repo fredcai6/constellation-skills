@@ -1,0 +1,12 @@
+{
+  "work_id": "w3a-465",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "w3a-465-006",
+      "assertion": "d1",
+      "statement": "A plan template whose red-phase postcondition defaulted to both an attestation and a named file for the failing-test output would have the artifact reference be structural rather than incidental.",
+      "history": "Restated to drop the imperative opening ('Make...'), which the strict episode-observation guard correctly flagged: a proposed-remedy is a record of what was observed to help, not an instruction for a future agent to follow."
+    }
+  ]
+}

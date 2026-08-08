@@ -1,0 +1,18 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "r7-extra",
+      "title": "extra",
+      "imperative": "do it",
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "s",
+          "check": null,
+          "satisfied": false
+        }
+      ]
+    }
+  ]
+}

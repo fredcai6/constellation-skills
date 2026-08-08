@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 wave 3, dispatch W3-A (issue #465)",
+      "spec_path": ".agent-work/w3a-465/MISSION_FRAME.md",
+      "intent_and_why": "Close the gap between three instructions and the machinery behind them in skills/reviewer/ and scripts/checklist_engine.py: give the r6-fowler fill an engine verb and name it, stop the engine's own writer from rewriting line endings, and correct the SKILL.md sentence that contradicts the engine's --override-reason."
+    },
+    "definition_of_done": [
+      "amend's retext-check op runs on a survey checklist (add/drop/rescope stay gated-only)",
+      "save() preserves an existing file's line ending and writes bytes; new/mixed-ending files get LF",
+      "skills/reviewer/ r6-fowler names both the normal and repair paths; SKILL.md's override-reason sentence is corrected",
+      "the line-ending regression is proven red before green with both an LF and a CRLF fixture",
+      "full suite green alongside the four new named tests"
+    ],
+    "good_enough": {
+      "mandatory_quality": "targeted tests for each of the three coupled changes plus the full suite, per ORCHESTRATOR_CONTEXT's mechanism-change bar",
+      "sufficient_evidence": "observed command results (refusals, red-before-green fixtures, full suite exit code), not structural assertion -- map is DEGRADED-NO-MAP",
+      "appetite": "one gate (g1), three coupled changes treated as one coherent bite"
+    },
+    "hard_constraints": [
+      "two-bin rule: every enforced invariant is checked by a command or attested by a named human -- the r6-fowler command postcondition cannot simply be deleted",
+      "spine: read and change the checklist state only through the engine, never by hand",
+      "fence: only scripts/checklist_engine.py, skills/reviewer/**, and new tests under tests/ (plus the Admiral-ratified extension to docs/CHECKLIST_SCHEMA.md and skills/workbench/references/checklist-engine.md)"
+    ],
+    "fixed_decisions": [
+      "retext-check lifts to survey; add/drop/rescope stay gated-only",
+      "the engine writes bytes and preserves the existing line ending; LF and CRLF fixtures, red before green",
+      "the prose moves (SKILL.md's override-reason sentence), not the --override-reason affordance itself",
+      "docs/CHECKLIST_SCHEMA.md and skills/workbench/references/checklist-engine.md extension is ratified by the Admiral -- five statements there went false when the guard relaxed"
+    ],
+    "current_wave": {
+      "objective": "Land the r6-fowler affordance gap, the line-ending byte-faithful save, and the two prose corrections as one reviewed, tested change",
+      "exit_criteria": [
+        "implementer result integrated with no unresolved blockers",
+        "independent reviewer verdict APPROVE",
+        "named new tests plus the full suite pass with a real exit 0",
+        "PR open against epic-418/w3a-465"
+      ],
+      "issues": [
+        {
+          "id": "465",
+          "title": "checklist_engine.py + skills/reviewer/: survey retext-check affordance, byte-faithful save, prose corrections",
+          "desired_outcome": "The r6-fowler fill has a working engine verb, save() no longer churns line endings, and reviewer prose matches the engine's actual override semantics",
+          "useful_now": "Closes a defect the wave's own organizing lesson (cold critic: a check that cannot fail) reproduced inside this dispatch",
+          "appetite": "one gate",
+          "acceptance_or_falsification_evidence": "four named tests (retext-check-on-survey, add/drop/rescope-still-refuse, save-preserves-LF, save-preserves-CRLF) plus the full suite, all real exit 0; reviewer independently reproduces the red",
+          "implementation_latitude": "choose internals; preserve the two-bin rule and the fence",
+          "hard_constraints_no_gos": [
+            "add/drop/rescope must stay gated-only",
+            "journal append near line 2762 is out of scope"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py amend() line 2128",
+            "scripts/checklist_engine.py save() line 169",
+            "skills/reviewer/templates/REVIEW_SURVEY.template.json r6-fowler",
+            "skills/reviewer/SKILL.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "identical placeholder/prose defect at skills/interrogator/templates/INTERROGATION.template.json zc-consolidate is closed in a later wave",
+        "why_likely": "the template is already type: survey, so this change already supplies the engine half; only its prose remains -- filed as a triage candidate",
+        "entry_conditions": ["triage confirms the candidate and an Admiral schedules it"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "whether the six repo JSON writers that pass encoding but not newline (collect_feedback.py, install_constellation.py, build_architecture_map.py) should be brought under the same byte-faithful discipline as save()",
+        "affects": "scope of a future line-ending-hygiene pass",
+        "settle_by": "triage / a future wave",
+        "current_evidence": "named as triage candidate #3 in RESULT.md; not investigated further, deliberately fenced out of this gate",
+        "next_probe": "grep for open(...) writers lacking newline= and assess each against CREW_CONTEXT's always-pass-newline rule"
+      }
+    ],
+    "parked_possibilities": [
+      "a {checklist_dir} substitution road that would kill this whole defect class corpus-wide (named untaken in plan-alternatives.md; additive, does not fix the residual hand-editing case)"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "465",
+      "outcome": "amend's retext-check op runs on a survey checklist (add/drop/rescope stay gated-only); save() preserves an existing file's line ending and writes bytes; skills/reviewer/ r6-fowler and SKILL.md prose corrected; docs/CHECKLIST_SCHEMA.md and skills/workbench/references/checklist-engine.md updated for the five statements the relaxed guard made false (Admiral-ratified fence extension)",
+      "evidence": "independent reviewer verdict APPROVE, no blockers, four triage candidates recorded (.agent-work/w3a-465/g1-review/REVIEW_RESULT.md); commit 6774e75e pushed, PR #492 open against epic-418/w3a-465; g1-integrate command check real exit 0 (4/4 named tests, full suite 1786 passed / 2 skipped / 683 subtests)"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "the affordance gap is closed and is observably conservative",
+      "expected": "retext-check succeeds on a survey; add/drop/rescope still refuse one",
+      "observed": "REFUSED -> amended: retext-check r6-fowler.c1 (authority Commander w3a-465) -> r6-fowler recorded pass, real exit 0; add/drop/rescope each refused real exit 1, each naming its own op and the word 'conservative'",
+      "source": ".agent-work/w3a-465/g1-review/REVIEW_RESULT.md, .agent-work/w3a-465/g1-review/probe/"
+    },
+    {
+      "claim": "save() is byte-faithful to the file's existing line ending",
+      "expected": "an LF file's endings survive a save() round trip on Windows; a CRLF file's endings also survive",
+      "observed": "LF fixture observed red (save() churned an LF file to CRLF, 8 CRLF endings written) before the fix, green after; CRLF fixture was the non-discriminating control on win32 and is documented as such",
+      "source": ".agent-work/w3a-465/RESULT.md section 3, tests/test_engine_survey_retext_and_newlines.py"
+    },
+    {
+      "claim": "the named new tests and the full suite pass with a real exit code",
+      "expected": "4 named tests pass; full suite exits 0",
+      "observed": "4/4 named tests passed; full suite: 1786 passed, 2 skipped, 683 subtests, real exit 0 (this Commander's own re-run at the g1-integrate gate). The implementer's and reviewer's earlier runs both reported 682 subtests, one fewer than this re-run.",
+      "source": "g1-integrate command postcondition (this run); .agent-work/w3a-465/RESULT.md section 4"
+    },
+    {
+      "claim": "the change is reviewed and shippable",
+      "expected": "independent reviewer verdict APPROVE",
+      "observed": "APPROVE, no blockers, all seven close criteria verified against the world; commit 6774e75e pushed, PR #492 open",
+      "source": ".agent-work/w3a-465/g1-review/REVIEW_RESULT.md"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "this Commander's own full-suite re-run at g1-integrate reported 683 subtests, one more than the implementer's and reviewer's earlier runs (682) and than the launch order's stated expectation (~682 on this branch)",
+      "classification": "evidence_only",
+      "affects": "none -- wave exit was not blocked; passed/skipped counts (1786/2) matched exactly, only the subtest tally differs by one, and no failures were observed in any of the three runs",
+      "evidence": "this run's g1-integrate command check: 1786 passed, 2 skipped, 683 subtests, real exit 0; RESULT.md section 4 records 682 subtests from the earlier implementer/reviewer runs",
+      "reason": "worth recording for a future wave in case the cause (a parametrized test whose count depends on repo/worktree state) matters elsewhere; not investigated further here since it does not change the exit verdict"
+    },
+    {
+      "id": "D1",
+      "signal": "extending the fence to docs/CHECKLIST_SCHEMA.md and skills/workbench/references/checklist-engine.md, and lifting retext-check onto surveys, are both changes to a shared engine interface beyond the originally scoped fence",
+      "classification": "evidence_only",
+      "affects": "already resolved -- the Admiral ratified both extensions before this continuation began; recorded here as the evidence trail, not as an open question",
+      "evidence": ".agent-work/w3a-465/RESULT.md section 6 (floated to the Admiral); this dispatch's launch instructions confirm ratification",
+      "reason": "closing the loop in the replan record so the ratification is traceable from this wave's evidence, not just from the dispatch transcript"
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {"id": "triage-1-interrogator-zc-consolidate-prose", "kind": "issue"},
+    {"id": "triage-2-journal-append-text-mode", "kind": "issue"},
+    {"id": "triage-3-six-writers-missing-newline-arg", "kind": "issue"},
+    {"id": "triage-4-crew-context-unnamed-exception", "kind": "issue"},
+    {"id": "triage-5-amend-215-lines-fowler-long-method", "kind": "issue"},
+    {"id": "triage-6-amend-type-applicability-six-sites", "kind": "issue"},
+    {"id": "triage-7-checklist-dir-substitution-road", "kind": "parked"},
+    {"id": "U-fixture-born-in-defective-state-doctrine", "kind": "uncertainty"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "skills/reviewer/",
+      "docs/CHECKLIST_SCHEMA.md",
+      "skills/workbench/references/checklist-engine.md"
+    ],
+    "map_status": "DEGRADED-NO-MAP -- no docs/architecture/ ships in this repo; context step discharged the degraded verdict with hash-pinned substitutes (ORCHESTRATOR_CONTEXT.md, GLOSSARY.md)"
+  }
+}

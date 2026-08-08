@@ -1,0 +1,89 @@
+{
+  "work_id": "w3a-465",
+  "diff_ref": "git diff on branch epic-418/w3a-465 (uncommitted): scripts/checklist_engine.py (_dominant_newline + save + amend), skills/reviewer/SKILL.md, skills/reviewer/templates/REVIEW_SURVEY.template.json, docs/CHECKLIST_SCHEMA.md, skills/workbench/references/checklist-engine.md, plus new tests/test_engine_survey_retext_and_newlines.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, installed constellation-reviewer references/global-crew.md and references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "amend() is now 215 lines (checklist_engine.py:2158-2372). This diff adds ~29 of them: a 13-line docstring extension plus an 18-line survey guard, both bolted onto a function that already validated four op kinds inline. The repo standard does NOT rescue this one -- global-crew.md says 'small composable units, explicit contracts at meaningful boundaries; split a unit when its intent blurs', which agrees with the smell rather than subordinating it. Not a blocker and not this issue's job: the guard itself is correctly placed (before the op loop, which is what preserves all-or-nothing) and the handoff fences refactoring out. Raised as a triage candidate: the per-op validation bodies are the natural extraction. save() (21 lines, 11 of them docstring) and _dominant_newline() (13 lines) are both fine.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "scripts/checklist_engine.py is a ~2900-line single module holding the whole engine -- verb dispatch, state machine, evidence, leases, recovery-text table, and now file-I/O policy.",
+      "override": {
+        "repo_standard": "global-everyone.md 'One canonical path; no speculative abstraction' plus 'Reference bundled scripts and references by their absolute installed path; don't resolve scripts/ from the target repo unless it vendors them' -- the engine is distributed as ONE bundled script per installed skill.",
+        "reason": "The single-file shape is the distribution contract, not an accident: every skill bundles and invokes this one path, so splitting it into modules would multiply the install surface each skill has to carry and break the absolute-path invocation the doctrine mandates. The standard subordinates the smell because the module's size is a consequence of a deliberate packaging decision that this diff does not touch and is not entitled to revisit."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "The new survey guard extracts an op name (`op.get('op') if isinstance(op, dict) else op`) and the main loop also reads `op.get('op')`, but these are one line each with different intent -- one classifies the delta as a whole to accept or refuse it, the other dispatches. No extractable duplicate. The new test file's two line-ending tests share write_with_endings() and line_ending_counts() rather than repeating the byte arithmetic.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "_dominant_newline() reads the same path save() writes; that is one concern split into a named helper, not a method more interested in another object's data. The survey guard reads only cl['type'] and the delta's own ops.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No recurring parameter group is introduced. (path, data) and (cl, delta, reason, authority) are unchanged signatures.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "The line ending is carried as raw bytes (b'\\n' / b'\\r\\n') rather than an enum. At this layer bytes ARE the domain type -- the whole point of the fix is to stay below the text-mode abstraction -- so a wrapper type would obscure rather than clarify.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "save(path, data) and _dominant_newline(path) are short. amend(cl, delta, reason, authority, base_dir) is 5 parameters, borderline, but it is pre-existing and this diff does not change the signature.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "One behavioral fact -- which checklist types amend accepts -- is restated in SIX places: the engine guard, the engine's docstring, docs/CHECKLIST_SCHEMA.md at four sites (43, 63, 280, 372), and skills/workbench/references/checklist-engine.md:62. Widening the verb by one op forced edits in all of them, and the implementer found the five prose sites only by running the authoring-side blast-radius enumeration; the first return shipped without them. This is the exact defect this issue exists to close, and the structure guarantees it recurs on the next amend change. Observation, not a blocker: the sites ARE all corrected in this diff (I re-grepped and found no sixth). Raised as a triage candidate -- a single generated or single-sourced statement of verb applicability would remove the class.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "checklist_engine.py is modified here for two entirely unrelated reasons in one change: file-write line-ending policy, and amend's type applicability. The test file's own module docstring concedes it -- 'Two independent defects, one file'.",
+      "override": {
+        "repo_standard": "The same single-bundled-engine packaging standard cited under large-class (global-everyone.md 'One canonical path'), together with the handoff's own framing that the two defects are coupled because together they are what make every instruction in the reviewer skill name an action the engine can actually perform.",
+        "reason": "Divergent change is a signal to SPLIT the module, and the module is deliberately unsplittable under the distribution contract. Given that, two unrelated edits landing in one file is the expected consequence of a decision already made, not new decay introduced by this diff. The change also keeps them genuinely separate in the code -- distinct functions, distinct tests, distinct node ids -- so nothing is entangled that a later split would have to untangle."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation is introduced. Path(path).read_bytes() / write_bytes() is a one-hop constructor call, not a train wreck.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Notably absent by construction, and this is the diff's best design decision. The survey affordance is deliberately narrowed to the one op that has a caller (retext-check), and the refusal text says in so many words that add/drop/rescope are withheld 'only because nothing needs it yet'. That is the anti-pattern's opposite: capability is added at the size of the demonstrated need, with the door left documented rather than pre-built. _dominant_newline's mixed-ending branch is likewise not speculative -- the handoff specified that case and a test pins it.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "save() carries an 11-line docstring over 6 lines of executable code, plus an inline comment justifying why replace(b'\\n', eol) cannot produce b'\\r\\r\\n'. On a normal codebase that ratio is a prompt to ask whether the code should be clearer instead.",
+      "override": {
+        "repo_standard": "global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions -- the project's specific conventions are the local delta', and global-everyone.md's requirement that durable rationale stay with the thing it describes rather than in a second place (the same principle the @grade: weld encodes).",
+        "reason": "The comments are not compensating for unclear code -- the six lines are already obvious. They record WHY the obvious-looking alternative is wrong (text mode churns a whole file's endings and destroys its blame) and WHY the byte replace is safe (json.dumps escapes literal CR, so no b'\\r' survives to double up). Both are non-recoverable from the code, both are exactly the knowledge that would otherwise be lost and the fix reverted by a future simplifier, and every neighbouring function in this engine is documented in the same dense style. The standard subordinates the smell."
+      }
+    }
+  ],
+  "rail_exception": null
+}

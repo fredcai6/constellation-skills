@@ -1,0 +1,87 @@
+FF                                                                       [100%]
+================================== FAILURES ===================================
+_____________________ test_retext_check_works_on_a_survey _____________________
+
+    def test_retext_check_works_on_a_survey():
+        """A delta whose ops are ALL `retext-check` is accepted on a survey.
+    
+        This is the repair path the reviewer skill points at: `r6-fowler` ships with a
+        placeholder record path in its command postcondition, and when the record moves
+        the reviewer must be able to correct that text THROUGH the engine instead of
+        hand-editing the survey JSON.
+        """
+        cl = survey(r6=survey_item("r6", command="python scripts/verify_fowler_pass.py <placeholder>"))
+        delta = {"ops": [retext_op("r6", "c1", "python scripts/verify_fowler_pass.py real/record.json")]}
+    
+>       out = E.amend(cl, delta, reason="record path resolved", authority="Commander w3a-465")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_engine_survey_retext_and_newlines.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cl = {'blockers': [], 'config': {}, 'consolidation': None, 'items': ['r6'], ...}
+delta = {'ops': [{'command': 'python scripts/verify_fowler_pass.py real/record.json', 'cond': 'c1', 'id': 'r6', 'op': 'retext-check', ...}]}
+reason = 'record path resolved', authority = 'Commander w3a-465'
+base_dir = None
+
+    def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | None = None) -> str:
+        """Intentional mid-stream re-planning of a GATED checklist. Apply a delta of
+        `add`/`drop`/`rescope` ops that touch PENDING gates only, plus a `retext-check`
+        op that corrects the check TEXT of a PENDING or IN-PROGRESS gate without
+        satisfying its condition — completed/blocked/skipped gates are never edited, and
+        no op ever marks a condition satisfied. The whole delta is ALL-OR-NOTHING: it is
+        validated and built on COPIES, and only committed to `cl` once every op passes,
+        so a refusal leaves `cl` unmutated (important: `main()` persists `cl` even on
+        the error path). Records an audit entry to `cl["amendments"]`.
+    
+        - `add`: insert a new pending gate (`id` kebab-ish and unique; non-empty
+          `title`/`imperative`; >=1 postcondition). `after` names an existing gate to
+          insert behind (omit to append). The insert may not land before a frozen
+          (non-pending) gate.
+        - `drop`: remove a pending gate.
+        - `rescope`: overwrite provided fields (title/imperative/pre/postconditions/
+          constraints/directives) on a pending gate; postconditions if given stay >=1.
+        - `retext-check`: correct the check TEXT of one condition on a pending or
+          in-progress gate (`command` for a command check, or a same-kind `check`
+          object), then reset that condition to unsatisfied — an authoring fix that
+          never marks the condition satisfied (that stays `waive`'s job) and never
+          changes the check's kind.
+        Requires non-empty `--reason` and `--authority` (human ratification), same as
+        `waive`."""
+        if cl.get("type") != GATED:
+>           raise EngineError("amend applies to gated checklists")
+E           checklist_engine.EngineError: amend applies to gated checklists
+
+scripts\checklist_engine.py:2183: EngineError
+_________________ test_add_drop_rescope_still_refuse_a_survey _________________
+
+    def test_add_drop_rescope_still_refuse_a_survey():
+        """`add`/`drop`/`rescope` stay gated-only, and the refusal says WHY.
+    
+        The refusal must read as a conservative choice, not a type-level impossibility:
+        dropping a survey item is a coherent thing to want, it is refused because
+        nothing needs it yet. It must also not refuse a delta merely for MIXING a
+        gated-only op in with retext-check ops — that mix is refused too, all-or-nothing.
+        """
+        ok_retext = retext_op("r6", "c1", "cmd real")
+    
+        cases = {
+            "add": {"op": "add", "id": "r7", "title": "t", "imperative": "i",
+                    "postconditions": [{"id": "c1", "statement": "s", "check": None, "satisfied": False}]},
+            "drop": {"op": "drop", "id": "r6"},
+            "rescope": {"op": "rescope", "id": "r6", "title": "new title"},
+        }
+        for name, op in cases.items():
+            cl = survey(r6=survey_item("r6", command="cmd <placeholder>"))
+            with pytest.raises(E.EngineError) as exc:
+                E.amend(cl, {"ops": [op]}, reason="r", authority="Commander w3a-465")
+            msg = str(exc.value)
+>           assert name in msg, f"{name}: refusal must name the op that was refused -- got {msg!r}"
+E           AssertionError: add: refusal must name the op that was refused -- got 'amend applies to gated checklists'
+E           assert 'add' in 'amend applies to gated checklists'
+
+tests\test_engine_survey_retext_and_newlines.py:206: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_engine_survey_retext_and_newlines.py::test_retext_check_works_on_a_survey
+FAILED tests/test_engine_survey_retext_and_newlines.py::test_add_drop_rescope_still_refuse_a_survey
+2 failed in 0.49s

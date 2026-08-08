@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "e0-context",
+  "mechanical": {
+    "run": "w3a-465",
+    "project": "constellation-skills",
+    "role": "commander-delegated:w3a-465",
+    "refusals": 0,
+    "spine-step": "e0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3a-465-e0-context@caa3f2411c9c8fbffcd13dffba5fc194b71541c9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3a-465",
+    "generated_at": "2026-08-08T06:10:20Z"
+  }
+}
