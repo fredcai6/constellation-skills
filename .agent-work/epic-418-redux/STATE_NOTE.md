@@ -87,7 +87,12 @@ All five confirmed MERGED via `gh pr view --json state`. **Never use an ancestry
 2. **#457's lease-liveness defect** — evidenced and commented, deliberately **not** folded into wave 3.
    The amendment says *easy*; this one is not. Both readings of the field are uninformative, so fixing
    it means deciding how liveness is encoded at all, which ends at a load-bearing interface.
-3. **#460's 22 doctrine candidates** — collected, nothing promoted. At
+3. **#264's unmerged gauge-chain tests — recommend landing them.** See the sweep verdict below. The
+   epic's own dark-governor incident is the argument: an assertion that the gauge is still
+   *measuring* has existed, written and unmerged, the entire time. Landing it is a **scope change**
+   (surfaced), needs a rebase over 211 commits, and should wait until #488 merges so it lands on
+   fixed ground rather than steering a running crew.
+4. **#460's 22 doctrine candidates** — collected, nothing promoted. At
    `.agent-work/r418-460/crew-handoffs/g2-implement-result.md` § "Evidence 4". Promotion is always his call.
 
 ## Settled — do NOT re-derive
@@ -109,11 +114,39 @@ All five confirmed MERGED via `gh pr view --json state`. **Never use an ancestry
   #488 lands. Watch context by judgement. Cause: my spine and my own `latitude-interrogation.json`
   resolve to one gauge path, and the writer counts bindings rather than distinct paths.
 - **#447 CLOSED** with a per-done-condition accounting; condition 4 recorded **partial**, not done.
+- **Never pass a markdown body to `gh` as a double-quoted bash string.** A backticked code span is
+  executed as **command substitution**: it errors to stderr while the comment/PR **posts anyway**,
+  silently missing that phrase, with every success signal intact. Write the body to a file and use
+  `-F <file>` / `-F body=@<file>`. The launch orders already say this for PR bodies; it is equally
+  true for `gh issue comment`. Cost me a corrupted comment on #264 this session.
 
-## Not swept — predecessor-run worktrees, deliberately left
+## Stale worktrees — sweep verdict, surveyed 2026-08-08
 
-`epic418-a-419`, `epic418-a2-440`, `epic418-b-420`, `epic418-d-422`, `epic418-g-425`, `epic418-h-447`,
-plus `governor-264` and `verify-w0`. Sweep at closeout, **after** harvesting each one's durable trio —
-a worktree swept before its trio is collected silently drops that run's learning.
+**`C:/Programs/constellation-skills-wt/governor-264` — DO NOT SWEEP.** It is the only one holding
+work that is not in main. Branch `governor/264-e2e-assertion`: **3 commits, 1144 lines, 13 tests,
+211 behind main**, and `git ls-files | grep gauge_chain` returns **nothing** — absent from main.
+**#264 is the only OPEN issue of the eight.** Includes
+`test_ladder_fill_series_is_non_decreasing_and_actually_moves` (the assertion that the gauge is still
+*measuring*, not merely producing records — the guard that would have caught my dark governor) and
+`test_chain_ambiguous_binding_writes_no_gauge_and_flags_every_candidate`, which builds
+`_ambiguous_work_trees` with **distinct parents** and therefore specifies the negative direction
+**#488's fix must preserve**. Surfaced to Tommy at the wave-3 boundary; commented on #264.
+
+**Sweep-safe after harvest:** `epic418-a2-440`, `epic418-b-420`, `epic418-g-425`, `epic418-h-447` —
+zero non-`.agent-work` diffs vs main.
+
+**`epic418-a-419` and `epic418-d-422`: flagged INSPECT by diff, then cleared by the forge.** Both
+show ~9 non-`.agent-work` file diffs against main, which looks like unlanded code. It is not: their
+branches are 200+ commits behind and their work was **squash-merged**, so a three-dot diff shows the
+pre-squash form of work that did land. **#419, #420, #422, #425, #440 and #447 are all CLOSED** per
+`gh issue view` — the diff was the misleading signal and the tracker was the reliable one, which is
+this epic's own lesson applied to its own cleanup. Harvest, then sweep.
+
+`verify-w0` is a detached HEAD scratch tree; no branch, nothing owed.
+
+**Order is not optional:** harvest each worktree's durable trio **before** `git worktree remove` — and
+under an epic lease the trio lands at `<worktree>/.agent-work/`, not the main checkout, because
+`durable_root()` deliberately returns the worktree root while the main checkout is fenced. Sweeping
+first silently drops that run's learning.
 
 _Updated: 2026-08-08T04:05:00Z_
