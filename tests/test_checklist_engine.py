@@ -3211,11 +3211,34 @@ def _reading(fill, model="claude-opus-4-8"):
     )
 
 
-def _advance_ns(iid="g1"):
+def _advance_ns(iid="g1", why=None, mechanical=False):
     return types.SimpleNamespace(
-        verb="advance", id=iid, from_child=None, why=None,
-        mechanical=False, session_id=None,
+        verb="advance", id=iid, from_child=None, why=why,
+        mechanical=mechanical, session_id=None,
     )
+
+
+def _start_ns(iid="g1"):
+    return types.SimpleNamespace(verb="start", id=iid, session_id=None)
+
+
+def _reopen_ns(iid="g1", reason="rework"):
+    return types.SimpleNamespace(verb="reopen", id=iid, reason=reason, session_id=None)
+
+
+def _resume_ns(iid="g1", reason="blocker resolved", note=None):
+    return types.SimpleNamespace(verb="resume", id=iid, reason=reason, note=note,
+                                 session_id=None)
+
+
+def _refresh_requests_anywhere(cl):
+    """Every `refresh-request` evidence item in the WHOLE checklist, superseded or
+    not — the load-bearing precondition of the permanent DC2 guard below. With one
+    of these present the HARD guard lifts, so the guarded advance succeeds on BOTH
+    sides of #467 and the test would prove nothing."""
+    return [ev for t in cl.get("tasks", {}).values()
+            for ev in (t.get("evidence") or [])
+            if isinstance(ev, dict) and ev.get("type") == "refresh-request"]
 
 
 class TripTwoBandGatePolicy(unittest.TestCase):
@@ -3265,18 +3288,21 @@ class TripTwoBandGatePolicy(unittest.TestCase):
         self.assertEqual(self.cl["tasks"]["g1"]["status"], "complete")
 
     # --- HARD band (refusal, on `advance`) ---------------------------------- #
-    def test_hard_refuses_at_and_above_hard_without_refresh(self):
+    def test_hard_refuses_begin_work_at_and_above_hard_without_refresh(self):
         # Acceptance 2/4 (falsifiable: does HARD ever let you pass without a
-        # refresh-request? -> NO): at/above hard with no refresh-request, advance
-        # REFUSES and the gate stays in-progress.
+        # refresh-request? -> NO). RE-AIMED by #467: the verb HARD refuses is the one
+        # that BEGINS work at a gate (`start`), never the one that closes the gate the
+        # agent is already inside. At/above hard with no refresh-request, `start`
+        # REFUSES and the gate stays pending.
         for fill in (self.hard, min(self.hard + 0.05, 1.0)):
             cl = copy.deepcopy(self.cl)
+            E.advance(cl, "g1")  # close g1 normally; g2 is now the next PENDING gate
             with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
                 with self.assertRaises(E.EngineError) as ctx:
-                    E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
-            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+                    E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
             self.assertIn("refresh", str(ctx.exception).lower())
-            self.assertIn("attach g1 --type refresh-request", str(ctx.exception))
+            self.assertIn("attach g2 --type refresh-request", str(ctx.exception))
 
     def test_hard_never_refuses_below_hard(self):
         # Acceptance 2: just below hard, HARD does not fire — advance passes.
@@ -3284,32 +3310,52 @@ class TripTwoBandGatePolicy(unittest.TestCase):
             msg = E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
         self.assertIn("g1 -> complete", msg)
 
-    def test_hard_passes_once_refresh_request_exists(self):
-        # HARD forces UNTIL a refresh-request exists for the gate; with one present,
-        # advance is allowed through (the agent has already requested the refresh).
+    def test_hard_handoff_close_needs_a_why_even_with_a_refresh_request_pending(self):
+        # RE-AIMED by #467. Before: "HARD forces UNTIL a refresh-request exists, then
+        # advance passes" — which no longer says anything, since HARD never refuses an
+        # advance at all now. The live question in its place is whether a pending
+        # refresh-request buys SILENCE at the close. It must not: the request is a
+        # pointer for the next agent, not a substitute for the understanding this one
+        # owes. The gate is why_exempt, so this also pins that the exemption stays
+        # suspended at hard even on the already-requested path.
         E.attach(self.cl, "g1", "refresh-request", {"seam": "g1", "why_ref": "w-1"})
-        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
-            msg = E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
-        self.assertIn("g1 -> complete", msg)
-        self.assertEqual(self.cl["tasks"]["g1"]["status"], "complete")
-
-    def test_hard_refusal_leaves_state_unmutated(self):
-        # A HARD refusal is raised BEFORE the verb runs: no why_trail, no status flip.
-        before = copy.deepcopy(self.cl)
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
+            self.assertEqual(self.cl["tasks"]["g1"]["status"], "in-progress")
+            msg = E.dispatch(self.cl, _advance_ns("g1", why="handing off at g1"),
+                             base_dir=Path("."))
+        self.assertIn("g1 -> complete", msg)
+        self.assertEqual(self.cl["tasks"]["g1"]["status"], "complete")
+        self.assertEqual(E._digest(self.cl), "handing off at g1")
+
+    def test_hard_refusal_leaves_state_unmutated(self):
+        # A HARD refusal is raised BEFORE the verb runs: no status flip, no manifest,
+        # no liveness stamp. RE-AIMED by #467 from `advance` to `start` — same
+        # ordering property, asserted on the verb HARD now guards.
+        E.advance(self.cl, "g1")
+        before = copy.deepcopy(self.cl)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(self.cl, _start_ns("g2"), base_dir=Path("."))
         self.assertEqual(self.cl, before)
 
     def test_hard_advisory_on_current_points_at_attach(self):
-        # On the read-only `current`, the HARD band escalates the advisory to the
-        # exact remedy (the attach command) and flags that advance is blocked.
+        # On the read-only `current`, the HARD band still escalates to the exact
+        # remedy (the attach command). RE-AIMED by #467: the "BLOCKED" assertion had
+        # to go, because the advisory no longer claims `advance` is blocked — it is
+        # not, and saying so was the instruction defect behind #431. In its place the
+        # advisory states a changed instruction. This fixture's gates are why_exempt
+        # and carry no why_trail, so it also pins the `<why-id>` fallback for a
+        # checklist with no live understanding to name.
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
             out = E.dispatch(self.cl, types.SimpleNamespace(verb="current"),
                              base_dir=Path("."))
         self.assertIn(">= hard", out)
-        self.assertIn("BLOCKED", out)
-        self.assertIn("attach g1 --type refresh-request", out)
+        self.assertIn("your instruction has changed", out)
+        self.assertIn("attach g1 --type refresh-request --field seam=g1 "
+                      "--field why_ref=<why-id>", out)
+        self.assertNotIn("BLOCKED", out)
 
     # --- missing/stale reading (None) --------------------------------------- #
     def test_none_reading_never_forces_and_gives_no_advice(self):
@@ -3371,8 +3417,9 @@ class RefreshRequestIdentity(unittest.TestCase):
 
     def test_hard_coattails_fixed_stale_why_ref_refused_then_fresh_releases(self):
         # A STALE refresh-request (keyed to an earlier understanding) must NOT wave a
-        # distinct new trip through HARD on the same still-open gate; a FRESH request
-        # keyed to the current digest releases it.
+        # distinct new trip through HARD; a FRESH request keyed to the current digest
+        # releases it. RE-AIMED by #467 from `advance` to `start`: #190's identity
+        # check is unchanged, it just now defends the BEGIN-work boundary.
         _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
         cl = gated(
             g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
@@ -3380,24 +3427,313 @@ class RefreshRequestIdentity(unittest.TestCase):
             g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
         )
         E.advance(cl, "g1", why="u1")                 # -> w-1
-        E.start(cl, "g2"); E.advance(cl, "g2", why="u2")  # -> w-2; g3 active, latest why w-2
-        E.start(cl, "g3")
+        E.start(cl, "g2"); E.advance(cl, "g2", why="u2")  # -> w-2; g3 pending, latest why w-2
         # stale request keyed to w-1 (an earlier trip's understanding)
         E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-1"})
-        adv = types.SimpleNamespace(verb="advance", id="g3", from_child=None,
-                                    why="u3", mechanical=False, session_id=None)
+        ns = _start_ns("g3")
         before = copy.deepcopy(cl)
         with mock.patch.object(E, "_read_gauge", return_value=_reading(hard)):
             with self.assertRaises(E.EngineError):
-                E.dispatch(cl, adv, base_dir=Path("."))
-        self.assertEqual(cl["tasks"]["g3"]["status"], "in-progress")  # unmutated
+                E.dispatch(cl, ns, base_dir=Path("."))
+        self.assertEqual(cl["tasks"]["g3"]["status"], "pending")  # unmutated
         self.assertEqual(cl, before)
         # a FRESH request keyed to the current digest (w-2) releases HARD
         E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-2"})
         with mock.patch.object(E, "_read_gauge", return_value=_reading(hard)):
-            msg = E.dispatch(cl, adv, base_dir=Path("."))
-        self.assertIn("g3 -> complete", msg)
-        self.assertEqual(cl["tasks"]["g3"]["status"], "complete")
+            msg = E.dispatch(cl, ns, base_dir=Path("."))
+        self.assertIn("g3 -> in-progress", msg)
+        self.assertEqual(cl["tasks"]["g3"]["status"], "in-progress")
+
+
+class TripHardGuardsBeginNotClose(unittest.TestCase):
+    """#467 — the HARD band moves off the verb that CLOSES a gate and onto the two
+    verbs that BEGIN work at one (`start`, `reopen`).
+
+    Closing the gate you are already inside IS the handoff, so it is never refused
+    for being over the line. What IS refused is beginning new work you cannot
+    finish, and closing a gate SILENTLY — a mechanical or why-less close records no
+    understanding, so `_latest_why_record` skips it and the next agent cold-starts
+    from a pre-trip digest, which is #431 reproduced after the fix.
+
+    `resume` is deliberately NOT guarded: it restores a BLOCKED gate to the status
+    it held before, which for an `in-progress` prior returns the agent to the gate
+    it is already mid-way through — the "closing your own gate" case this design
+    promises never to refuse.
+
+    Every test name here matches the frozen `g2-integrate` closeout selector
+    (`trip_begin`, `begin_work`, `handoff`). pytest exits 5 on an empty collection,
+    so these names are load-bearing, not cosmetic."""
+
+    # The exact refusal raised when a gate would be closed with NOTHING recorded
+    # while the gauge is at/over hard. Asserted by equality, never by substring.
+    NO_SILENT_CLOSE = (
+        "g1: context is at/over the hard limit, so this gate cannot be closed "
+        "silently — a mechanical or why-less close records no understanding, and "
+        "the next agent would cold-start from a digest written before your work. "
+        "Closing the gate is NOT refused; only the silence is. Run: "
+        "advance g1 --why \"<understanding>\""
+    )
+
+    def setUp(self):
+        self.soft, self.hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self, why_exempt=False):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=why_exempt),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=why_exempt),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=why_exempt),
+        )
+
+    def _g2_pending_after_g1(self):
+        """g1 advanced with a real understanding (-> w-1); g2 is the next PENDING
+        gate, so `start g2` is a genuine BEGIN-work move and the live why-record
+        the identity check keys on is w-1."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    # --- THE PERMANENT DC2 GUARD -------------------------------------------- #
+    def test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest(self):
+        """The permanent regression guard against the #431 deadlock returning.
+
+        Pinned at `fill >= hard` with NO refresh-request anywhere in the spine —
+        exactly the condition under which the pre-#467 engine REFUSED. It asserts
+        BOTH halves: the advance completes, AND the digest becomes the
+        understanding written AT this gate. If this fixture ever acquires a pending
+        refresh-request, the guard lifts, the advance passes on both sides of the
+        change, and this test silently stops guarding anything."""
+        cl = self._three_gates()
+        self.assertEqual(_refresh_requests_anywhere(cl), [])
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            # the two properties this test's value depends on, asserted in place
+            self.assertGreaterEqual(E._read_gauge(Path(".")).fill_fraction, self.hard)
+            msg = E.dispatch(
+                cl, _advance_ns("g1", why="handed off at g1: HARD now guards the begin verbs"),
+                base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+        self.assertEqual(E._digest(cl), "handed off at g1: HARD now guards the begin verbs")
+        self.assertEqual(_refresh_requests_anywhere(cl), [])
+
+    def test_handoff_digest_names_the_understanding_written_at_the_tripping_gate(self):
+        """#431's actual observable (DC3): after the handoff-carrying close, the
+        digest names the understanding written AT the tripping gate, not the one
+        from the gate before it."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="pre-trip understanding")
+        E.start(cl, "g2")
+        self.assertEqual(E._digest(cl), "pre-trip understanding")
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(cl, _advance_ns("g2", why="at-g2 handoff understanding"),
+                             base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> complete"), msg)
+        self.assertEqual(E._digest(cl), "at-g2 handoff understanding")
+
+    # --- BEGIN-work verbs ARE guarded --------------------------------------- #
+    def test_trip_begin_start_refused_at_and_above_hard_without_refresh(self):
+        for fill in (self.hard, self.over_hard):
+            cl = self._g2_pending_after_g1()
+            before = copy.deepcopy(cl)
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+                with self.assertRaises(E.EngineError) as ctx:
+                    E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
+            self.assertEqual(cl, before)  # refused BEFORE any mutation or liveness stamp
+            self.assertIn("attach g2 --type refresh-request", str(ctx.exception))
+
+    def test_trip_begin_reopen_refused_at_hard_without_refresh(self):
+        cl = self._g2_pending_after_g1()  # g1 is complete
+        before = copy.deepcopy(cl)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+        self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+        self.assertEqual(cl, before)
+        self.assertIn("attach g1 --type refresh-request", str(ctx.exception))
+
+    def test_trip_begin_start_released_by_a_matching_refresh_request(self):
+        cl = self._g2_pending_after_g1()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+        self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+
+    def test_trip_begin_stale_why_ref_does_not_release_begin_work(self):
+        """#190's identity check, preserved verbatim at the new guard sites: a
+        request keyed to an EARLIER understanding does not wave a new trip through."""
+        cl = self._g2_pending_after_g1()  # live why-record is w-1
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-99"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+
+    def test_trip_begin_start_allowed_just_below_hard(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard - 0.001)):
+            msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+
+    # --- `resume` is NOT guarded (specific exclusion) ----------------------- #
+    def test_trip_begin_resume_is_not_guarded_at_hard(self):
+        """`resume` returns a BLOCKED gate to its pre-block status. For an
+        `in-progress` prior that hands the agent back the gate it is already inside
+        — the case this design promises never to refuse."""
+        cl = self._three_gates()
+        E.block(cl, "g1", "needs a ruling", "human", "ask")
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(cl, _resume_ns("g1", reason="ruling arrived"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 resumed -> in-progress (blocker resolved: ruling arrived)"), msg)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+
+    # --- closing SILENTLY is refused (the other half of #431) --------------- #
+    def test_handoff_mechanical_close_refused_at_hard(self):
+        """`--mechanical` records no understanding, so `_latest_why_record` skips it
+        and the next agent cold-starts from a pre-trip digest — #431 reproduced after
+        the fix. At/over hard the mechanical close is refused by name."""
+        cl = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _advance_ns("g1", mechanical=True), base_dir=Path("."))
+        self.assertEqual(str(ctx.exception), self.NO_SILENT_CLOSE)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        self.assertEqual(cl.get("why_trail", []), [])  # nothing recorded, nothing skipped
+
+    def test_handoff_why_exempt_is_suspended_at_hard(self):
+        """A `why_exempt` gate normally closes silently. At/over hard the exemption is
+        SUSPENDED — and suspended means the understanding is actually RECORDED, not
+        merely demanded: a --why that the engine accepted but never wrote to the
+        why_trail would leave the digest just as stale."""
+        cl = self._three_gates(why_exempt=True)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
+            self.assertEqual(str(ctx.exception), self.NO_SILENT_CLOSE)
+            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+            msg = E.dispatch(cl, _advance_ns("g1", why="exempt gate, closed with an understanding"),
+                             base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+        self.assertEqual(E._digest(cl), "exempt gate, closed with an understanding")
+
+    def test_handoff_mechanical_close_still_allowed_below_hard(self):
+        """The falsifiable half: below hard nothing changes — a mechanical close is
+        still a legitimate marker for a step that carries no new understanding."""
+        cl = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard - 0.001)):
+            msg = E.dispatch(cl, _advance_ns("g1", mechanical=True), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+        self.assertTrue(cl["why_trail"][-1]["mechanical"])
+
+    def test_handoff_no_silent_close_never_fires_on_a_none_reading(self):
+        """Fail-safe: a missing/stale reading must not conjure a why requirement out
+        of a gate that is exempt, any more than it conjures a refusal."""
+        cl = self._three_gates(why_exempt=True)
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            msg = E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+
+    def test_handoff_unmet_postconditions_still_refuse_before_the_why_demand(self):
+        """Ordering preserved: you cannot be asked for a handoff understanding as a
+        way of buying past unfinished work — a failing postcondition still yields the
+        postcondition refusal, even at/over hard."""
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND, why_exempt=False))
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _advance_ns("g1", mechanical=True), base_dir=Path("."))
+        self.assertEqual(str(ctx.exception), "g1: postconditions unmet ['c1']")
+
+    # --- fail-safe: the guard no-ops where it always has -------------------- #
+    def test_trip_begin_none_reading_never_refuses_begin_work(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            self.assertTrue(E.dispatch(cl, _start_ns("g2"), base_dir=Path(".")).endswith("g2 -> in-progress"))
+            msg = E.dispatch(cl, _reopen_ns("g1", reason="r"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 reopened (rework 1/3); cascade-reset downstream "
+                                     "['g2'] (evidence superseded, retained)"), msg)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+
+    def test_trip_begin_survey_never_refuses_begin_work(self):
+        sv = survey(v1=survey_item("v1", "pending"))
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(sv, _start_ns("v1"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("v1 -> in-progress"), msg)
+
+    # --- what the agent is TOLD (the #431 observable) ----------------------- #
+    def _hard_advisory(self, cl, fill):
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+            return E._trip_advisory(cl, Path("."))
+
+    def test_handoff_hard_advisory_reads_as_a_changed_instruction(self):
+        """#431 is an instruction-conformance defect, so the fix is verified on what
+        the agent is TOLD. At HARD the advisory must read as a changed instruction —
+        close this gate carrying your handoff, request a refresh, stop — and never as
+        an alarm about being unsafe or blocked."""
+        cl = self._g2_pending_after_g1()  # g2 active/pending, live why-record w-1
+        out = self._hard_advisory(cl, self.over_hard)
+        self.assertEqual(out, (
+            f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
+            f"You have taken this as far as this context can carry it — now close THIS "
+            f"gate carrying your handoff (`advance g2 --why \"<understanding>\"`), "
+            f"request a refresh, and stop. A fresh agent picks up from your DIGEST; do "
+            f"not begin work at another gate. Request the refresh with: attach g2 "
+            f"--type refresh-request --field seam=g2 --field why_ref=w-1"
+        ))
+        for alarm in ("BLOCKED", "unsafe", "runaway", "lost"):
+            self.assertNotIn(alarm, out)
+
+    def test_handoff_hard_advisory_with_refresh_already_requested_reads_as_an_instruction(self):
+        cl = self._g2_pending_after_g1()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        out = self._hard_advisory(cl, self.over_hard)
+        self.assertEqual(out, (
+            f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, "
+            f"and the refresh for g2 is already requested. Close THIS gate carrying "
+            f"your handoff (`advance g2 --why \"<understanding>\"`) and stop. A fresh "
+            f"agent picks up from your DIGEST; do not begin work at another gate."
+        ))
+        for alarm in ("BLOCKED", "unsafe", "runaway", "lost"):
+            self.assertNotIn(alarm, out)
+
+    def test_handoff_hard_advisory_rides_current_at_the_cli_boundary(self):
+        """The advisory reaches the agent through the read-only `current`, unchanged
+        by the rail prefix — `current` itself stays pure."""
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            out = E.dispatch(cl, types.SimpleNamespace(verb="current"), base_dir=Path("."))
+        self.assertTrue(out.endswith(self._hard_advisory(cl, self.over_hard)), out)
+
+    def test_handoff_refresh_hint_carries_the_concrete_why_id(self):
+        """The literal `<why-id>` placeholder cost four separate agents a silent
+        no-op: `attach ... --field why_ref=<why-id>` exits 0 and records a request
+        that matches no understanding, so the identity check never releases. The hint
+        must emit the real id, and fall back to the placeholder only when there is no
+        live why-record to name."""
+        self.assertEqual(
+            E._refresh_attach_hint("g2", "w-7"),
+            "attach g2 --type refresh-request --field seam=g2 --field why_ref=w-7")
+        self.assertNotIn("<why-id>", E._refresh_attach_hint("g2", "w-7"))
+        self.assertEqual(
+            E._refresh_attach_hint("g2", None),
+            "attach g2 --type refresh-request --field seam=g2 --field why_ref=<why-id>")
+
+    def test_trip_begin_refusal_names_the_concrete_why_id(self):
+        cl = self._g2_pending_after_g1()  # live why-record is w-1
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertIn("--field why_ref=w-1", str(ctx.exception))
+        self.assertNotIn("<why-id>", str(ctx.exception))
+
+    def test_trip_begin_no_base_dir_never_refuses_begin_work(self):
+        cl = self._g2_pending_after_g1()
+        E._trip_hard_gate(cl, "g2", None)  # no raise: unresolvable gauge location
+        self.assertTrue(E.dispatch(cl, _start_ns("g2"), base_dir=None).endswith("g2 -> in-progress"))
 
 
 class FormatAgeTests(unittest.TestCase):
@@ -3576,27 +3912,52 @@ class TripRealGaugeFileWiring(unittest.TestCase):
         # why_exempt so advance needs no --why; HARD is orthogonal to why-capture.
         return gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=True))
 
-    def test_fresh_hard_gauge_sibling_of_spine_refuses_then_passes_with_refresh(self):
+    def test_fresh_hard_gauge_sibling_of_spine_refuses_begin_work_then_passes_with_refresh(self):
+        # RE-AIMED by #467 from `advance` to `start`: same real-file wiring proof,
+        # asserted on the verb HARD now guards. Beginning work at a pending gate over
+        # the line is refused end-to-end through main(), and a refresh-request releases it.
         soft, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "spine.json"
-            E.save(f, self._spine())
+            E.save(f, gated(
+                g1=gate("g1", "complete", command=PASS_COMMAND, why_exempt=True),
+                g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=True),
+            ))
             # gauge sibling of the spine, fresh (observed_at == now), fill >= hard
             self._write_gauge(d, min(hard + 0.05, 1.0),
                               datetime.now(timezone.utc).isoformat())
             import contextlib, io
             err = io.StringIO()
             with contextlib.redirect_stderr(err):
-                rc = E.main(["--file", str(f), "advance", "g1"])
-            self.assertEqual(rc, 1)  # HARD refuses
+                rc = E.main(["--file", str(f), "start", "g2"])
+            self.assertEqual(rc, 1)  # HARD refuses BEGIN-work
             self.assertIn("REFUSED:", err.getvalue())
-            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")
-            # request a refresh, then the same advance is allowed through
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "pending")
+            # request a refresh, then the same start is allowed through
             self.assertEqual(
-                E.main(["--file", str(f), "attach", "g1", "--type", "refresh-request",
-                        "--field", "seam=g1", "--field", "why_ref=w-1"]), 0)
-            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
-            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+                E.main(["--file", str(f), "attach", "g2", "--type", "refresh-request",
+                        "--field", "seam=g2", "--field", "why_ref=w-1"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "in-progress")
+
+    def test_handoff_fresh_hard_gauge_never_refuses_the_closing_advance(self):
+        """#467, the real-file twin of the permanent DC2 guard: with a REAL gauge
+        over hard and NO refresh-request anywhere, the gate the agent is already
+        inside closes through main() and the digest carries the understanding
+        written at it. The pre-#467 engine returned rc 1 here."""
+        _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, gated(g1=gate("g1", "in-progress", command=PASS_COMMAND,
+                                    why_exempt=False)))
+            self._write_gauge(d, min(hard + 0.05, 1.0),
+                              datetime.now(timezone.utc).isoformat())
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1",
+                                     "--why", "closing g1 carrying my handoff"]), 0)
+            cl = E.load(f)
+            self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+            self.assertEqual(E._digest(cl), "closing g1 carrying my handoff")
+            self.assertEqual(_refresh_requests_anywhere(cl), [])
 
     def test_stale_gauge_reads_none_and_never_forces(self):
         _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")

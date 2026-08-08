@@ -46,5 +46,29 @@
     "model": "opus",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/issue-467-trip-semantics/g2-implement/implementer/attempt-1",
+    "work_id": "issue-467-trip-semantics",
+    "gate": "g2-implement",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/issue-467-trip-semantics/g2-implement/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+    "handoff": ".agent-work/issue-467-trip-semantics/crew-handoffs/g2-implementer-handoff.md",
+    "result": ".agent-work/issue-467-trip-semantics/crew-handoffs/g2-implementer-result.md",
+    "stdout": ".agent-work/issue-467-trip-semantics/crew-runs/g2-implement-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/issue-467-trip-semantics/crew-runs/g2-implement-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-08T11:34:53.039318+00:00",
+    "last_heartbeat": "2026-08-08T12:28:55.253115+00:00",
+    "completed_at": "2026-08-08T12:28:55.253115+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

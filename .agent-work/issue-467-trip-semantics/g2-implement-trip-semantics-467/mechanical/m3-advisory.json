@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-advisory",
+  "mechanical": {
+    "run": "g2-implement-trip-semantics-467",
+    "project": "constellation-skills",
+    "role": "g2-implementer",
+    "refusals": 0,
+    "spine-step": "m3-advisory",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-trip-semantics-467-m3-advisory@01c4c37cfd851fb73344e5355e62fd0f166b2251",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement-trip-semantics-467",
+    "generated_at": "2026-08-08T11:54:53Z"
+  }
+}

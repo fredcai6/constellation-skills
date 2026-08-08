@@ -74,6 +74,15 @@ MUTATING_VERBS = {
 }
 
 
+# Verbs that BEGIN work at a gate, and are therefore the ones the Trip HARD band
+# refuses over the line (#467). `start` opens a pending gate; `reopen` drives a
+# complete gate back to in-progress and cascades downstream — both commit an agent
+# to work it may not be able to finish. `advance` is deliberately ABSENT: closing
+# the gate you are already inside IS the handoff and is never governor-refused. So
+# is `resume`, which only restores a blocked gate to the status it already held.
+TRIP_HARD_GUARDED_VERBS = {"start", "reopen"}
+
+
 # --------------------------------------------------------------------------- #
 # gauge reader binding (#181) — loaded by file path so the engine drives whether
 # it is run as a script or imported by a test via spec_from_file_location (both
@@ -1208,15 +1217,29 @@ def _why_suffix(cl: dict, aid: str | None) -> str:
 #     done, hand off here at this seam." SOFT NEVER forces; the agent may decline
 #     (any reason accepted in v1 — we do not police reason quality; declining is
 #     simply choosing to `advance`, which SOFT never blocks).
-#   HARD (fill >= hard): the engine REFUSES to `advance` until a `refresh-request`
+#   HARD (fill >= hard): the engine REFUSES the verbs that BEGIN work at a gate —
+#     `start` and `reopen` (TRIP_HARD_GUARDED_VERBS) — until a `refresh-request`
 #     exists for the gate (#179's `has_pending_refresh_request`), pointing at the
-#     exact `attach` command. HARD ALWAYS forces.
+#     exact `attach` command with the concrete live why-record id. HARD ALWAYS
+#     forces. It does NOT refuse `advance` (#467): closing the gate you are already
+#     inside IS the handoff, and an agent running out of context must be able to
+#     finish and hand off the gate it is in. `resume` is not guarded either — it
+#     only restores a blocked gate to the status it already held. What HARD adds on
+#     the CLOSE side is a ban on SILENCE: at/over hard `advance --mechanical` is
+#     refused and `why_exempt` is suspended, so the digest cannot stay pre-trip
+#     while the gate closes (#431).
+#
+# HARD means WRAP UP. It has never meant "you are unsafe", and its advisory is
+# worded as a changed instruction rather than an alarm — an agent that reads an
+# alarm looks for a way past it instead of doing the thing it is being asked to do.
 #
 # CHECKS AT GATE BOUNDARIES ONLY — the mid-gate runaway is a deliberately accepted
 # limit; there is no mid-gate check. Like the doctrine rail, this policy rides the
 # CLI-boundary chokepoints in `dispatch` so the verb functions stay PURE (their
 # return values are unchanged, so existing exact-equality tests keep passing): SOFT
-# is a suffix on `current`'s dispatch output; HARD is a pre-`advance` guard.
+# is a suffix on `current`'s dispatch output; HARD is a pre-verb guard on
+# `start`/`reopen` plus the `require_why` flag `dispatch` passes into `advance`
+# (default False, so a direct non-dispatch call is unaffected).
 #
 # The agent NEVER introspects fill: the engine supplies the fill fact, the agent
 # supplies the stop-point judgment.
@@ -1251,12 +1274,19 @@ def _read_gauge(base_dir: Path | None):
     return _gauge_reader.read(path)
 
 
-def _refresh_attach_hint(gate: str) -> str:
+def _refresh_attach_hint(gate: str, why_id: str | None = None) -> str:
     """The exact `attach` command that raises a refresh-request for `gate` — the
     remedy both bands point the agent at (payload is pointers only: seam + why_ref,
-    per #179). `<why-id>` is a placeholder the agent fills from the live DIGEST."""
+    per #179).
+
+    `why_id` is the live why-record id, and passing it is the whole point (#467):
+    the literal `<why-id>` placeholder is not a prompt an agent reliably fills in —
+    four separate runs pasted it verbatim, and `attach ... --field why_ref=<why-id>`
+    exits 0 while recording a request that matches no understanding, so the identity
+    check (#190) never releases and the agent cannot tell why. The placeholder
+    survives only as the fallback for a checklist with no live why-record to name."""
     return (f"attach {gate} --type refresh-request "
-            f"--field seam={gate} --field why_ref=<why-id>")
+            f"--field seam={gate} --field why_ref={why_id or '<why-id>'}")
 
 
 def _uncalibrated_advisory(base_dir: Path | None) -> str:
@@ -1424,11 +1454,24 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # the gate-only match, preserving all existing behavior.
         rec = _latest_why_record(cl)
         wid = rec["id"] if rec else None
+        # #467: HARD has always meant "wrap up", never "you are unsafe" — but the old
+        # wording ("`advance` is BLOCKED", "lost to a runaway") read as an alarm about
+        # a mechanism failing, and an agent that reads an alarm looks for a way past it
+        # instead of doing the one thing it is being asked to do. So the HARD band
+        # states a CHANGED INSTRUCTION: close the gate you are in, request a refresh,
+        # stop. It also no longer claims `advance` is blocked, because it is not.
         if has_pending_refresh_request(cl, gate, why_ref=wid):
-            return (f"\nCONTEXT {fill:.0%} (>= hard): refresh already requested for "
-                    f"{gate} — hand off now; do not keep working.")
-        return (f"\nCONTEXT {fill:.0%} (>= hard): `advance` is BLOCKED until you "
-                f"request a refresh. Run: {_refresh_attach_hint(gate)}  — then hand off.")
+            return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed, and "
+                    f"the refresh for {gate} is already requested. Close THIS gate "
+                    f"carrying your handoff (`advance {gate} --why \"<understanding>\"`) "
+                    f"and stop. A fresh agent picks up from your DIGEST; do not begin "
+                    f"work at another gate.")
+        return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed. You have "
+                f"taken this as far as this context can carry it — now close THIS gate "
+                f"carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
+                f"request a refresh, and stop. A fresh agent picks up from your DIGEST; "
+                f"do not begin work at another gate. Request the refresh with: "
+                f"{_refresh_attach_hint(gate, wid)}")
     if fill >= soft:
         return (f"\nCONTEXT {fill:.0%} (>= soft): you've used most of your context. "
                 f"Unless you're basically done, hand off here at {gate} rather than "
@@ -1436,19 +1479,40 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     return ""
 
 
-def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
-    """Trip HARD backstop at the `advance` gate boundary: REFUSE to advance when
-    the gauge reads `fill >= hard` and no `refresh-request` is pending for the
-    gate. No-op for surveys, a missing/stale reading (None), or below `hard` — HARD
-    never forces on an absent reading. Called BEFORE `advance` mutates state, so a
-    refusal leaves the gate exactly `in-progress`."""
-    if cl.get("type") != GATED or not iid:
-        return
+def _trip_hard_band_reading(cl: dict, base_dir: Path | None):
+    """The gauge Reading when this checklist is in the HARD band right now, else
+    None. One place decides "are we at/over hard", so the begin-work guard
+    (`_trip_hard_gate`) and the no-silent-close rule (`advance`'s `require_why`)
+    can never disagree about it. Fail-safe by construction: surveys and a
+    missing/stale reading both yield None, which every caller reads as "band
+    inactive" — HARD never forces on an absent reading."""
+    if cl.get("type") != GATED:
+        return None
     reading = _read_gauge(base_dir)
     if reading is None:
-        return
+        return None
     _, hard = _gauge_reader.thresholds_for(reading.model)
     if reading.fill_fraction < hard:
+        return None
+    return reading
+
+
+def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
+    """Trip HARD backstop at the verbs that BEGIN work at a gate — `start` (opens a
+    pending gate) and `reopen` (drives a complete gate back to in-progress and
+    cascades downstream). REFUSE to begin when the gauge reads `fill >= hard` and no
+    `refresh-request` is pending for the gate.
+
+    #467 moved this OFF `advance`. Closing the gate you are already inside IS the
+    handoff, so it is never governor-refused; what an agent over the line must not
+    do is BEGIN work it cannot finish. No-op for surveys, a missing/stale reading
+    (None), or below `hard` — HARD never forces on an absent reading. Called BEFORE
+    the verb runs, so a refusal leaves the gate's status exactly as it was and never
+    refreshes the lease."""
+    if not iid:
+        return
+    reading = _trip_hard_band_reading(cl, base_dir)
+    if reading is None:
         return
     # Identity-aware release (#190): the pending refresh-request must be keyed to the
     # CURRENT understanding (`_latest_why_record`), so a distinct new trip on a
@@ -1460,9 +1524,10 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
     if has_pending_refresh_request(cl, iid, why_ref=wid):
         return  # the agent already requested a refresh; the backstop is satisfied
     raise EngineError(
-        f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit — "
-        f"advancing is blocked until you request a refresh, so work is handed off at "
-        f"a seam rather than lost to a runaway. Run: {_refresh_attach_hint(iid)}"
+        f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit, so "
+        f"this is not the moment to BEGIN work here — finish and close the gate you are "
+        f"already in, then request a refresh so a fresh agent starts this one. "
+        f"Run: {_refresh_attach_hint(iid, wid)}"
     )
 
 
@@ -1852,7 +1917,8 @@ def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
 
 
 def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | None = None,
-            why: str | None = None, mechanical: bool = False) -> str:
+            why: str | None = None, mechanical: bool = False,
+            require_why: bool = False) -> str:
     if cl["type"] != GATED:
         raise EngineError("advance is for gated checklists; use record")
     t = task(cl, iid)
@@ -1896,7 +1962,27 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
     # either a running --why or an explicit --mechanical marker; SILENCE FAILS CLOSED.
     # A missing `why_exempt` is treated as NOT exempt (opt-out default). The record
     # lands on the append-only why_trail; a mechanical marker never becomes the digest.
-    if not bool(t.get("why_exempt")):
+    #
+    # `require_why` (#467) is the CLI boundary telling this verb that the context
+    # gauge is at/over the HARD threshold. Closing the gate is still NOT refused —
+    # closing it is the handoff — but closing it SILENTLY is: `--mechanical` is
+    # refused and `why_exempt` is SUSPENDED, so the understanding actually lands on
+    # the why_trail. Without this a tripped agent closes with a mechanical marker,
+    # `_latest_why_record` skips it, the DIGEST stays pre-trip, and the fresh agent
+    # cold-starts from an understanding written before the work it is inheriting —
+    # #431, reproduced after its own fix. The parameter defaults to False, so every
+    # direct (non-dispatch) caller behaves exactly as before.
+    if require_why:
+        if mechanical or not (why or "").strip():
+            raise EngineError(
+                f"{iid}: context is at/over the hard limit, so this gate cannot be "
+                f"closed silently — a mechanical or why-less close records no "
+                f"understanding, and the next agent would cold-start from a digest "
+                f"written before your work. Closing the gate is NOT refused; only the "
+                f"silence is. Run: advance {iid} --why \"<understanding>\""
+            )
+        _append_why(cl, iid, why=why.strip(), mechanical=False)
+    elif not bool(t.get("why_exempt")):
         if mechanical:
             _append_why(cl, iid, why=None, mechanical=True)
         elif (why or "").strip():
@@ -2673,10 +2759,15 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         # carry the owning --session-id. No lease -> legacy behavior (no session).
         session_id = getattr(args, "session_id", None)
         require_session(cl, v, session_id, config)
-        # Trip HARD backstop (#182): at the `advance` gate boundary, refuse when the
-        # gauge reads >= hard and no refresh-request exists yet. Checked BEFORE the
-        # verb runs so a refusal never mutates state. No-op on a missing reading.
-        if v == "advance":
+        # Trip HARD backstop (#182, re-aimed by #467): the guard hangs off the verbs
+        # that BEGIN work at a gate — `start` opens a pending gate, `reopen` drives a
+        # complete one back to in-progress — and NEVER off `advance`, which closes the
+        # gate the agent is already inside and IS the handoff. `resume` is deliberately
+        # not here: it returns a blocked gate to its pre-block status, which for an
+        # in-progress prior hands back the gate already under way. Checked BEFORE the
+        # verb runs so a refusal never mutates state and never stamps liveness. No-op
+        # on a missing reading.
+        if v in TRIP_HARD_GUARDED_VERBS:
             _trip_hard_gate(cl, getattr(args, "id", None), base_dir)
         # Run the verb FIRST: a refused verb raises here (before the liveness stamp),
         # so it never refreshes the lease even though main() persists on the error
@@ -2705,9 +2796,14 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
     if v == "start":
         return start(cl, args.id, base_dir=base_dir)
     if v == "advance":
+        # #467: the HARD band never refuses this advance — closing the gate you are
+        # inside IS the handoff — but at/over hard it does refuse closing it in
+        # SILENCE. The band decision belongs to this CLI boundary, so `advance` stays
+        # a pure function of its arguments and every direct caller is unaffected.
         return advance(cl, args.id, from_child=getattr(args, "from_child", None),
                        base_dir=base_dir, why=getattr(args, "why", None),
-                       mechanical=getattr(args, "mechanical", False))
+                       mechanical=getattr(args, "mechanical", False),
+                       require_why=_trip_hard_band_reading(cl, base_dir) is not None)
     if v == "record":
         return record(cl, args.id, args.result, args.finding, base_dir=base_dir)
     if v == "consolidate":

@@ -313,7 +313,8 @@
           "id": "p1",
           "statement": "the RED is on the record and reproduces",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "RED is on the record and reproduces. g1-integrate is COMPLETE and its DIGEST (why_trail w-4) records that commander-w4-467-d re-ran red-repro/repro_431.py --all in its own shell: 24 ASSERT OK / 0 FAIL, real exit 0, both faces. The repro artifact is present at .agent-work/issue-467-trip-semantics/red-repro/repro_431.py with four transcripts (all, face-a, face-b, gauge-read). Unchanged-tree shortcut applies: HEAD is d80eda7c (the g1 close commit), git status shows only the two engine JSONs modified by my own claim, and g1 changed no source at all (c2 verified git diff --stat -- scripts tests EMPTY, both worktree and main...HEAD). Not re-run here by explicit predecessor instruction and per the unchanged-tree evidence contract."
         }
       ],
       "postconditions": [
@@ -324,7 +325,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-2"
         }
       ],
       "constraints": [
@@ -365,7 +367,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -377,6 +379,18 @@
             "seam": "g2-implement",
             "why_ref": "w-4",
             "note": "Tripped at fill 0.165 (>= hard 0.15, claude-opus-5) BEFORE starting g2-implement, not during it. g2-implement is still 'pending' and NO crew was dispatched -- that is deliberate: 'start' is a BEGIN-work verb and dispatching an implementer at/over hard is exactly the DC6 violation this issue's own fix (b) is built to refuse. So the compliant reading of the governor is 'do not open g2', not 'open g2 and hand off mid-gate'. Successor: claim BOTH spine.json and execute.json (same session id -> idempotent resume, no --force), then start g2-implement and drive gate g2 from the frozen plan. g1 is CLOSED and its DIGEST (w-4) is complete -- do not redo any g1 work, do not re-run the repro to 'check'. why_ref is the concrete w-4, read from execute.json's raw why_trail because the engine's printed <why-id> is a literal placeholder that attaches exit 0 and silently does nothing (TC-4 / D7, which g2(d) fixes)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g2-implementer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g2-implement/implementer/attempt-1",
+            "verified": "run_crew.py --verify-result -> fresh (completed)",
+            "blockers": "none"
           },
           "produced_by": "engine",
           "ts": ""
@@ -988,7 +1002,18 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-implement",
+      "statement": "tc1: docs/agents/GLOSSARY.md line 13 still reads 'HARD blocks advance until the agent requests a context refresh.' That claim is FALSE as of this gate and it is the glossary every constellation agent reads -- it teaches the exact belief #431 came from. Found by the g2 implementer on its own initiative via a blast-radius grep; it was outside its allowed scope (CHECKLIST_SCHEMA.md Trip section only) so it flagged rather than edited. Rated must-fix before the epic closes."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-implement",
+      "statement": "tc2: whether a gate that trips with UNMET postconditions needs a mid-gate handoff channel. 'block --next' exists but 'current' does not render its text. Carries no grade. Raised per the frozen g2 plan, deliberately not built here."
+    }
+  ],
   "blockers": [],
   "why_trail": [
     {
@@ -1018,19 +1043,25 @@
       "why": "g1 CLOSED. RED verified genuine and reproduced in MY OWN shell as the fourth commander on this issue: repro_431.py --all -> 24 ASSERT OK / 0 FAIL, real exit 0; c1 pytest tests/test_checklist_engine.py tests/test_gauge_reader.py -> 394 passed, 30 subtests, real exit 0; c2 git diff --stat -- scripts tests EMPTY and main...HEAD -- scripts tests EMPTY, so this gate changed no source, before and after the repro run. c3 PASSED, NOT WAIVED: it was amended through the engine on the Admiral's ruling (retext-check g1-integrate.c3, authority \"Admiral, epic #418 latitude contract\"), from the literal string APPROVE -- which the frozen reviewer handoff made unreachable by prescribing ACCEPT / ACCEPT WITH FINDINGS / REJECT -- to verdict_class=ACCEPTED + blocking_findings=0. THE CHECK REMAINS FAILABLE, which was the Admiral's binding condition: ACCEPT and ACCEPT WITH FINDINGS pass; REJECT FAILS, twice over (verdict_class normalizes to REJECTED, and a REJECT necessarily carries blocking findings != 0). The literal reviewer verdict rides verbatim in the payload for audit; the normalization is additive. No APPROVE artifact was ever fabricated.\nCARRY INTO g2-g4, THIS IS THE ONE THAT INVALIDATES THE OBVIOUS TEST: the reviewer's PROBE 2 showed the post-attach advance SUCCEEDS and writes a fresh DIGEST. #431 is an INSTRUCTION-CONFORMANCE defect, not a mechanical deadlock -- the engine PERMITS the verb while telling the agent in the same breath not to run it. I proved it again by BEING it: I ran this very advance at fill 0.162 (>= hard 0.15 for claude-opus-5) and the engine let me, because a refresh-request was pending. So a g2-g4 acceptance test worded \"the advance is no longer blocked\" verifies something that was NEVER blocked and passes in BOTH worlds. The fix must be verified on what the agent is TOLD, not on whether the verb returns 0. Discrepancy D2.\nSTANDING TRAPS UNCHANGED: (1) DC6's observable is \"did anyone BEGIN work while over the line\", never \"did a handoff artifact appear\" -- the latter is true by construction and green in both worlds. (2) At/over hard, advance --mechanical must be REFUSED and why_exempt SUSPENDED, because _latest_why_record skips mechanical markers and would otherwise reproduce #431 after the fix.\nHANDOFF-INSTRUMENT DEFECTS I HIT COLD, for the epic's own ledger: STATE_NOTE.md is the STALEST artifact of the three -- it says the leases were RELEASED (they were active, re-claimed at 11:16:22Z) and describes c3 as an open unanswered float, when c3 had already been amended and the matching evidence attached. evidence e-g1-integrate-3 points a successor at a STATE_NOTE.md section titled \"THE DIGEST I COULD NOT WRITE\" that does not exist in the file. The engine state (execute.json tasks + amendments + evidence) was the ONLY projection that was correct end to end; the prose handoff and the dispatch briefing both told me to redo work already done. NEXT: g2.",
       "mechanical": false,
       "ts": "2026-08-08T11:22:10.189065+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "g2-implement CLOSED. An independent opus implementer shipped all five parts (a)-(e) and returned complete with no stop conditions hit; result verified fresh by run_crew.py --verify-result (not a stale leftover). THE SEAM HELD, which was the binding constraint: the guard moved from 'advance' to a new TRIP_HARD_GUARDED_VERBS={start,reopen} at the dispatch chokepoint, verbs stayed pure (advance gained one keyword require_why=False, and every direct E.advance(...) call in the suite is byte-identical), and one new _trip_hard_band_reading is the single place that decides 'are we at/over hard' so the begin-guard and the no-silent-close rule cannot drift apart. #190's identity check is preserved verbatim including the wid-is-None gate-only degradation. resume is untouched; _PROFILES untouched; no validation added to attach; no mid-gate channel built. I RAN THE FROZEN CLOSEOUT SELECTOR MYSELF: pytest tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff' -> 25 passed, 346 deselected, real exit 0 (it collected 0 and exited 5 before this gate), so the c2 empty-collection trap is cleared. Scope is clean in my own git status: only the three allowed source files (scripts/checklist_engine.py, tests/test_checklist_engine.py, docs/CHECKLIST_SCHEMA.md) plus work-area artifacts. THE TRAP WAS RESPECTED: the permanent DC2 guard test asserts BOTH preconditions inside itself -- fill>=hard AND _refresh_requests_anywhere(cl)==[] walking every task's evidence -- so it is red against today's code and cannot pass in both worlds. 12 mutations logged with per-mutation TOTAL failure counts; M4/M5 are deliberately paired so that only M5 catches a shipped-inert guard. HONESTY SIGNAL WORTH KEEPING: M11 (the None-reading fail-safe) is reported as a LIMITATION, not dressed as a pass -- no narrow mutation exists because nearly every fixture runs with no gauge file, so specificity is explicitly not claimed rather than a 47-failure mutation being passed off as proof. 6 existing Trip tests re-aimed, 0 deleted, each with a reason. Suite 1815 passed / 2 skipped / 682 subtests vs baseline 1793/2/683: +22 is exactly the new tests, and the -1 subtest was bisected to test_context_manifest.py's clean-file filter and is predicted to disappear once I commit -- I VERIFY THAT PREDICTION AT g2-integrate rather than accepting it. TWO CANDIDATES FLAGGED: tc1, docs/agents/GLOSSARY.md line 13 still asserts 'HARD blocks advance' -- now FALSE, and it is the glossary every agent reads, i.e. it teaches the exact belief #431 came from; the implementer found it by an unprompted blast-radius grep and correctly flagged rather than edited, out of scope. tc2, the mid-gate handoff channel, raised not built as instructed. NEXT: g2-review, and the reviewer must independently re-run at least two mutations.",
+      "mechanical": false,
+      "ts": "2026-08-08T12:29:55.385233+00:00"
     }
   ],
-  "refusals": 4,
+  "refusals": 6,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "released",
-    "claimed_at": "2026-08-08T11:16:22.391213+00:00",
-    "last_heartbeat": "2026-08-08T11:18:58.417593+00:00",
-    "claimed_by": "commander-w4-467-d",
+    "status": "active",
+    "claimed_at": "2026-08-08T11:30:51.929485+00:00",
+    "last_heartbeat": "2026-08-08T12:29:55.385233+00:00",
+    "claimed_by": "commander-w4-467-e",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-08T11:19:59.463207+00:00"
+    "takeover_reason": null
   },
   "amendments": [
     {
