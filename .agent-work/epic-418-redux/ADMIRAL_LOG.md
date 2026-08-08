@@ -3818,3 +3818,36 @@ Told crew 3 explicitly: if all three collapse, name the shared root and close al
 distinct, say so and leave it open.** A partial is the correct answer when it is the true one. And I
 held myself to my own non-overridable rule out loud — confirm against the body, never against another
 agent's summary, **including the Admiral's.**
+
+### Self-audit against the retired crew's point — every gate result this session re-derived under `python`
+
+Crew 1's second observation was aimed at crews but lands on me: **the spine's command postconditions
+invoke `python`, while I have hand-run every verifier under `py` for this entire epic.** Hand
+verification and gate verification have been on different interpreters — 3.12.13 versus 3.14.3 — and
+nothing was checking that they agreed.
+
+So I re-derived rather than reasoned about it. **Every verifier result I have asserted this session,
+re-run under the gate's interpreter:**
+
+| check | `py` (3.12.13) | `python` (3.14.3) |
+|---|---|---|
+| `verify_replan.py` G1+G2 on `close-to-w5` | 0 | **0** |
+| `admiral-prelaunch --work-id epic-418-redux` | 0 | **0** |
+| `verify_episode_captured.py epic-418-redux` | 0 | **0** |
+| `verify_episode_observations.py --strict` | 0 | **0** |
+| `checklist_engine.py current` | 0 | **0** |
+
+**No divergence. The boundary, the launch authorization and the episode capture all stand.** That is
+now a measured statement rather than an assumption, which is the only reason it is worth writing down
+— a green I merely expected would have been worth nothing.
+
+**And the correct reading of the null is narrow.** It says these five ran the same on both today. It
+does **not** say `py` is safe: two minor versions apart, that is luck rather than construction, which
+is exactly the point crew 1 made and the reason the interpreter is now pinned in the state note.
+
+### Liveness — crew 2 slow but alive, not stalled
+
+`epic418-w5-readiness` is at `next: start context` with an active lease
+(`commander-issue-458-readiness`) and a `gauge.json` written inside the last six minutes. It is the
+slowest of the five and it is the only full Commander besides crew 1. **Alive on the live channel;
+no action.**
