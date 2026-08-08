@@ -149,6 +149,27 @@ What carries forward, and must not be re-derived:
   asked. They are queued for the next checkpoint with their evidence rather than closed on my own
   authority. Merging is delegated; closing is not, and the two are easy to conflate once the PR is in.
 
+
+- `2026-08-07` — `INCIDENT`: **second HARD trip for both #433 and #460, this time at the `execute`
+  gate** (18% and 17% fill). Third dispatch each. Distinct from the first round in one way that
+  matters: **neither filed its refresh-request before stopping**, so `current` showed the DIGEST with
+  no `REFRESH REQUESTED:` line — which is the signature of a *crash*, not a governed handoff. The
+  recovery is identical either way (fresh agent, same worktree, same spine), but the diagnosis cost
+  me a round-trip, so the third-dispatch orders now say to file the request *first*, then stop.
+
+  Neither had lost work: #433 carried 3 commits, #460 carried 4 plus a completed reviewer/rework
+  cycle. The relaunch orders carry each one's settled findings forward explicitly and tell both to
+  **prioritise shipping over polishing** — a third dispatch that keeps refining is a fourth dispatch.
+
+  **Running cost of the trip band, measured rather than estimated: 3 dispatches per Commander-sized
+  issue.** #436 and #464 (implementer-sized, Sonnet) needed 2 and 1. This is the single largest
+  drag on the wave, and it is a governor-tuning question for Tommy — not something I retune mid-wave.
+
+- `2026-08-07` — `RULING`: **third-dispatch orders instruct Commanders to open their PR even though
+  it will report CONFLICTING.** The squash-orphan is mine, the replant is mechanical and proven
+  twice, and a Commander that stops to rebase would burn its remaining context on my mistake. So the
+  order states the conflict is expected, tells them not to rebase, and takes the replant onto me.
+
 ## Merges` heading while appending the baseline
   ruling — my replacement text dropped the heading it was anchored on. Caught when the next edit
   could not find it. No data lost (the section was empty); heading restored below. Cost: one
