@@ -7,7 +7,26 @@
 - **wave-4 dispatch:** one Commander, issue **#467**, worktree
   `C:/Programs/constellation-skills-wt/epic418-a2-467`, branch `epic-418/a2-467-trip-semantics`,
   model **Opus**. Launch order: `launch-orders/LO-467.md`.
+  **Now on its SECOND instance (`commander-w4-467-b`)** — the first tripped the governor at the
+  `plan` boundary (27.6%, asserted) and handed off cleanly. Same worktree, same spine file, cold
+  start from `current` alone. **The plan is FROZEN** and lives at
+  `<worktree>/.agent-work/issue-467-trip-semantics/execute.json` — 16 tasks, 5 gates.
 - **expected artifact:** a green, reviewed PR closing #467; then the wave-4 checkpoint to Tommy.
+
+**If it trips again: relaunch the same way.** Fresh Commander, same worktree, same spine file,
+told only to run `current` and obey it. **Do not re-brief from your own memory of the run** — DC5
+measures exactly whether a cold successor can resume from `current`, and briefing it destroys the
+measurement. Its own verdict on the handoff's sufficiency is part of its deliverable.
+
+**LO-467 CONTAINS AN UNSATISFIABLE INSTRUCTION — do not repeat it in any future launch order.**
+It says *"write a `refresh-request` ... make sure your `current` carries the DIGEST ... go idle."*
+Both clauses cannot be obeyed: `current` carries the latest live why-record, only `advance` writes
+one, and `advance` is the verb the refusal blocks. **`global-everyone.md` §reach-up says the same
+thing**, so this is #431 propagating into doctrine, not just my drafting. The move that actually
+works, discovered by the first Commander from source: `attach` refresh-request → `advance <gate>
+--why "<the handoff>"` → **`attach` a SECOND request at the gate you hand off TO**, because
+`REFRESH REQUESTED:` is **active-gate-keyed** and a compliant handoff otherwise erases its own
+signal.
 
 **GREEN MAIN BASELINE: `1793 passed, 2 skipped, 683 subtests, exit 0`** — carried from the wave-3
 close, re-verified on merged main after PR #499.
