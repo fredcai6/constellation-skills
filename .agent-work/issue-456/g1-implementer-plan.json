@@ -418,7 +418,8 @@
             "kind": "command",
             "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q --color=no"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m7-close-2"
         },
         {
           "id": "c2",
@@ -427,7 +428,8 @@
             "kind": "command",
             "command": "test -s .agent-work/issue-456/crew-handoffs/g1-implement-RESULT.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m7-close-3"
         }
       ],
       "constraints": [
@@ -436,11 +438,44 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m7-close-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m7-close",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-close-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/issue-456/crew-handoffs/g1-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -463,16 +498,17 @@
     }
   ],
   "blockers": [],
-  "refusals": 6,
+  "refusals": 7,
   "engine_session": {
     "session_id": "g1-implementer-01",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T00:51:05.055659+00:00",
-    "last_heartbeat": "2026-08-08T01:37:47.472113+00:00",
+    "last_heartbeat": "2026-08-08T01:49:07.535204+00:00",
     "claimed_by": "implementer",
     "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T01:49:23.042382+00:00"
   },
   "why_trail": [
     {
@@ -523,6 +559,13 @@
       "why": "Every check in the gate has now been attacked by something its author did not design for it, including the three inherited ones. The pass paid for itself twice: it exposed a hole in my own count arm (delete one page, add one stray page, the books balance) which is now closed by a separate coverage arm with its own test, and it turned two of StoreScan's declared limits from prose into measurements. Four survivors named plainly, two of them real gaps, routed to g4 as tc1 and recorded as tc3 rather than papered over by narrowing any check's claim. Working tree restored: only checks.py and test_code_map.py are modified; every mutation ran against a COPY of the package.",
       "mechanical": false,
       "ts": "2026-08-08T01:37:40.436671+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-close",
+      "why": "Full suite green at the boundary: 1729 passed, 2 skipped, 1 xfailed, 0 failed against a 1709/2/0 baseline -- +20 tests, no regression, xfail is not red. Both gate selectors reach the new work. IMPLEMENTER_RESULT written covering all six checks, every mutation with its command and observed exit code, the determinism-diff evidence, the move-invariant-vs-baseline rule and its three corollaries, the treatment of the RED invariant including the conditional-strict marker, and five findings not asked about. Committed at 44eeb740 with explicit paths only; git add -A never used, the untracked map/ tree untouched for the final gate. Not merged, not force-pushed.",
+      "mechanical": false,
+      "ts": "2026-08-08T01:49:07.535177+00:00"
     }
   ]
 }
