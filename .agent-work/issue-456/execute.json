@@ -194,12 +194,12 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "COMMANDER CONTEXT ONLY -- no work remains at this gate. All three reviewer findings are closed and independently verified: B1 (0 of 3535 entity-page headers carry a position), B2 (count no longer counts write calls), B3 (the docstring no longer claims the count can be wrong). Full suite 1709 passed / 2 skipped / 0 failed, re-run by me in a cleared environment after the final edit. Everything committed and pushed to issue-456/code-map at 853be2bc; map/ confirmed untracked. The single remaining action, 'advance g0-review', is refused solely because the commander gauge reads 0.194 against a 0.15 hard limit. Refresh-request already filed at e-g0-review-6. This is a context seam, not a work blocker, and it is bubbled rather than left in-progress so the run does not read as abandoned.",
         "authority_needed": "parent agent",
         "next_action": "A fresh commander re-claims lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), reads STATE_NOTE.md, then runs: resume g0-review --reason 'context refreshed', then advance g0-review, then g0-integrate. Do NOT redo any g0 work and do NOT re-dispatch any g0 crew -- all six are terminal. NOTE tc25 before attempting any dispatch at g0/implementer: that slot is undispatchable, refusing with 'duplicate crew' while naming a completed crew as running, and --abandon does not clear it because slot reuse left four entries under one id. Remaining after g0: g1 g2 g3 g4 g5 gb g6 g7 g8 gs, then reconcile, triage (drain tc1-tc25), review, feedback, archive -- release the lease LAST. Push and a full non-draft PR are pre-approved; merge to main is NOT.",
-        "prior_status": "in-progress"
+        "resume_reason": "context refreshed by compaction; all three review findings closed and verified"
       },
       "result": null,
       "finding": null,
@@ -332,7 +332,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Two REVIEW_RESULT artifacts received for g0: crew-handoffs/g0-review-RESULT.md (BLOCK, B1+B2) and crew-handoffs/g0-rereview-RESULT.md (BLOCK, B3). Both crews terminal. Attested by the Commander."
         }
       ],
       "postconditions": [
@@ -1803,14 +1804,7 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "g0-review",
-      "blocker": "COMMANDER CONTEXT ONLY -- no work remains at this gate. All three reviewer findings are closed and independently verified: B1 (0 of 3535 entity-page headers carry a position), B2 (count no longer counts write calls), B3 (the docstring no longer claims the count can be wrong). Full suite 1709 passed / 2 skipped / 0 failed, re-run by me in a cleared environment after the final edit. Everything committed and pushed to issue-456/code-map at 853be2bc; map/ confirmed untracked. The single remaining action, 'advance g0-review', is refused solely because the commander gauge reads 0.194 against a 0.15 hard limit. Refresh-request already filed at e-g0-review-6. This is a context seam, not a work blocker, and it is bubbled rather than left in-progress so the run does not read as abandoned.",
-      "authority_needed": "parent agent",
-      "next_action": "A fresh commander re-claims lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), reads STATE_NOTE.md, then runs: resume g0-review --reason 'context refreshed', then advance g0-review, then g0-integrate. Do NOT redo any g0 work and do NOT re-dispatch any g0 crew -- all six are terminal. NOTE tc25 before attempting any dispatch at g0/implementer: that slot is undispatchable, refusing with 'duplicate crew' while naming a completed crew as running, and --abandon does not clear it because slot reuse left four entries under one id. Remaining after g0: g1 g2 g3 g4 g5 gb g6 g7 g8 gs, then reconcile, triage (drain tc1-tc25), review, feedback, archive -- release the lease LAST. Push and a full non-draft PR are pre-approved; merge to main is NOT."
-    }
-  ],
+  "blockers": [],
   "why_trail": [
     {
       "id": "w-1",
@@ -1825,6 +1819,13 @@
       "why": "g0 implementation complete across three implementer passes and independently verified by the commander: full suite 1706 passed / 2 skipped / 0 failed against a 1688 baseline; exclusion falsifier reproduced in my own hands (mutation red, restore green); end-to-end extract-to-render exits 0 producing 3,635 pages; bundling resolved on the record via NON_INSTALLABLE_PACKAGES with four falsifiable guard tests; no timings in any run report. Evidence e-g0-implement-1/2/3.",
       "mechanical": false,
       "ts": "2026-08-07T22:09:17.760591+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g0-review",
+      "why": "g0-review CLOSED. Two reviewer passes, three findings, all three closed and independently verified by the Commander. B1 (page headers carried a source line number that D1 already proves wrong): Tommy ruled 'strip the line numbers' -- 0 of 3535 entity-page headers now carry a .py line number, all 3535 kept the path and ', N lines'. B2 (the render report's 'pages' counted write_text calls, so the silently-lost page was invisible): now counts the tree. B3 (raised by the re-review: the B2 fix RELOCATED the tautology rather than removing it -- a count of the tree is tautologically true of that tree, proved by three mutations the test's author did not choose, N4/N5/N8, all GREEN): closed by rewriting the docstring at tests/test_code_map.py:127 to state honestly that the test guards the counting METHOD only and does NOT detect a lost page. STANDING LESSON for the remaining ten gates: reproducing the falsifier a crew designed only proves that crew's probe works; a cannot-fail check must be attacked with a mutation its author did NOT choose. NOT DONE HERE, BY RULING: the falsifiable check already exists in the artifact and nothing asserts it -- pages minus 1 minus modules = 3535 vs entity_pages = 3536, contradicting itself by exactly the lost Verdict/verdict page. It goes to g1 with tc17, because asserting it today ships a RED test (the page really is lost and g2 owns the rename). tc24 corrects tc18: the root is 'sizes', which feeds three fields, and counting the tree again is NOT the fix. Suite 1709 passed / 2 skipped / 0 failed, reproduced by the Commander in a cleared environment after the final edit. Evidence e-g0-review-2 through e-g0-review-7.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:06:31.270722+00:00"
     }
   ]
 }
