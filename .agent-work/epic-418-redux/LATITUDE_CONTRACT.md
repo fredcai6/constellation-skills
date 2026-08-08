@@ -247,11 +247,31 @@ Everything carries forward unchanged. Two deltas, and one deliberate non-delta.
 1. **New expiry: epic close (user acceptance at `closeout`), or 72 hours from 2026-08-08T07:00Z.**
    This is the last expiry this contract needs — there is no wave 4 in scope under it.
 
-2. **The lessons-auditor dispatch is authorized.** This is the specific thing I named as blocking
-   the *next spine step* rather than the next wave: `closeout` substep 1 mandates a fresh-context
-   subagent invoking `constellation-lessons-auditor`. "Keep rolling" on a run whose only remaining
-   step needs that dispatch grants it. Scope: the closeout dispatches the spine mandates
-   (lessons auditor, cartographer reconcile) and nothing else. **No new wave, no new Commander.**
+2. ~~**The lessons-auditor dispatch is authorized.**~~ **VOID — the grant names a skill that no
+   longer exists, and the argument I built on it was wrong. See the correction below.** What stands:
+   the closeout dispatches the *live* doctrine mandates and nothing else — which is the cartographer
+   reconcile, and only that. **No new wave, no new Commander.**
+
+   **CORRECTION (2026-08-08, found while computing the epic's net change for the cartographer).**
+   I told Tommy at the wave-3 checkpoint that *"closeout itself needs a dispatch (the lessons
+   auditor), so this blocks the next spine step, not just wave 4"* — and I used that as one of three
+   reasons the run was blocked. **It is not true under live doctrine.** Verified by command:
+
+   - `skills/lessons-auditor/` **does not exist** in the repo, and
+     `constellation-lessons-auditor` **is not installed**. It was retired by this epic's own #447,
+     which replaced `LESSONS.md` and `AGENT_FEEDBACK.md` with `episodes/`.
+   - The live Admiral closeout — repo and installed copy agree — makes substep 1 *"Record the epic
+     retrospective as **episodes**"*, written **by the Admiral itself** via `apply_episode_delta.py`
+     and proven with `verify_episode_captured.py`. **No subagent is involved.**
+
+   So closeout needs **no dispatch for the retrospective at all**. The contract expiry was a real
+   blocker; *this particular argument for its urgency was not*, and I gave it to Tommy as fact.
+
+   **Root cause, and it is the third instance today of the same thing:** the Admiral skill text
+   loaded into my session is **stale**. This epic rewrote the Admiral skill mid-run (#447, #460),
+   and my copy predates that rewrite — so I have been operating this entire run from instructions
+   the epic itself superseded. A stale skill and a current one read identically. The live copy is
+   authoritative; my loaded copy is not.
 
 **CORRECTED, minutes after writing the above — I had A2 wrong, and the correction reverses the
 conclusion.** I wrote that A2 was uncut, was new scope, and therefore went to him at the summary.

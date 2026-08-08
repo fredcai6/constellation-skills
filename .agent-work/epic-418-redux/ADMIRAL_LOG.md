@@ -1288,3 +1288,59 @@ successors merged, so nothing is owed, but they are the only surviving record of
 attempt and nobody has diffed them against their replacements. Deleting is irreversible and buys
 nothing today; keeping costs nothing. Routed to the closeout audit as a decision with evidence
 rather than settled by me at 09:00 on hygiene grounds.
+
+## 2026-08-08 — two findings from computing the epic's net change
+
+Both surfaced while assembling the cartographer hand-off (`git diff --stat` from the epic's base,
+`cbd9aee8`, excluding `.agent-work` and `episodes`): **106 files, +10,864 / -4,229**. The diffstat
+showed large deletions under `skills/lessons-auditor/`, which is a directory the closeout is
+supposed to *dispatch*. I stopped and checked rather than reading past it.
+
+**ADMIRAL ERROR | I have been running this entire epic from a STALE copy of my own skill, and I
+gave Tommy a wrong fact because of it.**
+
+At the wave-3 checkpoint I told him, as one of three reasons `execute` was blocked: *"closeout
+itself needs a dispatch (the lessons auditor), so this blocks the next spine step, not just wave
+4."* Verified by command, that is false:
+
+- `skills/lessons-auditor/` does not exist in the repo; `constellation-lessons-auditor` is not
+  installed. **This epic's own #447 retired it**, replacing `LESSONS.md` and `AGENT_FEEDBACK.md`
+  with `episodes/`.
+- The live Admiral closeout — repo and installed copy agree, `diff` shows one line of difference and
+  it is an install-time path substitution — makes substep 1 **"Record the epic retrospective as
+  episodes"**, written **by the Admiral itself** through `apply_episode_delta.py` and proven with
+  `verify_episode_captured.py`. There is **no subagent in it**.
+
+So closeout needs no dispatch for the retrospective. The contract expiry was a real blocker; that
+argument for its urgency was not, and I presented it as fact.
+
+The root cause is the sharpest instance of this run's defect family yet: **the epic modified the
+skill its own Admiral is running under, and my copy was loaded before the change.** I have spent the
+whole run following superseded instructions that read exactly like current ones. The three earlier
+instances today (A2's status, four PR numbers, my trip detector) were all *my notes* going stale.
+This one is my **operating doctrine** going stale, which is a strictly worse version of it — and
+neither the harness nor the engine has any way to notice.
+
+Consequences handled: Addendum R2's grant of a lessons-auditor dispatch is struck as void.
+`closeout/LESSONS_RUN_BRIEF.md` is **not discarded** — its 17 routed candidates are precisely the
+raw material substep 1 now wants, so it is repurposed as the episode source, retitled accordingly.
+**Note the live rule it must now obey and the old one did not:** *an episode is a record, not a rule
+— write what you observed, and do not write a rule for a future agent to follow; a rule to follow
+belongs in `docs/agents/*` and is a human's call.* That constraint changes what several of those 17
+candidates are allowed to become, and #460's guard enforces it mechanically.
+
+**FINDING | `install_constellation.py` writes the forbidden interpreter into every Windows
+install.** Line 349: `return "py" if os.name == "nt" else "python3"`. The installed skills therefore
+instruct agents to run `py <script>` — **admiral** SKILL.md line 61, and **explorer** SKILL.md in
+three places (spine init, crew dispatch, role verifier).
+
+**`py` is the interpreter this project's own #454 says never to use** — it produces a false
+`HARNESS ERROR` in every agent session, and the invariant is carried in every launch order I have
+written this epic. So the installer is shipping, into the doctrine agents read, the exact command
+the doctrine forbids. It did not bite me only because I have been typing `python` from the state
+note rather than obeying the installed skill.
+
+Not fixed here, and the reason is the contract, not the difficulty: R2 authorized **no new Commander
+this wave**, and this is a behaviour change to a shipped installer that needs a test. Recommending
+it at the wave-4 checkpoint as a cheap fix under R1's standing preference. Recorded in the
+disposition ledger alongside #454.
