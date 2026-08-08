@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 redux — the agent can see the whole gate",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Finish epic #418's remaining course. Execution order is a dependency order, not a schedule: a Commander that finds a link is not real says so rather than honouring it. Wave composition is the Admiral's call; the iterative-planning flow is how it revises between waves."
+    },
+    "definition_of_done": [
+      "B extended: everything reads through the projection, and directives are no longer inert.",
+      "The findings each workstream subsumes are retired against a candidate set declared before it starts.",
+      "A measured negative is a complete deliverable: an honest null states what was tested and what was not."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No check that cannot register its own failure. No unevidenced claim about what happened. No silent scope cut.",
+      "sufficient_evidence": "A guard is observed refusing something real, not reasoned about. Merge state comes from the forge, never from an ancestry test.",
+      "appetite": "Rigor scales with cost-to-undo, not uniformly. Cheap to reverse, move fast."
+    },
+    "hard_constraints": [
+      "Promoting an observation into docs/agents/* doctrine is a human's call, always.",
+      "settings.json is never touched.",
+      "Test suite invocation is settled (#454): FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, never py.",
+      "No Fable at any tier; explicit model on every dispatch.",
+      "Never obey a spine rail naming a spine another agent drives (#457)."
+    ],
+    "fixed_decisions": [
+      "episodes/ replaces LESSONS.md and AGENT_FEEDBACK.md; an episode is a record, never read back as a rule.",
+      "Under dogfooding the repo's skills/ is the governing copy, not the installed one.",
+      "#468: the repo's vendored verify_iterative_role_artifacts.py cannot run from this repo; use the installed copy."
+    ],
+    "current_wave": {
+      "objective": "Wave 2 (B extended): make the whole gate visible, and settle the episode store's own records, retiring the carried findings that block them.",
+      "exit_criteria": [
+        "All four issues merged to main with the suite green on the final merged main.",
+        "Each landed guard is observed refusing something real rather than asserted to work.",
+        "Every merged issue is dispositioned on the tracker."
+      ],
+      "issues": [
+        {
+          "id": "433",
+          "title": "Render 'directives' in current",
+          "desired_outcome": "directives render in the projection, so a gate that carries them is no longer inert to the agent reading it.",
+          "useful_now": "Everything in B extended reads through the projection; an unrendered field is invisible to every consumer.",
+          "appetite": "One wave",
+          "acceptance_or_falsification_evidence": "A gate that actually carries directives renders them. 2955 gates scanned, 8 populated.",
+          "implementation_latitude": "Choose the rendering; preserve the gate schema.",
+          "hard_constraints_no_gos": [
+            "The gate schema shape is a surfaced interface."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "436",
+          "title": "Confirm the worktree-precondition enumeration check catches a real second template",
+          "desired_outcome": "The enumeration check is observed refusing a genuinely new worktree-entering template.",
+          "useful_now": "D's falsification debt: a check never seen to refuse is indistinguishable from one that cannot.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Deliberate invariant breakage in a scratch worktree, the refusal observed, then reverted.",
+          "implementation_latitude": "Choose the induced breakage.",
+          "hard_constraints_no_gos": [
+            "The breakage is reverted by the same issue that induces it."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "skills"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "460",
+          "title": "The episode store's own records read as prescriptions",
+          "desired_outcome": "Records are restated as observations, and a guard keeps them that way.",
+          "useful_now": "An episode read back as a rule is the failure the store was built to prevent.",
+          "appetite": "One wave",
+          "acceptance_or_falsification_evidence": "The guard catches real offenders on a live run, not a clean corpus.",
+          "implementation_latitude": "Choose the restatements; apply only via apply_episode_delta.py.",
+          "hard_constraints_no_gos": [
+            "Promotion to docs/agents/* surfaces, always."
+          ],
+          "local_unknowns": [
+            "How many of the 32 canon workarounds are genuinely prescriptions."
+          ],
+          "anchors": [
+            "episodes",
+            "scripts/apply_episode_delta.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "464",
+          "title": "Rename CONSTELLATION_FEEDBACK's Lesson: field to Episode:",
+          "desired_outcome": "The field name matches what it now holds, in one change via collect_feedback.py.",
+          "useful_now": "The field takes an episode id already; the stale name misleads every reader.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Existing records carrying the old field still parse.",
+          "implementation_latitude": "Choose the migration path.",
+          "hard_constraints_no_gos": [
+            "The legacy fallback and the hash prefix are preserved."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/collect_feedback.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Wave 3: the two findings carried out of wave 2 — #461 (episode negative control) and #465 (r6-fowler placeholder + CRLF).",
+        "why_likely": "Both were held deliberately, both sit in areas wave 2 just settled, and #461 was reproduced first-hand during #460's merge.",
+        "entry_conditions": [
+          "Wave 2 merged",
+          "Contract refreshed past its wave-2 expiry"
+        ]
+      },
+      {
+        "outcome": "A2 — trip semantics, cut into an issue at its turn.",
+        "why_likely": "F cannot type a verb whose meaning is unsettled.",
+        "entry_conditions": [
+          "B extended complete"
+        ]
+      },
+      {
+        "outcome": "F #424 — the MCP front door.",
+        "why_likely": "Verbs go where verbs belong, before content is written around them.",
+        "entry_conditions": [
+          "A2 cut and settled"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the governor's 17-21% HARD trip band is where it should be.",
+        "affects": "Every dispatch budget in every remaining wave.",
+        "settle_by": "A human ruling; it is a production default.",
+        "current_evidence": "All three wave-2 Commanders tripped at the plan seam. Measured cost: 3 dispatches for #433, 4 for #460, 2 for #436, 1 for #464.",
+        "next_probe": "Surface at the wave-3 checkpoint."
+      },
+      {
+        "unknown": "Whether A2 is one issue or several.",
+        "affects": "Forecast ordering for F and C.",
+        "settle_by": "Cutting it against what B extended actually leaves behind.",
+        "current_evidence": "B extended is now complete through wave 2.",
+        "next_probe": "Cut at its turn, not before."
+      }
+    ],
+    "parked_possibilities": [
+      "#452 multi-spine attribution — an honest null is permitted here.",
+      "#458 ship the gauge writer (workstream R).",
+      "#423 E backlog re-cut — runs on what survives the redux.",
+      "The defect-family theme as an organizing wave rather than a set of point fixes."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "433",
+      "outcome": "Merged and closed. `directives` render in the projection, so a gate carrying them is no longer inert to the agent reading it.",
+      "evidence": "PR #485 MERGED at 538d5fd7 per `gh pr view`; `gh issue view 433` reports CLOSED. The naive fix was rejected on evidence: 2955 gates scanned, 8 populated with directives, so a guard asserting 'directives render when present' would pass identically in the healthy and broken worlds."
+    },
+    {
+      "issue_id": "436",
+      "outcome": "Merged and closed. The worktree-precondition enumeration check was observed refusing a genuinely new worktree-entering template, and its failure output now carries the count it enumerated.",
+      "evidence": "PR #472 MERGED at 7bc3f8c2 per `gh pr view`; `gh issue view 436` reports CLOSED. The refusal was observed live in a scratch worktree, not reasoned about. Original PR #469 closed as superseded by a squash-orphaned-base replant, not a rework."
+    },
+    {
+      "issue_id": "460",
+      "outcome": "Merged and closed. Episode records are restated as observations and a guard keeps them that way; 22 doctrine candidates were collected without promotion.",
+      "evidence": "PR #487 MERGED at 476e044d per `gh pr view`; `gh issue view 460` reports CLOSED. The guard caught 4 real offenders on its first live run rather than passing on a clean corpus. Candidates preserved at `.agent-work/r418-460/crew-handoffs/g2-implement-result.md` section 'Evidence 4'; nothing written to `docs/agents/*`."
+    },
+    {
+      "issue_id": "464",
+      "outcome": "Merged and closed. `CONSTELLATION_FEEDBACK`'s `Lesson:` field renamed to `Episode:` in one change via collect_feedback.py.",
+      "evidence": "PR #473 MERGED at 0b4a11a7 per `gh pr view`; `gh issue view 464` reports CLOSED. The legacy fallback and hash prefix were deliberately preserved, so records written before the change still parse."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Wave 2's four issues landed and main is green.",
+      "expected": "Suite green on the final merged main, not per-PR.",
+      "observed": "476e044d: 1782 passed, 2 skipped, 683 subtests, exit 0 (real exit code captured).",
+      "source": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+    },
+    {
+      "claim": "#433's naive fix would have been a check that cannot fail.",
+      "expected": "A guard asserting 'directives render when present' distinguishes healthy from broken.",
+      "observed": "2955 gates scanned, 8 populated with directives. The overwhelming majority carry nothing to render, so such a guard passes identically in both worlds.",
+      "source": "commander scan during #433"
+    },
+    {
+      "claim": "The engine_session lease field indicates liveness.",
+      "expected": "active means a run is live; null means it is not.",
+      "observed": "147 tracked spine files, 18 with status active, exactly 1 a live run. A Commander that commits its own spine ships a mid-run snapshot into main forever. Separately, a Commander read null and raced a live Commander by 44 seconds.",
+      "source": "git ls-files .agent-work enumeration; cmd-460 incident"
+    },
+    {
+      "claim": "The Admiral's context governor was running during wave 2.",
+      "expected": "gauge.json refreshed through the wave.",
+      "observed": "Last real reading 2026-08-07T20:58:07Z; gauge-skip.json {reason: ambiguous-binding, candidate_count: 2} refreshed live hours later. The two bindings are the spine and its own latitude survey, both resolving to one gauge path.",
+      "source": ".agent-work/.spine-rail-binding.json; gauge-skip.json"
+    },
+    {
+      "claim": "PR #470 merged without an independent review.",
+      "expected": "No reviewer verdict exists.",
+      "observed": "Two independent reviewers returned APPROVE after the merge, each re-deriving the result empirically. Neither posted to the forge, so gh pr view 470 --json reviews is empty.",
+      "source": "session messages from rev-470 and rev-470b"
+    },
+    {
+      "claim": "The orphaned r418-460 lease was released.",
+      "expected": "Its spine reads released.",
+      "observed": "It still reads active / in-progress. The release touched the worktree copy; the copy in main arrived via PR #487's merge and is a different file.",
+      "source": "re-reading .agent-work/r418-460/spine.json after the fact"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D1",
+      "signal": "The gauge writer counts bindings rather than distinct gauge paths, so any Admiral run that drives its own latitude survey blinds its governor for the rest of the run.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Wave 3 composition, and the dispatch budget for every remaining wave.",
+      "evidence": "gauge_writer_hook.py:257-264 appends per binding with no dedup; caller at :530-541 skips on 2+. Both of this run's bindings resolve to one path.",
+      "reason": "A cheap fix that restores a signal the Admiral depends on; the human amendment directs cheap fixes into the wave rather than onto the board."
+    },
+    {
+      "id": "D2",
+      "signal": "tests/test_verify_spec_confirmed.py picks matches[0] from a glob with no signal that a second match existed.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Wave 3 composition.",
+      "evidence": "Flagged independently by both PR #470 reviewers, neither having seen the other's verdict.",
+      "reason": "One line, and it guards the state the repo is one archived run away from."
+    },
+    {
+      "id": "D3",
+      "signal": "The lease field carries no liveness information in either direction when read from disk.",
+      "classification": "later_only",
+      "affects": "#457's framing, and any consumer that reads the field as liveness.",
+      "evidence": "18 of 147 active, 1 live; and a null reading produced by a crew releasing between gates.",
+      "reason": "Not a cheap fix. Correcting it means deciding how liveness is encoded at all, which ends at a load-bearing interface. Evidence posted to #457 instead."
+    },
+    {
+      "id": "D4",
+      "signal": "The governor HARD-trips agents at roughly 17-21% context fill, costing 6 of wave 2's 10 dispatches.",
+      "classification": "later_only",
+      "affects": "Dispatch budget for every remaining wave.",
+      "evidence": "3 dispatches for #433, 4 for #460, 2 for #436, 1 for #464; all three Commanders tripped at the plan seam.",
+      "reason": "A production default affecting every agent, which the contract marks surfaced, and a threshold question rather than a cheap fix."
+    },
+    {
+      "id": "D5",
+      "signal": "One defect family accounts for four of wave 2's findings across four subsystems: a signal whose value is identical in the healthy and defective worlds.",
+      "classification": "evidence_only",
+      "affects": "How later waves choose what to guard.",
+      "evidence": "#433's naive fix, the lease field, matches[0], and the gauge writer's binding count. Four independent discoverers.",
+      "reason": "It is a lens, not a work item. Offered as a wave-3 shape and not taken up; it stays a candidate."
+    },
+    {
+      "id": "D6",
+      "signal": "The Admiral reported an action complete by verifying the action succeeded rather than re-running the observation that prompted it.",
+      "classification": "evidence_only",
+      "affects": "The Admiral's own reporting discipline.",
+      "evidence": "Reported releasing the r418-460 lease; release exited 0 on a different file. Re-reading the spine would have caught it in one command.",
+      "reason": "Owned and corrected in the log and the state note; no issue is warranted."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "U-a2",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-f-424",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-c-421",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-e-423",
+      "kind": "forecast"
+    },
+    {
+      "id": "U-452",
+      "kind": "issue"
+    },
+    {
+      "id": "U-458",
+      "kind": "issue"
+    },
+    {
+      "id": "U-457",
+      "kind": "issue"
+    },
+    {
+      "id": "U-governor-trip-band",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "U-a2-shape",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "U-defect-family-as-a-wave",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/hooks/gauge_writer_hook.py",
+      "tests/test_episode_negative_control.py",
+      "tests/test_verify_spec_confirmed.py",
+      "skills/constellation-reviewer",
+      "episodes"
+    ],
+    "map_status": "docs/architecture present; reconcile deferred to closeout per the spine."
+  }
+}

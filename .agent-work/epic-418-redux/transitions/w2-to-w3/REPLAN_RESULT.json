@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 2's exit criteria are met in full. All four issues merged, main green at 476e044d (1782 passed, 2 skipped, exit 0), each landed guard observed refusing something real rather than asserted, and all four dispositioned on the tracker with per-issue evidence. Merge state was taken from the forge, not from an ancestry test, because squash-merging PR #470 orphaned every wave-2 branch base.",
+    "epic_done": "The epic is not complete. B extended is finished; A2 is uncut, and F (#424), C (#421) and E (#423) are untouched. Done-condition #2 is now met; #1 and #3 stand as revised; #5 is untouched.",
+    "good_enough": "The mandatory quality boundary is preserved and was actively load-bearing this wave: #433's naive fix was rejected precisely because it would have been a check that cannot fail, and three further instances of that family were found rather than shipped."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D1",
+      "action": "revise_plan",
+      "reason": "The gauge writer's missing dedup silences the Admiral's own governor for any run that drives its latitude bookend correctly — it fires on the correct behaviour, not on an edge case. The fix is small and restores a signal the run depends on, so it enters wave 3 rather than sitting on the board. Filed as #488 to carry the evidence; the issue closes with the fix this wave.",
+      "issue_created": true
+    },
+    {
+      "id": "D2",
+      "action": "revise_plan",
+      "reason": "matches[0] trades a loud failure for a quiet wrong answer inside a verification test, and it was flagged independently by both reviewers of the PR that introduced it. One line. Filed as #489 and folded into wave 3 under the same amendment.",
+      "issue_created": true
+    },
+    {
+      "id": "D3",
+      "action": "amend_forecast_or_parked",
+      "reason": "The lease-liveness defect is real and now evidenced, but it is not cheap: both readings of the field are uninformative, so correcting it means deciding how liveness is encoded at all. That lands on a load-bearing interface, which the contract marks surfaced. Superseding evidence posted to the existing #457; no new issue, no wave-3 entry.",
+      "issue_created": false
+    },
+    {
+      "id": "D4",
+      "action": "amend_forecast_or_parked",
+      "reason": "The 17-21% trip band is a production default affecting every agent and a threshold question, not a fix. It stays surfaced for the human at the wave-3 checkpoint. In the meantime the forecast is amended to budget two dispatches per issue, which is what wave 2 actually cost.",
+      "issue_created": false
+    },
+    {
+      "id": "D5",
+      "action": "record_evidence_only",
+      "reason": "The defect family is a lens for choosing what to guard, not a work item. It was offered as an alternative wave-3 shape and the human named the two held issues instead; that is an answer. It stays a parked possibility.",
+      "issue_created": false
+    },
+    {
+      "id": "D6",
+      "action": "record_evidence_only",
+      "reason": "An owned Admiral error, corrected in the ADMIRAL_LOG and the state note. The generalisable form — verify by re-running the observation that prompted the action, not by confirming the action exited 0 — is already carried doctrine, so no artifact change is warranted.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Wave 3: retire the two findings carried out of wave 2, and knock out the two cheap guard-hardening fixes wave 2 discovered rather than leaving them on the board.",
+    "exit_criteria": [
+      "All four issues merged to main with the suite green on the final merged main.",
+      "#461's narrowed assertion is proven to still catch what the control exists for, not merely to stop failing.",
+      "#465 ends with either the placeholder gone or an engine verb that fills it named in the imperative — an instruction with no affordance behind it is not an acceptable exit.",
+      "Any tooling that writes engine state files does so in binary, proven by a CRLF round-trip test.",
+      "All four dispositioned on the tracker."
+    ],
+    "issues": [
+      {
+        "id": "461",
+        "title": "The episode-store negative control fails every run that legitimately captures an episode, between git add and commit",
+        "desired_outcome": "The assertion tests worktree-vs-index only, so a staged-but-uncommitted legitimate capture passes while stray writes still fail.",
+        "useful_now": "It lands on a gate every Commander now passes through: verify_episode_captured.py --phase archive requires the episodes to be tracked, so write -> git add -> suite -> commit is the normal path and the suite is red in the middle of it. A crew without context reads that as a regression it caused.",
+        "appetite": "One gate",
+        "acceptance_or_falsification_evidence": "A stray unstaged write and a stray untracked file under episodes/active/ both still fail the control; a staged legitimate capture passes; the docstring's stated property and the code's predicate agree.",
+        "implementation_latitude": "Choose the predicate; a pair measured green pre-commit during #447 g4 is git diff --name-only episodes/ plus git ls-files --others --exclude-standard episodes/.",
+        "hard_constraints_no_gos": [
+          "The control must not be loosened carelessly — after the commit all three of worktree, index and HEAD agree, so its emptiness is honest, and its anti-vacuity guard strengthens as the store grows.",
+          "The rest of tests/test_episode_negative_control.py and the store's blob-OID checks are out of scope."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "tests/test_episode_negative_control.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "465",
+        "title": "Reviewer r6-fowler ships a placeholder no engine verb can fill, and filling it in text mode rewrites every CRLF",
+        "desired_outcome": "Either the placeholder is removed from the shipped template, or an engine verb exists that fills it and the imperative names that verb. Engine state files are written in binary.",
+        "useful_now": "An instruction an agent cannot follow through the engine is an invitation to hand-edit engine state, which the whole engine design exists to prevent. The CRLF rewrite produces no error, passes JSON validation, and destroys blame.",
+        "appetite": "One wave",
+        "acceptance_or_falsification_evidence": "A round-trip test proves CRLF is preserved exactly. The reviewer skill's Windows state-file guidance says binary explicitly.",
+        "implementation_latitude": "The remove-vs-add-a-verb choice is genuinely open and belongs to this Commander. Settle the related SKILL.md contradiction in the same pass: the prose says an open fail cannot consolidate to APPROVE, while the engine ships --override-reason for exactly that case, so the prose reads as stricter than the affordance and pushes a reviewer with a real out-of-scope finding toward either a wrong BLOCK or a silently downgraded finding.",
+        "hard_constraints_no_gos": [
+          "Adding an engine verb changes a shared interface — if that is the chosen path, say so in the return; the Admiral adjudicates whether it surfaces.",
+          "No hand-editing of engine state files."
+        ],
+        "local_unknowns": [
+          "Whether the placeholder is load-bearing for any other reviewer gate."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "skills/constellation-reviewer"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "488",
+        "title": "The context-gauge writer counts bindings, not distinct paths",
+        "desired_outcome": "Two bindings resolving to one gauge path produce a reading; two resolving to genuinely different paths still skip.",
+        "useful_now": "Every Admiral run that drives its latitude bookend properly is currently running blind, including the one that found this.",
+        "appetite": "One gate",
+        "acceptance_or_falsification_evidence": "A test covers both directions, including the specific Admiral shape: a spine plus its own latitude survey in one work area.",
+        "implementation_latitude": "Choose the fix against the test, not the test against the fix.",
+        "hard_constraints_no_gos": [
+          "The #261 misattribution protection must not be weakened — genuinely different gauge paths still skip.",
+          "The gauge binding key is a load-bearing interface; changing its shape surfaces."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/hooks/gauge_writer_hook.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "489",
+        "title": "test_verify_spec_confirmed's fixture glob silently picks matches[0]",
+        "desired_outcome": "More than one match fails with a message naming every match found, rather than choosing one.",
+        "useful_now": "The glob was the right fix for a hardcoded path that broke on archival, but it trades a loud failure for a quiet wrong answer in a verification test.",
+        "appetite": "One gate",
+        "acceptance_or_falsification_evidence": "Two matches fail and name both; zero matches keeps current behaviour.",
+        "implementation_latitude": "Choose the message.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": [
+          "tests/test_verify_spec_confirmed.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "A2 — trip semantics, cut into an issue at its turn and against what B extended actually left behind.",
+      "why_likely": "B extended is now complete, and F cannot type a verb whose meaning is unsettled.",
+      "entry_conditions": [
+        "Wave 3 merged"
+      ]
+    },
+    {
+      "outcome": "F #424 — the MCP front door.",
+      "why_likely": "Verbs go where verbs belong, before content is written around them.",
+      "entry_conditions": [
+        "A2 cut and settled"
+      ]
+    },
+    {
+      "outcome": "C #421 — relocation against a settled verb contract.",
+      "why_likely": "The spec orders it after F for exactly this reason.",
+      "entry_conditions": [
+        "F merged"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether the governor's 17-21% HARD trip band is where it should be.",
+      "affects": "Every dispatch budget in every remaining wave.",
+      "settle_by": "A human ruling at the wave-3 checkpoint; it is a production default.",
+      "current_evidence": "6 of wave 2's 10 dispatches were governor relaunches. Confounded: the Admiral's own gauge was dark for the whole wave (#488), so the band was never observed from the orchestrator's side.",
+      "next_probe": "Wave 3 runs with #488 fixed, which gives the first Admiral-side reading of its own fill against the same band."
+    },
+    {
+      "unknown": "Whether A2 is one issue or several.",
+      "affects": "Forecast ordering for F and C.",
+      "settle_by": "Cutting it at its turn.",
+      "current_evidence": "B extended completes with wave 3.",
+      "next_probe": "Cut after wave 3 merges, not before."
+    },
+    {
+      "unknown": "Whether #465's placeholder is settled by removal or by a new engine verb.",
+      "affects": "Whether wave 3 touches a shared interface.",
+      "settle_by": "The #465 Commander, on evidence about whether the placeholder is load-bearing elsewhere.",
+      "current_evidence": "No engine verb fills it today; amend --op retext-check corrects check text, not a placeholder in a null-check statement.",
+      "next_probe": "The Commander's return states which path it took and why."
+    }
+  ],
+  "revised_parked": [
+    "#452 multi-spine attribution — an honest null is permitted here. #488 is the same subsystem and may subsume or be subsumed by it.",
+    "#458 ship the gauge writer (workstream R).",
+    "#423 E backlog re-cut — runs on what survives the redux.",
+    "#457 lease liveness — evidenced but not cheap; a design question with a load-bearing interface at the end of it.",
+    "The defect-family theme as an organizing wave rather than a set of point fixes."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-a2",
+      "action": "keep",
+      "reason": "Still the next dependency; cut at its turn, not now."
+    },
+    {
+      "id": "U-f-424",
+      "action": "keep",
+      "reason": "Still gated behind A2."
+    },
+    {
+      "id": "U-c-421",
+      "action": "keep",
+      "reason": "Still gated behind F."
+    },
+    {
+      "id": "U-e-423",
+      "action": "keep",
+      "reason": "Runs on what survives the redux; nothing has changed that."
+    },
+    {
+      "id": "U-452",
+      "action": "keep",
+      "reason": "Kept, but its scope may narrow — #488 addresses the same-path case it might otherwise have had to handle."
+    },
+    {
+      "id": "U-458",
+      "action": "keep",
+      "reason": "Still supported."
+    },
+    {
+      "id": "U-457",
+      "action": "keep",
+      "reason": "Kept and materially re-evidenced this boundary; the framing in its body is now known to describe a symptom."
+    },
+    {
+      "id": "U-governor-trip-band",
+      "action": "keep",
+      "reason": "Surfaced to the human, and wave 3 will produce the first uncontaminated Admiral-side measurement."
+    },
+    {
+      "id": "U-a2-shape",
+      "action": "keep",
+      "reason": "Settles at A2's turn."
+    },
+    {
+      "id": "U-defect-family-as-a-wave",
+      "action": "keep",
+      "reason": "Offered as wave 3's shape and not taken up; stays parked rather than dropped, because four independent instances in one wave is not noise."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave.issues",
+      "before": "Wave 3 as forecast at the previous boundary: #461 and #465, the two findings held out of wave 2.",
+      "after": "Wave 3 as launched: #461, #465, #488 and #489.",
+      "reason": "Explicit human amendment, minutes after the contract refresh that scoped wave 3 to the two held issues: 'feel free to add easy or useful fixes to wave 3. id rather not clutter the issue board or delay fixes that are easy to just knock out now'. #488 and #489 had just been filed as findings under the narrower reading. The standing preference this establishes is that a genuinely cheap fix gets done in the current wave rather than filed and deferred."
+    },
+    {
+      "surface": "latitude_contract.decision_classes",
+      "before": "Issue closing is a surfaced class: the Admiral asks before closing anything.",
+      "after": "Issue closing is delegated for wave 2's four merged issues (#433, #436, #460, #464) and remains surfaced for everything else.",
+      "reason": "'close the complete issues' grants the class for exactly those four. Narrowed deliberately rather than read as a general grant."
+    },
+    {
+      "surface": "latitude_contract.budget_model_table",
+      "before": "#465 listed as an implementer-with-plan dispatch on Sonnet, grouped with the other carried findings.",
+      "after": "#465 dispatched as a full Commander on Opus.",
+      "reason": "The issue carries a genuine design choice with two valid answers -- remove the shipped placeholder, or add an engine verb that fills it and name that verb in the imperative -- plus a doctrine contradiction to settle in the same pass, where SKILL.md says an open fail cannot consolidate to APPROVE while the engine ships --override-reason for exactly that case. That is not implementer work. Logged as a departure because the contract's table said otherwise."
+    }
+  ],
+  "wave_review_comment": "## Wave 2 review — B extended\n\nAll four issues merged and closed; main green at `476e044d` (1782 passed, 2 skipped, 683 subtests, exit 0).\n\n| Issue | PR | What landed |\n|---|---|---|\n| #433 | #485 | `directives` render |\n| #436 | #472 | the enumeration check observed refusing a real new entry |\n| #460 | #487 | episode records restated as observations; the guard caught 4 real offenders on its first live run |\n| #464 | #473 | `Lesson:` renamed to `Episode:`, legacy fallback preserved |\n| — | #470 | the Admiral's own fixture-path breakage |\n\n### What the wave found that it was not looking for\n\nFour findings, four subsystems, four different discoverers, **one defect family**: a signal whose value is identical in the healthy and the defective world.\n\n- #433's naive fix would have been one — 2955 gates scanned, 8 populated, so a guard asserting \"directives render when present\" passes either way.\n- The `engine_session` lease field is one in both directions: 18 of 147 tracked spines read `active`, exactly 1 is a live run; and a `null` reading is equally produced by a crew releasing between gates. See #457.\n- `matches[0]` cannot signal that a second match existed. Now #489.\n- The gauge writer cannot tell \"two agents\" from \"one agent counted twice\", so it wrote nothing all wave. Now #488.\n\nThe last one is the sharpest, because it fires on *correct* behaviour: an Admiral that drives its latitude bookend properly ends up bound to two checklists that resolve to one gauge path, and blinds its own governor for the rest of the run.\n\n### Two corrections the Admiral owns\n\n- It reported releasing an orphaned lease it had not released — the release exited 0 on the worktree copy, while the copy in `main` arrived via a merge and was never touched. Root cause: verifying that the action succeeded instead of re-running the observation that prompted it.\n- It reported that PR #470 merged without review. True when written; two independent reviewers returned APPROVE afterwards, neither posting to the forge.\n\n### Cost\n\n6 of 10 dispatches were governor relaunches at the plan seam. That measurement is confounded — the Admiral's own gauge was dark for the entire wave.\n\n### Wave 3\n\n#461, #465, #488, #489. The last two were filed as findings and then folded in on an explicit amendment: a fix that is genuinely cheap gets done now, not filed and deferred.",
+  "revised_epic_body": "## Current planning truth — after wave 2\n\n**B extended is complete.** #433, #436, #460 and #464 are merged and closed; main is green at `476e044d`. Done-condition #2 is met.\n\n### Wave 3 (current)\n\n| Issue | What it settles |\n|---|---|\n| #461 | the episode-store negative control reds every run that legitimately captures an episode, between `git add` and the commit |\n| #465 | reviewer `r6-fowler` ships a placeholder no engine verb can fill, and filling it in text mode rewrites every CRLF |\n| #488 | the gauge writer counts bindings rather than distinct paths, blinding any Admiral that drives its own latitude survey |\n| #489 | a fixture glob silently picks `matches[0]` with no signal a second match existed |\n\n#488 and #489 are wave-2 discoveries folded in under a standing preference: a genuinely cheap fix gets done in the current wave rather than filed and deferred.\n\n### Forecast (nonbinding)\n\nA2 — trip semantics, cut at its turn against what B extended actually left behind. Then F (#424, the MCP front door), then C (#421, relocation against a settled verb contract). E (#423) runs on what survives.\n\n### Open, not scheduled\n\n- **#457** — the lease field carries no liveness information in either direction. Evidenced this wave, deliberately not fixed: both readings are uninformative, so correcting it means deciding how liveness is encoded, which ends at a load-bearing interface.\n- **The governor's 17-21% trip band** — a production default, and a human call. Wave 3 gives the first Admiral-side measurement, since #488's fix restores the orchestrator's own gauge.\n- **#452**, **#458** — the governor's remaining work.\n\n### The lens this epic keeps producing\n\nA check that cannot fail: a signal whose value is identical in the healthy and defective worlds. Four independent instances surfaced in wave 2 alone. It is not a scheduled workstream, but it is the thing #418 is fundamentally about, and it is worth asking of any guard this epic ships.",
+  "escalation": null
+}

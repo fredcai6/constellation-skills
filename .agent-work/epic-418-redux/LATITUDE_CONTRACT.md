@@ -190,3 +190,44 @@ composition, run-ahead checkpoints, the expiry, and both surfaced tracker action
   asking each time. This matches `docs/agents/ORCHESTRATOR_CONTEXT.md` ("Local commits: allowed").
   **Unchanged:** pushes and merges to `main` still require explicit approval per that same overlay,
   and merge-to-main remains delegated only for green + reviewed PRs.
+
+---
+
+# Addendum R1 — wave-3 refresh (2026-08-08)
+
+The wave-2 boundary triggered the expiry above and `execute` blocked. Tommy refreshed it in
+session, verbatim:
+
+> *"you can keep running, you're compacted. close the complete issues, and get on into wave 3.
+> 461 & 465 is good"*
+
+Everything in the base contract carries forward unchanged. Three deltas:
+
+1. **Issue closing is now DELEGATED for wave 2's four merged issues** — #433, #436, #460, #464.
+   It was a `surfaced` class; "close the complete issues" grants it for exactly these four.
+   Still surfaced for anything else.
+2. **Wave 3 composition: #461 + #465 + #488 + #489.** Amended in session immediately after the
+   refresh above, verbatim:
+
+   > *"woah, feel free to add easy or useful fixes to wave 3. id rather not clutter the issue
+   > board or delay fixes that are easy to just knock out now"*
+
+   This reverses the hold I had placed on wave 2's two one-line findings. #488 (the gauge writer
+   counts bindings, not distinct paths) and #489 (`matches[0]` cannot signal a second match) were
+   filed as findings minutes earlier and are now **wave-3 work items**, to be fixed and closed
+   this wave rather than left on the board. The standing preference this establishes: **a fix
+   that is genuinely cheap gets done now; it does not get filed and deferred.**
+
+3. **New expiry: the wave-3 boundary (after #461, #465, #488 and #489 merge), or 72 hours from
+   2026-08-08T03:00Z, whichever comes first.**
+
+**Still carried unruled** — the governor trip band at 17-21%. It is a production default
+affecting every agent, which the table above marks `surfaced`, and it is a threshold question
+rather than a cheap fix, so the amendment above does not reach it. Goes back to him at the
+wave-3 checkpoint.
+
+**Not folded in, and why:** the lease-liveness defect (#457) is the third wave-2 finding, and it
+is *not* a cheap fix. `null` and `active` are both uninformative when read from disk; correcting
+that means deciding how liveness gets encoded at all, which is a design question with a
+load-bearing interface at the end of it. The superseding evidence is posted to #457. Folding it
+into wave 3 on an "easy fixes" amendment would misread the instruction.

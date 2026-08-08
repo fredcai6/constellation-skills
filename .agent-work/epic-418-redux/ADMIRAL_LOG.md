@@ -418,3 +418,48 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   "two different agents" from "one agent counted twice" is a check whose value is identical in the
   healthy and defective worlds. Likely one line (`len(set(candidates))`), but it is a change to main
   under an expired contract. Not filed, not fixed. Surfaced.
+
+- `2026-08-08` — `CONTRACT REFRESH` (blocker cleared; Tommy in session): the expired latitude
+  contract is refreshed as **Addendum R1**. Verbatim: *"you can keep running, you're compacted.
+  close the complete issues, and get on into wave 3. 461 & 465 is good"*.
+  Three deltas: issue closing becomes **delegated for #433/#436/#460/#464 only**; **wave 3 = #461 +
+  #465**, no additions; new expiry at the **wave-3 boundary or 72h**.
+  **What he did NOT rule on, and what I am therefore NOT doing:** the governor trip band, and the
+  three one-line fixes from wave 2's findings. I offered the defect-family theme as an alternative
+  wave-3 shape; he named the two held issues instead. That is an answer, so the theme stays a
+  candidate. Widening wave 3 to carry those fixes would be me converting a scoped instruction into
+  a mandate — they go back to him at the wave-3 checkpoint.
+
+- `2026-08-08` — `RULING` (contract amendment, Tommy in session, minutes after the refresh above):
+  **wave 3 widens to #461 + #465 + #488 + #489.** Verbatim: *"woah, feel free to add easy or useful
+  fixes to wave 3. id rather not clutter the issue board or delay fixes that are easy to just knock
+  out now"*.
+  This reverses my own hold. I had just filed #488 (gauge writer counts bindings, not distinct
+  paths) and #489 (`matches[0]` cannot signal a second match) as findings, deliberately deferred on
+  the reading that Tommy's wave-3 scope named two issues and I should not widen it. He corrected the
+  reading: filing a cheap fix instead of doing it is the thing he does not want.
+  **The standing preference to carry forward: a genuinely cheap fix gets done now, not filed and
+  deferred.** The board is for what needs deciding, not for what needs typing.
+  **Not folded in, deliberately:** #457's lease-liveness defect. It is the third wave-2 finding and
+  the amendment says *easy* — this one is not. Both readings of the field are uninformative, so
+  fixing it means deciding how liveness is encoded at all, which ends at a load-bearing interface.
+  Evidence posted to #457; it stays a design question.
+  Also still surfaced: the governor trip band, a production default and a threshold question.
+
+- `2026-08-08` — `RULING` (dispatch shape, delegated: wave composition + model tier):
+  three parallel dispatches, not four, chosen against file overlap — verified disjoint:
+  | Dispatch | Issue(s) | Shape | Tier | Touches |
+  |---|---|---|---|---|
+  | W3-A | #465 | full Commander | Opus | reviewer template, `checklist_engine.py`, reviewer SKILL.md |
+  | W3-B | #461 | implementer-with-plan | Sonnet | `tests/test_episode_negative_control.py` |
+  | W3-C | #488 + #489 | implementer-with-plan | Sonnet | `scripts/hooks/gauge_writer_hook.py`, `tests/test_verify_spec_confirmed.py` |
+  **Departure from the contract's model table, logged as the table requires:** it lists #465 as an
+  implementer/Sonnet carried finding. I am raising it to a full Commander on Opus because the issue
+  contains a genuine design choice with two valid answers (remove the shipped placeholder, or add an
+  engine verb that fills it and name that verb in the imperative), plus a doctrine contradiction to
+  settle in the same pass (`SKILL.md` says an open fail cannot consolidate to APPROVE; the engine
+  ships `--override-reason` for exactly that). That is not implementer work.
+  W3-C bundles two issues into one dispatch because both are one-line guard hardenings of the same
+  defect family in non-overlapping files — cheaper as one crew than two.
+  **Budget: two dispatches per issue** — every wave-2 agent tripped the governor at the plan seam.
+- TRANSITION | boundary=w2-to-w3 | decision=replan | verified
