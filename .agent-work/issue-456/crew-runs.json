@@ -554,5 +554,29 @@
     "abandoned": false,
     "dispatch": "external",
     "model": "sonnet"
+  },
+  {
+    "crew_id": "constellation/issue-456/g6/reviewer/attempt-1",
+    "work_id": "issue-456",
+    "gate": "g6",
+    "role": "reviewer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/issue-456/g6/reviewer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": ".",
+    "handoff": ".agent-work/issue-456/crew-handoffs/g6-review.md",
+    "result": ".agent-work/issue-456/crew-handoffs/g6-review-RESULT.md",
+    "stdout": ".agent-work/issue-456/crew-runs/g6-reviewer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/issue-456/crew-runs/g6-reviewer-attempt-1.stderr.txt",
+    "started_at": "2026-08-08T20:16:46.008557+00:00",
+    "last_heartbeat": "2026-08-08T20:35:55.181356+00:00",
+    "completed_at": "2026-08-08T20:35:55.181356+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "sonnet",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

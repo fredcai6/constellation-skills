@@ -2016,7 +2016,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream verified before opening the review item. g6-implement is complete: its c1 is attested against evidence e-g6-implement-1, the IMPLEMENTER_RESULT is on disk with return status complete and no stop conditions, and the crew's work is committed at 55b95314 with a clean tree. I re-ran the gate's own checks rather than reading the crew's numbers back -- full suite 1805 passed 2 skipped 683 subtests 0 failed, fresh build then check 7/7 exit 0, closing selector -k 'stale_tag' 12 passing against a designed baseline of 0.\n\nThe reviewer handoff exists at .agent-work/issue-456/crew-handoffs/g6-review.md and names the four questions this review exists to answer rather than inviting a checklist pass. The crew is registered as constellation/issue-456/g6/reviewer/attempt-1; recover_crews.py reported 24 crews 0 unresolved with no prior g6/reviewer entry before dispatch, so this is a clean first attempt and not a duplicate."
         }
       ],
       "postconditions": [
@@ -2027,7 +2028,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g6-review-1",
+          "attested": {
+            "evidence": "e-g6-review-1",
+            "note": "REVIEW_RESULT returned at .agent-work/issue-456/crew-handoffs/g6-review-RESULT.md, return status complete, verdict BLOCK. Recorded as e-g6-review-1. The postcondition asks only that a review result came back; it did, and it is substantive rather than a rubber stamp, so this condition is met even though the verdict is negative.\n\nThe BLOCK is correct and I am not contesting it. It lands on the question I set the review to answer and it landed with a reproduction rather than an opinion: the reviewer ran the attack the handoff prescribed -- forced stale = [] after the real computation in extract.run(), disabling the whole feature on one code path -- and 9 of 12 tests stayed green, including EVERY dedicated does-not-flag test. Only the two flags-a-real-change tests plus one incidental precondition failure went red. It reverted the mutation and confirmed a clean tree and 12/12 afterwards. That is the tc38/tc47 defect class exactly: the feature works, but most of its own regression evidence cannot fail, so a future change that silently disables the detector would ship green. The handoff itself named that threshold in advance, so this is the review doing what it was dispatched to do.\n\nThe other three questions came back answered rather than deferred. Q1 slug-match is a correctly-deferred g7 concern, confirmed against zero comment-tag vocabulary and zero anchors in this corpus. Q3 ran eight novel mutations the crew did not choose, all predictions matched, no accidental behavior and no new defect -- so reformatting immunity holds under attack the author did not design. Q2 the advisory-only severity ruling stands, but the reviewer confirmed a real text collision: the advisory line and checks.py's genuine failures both print an identical FAIL prefix and one build's stdout can carry both, separable only by exit code.\n\nTwo findings arrived that neither the crew nor I had: a genuine previously-unreported crash where a truncated or malformed leftover statements.jsonl -- a real scenario, since the writer has no atomic rename -- makes every subsequent extract die on an uncaught JSONDecodeError with no actionable message, which is a NEW failure mode this gate introduces where a corrupted leftover store used to be harmless; and independent confirmation that check never reaches render.py at all, so the staleness path's only routine exerciser today is a human not wiping .code-map between local builds, an unenforced convention. The reviewer also settled the 16-versus-12 test-count discrepancy in the crew's document at 12 by counting the classes itself, confirming a drafting error rather than dropped work, and independently affirmed rather than restated the crew's overrule of my rename position, on the grounds that over-flag-never-under-flag is the mechanism's consistent posture.\n\nNext is g6-integrate on a BLOCK: rework, not close. Scope is narrow and fully specified -- positive controls inside each does-not-flag test, a guarded read with an actionable message, and the FAIL prefix renamed -- and the same reviewer re-verifies rather than my self-grading the fix."
+          }
         }
       ],
       "constraints": [],
@@ -2036,11 +2042,33 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g6-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g6-review-RESULT.md",
+            "verdict": "BLOCK",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g6-review-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g6-review",
+            "why_ref": "w-23"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g6-integrate": {
@@ -2552,6 +2580,21 @@
       "id": "tc6",
       "from": "gb-integrate",
       "statement": "tc49 (re-filed into execute.json from the gb review's own survey, where it is that survey's tc1 -- do not double-count): thresholds.RECALL_FLOOR_DERIVATION is dead. Grep across scripts/, tests/ and all .py/.md files returns 5 hits: 1 its own definition, 0 consumers anywhere in scripts/ or tests/, 1 the code map's own auto-generated INDEX.md catalog entry (which catalogs every symbol whether used or not, so not a functional reader), and 3 the review's own artifacts. Genuinely zero consumers, confirmed by grep rather than asserted. The severity was deliberately NOT escalated and the distinction is the useful part: this is not the missing-derivation defect the gb handoff warned about, because the load-bearing derivation -- why the writes predicate has no independent oracle and is therefore derived the same hand-labelled way as calls and reads -- IS stated, and is stated where a human actually reads it, in RECALL_FLOORS's own docstring two lines above, which RECALL_FLOORS's own WHEN THIS FIRES line points an investigator toward. RECALL_FLOOR_DERIVATION is a near-verbatim unconsumed restatement of that same docstring. So the real defect is duplication with silent-drift risk: nothing keeps the two copies in sync and they can diverge unnoticed, which is the same shape as tc45 and tc48 (a stated rule drifting from the applied rule) one level up in the stack. ACTION: either delete the constant, or give it a real consumer so drift becomes visible -- the reviewer's own suggestion is to have RecallFloorTests' failure message quote it, which converts dead prose into a thing that must stay true."
+    },
+    {
+      "id": "tc7",
+      "from": "g6-integrate",
+      "statement": "A truncated or malformed leftover statements.jsonl makes every subsequent extract die on an uncaught JSONDecodeError with a bare traceback naming no next step. Found by the g6 reviewer, reproduced rather than reasoned about. This is a NEW failure mode g6 introduces: before g6 nothing read the previous store, so a corrupted leftover was harmless; now the read-before-overwrite step hits it on every run. The scenario is real, not theoretical, because the writer has no atomic rename -- an interrupted build leaves exactly this state, and the user's next action is to run build again, which is the run that dies. Being fixed inline in the g6 rework pass rather than deferred, since it rides the same file and the same crew; filed here so the finding survives independently of whether that pass covers it fully."
+    },
+    {
+      "id": "tc8",
+      "from": "g6-integrate",
+      "statement": "The advisory stale-tag line prints the literal FAIL prefix while leaving the exit code at zero, colliding with the prefix checks.py and render.py already use for genuine build-failing defects. Confirmed by the g6 reviewer, not inferred: one build invocation's stdout can legally carry both a build-failing FAIL line and an advisory-only FAIL line, and nothing in the text distinguishes them -- only the exit code does, which a human skimming output and a CI grep both routinely ignore. The cost is that an advisory nobody must act on reads identically to a defect somebody must, which erodes the meaning of every real FAIL in the same stream. One-line fix, ADVISORY stale tag rather than FAIL stale tag. Being fixed inline in the g6 rework pass; filed so the reasoning survives the fix."
+    },
+    {
+      "id": "tc9",
+      "from": "g6-integrate",
+      "statement": "Nothing in the routine pipeline exercises the staleness path. The g6 reviewer confirmed this by reading the call graph rather than assuming it: check never calls render.py at all, and deterministic-rebuild structurally cannot reach the path because it builds into two fresh scratch artifact directories on every call, so the previous-store read always sees nothing. The mechanism's only routine exerciser today is a human or agent NOT wiping .code-map between local build runs -- an unenforced convention, not a guarantee.\n\nThis matters beyond g6. A detector that no automated path ever runs is one refactor away from being silently dead, and the tests are its only remaining witness -- which is precisely why g6's vacuous-negative-test defect was worth blocking on. Worth deciding at triage whether some check should deliberately build twice into the same directory so the staleness path has a guaranteed exerciser, or whether the tests alone are accepted as sufficient with that limitation recorded. Not fixed in the g6 rework: it is a design question about what check is for, not a defect in what g6 built."
     }
   ],
   "blockers": [],
@@ -2716,6 +2759,13 @@
       "why": "Advancing g6-implement because its one postcondition is genuinely met and independently verified, not because the crew said so. The IMPLEMENTER_RESULT is on disk with no unresolved blockers, and I re-ran the gate's own checks myself rather than reading its numbers back: full suite 1805 passed 2 skipped 683 subtests 0 failed, which satisfies this gate's explicit full-suite constraint; fresh build then check 7/7 exit 0 with deterministic-rebuild included, which is the specific risk a new report field carries and it did not fire; closing selector -k 'stale_tag' 12 passing against a designed baseline of 0, so no new test is invisible to the command that closes this gate.\n\nWhat ships is the gate task as written: the enclosing entity span is hashed at extraction, the previous statements.jsonl is read before being overwritten so a rebuild can diff by slug, and a stale-anchor line surfaces in the run report the reviewer already reads rather than in a new surface nobody looks at. That is the IF4/TS8 remedy in the place the critics asked for it.\n\nI advance with two questions deliberately left open for the reviewer instead of answered by me, because this is the first build of a design the human signed accepted-untested and self-grading it would defeat the point. Whether slug-match really constitutes the 'text did not change' half of the rule or quietly begs the question, and whether advisory-only is the right severity when a flag that cannot fail the build can be ignored indefinitely, are review calls. The reviewer should also attack reformatting immunity with a mutation the crew did not choose, since reproducing the author's own falsifier proves only that the author's probe works.\n\nTwo limits are recorded rather than hidden. The detector finds nothing stale here, which is correct and not a null result -- there are no authored tags yet, so nothing exists that could be stale -- and it follows that the mechanism has only been exercised against a stand-in, with validation against real tag text belonging to g7. Docstring-only and comment-only edits are invisible to the span hash by construction. Neither blocks the build; both belong in front of a reviewer.",
       "mechanical": false,
       "ts": "2026-08-08T20:14:18.009176+00:00"
+    },
+    {
+      "id": "w-24",
+      "gate": "g6-review",
+      "why": "Advancing g6-review because a substantive REVIEW_RESULT came back, which is the whole of what this item's postcondition asks. A BLOCK is a completed review, not a failed one, and treating it as a reason to hold this item open would confuse the verdict with the deliverable.\n\nThe review earned its keep. It reproduced the defect rather than asserting it: forcing stale = [] after the real computation in extract.run() left 9 of 12 tests green, every dedicated does-not-flag test among them, then reverted cleanly and confirmed 12/12. The feature works -- proven independently under two separate attacks -- but most of the evidence shipped to prove it cannot fail, which is the same class as tc38 and tc47 on this run. It also brought two findings nobody had: an uncaught JSONDecodeError on a truncated leftover statements.jsonl, a new failure mode this gate introduces because the writer has no atomic rename, and confirmation that check never calls render.py, so nothing in the routine pipeline exercises the staleness path at all.\n\nI advance rather than reworking under this item because the two are different jobs. Rework belongs to g6-integrate, which is the item that reads the verdict and routes on it, and the remediation is narrow and already fully specified: a positive control inside each does-not-flag test so a whole-feature disable cannot leave it green, a guarded read with an actionable message, and the advisory line's FAIL prefix renamed so it stops colliding with the real failure convention. The same reviewer re-verifies the fix; I do not grade my own crew's repair.",
+      "mechanical": false,
+      "ts": "2026-08-08T20:37:17.212998+00:00"
     }
   ],
   "amendments": [
