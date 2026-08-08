@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-issue-411-trend-snapshot-shared-row",
+  "mechanical": {
+    "run": "impl-w5-docs-496-411",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m2-issue-411-trend-snapshot-shared-row",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-impl-w5-docs-496-411-m2-issue-411-trend-snapshot-shared-row@87dc90b67a293cbbc6d7feb78628e714c91d85e6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "impl-w5-docs-496-411",
+    "generated_at": "2026-08-08T22:57:42Z"
+  }
+}

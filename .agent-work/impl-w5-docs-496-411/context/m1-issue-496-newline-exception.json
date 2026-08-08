@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-issue-496-newline-exception",
+  "files": [],
+  "repo_rev": {
+    "commit": "ea85447164c358db8558536831899b558b6f6a9b"
+  },
+  "run": {
+    "work_id": "impl-w5-docs-496-411",
+    "generated_at": "2026-08-08T22:57:04Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-w5-docs",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-w5-docs",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-w5-docs"
+    }
+  }
+}
