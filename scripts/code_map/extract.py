@@ -159,15 +159,28 @@ def anchors_in(src):
 #: Gate g7, grammar v0 as ruled by DESIGN_SPEC (the cull test is applied at
 #: render time, not here): a bare `Word:` paragraph prefix in an ordinary
 #: comment, prior art shape is Go's `Deprecated:` convention. `Rationale:` is
-#: the survivor of the cull test's collapse (see cull-verdict.json) --
-#: `Assumption:`/`Constraint:` are not recognised keywords in the shipped
-#: grammar, so a comment using either word is ordinary prose, not a tag.
+#: the survivor of the cull test's collapse (see cull-verdict.json).
 #: `Rejected:` and `See:` were never collapse candidates: SY5's finding and
 #: the cull test both scope to "Assumption:/Constraint:/Rationale:" only --
 #: a rejected alternative and a reference are different KINDS of fact, not
 #: another flavor of rationale.
-TAG_START = re.compile(r"^[ \t]*#[ \t]*(Rationale|Rejected|See):[ \t]*(.*)$")
+#:
+#: Gate g7 remediation fix 2: `Assumption:`/`Constraint:` ARE recognised
+#: here -- the cull verdict is ALIAS, not retirement (see cull-verdict.json).
+#: The real f1Brainz PR #733 corpus has 4 of 6 tags authored with
+#: `Constraint:`; retiring it silently converted four real, working tags
+#: into inert prose with zero signal. `TAG_KIND_ALIAS` normalizes the KIND
+#: at the emission site (`tag_check`), so a comment authored with either
+#: retired word still extracts and renders, as `Rationale:`.
+TAG_START = re.compile(
+    r"^[ \t]*#[ \t]*(Assumption|Constraint|Rationale|Rejected|See):[ \t]*(.*)$")
 TAG_CONT = re.compile(r"^[ \t]*#[ \t]?(.*)$")
+
+#: The alias mapping fix 2 builds: a RECOGNIZED keyword whose KIND is
+#: normalized to its survivor before the statement is ever emitted, so
+#: `render.py:tag_lines` stays exactly as branch-free as the cull test
+#: proved it -- one lookup here, never a dispatch in the renderer.
+TAG_KIND_ALIAS = {"Assumption": "Rationale", "Constraint": "Rationale"}
 
 
 def tags_in(src):
@@ -473,9 +486,23 @@ class Extractor(ast.NodeVisitor):
         # are emitted and read back by run() to diff against the PREVIOUS
         # extraction's own copy of this dict.
         self.anchor_hashes = {}
+        # (owning symbol, tag text) -> (kind, span_hash, file, line, col) --
+        # gate g7 remediation fix 1: a tag carries no slug, so its identity
+        # across two extractions is its own text plus its owner, not an
+        # allocator id. Collected the same way `anchor_hashes` is, and read
+        # back by run() to diff against the PREVIOUS extraction's copy.
+        self.tag_hashes = {}
         self.out = []
         self.scope = Scope("module")
         self.encl = [self.mod + ":"]     # enclosing transformer stack
+        # enclosing DEFINITION NODES, pushed in lockstep with `encl` -- gate
+        # g7 remediation fix 1 needs this (unlike g6's anchor(), which only
+        # ever hashes the node its own slug sits above): a tag above a bare
+        # statement binds to the ENCLOSING entity/module (`self.here()`),
+        # not to that statement, so its staleness hash must cover the
+        # enclosing entity's own span, not the statement's. `self.tree`
+        # (the module) is the module-level entry, matching `encl[0]`.
+        self.encl_nodes = [self.tree]
         self.clsstack = []
         # enclosing class SYMBOLS, pushed in lockstep with clsstack, so a
         # resolver that spells a class-qualified name spells the same string
@@ -779,7 +806,7 @@ class Extractor(ast.NodeVisitor):
                 self.anchor_hashes[slug] = (sym, h, self.rel.replace("\\", "/"), ln, col)
                 return
 
-    def tag_check(self, sym, node):
+    def tag_check(self, sym, node, span_node=None):
         """Emit any tag paragraph minted directly above `node`, attributed
         to `sym` -- see `tags_in`.
 
@@ -790,7 +817,17 @@ class Extractor(ast.NodeVisitor):
         module -- there is no page finer than one per entity, so that is
         where it renders regardless of which statement it sat above. Same
         decorator-aware two-line check as `anchor()`, for the same reason: a
-        reader writes the comment above the first decorator, not the `def`."""
+        reader writes the comment above the first decorator, not the `def`.
+
+        Gate g7 remediation fix 1: `span_node` is the node whose span gets
+        HASHED for staleness -- the gate's own rule is "flag when the
+        ENCLOSING body changed while the tag text did not", not "when this
+        exact statement changed". For a whole-function/class tag `span_node`
+        defaults to `node` itself (the entity IS its own enclosing body,
+        exactly like `anchor()`); the statement-level call sites
+        (`visit_Assign`/`visit_AnnAssign`) pass the enclosing entity/module
+        node explicitly, since `node` there is only the tagged statement."""
+        span_node = node if span_node is None else span_node
         lines = [node.lineno]
         if getattr(node, "decorator_list", None):
             lines.insert(0, node.decorator_list[0].lineno)
@@ -798,9 +835,16 @@ class Extractor(ast.NodeVisitor):
             found = self.tags.get(line)
             if found:
                 ln, col = store_line(node.lineno), node.col_offset
+                h = span_hash(span_node)
                 for t in found:
-                    self.emit(sym, "tag", t["kind"], ln, col, "literal",
-                              d={"text": t["text"]})
+                    # Gate g7 remediation fix 2: normalize a retired keyword's
+                    # kind to its survivor HERE, the one place a tag becomes a
+                    # statement -- not in render.py, which stays branch-free.
+                    kind = TAG_KIND_ALIAS.get(t["kind"], t["kind"])
+                    self.emit(sym, "tag", kind, ln, col, "literal",
+                              d={"text": t["text"], "span_hash": h})
+                    self.tag_hashes[(sym, t["text"])] = (
+                        kind, h, self.rel.replace("\\", "/"), ln, col)
                 return
 
     def described(self, node, decorators):
@@ -855,8 +899,10 @@ class Extractor(ast.NodeVisitor):
         prev = self.scope
         self.scope = Scope("class", prev, node.name)
         self.encl.append(sym)
+        self.encl_nodes.append(node)
         for c in node.body:
             self.visit(c)
+        self.encl_nodes.pop()
         self.encl.pop()
         self.scope = prev
         self.clsyms.pop()
@@ -895,10 +941,12 @@ class Extractor(ast.NodeVisitor):
         if node.returns is not None:
             self.visit(node.returns)
         self.encl.append(sym)
+        self.encl_nodes.append(node)
         # pre-bind local assignment targets so forward references read as local
         self._prebind(node)
         for c in node.body:
             self.visit(c)
+        self.encl_nodes.pop()
         self.encl.pop()
         self.scope = prev
 
@@ -984,8 +1032,12 @@ class Extractor(ast.NodeVisitor):
         # which only fires at module/class level, a tag above a FUNCTION-LOCAL
         # assignment is the real corpus's own majority shape (5 of 6 tags in
         # f1Brainz PR #733), and it binds to the enclosing entity, not to a
-        # declared name that scope would refuse to record at all.
-        self.tag_check(self.here(), node)
+        # declared name that scope would refuse to record at all. Gate g7
+        # remediation fix 1: the STALENESS hash covers the ENCLOSING entity's
+        # own span (`self.encl_nodes[-1]`), not just this one Assign
+        # statement -- "the tagged statement changed" is not the gate's rule,
+        # "the enclosing body changed" is.
+        self.tag_check(self.here(), node, span_node=self.encl_nodes[-1])
         typ = self.infer_type(node.value)
         self.visit(node.value)
         for t in node.targets:
@@ -993,7 +1045,7 @@ class Extractor(ast.NodeVisitor):
             self._store(t, typ)
 
     def visit_AnnAssign(self, node):
-        self.tag_check(self.here(), node)
+        self.tag_check(self.here(), node, span_node=self.encl_nodes[-1])
         if node.value is not None:
             self.visit(node.value)
         self.visit(node.annotation)
@@ -1136,6 +1188,11 @@ def run(root, artifacts):
     # against, so nothing is flagged, which is the correct bootstrap
     # behaviour rather than a false positive on every anchor in a new repo.
     old_hashes = {}
+    # Gate g7 remediation fix 1: the SAME read, extended alongside, for tag
+    # statements -- a tag has no slug, so its identity across two runs is
+    # (owning symbol, tag text), not `st["o"]` (which for a tag is its KIND,
+    # e.g. "Rationale", not a unique id).
+    old_tag_hashes = {}   # (sym, text) -> span_hash
     if os.path.exists(outp):
         try:
             with open(outp, encoding="utf-8") as f:
@@ -1145,6 +1202,11 @@ def run(root, artifacts):
                         sh = (st.get("d") or {}).get("span_hash")
                         if sh is not None:
                             old_hashes[st["o"]] = sh
+                    elif st["p"] == "tag":
+                        d = st.get("d") or {}
+                        text, sh = d.get("text"), d.get("span_hash")
+                        if text is not None and sh is not None:
+                            old_tag_hashes[(st["s"], text)] = sh
         except (json.JSONDecodeError, UnicodeDecodeError, KeyError) as e:
             # A truncated or malformed leftover store -- e.g. from an
             # interrupted prior run, since the write below has no atomic
@@ -1153,11 +1215,13 @@ def run(root, artifacts):
             # skip, since a corrupt store silently disabling staleness
             # detection forever is the same disease in a different organ.
             old_hashes = {}
+            old_tag_hashes = {}
             print("previous statements store at %s is unreadable (%s: %s) -- "
                   "treating as absent; staleness comparison is skipped for "
                   "this run" % (outp, type(e).__name__, e))
 
-    new_hashes = {}   # slug -> (sym, hash, file, line, col)
+    new_hashes = {}       # slug -> (sym, hash, file, line, col)
+    new_tag_hashes = {}   # (sym, text) -> (kind, hash, file, line, col)
     with open(outp, "w", encoding="utf-8", newline="\n") as f:
         for rel in files:
             p = os.path.join(ROOT, rel)
@@ -1180,6 +1244,7 @@ def run(root, artifacts):
                 f.write(json.dumps(r) + "\n")
             nrows += len(rows)
             new_hashes.update(ex.anchor_hashes)
+            new_tag_hashes.update(ex.tag_hashes)
 
         # A slug present in BOTH runs is, by construction, the same "tag" --
         # today an anchor carries no text of its own besides the slug it was
@@ -1196,6 +1261,26 @@ def run(root, artifacts):
                    "q": {"file": sfile, "line": sline, "col": scol},
                    "ref": "derived", "hash": h, "res": "literal",
                    "d": {"old_hash": old_hashes[slug], "new_hash": h}}
+            f.write(json.dumps(row) + "\n")
+            nrows += 1
+
+        # Gate g7 remediation fix 1: the SAME diff, extended alongside for
+        # tags -- a (sym, text) key present in BOTH runs means the tag's own
+        # text did not change (the gate's own rule's second half); a hash
+        # delta on that matched key is the enclosing body changing while the
+        # tag stayed put, exactly the flag this gate defines. A tag whose
+        # text also changed has a different key and simply does not match --
+        # not flagged, because the author already revisited it.
+        stale_real_tags = sorted(
+            key for key, meta in new_tag_hashes.items()
+            if key in old_tag_hashes and old_tag_hashes[key] != meta[1])
+        for key in stale_real_tags:
+            sym, text = key
+            kind, h, sfile, sline, scol = new_tag_hashes[key]
+            row = {"s": sym, "p": "stale-tag", "o": ("%s: %s" % (kind, text))[:80],
+                   "q": {"file": sfile, "line": sline, "col": scol},
+                   "ref": "derived", "hash": h, "res": "literal",
+                   "d": {"old_hash": old_tag_hashes[key], "new_hash": h, "kind": kind}}
             f.write(json.dumps(row) + "\n")
             nrows += 1
 

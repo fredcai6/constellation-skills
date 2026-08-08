@@ -2869,6 +2869,15 @@ class Holder:
 def elsewhere():
     """A reference tag pointing at the definition above."""
     return None
+
+
+# Constraint: budget stays under 200ms end to end -- the SLA the caller
+# depends on.
+def budget():
+    """Gate g7 remediation fix 2: authored with the aliased keyword that
+    folds into Rationale: at extraction -- must still extract and render,
+    normalized to the survivor word."""
+    return 200
 '''
 
 
@@ -2878,7 +2887,10 @@ def _make_tag_repo(tmp: Path, source=None):
     whole-function tag (directly above `def spin`), a function-local
     assignment tag (directly above `path = TIMEOUT` inside `Holder.hold`,
     the real f1Brainz PR #733 corpus's own majority shape), and a module
-    tag (directly above the module constant `TIMEOUT`)."""
+    tag (directly above the module constant `TIMEOUT`). `budget()` adds
+    gate g7 remediation fix 2's alias round-trip: authored with the
+    ALIASED keyword `Constraint:`, which must still extract and render,
+    normalized to `Rationale:`."""
     (tmp / "pkg").mkdir()
     (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
     (tmp / "pkg" / "tags.py").write_text(source or _TAG_SOURCE,
@@ -2955,6 +2967,21 @@ class CommentTagExtractionTests(unittest.TestCase):
         self.assertEqual(see_tags[0]["o"], "See")
         self.assertEqual(see_tags[0]["d"]["text"], "pkg.tags:Holder.hold")
 
+    def test_comment_tags_constraint_keyword_extracts_normalized_to_rationale(self):
+        """Gate g7 remediation fix 2: `Constraint:` is a RECOGNIZED, ALIASED
+        keyword, not a retired one -- it extracts, with its kind normalized
+        to `Rationale` at the emission site, so the four real f1Brainz PR
+        #733 tags authored with this word keep being visibly consumed."""
+        tags = self._tags(self._extract())
+        budget_tags = [t for t in tags if t["s"] == "pkg.tags:budget"]
+
+        self.assertEqual(len(budget_tags), 1, budget_tags)
+        self.assertEqual(budget_tags[0]["o"], "Rationale",
+                         "a Constraint: authored tag must extract with kind "
+                         "normalized to Rationale -- the alias, not the "
+                         "retirement, is what shipped")
+        self.assertIn("200ms", budget_tags[0]["d"]["text"])
+
     def test_comment_tags_multiline_paragraph_joins_into_one_text(self):
         """The real corpus's own shape: a tag's prose wraps across several
         comment lines, and the extracted text is the JOINED paragraph, not
@@ -2966,6 +2993,43 @@ class CommentTagExtractionTests(unittest.TestCase):
         text = method_tags[0]["d"]["text"]
         self.assertIn("reading TIMEOUT directly here", text)
         self.assertIn("a local copy is deliberate", text)
+
+
+def _kind_dispatch_nodes(tree):
+    """Gate g7 remediation fix 3: every AST node in `tree` that varies
+    behavior on a tag's `kind`, not just an explicit `if kind == ...`/`elif`
+    branch (an `ast.Compare`, the ONLY shape the original pin test caught)
+    but also a dict/mapping-lookup dispatch (`SOME_MAP[t['kind']]`) or a
+    `match` statement keyed on it -- shapes the review proved an
+    ast.Compare-only check misses entirely (zero Compare nodes either
+    produces).
+
+    A plain READ of the tag's own kind field (`t['kind']`, the uniform
+    treatment itself) must NOT trip this -- only a subscript/`.get()` that
+    uses `kind` as the INDEX into some OTHER mapping does. The distinguishing
+    shape: the outer lookup's key expression is itself a reference to
+    `kind` (a bare `Name`) or a further subscript reading `kind` out of the
+    tag (`t['kind']`) -- not a literal string key like `t['kind']`'s own
+    `'kind'` constant, which would false-positive a bare read if matched by
+    naive substring text."""
+    found = []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Compare) and "kind" in ast.unparse(n):
+            found.append(n)
+        elif isinstance(n, ast.Match) and "kind" in ast.unparse(n.subject):
+            found.append(n)
+        elif isinstance(n, ast.Subscript):
+            key = n.slice
+            if (isinstance(key, ast.Subscript) and "kind" in ast.unparse(key)) or \
+               (isinstance(key, ast.Name) and key.id == "kind"):
+                found.append(n)
+        elif isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) \
+                and n.func.attr == "get" and n.args:
+            arg0 = n.args[0]
+            if (isinstance(arg0, ast.Subscript) and "kind" in ast.unparse(arg0)) or \
+               (isinstance(arg0, ast.Name) and arg0.id == "kind"):
+                found.append(n)
+    return found
 
 
 class CommentTagRenderTests(unittest.TestCase):
@@ -3018,19 +3082,36 @@ class CommentTagRenderTests(unittest.TestCase):
 
         self.assertIn("See: pkg.tags:Holder.hold", page)
 
+    def test_comment_tags_constraint_keyword_renders_as_rationale(self):
+        """Gate g7 remediation fix 2's alias round-trip, render half: a
+        `Constraint:`-authored tag shows on the page as `Rationale:` -- the
+        retired keyword itself must not leak into rendered output."""
+        self._build()
+        page = self._page("pkg.tags", "budget.md")
+
+        self.assertIn("Rationale: budget stays under 200ms", page)
+        self.assertNotIn("Constraint:", page,
+                         "the retired keyword must not survive to the rendered page")
+
     def test_comment_tags_render_path_carries_no_branch_on_kind(self):
         """The cull test itself, applied at code level: `tag_lines` is the
         ONLY place `render.py` reads a tag's kind, and it is one
-        list-comprehension with no conditional dispatch on the value --
-        every kind gets the identical `f"{kind}: {text}"` treatment, same
-        section, same order, same format. This is the evidence
-        `.agent-work/issue-456/cull-verdict.json` cites for its verdict."""
-        tree = ast.parse(inspect.getsource(render.tag_lines))
-        kind_compares = [ast.unparse(n) for n in ast.walk(tree)
-                         if isinstance(n, ast.Compare) and "kind" in ast.unparse(n)]
+        list-comprehension with no conditional dispatch OR lookup-dispatch
+        on the value -- every kind gets the identical `f"{kind}: {text}"`
+        treatment, same section, same order, same format. This is the
+        evidence `.agent-work/issue-456/cull-verdict.json` cites for its
+        verdict.
 
-        self.assertEqual(kind_compares, [],
-                         "tag_lines compares a tag's kind against something -- "
+        Gate g7 remediation fix 3: widened from an `ast.Compare`-only check
+        (which a dict-lookup dispatch or a `match` statement both evade,
+        producing zero Compare nodes) to `_kind_dispatch_nodes`, which also
+        catches those shapes -- verified live against a real evading
+        mutation, not reasoned about (see the RESULT doc)."""
+        tree = ast.parse(inspect.getsource(render.tag_lines))
+        dispatch = _kind_dispatch_nodes(tree)
+
+        self.assertEqual(dispatch, [],
+                         "tag_lines varies its treatment of a tag's kind -- "
                          "the cull test's premise (uniform treatment, no "
                          "dispatch on kind) no longer holds")
         self.assertIn("kind", inspect.getsource(render.tag_lines),
@@ -3060,41 +3141,48 @@ class CullVerdictArtifactTests(unittest.TestCase):
         self.assertIn("kinds", v)
 
     def test_comment_tags_cull_verdict_matches_extractors_recognized_keywords(self):
-        """The verdict claims Rationale/Rejected/See ship and
-        Assumption/Constraint do not -- checked against extract.py's own
-        TAG_START pattern, not against the verdict's own say-so."""
+        """Gate g7 remediation fix 2: the verdict is ALIAS, not retirement --
+        all five words are RECOGNIZED (checked against extract.py's own
+        TAG_START pattern, not the verdict's own say-so); Assumption:/
+        Constraint: additionally carry a normalization entry, re-derived
+        against extract.py's actual TAG_KIND_ALIAS dict, not just the
+        verdict's own prose about it."""
         v = self._verdict()
         pattern = extract.TAG_START.pattern
 
         self.assertEqual(sorted(v["shipped_keywords"]),
-                         ["Rationale", "Rejected", "See"])
+                         ["Assumption", "Constraint", "Rationale", "Rejected", "See"])
         for kw in v["shipped_keywords"]:
             with self.subTest(keyword=kw):
                 self.assertIn(kw, pattern)
-        for retired in ("Assumption", "Constraint"):
+
+        self.assertEqual(v["kind_normalization"], dict(extract.TAG_KIND_ALIAS),
+                         "the verdict's kind_normalization must match "
+                         "extract.py's actual TAG_KIND_ALIAS, not just assert "
+                         "its own prose")
+        for retired, survivor in extract.TAG_KIND_ALIAS.items():
             with self.subTest(keyword=retired):
-                self.assertNotIn(retired, pattern,
-                                 "the verdict says %s was collapsed away, but "
-                                 "extract.py's TAG_START still recognizes it"
-                                 % retired)
+                self.assertEqual(survivor, "Rationale")
 
     def test_comment_tags_cull_verdict_collapse_kinds_have_no_render_dependency(self):
         """For every kind the verdict marks a collapse candidate, the render
         path must actually show zero dependency on it -- re-run the same
-        AST check CommentTagRenderTests uses, so this test does not merely
-        trust the verdict's own 'consumer_dependencies: []' claim."""
+        widened AST check CommentTagRenderTests uses (gate g7 remediation
+        fix 3: catches a dict-lookup or `match` dispatch too, not just an
+        explicit compare), so this test does not merely trust the verdict's
+        own 'consumer_dependencies: []' claim."""
         v = self._verdict()
         tree = ast.parse(inspect.getsource(render.tag_lines))
-        kind_compares = [ast.unparse(n) for n in ast.walk(tree)
-                         if isinstance(n, ast.Compare) and "kind" in ast.unparse(n)]
+        dispatch = _kind_dispatch_nodes(tree)
 
         for kind, info in v["kinds"].items():
             if info.get("candidate_for_collapse"):
                 with self.subTest(kind=kind):
                     self.assertEqual(info["consumer_dependencies"], [])
-                    self.assertEqual(kind_compares, [],
+                    self.assertEqual(dispatch, [],
                                      "verdict claims no render dependency on "
-                                     "kind, but tag_lines compares on it")
+                                     "kind, but tag_lines varies its treatment "
+                                     "of it")
 
     def test_comment_tags_cull_verdict_rejected_and_see_are_not_collapse_candidates(self):
         v = self._verdict()
@@ -3140,11 +3228,14 @@ def _make_stale_tag_repo(tmp: Path, source=None):
 
 
 class CommentTagStaleAnchorJoinTests(unittest.TestCase):
-    """Gate g7 closes the limit g6 shipped with: zero authored tags existed
-    when g6's span_hash/diff machinery was built, so staleness detection had
-    only ever been exercised against a bare `[slug]` anchor, never against
-    real tag text. This is the first test that mutates a tagged entity's
-    body and checks the flag.
+    """Gate g7 remediation (fix 1): this fixture's function carries BOTH an
+    anchor and a tag, so this test proves COEXISTENCE -- g6's pre-existing
+    anchor-based flag keeps firing correctly when the same entity also
+    carries a live tag, and (since the fix) the NEW tag-staleness mechanism
+    fires alongside it without interference. It does NOT, on its own, prove
+    the tag mechanism works independent of an anchor -- that proof is
+    `CommentTagOnlyStaleTagTests`, whose fixture carries a tag and NO anchor
+    at all, the shape the real corpus (zero authored slugs) actually has.
 
     WORKFLOW FEEDBACK: the handoff's own illustration for this test named
     `Constraint:` as the tag kind to mutate under. The cull test this gate
@@ -3199,6 +3290,171 @@ class CommentTagStaleAnchorJoinTests(unittest.TestCase):
                          "proves staleness fires on a body change while the "
                          "tag stays put, not on the tag changing too")
 
+        stale_tag_syms = {st["s"] for st in after if st["p"] == "stale-tag"}
+        self.assertIn("pkg.rate:rate", stale_tag_syms,
+                      "the NEW tag-staleness mechanism (fix 1) must ALSO fire "
+                      "here -- both flags coexist on the same real body change, "
+                      "proving the extension does not disturb g6's anchor path "
+                      "or vice versa")
+
+
+_TAG_ONLY_STALE_SOURCE = '''"""A module whose one function carries a Rationale: tag and NO anchor at all -- gate g7 remediation fix 1's required proof that the tag-staleness mechanism does not depend on an anchor being present, which is the shape the real corpus (zero authored slugs) actually has."""
+
+BASE = 5
+
+
+# Rationale: this function's return value is doubled deliberately -- callers
+# never want the raw base rate.
+def rate():
+    """Doubles the base rate."""
+    return BASE * 2
+'''
+
+
+def _make_tag_only_stale_repo(tmp: Path, source=None):
+    """Mirrors `_make_stale_tag_repo`'s shape exactly, minus the `[slug]`
+    anchor bracket -- the one line that differs from `_STALE_TAG_SOURCE`.
+    This is the fixture `CommentTagStaleAnchorJoinTests`'s own docstring
+    used to claim to be but was not: an entity carrying a tag and nothing
+    else authored above it."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "rate.py").write_text(source or _TAG_ONLY_STALE_SOURCE,
+                                         encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/rate.py", cwd=tmp)
+
+
+class CommentTagOnlyStaleTagTests(unittest.TestCase):
+    """Gate g7 remediation, fix 1: the review proved the shipped join test's
+    fixture carried BOTH an anchor and a tag on the same function, so its
+    flag fired off g6's untouched anchor mechanism (`p == "stale-anchor"`) --
+    the real corpus (zero authored slugs) would never have exercised the
+    tag path at all. This class is the required proof: an entity with a tag
+    and NO anchor whatsoever, checked against a NEW `stale-tag` predicate
+    the anchor diff never reads."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_tag_only_stale_repo(self.repo)
+        self.artifacts = self.repo / ".code-map"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _extract(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["extract", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts)])
+        self.assertEqual(code, 0)
+        return statements_of(self.artifacts)
+
+    def test_comment_tags_stale_tag_flags_a_real_body_change_with_zero_anchors_present(self):
+        before = self._extract()
+        self.assertEqual({st["o"] for st in before if st["p"] == "anchored"}, set(),
+                         "input precondition: this fixture must carry NO anchor, "
+                         "or it proves nothing about the tag mechanism standing "
+                         "on its own")
+        tag_rows = [st for st in before
+                   if st["p"] == "tag" and st["s"] == "pkg.rate:rate"]
+        self.assertEqual(len(tag_rows), 1,
+                         "input precondition: exactly one Rationale: tag on rate()")
+        self.assertEqual(tag_rows[0]["o"], "Rationale")
+
+        (self.repo / "pkg" / "rate.py").write_text(
+            _TAG_ONLY_STALE_SOURCE.replace("return BASE * 2", "return BASE * 3"),
+            encoding="utf-8", newline="\n")
+        after = self._extract()
+
+        stale = [st for st in after if st["p"] == "stale-tag"]
+        self.assertEqual(len(stale), 1, stale)
+        self.assertEqual(stale[0]["s"], "pkg.rate:rate",
+                         "the staleness flag did not fire on a real body change "
+                         "under an entity carrying a live comment tag and NO "
+                         "anchor -- the mechanism this fix exists to build")
+
+        after_tags = [st for st in after
+                     if st["p"] == "tag" and st["s"] == "pkg.rate:rate"]
+        self.assertEqual(len(after_tags), 1)
+        self.assertEqual(after_tags[0]["d"]["text"], tag_rows[0]["d"]["text"],
+                         "the tag text itself must be UNCHANGED -- staleness "
+                         "fires on a body change while the tag stays put, not "
+                         "on the tag changing too")
+
+    def test_comment_tags_stale_tag_does_not_flag_on_first_extraction(self):
+        """Bootstrap: no previous store exists yet, so nothing to compare
+        against -- silence is correct, not a false positive."""
+        before = self._extract()
+
+        self.assertEqual([st for st in before if st["p"] == "stale-tag"], [])
+
+    def test_comment_tags_stale_tag_does_not_flag_when_tag_text_also_changes(self):
+        """A tag whose own text was also revised is not stale -- the gate's
+        own rule (restated in the remediation brief): the author already
+        re-read it. The identity key is (owning symbol, tag text), so a
+        changed text is a different key and simply does not match across
+        the two extractions -- not a false positive to special-case."""
+        self._extract()
+
+        mutated = _TAG_ONLY_STALE_SOURCE.replace(
+            "return BASE * 2", "return BASE * 3").replace(
+            "never want the raw base rate.",
+            "never want the raw, un-doubled rate.")
+        (self.repo / "pkg" / "rate.py").write_text(
+            mutated, encoding="utf-8", newline="\n")
+        after = self._extract()
+
+        self.assertEqual([st for st in after if st["p"] == "stale-tag"], [],
+                         "a tag whose text also changed must not be flagged stale")
+
+
+class CommentTagOnlyStaleTagRenderReportTests(unittest.TestCase):
+    """Gate g7 remediation fix 1's close criterion: a REAL tag's staleness,
+    with zero anchors present, must land in the SAME run report and
+    ADVISORY channel g6 established (`render_report.json`'s `stale_tags`
+    field, the `ADVISORY stale tag` print) -- not a second reporting
+    channel."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_tag_only_stale_repo(self.repo)
+        self.artifacts = self.repo / ".code-map"
+        self.out = self.repo / "map"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _build(self):
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = cli.main(["build", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts),
+                             "--out", str(self.out)])
+        self.assertEqual(code, 0, buffer.getvalue())
+        report = json.loads((self.artifacts / "render_report.json").read_text(encoding="utf-8"))
+        return report, buffer.getvalue()
+
+    def test_comment_tags_stale_tag_lands_in_the_same_render_report_field(self):
+        before, _ = self._build()
+        self.assertEqual(before.get("stale_tags"), [])
+
+        (self.repo / "pkg" / "rate.py").write_text(
+            _TAG_ONLY_STALE_SOURCE.replace("return BASE * 2", "return BASE * 3"),
+            encoding="utf-8", newline="\n")
+        report, out = self._build()
+
+        self.assertEqual(len(report.get("stale_tags") or []), 1, report)
+        self.assertIn("ADVISORY", out)
+        self.assertIn("stale tag", out)
+        stale_lines = [line for line in out.splitlines() if "stale tag" in line]
+        for line in stale_lines:
+            with self.subTest(line=line):
+                self.assertFalse(line.startswith("FAIL"),
+                                 "advisory stale-tag line collides with the FAIL "
+                                 "prefix used for genuine build-failing defects")
+
 
 class CommentTagNegativeTests(unittest.TestCase):
     """Negative extraction cases, sourced from the committed fixture
@@ -3212,7 +3468,12 @@ class CommentTagNegativeTests(unittest.TestCase):
     that extracts nothing at all cannot pass these tests by accident. Every
     'does not extract' claim here was verified by breaking the extractor and
     watching the specific assertion go red -- see the RESULT doc for the
-    self-check count."""
+    self-check count.
+
+    One method below (the aliased-keyword one) is no longer a negative case
+    -- gate g7 remediation fix 2 made Assumption:/Constraint: extract again,
+    normalized -- but it stays in this class since it shares the same
+    corpus fixture and setup."""
 
     CORPUS = (ROOT / "tests" / "fixtures" / "comment_tags_corpus" / "corpus.py"
              ).read_text(encoding="utf-8")
@@ -3247,17 +3508,28 @@ class CommentTagNegativeTests(unittest.TestCase):
         self.assertFalse(any(t["s"] == "pkg.corpus:plain_note" for t in tags),
                          "an ordinary '# Note: ...' comment extracted as a tag")
 
-    def test_comment_tags_retired_keywords_do_not_extract_post_collapse(self):
+    def test_comment_tags_aliased_keywords_extract_normalized_to_rationale(self):
+        """Gate g7 remediation fix 2: Assumption:/Constraint: are ALIASED,
+        not retired -- both extract, and both normalize to kind Rationale
+        at the emission site, with their own distinct text preserved."""
         tags = self._tags()
 
         self.assertTrue(any(t["s"] == "pkg.corpus:scaled" for t in tags),
                         "positive control: the Rationale: tag on scaled() did "
                         "not extract -- a broken extractor would make the "
-                        "negative assertion below pass vacuously")
-        retired = [t for t in tags if t["s"] == "pkg.corpus:retired_words"]
-        self.assertEqual(retired, [],
-                         "Assumption:/Constraint: extracted as tags despite "
-                         "the cull verdict collapsing them away")
+                        "assertions below prove nothing")
+        aliased = [t for t in tags if t["s"] == "pkg.corpus:aliased_words"]
+        self.assertEqual(len(aliased), 2, aliased)
+        for t in aliased:
+            with self.subTest(text=t["d"]["text"]):
+                self.assertEqual(t["o"], "Rationale",
+                                 "an aliased keyword extracted without its kind "
+                                 "normalized to Rationale")
+        texts = {t["d"]["text"] for t in aliased}
+        self.assertEqual(texts, {"this word aliases to Rationale: at extraction.",
+                                 "same story -- this word aliases too."},
+                         "the two aliased tags' own distinct text must survive "
+                         "extraction unchanged -- only the kind is normalized")
 
 
 _SUBPKG_SOURCE = '''"""A module living inside a real subpackage."""

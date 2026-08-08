@@ -187,6 +187,17 @@ def load_stores(artifacts):
                 stale_tags.append({"id": o, "s": s,
                                    "old_hash": d["old_hash"], "new_hash": d["new_hash"]})
                 continue
+            if p == "stale-tag":
+                # Gate g7 remediation fix 1: a REAL tag's own staleness --
+                # the enclosing body changed while the tag text did not, with
+                # no anchor involved at all. Lands in the SAME `stale_tags`
+                # list/report field/ADVISORY channel g6 established above,
+                # not a second reporting channel -- the review's explicit
+                # requirement.
+                d = st["d"]
+                stale_tags.append({"id": o, "s": s,
+                                   "old_hash": d["old_hash"], "new_hash": d["new_hash"]})
+                continue
             if p == "declares":
                 d = st["d"]
                 owner = modules[modof(s)] if s.endswith(":") else entities[s]
@@ -731,9 +742,11 @@ def run(root, artifacts, out):
         "ids": len(ids),
         "median_entity_page_lines": sizes[len(sizes) // 2][0] if sizes else 0,
         "largest_5": [[n, k] for n, k in sizes[:5]],
-        # Gate g6: slugs whose enclosing entity span changed since the
-        # PREVIOUS build while the tag's own identity (its slug) did not --
-        # see extract.py's span_hash/run() for what changed and what did not.
+        # Gate g6 + g7 remediation fix 1: entries whose ENCLOSING body span
+        # changed since the PREVIOUS build while the authored marker's own
+        # identity did not -- an anchor's slug (g6), or a tag's (owner, text)
+        # pair (g7, no anchor required). See extract.py's span_hash/run() for
+        # what changed and what did not.
         "stale_tags": [t["id"] for t in stale_tags],
     }
     print(json.dumps(report, indent=1))
@@ -749,7 +762,7 @@ def run(root, artifacts, out):
         # tag might still be true. What a human does when this fires: open
         # the tag at `t['s']` and re-read it against the current code; update
         # or remove it if it no longer holds.
-        print("ADVISORY stale tag [%s]: anchor body changed, tag text did not -- "
+        print("ADVISORY stale tag [%s]: enclosing body changed, tag text did not -- "
               "review %s and update or remove the tag" % (t["id"], t["s"]))
     artifacts = os.fspath(artifacts)
     os.makedirs(artifacts, exist_ok=True)

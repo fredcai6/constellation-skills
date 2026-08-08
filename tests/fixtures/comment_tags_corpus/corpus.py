@@ -28,13 +28,13 @@ def plain_note():
     return value
 
 
-def retired_words():
-    """A negative control: Assumption:/Constraint: are retired keywords post
-    cull-test collapse (see .agent-work/issue-456/cull-verdict.json) -- must
-    NOT extract as tags."""
-    # Assumption: this used to be a valid tag keyword before the cull test
-    # collapsed it into Rationale:.
+def aliased_words():
+    """Gate g7 remediation fix 2: Assumption:/Constraint: are ALIASED, not
+    retired, post cull-test collapse (see
+    .agent-work/issue-456/cull-verdict.json) -- both extract, with kind
+    normalized to Rationale: at the emission site."""
+    # Assumption: this word aliases to Rationale: at extraction.
     value = 1
-    # Constraint: same story -- this word is retired too.
+    # Constraint: same story -- this word aliases too.
     other = 2
     return value + other
