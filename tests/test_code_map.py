@@ -1218,6 +1218,108 @@ class PageAccountingInvariantTests(unittest.TestCase):
                                     "does not have"], failures)
 
 
+_LEDGER_SOURCE = '''"""A module declaring two entities whose names differ only by case."""
+
+
+class Ledger:
+    """The book of record."""
+
+    def post(self):
+        """Add an entry."""
+        return 1
+
+
+def ledger():
+    """Open one."""
+    return Ledger()
+'''
+
+
+def _make_case_collision_repo(tmp: Path):
+    """A FRESH case-only pair, with nothing to do with `Verdict`.
+
+    `pkg.book:Ledger` and `pkg.book:ledger` are two entities in one module, so
+    their pages land in one directory, and the renderer used to name each page
+    after the entity alone -- one filename on a case-insensitive filesystem.
+
+    A fix that only resolved the pair it was shown could not fail on the next
+    pair, which is why the proof runs on a pair the fix never saw."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "book.py").write_text(_LEDGER_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/book.py", cwd=tmp)
+
+
+class CaseOnlyPageIdentityTests(unittest.TestCase):
+    """Gate g2, defect (c): two entity names that differ only by case must not
+    resolve to one page.
+
+    TWO ARMS, and each is red on only ONE kind of filesystem — which is exactly
+    why both are here. On a case-insensitive filesystem the second write
+    destroys the first, so an entity the map claims has no page; on a
+    case-sensitive one both files exist and nothing is lost, so the loss arm
+    cannot fail and the folding arm is what sees the latent collision. Together
+    they are red on every platform, and a fix that satisfies only one of them is
+    not a fix."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_case_collision_repo(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        self.m = checks.MapUnderCheck(self.repo, self.repo / ".code-map",
+                                      self.repo / "map")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_the_fixture_really_declares_a_case_only_pair(self):
+        """Input precondition. Without two keys that fold to one name both arms
+        below are vacuous, and the whole class passes on a renderer that emits
+        no pages at all."""
+        groups = {}
+        for key in self.m.entities:
+            module, name = key.split(":", 1)
+            groups.setdefault((module, name.lower()), []).append(key)
+        collisions = sorted(tuple(sorted(v)) for v in groups.values() if len(v) > 1)
+
+        self.assertEqual(collisions, [("pkg.book:Ledger", "pkg.book:ledger")])
+
+    def test_every_entity_the_map_claims_is_an_entity_the_map_has_a_page_for(self):
+        """RED on a case-insensitive filesystem: one page overwrote the other."""
+        self.assertEqual(checks.page_accounting(self.m), [])
+
+    def test_no_two_page_filenames_in_one_directory_fold_to_the_same_name(self):
+        """RED on a case-sensitive filesystem, where nothing is lost and the
+        collision is only latent: two files, one folded name, and the map breaks
+        the moment it is checked out on Windows or macOS."""
+        folded = {}
+        for page in self.m.pages:
+            folded.setdefault((page.parent, page.name.lower()), []).append(page.name)
+        clashes = sorted(sorted(v) for v in folded.values() if len(v) > 1)
+
+        self.assertEqual(clashes, [],
+                         "two pages in one directory differ only by case, so the "
+                         "tree cannot survive a case-insensitive filesystem")
+
+    def test_every_link_the_map_writes_points_at_a_page_that_exists(self):
+        """The other half of renaming a page: the links that reach it.
+
+        Falsifier grade B — green before the fix, because on a case-insensitive
+        filesystem both spellings open the one surviving file. It is red the
+        moment a fix renames pages and forgets the module index or the parent
+        entity's child list, which is the obvious way to get this wrong."""
+        dangling = []
+        for page in self.m.pages:
+            for target in re.findall(r"\]\(([^)]+)\)", self.m.text(page)):
+                if not (page.parent / target).exists():
+                    dangling.append(f"{self.m.rel(page)} -> {target}")
+
+        self.assertEqual(dangling, [])
+
+
 def _filesystem_is_case_insensitive():
     """Does a path written as `A` come back as `a`?
 
