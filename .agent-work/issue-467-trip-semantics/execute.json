@@ -1159,7 +1159,9 @@
         {
           "id": "p1",
           "statement": "the shipped HARD-band semantics have been read from scripts/checklist_engine.py (TRIP_HARD_GUARDED_VERBS / _trip_hard_gate), so the replacement text is written against the code and not against memory of it",
-          "check": null
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Attested by commander-w4-467-g. Read the shipped HARD-band semantics in this worktree's scripts/checklist_engine.py, not from memory: (1) line 83 TRIP_HARD_GUARDED_VERBS = {start, reopen} -- exactly two verbs, advance is not among them; (2) _trip_hard_gate at :1549 refuses only when fill >= hard AND no refresh-request is pending for the gate keyed to the current why-record, and no-ops for surveys, a None reading, or below hard; (3) the dispatch chokepoint at :2821 applies that guard only 'if v in TRIP_HARD_GUARDED_VERBS', and its comment states it is NEVER hung off advance and deliberately not off resume; (4) the band comment at :1221-1232 states HARD 'does NOT refuse advance (#467): closing the gate you are already inside IS the handoff'; (5) the close side is not unguarded -- advance's require_why at :2026 refuses --mechanical and suspends why_exempt at/over hard, so the gate closes but not silently. Release condition confirmed at :1575: has_pending_refresh_request(cl, iid, why_ref=wid)."
         }
       ],
       "postconditions": [
@@ -1174,17 +1176,23 @@
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3b-glossary-1"
         },
         {
           "id": "c2",
           "statement": "BLAST RADIUS: exactly one line of docs/agents/GLOSSARY.md changed and no other file in the repo -- proved by a git diff --numstat pasted into the attestation, not asserted",
-          "check": null
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Attested by commander-w4-467-g. BLAST RADIUS, measured not asserted. Source-tree diff, engine-owned state excluded: 'git diff --numstat -- . :(exclude).agent-work/**' returns exactly ONE line and nothing else -- '1  1  docs/agents/GLOSSARY.md'. One insertion, one deletion, one file. 'git status --porcelain' over the same scope shows only ' M docs/agents/GLOSSARY.md' and no untracked file. The full 'git diff docs/agents/GLOSSARY.md' shows a single -/+ pair on the 'trip' row at line 13; the surrounding rows (gauge above, episode below) appear as unchanged context, so the table structure and every other row are untouched. Within the changed row itself only the fifth cell (Usage notes) differs -- the Term, Short, Meaning and Instead-of cells are byte-identical across the -/+ pair. HONEST DECLARATION rather than a clean-diff claim: 'git diff --numstat' with no pathspec ALSO reports .agent-work/issue-467-trip-semantics/{spine.json (4/5), execute.json (8/7), execute.json.journal (2/0)} plus two untracked engine sidecars context/g3b-glossary.json and mechanical/g3b-glossary.json. Every one of those was written BY THE ENGINE (claim, attest, start), not by me; I made exactly one Edit call this gate and it targeted GLOSSARY.md. c2's phrase 'no other file in the repo' is read as no other file of the SOURCE TREE, which holds exactly."
         },
         {
           "id": "c3",
           "statement": "the replacement wording is accurate against the shipped guard, checked clause by clause against the code read at p1 (guarded verbs = start + reopen; advance NOT refused; refresh-request is what releases)",
-          "check": null
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Attested by commander-w4-467-g. Clause-by-clause against the code read at p1. NEW CELL: 'HARD refuses the verbs that BEGIN work at a gate -- start and reopen -- until a refresh-request is pending; the advance that closes the gate you are already in is never refused, only closing it silently is.' CLAUSE 1 'refuses the verbs that BEGIN work at a gate -- start and reopen': matches TRIP_HARD_GUARDED_VERBS = {start, reopen} at :83 exactly -- two verbs, no more, no fewer -- and the dispatch guard at :2821 fires only for members of that set. The word BEGIN is the code's own framing (_trip_hard_gate docstring :1549, 'the verbs that BEGIN work at a gate'). CLAUSE 2 'until a refresh-request is pending': matches the release at :1575, 'if has_pending_refresh_request(cl, iid, why_ref=wid): return'. Deliberately not spelled out in a glossary cell: the request must also key to the current why-record (#190 identity-aware release), so a stale request cannot wave a new trip through -- narrower than the cell states, never broader, so the cell does not overclaim what releases. CLAUSE 3 'the advance that closes the gate you are already in is never refused': matches the band comment at :1229-1231, 'It does NOT refuse advance (#467): closing the gate you are already inside IS the handoff', and is structurally true because advance is absent from TRIP_HARD_GUARDED_VERBS, so _trip_hard_gate is never even called for it. CLAUSE 4 'only closing it silently is': matches advance's require_why at :2026 -- at/over hard, --mechanical is refused and why_exempt is SUSPENDED, error text 'Closing the gate is NOT refused; only the silence is.' THIRD CLAUSE DECLARED, for the Admiral: the gate imperative asked for two things (name the begin-work verbs; say the closing advance is not refused). I added clause 4 because 'advance is never refused' standing alone replaces a false line with a misleading one -- a reader would conclude HARD does nothing at all on the close side, when 'advance --mechanical' IS refused at/over hard. It stays inside the same cell and needs no neighbouring text, so it is within the ruling's blast radius, not an expansion of it. NOT CLAIMED, deliberately: the cell is silent on 'resume', which is also unguarded (:2818 comment), and on the SOFT band, which the row's Meaning column already covers."
         }
       ],
       "constraints": [
@@ -1193,11 +1201,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3b-glossary-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "row=$(grep -n '^| `trip` |' docs/agents/GLOSSARY.md) && echo \"$row\" && ! echo \"$row\" | grep -q 'blocks `advance`' && echo \"$row\" | grep -q 'start' && echo \"$row\" | grep -q 'reopen'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -1305,19 +1325,25 @@
       "why": "DC4 CLOSED. g3 went BLOCK -> rework -> APPROVE, and I verified every load-bearing step in my own shell rather than on report. THE BLOCK WAS RIGHT: the mutation log declared M15 an EQUIVALENT mutant on reasoning that enumerated start and advance but never block(), which carries no status guard while 'blocked' sits outside TERMINAL -- so active_id() moves BACKWARDS behind a later in-progress gate. I reproduced it with public verbs at the CLI before accepting the finding (shipped REFUSES 'advance g2 --mechanical' at 12% with g2 carrying a 50000 reserve; the mutant prints 'g2 -> complete'), which meant the gate argument g3 itself added at checklist_engine.py:2857 had ZERO coverage and deleting it silently disabled this issue's own no-silent-close guarantee for the gate being closed. REWORK, no source change: one test, test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate, reaching that state through start/advance/start/block/advance, plus the M15 log entry corrected from EQUIVALENT to KILLED with a VISIBLE correction note rather than a quiet rewrite -- f9925be6's commit message asserted the equivalence too, and the log now says so. MY OWN VERIFICATION: applied the M15 mutation myself, watched the new test go RED, reverted, watched it go GREEN, confirmed git diff --stat -- scripts empty both times; ran both closeout suites (572 passed/535 subtests; 21 passed/413 deselected/125 subtests). The independent re-reviewer proved the test is NOT vacuous -- the same fixture WITHOUT the block leaves active_id == g2 and is refused under shipped AND mutant, so a no-divergence fixture kills nothing -- and NOT manufactured: every step driven through E.dispatch, the only direct JSON write being the authored override. The test also ASSERTS the divergence, so future silent vacuity turns it red. ONE NON-BLOCKING FINDING I FIXED MYSELF rather than ship a wrong number in an evidence doc: the corrected M15 TOTAL said '383 deselected (frozen headroom-or-override selector)', mislabelling its provenance twice -- this log's Method applies no -k at all, and that selector deselects 413, not 383. I re-measured under the log's own Method (1 failed, 433 passed, 155 subtests) and rewrote the line with the correction recorded in place. Eight of nine original criteria passed by attack and are closed. Triage: tc4 block()'s missing status guard (pre-existing, NOT ours, and the M15 kill now DEPENDS on that state -- whoever tightens block() must know a test guards it), tc5 the reopen-path advisory/guard divergence where the docstring overclaims (I saw it in my own repro: current advised on g1 while the guard judged g2), tc6 the survey sidecar collision, three runs running. tc3 RESOLVED: the stray subtest lived in the stated baseline d376b786, which spans 15 commits and is not the diff's parent; against the true parent 5a69a30b the deltas are exactly +17 passed and +125 subtests. I AM TRIPPED AND STOPPING HERE, and the trip itself is evidence: fill 0.168164 >= hard 0.15. The engine that refused my advance is the INSTALLED workbench engine, which is PRE-#467 (140170 bytes, sha 9c05192f0feb3d4d, no TRIP_HARD_GUARDED_VERBS) while the repo engine is 156060 bytes, sha ccbc247e0de0dcaa. So this run has been driven throughout by the engine WITH the #431 bug, and I hit that bug live: it refused the advance that CARRIES the handoff. I released it the engine's own prescribed way -- a refresh-request keyed to the concrete w-9 -- rather than switching instruments mid-run, which is the Admiral's call, not mine. NEXT: g3b-glossary, the amended tc1 gate. Do NOT start it over the line.",
       "mechanical": false,
       "ts": "2026-08-08T15:27:51.764153+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g3b-glossary",
+      "why": "g3b-glossary CLOSED. docs/agents/GLOSSARY.md line 13, the trip row's Usage-notes cell, said 'HARD blocks advance until the agent requests a context refresh' -- false against the engine this branch ships. Replaced with: HARD refuses the verbs that BEGIN work at a gate -- start and reopen -- until a refresh-request is pending; the advance that closes the gate you are already in is never refused, only closing it silently is. Written against the code, not memory: TRIP_HARD_GUARDED_VERBS={start,reopen} at :83, _trip_hard_gate at :1549, the dispatch guard at :2821 which fires only for that set, the band comment at :1221-1232, and advance's require_why at :2026 for the close-side no-silence rule. c1 is genuinely failable -- I ran it before the edit and it exited 1, after the edit it exits 0. Blast radius measured: source-tree diff excluding engine state is exactly '1 1 docs/agents/GLOSSARY.md', one -/+ pair, only the fifth cell of that row differing; the .agent-work churn is the engine's own claim/attest/start writes, declared in the c2 attestation rather than hidden behind a filtered pathspec. I ADDED A THIRD CLAUSE beyond the two the imperative named ('only closing it silently is') and declared it for the Admiral: 'advance is never refused' standing alone would replace a false line with a misleading one, since advance --mechanical IS refused at/over hard. It stays inside the one sanctioned cell. Authority: Admiral ruling at the previous seam, epic #418 latitude contract, tc1. CONTEXT NOTE for whoever reads this next: the gauge went stale-looking at the seam (it held the predecessor's 20.9% for the first minutes of my session) and then refreshed to my own 8.8% -- I did NOT file a refresh-request and did NOT waive anything; there was no governor stop. NEXT: g4-implement, the append-only trip ledger -- Opus, engine-semantics reason named in the dispatch.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:41:06.446236+00:00"
     }
   ],
   "refusals": 7,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "released",
-    "claimed_at": "2026-08-08T14:15:38.844412+00:00",
-    "last_heartbeat": "2026-08-08T15:27:51.764153+00:00",
+    "status": "active",
+    "claimed_at": "2026-08-08T15:37:23.500685+00:00",
+    "last_heartbeat": "2026-08-08T15:41:06.446254+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-08T15:29:34.973949+00:00"
+    "takeover_reason": null
   },
   "amendments": [
     {
