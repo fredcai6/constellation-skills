@@ -610,7 +610,8 @@ class Extractor(ast.NodeVisitor):
         self.emit(self.mod + ":", WINDOW,
                   "[%d,%d)" % (LINE_BASE, LINE_BASE + loc),
                   LINE_BASE, 0, "literal",
-                  d={"line_base": LINE_BASE, "loc": loc})
+                  d={"line_base": LINE_BASE, "loc": loc,
+                     "doc_body": doc_body_of(self.tree), "all": self.table.all})
 
     def run(self):
         self.window()
@@ -773,16 +774,40 @@ class Extractor(ast.NodeVisitor):
                 for nm in _target_names(n.target):
                     self.scope.bind(nm, "assign")
 
+    def declare(self, target, node, annotation, value, form):
+        """A value declared directly in a module or class body: its name, its
+        annotation and WHAT IT IS SET TO.
+
+        A declaration is a fact about its owner, not an entity: it gets no page,
+        and `contains` -- which is what a page is counted from -- is deliberately
+        not used. The store used to carry only a `writes` edge here, which said
+        that a name was assigned and never to what, so a constant reached the map
+        as a bare word.
+
+        Only module and class bodies, matching what the removed stage collected:
+        a function-local assignment is a local, not a declared surface."""
+        if not isinstance(target, ast.Name):
+            return
+        if self.scope.kind not in ("module", "class"):
+            return
+        self.emit(self.here(), "declares", self.child_sym(target.id),
+                  store_line(node.lineno), node.col_offset, "internal",
+                  d={"annotation": annotation, "value": value, "form": form})
+
     def visit_Assign(self, node):
         typ = self.infer_type(node.value)
         self.visit(node.value)
         for t in node.targets:
+            self.declare(t, node, None, ast.unparse(node.value), "assign")
             self._store(t, typ)
 
     def visit_AnnAssign(self, node):
         if node.value is not None:
             self.visit(node.value)
         self.visit(node.annotation)
+        self.declare(node.target, node, ast.unparse(node.annotation),
+                     ast.unparse(node.value) if node.value is not None else None,
+                     "annotation-only" if node.value is None else "annotated-assign")
         self._store(node.target, self.infer_annotation(node.annotation))
 
     def visit_AugAssign(self, node):
