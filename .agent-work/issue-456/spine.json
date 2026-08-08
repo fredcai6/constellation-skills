@@ -395,12 +395,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "in-progress",
+      "status": "blocked",
       "status_detail": {
-        "blocker": "Commander context exhausted at a clean seam: gauge 0.194 against a 0.15 hard limit, so the engine refuses 'advance'. NO WORK IS OUTSTANDING at the current gate. g0 is substantively COMPLETE: implementation across three passes, a full review that BLOCKed on two findings, a remediation, and a re-review that verified those two closed and BLOCKed on a third -- all three now closed and independently verified by me. Full suite 1709 passed / 2 skipped / 0 failed re-run in a cleared environment after the final edit. Everything committed and pushed to issue-456/code-map at HEAD; map/ confirmed untracked, staged for gs. g0-review is blocked and bubbled with the same reason; refresh-request filed at e-g0-review-6. The human has attempted a compaction three times and it has not landed, which is why this bubbles rather than waits.",
+        "blocker": "Commander context is at/over the engine's 15% hard limit, so advance is mechanically refused. Two of eleven gates are CLOSED (g0 APPROVE, g1 APPROVE with 0 open findings); g1-review's advance is the only thing outstanding and it is pure bookkeeping. Nothing is lost: everything is committed and pushed to issue-456/code-map. RESUME: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), then resume execute, resume g1-review, advance g1-review, start+advance g1-integrate (c1 re-runs the full suite, ~8 min, expect 1729 passed / 2 skipped / 1 xfailed), then g2. Do NOT re-dispatch any g0 or g1 crew -- all ten are terminal (recover_crews: 0 unresolved). Do NOT redo any g0 or g1 work. Read .agent-work/issue-456/STATE_NOTE.md first. CARRY FORWARD: 'python -m scripts.code_map check' now exits 1 on this repo, correctly, until g2 lands the rename -- do not read it as a regression.",
         "authority_needed": "parent agent",
-        "next_action": "Fresh commander: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), read .agent-work/issue-456/STATE_NOTE.md, then resume execute, resume g0-review --reason 'context refreshed', advance g0-review, and continue at g0-integrate. Do NOT redo any g0 work; do NOT re-dispatch any g0 crew -- all six are terminal. Read tc25 BEFORE any dispatch to g0/implementer: that slot is undispatchable (refuses 'duplicate crew' naming a completed crew as running, and --abandon does not clear it because slot reuse left four entries under one id). Remaining: g1 g2 g3 g4 g5 gb g6 g7 g8 gs, then reconcile, triage (drain tc1-tc25), review, feedback, archive. Release the lease LAST. Push and a full non-draft PR are pre-approved; merge to main is NOT approved.",
-        "resume_reason": "context refreshed by compaction; gauge 0.056 vs 0.15 hard limit"
+        "next_action": "",
+        "prior_status": "in-progress"
       },
       "result": null,
       "finding": null,
@@ -877,13 +877,20 @@
       "statement": "tc33 CHECKS THAT DEGRADE QUIETLY RATHER THAN LOUDLY -- four found by the g1 reviewer, none blocking, all real. The sharpest: respelling the inbound line makes refs-line-self-consistent return [] instead of going red, so a rename of the thing it parses silently empties its iteration set rather than failing. That is the 'wrong iteration set' route into a check that cannot fail, and it is the same family as the g0 defects. It is survivable today only because inbound-attribution catches that particular case, which is luck, not design. One assertion fixes it: require the iteration set to be non-empty on a corpus known to be non-empty. ROUTE: fold into gB or wherever the check family is next touched; do not let it sit because a sibling happens to cover it."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "execute",
+      "blocker": "Commander context is at/over the engine's 15% hard limit, so advance is mechanically refused. Two of eleven gates are CLOSED (g0 APPROVE, g1 APPROVE with 0 open findings); g1-review's advance is the only thing outstanding and it is pure bookkeeping. Nothing is lost: everything is committed and pushed to issue-456/code-map. RESUME: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), then resume execute, resume g1-review, advance g1-review, start+advance g1-integrate (c1 re-runs the full suite, ~8 min, expect 1729 passed / 2 skipped / 1 xfailed), then g2. Do NOT re-dispatch any g0 or g1 crew -- all ten are terminal (recover_crews: 0 unresolved). Do NOT redo any g0 or g1 work. Read .agent-work/issue-456/STATE_NOTE.md first. CARRY FORWARD: 'python -m scripts.code_map check' now exits 1 on this repo, correctly, until g2 lands the rename -- do not read it as a regression.",
+      "authority_needed": "parent agent",
+      "next_action": ""
+    }
+  ],
   "refusals": 4,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T01:57:18.663061+00:00",
+    "last_heartbeat": "2026-08-08T01:58:52.470798+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
