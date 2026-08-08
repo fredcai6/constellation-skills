@@ -1,0 +1,41 @@
+{
+  "ops": [
+    {
+      "op": "rescope",
+      "id": "m1-confirm-collapse",
+      "title": "Confirm each pair independently against BODIES -- do not inherit any prior collapse claim",
+      "imperative": "Do not inherit the launch order's or any other agent's 'one defect, three filings' framing -- verify each pair independently against gh issue view <n> --json body. Working verdict already reasoned this session (re-derive, do not just copy): #507 and #370 share a root -- an address that was CORRECT WHEN THE HANDOFF WAS WRITTEN and STALE BY DELIVERY TIME, because the dispatching commander relaunched/tripped (#507) or deliberately handed off (#370) in between; #370's own body confirms the message reached the exact named agent, who simply no longer owned the gate -- that is staleness, not a resolution failure, and it is the same failure mode as #507's lineage-resolves-to-origin misroute. #413 reads as a DISTINCT root cause: its body states the dispatching commander 'was spawned as a subagent and therefore never registered under an addressable name' to its own children -- the address was never valid, even at dispatch time (no staleness window at all), a structural non-registration gap rather than a staleness gap. If your own re-reading confirms this split, write it to notes-1.md as PARTIAL collapse (#507 + #370 confirmed; #413 distinct) with the quotes backing each leg; if your re-reading instead finds true collapse or a different split, override this working verdict with your own reasoned one -- either way, never close on a title match or on an inherited summary (including this one). Attest c1.",
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "notes-1.md quotes all three issue bodies, states an independently-reasoned collapse verdict per pair (not copied from the launch order or from team-lead's caution), and is explicit about which issues genuinely collapse vs. which (if any) are distinct",
+          "check": null,
+          "satisfied": false
+        }
+      ]
+    },
+    {
+      "op": "rescope",
+      "id": "m5-pr-and-issues",
+      "title": "Push branch, open PR, close/comment per m1's confirmed verdict -- never a blanket three-way close",
+      "imperative": "Commit, push epic-418/w5-crew-addressing. Open a PR whose body cites a closing keyword ('Closes #NNN') ONLY for the issue(s) m1 confirmed truly collapse to this fix's root cause -- per the working verdict, that is #507 and #370; quote the collapse argument from notes-1.md for each. For any issue m1 found distinct (working verdict: #413), do NOT use a closing keyword -- reference it plainly ('Related to #413') and comment on it directly: state the distinct-root-cause finding, note that this fix still resolves the issue's PRACTICAL SYMPTOM as a side effect (delivery no longer depends on a crew addressing its dispatcher by name at all, so a never-addressable-parent stops mattering in practice) without claiming to have fixed the underlying harness reachability gap, and leave it OPEN for a human to judge whether the symptom fix is sufficient to close. Comment the matching collapse confirmation (quoted body evidence) on each of #507 and #370 too. Do not manually close ANY issue -- closing rides the PR merge, and #413 must not carry a closing keyword at all if m1 confirmed it distinct. Note the lineage-resolves-to-origin bug in the PR body per Pre-Ruling 3. Attest c1, verify c2 by command.",
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "PR opened citing a closing keyword ONLY for the issue(s) m1 confirmed collapse; any distinct issue is referenced (not closed) with a comment explaining the distinction and the symptom-only relief",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "PR exists on the branch",
+          "check": {
+            "kind": "command",
+            "command": "gh pr view epic-418/w5-crew-addressing --json number,url"
+          },
+          "satisfied": false
+        }
+      ]
+    }
+  ]
+}

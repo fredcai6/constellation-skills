@@ -65,3 +65,5 @@ Stop and return BLOCK if: the diff cannot be accessed, evidence is absent or unv
 
 ## Return Format
 Return REVIEW_RESULT: verdict (APPROVE or BLOCK), per-check findings, blockers, out-of-scope observations, workflow feedback (what in this handoff or the workflow made the review harder than it needed to be). The returned `REVIEW_RESULT` is recorded as the engine `review-result` evidence artifact (the `evidence_type` the integrate gate matches on) — the human-facing document name and the engine artifact type refer to the same object.
+
+**Delivery.** Write the full `REVIEW_RESULT` to `.agent-work/<work-id>/crew-handoffs/<gate>-reviewer-result.md` before ending your turn — that write is the delivery, and it is what a resumed or relaunched Commander finds regardless of which instance dispatched you. `SendMessage` an announcement to the dispatching Commander too, but treat it as a best-effort courtesy ping, not the delivery itself: the instance you address may have relaunched or handed off in the meantime and no longer resolve, or (dispatched as a subagent) may not be addressable from your thread at all — a missing ping is not a missing result.
