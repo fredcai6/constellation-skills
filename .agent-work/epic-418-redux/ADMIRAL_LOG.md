@@ -686,3 +686,25 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   issue cut — worth stating at the boundary, and worth pointing A2's Commander at.
   Recorded as a change of my own position, not as a new finding: the measurement did not change, my
   reading of it did.
+
+- `2026-08-08` — `RULING` (blast radius of my own commits, enumerated by command rather than assumed):
+  I committed a tracked `AGENT_FEEDBACK.md` to `main` during the harvest — into a repo whose #447
+  workstream **retired that filename** and shipped a guard for it. That is exactly the shape that
+  breaks a suite silently, so I checked instead of reasoning: `tests/test_retirement_guard.py` **16
+  passed**, and a full-suite re-run on `main` gives **1782 passed / 2 skipped / 683 subtests / exit 0
+  in 484s** — the wave-2 baseline exactly. The guard targets the live `.agent-work/` trio paths and
+  the retired scripts, not archived harvest records, which is consistent with the 57 pre-existing
+  `staged-feedback/*/AGENT_FEEDBACK.md` files already tracked. **No regression; verified, not
+  assumed.** This is also now the current merge baseline for wave 3.
+- `2026-08-08` — `ADMIRAL ERROR` (third occurrence, own instrumentation): **my monitor reported
+  `refresh=1` for W3-C after the relaunch had already superseded that request** — the
+  `refresh-request` artifact persists in the plan file, so the field read identically whether the
+  crew was stalled or had been recovered an hour earlier. That is a check that cannot fail, in the
+  dashboard I built to watch a wave about checks that cannot fail. **Third time in this session:**
+  the first monitor counted historical `.agent-work` files carried in `main` and reported identical
+  artifact counts for all three crews; the second reported a persisted flag. Fixed by reading the
+  **engine lease session id** instead, which changes on relaunch and now reads
+  `impl-w3c-488-489-b:active` — a value that differs between the two worlds.
+  **The generalisable bit:** instrumentation is exempt from nothing. I wrote three orders demanding
+  crews build the defective world before trusting a signal, then read my own dashboard for an hour
+  without asking what it would show if the thing I was watching had already gone wrong.
