@@ -1,0 +1,228 @@
+{
+  "work_id": "g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-d2-symbol-identity",
+    "m2-refs-accounting",
+    "m3-page-identity",
+    "m4-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff is complete",
+      "imperative": "Read the inherited global doctrine (constellation-implementer references/global-crew.md and references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the handoff .agent-work/issue-456/crew-handoffs/g2-implement.md, STATE_NOTE.md, reference/d2_collisions.txt and reference/probe_d2.py. Read the code under change: scripts/code_map/{extract,render,checks,supplement}.py and tests/test_code_map.py. Verify the handoff carries task, intent, allowed scope, specific exclusions, required evidence, test mode, stop conditions and return format; block if not. Record the measured baseline before any edit. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + reference files + code under change read; handoff complete on all eight fields; pre-change baseline suite numbers recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doctrine read: global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md. Handoff g2-implement.md read in full and COMPLETE on all eight fields (task/intent/scope/exclusions/evidence/test-mode/stop-conditions/return-format). STATE_NOTE.md, reference/d2_collisions.txt and reference/probe_d2.py read. Code read: extract.py, render.py, checks.py, supplement.py, cli.py, tests/test_code_map.py. BASELINE MEASURED BEFORE ANY EDIT, cleared env: 'python -m pytest tests/ -q --color=no' -> exit 0, '1729 passed, 2 skipped, 1 xfailed, 651 subtests passed' -- exactly the shape the handoff states. Corpus shape measured by AST: 0 nested classes, 0 classes inside a function, 31 closures inside a method. Store measured: 3619 distinct 'contains' symbols, exactly 4 emitted at more than one definition site -- the same four named in d2_collisions.txt and no others."
+        }
+      ],
+      "constraints": [
+        "work only in C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+        "never `git add -A`; stage explicit paths only",
+        "clear FORCE_COLOR and PYTHONIOENCODING before trusting any suite number; use `python`, never `py`"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-d2-symbol-identity": {
+      "id": "m1-d2-symbol-identity",
+      "title": "D2: a nested definition's symbol carries its enclosing METHOD",
+      "imperative": "Defect (a). scripts/code_map/extract.py builds a definition's symbol from clsstack[-1] whenever any class is on the stack, so a closure defined inside Class.method is emitted as mod:Class.<closure> and two same-named closures in two methods of one class merge into one symbol with a unioned caller set. Write the reproducer FIRST, naming the four measured collisions from .agent-work/issue-456/reference/d2_collisions.txt individually by string -- not by count -- plus a synthetic fixture for the class-defined-inside-a-function arm, which has zero occurrences on this corpus. Commit the reproducer FAILING. Then make each definition's symbol the enclosing scope's symbol plus its own name, so it equals supplement.py's qualified key, and keep every resolver that spells a class-qualified symbol (self.x, cls.x, the class-body name rule) spelling the same string. Attest c1 with the before/after symbol string for all four named collisions.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the reproducer names the four measured collisions individually and was observed FAILING on the pre-fix extractor, and is committed in that failing state -- manual attest, with the RED command output and exit code and the before/after symbol strings",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the four named collisions resolve to four distinct symbols each carrying its enclosing method, the class-in-function arm is covered synthetically, and tests/test_code_map.py is green",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -q --color=no"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "name the four collisions by string; `all N resolve` is vacuous -- it passes on an empty set",
+        "state plainly that the class-in-function arm has no real-corpus instance here",
+        "do not weaken or delete any of the six checks g1 shipped"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-refs-accounting": {
+      "id": "m2-refs-accounting",
+      "title": "Referenced-by: the count and the list are reconcilable, and the page says what the count means",
+      "imperative": "Defect (b). scripts/code_map/render.py refs_line() prints a site total and a module total that both include the page's own module, and a name list that silently omits it; nothing on the page states that the count already excludes the definition, imports, inheritance, writes and docstring mentions. Write the reproducer FIRST -- a page whose own module references it must let a reader reconcile every counted site against the list, and every page carrying an inbound line must state what the count includes and excludes -- and commit it FAILING. Then make the line account for the own-module sites explicitly and add the legend. Update scripts/code_map/checks.py ONLY in its rendered-line grammar (the block that documents itself as the one place that knows how a page spells its inbound references) and strengthen refs_line_self_consistent so the unnamed module must be exactly the one the line accounts for; do not remove any failure mode it already has. Attest c1 with the RED output and exit code.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed: symbol identity is fixed, so the inbound sets a page reports are the right entity's",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the reconciliation reproducer and the legend reproducer were observed FAILING before the fix and are committed in that failing state -- manual attest, with the RED command output and exit code",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "count and list reconcile with no silent omission, every inbound line is followed by a statement of what the count includes and excludes, and the g1 checks (inbound-attribution, refs-line-self-consistent) still pass with every failure mode they had",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -q --color=no"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do NOT fix page accounting by counting the rendered tree a second time (tc24 corrects tc18)",
+        "do not touch the line base or the page header format",
+        "OWN_MODULE_NAMED_MUTATION's anchor line in render.py must survive byte-exact, or g1's falsifier is destroyed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-page-identity": {
+      "id": "m3-page-identity",
+      "title": "Page identity: two entity names differing only by case cannot land on one file",
+      "imperative": "Defect (c), ruled in scope. scripts/code_map/render.py writes each entity page as key.split(':',1)[1] + '.md', so scripts.run_skill_eval:Verdict and :verdict resolve to one filename on a case-insensitive filesystem and one page silently overwrites the other. Write the reproducer FIRST over a SYNTHETIC module holding a fresh case-only pair with nothing to do with Verdict -- a fix that only resolves the pair you were shown cannot fail on the next pair -- and commit it FAILING. Then make case-only collisions impossible by construction in the renderer's page naming, deterministically (hashlib, never the builtin hash: PYTHONHASHSEED varies and deterministic-rebuild would catch it). Do NOT rename class Verdict or def verdict in scripts/run_skill_eval.py -- Commander ruling. Delete the strict-xfail marker at tests/test_code_map.py:982; strict forces this. Attest c1 with the RED output and exit code.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the synthetic case-only pair reproducer was observed FAILING before the fix and is committed in that failing state -- manual attest, with the RED command output and exit code",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the synthetic case-only pair renders two distinct pages, the strict-xfail marker is deleted, and `python -m scripts.code_map check` exits 0 on this repository",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -q --color=no && env -u FORCE_COLOR -u PYTHONIOENCODING python -m scripts.code_map check"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "no symbol in scripts/run_skill_eval.py or any other non-map source file may be renamed",
+        "the INDEX.md collision fixture (_make_collision_repo) is g1's falsifier for page-accounting and must keep colliding",
+        "page naming must be deterministic across processes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-close": {
+      "id": "m4-close",
+      "title": "Full suite green at the gate boundary, tree clean, result written",
+      "imperative": "Run the full suite in a cleared environment and compare against the stated baseline shape (1729 passed, 2 skipped, 1 xfailed before; 1730+ passed, 2 skipped, 0 xfailed after). Run `python -m scripts.code_map check` and record the exit code. Prove `git status` holds no stray edit from any probe -- restore byte-exact anything mutated. Commit on branch issue-456/code-map, staging explicit paths only, never `git add -A` (the untracked map/ tree is staged at the final gate). Write IMPLEMENTER_RESULT to .agent-work/issue-456/crew-handoffs/g2-implement-RESULT.md per the handoff's return format: per defect the reproducer, RED output with exit code, the fix, GREEN output and the falsifier grade A or B; then suite numbers, the check exit code, the deleted xfail marker, out-of-scope candidates, Map Impact and Workflow Feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all three defects fixed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green in a cleared environment at the shape the handoff states",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q --color=no"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written, work committed on issue-456/code-map, git status free of stray edits -- manual attest",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "never force-push; do not merge to main",
+        "no timings in any run report -- it breaks the determinism diff",
+        "C:/Programs/f1Brainz and C:/Programs/superCoolSpaceSim are read-only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g2-implementer-attempt-1",
+    "status": "active",
+    "claimed_at": "2026-08-08T04:55:30.791316+00:00",
+    "last_heartbeat": "2026-08-08T05:03:52.366102+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
+}

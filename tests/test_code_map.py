@@ -295,6 +295,80 @@ def _make_mixed_repo(tmp: Path):
     _git("add", "pkg/__init__.py", "pkg/widget.py", "pkg/user.py", cwd=tmp)
 
 
+_FUNCTION_NESTED_SOURCE = '''"""Definitions nested inside a function — both arms of defect D2."""
+
+
+class Holder:
+    """Two methods, each defining a closure of the same name."""
+
+    def first(self):
+        """The first method."""
+
+        def shared():
+            """The first method's closure."""
+            return 1
+
+        return shared
+
+    def second(self):
+        """The second method."""
+
+        def shared():
+            """The second method's closure."""
+            return 2
+
+        return shared
+
+
+def outer():
+    """A function that defines a class."""
+
+    class Bundle:
+        """Defined inside a function, so it is not a module-level class."""
+
+        def method(self):
+            """A method of a class that is defined inside a function."""
+            return 3
+
+    return Bundle
+'''
+
+
+def _make_function_nested_repo(tmp: Path):
+    """A repo carrying both arms of defect D2 at once.
+
+    Arm one: two closures named `shared`, in two different METHODS of one class.
+    The old symbol was built from the innermost CLASS however deep inside a
+    method the definition sat, so both were `pkg.nested:Holder.shared` — one
+    symbol, two entities, and one unioned set of facts on both pages.
+
+    Arm two: a class defined inside a function, which the old symbol named as if
+    it were module-level. This repository declares NO class inside a function,
+    so this fixture is the only place that arm is exercised anywhere."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "nested.py").write_text(_FUNCTION_NESTED_SOURCE,
+                                           encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/nested.py", cwd=tmp)
+
+
+def contains_sites(artifacts):
+    """Every definition symbol in the statement store -> its definition sites.
+
+    Read from the store directly, never through `render.load_stores`: the symbol
+    IS what defect D2 was about, and reading it back through the renderer would
+    ask the code under test what it thinks it emitted."""
+    sites = {}
+    with open(Path(artifacts) / "statements.jsonl", encoding="utf-8") as f:
+        for line in f:
+            statement = json.loads(line)
+            if statement["p"] == "contains":
+                sites.setdefault(statement["o"], []).append(
+                    (statement["q"]["file"], statement["q"]["line"] + 1))
+    return sites
+
+
 #: A source position in a rendered page: a Python file path with a line number
 #: welded to it. The confirmed ruling is that nothing committed carries one.
 POSITION = re.compile(r"\.py:\d+")
@@ -810,6 +884,79 @@ class EntitySymbolJoinTests(unittest.TestCase):
             f"overstated and must be rewritten, not left standing\n{proc.stdout}")
 
 
+class FunctionNestedSymbolIdentityTests(unittest.TestCase):
+    """Gate g2, defect D2: a definition's symbol carries its whole enclosing
+    chain, not just its innermost class.
+
+    Synthetic, and hermetic: the real-corpus arm is
+    `RealCorpusNestedSymbolIdentityTests`, which names four collisions this
+    repository actually has. This one covers the shape that repository does NOT
+    have — a class defined inside a function — and the reader-visible
+    consequence of the shape it does."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_function_nested_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _sites(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["extract", "--root", str(self.repo)]), 0)
+        return contains_sites(self.repo / ".code-map")
+
+    def test_two_closures_in_two_methods_are_two_symbols(self):
+        """The shape the four real collisions have."""
+        sites = self._sites()
+
+        self.assertNotIn(
+            "pkg.nested:Holder.shared", sites,
+            "the symbol drops the enclosing method, so both closures are one "
+            "symbol and one page carries the other's facts")
+        for symbol in ("pkg.nested:Holder.first.shared",
+                       "pkg.nested:Holder.second.shared"):
+            with self.subTest(symbol=symbol):
+                self.assertIn(symbol, sites)
+                self.assertEqual(len(sites[symbol]), 1, sites.get(symbol))
+
+    def test_a_class_defined_inside_a_function_is_not_named_as_module_level(self):
+        """THE ARM WITH NO REAL-CORPUS INSTANCE, stated rather than implied.
+
+        This repository declares zero classes inside a function, so `4 -> 0` on
+        the measured collisions would close the gate with this arm unwritten.
+        The fixture is the only place it runs."""
+        sites = self._sites()
+
+        for present, absent in (("pkg.nested:outer.Bundle", "pkg.nested:Bundle"),
+                                ("pkg.nested:outer.Bundle.method",
+                                 "pkg.nested:Bundle.method")):
+            with self.subTest(symbol=present):
+                self.assertIn(present, sites)
+                self.assertNotIn(absent, sites,
+                                 "a class defined inside a function is named as "
+                                 "if it were module-level")
+
+    def test_each_closure_page_carries_its_own_docstring_and_not_its_sibling_s(self):
+        """The reader-visible consequence, which is why the symbol matters.
+
+        Two closures sharing one symbol share one docstring, one caller set and
+        one `uses` block. Both pages then state something specific and confident
+        about the other closure."""
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        pages = self.repo / "map" / "pkg.nested"
+
+        first = (pages / "Holder.first.shared.md").read_text(encoding="utf-8")
+        second = (pages / "Holder.second.shared.md").read_text(encoding="utf-8")
+
+        self.assertIn("The first method's closure", first)
+        self.assertNotIn("The second method's closure", first)
+        self.assertIn("The second method's closure", second)
+        self.assertNotIn("The first method's closure", second)
+
+
 class PageAccountingInvariantTests(unittest.TestCase):
     """Gate g1: every page the map CLAIMS must be a page the map HAS.
 
@@ -982,6 +1129,106 @@ class RealCorpusPageAccountingInvariantTests(unittest.TestCase):
     @pytest.mark.xfail(CASE_INSENSITIVE_FS, strict=True, reason=COLLISION_XFAIL_REASON)
     def test_every_page_this_repo_claims_is_a_page_this_repo_has(self):
         self.assertEqual(checks.page_accounting(self.m), [])
+
+
+#: The FOUR D2 collisions this repository actually has, NAMED — one row per
+#: collision: the merged symbol the extractor used to emit, and the two entities
+#: it merged into it. Measured with
+#: `.agent-work/issue-456/reference/probe_d2.py`, recorded in
+#: `.agent-work/issue-456/reference/d2_collisions.txt`, at the revision that
+#: opened gate g2.
+#:
+#: Named rather than counted on purpose. "All four resolve" passes on an empty
+#: set, and it passes on an extractor that quietly stopped emitting nested
+#: definitions at all; neither is the thing being asserted.
+#:
+#: Every row is the same shape: two closures defined in two different METHODS of
+#: one class. The old symbol was built from the innermost class on the stack
+#: however deep inside a method the definition sat, so the METHOD name — the one
+#: thing telling the two apart — was the part that got dropped.
+D2_MEASURED_COLLISIONS = (
+    ("tests.test_context_determinism:RealCheckoutSkew.project",
+     ("tests.test_context_determinism:RealCheckoutSkew."
+      "test_a_clean_checkout_differs_only_in_rev_never_in_shape.project",
+      "tests.test_context_determinism:RealCheckoutSkew."
+      "test_two_checkouts_same_commit_unequal_dirt_on_an_undeclared_file"
+      "_agree_on_content.project")),
+    ("tests.test_context_manifest:ProducerGuards.explode",
+     ("tests.test_context_manifest:ProducerGuards."
+      "test_build_manifest_with_both_edges_injected_shells_out_to_nothing.explode",
+      "tests.test_context_manifest:ProducerGuards."
+      "test_no_globs_or_filesystem_enumeration_anywhere_in_the_producer.explode")),
+    ("tests.test_feedback_tooling:InboxLifecycleTests.f",
+     ("tests.test_feedback_tooling:InboxLifecycleTests._filer.f",
+      "tests.test_feedback_tooling:InboxLifecycleTests._recorder.f")),
+    ("tests.test_install_constellation:InterpreterProbeTests.fake_run",
+     ("tests.test_install_constellation:InterpreterProbeTests."
+      "test_probe_prefers_py_over_python3_when_both_succeed.fake_run",
+      "tests.test_install_constellation:InterpreterProbeTests."
+      "test_probe_timeout_candidate_falls_through_without_hanging.fake_run")),
+)
+
+
+class RealCorpusNestedSymbolIdentityTests(unittest.TestCase):
+    """Gate g2, defect D2, against THIS repository.
+
+    A synthetic fixture proves the rule. This proves the rule was broken here,
+    on four named entities, right now — which is stronger evidence than any
+    fixture.
+
+    Only `extract` runs. The defect is in the statement store, and rendering
+    3,600 pages to read four symbols would pay for the whole pipeline to observe
+    one stage of it. The store goes to a scratch directory, so the committed
+    tree is untouched."""
+
+    _tmp = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        scratch = Path(cls._tmp.name)
+        proc = run_code_map(ROOT, "extract", "--root", str(ROOT),
+                            "--artifacts", str(scratch / "artifacts"))
+        if proc.returncode != 0:
+            cls._tmp.cleanup()
+            raise AssertionError("HARNESS ERROR: the real-corpus extraction failed, "
+                                 f"so nothing below is evidence\n{proc.stderr[-2000:]}")
+        cls.sites = contains_sites(scratch / "artifacts")
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls._tmp is not None:
+            cls._tmp.cleanup()
+
+    def test_the_four_measured_collisions_are_four_pairs_of_distinct_symbols(self):
+        """Each named pair, by string."""
+        for merged, entities in D2_MEASURED_COLLISIONS:
+            with self.subTest(merged=merged):
+                for entity in entities:
+                    self.assertEqual(
+                        len(self.sites.get(entity, ())), 1,
+                        f"{entity} is not in the store exactly once under its own "
+                        f"qualified name")
+                self.assertFalse(
+                    merged in self.sites,
+                    f"{merged} is still emitted, so the enclosing method is still "
+                    f"being dropped")
+
+    def test_no_definition_symbol_is_emitted_at_two_positions(self):
+        """The whole corpus, not only the four named above.
+
+        A symbol emitted at two definition sites is two entities wearing one
+        name, and every fact the map holds about either of them lands on both.
+        The named test above is what keeps this one from passing on an extractor
+        that emits nothing."""
+        self.assertGreater(len(self.sites), 3000,
+                           "input precondition: the store must hold this "
+                           "repository's definitions, or this scan reads nothing")
+
+        merged = {symbol: places for symbol, places in self.sites.items()
+                  if len(places) > 1}
+
+        self.assertEqual(merged, {})
 
 
 class DiscoveryTests(unittest.TestCase):
