@@ -1061,3 +1061,15 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   it. Also carried up: `spine.json`'s `execute.c2` was instantiated with a **relative** script path
   that can never resolve from a worktree; the predecessor repaired it by `retext-check` and it is a
   **template defect affecting every Commander**, routed to its `feedback` gate.
+
+- `2026-08-08` — `RULING` (#457, refused again — **second firing in this session, and the recurrence is
+  the point**): the same `triage` rail arrived, now naming `commander-w3a-465-c`'s spine. Mine is
+  `admiral-epic-418-redux`. **Refused**, same discriminator: match the lease's `session_id` against
+  your own.
+  **The pattern is now measurable and worth handing to #457.** The rail misattributes *whenever a
+  subagent's spine is the most recently active checklist in the repo* — which, for an Admiral running
+  a wave, is essentially always. It fired twice in this session alone against two different Commander
+  session ids, and the predecessor run recorded ten firings. **This is not an occasional mix-up; it is
+  the normal condition of an orchestrator whose crews drive their own spines.** An Admiral that obeyed
+  it would put two agents on one spine every time a Commander reached a gate the Admiral recognises.
+  Refusing costs one comparison. Obeying costs a corrupted crew run.
