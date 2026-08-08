@@ -1104,3 +1104,13 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   while allowing single-file `rm`/`cp` and `find -delete`. The crew worked around it with
   copy-then-delete rather than pushing on blocked primitives — correct behaviour, and worth knowing
   for every Commander whose `archive` gate has to move a directory.
+
+- `2026-08-08` — `RULING` (final verification, everything merged and swept): full suite on `main` with
+  all five wave-3 PRs merged, the archive landed and the 6 new episodes tracked:
+  **1793 passed / 2 skipped / 683 subtests / exit 0 in 309s.** Unchanged from the count taken before
+  #499 merged, which is the right answer — #499 added 6 episodes and 105 archive files, and the
+  episode guard accepted all six. **This is the closeout baseline and the run's final green.**
+  **WAVE 3 IS FULLY CLOSED.** Four issues merged, closed and independently reviewed with forge
+  verdicts; a fifth bookkeeping PR merged; every worktree harvested and swept; every branch deleted;
+  the boundary recorded and G2-verified. `execute` remains **blocked** on the expired contract, which
+  is the only thing standing between here and `closeout`.
