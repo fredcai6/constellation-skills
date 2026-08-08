@@ -1,0 +1,68 @@
+CONTROL  unmutated copy, undamaged map -> exit 0, failed=none
+
+ATTACK   delete-a-page
+  what     deleted map/pkg.widget/helper.md
+  exit     1
+  caught   page-accounting
+  survived no-empty-pages, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   swap-two-pages
+  what     swapped the CONTENTS of helper.md and Widget.md (paths now lie)
+  exit     0
+  caught   NOTHING -- SURVIVOR
+  survived no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   stray-extra-page
+  what     added map/stray.md, a page the store never asked for
+  exit     1
+  caught   page-accounting
+  survived no-empty-pages, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   empty-a-page
+  what     truncated map/pkg.widget/Widget.md to zero bytes
+  exit     1
+  caught   no-empty-pages, page-accounting
+  survived refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   rename-a-page-file
+  what     renamed helper.md -> Helper.md (title unchanged)
+  exit     0
+  caught   NOTHING -- SURVIVOR
+  survived no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   drop-every-module-index
+  what     mutated render.py
+  exit     1
+  caught   page-accounting
+  survived no-empty-pages, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   flat-page-tree
+  what     mutated render.py
+  exit     1
+  caught   page-accounting
+  survived no-empty-pages, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   reversed-caller-list
+  what     mutated render.py
+  exit     0
+  caught   NOTHING -- SURVIVOR
+  survived no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   unsorted-caller-list
+  what     mutated render.py
+  exit     0
+  caught   NOTHING -- SURVIVOR
+  survived no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+
+ATTACK   timestamp-on-a-page
+  what     mutated render.py
+  exit     1
+  caught   deterministic-rebuild
+  survived no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, inbound-attribution
+
+ATTACK   extractor-never-records-reads
+  what     mutated extract.py
+  exit     0
+  caught   NOTHING -- SURVIVOR
+  survived no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild
+

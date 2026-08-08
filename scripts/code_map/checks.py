@@ -30,6 +30,13 @@ time on purpose, and it is compared against the RENDERED PAGES -- the artifact a
 reader actually gets -- rather than against the renderer's own in-memory state.
 
 What they do NOT prove is recorded honestly beside each check.
+
+`check` EXITS 1 ON THIS REPO TODAY, and that is correct
+------------------------------------------------------
+`page_accounting` is red by exactly one page: two entities named `Verdict` and
+`verdict` resolve to one filename on a case-insensitive filesystem, so the map
+advertises a page it does not have. Gate `g2` owns the rename; `g1` only asserts
+it. Do not silence the check to make the command green.
 """
 import collections
 import json
@@ -244,6 +251,167 @@ def no_empty_pages(m):
             if not p.read_text(encoding="utf-8").strip()]
 
 
+#: The one page in the tree that is neither a module index nor an entity: the
+#: top index. A structural fact about the layout -- there is exactly one root --
+#: not a remembered fact about this corpus. It stays 1 at any corpus size, which
+#: is what keeps `page_accounting` an invariant rather than a baseline.
+TOP_INDEX_PAGES = 1
+
+
+def page_accounting(m):
+    """Every page the map CLAIMS must be a page the map HAS.
+
+    The tree is required to hold exactly one page per module index, one per
+    entity, and one top index. Both sides are derived independently: the left is
+    the files on disk, the right is the store. When they disagree the map is
+    advertising something a reader cannot open.
+
+    This is the check that sees a page silently overwriting another. Two entity
+    names that differ only by case resolve to one filename on Windows and macOS,
+    so the second write destroys the first and every count the render report
+    publishes still looks right -- `pages` is an `rglob` of the tree, so it
+    agrees with the tree by construction and cannot notice (that is `tc18`, and
+    `tc24` rules that counting the tree a second time is NOT the fix).
+
+    RED ON THIS REPO TODAY, by exactly one page: `scripts.run_skill_eval:Verdict`
+    and `:verdict` land on one file. Gate `g2` owns the rename; `g1` only
+    asserts it. See the `xfail(strict=True)` in tests/test_code_map.py.
+
+    TWO ARMS, and the second is the durable one.
+
+    - COVERAGE: every module and every entity the store declares must be the
+      TITLE of some page. Shape-free -- it never says where a page lives or what
+      it is called, so no later gate moves it -- and it is what names the loss.
+    - COUNT: `pages == 1 + modules + entities`. This is the identity the render
+      report contradicts, so it is the one that is red today, and it catches a
+      loss that coverage cannot: a page duplicated, or a page in the tree the
+      store never asked for.
+
+    Coverage is asserted on its own rather than only as a diagnostic when the
+    count is off. Attacking the count arm alone found the hole: delete one page
+    and add one stray page and the arithmetic balances while a page the map
+    advertises is gone.
+
+    The count arm is the one a later gate can legitimately move: it assumes the
+    tree holds exactly one index per module plus one top index. A gate that adds
+    an index tier has to update the accounting -- deliberately, not silently,
+    because the constant is named here and nowhere else.
+
+    Both arms read the TITLE of every page that exists, never the renderer's
+    filename expression -- a check that derives its expectation with the code
+    under test's own expression can only ever agree with it."""
+    titles = {m.title_key(p) for p in m.pages}
+    failures = [f"{k}: an entity the map claims and does not have"
+                for k in sorted(set(m.entities) - titles)]
+    failures += [f"{k}: a module index the map claims and does not have"
+                 for k in sorted(set(m.modules) - titles)]
+    expected = TOP_INDEX_PAGES + len(m.modules) + len(m.entities)
+    actual = len(m.pages)
+    if actual != expected:
+        failures.append(
+            f"the tree holds {actual} pages; the store accounts for {expected} "
+            f"({TOP_INDEX_PAGES} top index + {len(m.modules)} module indexes + "
+            f"{len(m.entities)} entities)")
+    return failures
+
+
+def refs_line_self_consistent(m):
+    """A page's `referenced by:` line must agree with its own list.
+
+    PAGE-LOCAL: this reads the page and nothing else -- no store, no supplement.
+    `inbound_attribution` is strictly stronger wherever the store can be read,
+    and on a healthy map the two agree on every entity page. Two things keep
+    this one from being dead weight:
+
+    - it covers EVERY page in the tree, while `inbound_attribution` only covers
+      pages whose title names a known entity. A page that lost its title, or
+      that the store no longer knows about, is invisible to the store check and
+      visible here.
+    - it survives the store: a later gate that changes the schema breaks the
+      second derivation, and this rule still holds.
+
+    The rules are the arithmetic the line is required to satisfy whatever the
+    numbers are: you cannot name a module twice, you cannot name more modules
+    than you counted, at most ONE counted module may go unnamed (the page's own,
+    which the renderer leaves out because the count already implies it), you
+    cannot draw N sites from more than N modules, and zero sites and zero
+    modules must arrive together.
+
+    What it does NOT prove: that the numbers are RIGHT. A line can be perfectly
+    self-consistent and completely wrong -- that is `inbound_attribution`'s
+    job."""
+    failures = []
+    for page in m.pages:
+        where = m.rel(page)
+        title = m.title_key(page) or ""
+        own = title.split(":", 1)[0] if ":" in title else title
+        for line in refs_lines(m.text(page)):
+            stated = parse_refs(line)
+            if stated is None:
+                failures.append(f"{where}: cannot read the inbound line: {line!r}")
+                continue
+            named = list(stated.named)
+            if len(set(named)) != len(named):
+                failures.append(f"{where}: names a module more than once: {named}")
+            gap = stated.modules - len(named)
+            if gap < 0:
+                failures.append(f"{where}: names {len(named)} modules but counts only "
+                                f"{stated.modules}")
+            elif gap > 1:
+                failures.append(f"{where}: counts {stated.modules} modules and names "
+                                f"{len(named)}; at most one -- the page's own -- may go "
+                                f"unnamed")
+            if stated.sites < stated.modules:
+                failures.append(f"{where}: {stated.sites} sites cannot come from "
+                                f"{stated.modules} modules")
+            if (stated.sites == 0) != (stated.modules == 0):
+                failures.append(f"{where}: {stated.sites} sites and {stated.modules} "
+                                f"modules disagree about whether anything references it")
+            if own and own in named:
+                failures.append(f"{where}: names its own module {own!r} in the caller "
+                                f"list, which the count already accounts for")
+    return failures
+
+
+def entity_symbol_join(m):
+    """A page's title must agree with the store symbol found at its position.
+
+    Two INDEPENDENT AST passes produce the map: `extract.py` emits a `contains`
+    statement naming the symbol at (file, line), and `supplement.py` records the
+    entity's qualified name and its line. The renderer welds them with a
+    (file, line) join -- that join is what decides whose docstring and whose
+    callers a page shows. If the two passes ever disagree about what sits at a
+    position, the join silently lands a page on another entity's facts.
+
+    Comparing the join's OUTPUT against the entity's own name is what makes this
+    a check rather than a restatement: the join is re-derived here from the same
+    two facts, so it is not independent OF the join, but the leaf name is a
+    third fact neither pass shares with the other.
+
+    Leaf name, not the whole symbol: the store truncates the enclosing chain for
+    entities nested inside a function (defect D2, owned by `g2`), so the chains
+    legitimately differ today and the leaf does not. That keeps this check from
+    going red at `g2` for the wrong reason.
+
+    An entity that joins to NO symbol is a failure too: the renderer falls back
+    to the key, and the page then shows no docstring and no callers from the
+    store while still looking like a finished page."""
+    failures = []
+    for page, key in m.entity_pages:
+        where = m.rel(page)
+        symbol = m.symbol_of(key)
+        if symbol is None:
+            failures.append(f"{where}: {key} joins to no store symbol, so the page "
+                            f"carries nothing the store knows about it")
+            continue
+        want = key.split(":", 1)[1].rsplit(".", 1)[-1]
+        got = symbol.split(":", 1)[-1].rsplit(".", 1)[-1]
+        if want != got:
+            failures.append(f"{where}: page is titled {key} but the store symbol at "
+                            f"that position is {symbol} ({got!r}, not {want!r})")
+    return failures
+
+
 def inbound_attribution(m):
     """Every page's caller set must match an independent full scan of the store.
 
@@ -358,6 +526,9 @@ def deterministic_rebuild(m):
 
 CHECKS = (
     ("no-empty-pages", no_empty_pages),
+    ("page-accounting", page_accounting),
+    ("refs-line-self-consistent", refs_line_self_consistent),
+    ("entity-symbol-join", entity_symbol_join),
     ("inbound-attribution", inbound_attribution),
     ("deterministic-rebuild", deterministic_rebuild),
 )

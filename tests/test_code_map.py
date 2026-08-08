@@ -30,6 +30,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -247,6 +249,50 @@ def _make_cross_module_repo(tmp: Path):
     (tmp / "pkg" / "far.py").write_text(_FAR_SOURCE, encoding="utf-8", newline="\n")
     _git("init", "-q", cwd=tmp)
     _git("add", "pkg/__init__.py", "pkg/callee.py", "pkg/far.py", cwd=tmp)
+
+
+_WIDGET_SOURCE = '''"""The module other modules point at."""
+
+
+class Widget:
+    """A widget."""
+
+    def spin(self):
+        """Spin it."""
+        return 1
+
+
+def helper():
+    """Make one."""
+    return Widget()
+'''
+
+_WIDGET_USER_SOURCE = '''"""A module that uses Widget across the module boundary."""
+from pkg.widget import Widget, helper
+
+
+def use():
+    """Call helper twice, then hand Widget itself back."""
+    helper()
+    helper()
+    return Widget
+'''
+
+
+def _make_mixed_repo(tmp: Path):
+    """A repo that carries BOTH properties the join tests need at once.
+
+    An entity whose name is not already lowercase (`Widget`), so a mutation that
+    renames entities is not silently a no-op; and real cross-module inbound
+    edges, so `inbound_attribution` has something to agree about rather than
+    comparing empty caller sets. A fixture with only one of the two lets the
+    independence claim in `test_join_catches_a_rename...` pass vacuously."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "widget.py").write_text(_WIDGET_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "user.py").write_text(_WIDGET_USER_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/widget.py", "pkg/user.py", cwd=tmp)
 
 
 #: A source position in a rendered page: a Python file path with a line number
@@ -593,6 +639,349 @@ class InboundAttributionTests(unittest.TestCase):
                             f"callee's own module passed `check`\n{proc.stdout}")
         self.assertIn("FAIL inbound-attribution", proc.stdout)
         self.assertIn("as callers", proc.stdout)
+
+
+#: The renderer leaves the page's OWN module out of the named caller list,
+#: because the count already accounts for it. Name it anyway and the line
+#: contradicts its own convention -- visible without reading the store at all.
+OWN_MODULE_NAMED_MUTATION = (
+    ("    ext = sorted(m for m in callers if m != mod)\n",
+     "    ext = sorted(m for m in callers)\n"),
+)
+
+
+class RefsLineSelfConsistencyTests(unittest.TestCase):
+    """Gate g1: a page's referenced-by count must agree with its own list.
+
+    Page-local — no store, no supplement. `inbound_attribution` is stronger
+    wherever the store is readable, so the value of this one is its SCOPE (every
+    page in the tree, not only pages whose title names a known entity) and its
+    independence from the store schema that gate g3 rewrites. The last test
+    below is the one that shows that scope is not hypothetical."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_cross_module_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _build(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        return checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
+
+    def test_refs_lines_are_self_consistent_on_an_intact_map(self):
+        m = self._build()
+
+        parsed = [checks.parse_refs(line)
+                  for page in m.pages
+                  for line in checks.refs_lines(m.text(page))]
+        self.assertTrue(
+            any(r and r.modules - len(r.named) == 1 for r in parsed),
+            "input precondition: some page must count a module it does not name -- "
+            "its own -- or the at-most-one-unnamed rule is never exercised and this "
+            "test cannot fail")
+
+        self.assertEqual(checks.refs_line_self_consistent(m), [])
+
+    def test_self_consistent_line_goes_red_when_a_page_names_its_own_module(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        host = mutated_package(tmp.name, "render.py", OWN_MODULE_NAMED_MUTATION)
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: a page contradicting its own caller "
+                            f"convention passed `check`\n{proc.stdout}")
+        self.assertIn("FAIL refs-line-self-consistent", proc.stdout)
+        self.assertIn("its own module", proc.stdout)
+
+    def test_self_consistent_check_sees_pages_the_store_check_cannot(self):
+        """The scope claim, measured rather than argued.
+
+        `inbound_attribution` iterates pages whose title names a known entity.
+        The top index is not one, so a lie written on it is invisible there and
+        caught here. If this ever stops holding, the page-local check is
+        genuinely redundant and should be said to be."""
+        m = self._build()
+        top = self.repo / "map" / "INDEX.md"
+        self.assertNotIn(top, [p for p, _ in m.entity_pages],
+                         "input precondition: the top index must NOT be an entity page, "
+                         "or the two checks have the same scope and this proves nothing")
+
+        top.write_text(top.read_text(encoding="utf-8")
+                       + "\nreferenced by: 1 sites in 3 modules (a, b, c)\n",
+                       encoding="utf-8", newline="\n")
+        m = checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
+
+        self.assertEqual(checks.inbound_attribution(m), [],
+                         "the store check was expected to be blind to this page")
+        failures = checks.refs_line_self_consistent(m)
+        self.assertTrue(any("INDEX.md" in f for f in failures), failures)
+
+
+#: The supplement's entity line is one half of the (file, line) join that welds
+#: a page to its store symbol. Shift it and the join lands on whatever else is
+#: at that position -- or on nothing.
+JOIN_SHIFT_MUTATION = (
+    ('                        "line": child.lineno,      # store has this\n',
+     '                        "line": child.lineno + 1,  # store has this\n'),
+)
+
+#: Rename every entity in the supplement while leaving every POSITION intact.
+#: The join still resolves, the page still shows the right callers -- and the
+#: page is titled after an entity that does not exist under that name. This is
+#: the mutation `inbound_attribution` cannot see.
+SUPPLEMENT_RENAME_MUTATION = (
+    ('                    qual = f"{prefix}.{child.name}" if prefix else child.name\n',
+     '                    qual = f"{prefix}.{child.name.lower()}" if prefix else child.name.lower()\n'),
+)
+
+
+class EntitySymbolJoinTests(unittest.TestCase):
+    """Gate g1: a page's title must agree with the store symbol at its position.
+
+    `extract.py` and `supplement.py` are two independent AST passes over the
+    same source, welded by a (file, line) join. This is the check that notices
+    them disagreeing about what sits at a position — which is the map landing a
+    page on another entity's docstring and another entity's callers."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_mixed_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _package(self, subs=()):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        return mutated_package(tmp.name, "supplement.py", subs)
+
+    def test_every_page_title_agrees_with_the_store_symbol_it_is_joined_to(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        m = checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
+
+        self.assertTrue(m.entity_pages,
+                        "input precondition: the tree must hold entity pages, or this "
+                        "check joins nothing and cannot fail")
+
+        self.assertEqual(checks.entity_symbol_join(m), [])
+
+    def test_join_goes_red_when_the_two_ast_passes_disagree_about_a_position(self):
+        host = self._package(JOIN_SHIFT_MUTATION)
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: a map whose pages are joined to the wrong "
+                            f"position passed `check`\n{proc.stdout}")
+        self.assertIn("FAIL entity-symbol-join", proc.stdout)
+
+    def test_join_catches_a_rename_that_every_other_check_agrees_with(self):
+        """The independence proof for this check.
+
+        The supplement renames each entity and moves nothing. Every position is
+        still right, so the join still resolves, the caller sets are still
+        correct, no page is empty, no page is lost and the build is still
+        deterministic — every other check in the gate passes. The map is
+        nonetheless titling pages after entities that do not exist under that
+        name, and only this check says so."""
+        host = self._package(SUPPLEMENT_RENAME_MUTATION)
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: a map titling pages after entities that do "
+                            f"not exist passed `check`\n{proc.stdout}")
+        self.assertIn("FAIL entity-symbol-join", proc.stdout)
+        failed_lines = [ln for ln in proc.stdout.splitlines() if ln.startswith("FAIL ")]
+        self.assertEqual(
+            [ln.split(":")[0] for ln in failed_lines], ["FAIL entity-symbol-join"],
+            "if another check also caught this, the independence claim above is "
+            f"overstated and must be rewritten, not left standing\n{proc.stdout}")
+
+
+class PageAccountingInvariantTests(unittest.TestCase):
+    """Gate g1: every page the map CLAIMS must be a page the map HAS.
+
+    `pages - 1 - modules == entity_pages`, stated against the store rather than
+    against the render report's sibling field. Relational, not a baseline: both
+    sides are recomputed from the map on every run, so it holds at any corpus
+    size and survives every gate that moves the numbers.
+
+    The fixture collides a class named `INDEX` with its own module index, which
+    collides on EVERY platform. The real repo's `Verdict`/`verdict` collision
+    needs a case-insensitive filesystem, so a fixture built on it would prove
+    nothing on Linux — see `RealCorpusPageAccountingInvariantTests` for how that one is
+    handled."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _build(self, make):
+        make(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        return checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
+
+    def _check(self):
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = cli.main(["check", "--root", str(self.repo)])
+        return code, buf.getvalue()
+
+    def test_the_page_accounting_invariant_holds_on_an_intact_map(self):
+        m = self._build(_make_entity_repo)
+
+        self.assertGreater(len(m.entities), 1,
+                           "input precondition: the store must claim entities, or the "
+                           "accounting is 1 + modules on both sides and cannot fail")
+
+        self.assertEqual(checks.page_accounting(m), [])
+
+    def test_the_invariant_goes_red_when_two_pages_resolve_to_one_file(self):
+        self._build(_make_collision_repo)
+
+        code, out = self._check()
+
+        self.assertNotEqual(code, 0, "a map that lost a page to a filename collision "
+                                     "passed `check`\n" + out)
+        self.assertIn("FAIL page-accounting", out)
+        self.assertIn("a module index the map claims and does not have", out)
+        self.assertIn("pkg.thing", out)
+
+    def test_the_invariant_goes_red_when_a_page_is_simply_deleted(self):
+        """A different loss than a collision, and the reason the check counts
+        the tree instead of looking for collisions: it does not care HOW the
+        page went missing."""
+        self._build(_make_entity_repo)
+        page = self.repo / "map" / "pkg.thing" / "helper.md"
+        self.assertTrue(page.exists(), "input precondition: the page must exist to delete")
+        page.unlink()
+
+        code, out = self._check()
+
+        self.assertNotEqual(code, 0, "a map missing a page passed `check`\n" + out)
+        self.assertIn("FAIL page-accounting", out)
+        self.assertIn("pkg.thing:helper", out)
+
+    def test_the_invariant_goes_red_when_the_books_balance_but_a_page_is_gone(self):
+        """The reason coverage is asserted on its own and not merely reported
+        when the count is off.
+
+        One page deleted and one stray page added: the arithmetic is back in
+        balance and the map still advertises a page it does not have. A count
+        arm alone calls this healthy."""
+        m = self._build(_make_entity_repo)
+        before = len(m.pages)
+        (self.repo / "map" / "pkg.thing" / "helper.md").unlink()
+        (self.repo / "map" / "stray.md").write_text(
+            "# not an entity\n", encoding="utf-8", newline="\n")
+
+        m = checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
+        self.assertEqual(len(m.pages), before,
+                         "input precondition: the page count must be unchanged, or the "
+                         "count arm catches this and the coverage arm proves nothing")
+
+        failures = checks.page_accounting(m)
+        self.assertEqual(failures, ["pkg.thing:helper: an entity the map claims and "
+                                    "does not have"], failures)
+
+
+def _filesystem_is_case_insensitive():
+    """Does a path written as `A` come back as `a`?
+
+    Measured, never assumed from `sys.platform`: the answer is a property of the
+    FILESYSTEM, and a case-sensitive volume on Windows or a case-insensitive one
+    on Linux both exist."""
+    with tempfile.TemporaryDirectory() as d:
+        (Path(d) / "CaseProbe.tmp").write_text("x", encoding="utf-8", newline="\n")
+        return (Path(d) / "caseprobe.tmp").exists()
+
+
+CASE_INSENSITIVE_FS = _filesystem_is_case_insensitive()
+
+COLLISION_XFAIL_REASON = (
+    "RED BY DESIGN, owned by gate g2. scripts/run_skill_eval.py declares both "
+    "`class Verdict` and `def verdict`; their pages resolve to one filename on a "
+    "case-insensitive filesystem, so the map advertises 3694 pages and holds 3693. "
+    "g1 asserts the loss; g2 renames. strict=True on purpose: when g2 lands the "
+    "rename this XPASSes, the run goes RED, and g2 is forced to delete this marker "
+    "-- the defect cannot be silently left behind and the check cannot be silently "
+    "left disabled. The marker is CONDITIONAL because the collision itself is: on a "
+    "case-sensitive filesystem the two are separate files, nothing is lost, and the "
+    "assertion below simply passes."
+)
+
+
+class RealCorpusPageAccountingInvariantTests(unittest.TestCase):
+    """The accounting invariant against THIS repository.
+
+    A synthetic collision proves the check can fail. This proves it is failing,
+    right now, on a real defect — which is stronger evidence than any mutation.
+
+    The build goes to a scratch directory, so the committed `map/` tree is not
+    touched and the test needs nothing to be built beforehand."""
+
+    _tmp = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls._tmp = tempfile.TemporaryDirectory()
+        scratch = Path(cls._tmp.name)
+        env = dict(os.environ)
+        env.pop("FORCE_COLOR", None)
+        env.pop("PYTHONIOENCODING", None)
+        proc = subprocess.run(
+            [sys.executable, "-m", "scripts.code_map", "build", "--root", str(ROOT),
+             "--artifacts", str(scratch / "artifacts"), "--out", str(scratch / "map")],
+            cwd=str(ROOT), capture_output=True, text=True, env=env)
+        if proc.returncode != 0:
+            cls._tmp.cleanup()
+            raise AssertionError("HARNESS ERROR: the real-corpus build failed, so "
+                                 f"nothing below is evidence\n{proc.stderr[-2000:]}")
+        cls.m = checks.MapUnderCheck(ROOT, scratch / "artifacts", scratch / "map")
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls._tmp is not None:
+            cls._tmp.cleanup()
+
+    def test_this_repo_declares_two_entities_whose_pages_share_one_filename(self):
+        """The input precondition for the xfail below, asserted rather than
+        trusted: without a real collision the marker is decoration.
+
+        Two names collide only if they are in the SAME module — that is what
+        puts their pages in one directory. `tests.test_map_orient:verdict` is
+        another `verdict` in this repo and collides with nothing, so a check
+        that only compared leaf names would call it a collision."""
+        groups = {}
+        for key in self.m.entities:
+            module, name = key.split(":", 1)
+            groups.setdefault((module, name.lower()), []).append(key)
+        collisions = sorted(tuple(sorted(v)) for v in groups.values() if len(v) > 1)
+
+        self.assertEqual(collisions, [("scripts.run_skill_eval:Verdict",
+                                       "scripts.run_skill_eval:verdict")],
+                         "the collision set moved; the xfail reason below names a "
+                         "specific pair and must move with it")
+
+    @pytest.mark.xfail(CASE_INSENSITIVE_FS, strict=True, reason=COLLISION_XFAIL_REASON)
+    def test_every_page_this_repo_claims_is_a_page_this_repo_has(self):
+        self.assertEqual(checks.page_accounting(self.m), [])
 
 
 class DiscoveryTests(unittest.TestCase):
