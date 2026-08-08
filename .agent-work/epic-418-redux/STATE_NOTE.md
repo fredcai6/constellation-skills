@@ -1,6 +1,6 @@
 # Crash-resume state note — epic-418-redux
 
-> ## THE SIX RULES — re-read this block before every batch of commands
+> ## THE SEVEN RULES — the ones I have actually broken. Run rule 2 first.
 >
 > Everything below this box is reference. **These are the ones that have actually been broken,
 > by me, after I wrote them down.** This run's most repeated failure is not ignorance — it is
@@ -31,14 +31,14 @@
 >    reads as live. *(One command from destroying a healthy crew, then its replacement, in a loop.)*
 > 4. **Mutation-test every check before you trust it.** If it cannot go red, it is not a check.
 >    *(7 instances built by me in the epic about exactly this.)*
-> 7. **NEVER dispatch a successor until the predecessor's IDLE NOTIFICATION has arrived** — not
->    "it said it was going idle". Then STOP it, then dispatch. *(I overlapped two Commanders on one
->    run for 4 minutes. Nothing was lost and that was LUCK: every agent here shares one session id,
->    so `claim` treats a teammate as an idempotent self-resume. **The lease does not exclude.**)*
 > 5. **A piped `$?` is the pipe's exit code.** Redirect to a file or use `${PIPESTATUS[0]}`.
 >    *(Read a verifier REFUSAL as exit 0.)*
 > 6. **Never pass markdown to `gh` in a double-quoted string** — a backtick runs as command
 >    substitution and the post succeeds with the phrase silently deleted. Write a file, use `-F`.
+> 7. **NEVER dispatch a successor until the predecessor's IDLE NOTIFICATION has arrived** — not
+>    "it said it was going idle". Then STOP it, then dispatch. *(I overlapped two Commanders on one
+>    run for 4 minutes. Nothing was lost and that was LUCK: every agent here shares one session id,
+>    so `claim` treats a teammate as an idempotent self-resume. **The lease does not exclude.**)*
 
 
 **WAVE 4 RUNNING: one Commander on #467 (A2, trip semantics). Never dispatch a second into this worktree.**
