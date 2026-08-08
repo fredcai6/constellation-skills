@@ -223,7 +223,8 @@
             "kind": "artifact",
             "evidence_type": "review-result",
             "match": {
-              "verdict": "APPROVE"
+              "verdict_class": "ACCEPTED",
+              "blocking_findings": "0"
             }
           },
           "satisfied": false
@@ -246,6 +247,31 @@
             "blocking_findings": "0",
             "crew_id": "constellation/issue-467-trip-semantics/g1-review/reviewer/attempt-1",
             "note": "Verdict recorded as the reviewer actually wrote it. The gate plan's c3 expects the literal string APPROVE; the reviewer handoff authored at the g1 seam prescribed the vocabulary ACCEPT / ACCEPT WITH FINDINGS / REJECT and explicitly called ACCEPT WITH FINDINGS the healthy outcome. Vocabulary mismatch between frozen plan and handoff, floated to the Admiral rather than resolved here. NOT attaching a second artifact reading APPROVE -- that would be fabricated evidence to satisfy a check."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g1-reviewer-result.md",
+            "verdict": "ACCEPT WITH FINDINGS",
+            "verdict_class": "ACCEPTED",
+            "blocking_findings": "0",
+            "crew_id": "constellation/issue-467-trip-semantics/g1-review/reviewer/attempt-1",
+            "note": "verdict carries the reviewer's literal first-line text; verdict_class is the additive normalization the amended c3 matches on (ACCEPT and ACCEPT WITH FINDINGS -> ACCEPTED; REJECT -> REJECTED, which fails). blocking_findings=0 is the independent second guard and is a factual claim about the result document, counted from its Findings section: 'Blocking: none.'"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3",
+            "note": "Tripped at hard (15%) on the advance that would have CLOSED g1. All three g1-integrate postconditions are MET, not waived -- c1 and c2 verified in my own shell, c3 amended per the Admiral's ruling and the evidence attached (e-g1-integrate-2). The ONLY thing missing is the advance itself. why_ref is the concrete w-3, read from execute.json's raw why_trail: the engine's printed <why-id> placeholder is a silent no-op (attaches exit 0, does not release HARD) and the real id is not recoverable from current or the refusal -- that is triage candidate TC-4 / discrepancy D7, which g2(d) fixes. Successor: claim without --force, then run ONE command -- advance g1-integrate --why <the DIGEST in STATE_NOTE.md 'THE DIGEST I COULD NOT WRITE'> -- and g1 is closed. Do not redo any g1 work."
           },
           "produced_by": "engine",
           "ts": ""
@@ -950,16 +976,25 @@
       "ts": "2026-08-08T11:04:38.927448+00:00"
     }
   ],
-  "refusals": 2,
+  "refusals": 3,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "released",
-    "claimed_at": "2026-08-08T10:47:17.826204+00:00",
-    "last_heartbeat": "2026-08-08T11:06:54.198214+00:00",
-    "claimed_by": "commander-w4-467-c",
+    "status": "active",
+    "claimed_at": "2026-08-08T11:16:22.391213+00:00",
+    "last_heartbeat": "2026-08-08T11:18:58.417593+00:00",
+    "claimed_by": "commander-w4-467-d",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-08T11:15:06.835597+00:00"
-  }
+    "takeover_reason": null
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-08T11:17:17.935933+00:00",
+      "reason": "c3 could not PASS as written: it matched the literal verdict string APPROVE, while the reviewer handoff frozen at the same seam prescribes ACCEPT / ACCEPT WITH FINDINGS / REJECT. Admiral ruled amend, not waive -- a waiver hides the bug and leaves the gate permanently unpassable for every future reviewer following that handoff; an amend makes the check TRUE rather than SKIPPED. WHICH VERDICTS PASS AND WHICH FAIL: ACCEPT passes; ACCEPT WITH FINDINGS passes; REJECT FAILS. ROOT CAUSE, and it is why the fix is shaped this way: artifact-kind match is EXACT EQUALITY per key (checklist_engine.py ~line 850: all(ev.payload[k] == v for k,v in want.items())). It cannot express 'one of', which is precisely why the original author hard-coded a single verdict string and why the mismatch was possible at all. So the two accepting verdicts are normalized into one key: verdict_class ACCEPTED covers ACCEPT and ACCEPT WITH FINDINGS, while REJECT normalizes to REJECTED and fails the equality. The literal reviewer verdict is still carried verbatim in the payload's verdict field for audit -- the normalization is additive, not a replacement. THE CHECK REMAINS FAILABLE, which was the Admiral's binding condition: it is NOT loosened to accept any verdict string, which would convert a check that cannot pass into a check that cannot fail -- the same defect wearing the other mask, shipped inside the wave hunting it. It is guarded twice over: a REJECT fails on verdict_class, and independently fails on blocking_findings=0, since a REJECT necessarily carries at least one blocking finding. An ACCEPT WITH FINDINGS that carried blocking findings would also, correctly, fail. Check KIND is unchanged (artifact->artifact), as retext-check requires.",
+      "authority": "Admiral (epic #418 latitude contract, delegated adjudication)",
+      "ops": [
+        "retext-check g1-integrate.c3"
+      ]
+    }
+  ]
 }

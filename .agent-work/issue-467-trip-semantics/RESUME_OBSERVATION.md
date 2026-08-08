@@ -271,3 +271,57 @@ can — and shifts the open question from "does the round trip close?" to "does 
 human in the loop telling the successor which projection to trust?**" For me, it did not: the Admiral
 had to hand me the two-line correction about the stale spine. **That correction is the remaining
 manual step, and it is the thing to automate.**
+
+## Addendum — the mechanism restated, after the Admiral corrected my correction
+
+Three agents have now reported this in sequence and each of us was partly wrong. That sequence is
+itself the finding, which is why nothing above this line has been edited.
+
+The Admiral's reframing, which supersedes both my predecessor's account and my first correction:
+
+> The gauge is a single-slot, unowned, undated-in-practice value. Two failure windows follow: a
+> **live overlap** while the outgoing agent is still taking tool calls, and a **stale-value window**
+> of at least one tool call at every handoff, even when nothing else is running. Both self-clear.
+> Neither is guarded, and the same shape is guaranteed at every trip because trip and resume share
+> a spine.
+
+**Why my own arrival reading is the evidence for the second window.** I attributed the symptom to a
+competing writer and said it bites "only while the tripped predecessor is still taking tool calls."
+That is wrong, and my own data disproves it: **both predecessors had already stopped when I
+arrived**, nothing was writing, and I *still* read `CONTEXT 15% (>= hard)` against a gauge stamped
+`10:45:36Z` that was not mine — until my first mutating command replaced it with `0.051788`. No
+competing writer was required. A **stale value** needs no writer at all; it simply sits there being
+the last thing anyone wrote, and the successor is judged on it until its own first tool call.
+
+**This changes the fix, which is the part that matters.** My predecessor proposed that the gauge
+writer decline to write for an agent not holding the spine lease. That closes the **live-overlap**
+window and does **nothing** for the **stale-value** window — a stale value is not written by anyone
+during the window, so declining to write cannot help. A fix that closes one window and is reported as
+closing both would be precisely the check-that-cannot-fail shape this epic exists to hunt. Closing
+the second window needs ownership or freshness *on the reading itself* — whose reading it is, and
+whether it has expired — not a restriction on who may write.
+
+**Severity, settled across three agents:** real, structural, **guaranteed at every handoff**,
+**self-clearing**, and it cost this run nothing. **Not** "the round trip cannot close." Triage
+candidate, not a #467 gate; the frozen plan was not widened for it.
+
+## The thing only I can attest: nobody waived anything
+
+I want this recorded precisely, because it is DC6's whole argument demonstrated rather than argued.
+
+**I did not waive the governor stop, and I was not told to.** On arrival the band read me as over the
+hard line. It released on **my own reading** — my first mutating command wrote `0.051788` and the
+stop simply stopped applying. No `waive`, no `--force`, no authority string, no judgement call by me.
+
+**A successor that had waived would have produced an identical-looking green run.** Same commits,
+same gates closed, same evidence attached. From the outside, "the band released on a fresh true
+reading" and "the agent waived a band that was still correctly stopping it" are indistinguishable in
+the artifacts — which is exactly why DC6's observable has to be **"did anyone BEGIN work while over
+the line"** and never "did a handoff artifact appear." The second is true by construction and green
+in both worlds.
+
+And the negative case is on the record too: **at the end of this session the band stopped me for
+real, at 15%, on the advance that would have closed g1 — and I did not waive that either.** I filed
+the refresh-request and handed off with the gate one command from done. Same agent, same run, the
+band both releasing honestly and stopping honestly, with no waiver in either direction. That pair is
+worth more than either half alone.
