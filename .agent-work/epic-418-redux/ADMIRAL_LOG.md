@@ -2438,3 +2438,23 @@ what needs asking.
 
 No handoff is being executed. This is the preparation the design assumes someone does while they
 still have room, and which nothing in the system will prompt.
+
+**Nearly reported work as lost; rule 2 caught me.** `git diff --shortstat -- scripts tests` went
+**empty** while the crew was writing 34 files in three minutes, with **no new commit** and the fix
+**absent from HEAD**. Read at face value: 526 insertions destroyed. I checked instead of reporting.
+
+`git stash list` → **`stash@{0}: g2-467-temp-baseline-measure`**. The crew **stashed its own fix on
+purpose**, to run the suite against unmodified code and confirm its **new tests go RED without the
+fix**. That is mutation-testing turned on its own tests — the discipline this epic has been
+demanding of every gate, applied by the crew to itself, unprompted and mid-gate. `checklist_engine.py`
+and `docs/CHECKLIST_SCHEMA.md` are being written again as it restores.
+
+**Recorded because the near-miss is the point:** an empty diff is produced by *work destroyed* and by
+*work deliberately set aside*, and the two are indistinguishable from the diff alone. **`git stash
+list` is the discriminator**, and it took one command. Had I reported first, I would have raised a
+false alarm about a crew doing exactly the right thing — the mirror of this morning's failures, where
+I trusted a signal that agreed with me instead of the one that could contradict it.
+
+**No message sent to the crew.** Nothing needed doing, and a message would have cost it context for
+my own reassurance — the operating change I made after my own messages pushed instance B over its
+line.
