@@ -44,15 +44,20 @@
 > **CREW 1 IS NOW `commander-w5-gates-b`.** The first instance tripped at `plan` on a HARD reading,
 > wrote its refresh-request, committed `eff00abf` and stood down — working as designed, not a failure.
 >
-> **LIVE POSITION @ 23:24Z 2026-08-08 — five crews out, ONE home.**
+> **LIVE POSITION @ 23:52Z 2026-08-08 — 2 PRs open, 0 merged.**
 >
 > | crew | state | evidence |
 > |---|---|---|
-> | 1 gates | **running** (`-b`, the refresh) | 2 commits, `aa2038d9` |
-> | 2 readiness | running, **slowest** | lease active; asked for proof-of-life, it resumed |
-> | 3 addressing | running | work area `issue-507-370-413-addressing/` |
-> | 4 engine | running | on `execute`; its 30-min silence was reading 9 issue bodies |
-> | 5 docs | **DONE, lease released** | **PR #509 open, CI green** |
+> | 1 gates | running as `-b-refresh1` | `plan [in-progress]`; MISSION_FRAME, plan-alternatives, `execute.json` authored |
+> | 2 readiness | running as `-b` | recovered from the stale-gauge trap; steady writes |
+> | 3 addressing | **DONE** | **PR #511**, 4 commits. Real red-then-green after rework. |
+> | 4 engine | running as `-b` | driving a 10-item plan its predecessor authored |
+> | 5 docs | rework on disk, **not pushed** | **PR #509** green; `m3` pending; suite re-run at 23:43 |
+>
+> **PR #511 rework, verified by ME against clean main, not accepted on report:** its first acceptance
+> test **passed on unmodified main** — a check that cannot fail, in the PR closing an addressing
+> defect. Crew 3 responded by adding real doctrine guards: now `2 failed, 2 passed, REAL_EXIT=1` on
+> main. **Merge only after CI is green on `bd31f69c`.**
 >
 > **MERGE BASELINE (use this, do not re-guess it):** main is green at **1867 passed / 2 skipped /
 > 829 subtests / real exit 0**, run with `python -m pytest`, exit read **unpiped**. Matches wave 4's
