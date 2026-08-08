@@ -1932,7 +1932,8 @@
           "id": "p1",
           "statement": "g3 -- needs the span in the schema to hash an anchor body",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3 is complete, so the entity span is in the schema and there is a body to hash. g3's own gate proved entity_symbol_join's two independent derivations (extract.child_sym vs checks.SourceScan) stay independent, and that join is what makes a span trustworthy enough to hash against. g4 (index) and g5 (caller split) and gb (thresholds) have all closed since, so the render surface is frozen and the committed thresholds exist: this gate's new run-report line must not perturb the determinism diff, and the run report carries no timings for exactly that reason. Baseline at entry: suite 1793 passed 2 skipped 672 subtests 0 failed, fresh build then check 7/7 exit 0, modules 111."
         }
       ],
       "postconditions": [

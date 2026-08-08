@@ -4,9 +4,26 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`g6`** — next gate, NOT yet started
-- **PID**: none in flight. All crews resolved (23 crews, 0 unresolved).
+- **step**: `execute` (in-progress) · **slug**: `g6-implement` — **DISPATCHED** 2026-08-08
+- **PID**: crew `constellation/issue-456/g6/implementer/attempt-1`, Agent name
+  `g6-implementer`, model `sonnet`. Recover with `SendMessage` to that name
+  (externally dispatched — nudge in place, never relaunch).
 - **expected artifact**: `.agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md`
+- `g6-implement.p1` already **attested**; handoff at
+  `.agent-work/issue-456/crew-handoffs/g6-implement.md`.
+
+**`g6` = staleness detection.** Hash each tag's enclosing entity span at
+extraction; on rebuild flag any tag whose anchor body changed while its text did
+not, **in the run report the reviewer already reads** (no new channel; **no
+timings** — the determinism diff covers the report). Designed but never built,
+human-signed **accepted-untested** at confirm — **first build**.
+
+Two things the handoff makes the crew resolve rather than assume: (1) **what a
+"tag" even is today** — `g7` is the comment-tags gate and comes AFTER, so the
+surface may not exist yet; building against a fixture is a legitimate stated
+outcome. (2) **what the "anchor body" is** — this gate's open decision.
+The twitchiness trap is named: a naive span-text hash fires on reindentation and
+rewrapping, and an ignored flag is worse than none.
 
 ## `gb` IS CLOSED — `gb-integrate -> complete` on an APPROVE
 
