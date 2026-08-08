@@ -523,7 +523,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
         }
       ],
       "constraints": [],
@@ -532,12 +533,12 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "Commander context at 16-19%, at/over the engine's 15% hard limit; advance is mechanically refused. THE GATE'S WORK IS COMPLETE -- review returned APPROVE with 0 open findings (e-g1-review-1), refresh-request filed (e-g1-review-2). Nothing outstanding but the advance itself. RESUME: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), then resume execute, resume g1-review, advance g1-review, start+advance g1-integrate (c1 re-runs the full suite, ~8 min, expect 1729 passed / 2 skipped / 1 xfailed), then g2. Do NOT re-dispatch any g0 or g1 crew -- all ten are terminal. Read .agent-work/issue-456/STATE_NOTE.md first.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "prior_status": "in-progress"
+        "resume_reason": "context refreshed via compaction"
       },
       "result": null,
       "finding": null,
@@ -584,7 +585,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT exists on disk NOW, verified by ls before attesting (16057 bytes, .agent-work/issue-456/crew-handoffs/g1-review-RESULT.md, first line 'VERDICT: APPROVE'). Attested only after the satisfying artifact existed -- the tc28 rule from g0."
         }
       ],
       "postconditions": [
@@ -600,7 +602,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
         },
         {
           "id": "c2",
@@ -612,17 +615,50 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g1-review-RESULT.md",
+            "crew": "constellation/issue-456/g1/reviewer/attempt-1",
+            "crew_verification": "run_crew.py --verify-result -> 'fresh (completed)'.",
+            "survey": "Driven end to end at .agent-work/issue-456/g1-review/review.json -- 7 items, all visited, consolidated APPROVE, 0 open findings.",
+            "suite": "1729 passed, 2 skipped, 1 xfailed, 651 subtests passed. Baseline 1709/2/0: +20 passed, 0 failed. xfail is not red. Reproduced by the reviewer in a cleared environment.",
+            "attack_mandate_discharged": "The reviewer was told explicitly that the implementer's own undesigned-attack pass does NOT discharge its own, because reproducing a falsifier its author designed proves only that probe works -- the shape that got past two reviewers at g0. It ran its own attacks and returned APPROVE with no surviving check that should have caught one.",
+            "xfail_guard_upheld": "The reviewer confirmed the implementer was RIGHT to overrule the Commander's handoff, and verified the mechanism directly: xfail(False, strict=True) over a passing body -> passed, which is exactly the Linux-CI failure my bare strict=True would have caused. Case sensitivity is probed at RUNTIME, never inferred from sys.platform. The XPASS-turns-red mechanism was verified end to end by simulating g2's rename ([XPASS(strict)], exit 1) and then restored byte-exact.",
+            "move_invariant_rule": "The reviewer quoted and judged the implementer's own rule for separating a move-invariant check from a baseline. Judgement: not a matter of taste, testable against any candidate check, and it classifies all six correctly. One carve-out in it is an exception TO the rule rather than an instance OF it and must be named as such -- recorded so later gates place their thresholds by a rule that has already been stress-tested rather than inventing one each time.",
+            "known_limits_carried_not_hidden": "Two limits the implementer found and did NOT narrow away, both re-confirmed by the reviewer and routed forward rather than closed here: tc31 -- nothing in g1 ties a page's LOCATION to its CONTENT (swapping two pages' contents, and renaming a page file, both pass all six checks); routed to g4, whose close criteria already demand a link-following graph walk. tc32 -- a green determinism run is NOT evidence that caller ordering is stable (a Counter is insertion-ordered and hash-seed-immune, so dropping its sort changes nothing observable under a hash-seed sweep); routed to g5, which must establish caller ordering by its own argument and must not cite g1's green as proof.",
+            "carry_forward": "python -m scripts.code_map check EXITS 1 on this repository, correctly, until g2 lands the rename. It is stated at the top of the module docstring. gs and any CI wiring must expect it and must not read it as a regression.",
+            "reviewer_out_of_scope": "One process observation: a rail that was actually run and passed can journal as a risk acceptance, which would misrepresent the record. Carried to triage."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'determinism or invariant' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-implement": {
@@ -634,7 +670,8 @@
           "id": "p1",
           "statement": "g1 -- the regression must be able to go red before it is fixed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1 is complete and integrated (advance ran c1 itself, exit 0). The regression can go red before it is fixed: checks.py now returns 1 on any failure and page_accounting() is asserted RED BY DESIGN at tests/test_code_map.py:982 as xfail(CASE_INSENSITIVE_FS, strict=True) -- the loss is measured and asserted today, so g2's fix is provable rather than assumed."
         }
       ],
       "postconditions": [
@@ -1917,14 +1954,7 @@
       "statement": "tc26: the render report's page count still cannot notice a zero-byte page -- rglob('*.md') counts a file that was created and never written. Raised by the g0 closing reviewer (A5). NOT a blocker at g0: it weakens only the one field the B3 docstring now explicitly forbids trusting, and g1's structural invariant subsumes it. Goes to g1 with tc17."
     }
   ],
-  "blockers": [
-    {
-      "item": "g1-review",
-      "blocker": "Commander context at 16-19%, at/over the engine's 15% hard limit; advance is mechanically refused. THE GATE'S WORK IS COMPLETE -- review returned APPROVE with 0 open findings (e-g1-review-1), refresh-request filed (e-g1-review-2). Nothing outstanding but the advance itself. RESUME: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), then resume execute, resume g1-review, advance g1-review, start+advance g1-integrate (c1 re-runs the full suite, ~8 min, expect 1729 passed / 2 skipped / 1 xfailed), then g2. Do NOT re-dispatch any g0 or g1 crew -- all ten are terminal. Read .agent-work/issue-456/STATE_NOTE.md first.",
-      "authority_needed": "parent agent",
-      "next_action": ""
-    }
-  ],
+  "blockers": [],
   "why_trail": [
     {
       "id": "w-1",
@@ -1960,6 +1990,20 @@
       "why": "g1 BUILD DONE. checks.py rewritten, not ported -- it was print-only with a literal 'return 0' whose own docstring admitted it gated nothing. Now a CHECKS registry over a MapUnderCheck; run() returns 1 on any failure; a missing tree or store is a FAILURE, not a skip. SIX checks ship. Every one shown RED under a mutation of the property it guards with a nonzero exit, each against an unmutated positive control, each mutation applied to a COPIED package so the shipped tree was never touched -- and then every one attacked ONCE MORE with a mutation its author did not design for it, including the predecessor crew's three. That is g0's standing lesson applied rather than quoted. Determinism is measured across two SEPARATE PROCESSES with PYTHONHASHSEED 0 vs 1, because a single process shares one seed and structurally cannot see that bug class; killed by dropping a sorted(). Inbound attribution compares a page's caller set against an independent StoreScan -- a second derivation, not the same expression twice. THE ACCOUNTING INVARIANT IS ASSERTED AND RED BY DESIGN: 3648-1-112=3535 vs entity_pages 3536, the Verdict/verdict collision, owned by g2, strict-xfail so the XPASS forces the marker off when g2 lands. THE CREW CORRECTLY OVERRULED MY HANDOFF: I specified a BARE xfail(strict=True); on a case-sensitive filesystem both pages exist, the invariant is green, and strict XPASS is a failure -- my instruction would have turned CI red on Linux while looking right on this Windows box. Gated on CASE_INSENSITIVE_FS instead. Second time this run a crew has overruled a Commander handoff and been right; both times by running the thing rather than reading it. Suite 1729 passed / 2 skipped / 1 xfailed, +20 passed and 0 failed against the 1709 baseline. CARRY FORWARD: 'python -m scripts.code_map check' now exits 1 on this repo, correctly, until g2 fixes the collision -- gs and any CI wiring must expect that and not read it as a regression. Predecessor attempt-1 parked cleanly at a context seam and attempt-2 finished on its plan; tc30 filed against --abandon --relaunch, which registered attempt-2 and then hung without spawning it.",
       "mechanical": false,
       "ts": "2026-08-08T01:39:11.919989+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g1-review",
+      "why": "g1 reviewed APPROVE, 0 open findings (e-g1-review-1). Six checks ship in a rewritten checks.py; each shown RED under a mutation of the property it guards AND attacked again with a mutation its author did not design for -- the standing g0 lesson applied, not quoted. Reviewer proved the two-separate-process determinism claim by stamping a hash-seed-dependent byte rather than reading the code. Reviewer confirmed the implementer was RIGHT to overrule my bare xfail(strict=True): case sensitivity is probed at runtime, and the XPASS-turns-red mechanism was verified end to end by simulating g2's rename. Suite 1729/2/1xfail vs 1709/2/0 baseline. Two limits carried forward not narrowed away: tc31 (no check ties a page's location to its content) routed to g4, tc32 (green determinism is not evidence of stable caller ordering) routed to g5.",
+      "mechanical": false,
+      "ts": "2026-08-08T04:39:40.730440+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g1-integrate",
+      "why": "g1 integrated on an APPROVE verdict with 0 open findings. c1 re-run by the engine itself, not attested around it. The gate ships six falsifiable checks replacing a print-only module whose run() ended in a literal return 0. Carry-forward for every later gate: python -m scripts.code_map check now EXITS 1 on this repository, correctly, until g2 lands the Verdict/verdict rename -- gs and any CI wiring must not read that as a regression.",
+      "mechanical": false,
+      "ts": "2026-08-08T04:46:11.059083+00:00"
     }
   ],
   "amendments": [
