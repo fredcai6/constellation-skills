@@ -2198,3 +2198,61 @@ is nothing left to confound. (Contrast with my earlier stop of instance A, which
 has been issuing engine commands through 11:23:05. A successor reads a value that is not its own
 until its own hook writes. Exactly as characterised, observed in real time rather than reconstructed
 — and a reminder not to read that number as D's.
+
+## 2026-08-08 — TWO COMMANDERS MUTATED ONE RUN. My error, and the lease did not stop it.
+
+**ADMIRAL ERROR, and it is the one doctrine names explicitly: I dispatched instance D while instance
+C was still awake.** Between **11:16 and 11:20** both were mutating the same run — C amended c3,
+tripped at hard, filed a refresh-request, rewrote `STATE_NOTE.md`, committed twice and released the
+leases, **while D was verifying**. *"Never put two Commanders in one worktree."* I did exactly that.
+
+**Nothing was lost — and D is right that this was luck, not the lease.** Its finding, which is worth
+more than the near-miss: **the engine cannot distinguish two agents that share a session id.**
+`claim` treats a teammate as an **idempotent self-resume**, so the lease silently permitted the
+second writer instead of refusing it. C's release even carried **D's `claimed_by` string**. This is
+#419's identity problem again, one layer deeper: **the lease is not a mutual-exclusion mechanism
+when agents share a session id**, which every agent in this session does.
+
+**Four ways my dispatch and the notes actively misled D**, all traceable to that overlap:
+- the note said both leases were **RELEASED, claim without `--force`**; both were **ACTIVE**,
+  re-claimed 11:16:22Z. My dispatch repeated it, having been written from C's report.
+- the note described **c3 as an open unanswered float**; it had already been amended and its evidence
+  attached. **Only the raw task JSON showed the truth.**
+- evidence `e-g1-integrate-3` pointed at a `STATE_NOTE.md` section that **did not exist in the file
+  when D read it**.
+- **the note was rewritten underneath D mid-run (11:19:41Z)** — its first and second reads were
+  different documents. D's verdict: ***"a note whose staleness you detect by re-reading it is not an
+  instrument."***
+
+**Operating change, effective now and applied immediately: do not dispatch a successor until the
+predecessor's idle notification has actually arrived.** Not "it said it was going idle" — the
+harness push, which is the channel I established is authoritative. **I am holding instance E's
+dispatch on exactly this**, even though D's leases are released, its tree is clean at `d80eda7c`,
+and only its closing flush is still touching disk.
+
+**RULING | D was RIGHT not to open g2, and I am confirming it rather than overriding.** It crossed
+hard (**0.165 ≥ 0.15**) *before* `start g2-implement`. `start` is a BEGIN-work verb, and dispatching
+an implementer crew at/over hard is **precisely the DC6 violation this issue's own fix is built to
+refuse**. Opening g2 to obey my *"then advance and open g2"* would have **committed the violation
+inside the wave that exists to forbid it.** It filed the refresh-request with the concrete
+`why_ref=w-4` and stopped. That is the compliant shape and the third time this wave a crew has
+declined an available green.
+
+**It proved the reframing with its own body rather than restating mine.** It ran the closing
+`advance` at fill **0.162, over hard, and the engine let it through** — because a refresh-request was
+pending, the guard lifts and the verb returns 0. **So #431 is instruction-conformance, demonstrated,
+not argued.** It put the consequence in the `w-4` DIGEST, the note and the commit message as a
+test-design constraint: *a g2-g4 acceptance test worded "the advance is no longer blocked" verifies
+something that was never blocked and passes in both worlds; verify the fix on what the agent is
+TOLD.*
+
+**RULING | residue float: do NOT reverse it.** D re-ran the repro, which dirtied 25 tracked files,
+and **committed the churn rather than quietly checking it out**, offering to be reversed. Keep it
+committed. It is the cleanest live evidence that `decision:red-leaves-no-residue` is violated, and a
+quietly-clean tree would have destroyed the only artifact showing it. The structural conflict is
+between two rules **I** enforce simultaneously; it is not the crew's to resolve.
+
+**Verified in its own shell, not read off the record:** c1 `394 passed, 30 subtests, real exit 0`;
+c2 `git diff --stat -- scripts tests` empty **and** `main...HEAD -- scripts tests` empty; the gate's
+own `repro_431.py --all` → **24 ASSERT OK / 0 FAIL, real exit 0** with `scripts`/`tests` still clean
+afterwards; `advance g1-integrate` → `complete`, DIGEST written as `w-4`.
