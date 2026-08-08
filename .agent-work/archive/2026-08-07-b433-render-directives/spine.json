@@ -632,7 +632,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -710,7 +711,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -726,7 +727,7 @@
     "session_id": "commander-b433-render-directives",
     "status": "active",
     "claimed_at": "2026-08-07T21:37:06.212179+00:00",
-    "last_heartbeat": "2026-08-08T00:52:18.986703+00:00",
+    "last_heartbeat": "2026-08-08T00:54:06.593856+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": null,
