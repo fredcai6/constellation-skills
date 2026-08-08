@@ -499,13 +499,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "g3-implementer-attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T06:46:33.759647+00:00",
     "last_heartbeat": "2026-08-08T07:42:21.793837+00:00",
     "claimed_by": "constellation/issue-456/g3/implementer/attempt-1",
     "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T07:42:49.651622+00:00"
   },
   "why_trail": [
     {

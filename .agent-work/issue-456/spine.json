@@ -900,6 +900,16 @@
       "id": "tc38",
       "from": "execute",
       "statement": "tc38: SECOND instance of an integrate check that could only ever FAIL, and the first was tc29. g2-integrate c1's selector -k 'symbol_identity or referenced_by' matched ZERO tests; pytest deselects all and exits 5, so the check was informationless in the same way a check that cannot fail is -- just from the other side. Root cause: the gate spec's selectors were written in snake_case against test CLASS names that are CamelCase, and nothing verified a non-empty selection. g0 and g1 escaped only because 'discovery or cli' and 'determinism or invariant' happen to match. STANDING RULE for the remaining gates (g3 g4 g5 gb g6 g7 g8 gs): before advancing any *-integrate, run its -k selector by hand and confirm it selects a NON-EMPTY set, then confirm that set can go red. A gate whose selector matches nothing will refuse to advance and the failure will look like broken code rather than a broken check -- which is how it presented here. Also: tell each gate's implementer in its handoff what its integrate selector is, so the crew names its test classes to match."
+    },
+    {
+      "id": "tc39",
+      "from": "execute",
+      "statement": "tc39: the engine's HARD context band fires at roughly 16-18 percent of actual fill, because gauge_reader gives claude-opus-5 a 150K-token hard cap while the model's window is 1M. Every crew from g1 onward has hit it, and the Commander has now parked three times on it. Consequences observed, not theorised: the g1 implementer parked and needed a successor; the g2 implementer parked and needed a successor; the g3 implementer hit it at EVERY gate boundary from m1 on and chose to attach the refresh-request and DECLINE it with a stated reason rather than park the run at m0 -- the engine's own rollout caveat describes this situation. That is a reasonable call but it means the band is being routed around rather than obeyed, which is worse than either obeying it or fixing it. This is a real cost: roughly one extra crew dispatch per gate, plus Commander parks that cost a compaction each. Route to feedback, not to a gate -- it is a defect in the governor's model table, not in this issue's code."
+    },
+    {
+      "id": "tc40",
+      "from": "execute",
+      "statement": "tc40: 'add an extraction-window statement' appears in the g3 gate spec but is DEFINED NOWHERE in the run's artifacts. The g3 implementer designed it itself -- the per-file coverage boundary plus the home for the declared line base -- and flagged that a reviewer should check that design against intent rather than inherit it. This is the right disclosure and it must not be lost: the g3 reviewer has to judge whether the invented definition matches what the plan meant, because nothing else in the run can settle it. Generalisable: a gate spec phrase that names an artifact the run never defines will be silently invented by whoever implements it, and it will then read as settled."
     }
   ],
   "blockers": [
@@ -915,7 +925,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T07:29:29.072733+00:00",
+    "last_heartbeat": "2026-08-08T07:44:39.173744+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
