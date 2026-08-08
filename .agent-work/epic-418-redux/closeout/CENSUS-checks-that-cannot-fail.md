@@ -105,6 +105,33 @@ The generalisation both share: **a value with no provenance cannot be checked.**
 check" — cannot. There is no predicate over `0.190464` that distinguishes mine from yours. The fix is
 never a better check; it is attaching *when* and *by whom* at the point the value is written.
 
+### G. The one that best makes the case — an acceptance test that cannot fail, in the PR fixing an addressing defect
+
+| # | Specimen | The identical signal |
+|---|---|---|
+| 22 | **PR #511's relaunch acceptance test** | Written under a NOT-OVERRIDABLE requirement to be *shown failing on today's code and passing on yours*. **It passes on unmodified main: `2 passed, REAL_EXIT=0`.** |
+
+**Nobody was careless, and that is the point.** The crew's own analysis is correct and predicted this:
+the job-addressed delivery machinery (`run_crew.py`, `recover_crews.py`) **already existed and already
+worked**; the defect was doctrine telling crews the SendMessage announcement was load-bearing. So the
+test characterises machinery that was never broken, and **the actual fix — four documents — is prose no
+test can reach.** The test cannot fail on today's code *because the code was never the defect.*
+
+The green then reads, to anyone who does not run it against main, exactly like proof that the fix
+works. **A check that cannot fail, inside the pull request closing an addressing defect, in the wave
+whose entire subject is this pattern.**
+
+**How it was caught, and how it was not.** The Admiral **read** the crew's analysis — which states the
+premise plainly — and missed the implication. It surfaced only on **running the test against a clean
+main checkout**. That is the fourth item in the list below beating the first three, again, and it is
+the strongest single argument in this document: the information needed to predict this specimen was
+already written down, in the same document, by the same run, and reading it was not enough.
+
+**The resolution asked for is not a better test.** It is one honest sentence in the return naming the
+test as a characterization test that passes on unmodified main — which converts a misleading green
+into an accurate one — plus a judgement call, with a reasoned *"nothing worthwhile"* accepted, on
+whether the prose change can be reached at all.
+
 ---
 
 ## What actually finds them
@@ -128,5 +155,5 @@ the argument for why it is load-bearing rather than pedantic.
 ## What this census is not
 
 It is **not** a claim that every check here is worth fixing, nor that the pattern is rare enough to
-enumerate exhaustively. Twenty-one specimens in one epic by actors *looking for them* is a lower bound, not a total. The honest reading is that this is a **base rate in verification code**, and the useful
+enumerate exhaustively. Twenty-two specimens in one epic by actors *looking for them* is a lower bound, not a total. The honest reading is that this is a **base rate in verification code**, and the useful
 response is a habit — run it against a failing case — rather than a list to work through.
