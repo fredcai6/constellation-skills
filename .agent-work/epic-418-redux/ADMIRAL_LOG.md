@@ -1603,3 +1603,47 @@ itself`), so the frozen plan, the DIT convergence, the critic triage and the tri
 in git before the handoff. That is the clean-seam sequencing I asked for at dispatch, obeyed without
 being reminded, and it is why the cold start had a rich work area to land in — which the predecessor
 itself named as the reason the doctrine works at all.
+
+**INCIDENT | I was one command away from tearing down a healthy Commander, and the signal telling me
+to do it was the engine's own.** My watcher woke with `REFRESH REQUESTED again -- relaunch cold`.
+**Commander B had not tripped.** It was at **6.9% fill**, holding an active lease claimed at
+10:09:35, and had just committed `90dbd3c5 plan(467): record the Admiral's wave-4 rulings as binding
+gate constraints`. Healthy, working, twelve minutes old.
+
+**What actually fired: the PREDECESSOR's already-served requests.** Both records are permanent
+evidence attachments —
+`{"id":"e-plan-2","type":"refresh-request","payload":{"seam":"plan","why_ref":"w-3"}}` and
+`{"id":"e-execute-1",...,"seam":"execute","why_ref":"w-4"}` — and the engine keeps rendering
+`REFRESH REQUESTED:` until the target gate is **started**. `execute` had not started. So for the
+whole of the successor's startup, **every observer is told a refresh is outstanding that was
+answered fifteen minutes earlier.** Their `ts` fields are even empty strings, so there is nothing in
+the record to date it against.
+
+**This is the third defect in the refresh signal and the worst of the three.** The first makes a
+compliant handoff **invisible** (active-gate-keyed, so closing your gate erases your own signal).
+This one makes a **served** handoff look permanently **unserved** — and an Admiral obeying it
+relaunches a healthy Commander, then relaunches the replacement, in a loop, each cycle destroying a
+crew that was working. Invisible-when-present is a missed signal; visible-when-absent is a
+self-sustaining outage.
+
+**Seventh instance of the family today, and the closest to real damage.** Every previous one cost me
+accuracy. This one would have cost the wave.
+
+**Fixed with the discriminator this run already established.** A refresh request is only
+**actionable when nobody is working** — so the monitor now gates the raw signal on **recent write
+activity in the worktree**, which is the liveness test that survived the 27-minute-stale-heartbeat
+episode. Verified both directions before re-arming:
+
+- raw engine refresh **True**, structural count **2**, worktree active → verdict
+  `refresh-request present but SERVED (someone is working) -- do NOT relaunch`
+- liveness check forced to fail → reports `idle`, proving it can return False rather than being
+  stuck true
+
+The instrument now distinguishes *a refresh is needed* from *a refresh was already delivered*, which
+neither the engine's projection nor a structural count can do alone.
+
+**Routed to #467's triage** as a sibling of the Commander's own finding 1. Together they are one
+statement: **the reach-up signal has no notion of being served.** It cannot say who asked, when, or
+whether anyone answered — so it is simultaneously unreadable when it matters and unclearable when it
+does not. That is squarely DC6's territory: a mechanism whose observable does not track the
+condition it claims to report.
