@@ -1382,3 +1382,28 @@ retirement propagated into substep 1 and into the commander's gate, and left sub
 artifact nothing produces. Smaller sibling of the lessons-auditor dangling reference above, same
 family, and found the same way — by checking a mandate against the thing it names rather than
 reading past it. Closeout candidate, not fixed here.
+
+**RULING | fielded the #467 Commander's proof-of-life and gave it three things it could not see.**
+Its restatement of the issue was correct on every point, including that DC6 is the bill and a green
+suite does not pay it. Confirmed and told it to proceed. Added:
+
+1. **Its own fill: 19.4%, inside the HARD band**, with calibration against the wave-3 crews (17-21%,
+   tripped) and against me (44%, no trip, same machine and hook and tier today). Two operating
+   consequences given: sequence toward clean seams and do not start what it cannot land; and if it
+   trips, **record what its handoff does not carry** before going idle. It is the only agent in this
+   epic who will have been on both sides of the boundary it is specifying, so that observation is
+   DC5 evidence nobody else can produce.
+2. **A standing instruction to verify doctrine against the INSTALLED skill rather than my launch
+   order** — with my own stale-skill error given as the reason, in full. If LO-467 contradicts the
+   live text, the live text wins and I want to hear about it. Not hypothetical for this dispatch:
+   #467 changes the engine's refusal semantics, so the doctrine describing those semantics is inside
+   its blast radius.
+3. **Authorized it to cite the 19.4% reading as DC4's one exercised override** — the gate has
+   demonstrably bitten. Global default retuning stays surfaced to Tommy and it may not touch it.
+
+**Deliberately withheld: which design candidate to take.** I read only the three candidate headers
+and stopped. #467 lists the distinguishing mechanism under **Open (Commander's call)**, and picking
+it for the Commander would be me commanding the issue. I gave it the *standard* instead of the
+answer — DC2 is the condition #467 says the engine cannot express today, so whichever candidate it
+takes must show the engine distinguishing the two advances **tested both ways**; a candidate that
+only makes the good case work has not met DC2.
