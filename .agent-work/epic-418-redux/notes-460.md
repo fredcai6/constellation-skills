@@ -187,3 +187,76 @@ measured against the corpus as it was. The commit this note lands in is that sha
 **`<pre-g2-sha>` for g3's measurement: `c9d9dd7cf380e497ab8b356122a525e4644605db`** — the g1
 commit. `episodes/active/` is untouched at that sha, so it holds the 32 canon records exactly
 as they read before the rewrite.
+
+## g2 outcome — verified at the tree, not taken on trust
+
+**48 examined / 32 in scope / 27 restated.** Committed at `770f3e06`. Independently checked:
+24 files changed, 54 insertions, 27 deletions — exactly 27 statement lines replaced and 27 history
+lines appended, nothing else touched. Zero `issue-447` files appear in the diff, so the 16 records
+that already honoured the constraint were left alone. All five UNGROUNDED assertions
+(`issue-304-g3-005.d2`, `issue-308-014.a5`, `issue-308-015.a5`, `issue-308-017.a5`,
+`issue-308-019.a5`) are unmodified. `query_episodes.py --store-root episodes enumerate` exits 0.
+
+Sample, `issue-308-001.a5` — the record the #447 handoff had pointed a crew at as its migration
+precedent, and the issue's own worked BEFORE:
+
+- was: *"Give the harness the same fail-safe discipline as the production code under test: wrap
+  per-iteration work in try/except..."*
+- now: *"The harness was given the same fail-safe discipline as the production code under test:
+  per-iteration work was wrapped in try/except..."*, with the original preserved verbatim on the
+  appended `history` line.
+
+## The #461 collision LO-460 asked me to report
+
+`tests/test_episode_negative_control.py::test_canon_episode_store_untouched` blocked the gate. Its
+final assertion is `git status --porcelain episodes/` == `""`, so it goes red for **any**
+uncommitted change to canon — which is precisely what #460 exists to produce. It reads only git
+status, never content, so no restatement can affect it.
+
+The guard is wider than its stated intent. Its docstring scopes it to proving *that test module's*
+synthetic consolidation never reached canon, and the assertion two lines above it
+(`REPO_ROOT not in seeded_store["root"].parents`) already establishes exactly that. The blanket
+dirty check cannot distinguish "a test leaked into canon" from "the running gate legitimately
+changed the store and has not committed yet".
+
+Committing cleared it honestly — re-running the failed test itself: `1 passed`, exit 0. No code
+change was needed and none was made; `tests/` is outside g2's allowed scope. **This is the
+collision LO-460 anticipated when it held #461 to the wave's second half: yes, my work changes what
+that control should assert.** Narrowing it to its stated intent is worth its own issue, and its
+shape is the same class the episodes it guards are all about — a check whose pass condition is
+broader than the property it was written to establish.
+
+## Doctrine candidates — 22, for the HUMAN
+
+Collected only. Nothing written into `docs/agents/*`; no new file created to hold any of it. The
+full table with per-candidate grounding is at
+`.agent-work/r418-460/crew-handoffs/g2-implement-result.md` § "Evidence 4". The strongest four by
+the store's own recorded evidence:
+
+1. `issue-308-002.a5` — before planning, grep the launch order's named defect AND verify a named
+   edit target exists at the named address. Nine mentions, six confirmations, zero disconfirmations
+   across three epics — the most-confirmed entry in the migrated bank.
+2. `issue-308-019.a5` — require a check to demonstrate it ran against something that could have
+   failed it; mutation-test the guard and assert the mutation applied. Five-plus instances in one
+   epic.
+3. `issue-308-008.a5` — run the cold plan critic as mandatory, not bias-to-yes, for any plan whose
+   acceptance rests on a before/after measurement or a parser test. Every run that ran it found a
+   plan-invalidating defect before dispatch.
+4. `issue-308-005.a5` — pair every round-trip test over real artifacts with adversarial fixtures
+   built to make the tool answer wrongly. Confirmed three times over three tools.
+
+Four further entries are tool/platform facts rather than doctrine and are listed separately.
+
+## For g4, found by the g2 crew and confirmed
+
+`docs/EPISODE_STORE.md`'s own canonical worked record carries a prescriptive assertion at
+`governor-268-003.d2` — *"...should enumerate every sibling template carrying the pattern"*. The
+document that defines the record format models the shape this issue removes. That belongs in g4's
+reconciliation, and it is a second instance of the same inversion the issue was filed about.
+
+## Subsumption report — 0 of 8 closed
+
+Of the pre-declared set (#400, #403, #404, #277, #285, #399, #342, #392), **zero closed**. None was
+reached: #400/#403/#404/#277 sit at the retired playbook and its compiled guides rather than in the
+store, and #399/#342/#392 are the K3 cluster the issue puts out of scope. Declaring them was the
+obligation; closing none of them is the honest number.
