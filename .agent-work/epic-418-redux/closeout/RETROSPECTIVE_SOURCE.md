@@ -322,3 +322,37 @@ what was seen, what it cost, what worked around it. None of them is a rule.**
     reviewer's own skill. The reviewer force-waived a check it could have filled.
 45. **The same unpassable check was found latent in four further gates** by a crew that read ahead of
     itself rather than meeting it four more times at four closing advances.
+
+---
+
+## 49. The base rate is higher than the Commander's four — three more found in one hour, none by looking
+
+2026-08-08T16:57:33Z. `g4-implement` produced `CHECK_THAT_CANNOT_FAIL.md`, which documents **four specimens of the
+defect inside issue #467 alone** — one of them the Commander's own near-miss, caught by two cold critics
+before code was written — and argues that four instances in four artifacts by four actors *who all knew
+the issue was about that defect* is "not an anecdote, it is a base rate."
+
+Independent corroboration from the Admiral side, all inside the same hour, **none of it from searching
+for the pattern** — each surfaced while doing an unrelated errand:
+
+1. **#313 (installer).** `resolve_interpreter()` proves an interpreter *starts and runs a script*.
+   Identical signal in both worlds: the interpreter that cannot run the suite also starts and also runs
+   scripts. Found while sweeping cheap fixes — and my first draft of the finding was **wrong in the
+   ordinary direction** (I claimed the installed commands were broken; they exit 0).
+2. **#501 (the launch gate).** `_installed_skills_root()` guards with
+   `name.startswith("constellation-")` to assert "you are running from an installed skill" — and the
+   **repository is named `constellation-skills`**. The predicate matches the one directory it exists to
+   reject. Found while dry-running a boundary to avoid a shape refusal.
+3. **#502 (the provenance chain).** The journal is hash-chained specifically to make forgery expensive,
+   and records `verb, task, session_id, ts, hashes` — **never the engine that executed the verb**, with
+   four divergent builds live. Found while pre-computing an install sync.
+
+**The generalization the crew's document should carry but cannot, because it only sees its own issue:**
+three of these sit in **verification and provisioning machinery** — the installer's probe, the gate that
+refuses launches, the chain that proves a run happened. The defect concentrates in the layer whose whole
+job is to be trustworthy, and that is not a coincidence: **machinery that reports on other things is
+rarely reported on by anything.** #467's four specimens are all inside the work; these three are inside
+the instruments that judge the work.
+
+Route: the crew's artifact stays theirs and is not to be edited by me. This observation belongs in the
+epic retrospective as the **outer** frame around it.
