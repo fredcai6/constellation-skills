@@ -2060,5 +2060,149 @@ class OneSchemaCoverageTests(unittest.TestCase):
         self.assertIn("[inside_a_with_block](inside_a_with_block.md)", index)
 
 
+_ANCHOR_SOURCE = '''"""A module whose author minted two ids for the mind map to hook."""
+
+WIDTH = 3
+
+
+# [widget-spin]
+def spin():
+    """The first anchored definition."""
+    return WIDTH
+
+
+class Holder:
+    """Holds the second anchored definition."""
+
+    # [holder-hold]
+    def hold(self):
+        """An anchored method."""
+        return 2
+
+
+def unanchored():
+    """Most definitions never get an id: they are minted on demand."""
+    return 3
+'''
+
+
+def _make_anchor_repo(tmp: Path, source=None):
+    """A repo carrying two authored `[kebab-slug]` anchors and one definition
+    with none.
+
+    Two, because one id cannot show that the file is SORTED; and one
+    unanchored definition, because the ruling is that ids are minted on demand
+    and a file that listed every definition would not be an authored layer at
+    all."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "anchors.py").write_text(source or _ANCHOR_SOURCE,
+                                            encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/anchors.py", cwd=tmp)
+
+
+class IdsJsonlTests(unittest.TestCase):
+    """Gate g3: `map/ids.jsonl` is the mind map's one lookup, and it carries NO
+    position.
+
+    The mind map stores repo and slug and nothing else, so the id has to
+    survive a rename and a move. `{"id","s"}` is what makes that true: the
+    symbol path is derived and disposable, the slug is authored and durable, and
+    because the file holds no line number its git diff IS the id-motion report
+    rather than churn nobody can read."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_anchor_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _build(self, out="map"):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["build", "--root", str(self.repo),
+                             "--out", str(self.repo / out)])
+        self.assertEqual(code, 0)
+        return (self.repo / out / "ids.jsonl").read_bytes()
+
+    @staticmethod
+    def _lines(raw):
+        return [json.loads(ln) for ln in raw.decode("utf-8").splitlines()]
+
+    def test_ids_jsonl_carries_one_sorted_line_per_minted_anchor(self):
+        entries = self._lines(self._build())
+
+        self.assertEqual(entries, [{"id": "holder-hold", "s": "pkg.anchors:Holder.hold"},
+                                   {"id": "widget-spin", "s": "pkg.anchors:spin"}])
+
+    def test_ids_jsonl_carries_no_position(self):
+        """The confirmed constraint: nothing committed carries a position. The
+        keys are asserted exactly, so a later gate cannot slip a `q` back in."""
+        entries = self._lines(self._build())
+
+        self.assertTrue(entries,
+                        "input precondition: the file must hold ids, or a scan for "
+                        "forbidden keys reads nothing and passes")
+        for entry in entries:
+            with self.subTest(id=entry.get("id")):
+                self.assertEqual(sorted(entry), ["id", "s"])
+
+    def test_ids_jsonl_keeps_the_id_and_moves_the_symbol_when_one_is_renamed(self):
+        """Mint two, rename one. The authored id is what the mind map stored;
+        the symbol path is derived, so it is the side that moves."""
+        before = self._lines(self._build())
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("def spin():", "def rotate():"),
+            encoding="utf-8", newline="\n")
+        after = self._lines(self._build())
+
+        self.assertEqual([e["id"] for e in after], [e["id"] for e in before])
+        self.assertEqual([e["s"] for e in after],
+                         ["pkg.anchors:Holder.hold", "pkg.anchors:rotate"])
+
+    def test_ids_jsonl_is_byte_identical_when_the_code_around_it_moves(self):
+        """The payoff for carrying no position, and the thing a `q` would
+        destroy: a 5-line insertion above an anchor moves every definition in
+        the file and this file does not change at all."""
+        before, moved_from = self._build(), self._recorded_line()
+
+        self.assertTrue(before.strip(),
+                        "input precondition: two empty files are byte-identical and "
+                        "prove nothing")
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            "# padding\n" * 5 + _ANCHOR_SOURCE, encoding="utf-8", newline="\n")
+        after, moved_to = self._build(out="map2"), self._recorded_line()
+
+        self.assertEqual(moved_to, moved_from + 5,
+                         "input precondition: the insertion must actually move the "
+                         "entity, or this proves nothing about positions")
+        self.assertEqual(before, after)
+
+    def _recorded_line(self):
+        """Where the STORE says the anchored definition is. The rendered page
+        cannot serve as this precondition -- it carries no position, which is
+        the very ruling this test is downstream of."""
+        return [st["q"]["line"] for st in statements_of(self.repo / ".code-map")
+                if st["p"] == "contains" and st["o"] == "pkg.anchors:spin"][0]
+
+    def test_ids_jsonl_reports_a_duplicate_slug_as_a_build_error(self):
+        """Two definitions claiming one id is an authored mistake, and the run
+        report is where the ruling says it surfaces. Silently keeping one would
+        leave the mind map pointing at whichever won."""
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("[holder-hold]", "[widget-spin]"),
+            encoding="utf-8", newline="\n")
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = cli.main(["build", "--root", str(self.repo)])
+
+        self.assertEqual(code, 1)
+        self.assertIn("widget-spin", buffer.getvalue())
+
+
 if __name__ == "__main__":
     unittest.main()
