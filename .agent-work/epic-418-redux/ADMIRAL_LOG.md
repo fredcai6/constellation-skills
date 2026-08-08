@@ -1879,3 +1879,66 @@ settled list: a command whose answer depends on cwd, whose failure mode is a con
 `spine.json` and journal. That is a reviewer **constructing the healthy and defective worlds itself**
 rather than re-reading the crew's evidence, and a below-hard control alongside the escape probe is
 exactly the counterfactual discipline the wave has been demanding of implementers. Unprompted by me.
+
+## 2026-08-08 — instance B closes out: the design obeyed voluntarily, and my own messages were the cost
+
+**ADMIRAL ERROR | my messages pushed a crew over the trip line.** B's asserted readings: **0.147
+before my two messages, 0.153557 after** — hard is 0.15. **I put it over.** I sent two long messages
+to a crew I had already been told was working near the line, including one that was largely context
+it could not act on. The Admiral's own inputs consume the headroom the design reserves for building
+the handoff.
+
+**Operating change, effective now:** messages to a live crew are a **charge against its context
+budget**, not free. Send fewer, shorter, and only what changes what it does next. Everything else
+goes in a file it can read when it chooses. I will follow this for the rest of the run.
+
+**And what it did with that is the most important behavioural result of the wave.** Over the line, it
+**refused to start new work** — `start g1-review` — and said why:
+
+> *"Beginning new work above the line is precisely the thing this issue's design refuses. I am not
+> going to be the first agent to ignore that instruction, inside the run implementing it — DC6
+> exists because that non-compliance leaves no trace, and it would have left none here either."*
+
+**Nothing would have caught it if it had continued.** That is DC6's premise stated from the inside,
+by the agent it would have applied to, at the moment it had every incentive to push on. Voluntary
+compliance under an instruction that cannot detect its own violation — which is exactly the property
+the redesign trades away and the reason DC6 must be paid.
+
+**FINDING | the reach-up failure mode INVERTS with where you trip, and the two halves are now both
+observed.** B's characterisation, and it completes the picture:
+
+| Trip location | What breaks |
+|---|---|
+| At a **step boundary** (instance A) | the signal **erases itself** — advancing moves the active gate, so the request stops rendering; a second request must be filed at the resume gate |
+| **Mid-step** (instance B) | the signal **persists**, but the DIGEST is **frozen and unwritable**, because `advance` is its only writer and the step spans every remaining gate |
+
+Two Commanders, two trip locations, two opposite failures. Neither could have found both.
+
+**Sharpened, and it is why this is a mechanism defect rather than an instrument one:** the request
+record's `ts` is an **empty string**, so served-vs-live is not merely *unrendered* — it is
+**unrecorded**. No consumer can recover it, however cleverly it reads. My watcher patch (gate on
+worktree write activity) is a correct workaround precisely because the information does not exist to
+be read.
+
+**Post-handoff direction has no channel, so it built one.** Committed **`19b879f2` —
+`ADMIRAL_INPUTS.md`** into the successor's work area, carrying all six of my inputs across the seam,
+because `current` cannot accept direction that arrives after a handoff. It committed **by path only**
+so as not to disturb the live successor's tree, and did not re-claim the lease (C claimed at
+10:47:06Z). This is the *"one-slot mailbox only the tripping agent can write, and only by
+advancing"* finding, worked around durably rather than complained about.
+
+**RULING ACCEPTED | DC1's boundary belongs in the accounting, not triage.** I delegated the call and
+B made it, with reasoning, flagged overturnable: *a triage issue would file it away from the claim it
+qualifies.* That is right and I am not overturning it. The honest scope of a claim belongs with the
+claim.
+
+**Its second self-correction, and my read on it.** B now says the gauge collision resolved **before**
+I intervened — that it advanced two gates under its own reading at 12-13% — so my stopping the
+predecessor *"made it clean; it was not what unblocked it."* I am **not** treating that as settled
+from B alone: it is the interested party revising its own report a second time, from recollection,
+about timing. **C's independent arrival measurement is the stronger evidence** and it points the same
+way. The settled statement already logged stands unchanged — two windows, both self-clearing — and
+the severity stays at the lower level.
+
+**B is idle, tree clean, lease is C's, everything committed.** Three instances, three clean handoffs,
+zero work lost.
