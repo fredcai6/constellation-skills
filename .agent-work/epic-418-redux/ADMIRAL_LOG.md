@@ -268,6 +268,27 @@ What carries forward, and must not be re-derived:
   descendant's work was fully merged and its Commander was gone, so a dead descendant's stale spine
   still captures its ancestor's rail. Evidence added to #457.
 
+
+- `2026-08-07` — `RULING`: **wave-2 worktrees harvested and swept; the #457 capture surface removed
+  at its source.** Harvest first, then remove, per the mandated order. Result: **nothing to harvest**
+  — each worktree's `CONSTELLATION_FEEDBACK.md` was *behind* main rather than ahead (they carried the
+  pre-#464 `Lesson:` wording, main has `Episode:`), and no new `staged-feedback/<work-id>/` dirs
+  existed for this epic. Verified by diff before deleting anything, not assumed.
+
+  `r418-433`, `r418-436`, `r418-460`, `r418-464` removed and pruned. Before removing `r418-460` I
+  **released its orphaned lease** (`commander-r418-460-b`) — its Commander had finished and exited
+  without releasing, leaving an `execute [in-progress]` gate with a live lease. That orphan was what
+  captured my rail.
+
+  **The survey turned the #457 diagnosis into something more useful than "descendants capture
+  ancestors".** Every remaining spine in the tree was checked: the six predecessor epic-418
+  worktrees had all **released** cleanly, but `governor-264` still holds a **live lease with a
+  heartbeat from 2026-07-28** — over ten days stale, gate still `in-progress`, from an abandoned
+  Commander on an unrelated issue. So the capture surface is *any* orphaned in-progress spine with an
+  unreleased lease, and those accumulate precisely because nobody is left to release them. Left
+  `governor-264` alone — it is outside this epic — and filed the analysis on #457 with the two places
+  the evidence points (stale-lease ineligibility; refusing to name a spine the caller does not own).
+
 ## Merges` heading while appending the baseline
   ruling — my replacement text dropped the heading it was anchored on. Caught when the next edit
   could not find it. No data lost (the section was empty); heading restored below. Cost: one

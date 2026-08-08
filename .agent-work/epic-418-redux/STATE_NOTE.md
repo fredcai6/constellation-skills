@@ -5,7 +5,7 @@ own terms and the `execute` gate is BLOCKED awaiting Tommy's refresh. Do not dis
 
 - **step:** `execute` — **blocked** on contract expiry. Remaining after `execute`: `closeout` only.
 - **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` at
-  **`476e044d`** (= `origin/main`, pushed, working tree clean)
+  **`0cb9ca2a`** (= `origin/main`, pushed, working tree clean)
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
   — then get the contract refreshed before anything else
 - **pid:** none — no agents in flight
@@ -30,7 +30,10 @@ own terms and the `execute` gate is BLOCKED awaiting Tommy's refresh. Do not dis
 - **#465** (reviewer r6-fowler placeholder + CRLF) — held to wave 3, touches `checklist_engine.py`.
 - **#433, #436, #460, #464 are MERGED BUT NOT CLOSED** on the tracker — issue closing is a
   `surfaced` class and Tommy has not been asked.
-- Worktrees `r418-433/436/460/464` still exist, unswept, pending closeout harvest.
+- ~~Worktrees pending sweep~~ — **DONE**: all four harvested (nothing to harvest; their exports were
+  behind main, not ahead) and swept. `r418-460`'s orphaned lease released first.
+- **`governor-264` still holds a live lease with a 2026-07-28 heartbeat** — an unrelated issue's
+  abandoned Commander. Left alone, but it is a standing #457 rail-capture hazard for whoever runs next.
 
 ## Landed so far
 
@@ -104,4 +107,4 @@ returns the same answer for merged and abandoned. Ask the forge (`gh pr view <n>
 3. #460 will return **doctrine candidates** — records that look like real rules. Promoting any of
    them into `docs/agents/*` is his call, always.
 
-_Updated: 2026-08-08T02:35:00Z_
+_Updated: 2026-08-08T02:50:00Z_
