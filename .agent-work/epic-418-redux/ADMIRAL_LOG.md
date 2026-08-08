@@ -2362,3 +2362,25 @@ re-arming: `fill=0.088`, active-within-15min → **"refresh present but SERVED �
 every one has been a **proxy** — file mtimes, a rendered string, a substring, a subprocess exit,
 "quiet" — standing in for a fact only the thing itself can report. Each proxy was right until the
 world produced a case where it wasn't, and every failure looked identical to health.
+
+**RULING | converted rule 2 from a reminder into a gate, and it paid on first run.** Having just
+worked out that *the only rule that ever fired is the one that gates an action*, I applied it to the
+rule I have broken most: **re-derive every status claim from its source**. Broken four times — the
+A2 status across three waves, four wrong PR numbers, an epic run on a stale skill, and my own error
+count understated while describing that exact failure, with the true number one `grep -c` away.
+
+`.agent-work/epic-418-redux/truth.sh` now derives, in **one command**: gate counts and amendments
+from `execute.json`; lease; fill with the successor-reads-predecessor caveat attached; liveness at
+3/10/20 minutes **with the warning that crew writes are indistinguishable from Commander writes and
+that the authoritative channel is the harness idle notification**; whether the fix has touched
+source; HEAD, dirtiness and main-drift; and the forge state for the PR, the issue and CI. Rule 2 in
+the state note is now *"run truth.sh"* rather than *"remember to re-derive."*
+
+**It earned its place on the first run** by telling me something I did not know and would not have
+asked: **the fix has begun touching source** — `tests/test_checklist_engine.py`, **+26/-3**. First
+code change of the wave. Tests first, which is the right order for a gate whose whole purpose is to
+make the compliance signal mechanical.
+
+Also derived and worth having in one place: 4/16 gates, `amendments: 1`, `g2-implement` in-progress,
+lease **active** by instance E, fill **8.8%**, main drift since the branch base **0 files** (so no
+rebase will be needed), `#467` OPEN, no PR yet, CI clear.

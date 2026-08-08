@@ -22,9 +22,11 @@
 > 1. **Do NOT push after every log append.** `ci.yml` has no `paths-ignore`, so an
 >    `.agent-work`-only commit burns the full 8-minute suite. Commit locally; push at real
 >    boundaries. *(Broken twice: 6 concurrent runs starved PR #490 ~25 min; then 3 more today.)*
-> 2. **Re-derive every status claim from its source before citing it.** `gh issue view`, `gh pr
->    view`, the forge — never this file's memory of it. *(Broken 3x: "A2 has no issue cut" across
->    three waves; four wrong PR numbers; a stale skill I ran the whole epic on.)*
+> 2. **RUN `bash .agent-work/epic-418-redux/truth.sh` before citing any status.** Do not recall it,
+>    do not read it off this file. That script derives gates, lease, fill, liveness, source-touched,
+>    branch, forge and CI from their sources in one command. *(Rule 2 was "remember to re-derive"
+>    and I broke it 4x — including once while describing that failure, and once understating my own
+>    error count when the exact number was one grep away. It is now a command, not a reminder.)*
 > 3. **Never act on `REFRESH REQUESTED` alone** — prove the worktree is idle first. A served request
 >    reads as live. *(One command from destroying a healthy crew, then its replacement, in a loop.)*
 > 4. **Mutation-test every check before you trust it.** If it cannot go red, it is not a check.
