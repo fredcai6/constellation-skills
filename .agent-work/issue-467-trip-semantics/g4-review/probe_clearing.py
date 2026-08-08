@@ -51,12 +51,22 @@ def show(step):
     rc, out, err = cli(f, "current")
     cl = json.loads(f.read_text(encoding="utf-8"))
     line = next((l for l in out.splitlines() if "TRIP LEDGER" in l), None)
+    # #467 B1 REWORK, mechanical edit to keep this probe running against the new
+    # strings: the historical line added by the rework deliberately does NOT share
+    # the "TRIP LEDGER" substring with the live line (so `grep 'TRIP LEDGER'
+    # scripts/` still finds the render site once) -- it is labelled "TRIP HISTORY".
+    # Without this line the probe would silently stop seeing the fix and every
+    # "RENDERED LINE" below would still read None at the seam, which is no longer
+    # true. No other line in this function was changed.
+    hist_line = next((l for l in out.splitlines() if "TRIP HISTORY" in l), None)
     print(f"\n[{step}]")
     print(f"    active gate      : {E.active_id(cl)}")
     print(f"    why_trail        : {[w['id'] for w in cl.get('why_trail', [])]}")
     print(f"    ledger on disk   : {[(e['id'], e['outcome'], e['why_ref']) for e in cl.get('trip_ledger') or []]}")
     print(f"    SIGNAL (selector): {len(E.begin_over_line_records(cl))}")
+    print(f"    HIST (selector)  : {len(E.begin_over_line_records_historical(cl))}")  # #467 B1 rework
     print(f"    RENDERED LINE    : {line}")
+    print(f"    RENDERED HISTORY : {hist_line}")  # #467 B1 rework
     return line
 
 

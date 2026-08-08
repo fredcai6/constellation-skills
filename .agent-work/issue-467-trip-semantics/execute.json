@@ -982,7 +982,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Attested by commander-w4-467-h. REVIEW_RESULT for g4-review received and verified fresh in MY OWN shell this turn: run_crew.py --verify-result constellation/issue-467-trip-semantics/g4-review/reviewer/attempt-1 -> 'fresh (completed)'; recover_crews.py issue-467-trip-semantics -> 11 crews, 0 unresolved, so no crew is in flight. Artifact at crew-handoffs/g4-reviewer-result.md (413 lines), attached to g4-review as e-g4-review-1. VERDICT = BLOCK, 1 blocking finding (B1). Per this gate's own imperative, BLOCK -> return for rework; c1/c2/c3 stay unmet until an APPROVE re-review lands."
         }
       ],
       "postconditions": [
@@ -1030,7 +1031,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1334,6 +1335,31 @@
       "id": "tc13",
       "from": "g4-review",
       "statement": "'outcome' is a bare string whose two legal values live in three places that must agree by convention; a named constant would make N10's defect shape structurally impossible rather than test-caught."
+    },
+    {
+      "id": "tc14",
+      "from": "g4-review",
+      "statement": "From the g4 review survey (reviewer tc1). AUTHORITY IS ENFORCED BY NOTHING: the engine accepts ANY string for 'amend --authority' and 'waive --authority', so the 'human ratification' convention is satisfied by an agent typing the word. Flagged by the Admiral (LO-467-h ruling 8) as a specimen of THIS ISSUE'S OWN SUBJECT sitting in the engine's authority mechanism -- a check that cannot fail, green whether or not a human ever saw it. Deliberately NOT fixed here."
+    },
+    {
+      "id": "tc15",
+      "from": "g4-review",
+      "statement": "From the g4 review survey (reviewer tc2). Mutations N15 and N16 are both killed only by test_compliance_line_names_the_count_and_the_latest_begin, so two distinct defect shapes have a single point of coverage. The test is strong (three entries of two kinds, full string equality, assertNotIn) but one deletion removes both kills."
+    },
+    {
+      "id": "tc16",
+      "from": "g4-review",
+      "statement": "From the g4 review survey (reviewer tc3). A MUTATION THAT MAKES THE MODULE RAISE IS A CRASH, NOT A KILL. The g4 mutation log's N17 appends ledger_note to the SOFT return where the name is scoped to the HARD branch, so it is a NameError and its 23-failure radius is crash noise; the behavioural form has a radius of 1. A standing rule that a mutation must leave the module importable would have caught it, and would stop crash noise being read as blast radius."
+    },
+    {
+      "id": "tc17",
+      "from": "g4-review",
+      "statement": "From the g4 review survey (reviewer tc4, corroborated by the Fowler pass: data-clumps + long-parameter-list). The Trip section now assembles the same band judgment (fill, hard, model, gate) by hand at THREE sites and _append_trip_entry takes seven loose parameters. The natural refactor is a value object, but it would touch what g2 and g3 shipped, so it was deliberately excluded from this gate's scope."
+    },
+    {
+      "id": "tc18",
+      "from": "g4-review",
+      "statement": "From the g4 review survey (reviewer tc5, from the Fowler pass). 'outcome' is a bare string whose two legal values live in three places that must agree by convention. A named constant would make N10's defect shape structurally impossible rather than test-caught."
     }
   ],
   "blockers": [],
@@ -1430,17 +1456,16 @@
       "ts": "2026-08-08T17:51:08.308277+00:00"
     }
   ],
-  "refusals": 8,
+  "refusals": 9,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "released",
-    "claimed_at": "2026-08-08T15:37:23.500685+00:00",
-    "last_heartbeat": "2026-08-08T17:51:31.757826+00:00",
-    "claimed_by": "agent",
-    "worktree": ".",
+    "status": "active",
+    "claimed_at": "2026-08-08T18:09:53.972633+00:00",
+    "last_heartbeat": "2026-08-08T18:12:20.123685+00:00",
+    "claimed_by": "commander-w4-467-h",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-08T17:52:59.962747+00:00"
+    "takeover_reason": null
   },
   "amendments": [
     {

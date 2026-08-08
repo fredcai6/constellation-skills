@@ -417,13 +417,18 @@ nothing else — no subprocess, no gauge read, no clock — so it is safe on the
 path.
 
 Keying it to the live understanding is what stops a historical mark from reading as present-tense
-non-compliance. When the understanding moves on — a fresh agent records its own `why`, or a `reopen`
-appends a reopen-marker that makes the old one stale — the entry is **retained and never edited**, it
-simply stops matching.
+non-compliance. When the understanding moves on, the entry is **retained and never edited**, it
+simply stops matching. Two things move the understanding on, and the mechanism **cannot tell them
+apart**: a `reopen` appending a reopen-marker, **or the same offending agent closing the very gate
+its own HARD advisory just told it to close** — the only legal close at/over hard is
+`advance --why`, and that write is what supersedes the old why-record. The second case is not a
+corner case; it is the **likeliest** superseder in exactly the runaway this ledger exists to catch,
+because the HARD band's own instruction is "close THIS gate" (see *#467 B1* below and the fourth
+limit in the next section).
 
 It is surfaced by **extending the existing HARD branch** of `_trip_advisory`, in both of that
-branch's sub-branches, as one added line naming the count and the latest begin. There is exactly one
-computation of this fact in the engine; nothing else renders it.
+branch's sub-branches, as up to two added lines — this one and the historical one below. There is
+exactly one computation of each fact in the engine; nothing else renders either.
 
 **In the healthy world there is no ledger at all.** The agent that was told to wrap up closed its
 gate and stopped, so no begin verb ever ran, so nothing was ever appended. That is the whole value of
@@ -431,8 +436,9 @@ the signal: it differs between the two worlds.
 
 **Fail-safe: an empty result is not a claim of compliance.** A missing, stale, or clock-skewed gauge
 collapses to no reading, and then `_trip_hard_gate` returns before writing anything **and** the
-advisory says nothing about the ledger. Silence reads as *neither compliant nor non-compliant*. A
-signal that read silence as "clean" would be the same defect class as a check that cannot fail.
+advisory says nothing about either ledger read. Silence reads as *neither compliant nor
+non-compliant*. A signal that read silence as "clean" would be the same defect class as a check that
+cannot fail.
 
 **Backward compatible.** The list is created lazily on first write (`setdefault`, the `why_trail`
 idiom), so a spine with no `trip_ledger` drives unchanged and never acquires the key for nothing. An
@@ -441,7 +447,35 @@ existing ledger is extended, never replaced.
 **Engine-written only.** No CLI verb creates, edits, or deletes an entry. The only writer is
 `_append_trip_entry`; its only caller is `_trip_hard_gate`; and `_trip_hard_gate`'s only caller is
 `dispatch`, which runs it **before** `_run_verb` — the function every verb is dispatched through.
-Entries are append-only: no code path mutates or removes one.
+Entries are append-only: no code path mutates or removes one. `begin_over_line_records_historical`
+below reads the same append-only list; it is a second reader, never a second writer.
+
+#### The historical read — `begin_over_line_records_historical(cl)` (#467 B1 rework)
+
+A second **pure** selector, additive to the live one above and **not a replacement for it**: every
+`begin-refused`/`begin-released` `trip_ledger` entry, filtered the same way, but with **no `why_ref`
+keying at all**. Where the live selector answers "is there an over-the-line begin under the
+understanding now in force" — and is therefore emptied by the mandated close, as above — this
+answers "has this checklist ever recorded one", and nothing that changes which understanding is live
+can affect the answer.
+
+**Why it exists.** The HARD band's own instruction is "close THIS gate carrying your handoff", and
+closing a gate is exactly the act that supersedes the live why-record. The live selector's keying
+(close criterion (b), correctly implemented and **not changed by this addition**) therefore
+guarantees that the one close an over-the-line agent is required to make is also the one thing that
+empties the only rendered signal — byte-identical, at the seam, to an agent that never went over the
+line at all. The historical selector is unkeyed *because* nothing keyed to the live understanding can
+survive the mandated close.
+
+Rendered as its own line — `TRIP HISTORY`, deliberately not sharing the `TRIP LEDGER` label with the
+live line — in the same one render site as the live line, naming the total and the latest entry, and
+stating plainly that no close clears it. **It renders whenever anything is on record at all, even
+when the live list is empty** — that seam (live 0, historical N) is precisely the case it exists for.
+
+Pure, fail-safe, and engine-written-only in exactly the same senses as the live selector (see above):
+no subprocess/gauge/clock; a malformed `trip_ledger` (`None`, a string, a dict, or a list holding
+non-dict entries) degrades to an empty result rather than raising; and it is a reader only, called
+from `_trip_advisory` alongside the live selector.
 
 #### The limit — what this cannot observe
 
@@ -455,6 +489,16 @@ Two consequences worth stating plainly rather than leaving fuzzy:
   already in, over the line, without running any verb, leaves no mark.
 - An empty ledger therefore means "no recorded begin over the line under this understanding" — never
   "this run was compliant".
+
+**The fourth: the live signal goes silent at exactly the close it mandates.** The HARD band's own
+instruction is "close THIS gate carrying your handoff", and closing a gate is what writes the new
+`why_trail` record that becomes live. The live selector is keyed to that live record by design (close
+criterion (b)), so the mandated close is **guaranteed** to empty it — on the live line alone, a
+compliant agent that never went over the line and an offender who did and then closed the very gate
+its own advisory told it to close render **identically absent**. That is why the historical read
+exists (`begin_over_line_records_historical`, above): it carries no keying for the close to supersede,
+so it is where the two worlds actually differ. A reader who checks only the live line at the seam
+learns nothing; the historical line is what has to be read.
 
 ## Engine verbs ↔ schema
 

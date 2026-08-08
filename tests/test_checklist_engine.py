@@ -5766,6 +5766,112 @@ class TripLedgerComplianceSignal(unittest.TestCase):
         self.assertNotIn("trip_ledger", cl)
         self.assertEqual(E.begin_over_line_records(cl), [])
 
+    # --- #467 B1 rework: the HISTORICAL selector, additive and UNKEYED -------- #
+    #
+    # The live selector above is keyed to the live understanding by design (close
+    # criterion (b)); that keying is what the mandated HARD-band close (`advance
+    # --why`) is guaranteed to supersede, emptying the live selector even in the
+    # exact runaway the ledger exists to catch (B1). The historical selector below
+    # answers a different question -- not "under the understanding now in force"
+    # but "ever" -- and is exactly what survives that supersede.
+
+    def test_historical_signal_is_empty_in_the_healthy_world_and_names_the_begin_in_the_defective_one(self):
+        healthy = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(healthy, _advance_ns("g1", why="wrapping up and stopping"),
+                       base_dir=Path("."))
+        self.assertEqual(E.begin_over_line_records_historical(healthy), [])   # <-- differing value
+
+        defective = self._tripped_at_g2()
+        records = E.begin_over_line_records_historical(defective)            # <-- differing value
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["outcome"], "begin-refused")
+        self.assertEqual(records[0]["gate"], "g2")
+
+    def test_historical_signal_survives_the_supersede_that_empties_the_live_one(self):
+        """THE B1 regression, at the selector level. Byte-identical ledger to
+        `test_compliance_signal_reads_the_live_understanding_not_a_superseded_one`
+        — only the understanding moves on — but here it is the HISTORICAL
+        selector under test, and it must NOT go quiet: going quiet on exactly this
+        transition is the defect. Differing value: the LIVE selector's length
+        (1 -> 0, positive control) vs the HISTORICAL selector's length (1 -> 1,
+        unchanged — the field this test actually measures)."""
+        defective = self._tripped_at_g2()
+        ledger_snapshot = copy.deepcopy(defective["trip_ledger"])
+        self.assertEqual(len(E.begin_over_line_records(defective)), 1)              # positive control (live, before)
+        self.assertEqual(len(E.begin_over_line_records_historical(defective)), 1)   # positive control (historical, before)
+
+        # the offender's own close: a fresh why-record supersedes the live one
+        superseded = copy.deepcopy(defective)
+        E.attach(superseded, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.start(superseded, "g2")
+        E.advance(superseded, "g2", why="u2 — the offender's own close")
+        self.assertEqual(E._latest_why_record(superseded)["id"], "w-2")
+
+        self.assertEqual(superseded["trip_ledger"], ledger_snapshot)  # entry retained, never edited
+        self.assertEqual(E.begin_over_line_records(superseded), [])                 # live goes quiet (positive control)
+        self.assertEqual(len(E.begin_over_line_records_historical(superseded)), 1)  # <-- differing value: historical does not
+        self.assertEqual(E.begin_over_line_records_historical(superseded)[0]["id"],
+                         ledger_snapshot[0]["id"])
+
+    def test_historical_signal_goes_quiet_only_when_the_ledger_itself_is_empty(self):
+        """The other supersede path (`reopen`) quiets the LIVE selector the same
+        way (already proven elsewhere); the historical one has no why_ref keying
+        for a reopen-marker to bypass, so it is unaffected. Positive control
+        first, so the differing value means something."""
+        cl = self._tripped_at_g2()
+        self.assertEqual(len(E.begin_over_line_records(cl)), 1)             # positive control
+        self.assertEqual(len(E.begin_over_line_records_historical(cl)), 1)  # positive control
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+        self.assertEqual(E.begin_over_line_records(cl), [])                 # live goes quiet (existing behaviour)
+        self.assertEqual(len(E.begin_over_line_records_historical(cl)), 1)  # <-- differing value: historical does not
+
+    def test_historical_signal_counts_both_begin_outcomes_and_nothing_else(self):
+        cl = self._tripped_at_g2()
+        entry = cl["trip_ledger"][0]
+        for outcome in ("begin-refused", "begin-released"):
+            with self.subTest(outcome=outcome):
+                entry["outcome"] = outcome
+                self.assertEqual(len(E.begin_over_line_records_historical(cl)), 1)
+        for outcome in ("advance-noted", "", None):
+            with self.subTest(outcome=outcome):
+                entry["outcome"] = outcome
+                self.assertEqual(E.begin_over_line_records_historical(cl), [])
+
+    def test_historical_selector_is_pure_and_reads_stored_state_only(self):
+        cl = self._tripped_at_g2()
+        before = copy.deepcopy(cl)
+        with mock.patch.object(E, "_read_gauge",
+                               side_effect=AssertionError("the selector must not read the gauge")), \
+             mock.patch.object(E.subprocess, "run",
+                               side_effect=AssertionError("the selector must not run a subprocess")):
+            records = E.begin_over_line_records_historical(cl)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(cl, before)  # no side effects
+
+    def test_historical_signal_is_empty_on_a_spine_that_never_carried_a_ledger(self):
+        cl = self._three_gates()
+        self.assertNotIn("trip_ledger", cl)
+        self.assertEqual(E.begin_over_line_records_historical(cl), [])
+
+    def test_historical_selector_never_raises_on_a_malformed_ledger(self):
+        """Fail-safe parity with the live selector (criterion 8): a corrupted
+        `trip_ledger` value is read as empty, never a crash."""
+        for malformed in (None, "not-a-list", {"also": "not-a-list"}):
+            with self.subTest(malformed=repr(malformed)):
+                cl = self._three_gates()
+                cl["trip_ledger"] = malformed
+                self.assertEqual(E.begin_over_line_records_historical(cl), [])
+
+    def test_historical_selector_skips_non_dict_entries_in_an_otherwise_valid_ledger(self):
+        cl = self._three_gates()
+        cl["trip_ledger"] = [1, "x", None, {"id": "tl-1", "outcome": "begin-refused",
+                                             "gate": "g2", "verb": "start"}]
+        records = E.begin_over_line_records_historical(cl)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["id"], "tl-1")
+
 
 class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
     """#467 (c) — the signal is surfaced by EXTENDING the existing `_trip_advisory`
@@ -5820,10 +5926,24 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
                 f"your handoff (`advance {gate} --why \"<understanding>\"`) and stop. A fresh "
                 f"agent picks up from your DIGEST; do not begin work at another gate.")
 
-    def _expected_note(self, n, verb, gate, outcome):
+    def _expected_live_note(self, n, verb, gate, outcome):
         return (f"\nTRIP LEDGER: {n} begin(s) at/over the hard line are on the record "
                 f"under this understanding (latest: {verb} {gate} -> {outcome}). "
-                f"Closing this gate does not clear the record.")
+                f"Closing THIS gate clears this line; the line below, if present, "
+                f"is not.")
+
+    def _expected_historical_note(self, n, verb, gate, outcome):
+        return (f"\nTRIP HISTORY: {n} begin(s) at/over the hard line are on the "
+                f"record across this checklist's full history (latest: {verb} {gate} "
+                f"-> {outcome}). No close clears this line.")
+
+    def _expected_note(self, n, verb, gate, outcome):
+        """The live line and the historical line together, for the common case
+        (used by every existing shape-4 test below) where nothing has yet been
+        superseded — the two selectors hold the SAME count and the SAME latest
+        entry, so both lines carry identical (n, verb, gate, outcome)."""
+        return (self._expected_live_note(n, verb, gate, outcome)
+                + self._expected_historical_note(n, verb, gate, outcome))
 
     # --- shape 4: the rendered signal ---------------------------------------- #
     def test_compliance_line_appears_on_the_hard_advisory_only_in_the_defective_world(self):
@@ -5873,18 +5993,56 @@ class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
             + self._expected_note(3, "start", "g2", "begin-released"))
         self.assertNotIn("1 begin(s)", out)
 
-    def test_compliance_line_is_absent_once_the_recorded_begin_is_superseded(self):
-        """The keying reaches the RENDER, not just the selector: the same retained
-        entry stops being reported once the understanding moves on. Differing field:
-        the advisory string (with vs without the TRIP LEDGER line)."""
+    # --- #467 B1 rework: the HISTORICAL line, additive and rendered separately - #
+
+    def test_historical_line_renders_at_the_seam_even_when_the_live_line_is_absent(self):
+        """THE B1 regression, at the render site. World H: nothing was ever
+        tripped — no begin verb ever ran over the line, so there is neither a
+        live line nor a historical one. World D: the offender's own close — a
+        refused begin at g2, then that SAME agent closes g2 with `advance --why`
+        (the only legal close at/over hard) — which supersedes the live
+        selector (the existing, correct keying) but must NOT silence the
+        historical one. Positive control: World H proves the historical line
+        does not render spuriously. Differing field: whether `TRIP HISTORY`
+        appears at all, and the count it names."""
+        healthy = self._g2_pending_after_g1()
+        healthy_out = self._advisory(healthy)
+        self.assertNotIn("TRIP HISTORY", healthy_out)  # positive control
+
+        defective = self._g2_pending_after_g1()
+        self._refuse_start(defective, "g2")
+        self.assertEqual(len(defective["trip_ledger"]), 1)
+        E.attach(defective, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.start(defective, "g2")
+        E.advance(defective, "g2", why="u2 — the offender's own close")
+        out = self._advisory(defective)
+        self.assertNotIn("TRIP LEDGER:", out)   # the live line is absent (B1's own reproduction)
+        self.assertIn("TRIP HISTORY", out)      # <-- differing field: the historical line survives
+        self.assertIn("1 begin(s)", out)        # names the true count, not zero
+
+    def test_live_line_is_absent_after_the_offenders_own_close_but_the_historical_line_still_names_it(self):
+        """B1, corrected: this IS the offender's own close, not a fresh agent's —
+        the only legal close at/over hard is `advance --why`, and that is what an
+        agent that just ran an over-the-line begin has to run to leave the gate it
+        is trapped in. The keying reaches the RENDER, not just the selector: the
+        same retained entry stops being reported on the LIVE line once THAT close
+        writes the new why-record and supersedes the old one — that keying is
+        correct and untouched (close criterion (b)). What changed is that the
+        HISTORICAL line does not stop: unkeyed, it still names the retained begin.
+        Differing field: which line is present after the SAME close (live absent,
+        historical present) — this is the exact seam B1 measured as byte-identical
+        to a compliant agent; it no longer is."""
         cl = self._g2_pending_after_g1()
         self._refuse_start(cl, "g2")
         self.assertEqual(len(cl["trip_ledger"]), 1)  # positive control: it is there
         E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
         E.start(cl, "g2")
-        E.advance(cl, "g2", why="u2 — a fresh agent's understanding")
+        E.advance(cl, "g2", why="u2 — the offender's own close, the gate its own HARD advisory told it to close")
         self.assertEqual(len(cl["trip_ledger"]), 1)  # retained, not deleted
-        self.assertEqual(self._advisory(cl), self._expected_hard("g3", "w-2"))
+        self.assertEqual(
+            self._advisory(cl),
+            self._expected_hard("g3", "w-2")
+            + self._expected_historical_note(1, "start", "g2", "begin-refused"))
 
     def test_compliance_line_reaches_the_agent_through_current_at_the_cli_boundary(self):
         healthy = self._g2_pending_after_g1()
@@ -5981,12 +6139,14 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
         """The exhaustive proof, read off the engine's own call graph rather than a
         hand-maintained list of verbs.
 
-        Three facts, each asserted mechanically: (1) exactly two functions in the
-        engine name the `trip_ledger` key at all — one writes it, one reads it;
+        Three facts, each asserted mechanically: (1) exactly three functions in the
+        engine name the `trip_ledger` key at all — one writes it, two read it (the
+        live selector and its #467 B1-rework sibling, the historical selector);
         (2) the writer's only caller is `_trip_hard_gate`; (3) `_trip_hard_gate`'s
         only caller is `dispatch`, and `_run_verb` — the function every CLI verb is
         dispatched through — reaches neither. So no verb can create, edit, or delete
-        an entry."""
+        an entry, and the new reader is exactly that: a reader, called from the same
+        one render site as the live one."""
         import ast
         tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
         funcs = {n.name: n for n in ast.walk(tree)
@@ -6005,10 +6165,12 @@ class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
             return sorted(f for f, node in funcs.items() if name in calls_within(node))
 
         self.assertEqual(sorted(f for f, n in funcs.items() if names_the_key(n)),
-                         ["_append_trip_entry", "begin_over_line_records"])
+                         ["_append_trip_entry", "begin_over_line_records",
+                          "begin_over_line_records_historical"])
         self.assertEqual(callers_of("_append_trip_entry"), ["_trip_hard_gate"])
         self.assertEqual(callers_of("_trip_hard_gate"), ["dispatch"])
         self.assertEqual(callers_of("begin_over_line_records"), ["_trip_advisory"])
+        self.assertEqual(callers_of("begin_over_line_records_historical"), ["_trip_advisory"])
         run_verb_calls = calls_within(funcs["_run_verb"])
         for unreachable in ("_append_trip_entry", "_trip_hard_gate"):
             self.assertNotIn(unreachable, run_verb_calls)

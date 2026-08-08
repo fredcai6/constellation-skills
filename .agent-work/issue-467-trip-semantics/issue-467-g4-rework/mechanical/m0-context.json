@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "issue-467-g4-rework",
+    "project": "constellation-skills",
+    "role": "implementer:g4-rework",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-g4-rework-m0-context@454575091db845dd0c3665bbb264ffc534bc5dca",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-g4-rework",
+    "generated_at": "2026-08-08T18:22:12Z"
+  }
+}

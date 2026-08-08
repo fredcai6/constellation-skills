@@ -214,6 +214,19 @@ Driver and raw results (kept outside the repo, reproducible):
   `TripTwoBandGatePolicy::test_soft_fires_at_and_above_soft`. The radius is honest: those tests
   pin the SOFT string by equality, so any addition to it is a real regression, and they catch
   this one without having been written for it.
+- **CORRECTION (#467 B1 rework, g4-review NB2/handoff instruction):** the branch as logged above —
+  `+ ledger_note` appended to the SOFT return — is **not reachable as written**. `ledger_note`
+  (now `live_note`/`historical_note` after the B1 rework's split, same scoping before and after)
+  is a local computed **inside** the `if fill >= hard:` block; the SOFT return sits in a sibling
+  `if fill >= soft:` block below it, where that name is undefined. Applying the logged mutation
+  literally raises `NameError: name 'ledger_note' is not defined` on any SOFT-band call — a
+  **crash**, not a behavioural change, so the recorded radius of 23 is crash noise (every test
+  that ever calls `_trip_advisory` in the SOFT band errors, not just the ones that would catch a
+  real leak). The **behavioural** form of this mutant — actually computing the note in the SOFT
+  branch too, rather than referencing an out-of-scope name — still kills
+  `test_compliance_line_never_appears_below_the_hard_band`, with a **TOTAL: 1 failed**, everything
+  else green. Corrected in place, visibly, rather than rewritten as if it had always said this
+  (g3 M15 precedent, `g3-mutation-log.md`).
 
 ---
 
@@ -241,6 +254,79 @@ Driver and raw results (kept outside the repo, reproducible):
 
 ---
 
+## The B1 rework (#467 g4-rework, attempt 2) — N20–N22
+
+The reviewer's B1 finding (see `g4-reviewer-result.md`): the mandated HARD-band close is
+guaranteed to supersede the live why-record, emptying `begin_over_line_records` — so the one
+close an over-the-line agent is required to make is also the one thing that silences the only
+rendered signal. The fix adds a second, unkeyed selector (`begin_over_line_records_historical`)
+and a second rendered line (`TRIP HISTORY`), computed once and appended to both HARD sub-branches
+alongside the existing live line. These three mutations target exactly that addition.
+
+**Method — adapted from the g4 method above, declared rather than silent.** The g4 method commits
+the implementation first, then reverts each mutant with `git checkout --` and asserts
+`git diff --quiet` against the committed baseline. This rework's implementer does not commit (the
+Commander does), so `scripts/checklist_engine.py` is genuinely, correctly dirty in git for the
+whole run — `git checkout --` here would destroy the real fix along with the mutant. The driver
+(`.agent-work/issue-467-trip-semantics/g4-rework/mutate_n20_22.py`) instead snapshots the real,
+uncommitted implementation before mutating and reverts each mutant against that snapshot,
+asserting byte-identity (not `git diff --quiet`) before the next mutation. Same discipline
+otherwise: one textual replacement per mutation, anchor asserted to match exactly once, asserted
+to actually change the file, tests run, reverted, revert asserted clean before the next.
+
+```
+FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py
+```
+
+Baseline for this file at the point these mutations were run: 34 passed / 21 subtests passed on
+the targeted `-k 'ledger or compliance'` slice; full-file baseline 409 passed prior to this
+rework's new tests (see close criterion 9 for the full-suite counts). Raw driver output:
+`.agent-work/issue-467-trip-semantics/g4-rework/mutate_n20_22.py`; console output pasted into the
+implementer result.
+
+## N20 — the new (historical) selector dead-coded to `return []`
+
+- **Branch broken:** `begin_over_line_records_historical`'s final `return out` replaced with
+  `return []`, so the historical read always reports nothing.
+- **NAMED test red:** `TripLedgerComplianceOnTheHardAdvisory::test_historical_line_renders_at_the_seam_even_when_the_live_line_is_absent`
+- **TOTAL: 13 failed** (`FAILED` + `SUBFAILED`), 407 passed, 126 subtests passed. The radius
+  includes every other new historical-selector test (they all assert a non-empty result somewhere)
+  plus the render-site test — a dead-coded selector cannot render anything, so every consumer of
+  it goes red together. Reverted clean.
+
+## N21 — the historical line dropped from the ALREADY-REQUESTED HARD sub-branch
+
+- **Branch broken:** the already-requested `return (...) + live_note + historical_note` had
+  `+ historical_note` removed, leaving `+ live_note` only — mirrors g4's own N13 one level up, now
+  against the historical line specifically.
+- **NAMED test red:** `TripLedgerComplianceOnTheHardAdvisory::test_compliance_line_also_rides_the_already_requested_hard_advisory`
+- **TOTAL: 2 failed**, 416 passed, 128 subtests passed. Narrow and precise: only the tests pinning
+  the already-requested branch's exact string are affected. Reverted clean.
+
+## N22 — the historical selector keyed to the live why-record (re-creates B1)
+
+- **Branch broken:** `begin_over_line_records_historical` given the SAME keying as the live
+  selector (`_latest_why_record` lookup + `why_ref != live: continue`), collapsing it to a copy of
+  `begin_over_line_records`. This is the mirror-image defect this whole rework exists to prevent:
+  a live-only signal that goes silent at exactly the seam a fresh reader arrives at.
+- **NAMED test red:** `TripLedgerComplianceOnTheHardAdvisory::test_historical_line_renders_at_the_seam_even_when_the_live_line_is_absent`
+  — **killed AT THE SEAM**, as the handoff required: this test builds the exact offender's-own-close
+  scenario and asserts the historical line still names the retained begin; with this mutation the
+  historical selector is ALSO emptied by the same supersede, so the assertion that `TRIP HISTORY`
+  is present fails, reproducing B1 byte-for-byte at the render site.
+- **TOTAL: 4 failed**, 414 passed, 128 subtests passed. Narrower than N20 because the mutated
+  selector still returns *something* in scenarios where nothing has yet been superseded (the
+  keying is a no-op until the understanding actually moves on) — only tests that specifically
+  exercise a supersede catch it, which is exactly the point: **the seam is a specific state, not
+  every state**, and this mutant is only distinguishable there. Reverted clean.
+
+**3 mutations, all 3 killed by a named test, all reverted clean.** No equivalent mutants declared.
+Combined with N18/N19 above (unchanged by this rework — the write site and its wiring were not
+touched) and the original N1–N17, the engine-written-only guarantee and the render-site-once
+guarantee both hold with the historical selector added.
+
+---
+
 ## Summary
 
 | # | branch broken | named test | total failed |
@@ -264,12 +350,16 @@ Driver and raw results (kept outside the repo, reproducible):
 | N17 | note leaks into the SOFT band | `test_compliance_line_never_appears_below_the_hard_band` | 23 |
 | N18 | write site reachable from a CLI verb | `test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb` | 6 |
 | N19 | dispatch stops passing the verb | `test_ledger_is_append_only_across_repeated_begins` | 11 |
+| N20 | historical selector dead-coded to `[]` | `test_historical_line_renders_at_the_seam_even_when_the_live_line_is_absent` | 13 |
+| N21 | historical line dropped from the already-requested sub-branch | `test_compliance_line_also_rides_the_already_requested_hard_advisory` | 2 |
+| N22 | historical selector keyed to live (re-creates B1) | `test_historical_line_renders_at_the_seam_even_when_the_live_line_is_absent` | 4 |
 
-**19 mutations, all 19 killed by a named test.** No equivalent mutants were declared — after
-g3's M15 was found to be a false `EQUIVALENT`, a declaration of equivalence is a claim needing
-evidence, and none of these nineteen needed one. Three (N1, N7, N17) have a wide blast radius,
-attributable in each case to a field or string that other tests legitimately pin, and declared
-above rather than dressed up.
+**19 mutations at g4-implement, all 19 killed by a named test; 3 more (N20–N22) at the B1 rework,
+all 3 killed by a named test — 22 total, 0 survivors.** No equivalent mutants were declared —
+after g3's M15 was found to be a false `EQUIVALENT`, a declaration of equivalence is a claim
+needing evidence, and none of these twenty-two needed one. Three (N1, N7, N17) have a wide blast
+radius, attributable in each case to a field or string that other tests legitimately pin, and
+declared above rather than dressed up.
 
 The four that matter most:
 

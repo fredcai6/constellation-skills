@@ -168,8 +168,18 @@ Concrete, in the order they cost least:
   skip.
 - **Build the healthy world too.** For any claim that a signal detects something, construct the
   spine where the defect is present *and* the one where it is absent, and **name the field that
-  differs**. If you cannot name the field, there is no signal. Every one of this gate's 25 tests
-  is written this way, and it is why N9 — the mutation that drops the compliance keying — is
+  differs**. If you cannot name the field, there is no signal. **CORRECTION (#467 B1 rework):**
+  this line originally claimed *"every one of this gate's 25 tests is written this way."* That
+  was false, and it is the same defect class as B1 — an overclaim in a shipped artifact, this one
+  inside the very document that catalogues the class. **24 of the 25 were; one was not.**
+  `test_compliance_line_is_absent_once_the_recorded_begin_is_superseded`, as shipped at
+  g4-implement, was negative-only: its only positive control was that the ledger entry
+  *existed* (`self.assertEqual(len(cl["trip_ledger"]), 1)`), never that any signal actually
+  *rendered* — exactly the gap NB4 named in the reviewer's B1 finding. It was corrected at the
+  B1 rework: renamed
+  `test_live_line_is_absent_after_the_offenders_own_close_but_the_historical_line_still_names_it`,
+  and it now asserts a render-side positive control in the same test — the historical line still
+  names the retained begin. It is why N9 — the mutation that drops the compliance keying — is
   caught by a test whose two worlds hold a **byte-identical** ledger: nothing but the keying can
   be what that test measures.
 - **Pair every negative assertion with a positive control in the same test.** Not in a

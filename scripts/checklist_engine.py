@@ -1492,20 +1492,39 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # the gate-only match, preserving all existing behavior.
         rec = _latest_why_record(cl)
         wid = rec["id"] if rec else None
-        # #467 (the trip ledger): the ONE render of the compliance fact. The engine
+        # #467 (the trip ledger): the ONE render of each compliance fact. The engine
         # already wrote the ledger at `_trip_hard_gate`; this reads it back through
-        # the single pure selector and appends one line to whichever HARD sub-branch
-        # is returned below. There is deliberately no second computation of this fact
-        # anywhere — an over-the-line begin is reported here or not at all.
-        ledger_note = ""
+        # the two pure selectors and appends up to two lines to whichever HARD
+        # sub-branch is returned below. There is deliberately no second computation
+        # of either fact anywhere — an over-the-line begin is reported here or not
+        # at all.
+        #
+        # #467 B1 rework: the LIVE line alone is not enough. The close this HARD
+        # band mandates (`advance --why`) is guaranteed to supersede the live
+        # why-record, which empties the LIVE selector by design (close criterion
+        # (b) — its keying is correct and untouched). Left alone, that means the
+        # one required close is also the one thing guaranteed to silence the only
+        # rendered signal. The HISTORICAL line is unkeyed and cannot be silenced by
+        # any close, so it renders whenever anything is on record at all — even
+        # when the live line above it has nothing to say.
+        live_note = ""
+        historical_note = ""
         records = begin_over_line_records(cl)
+        historical = begin_over_line_records_historical(cl)
         if records:
             last = records[-1]
-            ledger_note = (
+            live_note = (
                 f"\nTRIP LEDGER: {len(records)} begin(s) at/over the hard line are on "
                 f"the record under this understanding (latest: {last.get('verb') or '?'} "
-                f"{last.get('gate')} -> {last.get('outcome')}). Closing this gate does "
-                f"not clear the record.")
+                f"{last.get('gate')} -> {last.get('outcome')}). Closing THIS gate "
+                f"clears this line; the line below, if present, is not.")
+        if historical:
+            hlast = historical[-1]
+            historical_note = (
+                f"\nTRIP HISTORY: {len(historical)} begin(s) at/over the hard line "
+                f"are on the record across this checklist's full history (latest: "
+                f"{hlast.get('verb') or '?'} {hlast.get('gate')} -> "
+                f"{hlast.get('outcome')}). No close clears this line.")
         # #467: HARD has always meant "wrap up", never "you are unsafe" — but the old
         # wording ("`advance` is BLOCKED", "lost to a runaway") read as an alarm about
         # a mechanism failing, and an agent that reads an alarm looks for a way past it
@@ -1517,13 +1536,13 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
                     f"the refresh for {gate} is already requested. Close THIS gate "
                     f"carrying your handoff (`advance {gate} --why \"<understanding>\"`) "
                     f"and stop. A fresh agent picks up from your DIGEST; do not begin "
-                    f"work at another gate.") + ledger_note
+                    f"work at another gate.") + live_note + historical_note
         return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed. You have "
                 f"taken this as far as this context can carry it — now close THIS gate "
                 f"carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
                 f"request a refresh, and stop. A fresh agent picks up from your DIGEST; "
                 f"do not begin work at another gate. Request the refresh with: "
-                f"{_refresh_attach_hint(gate, wid)}") + ledger_note
+                f"{_refresh_attach_hint(gate, wid)}") + live_note + historical_note
     if fill >= soft:
         return (f"\nCONTEXT {fill:.0%} (>= soft): you've used most of your context. "
                 f"Unless you're basically done, hand off here at {gate} rather than "
@@ -1616,6 +1635,39 @@ def begin_over_line_records(cl: dict) -> list[dict]:
         if e.get("outcome") not in ("begin-refused", "begin-released"):
             continue
         if e.get("why_ref") != live:
+            continue
+        out.append(e)
+    return out
+
+
+def begin_over_line_records_historical(cl: dict) -> list[dict]:
+    """PURE selector, additive to `begin_over_line_records` and separate from it:
+    every `begin-refused`/`begin-released` entry in `trip_ledger`, regardless of
+    `why_ref` (#467 B1 rework).
+
+    Where the LIVE selector answers "is there an over-the-line begin under the
+    understanding now in force" -- and is therefore emptied by the very close the
+    HARD band mandates -- this answers a question that close cannot affect: "has
+    this checklist EVER recorded a begin over the line". Nothing here is keyed to
+    a why-record, so nothing here can be superseded. The entries are the same
+    entries the live selector reads; this is a second, unkeyed view onto them, not
+    a second write and not a second source of truth.
+
+    Pure by construction, same as the live selector: reads only `trip_ledger`, no
+    subprocess/gauge/clock, so it is safe to call from the read-only `current`
+    path. Never raises on a malformed ledger -- a non-list `trip_ledger` (`None`,
+    a string, a dict) degrades to nothing via `or []`, and a list holding
+    non-dict entries skips them one at a time, matching `begin_over_line_records`'s
+    own fail-safe.
+
+    Does not replace the live selector and must never be used to. The live
+    selector's keying is close criterion (b) (Admiral pre-ruling) and stays
+    exactly as it is; this selector is additive and separately rendered."""
+    out: list[dict] = []
+    for e in cl.get("trip_ledger", []) or []:
+        if not isinstance(e, dict):
+            continue
+        if e.get("outcome") not in ("begin-refused", "begin-released"):
             continue
         out.append(e)
     return out

@@ -1,0 +1,593 @@
+{
+  "work_id": "issue-467-g4-rework",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-selector-red",
+    "m2-selector-green",
+    "m3-render-red",
+    "m4-render-green",
+    "m5-sentence-and-doc",
+    "m6-fix-pinned-test",
+    "m7-seam-measurement",
+    "m8-probe-rerun",
+    "m9-mutations",
+    "m10-artifact-corrections",
+    "m11-full-suite-and-scope"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify handoff",
+      "imperative": "Read the handoff at .agent-work/issue-467-trip-semantics/crew-handoffs/g4-rework-implementer-handoff.md in full, plus g4-reviewer-result.md's B1 finding, plus the relevant code (scripts/checklist_engine.py around _trip_advisory/begin_over_line_records/_append_trip_entry) and docs/CHECKLIST_SCHEMA.md's compliance-signal and limit sections. Confirm the handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions, return format). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + B1 finding + code + doc sections read; handoff verified complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff, B1 finding, code sites, and doc sections read; handoff verified complete"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-selector-red": {
+      "id": "m1-selector-red",
+      "title": "New historical selector: tests RED",
+      "imperative": "In tests/test_checklist_engine.py, add new tests for begin_over_line_records_historical: purity (no subprocess/gauge/clock, no mutation), outcome filtering, empty-on-no-ledger, and the core B1 regression test asserting the historical selector's count is UNCHANGED by a supersede that empties the live selector (byte-identical ledger, only understanding moves on -- same shape as the existing keying test). Run the new tests and observe them fail with AttributeError/NameError (function does not exist yet). Attest c1 with the RED output pasted into evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded from m0"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new selector tests written and observed RED (pasted)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed: 14 failed with AttributeError (no attribute begin_over_line_records_historical); see g4rw_m1_red.txt"
+        }
+      ],
+      "constraints": [
+        "do not touch begin_over_line_records's own body",
+        "no new state/field/verb"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-selector-green": {
+      "id": "m2-selector-green",
+      "title": "Implement begin_over_line_records_historical: GREEN",
+      "imperative": "Add the pure, unkeyed historical selector to scripts/checklist_engine.py near begin_over_line_records, never writing, never raising on a malformed ledger. Run the m1 tests and confirm GREEN.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed in m1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "m1 selector tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k historical"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-selector-green-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-selector-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k historical",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-render-red": {
+      "id": "m3-render-red",
+      "title": "Render site test RED",
+      "imperative": "Add a test asserting the historical line renders at the seam (via _trip_advisory / dispatch current) even when the live list is empty -- the exact B1 scenario: offender closes the gate, live line absent, historical line present naming the retained begin. Include a positive control that the line actually renders (not just that the ledger entry exists). Observe it fail (old code has no historical line).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "selector green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "selector green (m2)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "render test written and observed RED (pasted)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed: fails at assertIn TRIP HISTORY, reproducing B1 (live absent, no historical line yet); see g4rw_m3_red.txt"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-render-green": {
+      "id": "m4-render-green",
+      "title": "Extend _trip_advisory render: GREEN",
+      "imperative": "Extend the ledger_note computation in _trip_advisory (scripts/checklist_engine.py ~1500-1508) to compute the historical selector once and append a second 'TRIP HISTORY' line (distinct substring from 'TRIP LEDGER' so grep 'TRIP LEDGER' scripts/ still finds the render site once) whenever any historical record exists, independent of whether the live list is empty. Run the m3 test and confirm GREEN, plus the full compliance/ledger test slice.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "render test RED",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "render test RED (m3)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "render tests pass; grep 'TRIP LEDGER' scripts/ still finds exactly one line",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-render-green-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-render-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-render-green-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-sentence-and-doc": {
+      "id": "m5-sentence-and-doc",
+      "title": "Correct the false sentence + declare the fourth limit in the doc",
+      "imperative": "Rewrite the live line's closing sentence so it is true of the live line only, pointing at the historical line. Update docs/CHECKLIST_SCHEMA.md's compliance-signal section (fix the fresh-agent/reopen supersede narrative per NB1, document the historical read) and the limit section (declare the fourth limit in the same plain voice as the other three). Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "render green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "render green (m4), sentence already corrected as part of that change"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "sentence corrected in code; doc sections updated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "code sentence corrected (in m4); docs/CHECKLIST_SCHEMA.md compliance-signal section corrected (NB1 fresh-agent/offender ambiguity fixed, historical read documented) and fourth limit declared in the limit section"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6-fix-pinned-test": {
+      "id": "m6-fix-pinned-test",
+      "title": "Fix test_compliance_line_is_absent_once_the_recorded_begin_is_superseded",
+      "imperative": "Rename and rewrite this test so it asserts the honest fact: the live line goes absent AND the historical line still names the retained begin; correct the docstring and the 'a fresh agent's understanding' label to say it exercises the offender's own close. Also update _expected_note and the other pinned-string tests (lines using it) to the corrected two-line text. Do not delete the test.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "doc/sentence done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "doc/sentence work done (m5)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "corrected test passes; other pinned tests updated to match and pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-fix-pinned-test-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-fix-pinned-test-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-seam-measurement": {
+      "id": "m7-seam-measurement",
+      "title": "Two-worlds seam measurement (H vs D) through the real CLI",
+      "imperative": "Write a probe script under .agent-work/issue-467-trip-semantics/ (own temp fixture spine/gauge, NOT execute.json) that builds World H (compliant close, no over-the-line begin) and World D (runaway: refused begin, released begin, offender's own close), runs `current` at the seam in each through the real CLI subprocess with a real gauge.json, and prints both rendered outputs verbatim. Confirm they differ and D names the true total. Attest c1 with both outputs pasted.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "pinned test fixed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "pinned test fixed (m6)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "H and D outputs pasted, differing, D names true total",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "H and D differ at the seam through the real CLI/gauge, no mock; D names true total (2); TRIP HISTORY renders in D only. See g4rw_m7_seam.txt / probe_seam_h_d.py"
+        }
+      ],
+      "constraints": [
+        "real CLI subprocess",
+        "real base_dir/gauge.json",
+        "no mock in advisory path"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m8-probe-rerun": {
+      "id": "m8-probe-rerun",
+      "title": "Re-run reviewer's probe_clearing.py",
+      "imperative": "Run .agent-work/issue-467-trip-semantics/g4-review/probe_clearing.py unmodified against the fixed engine and paste its output. If it needs a mechanical string-matching edit to keep running (e.g. it only greps for TRIP LEDGER), make the minimal edit, say so explicitly, and show the diff -- do not rewrite it into agreement. Confirm the third row (the offender's own close) has changed from the B1 measurement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "seam measurement done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "seam measurement done (m7)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "probe re-run output pasted; third row changed; any edit shown",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "probe_clearing.py re-run with a minimal mechanical edit (added TRIP HISTORY detection to show(); diff in g4rw_probe_clearing_diff.txt). Third row now shows RENDERED LINE: None but RENDERED HISTORY names 2 begins (previously nothing rendered at all). Also found+fixed a self-reference bug: the live sentence originally quoted the literal phrase TRIP HISTORY, which made substring search for the historical line match the live line too; reworded to 'the line below, if present, is not.'"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m9-mutations": {
+      "id": "m9-mutations",
+      "title": "New mutations logged (N20+), including the keying-collapse mutant",
+      "imperative": "Add mutations to g4-mutation-log.md continuing at N20: the new selector dead-coded to return []; the historical line dropped from one of the two HARD sub-branches; and the historical selector keyed to the live why-record (made identical to the live one) -- this last one must be killed AT THE SEAM (by the m7/m3 test), because it re-creates B1 exactly. Sanctioned route: edit in place, run tests, revert with git checkout --, assert git diff --quiet clean before the next. Watch for SUBFAILED vs FAILED and crash-vs-behavioural mutants (recast crashes).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "probe rerun done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "probe rerun done (m8)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new mutations logged with named killing tests and totals; keying-collapse mutant killed at the seam; git diff --quiet clean between mutations",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && git diff --quiet -- scripts/checklist_engine.py; echo exit=$?"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-mutations-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m9-mutations-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && git diff --quiet -- scripts/checklist_engine.py; echo exit=$?",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m10-artifact-corrections": {
+      "id": "m10-artifact-corrections",
+      "title": "N17 correction + CHECK_THAT_CANNOT_FAIL.md line-172 overclaim correction",
+      "imperative": "In g4-mutation-log.md, visibly correct the N17 entry per the handoff's exact facts (NameError/crash reclassified, behavioural total 1, state the correction rather than silently rewriting). In CHECK_THAT_CANNOT_FAIL.md, correct the 'Every one of this gate's 25 tests is written this way' overclaim to what is true (one was negative-only, name it).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "mutations logged",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "mutations logged (m9)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both artifact corrections made visibly",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "N17 corrected in place (CORRECTION block, g3 M15 precedent): NameError/crash reclassified, behavioural total verified empirically at 1 failed (see g4rw_n17_verify.txt). CHECK_THAT_CANNOT_FAIL.md line ~171 corrected: 24/25, named the negative-only test and its rework fix"
+        }
+      ],
+      "constraints": [
+        "do not retro-edit implementer/reviewer result files or earlier handoffs"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m11-full-suite-and-scope": {
+      "id": "m11-full-suite-and-scope",
+      "title": "Full suite, targeted collection check, scope check",
+      "imperative": "Run the full suite (FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, real exit code captured via redirect+echo $?) and the targeted -k 'ledger or compliance or trip_log' run (confirm it collects >0, not exit 5). Compare full-suite counts to the 1858 passed/2 skipped/821 subtests/exit 0 baseline and explain any delta. Run git diff --stat and confirm every changed path is inside the allowed scope. Assemble and send IMPLEMENTER_RESULT to commander-w4-467-h.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "artifact corrections done",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "artifact corrections done (m10)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite passes (or delta explained); targeted run collects; git diff --stat all in scope; result sent",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests > C:/Users/fredc/.claude/jobs/cdcd8db2/tmp/g4rw_full_suite.txt 2>&1; echo exit=$? >> C:/Users/fredc/.claude/jobs/cdcd8db2/tmp/g4rw_full_suite.txt; tail -20 C:/Users/fredc/.claude/jobs/cdcd8db2/tmp/g4rw_full_suite.txt"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m11-full-suite-and-scope-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m11-full-suite-and-scope-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests > C:/Users/fredc/.claude/jobs/cdcd8db2/tmp/g4rw_full_suite.txt 2>&1; echo exit=$? >> C:/Users/fredc/.claude/jobs/cdcd8db2/tmp/g4rw_full_suite.txt; tail -20 C:/Users/fredc/.claude/jobs/cdcd8db2/tmp/g4rw_full_suite.txt",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "impl-467-g4rw-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T18:21:45.742639+00:00",
+    "last_heartbeat": "2026-08-08T18:58:16.233979+00:00",
+    "claimed_by": "implementer:g4-rework",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T19:02:57.028124+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:22:12.962032+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-selector-red",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:23:29.800116+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-selector-green",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:24:06.759171+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-render-red",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:25:21.671497+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-render-green",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:28:58.828131+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-sentence-and-doc",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:29:49.978832+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-fix-pinned-test",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:30:17.899601+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-seam-measurement",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:31:10.137901+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-probe-rerun",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:33:52.744797+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m9-mutations",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:39:06.198197+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "m10-artifact-corrections",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:41:42.593411+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "m11-full-suite-and-scope",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T18:58:16.233956+00:00"
+    }
+  ]
+}
