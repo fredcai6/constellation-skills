@@ -661,3 +661,28 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   *same* `--session-id` friction myself this session on `resume`, and separately learned the flag must
   come **after** the verb, not before. Three independent encounters with one under-documented
   contract. Triage candidates for closeout; not folded into wave 3.
+
+- `2026-08-08` — `RULING` (recommendation change, on this wave's own evidence): **the trip-band
+  question I have been holding for Tommy is probably the wrong question, and A2 already answers it.**
+  What W3-C's trip actually cost: **nothing but a relaunch to open a PR.** It tripped on `m3-verify`
+  — the *wrap-up* gate — with both fixes implemented, both before-states captured, both directions of
+  #488 verified and the full suite green at 1789. The work was done. The trip cost the mechanical act
+  of opening a PR and writing a result artifact.
+  Re-reading wave 2 in that light: its 6-of-10 relaunches were **the same shape** — every one at the
+  plan seam or the wrap-up, none losing work. I recorded that as "the single largest drag on the
+  wave" and framed the remedy as retuning the band. On this evidence that framing is wrong twice
+  over. First, a band tuned lower or higher does not change what a late trip costs; it changes only
+  *when* the same relaunch happens. Second, and more to the point:
+  **W3-C's trip was cheap precisely because it wrote a `refresh-request` and handed off** — which is
+  **A2's design already working, ahead of A2 being built.** A2 converts a trip from a refusal into a
+  change of instruction, with a DIGEST carried on the handoff-bearing advance; W3-C's `current`
+  carried exactly that (`REFRESH REQUESTED: m3-verify` alongside a DIGEST naming the extracted
+  function), and a cold successor picked it up at 4% fill with nothing re-derived.
+  **So the recommendation I take to Tommy changes:** not "retune 17–21%", but "the band is doing its
+  job; the expensive part is that a trip still costs a full agent, and A2's round-trip
+  done-condition (DC5: trip → handoff → refresh → resume, verified against what the tripped agent was
+  mid-way through) is the thing that makes it cheap." Wave 3 just ran that round trip successfully
+  and by hand. **That is a live positive control for A2's central claim**, collected before A2 has an
+  issue cut — worth stating at the boundary, and worth pointing A2's Commander at.
+  Recorded as a change of my own position, not as a new finding: the measurement did not change, my
+  reading of it did.
