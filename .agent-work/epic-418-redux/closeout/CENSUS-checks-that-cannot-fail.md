@@ -85,6 +85,26 @@ defect rather than removing it.
 | 18 | **#484's own suggested fix** | Substituting the branch while keeping `--jq 'length > 0'` converts a check that **cannot pass** into one that **cannot fail** — because the engine's verdict is **returncode-only**, and that command prints `false` and **exits 0**. Verified: `gh pr list --head 'no-such-branch-xyz-418' ... ` → `false`, `REAL_EXIT=0`. The suggestion appears verbatim in the issue that coined "a check that cannot pass" for this repo. |
 | 19 | **#501's boundary-freshness variant** | The stateless design — refuse unless `NEXT_WAVE.boundary_id` is the last verified `TRANSITION` in the log — was killed against this epic's own live artifacts: run early, the new boundary is not logged yet, so the stale boundary **is** the last entry. **Green in exactly the world it was written to catch.** Deferred with a falsification rather than skipped. |
 
+### F. Added 2026-08-08, from wave 5's own execution — readings with no provenance
+
+Both were found by agents *doubting a number they were handed*, which is the fourth finder in the
+list below and the only one that scales.
+
+| # | Specimen | The identical signal |
+|---|---|---|
+| 20 | **The inherited gauge** (#481, #477) | A fresh agent reads its **predecessor's** context fill until its own first tool call lands. The reading carries **no timestamp, no owner, and no staleness marker in `current`** — an inherited 19% is byte-identical to a self-measured 19%. Verified: `gauge.json` said `observed_at 23:18:53Z`, **nine minutes before the agent reading it existed.** |
+| 21 | **"A refresh-request exists"** (#510, #500) | The refresh-request survives a boundary trip; the **DIGEST does not**. So any check asserting the request was filed passes in both worlds — the one where the handoff carried the run's knowledge, and the one where it carried nothing. #510's own acceptance names this trap explicitly. And because a request has **no served state** (#500), a successor cannot tell whether the one it is looking at has already been answered. |
+
+**Specimen 20 is the most expensive on this list, because its failure mode is a loop.** Relaunch →
+inherit the stale number → trip → hand off → relaunch, indefinitely, **with every cycle looking like
+correct doctrine being followed.** Four crews were relaunched within a few minutes on 2026-08-08 and
+it was about to happen four times over. It was caught because one fresh Commander asked whether the
+reading was actually its own instead of obeying it.
+
+The generalisation both share: **a value with no provenance cannot be checked.** Not "is hard to
+check" — cannot. There is no predicate over `0.190464` that distinguishes mine from yours. The fix is
+never a better check; it is attaching *when* and *by whom* at the point the value is written.
+
 ---
 
 ## What actually finds them
@@ -108,6 +128,5 @@ the argument for why it is load-bearing rather than pedantic.
 ## What this census is not
 
 It is **not** a claim that every check here is worth fixing, nor that the pattern is rare enough to
-enumerate exhaustively. Nineteen specimens in one epic by actors *looking for them* is a lower bound,
-not a total. The honest reading is that this is a **base rate in verification code**, and the useful
+enumerate exhaustively. Twenty-one specimens in one epic by actors *looking for them* is a lower bound, not a total. The honest reading is that this is a **base rate in verification code**, and the useful
 response is a habit — run it against a failing case — rather than a list to work through.
