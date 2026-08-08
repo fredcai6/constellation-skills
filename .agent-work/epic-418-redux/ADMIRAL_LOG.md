@@ -1982,3 +1982,19 @@ delivered twice today, so its silence carries information.
 engine on tool use, never fetched by the agent* — and I spent a tool call trying to *pull* an answer
 the harness had already *pushed* me twice. Recorded because the epic is about mechanisms whose
 signal you have to know how to read, and I misread my own.
+
+**Checked a real sweep risk; the existing control already covers it, so I spent nothing on it.**
+The g1 reviewer's evidence is **23 untracked files** in the wave-4 worktree — the `probe-scratch`
+and `probe3-scratch` worlds, `red-repro-431-probe-literal/`, `fowler-pass.json` — with **0
+committed** so far. Not gitignored, so the crew will commit them at gate close as both predecessors
+did at their seams.
+
+If the crew died first, the harvest gate catches it: the sweep check hashes each untracked file and
+asks git whether it knows the blob, and it was **mutation-tested with a canary this morning** before
+I let it authorise any deletion. All 23 would report `AT-RISK` and `HOLD`.
+
+**Deliberately did NOT message the crew about committing more often.** My messages are a charge
+against its context budget — that is the operating change I made two hours ago after my own two
+messages pushed instance B from 0.147 over the 0.15 line. The risk is already covered by a control I
+have verified; spending a live crew's headroom to re-cover it would be the more expensive mistake.
+Recorded here instead, which costs nothing.
