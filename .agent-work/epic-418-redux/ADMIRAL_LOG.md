@@ -2548,3 +2548,60 @@ Crew reading **15.8%, over the 0.15 hard line**, sitting **between gates**. That
 off at, and five predecessors have done it cleanly with nothing lost. **Not acting on it:** rule 7 —
 wait for the idle notification, stop the predecessor, then dispatch, in that order. The one rule that
 has ever caught anything, and it caught a healthy-crew relaunch earlier today.
+
+## 2026-08-08 — g3 seam: install sync, and three rulings
+
+**RULING | fixed the stale installed reviewer bundle, at the one safe moment.** Instance E reported
+that the reviewer skill's **installed engine bundle is stale** — it refuses `amend` on surveys, which
+is **why the g1 reviewer force-waived its Fowler postcondition**, while the g2 reviewer's amend
+worked first try against a newer copy. Verified: installed `constellation-reviewer/SKILL.md` was
+dated **2026-07-19**, three weeks behind the repo.
+
+Sequence, deliberately: `--dry-run` first (clean plan) → plain run **REFUSED with exit 2**,
+*"already exists; rerun with --force"*, **at the first skill, before writing anything** (confirmed by
+mtimes: nothing touched) → then **`--skills constellation-reviewer --force`**, exit 0, and verified
+the bundled engine is now **byte-identical to the repo's**.
+
+**Scoped to one skill on purpose.** Install sync is PRE-CLEARED in the contract for all 20, but
+force-overwriting the user's entire global skills directory mid-wave has a blast radius unrelated to
+the defect. **One skill, one demonstrated defect, one verification.** Done at a seam with **no crew
+running**, which is the only safe window.
+
+**Did NOT pass `--wire-hooks`.** The installer reports the Context Governor is UNWIRED in the user's
+global settings and offers to add it — that is **#458**, a production-default change to Tommy's
+machine, and `surfaced` by the contract. Not mine, even though the flag was right there.
+
+**RULING | tc1 (`docs/agents/GLOSSARY.md:13`) — fix it as its OWN COMMIT on the branch, outside any
+gate.** I earlier said "pull it into g2's scope"; g2 has since closed without it, and E correctly
+reports it is outside the frozen scope of **every** gate. So: the successor fixes that **one line**
+as a standalone commit on `epic-418/a2-467-trip-semantics`, **not** inside a frozen gate and **not**
+by amending one. It ships in #467's PR because it is the document that describes the behaviour the PR
+changes. Rationale unchanged and now stronger with two crews concurring: it **teaches the exact
+belief #431 came from**, from the canonical source, to every future agent — root-caused by the crews
+as **shotgun surgery**, the same fact in four hand-maintained places, three updated and one missed.
+
+**RULING | settle experiment replacement ACCEPTED.** My DC4 approval required a *named* settle
+experiment for `decision:execute-gate-reserve-value` (30000, `@grade: guess`). E and its implementer
+**independently confirmed the authored experiment is not runnable**: `gauge.json` keeps only the
+latest reading and the per-gate context manifests carry no fill value. Its replacement — **log
+`(gate, fill_fraction)` at each gate boundary**, so the number becomes measurable after a handful of
+commander runs — is accepted as the named experiment. It is **new instrumentation, outside frozen
+scope**: triage candidate, not this issue.
+
+**Second instrument defect for the ledger:** the two review surveys **share item ids**, so their
+mechanical sidecars collide — **g1's were overwritten by g2's run**. Triage candidate.
+
+**The g2 reviewer earned its verdict, and the method is the point.** It **refused to trust the
+implementer's saved RED files**, rebuilt the pre-change engine from `git show 38f0b448^`, and ran the
+new tests against it: **16 failed / 9 passed**, the permanent DC2 guard red for the right reason.
+Then it audited `_refresh_requests_anywhere` against `has_pending_refresh_request` and confirmed a
+**strict superset that does not filter superseded** — *without that audit the whole no-pending-request
+precondition would have been decorative*. **PROBE D** ran #431 on both engines side by side: old says
+`advance` is BLOCKED and hands the literal `<why-id>`, rc 1, gate stuck, digest pre-trip; new says the
+instruction has changed, hands a working command, rc 0, gate closes, digest fresh, zero
+refresh-requests left, next gate still refused. **That is the fix verified on what the agent is
+TOLD** — the constraint I set, met exactly.
+
+**And the line I would put in front of Tommy:** E crossed hard after closing `g3-implement`, refused
+to start `g3-review`, and wrote — *"the fix now shipped in this tree would have refused me if I had
+tried. **I did not need the engine to refuse me.**"* Sixth clean seam, nothing lost.
