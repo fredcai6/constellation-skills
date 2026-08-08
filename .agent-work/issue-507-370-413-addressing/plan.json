@@ -267,7 +267,8 @@
           "id": "c1",
           "statement": "PR opened citing a closing keyword ONLY for the issue(s) m1 confirmed collapse; any distinct issue is referenced (not closed) with a comment explaining the distinction and the symptom-only relief",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "PR #511 opened (epic-418/w5-crew-addressing -> main), body cites Closes #507 + Closes #370 only, quotes each issue's collapse argument, references #413 plainly (Related to #413, not a closing keyword) with the distinct-root-cause explanation and Pre-Ruling 3 lineage note. Comments posted on all three issues (507, 370, 413) with the matching collapse-confirmation / distinction text. No issue manually closed."
         },
         {
           "id": "c2",
@@ -276,7 +277,8 @@
             "kind": "command",
             "command": "gh pr view epic-418/w5-crew-addressing --json number,url"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-pr-and-issues-2"
         }
       ],
       "constraints": [
@@ -284,7 +286,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -295,6 +297,17 @@
           "payload": {
             "seam": "m5-pr-and-issues",
             "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-pr-and-issues-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "gh pr view epic-418/w5-crew-addressing --json number,url",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -309,13 +322,14 @@
   "refusals": 5,
   "engine_session": {
     "session_id": "impl-w5-addressing-b",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T23:29:00.569977+00:00",
-    "last_heartbeat": "2026-08-08T23:40:22.528188+00:00",
+    "last_heartbeat": "2026-08-08T23:43:08.240247+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T23:43:15.949365+00:00"
   },
   "trip_ledger": [
     {
@@ -425,6 +439,13 @@
       "why": "tests/test_crew_delivery_addressing.py written and green (2/2). Test A characterizes today's instance-name addressing misrouting after a relaunch, transcribed directly from #507's evidence table (no in-repo function exists for SendMessage resolution -- it's a harness property outside this repo). Test B proves the job/gate-addressed fix using REAL run_crew.record_external_attempt/load_registry/verify_external_result and recover_crews.classify_registry (no mocks): a simulated relaunch -- fresh registry reloads sharing no Python identity with the dispatcher, across two different asking-instance labels never passed into either function -- discovers STATE_COMPLETE from the durable registry+result alone. Mutation-verified both assertions are load-bearing, not vacuous (evidence in c2 attestation note). Proceeding to m5: push branch, open PR citing Closes #507 + Closes #370 only, comment #413 as distinct without a closing keyword.",
       "mechanical": false,
       "ts": "2026-08-08T23:39:49.675812+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-pr-and-issues",
+      "why": "Committed and pushed epic-418/w5-crew-addressing (0148638d). PR #511 opened citing Closes #507 + Closes #370 only, quoting each body's collapse argument; #413 referenced plainly (not closed) with the distinct-root-cause explanation and symptom-relief note; Pre-Ruling 3 lineage-resolves-to-origin bug noted in the PR body. Comments posted on #507, #370, #413 matching the PR's framing. c2 command check (gh pr view) verified green. No issue manually closed -- merge does it. All five gates (m0-m5... m0-m4 already complete) done; plan complete.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:43:08.240226+00:00"
     }
   ]
 }
