@@ -1,0 +1,80 @@
+{
+  "work_id": "issue-456-g6-review",
+  "diff_ref": "git show 55b95314 -- scripts/code_map/extract.py scripts/code_map/render.py tests/test_code_map.py (gate g6: stale-tag detector)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, scripts/code_map module docstrings, skills/constellation-reviewer/references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "extract.py's run() grew from roughly 54 lines to 86 (confirmed by reading the function end to end at its current location, extract.py:1017-1103), adding two new concerns on top of its existing one: reading the PREVIOUS extraction's statements.jsonl before overwriting it (~14 lines), and computing + emitting the stale-slug diff (~17 lines), bundled into a function that already did file discovery, per-file extraction, and report writing. Not blocking -- each new block is directly about the same store this function already owns writing, and both blocks are short and single-purpose. Worth a future split (e.g. `_read_old_hashes(outp)` / `_diff_stale(old, new)` helpers) if this function grows a fourth concern.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "Extractor gains one field (self.anchor_hashes, a plain dict) and one modified method (anchor()); no meaningful growth in responsibility count for the class as a whole.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "No byte-identical or near-identical block introduced. The two 'FAIL ...' print statements in render.py (duplicate id, stale tag) share a style but not duplicated logic -- each prints a different message shape from different source data.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "span_hash(node) operates only on its own `node` argument. Extractor.anchor()/run() operate on self's own state (self.anchor_hashes, self.anchors) and their own local variables -- no method reaches into another object's internals more than its own.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "extract.py's new `anchor_hashes[slug] = (sym, h, self.rel.replace(...), ln, col)` (extract.py, Extractor.anchor()) is a bare positional 5-tuple, later unpacked in run() as `sym, h, sfile, sline, scol = new_hashes[slug]`. Its shape is documented only in a comment (`# slug -> (owning symbol, span_hash) -- ...`), not in the type system -- a future edit that reorders or drops a field would fail silently rather than raising. This is a genuinely new shape in this file (self.anchors is a plain scalar dict; no prior 5-field positional tuple exists in extract.py). Not blocking -- the tuple is created and consumed within ~10 lines of one class/one function, immediately unpacked, low realistic risk -- but a small NamedTuple would remove the silent-reorder risk and give the comment's documentation the type system's backing.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "The 16-char hex-digest hash is a bare string, consistent with how slugs/ids are already represented as bare strings throughout extract.py -- not a new primitive-obsession instance, a carried-forward convention.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "span_hash(node) takes exactly one parameter. No existing signature grew a parameter in this diff.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The whole diff is one cohesive feature (span-hash staleness detection) touching exactly the three files that feature's shape requires: extractor, renderer, tests. Not a change rippling across unrelated call sites for a small edit.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "extract.py changes for one reason (persist + diff the span hash); render.py changes for one reason (surface the flag in the report and stdout). Confirmed by reading the diff hunks directly -- neither file mixes two unrelated reasons to change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "`(st.get(\"d\") or {}).get(\"span_hash\")` is a defensive null-guard on one dict lookup, not a chain traversing multiple objects. Tuple unpacking (`sym, h, sfile, sline, scol = new_hashes[slug]`) is a single dict lookup, not chained navigation.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "No unused hook, stub, or ignored parameter. The stated forward-compatibility with gate g7 (reusing the same `[slug]` anchor allocator) is NOT new surface this diff adds for g7's benefit -- the anchor allocator already existed pre-g6; g6 only hashes and diffs what that existing allocator already mints. Every line added here is exercised by this gate's own 12 tests.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "Docstrings and inline comments state design decisions and their reasoning (span_hash's named blind spot on local-variable renames; why the docstring is stripped before dumping; why old_hashes is read before the store is overwritten; why a stale tag is advisory rather than build-failing) rather than restating what the code already says. Confirmed by reading each comment against its adjacent code -- none narrates the obvious.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}
