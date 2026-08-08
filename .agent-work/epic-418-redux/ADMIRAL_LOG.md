@@ -3556,3 +3556,46 @@ than what a future agent should do.
 `verify_episode_captured.py` takes the work-id **positionally**, not as `--work-id`; and
 `verify_episode_observations.py` takes **no file arguments**, it scans the store. Both were exit-2
 usage refusals, both re-run correctly.
+
+### FINDING (#508) — my own loaded doctrine went stale, and the install sync did it
+
+**Found by not trusting a step.** I was about to compile the closeout lessons-auditor brief and
+stopped to ask whether that step still existed, **because #447 merged inside this epic**. It does not.
+
+My in-context `constellation-admiral` was loaded at session start. The install sync I ran an hour
+later — correctly, all nine bundles were pre-merge — replaced `SKILL.md` on disk underneath me. The
+installed file is **right**; the stale copy is the one inside me.
+
+| My loaded doctrine says | Verified on disk |
+|---|---|
+| dispatch `constellation-lessons-auditor` | `skills/lessons-auditor/` does not exist |
+| append the retrospective to `.agent-work/AGENT_FEEDBACK.md` | does not exist |
+| harvest the durable **trio** | harvest is now **one** file, `CONSTELLATION_FEEDBACK.md` |
+| write deltas via `apply_lessons_delta.py` | does not exist |
+| *(absent)* | `apply_episode_delta.py` needs `--store-root episodes` **every** invocation |
+
+Checked with `ls` and `grep -c`, not from memory. The real closeout is **five** steps, not seven.
+
+**RULING — closeout runs against the doctrine on disk, not the one in my context.** I will re-read
+the installed `SKILL.md` closeout section at the start of closeout and follow that. Recorded here
+because the temptation is to trust what is already loaded; it is the cheaper read and it is wrong.
+
+**Why this is a finding and not just my mistake.** Three of the five diverged steps fail loudly — a
+missing skill, a missing file. **One fails silently, and it is the dangerous one:**
+harvest-before-sweep over a retired filename reports *"nothing to collect"*, which is byte-identical
+to a genuinely empty harvest. An Admiral on the stale doctrine would have harvested two names that no
+longer exist, found nothing, concluded there was nothing, and swept the worktrees — **dropping the
+export that was there under the name the current doctrine uses.** A check that cannot fail, sitting in
+the step whose whole job is to stop a run's learning being dropped.
+
+**And there is no version of this run that avoids it.** Skipping the sync leaves five crews on an
+engine without #467. Running it invalidates my own doctrine. Only noticing is available.
+
+**Self-audit against the corrected doctrine, done immediately:** my three episodes were applied
+*without* `--store-root episodes`. Outcome re-derived rather than assumed —
+`verify_episode_captured.py epic-418-redux` reports them in
+`C:\Programs\constellation-skills\episodes\active`, the correct store. The default resolved right; I
+will pass the flag explicitly from here.
+
+Filed as **#508**, with #344 named as its mirror (that issue is the corpus going stale relative to
+main; this is the agent going stale relative to the corpus, **caused by the fix for #344**).
