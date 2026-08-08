@@ -4,8 +4,16 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: `g5-remediate` (NOT yet dispatched — handoff written and ready)
-- **PID**: none in flight — parked at a context seam the engine itself named
+- **step**: `execute` (in-progress) · **slug**: `g5-remediate` — **DISPATCHED** 2026-08-08
+- **PID**: crew `constellation/issue-456/g5/implementer/attempt-2`, Agent name `g5-remediator`,
+  model `sonnet`. Recover with `SendMessage` to that name (externally dispatched —
+  `recover_crews.py` will report it RESUMABLE, which means nudge in place, never relaunch).
+- **REGISTRY GOTCHA (new, 2026-08-08):** `recover_crews.py` reported `0 unresolved` while
+  `run_crew.py` still REFUSED the launch as a duplicate — the two disagree. An externally
+  dispatched crew stays `running` in the registry until you close it explicitly with
+  `run_crew.py --verify-result <session-name>`. That is the correct close for a crew that
+  finished; `--abandon` would misrecord a successful attempt. Both `g5` attempt-1 entries
+  (implementer and reviewer) were verified and closed this way before attempt-2 registered.
 - **expected artifact**: `.agent-work/issue-456/crew-handoffs/g5-remediate-RESULT.md`
 - **lease**: `commander-issue-456` — re-claim IDEMPOTENTLY (same id, NOT a takeover, no `--force`)
 
