@@ -2418,3 +2418,23 @@ both-sides assertion honestly scoped. The fix is now being built against that de
 rather than an assumed one, carrying the reviewer's reframe: **#431 is instruction-conformance, so a
 test worded "the advance is no longer blocked" verifies something that was never blocked and passes
 in both worlds.**
+
+**Applied my own finding to myself: 54.9% fill, never once asked to stop.** Against a **0.15** hard
+line, on the same machine and hook that stopped five Commanders today. **The governor has never
+prompted me and by construction never will** — the trip evaluates only on a gated verb, and this
+role sits inside `execute` for the entire epic. That is the DC1 boundary I had instance D record in
+its accounting, now observed on the role that wrote it.
+
+So I did the thing the design cannot make me do: **spent headroom on the handoff before needing it.**
+The state note was 379 lines of comprehensive reference and **not a handoff** — it never answered
+*"what do I do in the first sixty seconds."* It now opens with an ordered cold-start block:
+`truth.sh` first, then the engine projection, then **is a Commander alive** (with quiet-is-not-dead
+stated, and the idle notification named as authoritative), then the relaunch drill in the order that
+matters — **wait for the notification, stop the predecessor, then dispatch** — then the seven rules.
+
+It also states, at the top where a successor will actually meet it, that **nothing else is blocked on
+Tommy** but the scope call and four cheap fixes, so a fresh Admiral does not stall trying to work out
+what needs asking.
+
+No handoff is being executed. This is the preparation the design assumes someone does while they
+still have room, and which nothing in the system will prompt.
