@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "decision": "stop",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 4's exit criteria are met. #467 merged (PR #505, c875ee23) and closed; #431 verified dissolved and closed; main green at 1867 passed / 2 skipped / 829 subtests / real exit 0 on the final merged tree, exit read from the pytest process rather than through a pipe. The acceptance round trip closed on two dispatched agents with B cold-started from `current` alone -- verified by the Admiral against the captured prompt bytes, not on report. DC6 is reported PARTIAL and was not rounded up. Forecast fit: A2 was forecast as provisionally three issues; it was cut as one (#467) carrying six done-conditions, and landed as one wave with an in-wave rework cycle. The forecast's shape was wrong in count and right in content. Plan health: The plan is intact. What changed is not the plan but what the epic knows: the check-that-cannot-fail defect the epic exists to remove was found repeatedly inside this one wave, including inside the fix for it and inside the verifier written to measure it.",
+    "epic_done": "The epic is NOT complete. A2 is done and B extended was already done. F (#424), C (#421) and E (#423) remain unlaunched, and whether the epic continues into them or closes at A2 is a human scope decision that is surfaced and outstanding. Closeout has not run.",
+    "good_enough": "Preserved and load-bearing throughout. Every verdict this wave was re-derived rather than accepted on report: the Commander reproduced the g4 BLOCK in its own shell with the reviewer's own probe; it broke the ledger write branch itself and got 29 failed / real exit 1; the g5 reviewer broke the acceptance verifier's inputs with 11 attacks beyond the shipped nine; and the Admiral independently re-derived B's prompt bytes and hash, and re-ran the suite on the merged tree. DC6 was reported partial rather than rounded up."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D1",
+      "action": "repair_current_wave",
+      "reason": "Repaired in-wave and re-reviewed. The first ledger implementation was erased by the close the band orders; fixed additively in e33f9eb1 with the live selector's keying at zero diff, and the test that pinned the defect as intended was renamed and corrected. Re-review APPROVE, 0 blocking.",
+      "issue_created": false
+    },
+    {
+      "id": "D2",
+      "action": "amend_forecast_or_parked",
+      "reason": "Filed as #504 and deliberately deferred: touching that code would have voided the review the rework had just earned, and which verb should surface the ledger at closeout is an open design question rather than a typo. DC6 stays PARTIAL as a consequence.",
+      "issue_created": true
+    },
+    {
+      "id": "D3",
+      "action": "amend_forecast_or_parked",
+      "reason": "The epic's central finding generalised: the defect concentrates in machinery whose job is to be trustworthy and which nothing reports on. Filed as #501/#502/#503 and a comment on #313. No wave action.",
+      "issue_created": true
+    }
+  ],
+  "current_wave": {
+    "objective": "Wave 4: cut and land A2 -- make a HARD context reading change the instruction instead of refusing the verb, and make an over-the-line BEGIN observable to the next reader.",
+    "exit_criteria": [
+      "#467 merged to main with the suite green on the final merged main.",
+      "#431 verified dissolved by a RED that no longer reproduces, with the reading asserted read first.",
+      "The trip -> handoff -> refresh -> resume round trip closed on real dispatched agents, with the successor cold-started from `current` alone and its prompt carrying no re-briefing.",
+      "Every done-condition reported at its true state, with partials named as partials rather than rounded up."
+    ],
+    "issues": [
+      {
+        "id": "467",
+        "title": "A2: trip semantics -- a HARD reading changes the instruction instead of refusing the verb",
+        "desired_outcome": "The HARD band guards the verbs that BEGIN work (`start`, `reopen`) rather than `advance`, so the advance that carries the handoff is never blocked and the DIGEST the trip depends on is written normally. An over-the-line BEGIN leaves a record that survives the close the band orders.",
+        "useful_now": "The defect fires on every agent that trips, which on this project is every long-running Commander. It fired four separate times during its own fix.",
+        "appetite": "One wave, one Commander, rework tolerated.",
+        "acceptance_or_falsification_evidence": "A RED established at unmodified HEAD that no longer reproduces after the fix, plus a full round trip closed on two dispatched agents where the successor's prompt is the engine's `current` output and nothing else, byte-asserted in code.",
+        "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+        "hard_constraints_no_gos": [
+          "No new CLI surface.",
+          "The live selector's keying must not change; widening it to match all why-records is refused.",
+          "A verdict is never reworded to fit a gate."
+        ],
+        "local_unknowns": [
+          "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+          "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "tests/test_checklist_engine.py",
+          "docs/CHECKLIST_SCHEMA.md",
+          "docs/agents/GLOSSARY.md"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "F (#424) -- MCP front door for the engine. Unlaunched, and better specified than before wave 4, because the wave established which verbs the governor guards and what a handoff must carry.",
+      "entry_conditions": [
+        "A human decision to continue the epic past A2."
+      ],
+      "why_likely": "The engine's verb surface is now settled enough to wrap, which was the open question before."
+    },
+    {
+      "outcome": "C (#421) and E (#423) -- unlaunched. E still carries the HITL batch confirms outstanding before this epic began.",
+      "entry_conditions": [
+        "The same scope decision, plus the human confirms E needs for its batch."
+      ],
+      "why_likely": "Neither was touched by wave 4, so their shape is unchanged."
+    },
+    {
+      "outcome": "A follow-on cluster now exists that did not before: #500, #501, #502, #503, #504 -- five cheap issues, all in verification or reach-up machinery, all found while doing something else.",
+      "entry_conditions": [
+        "Any future wave; none of them blocks another."
+      ],
+      "why_likely": "All five were verified against source before filing, and each has a named cheapest fix."
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether the epic continues past A2 into F, C and E, or closes here.",
+      "affects": "Everything after closeout.",
+      "settle_by": "Human scope decision.",
+      "current_evidence": "Surfaced to the human and outstanding; nothing in the run depends on it.",
+      "next_probe": "Ask at the wave-4 checkpoint, which is now."
+    },
+    {
+      "unknown": "Whether the closeout-silence fix (#504) needs a new verb or only a render on `current` at a terminal checklist.",
+      "affects": "DC6 moving from partial to done.",
+      "settle_by": "The follow-on that picks up #504.",
+      "current_evidence": "The trip_ledger data is already on disk and is never deleted; only the render is missing.",
+      "next_probe": "Render the ledger on `current` when no gate is active and check a completed runaway differs from a clean run."
+    }
+  ],
+  "revised_parked": [
+    "#452 multi-spine attribution -- unchanged.",
+    "#458 ship the gauge writer in tracked settings -- sharpened by wave 4: the writer IS wired via untracked settings.local.json and was observed firing live, so the gap is distribution, not function.",
+    "#266 trip untested in anger -- now falsified; recommended for close as answered, with wave 4's four live trips as the evidence.",
+    "#371 artifact match cannot express 'one of' -- second instance recorded; the mirror defect (a check that cannot PASS) named."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-f-424",
+      "action": "keep",
+      "reason": "Unlaunched and still wanted; its cut is a human scope decision."
+    },
+    {
+      "id": "U-c-421",
+      "action": "keep",
+      "reason": "Unlaunched; same."
+    },
+    {
+      "id": "U-e-423",
+      "action": "keep",
+      "reason": "Unlaunched; still carries outstanding HITL batch confirms."
+    },
+    {
+      "id": "U-500",
+      "action": "keep",
+      "reason": "Filed this wave. The reach-up signal has no served state -- the defect that forced heuristic monitoring all epic."
+    },
+    {
+      "id": "U-501",
+      "action": "keep",
+      "reason": "Filed this wave. The wave-launch gate cannot run as the spine instructs."
+    },
+    {
+      "id": "U-502",
+      "action": "keep",
+      "reason": "Filed this wave. No provenance record names the engine build that produced a gate."
+    },
+    {
+      "id": "U-503",
+      "action": "keep",
+      "reason": "Filed this wave. --authority is enforced by nothing."
+    },
+    {
+      "id": "U-504",
+      "action": "keep",
+      "reason": "Filed this wave and deferred by ruling. It is what keeps DC6 partial."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave.issues",
+      "before": "Wave 4 as launched: #467 alone.",
+      "after": "Merged and closed; the wave is complete with no issue left open in it.",
+      "reason": "PR #505 merged on a green CI check and a green suite re-run by the Admiral on the merged tree."
+    },
+    {
+      "surface": "current_wave.exit_criteria",
+      "before": "A2's six done-conditions were expected to close outright at wave exit.",
+      "after": "Reported at their true state: DC1/DC3/DC4/DC5 done, DC2 done-by-different-means, DC6 PARTIAL. The done-conditions themselves are unchanged -- this records what the wave measured against them, not a revision of them.",
+      "reason": "DC2's literal text names a distinction the engine does not have (the line is drawn between verbs, not two modes of `advance`), and DC6 is partial because of #504, deferred by ruling. Neither was rounded up."
+    },
+    {
+      "surface": "backlog",
+      "before": "The cheap fixes were four unowned observations held as a human decision.",
+      "after": "Routed to the tracker as #500-#504 plus comments on #313/#442/#371/#266.",
+      "reason": "Human instruction on 2026-08-08 to include them in the plan."
+    }
+  ],
+  "wave_review_comment": "## Wave 4 review\n\n**One issue, one merge, one close -- and the wave found its own subject inside its own fix.**\n\n#467 makes a HARD context reading change the instruction rather than refuse the verb: the band now guards `start`\nand `reopen` instead of `advance`, so the advance that *carries* the handoff is never blocked. Zero new CLI surface,\nbecause `advance --why` already failed closed on silence and that `--why` **is** the DIGEST.\n\n**The blocking finding is the story.** The first trip-ledger implementation was erased by the very close the band\norders an agent to make -- at/over hard the only legal close is `advance --why`, that appends a new why-record, and\nthe selector matched only the live record. Measured at 0.20 fill: 1 after a refused begin, 2 after a released begin,\n**0 the moment the agent complies**. A three-gate runaway peaked at 2 and was **absent at the seam**, byte-identical\nto an agent that behaved perfectly. And a *passing* test ran the offender's path byte-for-byte while calling it\n\"a fresh agent\" -- a green test certifying the bug. Caught at review, reproduced by the Commander in its own shell,\nfixed additively with the live keying at zero diff.\n\n**The acceptance measurement is the strongest evidence this epic has produced.** Two dispatched agents on a separate\nspine; B's prompt was the engine's `current` output and nothing else (3754 bytes, sha256 `3da6411...`, asserted\nbyte-equal in code and independently re-verified by the Admiral). The trip fired on a *real* reading rather than a\nlarge plant, via a per-gate threshold that puts the hard line at 0.001 -- verified in force, because at 0.05 fill the\nengine renders the HARD band, which the default cannot do. And the handoff was made load-bearing: A had to invent a\nsix-hex nonce and was forbidden to write it to disk; B's gate required an item to *be* that nonce. B wrote it.\n**B could not have finished without reading A's understanding.**\n\n**Eight specimens of the check-that-cannot-fail defect were found in this one wave** -- four catalogued by the crew,\none inside the fix for those four, one in the acceptance verifier's own self-test, and the engine's `--authority`\nfield. Three more were found Admiral-side: the installer's interpreter probe, the wave-launch gate's skills-root\nguard, and the journal's missing instrument identity. **All three of those sit in verification and provisioning\nmachinery** -- the layer whose whole job is to be trustworthy, and which nothing reports on.\n\n**Reported honestly:** DC2 done-by-different-means, DC6 **partial**. #504 was filed and deliberately not fixed,\nbecause touching that code would have voided the review the rework cycle had just earned.\n\nThe trip fired live **four times** during its own fix, on four different Commanders, each of which handed off cleanly\nand stopped. #266's premise -- that the trip had never fired on a correct reading -- is falsified by the work itself.",
+  "revised_epic_body": "## Current planning truth -- after wave 4\n\n**A2 is complete.** #467 is merged (PR #505, `c875ee23`) and closed; #431 is verified dissolved and closed. Main is\ngreen at 1867 passed / 2 skipped / 829 subtests / real exit 0 on the final merged tree.\n\n**What shipped.** A HARD context reading changes the instruction instead of refusing the verb:\n`TRIP_HARD_GUARDED_VERBS = {start, reopen}`, a concrete `why_ref` in place of the `<why-id>` placeholder, an\nappend-only trip ledger for BEGINs over the line, and an unkeyed historical selector plus a `TRIP HISTORY` line so\nthe record survives the close the band orders. The glossary no longer claims HARD blocks `advance`, and the fourth\nlimit is declared in `CHECKLIST_SCHEMA.md` alongside the other three.\n\n**Done-conditions:** DC1, DC3, DC4, DC5 done. DC2 **done by different means** -- the engine draws the line between\nverbs, not between two modes of `advance`, so the done-condition's literal text names a distinction the engine does\nnot have. DC6 **partial** -- both lines were observed live and the historical line survives the mandated close, but\n#504 stands: once no gate is active, both go silent at closeout.\n\n**New follow-on cluster, all found while doing something else:** #500 (a refresh-request has no served state and the\ncompliant handoff erases its own signal), #501 (the wave-launch gate cannot run as the spine instructs -- its guard\naccepts the repo because the repo is named `constellation-skills`), #502 (no provenance record names the engine build\nthat produced a gate, with four builds live), #503 (`--authority` is validated only as non-empty, so human\nratification is enforced by nothing), #504 (the ledger goes silent at closeout).\n\n**Open scope decision, and it is the human's:** whether the epic continues into F (#424), C (#421) and E (#423), or\ncloses at A2. Nothing else is blocked on anyone.\n\n**What the epic now knows that it did not:** the check-that-cannot-fail defect is not an anecdote, it is a base rate.\nEleven specimens were found in a single wave, by five different actors, all of whom knew the wave was about that\ndefect -- and the ones the Admiral found all sit in the machinery that judges other work.",
+  "escalation": null
+}

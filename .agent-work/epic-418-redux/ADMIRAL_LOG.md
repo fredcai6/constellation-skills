@@ -3238,3 +3238,54 @@ Rule 7: notification received -> predecessor confirmed terminated -> **then** la
 Order `launch-orders/LO-467-j.md`. Told to warn its reviewer that **A and B were deliberately not
 dispatched through `run_crew.py`** — otherwise it finds an apparent process violation and reports a
 defect that is a deliberate design choice.
+
+- TRANSITION | boundary=w4-to-close | decision=stop | verified
+
+---
+
+## MERGE + BOUNDARY | 2026-08-08T21:53:34Z | wave 4 landed; w4-to-close exits STOP
+
+**PR #505 MERGED** at `c875ee23` (state=MERGED, mergedAt 2026-08-08T21:36:52Z, verified by `gh pr view`,
+not inferred from ancestry). **#467 CLOSED. #431 closed as verified dissolved**, with the four live trips
+this run recorded cited as confirmation.
+
+Gated properly: CI `test:COMPLETED:SUCCESS`, `mergeable=MERGEABLE`, merge exit **0** read on its own.
+Merge commit rather than squash, matching this repo's convention, so the branch's **36 commits of
+evidence survive** — #412's orphaning hazard applies to squash-merged branches and this is not one.
+
+**Re-verified on the merged tree rather than trusting the branch run:** 1867 passed, 2 skipped, 829
+subtests, **real exit 0** in 431.89s. Zero non-`.agent-work` files differ between the tested commit and
+merged main, so the shortcut was available — **I ran it anyway**, because `.agent-work/` is tracked here
+and at least one test filters on working-tree cleanliness.
+
+### The boundary packet refused me SEVEN times, every time on shape
+
+`w2-to-w3` refused four times on shape and I pre-staged a skeleton to prevent a repeat. **The skeleton
+was itself wrong** — it used `id`/`issue_ids`/`intent` where the contract wants
+`objective`/`issues`/`exit_criteria`. **A fixture built to prevent a class of error reproduced that
+exact error**, which is this epic's subject again, in my own instrumentation.
+
+**Two of the seven refusals were substantive and I was wrong both times:**
+
+1. `record_evidence_only` requires `issue_created=false`. I had classified D3 (the installer probe, the
+   launch gate, the journal, `--authority`) as **evidence_only while it had produced #501, #502 and
+   #503**. Those are not observations recorded and left — they are **deferred work with a tracker home**.
+   Reclassified `later_only`. **The verifier caught me mislabelling my own findings as less than they
+   were.**
+2. A fixed-boundary change requires `applicable=false` and a formal escalation packet. I had listed
+   `definition_of_done` as a material change — but **I did not change the done-conditions, I reported
+   what they landed at.** Corrected the surface. The distinction matters: proposing a change to a fixed
+   boundary is plan surgery needing human authority; reporting an outcome against one is not.
+
+Both times the fix was to correct **the packet**, never the flag. `INPUT OK / RESULT OK / RENDER OK`
+(8611 chars) at real exit 0.
+
+**Exit: `stop`.** Not "advance" — there is no next wave to authorize, because whether the epic continues
+into F (#424), C (#421) and E (#423) is a **human scope decision**, surfaced and outstanding. Wrote
+`NEXT_WAVE.json` (boundary `w4-to-close`, `launch_id: null`), `CURRENT_TRUTH.md` and `WAVE_REVIEW.md`.
+
+**`admiral-prelaunch` deliberately NOT run, and this is not a skipped gate.** It exists to authorize a
+launch and refuses any decision that is not `advance`/`replan`; with `stop` there is nothing to
+authorize. I validated the packet **directly against the same `verify_replan` module the prelaunch check
+loads** — the installed copy at `~/.claude/skills/constellation-replan/`, per #501, since the repo copy
+resolves the wrong skills root.
