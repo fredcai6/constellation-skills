@@ -3332,3 +3332,53 @@ is honestly `advance`, NEXT_WAVE names a real wave, and c3 passes with nothing b
 c3 needs a waive **on his authority**, and #506 is the defect that forced it.
 
 Wave 4 itself is **complete and merged** — nothing about this block touches that.
+
+---
+
+## FINDING | 2026-08-08T21:59:20Z | backlogged crew mail — three floats answered by events, one durable defect filed as #507
+
+A batch of crew messages landed after the wave had already merged. Read rather than skimmed, because
+"stale" is a claim that needs checking.
+
+**Three floats, all answered by events rather than by me — recording that they were answered, not
+ignored:**
+
+- **A1, the ninth field `why_ref`.** Recommendation was keep; it shipped kept. Worth preserving is the
+  Commander's **correction against its own float**: both arguments it had passed me were wrong (`_now()`
+  is microsecond precision, so "fragile at second granularity" was weak; and N7's 12-test radius proves
+  the *keying* matters but cannot distinguish "record it" from "derive it"). **The real ground:
+  `_latest_why_record` is not a function of ordering — a reopen appended after the trip changes any
+  "as of now" derivation.** Same verdict, sounder reason, self-corrected. That is the behaviour I have
+  been trying to get all epic.
+- **The historical render.** Approved and shipped; it is the fix that closed g4.
+- **The g5 citation question.** Overtaken: g5 ran a real round trip with two dispatched agents, so the
+  live trips became corroboration rather than substitute — which is exactly the standing frame.
+
+**#507 filed, and it is not stale.** Crew handoffs address an **ephemeral agent instance**. Three
+deliveries in this wave, three misroutes, three round trips through me:
+
+| delivery | named | reached |
+|---|---|---|
+| g4 rework implementer result | `-h` | nobody |
+| g4 rework re-review (APPROVE) | `-h` | `commander-w4-467` (retired) |
+| g5 review (APPROVE) | `-j` | `commander-w4-467` (retired) |
+
+**Bidirectional and unrecoverable from either end:** the lookup resolves a lineage toward its **origin**,
+so a handoff naming `-j` lands on `-a`; and a crew's reply-to identity is a **type**
+(`general-purpose`), so the misrouted Commander cannot send it back. **Only the Admiral could address
+both ends.** In the third case the loop could not close without me at all.
+
+Every misrouted message carried a **completed verdict**. Nothing was lost only because the retired
+instance verified the artifacts on disk and **refused to adjudicate them** — a well-behaved agent
+compensating for a broken mechanism, which is the thing this epic exists to stop relying on.
+
+The fix is the principle this epic keeps rediscovering: **address the job, not the agent.**
+`issue-467-trip-semantics / g4-review` is stable across every relaunch; an instance name is not.
+Job-file-not-agent-file, applied to crew addressing.
+
+**Corroboration for the retrospective, from the retired instance and independently of my §49:** the
+defect recurred **three times at three tiers of this one issue** — the first DC6 observable (caught by a
+cold critic panel), g4's B1 (caught by the g4 reviewer), and g5's V1/V8 (caught by the g5 reviewer,
+inside the instrument built to make DC5 falsifiable). **In all three the author could not see it and an
+independent cold reader could.** That is an argument about process, not about any of the three authors,
+and it belongs in the epic retrospective.
