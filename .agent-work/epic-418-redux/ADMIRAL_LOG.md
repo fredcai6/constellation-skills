@@ -1407,3 +1407,74 @@ it for the Commander would be me commanding the issue. I gave it the *standard* 
 answer — DC2 is the condition #467 says the engine cannot express today, so whichever candidate it
 takes must show the engine distinguishing the two advances **tested both ways**; a candidate that
 only makes the good case work has not met DC2.
+
+## 2026-08-08 — #467 plan boundary: three rulings, and a refutation of my own evidence
+
+**ADMIRAL ERROR | the Commander refuted my launch order's field evidence, and it was right.**
+LO-467 item 2 told it the trip band is role-blind, citing *"the Admiral ran to 44% with no trip."*
+It came back with `docs/GAUGE_WRITER_HOOK.md` §residuals: **an orchestrator holding several spines
+under one binding key writes no reading at all** — and an Admiral holding an epic spine plus crew
+spines is exactly that shape (**#452**). So `no trip at 44%` and `no gauge at 44%` are
+indistinguishable **without an asserted live reading**. That is #467's own *"no absence is
+evidence"* rule, turned on the Admiral who put it in the launch order.
+
+The engine had already told me, in its own projection, and I read past it:
+`CONTEXT GAUGE SILENT: the last recorded reading at this path was 46% full ... too old (or
+otherwise rejected) to trust as a live reading.`
+
+**Fifth instance of this family today, and the first one a subordinate caught rather than me.**
+Retracted the section of `evidence/w4-467-gauge-observation.md` and credited the refutation. What
+survives is stronger than what I withdrew: the Commander's **19.4% is asserted, live, and
+single-binding**, so it carries DC4's *"overrides only where a gate has bitten"* alone. The
+comparison was never needed and is not used. It **declined** to use my number to justify any
+threshold, which is the correct call and I have confirmed it.
+
+**RULING | DC2 by verb choice — APPROVED, with an accounting condition.** The Commander's
+3-candidate panel converged on **HARD refusing the verbs that BEGIN work (`start`, `reopen`) rather
+than `advance`**. Its argument: in the shipped engine no `advance` ever starts work, so the issue's
+literal DC2 describes a distinction the engine does not have; closing the gate you are in is always
+allowed and *is* the handoff, since `advance --why` already fails closed on silence and that `--why`
+already **is** the DIGEST. The governor was refusing the one verb that writes it. Zero new CLI
+surface, so **#424 pays nothing for this**.
+
+This is the epic body's own instruction obeyed — *a Commander that finds a link is not real should
+say so rather than honour it*. **Condition: report DC2 as done-by-different-means with the
+reasoning, never as done-as-written.** The honest accounting is what makes the departure defensible
+rather than quiet, and a reviewer must see it without reading the DIT.
+
+**RULING | "the RED leaves no residue" is over-stated — APPROVED, and the issue is improved.** Not a
+spec challenge; correctly read. The full scenario is unreproducible after the fix, but its
+load-bearing branch is pinnable: `fill >= hard` with no pending refresh-request, asserting the
+advance completes and the digest updates — red today, green after, **permanent**. Required it to
+state the correction plainly in the return rather than bury it in a passing test.
+
+**RULING | one production-template change — APPROVED, with DC4's own condition.** An absolute-token
+headroom reserve on the commander spine's `execute` gate. Accepted because **DC4 mandates exercising
+exactly one override**, it is **tighten-only** (can only trip earlier, never later — fails in the
+conservative direction), and it is graded `@grade: guess` with a named settle experiment rather than
+presented as settled. **Condition, from DC4's literal text: show it changes that gate's behaviour
+*and not its neighbours'*.** A test proving only that the overridden gate trips earlier has not met
+DC4 — the *and not its neighbours* half is the entire reason the condition exists, since the failure
+mode is 68 hand-authored ungraded placeholders. **Disclosed to Tommy at the wave-4 checkpoint as a
+behaviour change shipping for every future commander run** — disclosure, not a hold.
+
+**FINDING | the Commander's cold critic panel caught its own DC6 being a check that cannot fail.**
+Its first DC6 observable — *"did a handoff artifact appear before the next advance"* — is **true by
+construction**, because `advance` already refuses a non-exempt gate without `--why`. It would have
+read green in both worlds. **Two critics found it independently.** The observable is now *"did
+anyone begin work while over the line"*, where the compliant world produces **no ledger entry at
+all**. A second critic finding: `advance --mechanical` would have defeated DC3 post-fix, because a
+mechanical marker is skipped by `_latest_why_record`, leaving the DIGEST pre-trip — **#431 returning
+in different clothes**. Now refused at/over hard, with `why_exempt` suspended.
+
+I have asked for this written up at length rather than compressed: **an epic about checks that
+cannot fail, whose Commander nearly shipped one inside the fix for it, and whose own cold panel
+caught it before I did**, is the most valuable artifact this run can produce.
+
+**Routed as a doctrine candidate: the anti-vacuity gate check.** Each integrate carries a
+`pytest -k` that **exits 5 when the gate shipped no tests**. Invented unprompted, and it is this
+epic's thesis applied to the Commander's own process. Sibling of wave 2's mutation-testing
+invention.
+
+**Deliberately not done: I did not pick the design.** I read three candidate headers and stopped.
+The distinguishing mechanism is listed under #467's **Open (Commander's call)**.

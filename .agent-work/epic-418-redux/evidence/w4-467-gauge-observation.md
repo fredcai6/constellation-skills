@@ -15,24 +15,37 @@ has not written a line of implementation code yet. At the moment of reading it h
 That makes it a **positive control for #467's own premise**, taken from a crew that had no idea it
 was being measured for this.
 
-## Against the Admiral-side reading
+## RETRACTED: the Admiral-side comparison — the #467 Commander refuted it, and it was right
 
-Same machine, same `PostToolUse` hook, same model tier (`claude-opus-5`), same morning:
+**This section originally read the Admiral's "44% untripped" as proof the band is role-blind. That
+inference does not hold and is withdrawn.** The refutation came from the #467 Commander at its plan
+boundary, citing `docs/GAUGE_WRITER_HOOK.md` §residuals: **an orchestrator holding several spines
+under one binding key writes no reading at all.** An Admiral holding an epic spine plus crew spines
+is exactly that shape (**#452**).
 
-| Role | Fill | Tripped? |
+So `no trip at 44%` and `no gauge at 44%` are **indistinguishable without an asserted live reading**
+— which is #467's own *"no absence is evidence"* rule, turned on the Admiral who wrote it into the
+launch order. The engine's own projection said as much to my face and I read past it:
+
+> `CONTEXT GAUGE SILENT: the last recorded reading at this path was 46% full ... sampled 1h31m ago
+> — too old (or otherwise rejected) to trust as a live reading.`
+
+**Fifth instance of this family in one day, and the first one a subordinate caught rather than me.**
+That the crew commanded to fix "no absence is evidence" applied it to its own Admiral's evidence is
+the mechanism working exactly as intended.
+
+## What survives
+
+| Role | Fill | Status |
 |---|---|---|
-| Wave-3 crews | 17-21% | yes, repeatedly |
-| **#467 Commander (this reading)** | **19.4%, pre-implementation** | in band |
-| Admiral (this run) | **44%** | no |
+| Wave-3 crews | 17-21% | tripped, repeatedly |
+| **#467 Commander (this reading)** | **19.4%, pre-implementation** | **asserted live reading, in band** |
+| ~~Admiral~~ | ~~44%~~ | **withdrawn — cannot distinguish untripped from unmeasured** |
 
-**The band does not appear to be role-blind by accident — it is measured against a window the roles
-do not share.** A Commander loads an issue spec, a launch order, a codebase region and a design
-space; an Admiral holds a log and a ledger. The same fraction means different things to them, and
-the current default is global-per-model (`_PROFILES`, HARD at 150k of a 1M Opus window).
-
-**This is exactly what #467's DC4 exists to license** — *"the override mechanism existing and
-exercised at least once ... overrides only where a gate has bitten."* This gate has bitten, on
-camera, in the crew fixing it.
+The Commander's own **19.4% is an asserted, live, single-binding reading**, so it stands on its own
+without the comparison. **That reading alone is what may carry DC4's "overrides only where a gate
+has bitten"** — a crew in the band, pre-implementation, on the issue about the band. The Admiral
+comparison was never needed for it and is not used.
 
 ## What this reading does NOT say
 
