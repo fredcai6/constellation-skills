@@ -1,0 +1,83 @@
+{
+  "work_id": "issue-456-g5-review",
+  "diff_ref": "git diff 5e5e2794..1f5c8a6e -- scripts/code_map/render.py scripts/code_map/checks.py tests/test_code_map.py (gate g5: production/test caller split, tc32 closure)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, scripts/code_map/checks.py module docstring, skills/constellation-reviewer/references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "checks.py's refs_line_self_consistent grew from a shape+legend+arithmetic check to a shape+legend+TEST_NOTE+arithmetic check: ~67 lines of code (excluding its own docstring), now bundling 4 distinct concerns in one function -- header shape (exactly one production + one tests line), legend-follows check, TEST_NOTE presence/absence, and ~8 per-line arithmetic invariants. This is a real, if moderate, growth in both size and concern-count, not merely a proportional restatement of what was there before. Not blocking -- the function remains a single coherent PAGE-LOCAL pass over one page's parsed lines (the docstring's own stated locality goal: avoid re-reading the page per concern), and every added concern is a natural extension of the SAME self-consistency invariant this function already owned. Worth a future split (header-shape vs. per-line arithmetic) if it grows again.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No classes added or grown by this diff. checks.py's MapUnderCheck/StoreScan/SourceScan are untouched (confirmed: no hunk in the diff touches their line ranges).",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "render.py's REFS_PROD_PREFIX/REFS_TEST_PREFIX/TEST_NOTE/SPLIT_LEGEND and checks.py's byte-identical copies of the same four constants (plus is_test_module, declared twice) look like textbook duplication.",
+      "override": {
+        "repo_standard": "scripts/code_map/checks.py's own established, repeatedly-applied convention (already present for REFS_LEGEND and REFS_PREFIX before this gate; g3/g4's reviews already overrode the same pattern for their own gates) -- checks.py's module docstring and each duplicated constant's own comment state the rule explicitly: 'declared here, not imported from the renderer... a check that reads its expected text out of the code under test can only ever agree with it.' This is also CREW_CONTEXT.md's 'Assert against behaviour, never against text that describes it' verification-discipline rule applied at the constant/predicate level, not just the assertion level.",
+        "reason": "The duplication is the load-bearing mechanism, not an accident: it is what let this review's own independence-divergence attack (mutating ONLY checks.py's copy of is_test_module) prove the second copy actually catches a renderer/checker disagreement -- inbound_attribution and refs_line_self_consistent both went red. An imported single copy could never fail that way. The repo standard specifically subordinates this smell for exactly this class of verification code."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "is_test_module(mod)/_bucket_line(prefix, counter, mod)/refs_line(key, mod) all operate on render.py's own module-level state (inbound, BY_PKG-adjacent helpers); refs_prefix_of/parse_refs/is_test_module/refs_line_self_consistent/inbound_attribution in checks.py all use only MapUnderCheck's published surface or their own string arguments, the same pattern every other check in the file already follows.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "The pre-existing Refs namedtuple (sites, modules, named, own) is unchanged in shape; the new by_prefix dict in inbound_attribution groups two Refs under their own named prefix keys rather than passing an unlabeled tuple around. No new parameter clump introduced.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "REFS_PROD_PREFIX/REFS_TEST_PREFIX are bare strings, consistent with the pre-existing REFS_PREFIX convention this file already used before this gate -- a carried-forward pattern, not a new instance.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Every new/changed function signature stays short: _bucket_line(prefix, counter, mod) [3], refs_line(key, mod) [2, unchanged], is_test_module(mod) [1], refs_prefix_of(line) [1]. No growth of an existing signature in this diff.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The whole diff is one cohesive feature (the production/test split) touching exactly the three files a single feature of this shape would touch (renderer, its checks, its tests) -- not a change rippling across many unrelated call sites for one small edit.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "render.py changes for one reason (rendering the two-bucket split); checks.py changes for one reason (verifying it, plus tc32's ordering falsifier which reuses the same _bucket_line refactor). Confirmed by reading the diff hunks directly, not the hunk headers -- no file mixes two unrelated reasons to change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "truth.get(own_module, 0), counter.get(mod, 0), by_prefix[refs_prefix_of(line)] are single-level lookups at their call sites, not chained navigation through multiple objects.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "_bucket_line is shared by exactly two concrete callers (production and test buckets) inside the SAME function that calls it twice -- exercised immediately, not spare capacity for an imagined third bucket. No unused hook, no stub, no ignored parameter anywhere in the diff.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "Docstrings state design decisions and their reasoning throughout (is_test_module explains why it reads the dotted name rather than the file path and why it is a second hand-written copy; _bucket_line explains why there is exactly one sorted() call in the file; refs_line explains what splitting the total into two buckets buys a reader). All new identifiers (REFS_PROD_PREFIX, TEST_NOTE, SPLIT_LEGEND, is_test_module, _bucket_line) read as exactly what they do.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

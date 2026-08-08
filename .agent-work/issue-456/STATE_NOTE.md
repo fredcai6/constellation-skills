@@ -4,21 +4,52 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: `g5-implement` (dispatching now)
-- **PID**: detached Agent subagent, `constellation/issue-456/g5/implementer/attempt-1`
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g5-implement-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: `g5-remediate` (NOT yet dispatched — handoff written and ready)
+- **PID**: none in flight — parked at a context seam the engine itself named
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g5-remediate-RESULT.md`
 - **lease**: `commander-issue-456` — re-claim IDEMPOTENTLY (same id, NOT a takeover, no `--force`)
 
 ## Where the run is
 
-CLOSED: `g0`, `g1`, `g2`, `g3`, **`g4`** (all advanced; `g4` closed on APPROVE
-with `tc44` filed non-blocking).
-NOW: **`g5`** — de-conflate the zero-inbound entities. Unused and untested look
-identical today. Split the caller list into production and test callers and fix
-the useless `referenced by: none found` line on test pages. **Do NOT delete test
-pages — explicit ruling (critic IF7 over SY8).** `g5` also owns **`tc32`** (a
-green determinism run is NOT evidence of stable caller ordering).
-REMAINING AFTER: `gb g6 g7 g8 gs`, then
+CLOSED: `g0`, `g1`, `g2`, `g3`, `g4`.
+**`g5` is NOT closed — the review returned `BLOCK` and the block is correct.**
+`g5-implement` and `g5-review` are both `complete`; `g5-integrate` must NOT be
+advanced on a BLOCK. **Next action: dispatch the remediation crew** with the
+ready handoff at `.agent-work/issue-456/crew-handoffs/g5-remediate.md`, at
+**`--model sonnet`**, role `implementer`, gate `g5` (it will register as
+`attempt-2`). Then re-review, then `g5-integrate` on an APPROVE.
+
+### The block, in one line
+
+`SPLIT_LEGEND` — printed on all **3864** pages — says the split keys on a
+**top-level** `tests` package; `is_test_module` is `return "tests" in parts`,
+matching a `tests` segment **anywhere**. Confirmed in BOTH hand-independent
+copies by reviewer and Commander. **Commander's ruling: fix the LEGEND, keep the
+PREDICATE, add the pinning check** (precedent: `RefsAccountingTests.
+test_the_legend_names_the_predicates_the_count_actually_counts` pins
+`REFS_LEGEND`). Reclassifies zero entities, so all measured numbers stand.
+
+### What g5 already got RIGHT (do not redo)
+
+Two attributed lines per page; `TEST_NOTE` on 2789 test-defined pages and 0
+production-defined; test pages NOT deleted (IF7 over SY8); `tc32` genuinely
+closed and attacked with three unchosen mutations; the hand-restated
+`is_test_module` in `checks.py` **proven load-bearing** (diverging only that copy
+made TWO checks go red) — which retires the standing worry that this gate would
+collapse `g2`'s two-independent-declarations design.
+
+### The corrected split — measured twice independently, agreeing exactly
+
+| bucket | prod-defined | test-defined |
+|---|---|---|
+| unused | **88** | **2340** |
+| test-only | **2** | 449 |
+| production | 873 | 0 |
+
+The crew's shipped headline of "unused 2428 (64.7%)" is **96.4% test-defined**.
+Genuinely unused production code is **88**, not 2428 — a 27x difference.
+
+REMAINING AFTER `g5`: `gb g6 g7 g8 gs`, then
 `reconcile → triage → review → feedback → archive`. **Release the lease LAST.**
 
 ## Resume recipe
@@ -96,7 +127,30 @@ something the Commander missed — quality held.
 
 ## Gate assignments still to honor
 
-- **g5** owns `tc32` (a green determinism run is not evidence of stable caller order).
+- **g5** owned `tc32` — **CLOSED and attacked**, no longer outstanding.
+- **CANDIDATE NUMBERING TRAP:** `execute.json` has its OWN candidate counter. The
+  two candidates filed at `g5-review` print as **`tc2`/`tc3`** but are the
+  run-wide **`tc45`/`tc46`**. Triage must not double-count. `tc45` = nothing pins
+  a printed legend to the predicate the code applies (generalize past
+  `SPLIT_LEGEND`). `tc46` = a gate's own evidence script reproduced the exact
+  conflation the gate removed, and evidence scripts get no adversarial read.
+- **tc39 CONFIRMED AGAIN, live:** the context governor's HARD band fired at
+  **15%** fill and refused `advance` until a `refresh-request` was attached. The
+  crew independently hit the undocumented `why_ref` rule — it must cite the
+  **CURRENT latest** why-record id, and **every** `advance` mints a new one, so a
+  cited id goes stale immediately. Read `why_trail[-1].id` and attach in the same
+  breath. Both route to **feedback**.
+- **New from the g5 crew, for feedback:** a `command` postcondition ALWAYS
+  re-runs and cannot be satisfied by reference to evidence already gathered the
+  way `attest --evidence` can — so one `advance` re-ran a ~5-minute full suite
+  that had just been run by hand.
+- **Non-blocking, carried forward:** 386 pages are non-ASCII, every one traced to
+  PRE-EXISTING docstring prose (an em-dash in `scripts/agent_work_root.py`).
+  `g5`'s own strings are pure ASCII. Not `g5`'s defect; do not re-litigate.
+- **Line-position ruling, precisely restated:** **0 of 3864 page HEADERS** carry a
+  line position. Three pages do contain a `.py:<line>` string — all inside
+  docstring prose the map reproduces verbatim from source. That is correct
+  behaviour, not a header defect. Do not "fix" it by censoring source text.
 - **tc35** (INDEX collision family) needs `g1`'s `page-accounting` falsifier rebuilt
   on a DIFFERENT collision FIRST.
 - **tc39** (governor HARD band at ~16% of real fill), **tc42** (Fowler rail's

@@ -1521,7 +1521,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -1532,7 +1533,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1",
+          "attested": {
+            "evidence": "e-g5-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
@@ -1541,11 +1547,46 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "status": "complete",
+            "verdict": "BLOCK",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g5-review-RESULT.md",
+            "crew": "constellation/issue-456/g5/reviewer/attempt-1",
+            "crew_model": "sonnet",
+            "blockers": "Finding A: SPLIT_LEGEND, printed on all 3864 pages, states the rule is a TOP-LEVEL tests package; is_test_module matches a `tests` segment ANYWHERE on the dotted path. Fix the legend or the predicate, and add a pinning check.",
+            "finding_A": "CONFIRMED, BLOCKING. Reproduced independently rather than from the diff: is_test_module('scripts.tests.helpers') and is_test_module('pkg.sub.tests.foo') both return True in BOTH copies (render.py and checks.py) though neither has `tests` as its first segment. Lands on the gate's own close criterion judged verbatim -- 'the page says what it was based on' -- and is this run's central defect class, a stated rule that does not match the applied rule, on the one sentence explaining the gate's mechanism, repeated on every page. Confirmed NOTHING pins the legend to the predicate, unlike the existing REFS_LEGEND precedent (RefsAccountingTests.test_the_legend_names_the_predicates_the_count_actually_counts pins REFS_LEGEND to load_stores's real predicate set).",
+            "finding_B": "CONFIRMED as a real conflation; does NOT escape into anything shipped. Reproduced measure_split.py's headline byte-for-byte, then re-measured independently with the definer dimension added and matched the Commander's numbers exactly: unused 88 prod-defined / 2340 test-defined; test-only 2 / 449; production 873 / 0. TEST_NOTE on exactly 2789 test-defined and 0 production-defined pages -- the per-page mechanism is right. Read top_index and module_index in full and grepped scripts/ for unused/test_only: zero hits outside the split-grammar constants and measure_split.py itself. The shipped capability is sound; the defect is confined to the evidence layer.",
+            "tc32_attacked_and_holds": "Attacked with three mutations the implementer did not choose (its own probe only deletes sorted(...)): reverse-sort -> diff EMPTY (still visit-order-independent); call-count with tied counts -> diff NON-EMPTY (ties leak visit order through Python's stable sort); reversed-insertion -> diff NON-EMPTY. All three matched a-priori expectations. Also built a second fixture where the TEST bucket is the one with 2 external callers and reran: both bucket lines order deterministically, not just production. tc32 genuinely closed.",
+            "independence_proven_load_bearing": "Attacked for real: diverged ONLY checks.py's is_test_module copy (confirming render.py's copy in the same mutated host stayed untouched), built a fixture exercising the divergence, and check went red on TWO separate checks (inbound_attribution and refs_line_self_consistent). The hand-restated second copy is load-bearing, not decoration -- not a tc29/tc38 finding.",
+            "retargeted_anchors_verified": "OWN_MODULE_NAMED_MUTATION and LEGEND_DROPPED_MUTATION run directly and isolated: 3 passed. Each test's own harness independently proves its anchor is unique in the source and that the mutation flips check's exit code with the exact message asserted. Retargeting did not defang them.",
+            "numbers_reproduced": "Exact match on every claim: full suite 1780 passed / 2 skipped / 672 subtests / exit 0; fresh build 111 modules / 3752 entities / 3864 pages; fresh check 7/7; gate selector -k 'refs or caller' 19 passed; measure_split.py headline byte-for-byte.",
+            "scope_and_tripwires": "No drift. git diff --name-only 5e5e2794..1f5c8a6e run by the reviewer: exactly checks.py, render.py, tests/test_code_map.py plus workbench artifacts. _make_collision_repo's INDEX collision still fires (4 tests green); entity_symbol_join untouched (grepped, zero hits); page_location_matches_content untouched; page headers zero line positions across all 3864 pages.",
+            "new_out_of_scope_observation": "386 pages are non-ASCII, every one traced to PRE-EXISTING docstring prose elsewhere in the repo (an em-dash in scripts/agent_work_root.py's docstring). g5's own new strings are confirmed pure ASCII. Carried forward, not this gate's defect.",
+            "fowler": "12/12 rendered, rail exit 0. One flagged non-blocking: refs_line_self_consistent grew to bundle 4 concerns (~67 lines), worth a future split. One overridden with a logged reason: duplicated-code on the byte-identical constants and is_test_module declared independently in both files -- that duplication EARNED the override in this very review by the independence attack above.",
+            "commander_ruling_on_finding_A": "FIX THE LEGEND, KEEP THE PREDICATE, ADD THE PINNING CHECK. Reasoning: a nested pkg/tests/ subpackage is a real and common layout (Django-style app-local tests), so 'a tests segment anywhere on the dotted path' is the more defensible published-convention reading; 'top-level' is the narrower and less accurate description. This is also the smaller diff and reclassifies ZERO entities, so no measured number in this gate's evidence changes. The pinning check must fail if the legend text and the predicate drift again, parallel to the existing REFS_LEGEND precedent."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-review-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g5-review",
+            "why_ref": "w-17"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g5-integrate": {
@@ -2320,6 +2361,16 @@
       "id": "tc1",
       "from": "g0-integrate",
       "statement": "tc26: the render report's page count still cannot notice a zero-byte page -- rglob('*.md') counts a file that was created and never written. Raised by the g0 closing reviewer (A5). NOT a blocker at g0: it weakens only the one field the B3 docstring now explicitly forbids trusting, and g1's structural invariant subsumes it. Goes to g1 with tc17."
+    },
+    {
+      "id": "tc2",
+      "from": "g5-review",
+      "statement": "tc45: nothing pins a page's stated legend to the predicate the code actually applies. g5 shipped SPLIT_LEGEND on all 3864 pages saying the test/production split keys on a TOP-LEVEL tests package, while is_test_module matches a `tests` segment ANYWHERE on the dotted path -- confirmed by the reviewer in BOTH hand-independent copies. The repo already has the right precedent one function away: RefsAccountingTests.test_the_legend_names_the_predicates_the_count_actually_counts pins REFS_LEGEND to load_stores's real predicate set. SPLIT_LEGEND got no such test, so the only surface a reader sees drifted from the code silently. GENERALIZE THE RULE: every legend sentence the map prints is a CLAIM ABOUT THE CODE and needs a check that goes red when the claim and the code disagree -- otherwise the map's honesty mechanism is itself unverified. Applies to any future legend, not just this one."
+    },
+    {
+      "id": "tc3",
+      "from": "g5-review",
+      "statement": "tc46: a gate's own evidence script can reproduce the exact conflation the gate was built to remove, and nothing catches it because evidence scripts are not themselves checked. g5 de-conflated unused / test-only / production ON THE PAGE correctly -- TEST_NOTE verified on 2789 test-defined pages and 0 production-defined pages -- and then reported a headline of 'unused: 2428 (64.7%)' produced by measure_split.py, which buckets purely on the two rendered caller lines and never asks whether the entity is ITSELF test-defined. 2340 of those 2428 (96.4%) are test entities whose own pages say zero callers is the normal expected state. The number a reader wants, genuinely unused PRODUCTION code, is 88 -- a 27x difference. Production code called only by tests is 2. Confirmed independently by the reviewer, and confirmed NOT to escape into anything shipped (top_index and module_index read in full; scripts/ grepped for the bucket names; zero hits outside the split-grammar constants and measure_split.py itself). TWO ACTIONS: (1) fix measure_split.py to carry the definer dimension, template ready at .agent-work/issue-456/evidence/g5_reviewer_split_by_definer.py, BEFORE the 2428 number propagates past this gate's closeout; (2) the general lesson -- a gate's evidence script deserves the same adversarial read as its shipped code, because a wrong headline number is how a green gate gets mistaken for a validated capability."
     }
   ],
   "blockers": [],
@@ -2442,6 +2493,13 @@
       "why": "g5 build CLOSED. Every entity page's single inbound line becomes TWO attributed lines -- referenced by (production) and referenced by (tests) -- so unused / test-only / production-used are distinguishable on the page itself, which is the gate's whole point. render.is_test_module is derived from pytest's documented default python_files convention and is restated BY HAND a second time in checks.py rather than imported: this was the gate most likely to collapse the two-independent-declarations design g2 established, and I grepped checks.py directly to confirm no import of the grammar from render.py exists. Test-defined entities carry TEST_NOTE saying zero callers is the expected state, not a finding -- verified present on 2789 test-defined pages and on ZERO production-defined pages. Test pages NOT deleted, honoring critic IF7 over SY8. tc32 closed with a permuted-visit-order falsifier the crew graded A, and the crew VOLUNTEERED that its mutant initially survived a 1-caller fixture and only bites at 2, committing the wider fixture instead of a silent pass. Critic F4 honored: classification is by caller module, never by a count. My own integration run, not taken on trust: fresh build then check 7/7 exit 0, modules 111, entities 3752, pages 3864.\n\nI FOUND TWO PROBLEMS MYSELF AND AM SENDING BOTH TO REVIEW RATHER THAN CLOSING OVER THEM. (A) SPLIT_LEGEND, printed on all 3864 pages, tells the reader the rule is a TOP-LEVEL tests package; the code is `return \"tests\" in parts`, a tests segment ANYWHERE on the dotted path. Probed: scripts.tests.helpers -> True, pkg.sub.tests.foo -> True. The docstring and the crew's own Assumptions section both say anywhere; only the legend -- the single surface a reader sees -- says top-level, and nothing checks the legend against the predicate so they can drift silently. That is this run's central defect class, a stated rule that does not match the applied rule, landing on this gate's own honesty surface. (B) The crew's headline number reproduces the exact conflation the gate exists to remove: measure_split.py buckets purely on the two rendered lines and never asks whether the entity is ITSELF test-defined, so every uncalled test function lands in unused. I re-measured over the same tree adding that one dimension: of the 2428 unused, 2340 (96.4%) are test-defined -- precisely the entities whose own pages say zero callers is normal. Genuinely unused PRODUCTION entities: 88, not 2428, a 27x difference. Production code called only by tests: 2. The pages are right; the claim is not. Review must determine whether the conflation escapes the evidence script into anything shipped, which would be materially more serious.\n\nCross-corpus: f1Brainz (1227 modules / 15037 entities, a 548-module tests package AND a separate run_tests module) built into scratch, check 7/7 exit 0 on the real tree, and run_tests classifies production -- the predicate's stated degradation confirmed on real input rather than assumed. superCoolSpaceSim deliberately NOT used as a shape test: it is C++/Obj-C with zero .py files, a null, per my own earlier admitted error.\n\nCrew conduct recorded honestly: the crew stalled twice and needed two nudges. Cause per its own report was one governed HARD context trip at the very start -- a legitimate reach-up, which I handled by resuming the SAME session in place rather than relaunching, and the engine digest proved sufficient to resume from m1 without re-reading the source tree -- then a genuinely long stretch across two ~6-minute full-suite runs plus the 1227-module f1Brainz build. Not idle. My second nudge demanded a RESULT file with blockers named even if incomplete; the crew returned a complete one.",
       "mechanical": false,
       "ts": "2026-08-08T15:10:57.342967+00:00"
+    },
+    {
+      "id": "w-18",
+      "gate": "g5-review",
+      "why": "g5 review returned BLOCK, and the block is correct. The reviewer confirmed BOTH Commander findings by running them rather than reading the diff, and went beyond its mandate on the rest.\n\nFINDING A -- CONFIRMED, BLOCKING. SPLIT_LEGEND, printed on all 3864 pages, states the rule is a TOP-LEVEL tests package; is_test_module matches a `tests` segment ANYWHERE on the dotted path, reproduced independently in BOTH copies. Nothing pins the legend to the predicate, unlike the existing REFS_LEGEND precedent. This lands on the gate's own close criterion judged verbatim and is this run's central defect class -- a stated rule that does not match the applied rule -- on the one sentence explaining the gate's mechanism, repeated on every page. The gate CANNOT close over it.\n\nFINDING B -- CONFIRMED as a real conflation, but it does NOT escape into anything shipped. The reviewer read top_index and module_index in full and grepped scripts/ for the bucket names: zero hits outside the split-grammar constants and measure_split.py itself. So the per-page capability is genuinely delivered and the defect is confined to the evidence layer.\n\nMY RULING ON FINDING A: fix the LEGEND, keep the PREDICATE, and add the pinning check. A nested pkg/tests/ subpackage is a real and common layout, so 'a tests segment anywhere on the dotted path' is the more defensible reading of the published convention and 'top-level' is simply the less accurate description. It is also the smaller diff and reclassifies ZERO entities, so no measured number in this gate's evidence changes -- the 88 / 2 / 873 / 2340 / 449 split stands as measured. The pinning check must go red if the legend text and the predicate drift again.\n\nWHAT THE REVIEWER PROVED BEYOND ITS MANDATE. tc32 attacked with three mutations the implementer did not choose: reverse-sort left the diff EMPTY (still visit-order-independent), while call-count-with-ties and reversed-insertion both went NON-EMPTY -- ties leak visit order through Python's stable sort. It also built a second fixture where the TEST bucket is the one with two external callers, proving BOTH bucket lines order deterministically rather than only production. tc32 is genuinely closed. Separately it proved the hand-restated is_test_module in checks.py is load-bearing rather than decoration: diverging ONLY the checks.py copy made TWO checks go red. That retires the standing worry that this gate would collapse g2's two-independent-declarations design into an import.\n\nEvery number reproduced exactly: suite 1780/2/672/exit 0, build 111/3752/3864, check 7/7, selector 19, and measure_split.py's headline byte-for-byte. No scope drift; all named tripwires re-verified directly, including zero line positions in page headers across all 3864 pages.\n\nNEW, out of this gate's scope: 386 pages are non-ASCII, every one traced to PRE-EXISTING docstring prose (an em-dash in scripts/agent_work_root.py). g5's own new strings are pure ASCII. Carried forward, not this gate's defect.\n\nNEXT: a remediation crew fixes the legend and adds the pinning check, then g5-integrate needs an APPROVE. g5-integrate must NOT be advanced on this BLOCK.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:36:08.031936+00:00"
     }
   ],
   "amendments": [
