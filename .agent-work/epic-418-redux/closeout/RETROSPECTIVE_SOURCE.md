@@ -25,8 +25,8 @@ episode whose remedy opened with an imperative verb. Anything below that reads "
 - **Only write path:** `apply_episode_delta.py --store-root episodes` on every invocation.
 - **Prove capture** with `verify_episode_captured.py` before advancing.
 
-**Status: covers waves 0-3. Wave 4 (#467) is in flight — section G is a marked slot and the
-retrospective is not complete until it is filled.**
+**Status: waves 0-3 complete; wave 4 (#467) in flight, section G filled as it happens (36 observations
+so far). Not final until #467's per-done-condition accounting lands.**
 
 ---
 
@@ -50,7 +50,7 @@ claims were **falsified by this epic's own execution**, which is itself an audit
 | 1 | #440 #447 | merged, closed |
 | 2 | #433 #436 #460 #464 | merged, closed |
 | 3 | #461 #465 #488 #489 | merged, closed, all reviewed on the forge |
-| 4 | #467 (A2) | **IN FLIGHT — fill this in** |
+| 4 | #467 (A2) | **IN FLIGHT** — g1 complete (RED verified by adversarial review); 3/16 gates |
 
 **Green baseline at wave-3 close:** `1793 passed, 2 skipped, 683 subtests, exit 0`.
 
