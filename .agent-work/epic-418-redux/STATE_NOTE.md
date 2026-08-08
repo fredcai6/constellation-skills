@@ -141,10 +141,33 @@ from the forge.**
    #488 is done. Measured: tracked `.claude/settings.json` wires `spine_rail.py` only and the gauge
    writer on **nothing** — every governor observation this epic made came from untracked local
    config.
-3. **The trip band is role-blind** — the recommendation CHANGED, don't re-ask the old question.
-   Crews trip at 17-21%; I ran to 44% with no trip on the same machine and hook. And every trip
-   this epic saw cost a relaunch at a seam, never lost work — A2's design working before A2 is
-   built. Recommend: leave the band, ship A2, hand its Commander this run as a positive control.
+3. **The trip band — MY EVIDENCE WAS RETRACTED. Do not repeat the old claim.**
+   I said "crews trip at 17-21%; I ran to 44% with no trip, so the band is role-blind." **The #467
+   Commander refuted it and was right:** an orchestrator holding several spines under one binding
+   key writes **no reading at all** (`docs/GAUGE_WRITER_HOOK.md` §residuals, **#452**), and an
+   Admiral holding an epic spine plus crew spines is exactly that shape. So *no trip at 44%* and
+   *no gauge at 44%* are indistinguishable **without an asserted live reading** — #467's own "no
+   absence is evidence" rule, aimed at me. The engine had already said so
+   (`CONTEXT GAUGE SILENT ... too old to trust as a live reading`) and I read past it.
+
+   **What stands:** the #467 Commander's **19.4%** — asserted, live, single-binding, taken
+   pre-implementation while it worked on the trip-band issue itself. That reading carries DC4's
+   *"overrides only where a gate has bitten"* on its own; the Admiral comparison is not used.
+   Recommendation unchanged in substance: **leave the global band, ship A2** — every trip this epic
+   saw cost a relaunch at a seam and lost no work.
+
+4. **DISCLOSURE — a production-template behaviour change is shipping in wave 4.** The #467
+   Commander is landing DC4's one mandated override as an absolute-token headroom reserve on the
+   **commander spine's `execute` gate**. It is **tighten-only** (can only trip earlier, never
+   later), graded `@grade: guess` with a named settle experiment, and it is **not** the global
+   default. I approved it as inside the issue's mandate and told the Commander not to wait.
+   **It changes behaviour for every future commander run and Tommy may reverse it.**
+
+5. **The installer ships the forbidden interpreter.** `install_constellation.py:349` —
+   `return "py" if os.name == "nt" else "python3"`. Installed **admiral** SKILL.md (line 61) and
+   **explorer** SKILL.md (3 places) therefore instruct agents to run `py`, which **#454** says never
+   to use because it throws a false `HARNESS ERROR` in every agent session. Cheap fix, recommended,
+   not done — R2 authorized no second Commander this wave.
 4. **#493, #495, #496, #497, #498** — five, not six: **#494 is already CLOSED**. Keep-or-drop is an
    acceptance-time question; the closeout audit produces the evidence.
 5. **#460's 22 doctrine candidates**, collected, nothing promoted, at

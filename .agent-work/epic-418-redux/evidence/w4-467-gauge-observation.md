@@ -63,3 +63,36 @@ This reading exists **because #488 shipped in wave 3**. The Admiral's own gauge 
 nine hours of this epic — two bindings resolving to one path read as ambiguous and the writer
 skipped. A wave-3 fix is what makes a wave-4 measurement possible, which is the improvement loop
 working within a single run.
+
+---
+
+## Second reading, same crew: 28.0% and still no trip — and *why* is the finding
+
+**2026-08-08T10:06:53Z · `fill_fraction = 0.280` (28.0%)** — up from 19.4% at 09:49:48Z, roughly
+**+0.5 percentage points per minute**. Spine still `plan=pending`; **zero commits on the branch**.
+
+28% is **well over** HARD (`_PROFILES` sets it at 150k of a 1M Opus window = 15%, and wave-2 crews
+were observed tripping at 17-21%). So why no trip?
+
+**Because the trip is evaluated on a gated verb, and this crew has not attempted one since crossing
+the line.** The current design refuses `advance` *pre-advance*; an agent working a long stretch
+inside a single gate sails past the threshold unnoticed and only discovers it at the boundary. This
+crew has been inside `plan` — writing a design-it-twice panel, running a cold critic panel, triaging
+19 findings — the whole time.
+
+**Three things follow, and none of them are speculation.**
+
+1. **It corroborates the retraction above rather than reviving it.** *"The Admiral ran to 44% with
+   no trip"* was doubly unsound: not only is the reading unasserted (§retraction), but **no trip is
+   evaluated while no gated verb is attempted.** An orchestrator between gates and an orchestrator
+   with headroom look identical, for a second independent reason.
+2. **It is mild support for the shipped design.** If a trip can only land at a gate boundary, it
+   lands exactly where a handoff is cheapest to write — the seam. Every trip this epic observed cost
+   a relaunch at a seam and lost no work, and this is the mechanical reason why, not a coincidence.
+3. **It sharpens what DC5's round trip must actually exercise.** The interesting case is not an
+   agent that trips politely at a boundary. It is one that crosses the line **deep inside a gate**,
+   accumulates uncommitted work, and only then meets the refusal. That is this crew, right now, at
+   28% with zero commits.
+
+**Prediction on the record, before the fact:** this Commander trips on its next `advance`, not
+before. Recorded now so the outcome cannot be read back favourably either way.
