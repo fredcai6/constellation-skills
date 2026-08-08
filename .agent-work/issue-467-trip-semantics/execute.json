@@ -132,7 +132,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT for g1-implement present at crew-handoffs/g1-implementer-result.md; recover_crews.py reports attempt-1 COMPLETE, 0 unresolved"
         }
       ],
       "postconditions": [
@@ -143,7 +144,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
         }
       ],
       "constraints": [],
@@ -152,11 +154,24 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g1-reviewer-result.md",
+            "verdict": "ACCEPT WITH FINDINGS",
+            "crew_id": "constellation/issue-467-trip-semantics/g1-review/reviewer/attempt-1",
+            "note": "Independent reviewer, opus, cold. 4 handoff questions each answered with a reproduced command; 4 adversarial probes written to attack the claim. 0 blocking, 8 non-blocking findings. run_crew.py --verify-result: fresh (completed)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-integrate": {
@@ -168,7 +183,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received at crew-handoffs/g1-reviewer-result.md; run_crew.py --verify-result reports fresh (completed)"
         }
       ],
       "postconditions": [
@@ -216,11 +232,25 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g1-reviewer-result.md",
+            "verdict": "ACCEPT WITH FINDINGS",
+            "blocking_findings": "0",
+            "crew_id": "constellation/issue-467-trip-semantics/g1-review/reviewer/attempt-1",
+            "note": "Verdict recorded as the reviewer actually wrote it. The gate plan's c3 expects the literal string APPROVE; the reviewer handoff authored at the g1 seam prescribed the vocabulary ACCEPT / ACCEPT WITH FINDINGS / REJECT and explicitly called ACCEPT WITH FINDINGS the healthy outcome. Vocabulary mismatch between frozen plan and handoff, floated to the Admiral rather than resolved here. NOT attaching a second artifact reading APPROVE -- that would be fabricated evidence to satisfy a check."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-implement": {
@@ -911,6 +941,24 @@
       "why": "g1-implement CLOSED. RED reproduced at unmodified HEAD, both faces, by a dispatched implementer; result at crew-handoffs/g1-implementer-result.md, repro at red-repro/repro_431.py (--all | --face a | --face b | --assert-gauge-read), 24 ASSERT OK / 0 FAIL, real exit 0, rebuilds from nothing. GUARD HELD: git diff --stat -- scripts tests EMPTY, re-verified in my own shell. READING PROVED READ: engine's literal 'CONTEXT 30% (>= hard)' in the transcript, planted 0.30 vs opus-5 hard 0.15, gauge planted beside the SCRATCH spine (live spine/gauge untouched). FACE A is the staleness property, not a bare refusal: after the agent runs the exact attach the refusal prints, HARD RELEASES ('refresh already requested for g2') and the same output STILL reads 'DIGEST: PRE-TRIP UNDERSTANDING' -- asserted as an equality, with a no-gauge counterfactual control attributing the staleness to the refusal alone. FACE B holds with a scope limit the implementer volunteered and asserted in the script: current DOES still list c2 [unmet] at HARD, so the masking is scoped to the advance refusal path, not the whole engine -- reviewers must not read it wider. Suite at baseline 1793/2/683 real exit 0. NEXT: g1-review -- dispatch an INDEPENDENT reviewer; per critic finding R1 the independent read is the one guard against a MANUFACTURED RED, which is this epic's central defect, so the reviewer's first job is to decide whether face A really is staleness rather than a dressed-up exception. NEW VERIFIED TRIAGE CANDIDATE from g1: copy-pasting the refusal's literal 'why_ref=<why-id>' placeholder ATTACHES with exit 0 but does NOT release HARD -- a silent no-op on the exact command the engine prints. That is the defect g2(d) already plans to fix (emit the concrete why-id), now confirmed empirically, and it independently corroborates TRIP_OBSERVATION.md item 4. STANDING TRAPS unchanged: DC6's observable is 'did anyone BEGIN work while over the line', never 'did a handoff artifact appear'; and at/over hard, advance --mechanical must be refused and why_exempt suspended.",
       "mechanical": false,
       "ts": "2026-08-08T10:42:37.344790+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "g1-review CLOSED, verdict ACCEPT WITH FINDINGS, 0 blocking / 8 non-blocking. Independent opus reviewer answered all four handoff questions with commands it reproduced, and wrote FOUR adversarial probes to attack the claim rather than confirm it. THE RED IS GENUINE: (1) reading was READ -- engine printed its own 'CONTEXT 30% (>= hard)' four times in the reviewer's transcript, and gauge_reader.read() returns a Reading not None on the planted record; (2) the control is real -- normalized JSON diff shows the two scratch spines differ only in downstream consequences of the refusal, and advance is verified in source as the SOLE why_trail writer (both _append_why call sites inside advance()); (3) 11 of 24 assertions flip under the planned fix including every load-bearing #431 claim, and all 13 both-sides assertions are harness/setup/control/honest-scope -- no assertion is dressed up as #431 evidence, which was the thing to find and it is not there; (4) git diff --stat -- scripts tests empty, plus staged, status, and main...HEAD all empty, suite re-run at exact baseline 1793/2/683 REAL_EXIT=0. REVIEWER PROBE 2 IS A REFRAME g2-g4 MUST CARRY: the post-attach advance SUCCEEDS and writes a fresh DIGEST, so #431 is NOT a mechanical deadlock -- the engine PERMITS the advance while telling the agent in the same breath not to run it. #431 is an instruction-conformance defect, not a lock. The repro narrated this in prose (N3) rather than asserting it. PROBE 3 independently corroborates the copy-paste trap: literal why_ref=<why-id> attaches exit 0 and the next advance is STILL refused -- a silent no-op, which is what g2(d) fixes. I VERIFIED IN MY OWN SHELL: git diff --stat -- scripts tests empty AND main...HEAD empty; run_crew.py --verify-result reports fresh (completed). ONE FINDING I RE-DERIVED AND RE-ATTRIBUTED: N1 says the result's 'none under version control' claim is false -- it is, 29 files under red-repro/ are tracked (git ls-files count 29, check-ignore exit 1) so every repro re-run dirties tracked files, against decision:red-leaves-no-residue. But git log --diff-filter=A shows ALL 29 entered in 62f564c7, the PREDECESSOR COMMANDER's seam-commit at the trip, not any git add by the implementer. The implementer's claim was true when written and my predecessor's handoff commit falsified it. Residue is real; the attribution is not the implementer's. FLOATING to the Admiral, not deciding: untracking committed evidence is outside the frozen plan. ALSO FLOATING W1 -- the reviewer hit a check that CANNOT PASS (r6-fowler ships a literal placeholder command that a shell reads as a redirect; neither amend, which is gated-only, nor attest, which refuses engine-checked conds, can fill it) and force-waived it with the real exit 0 recorded. That is this epic's own defect INVERTED and it is live in REVIEW_SURVEY.template.json. STANDING TRAPS UNCHANGED: DC6's observable is 'did anyone BEGIN work while over the line', never 'did a handoff artifact appear'; at/over hard, advance --mechanical must be refused and why_exempt suspended. NEXT: g1-integrate.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:04:38.927448+00:00"
     }
-  ]
+  ],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+    "status": "active",
+    "claimed_at": "2026-08-08T10:47:17.826204+00:00",
+    "last_heartbeat": "2026-08-08T11:06:54.198214+00:00",
+    "claimed_by": "commander-w4-467-c",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+    "previous_session_id": null,
+    "takeover_reason": null
+  }
 }

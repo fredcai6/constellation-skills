@@ -68,8 +68,8 @@
   "engine_session": {
     "session_id": "repro-431-b",
     "status": "active",
-    "claimed_at": "2026-08-08T10:40:43.844301+00:00",
-    "last_heartbeat": "2026-08-08T10:40:44.885451+00:00",
+    "claimed_at": "2026-08-08T11:05:02.358107+00:00",
+    "last_heartbeat": "2026-08-08T11:05:03.427119+00:00",
     "claimed_by": "repro-431",
     "worktree": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467",
     "previous_session_id": null,
@@ -81,7 +81,7 @@
       "gate": "g1",
       "why": "PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None.",
       "mechanical": false,
-      "ts": "2026-08-08T10:40:44.443144+00:00"
+      "ts": "2026-08-08T11:05:02.962679+00:00"
     }
   ]
 }

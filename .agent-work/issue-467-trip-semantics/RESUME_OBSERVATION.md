@@ -133,3 +133,141 @@ successor can reconstruct the work from `current`. It cannot, as built, be told 
 That is a better result for #467 than a clean resume would have been, and it is the kind of thing
 DC5 exists to catch — DC1–DC3 were all satisfiable while this was true, because none of them look at
 the far end.
+
+---
+
+# Second resume — the far end of the SECOND round trip
+
+**Written by `commander-w4-467-c`.** Everything above this line is `commander-w4-467-b`'s account of
+the *first* resume. I am the third Commander on this spine and the second cold successor. I have not
+edited a word of my predecessor's section; where I contradict it I say so here.
+
+This is a second, independent DC5 observation — and unlike the first, it is a **repeat** of the same
+experiment with one variable changed, which is worth more than either observation alone.
+
+## What was different about my start
+
+My predecessor was given exactly one command and no briefing. I was given **three** files to read in
+a stated order, plus a two-line correction the Admiral explicitly flagged as coming from my
+predecessor rather than from its own memory of the run:
+
+1. `execute.json current` — "your real DIGEST is here"
+2. `spine.json current` — "its DIGEST is STALE; read it for the reach-up flag, not for instructions"
+3. `STATE_NOTE.md`
+
+**That correction was the difference between a smooth start and a wasted one,** and it is the finding.
+
+## The finding: the spine's cold-start surface goes stale exactly when it matters most
+
+`advance` is the only writer of the why-trail. The spine's `execute` step spans all 16 gates. So a
+Commander that trips **mid-`execute`** — which is where nearly all the time goes, so it is the
+ordinary case, not the edge case — **cannot update the spine's DIGEST at all.** It has no `advance`
+to write through.
+
+The consequence I would have hit: `spine.json current` told me to `start execute` and drive
+`execute.json` **from `e0-context`**, which was written two agents ago and describes work that has
+been complete and committed since. Had I followed the spine's own cold-start surface, I would have
+tried to re-open a closed gate. The engine would probably have refused me, but I would have burned
+real context deciding whether the refusal or the instruction was right.
+
+`execute.json current` was accurate, current, and sufficient. **The cold-start surface a resumed
+Commander needs is the *inner* checklist's projection, not the spine's.** The spine's projection is
+correct only for a Commander that tripped *between* spine steps.
+
+My predecessor did not amend the frozen plan to work around this, and neither did I. It is a finding
+about the mechanism, and the mechanism should be fixed rather than each Commander routing around it.
+
+## What the handoff carried — and it was enough
+
+`execute.json`'s DIGEST carried, correctly:
+
+- **the gate state** (`g1-implement` CLOSED, what it proved, where every artifact is)
+- **the two standing traps**, restated at every advance so they cannot decay: DC6's observable is
+  "did anyone BEGIN work while over the line", never "did a handoff artifact appear"; and at/over
+  hard, `advance --mechanical` must be refused and `why_exempt` suspended
+- **the next action**, named as a gate
+- **a new verified triage candidate** discovered in the previous gate (the `why_ref=<why-id>` no-op)
+- **the guard that must hold** (`git diff --stat -- scripts tests` empty), and that it had been
+  re-verified in the predecessor's own shell rather than taken from the crew
+
+Beyond the DIGEST, my predecessor did something the plan did not require and that I want recorded:
+**it authored the next gate's reviewer handoff before it stopped**, so I *dispatched* rather than
+composed. That single act is the reason I got a crew running within minutes of a cold start. It is
+the cheapest high-value thing a tripping Commander can do, and I would make it doctrine: **spend your
+last headroom authoring the next step's handoff, not summarizing the last one.**
+
+## What I had to re-derive
+
+Almost nothing about the work. Two things about the machinery:
+
+1. **`claim` requires `--session-id`**, and so does every mutating verb after it. Nothing said so; I
+   learned it from a refusal. Cheap, but it is a refusal on your *first* command as a fresh agent,
+   which is the worst moment to meet one.
+2. **`advance` requires the task to be `in-progress`,** so a resumed Commander arriving at a `pending`
+   gate must `start` it first. The `next:` line on `current` pointed at `attest`, which succeeded, and
+   then `advance` refused with `must be in-progress`. Also cheap, also a refusal-taught lesson.
+
+Both are the same shape as the defects this epic is about: the projection tells you the next command,
+you run it, and the engine refuses on a precondition the projection did not surface.
+
+## The correction to my predecessor's central negative result
+
+My predecessor recorded that **the round trip does not close — it loops**: a resumed Commander reads
+as over the line the instant it starts, because many agent keys resolve to one spine-derived
+`gauge.json` and last-writer-wins.
+
+**I saw the same symptom and it did not persist.** On arrival `execute.json current` printed
+`CONTEXT 15% (>= hard)` against a gauge stamped `10:45:36Z` that was not mine. My first mutating
+command (`claim`) rewrote it to `fill_fraction 0.051788` at `10:46:57Z` — my own reading — and the
+band released. I waived nothing.
+
+**The mechanism is real; its scope is narrower than written.** It bites only while the tripped
+predecessor is **still alive and taking tool calls**, because only then is there a competing writer.
+Both of my predecessors had stopped before I started, so nothing contended and my own reading won
+immediately.
+
+That is not a small correction. As written, the defect says the design **cannot** close a round trip.
+As corrected, it says the design closes fine **provided the tripped agent actually goes quiet** —
+which is exactly what "commit at the seam, hand off, and go idle" already instructs. The bug is
+confined to the overlap window of a handoff where the old agent keeps working, and the lease-based
+fix my predecessor proposed would close even that.
+
+**Why the difference between our two runs is itself the evidence:** predecessor-b resumed while
+predecessor-a was still live; I resumed after both had stopped. Same mechanism, one variable changed,
+opposite outcomes. That is a cleaner attribution than either run could produce alone.
+
+## What is still reachable from nothing
+
+My predecessor's sharpest gap **stands unfixed and I hit it too**: `LO-467.md` holds the environment
+invariants this epic paid for in real incidents — the exact pytest invocation (never `py`, #454), the
+`${PIPESTATUS[0]}` rule, the `gh` markdown-body rule, the ban on inferring merge state from an exit
+code — and **nothing in either projection points at it.** I only knew to carry those constraints into
+my reviewer dispatch because my predecessor had already written them into the reviewer handoff by
+hand. Had it not, I would have dispatched a crew without them.
+
+So the gap is real, and worse than it looks: it is currently patched by *each Commander manually
+copying the invariants forward into each crew handoff*. That works until one Commander forgets, and
+nothing detects the omission.
+
+## One thing neither projection carried, that cost me a decision
+
+Neither projection told me what the **verdict vocabulary** was. `g1-integrate`'s c3 matches the
+literal string `APPROVE`; the reviewer handoff prescribes `ACCEPT` / `ACCEPT WITH FINDINGS` /
+`REJECT`. I found the conflict only by dumping the gate's raw JSON after the reviewer had already
+returned. Recorded as TC-2 in `triage-candidates/g1-candidates.md`, floated to the Admiral, and
+deliberately **not** resolved by attaching a second artifact reading `APPROVE` — that would be
+fabricating evidence to satisfy a check, which is the defect this epic exists to kill.
+
+## Verdict on the round trip, second observation
+
+**The content carried; the instrument now also carried, once the contending writer stopped.** A cold
+successor reconstructed the work from `execute.json current` alone and had a crew dispatched within
+minutes. The two things that did *not* carry are both structural rather than incidental: the spine's
+projection is stale by construction for any mid-`execute` trip, and the launch order's environment
+invariants are reachable from nothing.
+
+The first round trip proved the far end could not be told it had room to work. The second proves it
+can — and shifts the open question from "does the round trip close?" to "does it close **without a
+human in the loop telling the successor which projection to trust?**" For me, it did not: the Admiral
+had to hand me the two-line correction about the stale spine. **That correction is the remaining
+manual step, and it is the thing to automate.**

@@ -10,12 +10,12 @@
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-red-repro-431-face-a-counterfactual-g1@b62048ff4618da0ddc0043c174db93a51917656c",
+    "context-manifest-ref": "ctx-red-repro-431-face-a-counterfactual-g1@34bdb450f047b3d3beebdc0e7020effcc7d7b6cb",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "red-repro-431-face-a-counterfactual",
-    "generated_at": "2026-08-08T10:40:42Z"
+    "generated_at": "2026-08-08T11:05:01Z"
   }
 }

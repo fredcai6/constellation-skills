@@ -48,7 +48,7 @@ $ checklist_engine.py --file spine.json attest g2 --cond c1 --which postconditio
 $ checklist_engine.py --file spine.json current
 | RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
 | 
-| LEASE active: repro-431-gauge (by repro-431, heartbeat 2026-08-08T10:40:40.493361+00:00)
+| LEASE active: repro-431-gauge (by repro-431, heartbeat 2026-08-08T11:04:59.022689+00:00)
 | ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
 | 1/1 met
 | next: advance g2 --why "<understanding>" (or --mechanical)
@@ -58,12 +58,12 @@ $ checklist_engine.py --file spine.json current
   [ASSERT OK  ] no CONTEXT advisory before the gauge exists
 --- plant it as a SIBLING of the spine and ask again ---
 planted gauge: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\gauge-read\gauge.json
-  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T10:40:35.618009Z"}
+  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T11:04:54.142155Z"}
 
 $ checklist_engine.py --file spine.json current
 | RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
 | 
-| LEASE active: repro-431-gauge (by repro-431, heartbeat 2026-08-08T10:40:40.493361+00:00)
+| LEASE active: repro-431-gauge (by repro-431, heartbeat 2026-08-08T11:04:59.022689+00:00)
 | ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
 | 1/1 met
 | next: advance g2 --why "<understanding>" (or --mechanical)
@@ -121,13 +121,13 @@ $ checklist_engine.py --file spine.json attest g2 --cond c1 --which postconditio
 
 --- context fills up here: plant a fresh at-or-over-HARD reading ---
 planted gauge: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-a\gauge.json
-  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T10:40:36.874663Z"}
+  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T11:04:55.396432Z"}
 
 --- step 1: `current` -- prove the planted reading was actually READ ---
 $ checklist_engine.py --file spine.json current
 | RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
 | 
-| LEASE active: repro-431-a (by repro-431, heartbeat 2026-08-08T10:40:41.861538+00:00)
+| LEASE active: repro-431-a (by repro-431, heartbeat 2026-08-08T11:05:00.383469+00:00)
 | ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
 | 1/1 met
 | next: advance g2 --why "<understanding>" (or --mechanical)
@@ -166,7 +166,7 @@ $ checklist_engine.py --file spine.json attach g2 --type refresh-request --field
 $ checklist_engine.py --file spine.json current
 | RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
 | 
-| LEASE active: repro-431-a (by repro-431, heartbeat 2026-08-08T10:40:42.201607+00:00)
+| LEASE active: repro-431-a (by repro-431, heartbeat 2026-08-08T11:05:00.717718+00:00)
 | ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
 | 1/1 met
 | next: advance g2 --why "<understanding>" (or --mechanical)
@@ -237,7 +237,7 @@ $ checklist_engine.py --file spine.json advance g2 --why CURRENT UNDERSTANDING: 
 $ checklist_engine.py --file spine.json current
 | RAIL: Release is your last journaled action. Run `release`; do not claim it.
 | 
-| LEASE active: repro-431-a-cf (by repro-431, heartbeat 2026-08-08T10:40:43.609080+00:00)
+| LEASE active: repro-431-a-cf (by repro-431, heartbeat 2026-08-08T11:05:02.129282+00:00)
 | DONE: no open items.
 | DIGEST: CURRENT UNDERSTANDING: g2 found the reader's None path is reached from three distinct failure modes, so the retry belongs in the caller, not the reader.
 | (exit 0)
@@ -293,12 +293,12 @@ $ checklist_engine.py --file spine.json attest g2 --cond c1 --which postconditio
 
 --- g2 is in-progress with c2 UNMET. Context fills up. ---
 planted gauge: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-b\gauge.json
-  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T10:40:39.899472Z"}
+  {"schema_version": 1, "fill_fraction": 0.3, "model": "claude-opus-5", "observed_at": "2026-08-08T11:04:58.439904Z"}
 
 $ checklist_engine.py --file spine.json current
 | RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
 | 
-| LEASE active: repro-431-b (by repro-431, heartbeat 2026-08-08T10:40:44.885451+00:00)
+| LEASE active: repro-431-b (by repro-431, heartbeat 2026-08-08T11:05:03.427119+00:00)
 | ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
 | postconditions:
 |   c2 [unmet] null — retry relocated to the caller and shown green
@@ -322,12 +322,12 @@ $ checklist_engine.py --file spine.json advance g2 --why CURRENT UNDERSTANDING: 
               the agent is told to hand off, not that its gate was unfinishable
 --- what the agent WOULD have been told, with the gauge below HARD ---
 planted gauge: C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\issue-467-trip-semantics\red-repro\scratch\face-b\gauge.json
-  {"schema_version": 1, "fill_fraction": 0.02, "model": "claude-opus-5", "observed_at": "2026-08-08T10:40:40.132566Z"}
+  {"schema_version": 1, "fill_fraction": 0.02, "model": "claude-opus-5", "observed_at": "2026-08-08T11:04:58.684468Z"}
 
 $ checklist_engine.py --file spine.json current
 | RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
 | 
-| LEASE active: repro-431-b (by repro-431, heartbeat 2026-08-08T10:40:44.885451+00:00)
+| LEASE active: repro-431-b (by repro-431, heartbeat 2026-08-08T11:05:03.427119+00:00)
 | ACTIVE g2 [in-progress] — Do the g2 work, then satisfy its postconditions.
 | postconditions:
 |   c2 [unmet] null — retry relocated to the caller and shown green

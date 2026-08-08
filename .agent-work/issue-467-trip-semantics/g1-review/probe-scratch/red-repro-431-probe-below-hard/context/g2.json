@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2",
+  "files": [],
+  "repo_rev": {
+    "commit": "19b879f2ad0cf5854f02580f2d3f53a017219812"
+  },
+  "run": {
+    "work_id": "red-repro-431-probe-below-hard",
+    "generated_at": "2026-08-08T10:53:00Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1",
+  "mechanical": {
+    "run": "red-repro-431-probe-literal",
+    "project": "constellation-skills",
+    "role": "repro-431",
+    "refusals": 0,
+    "spine-step": "g1",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-red-repro-431-probe-literal-g1@f3f6131e807fbea50a8ed2bb34209921ce7c3956",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "red-repro-431-probe-literal",
+    "generated_at": "2026-08-08T10:55:43Z"
+  }
+}
