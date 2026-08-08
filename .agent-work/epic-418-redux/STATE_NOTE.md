@@ -102,7 +102,14 @@ All five confirmed MERGED via `gh pr view --json state`. **Never use an ancestry
    **The governor thread is four parts, three already written:** #458 (ships at all) · #264 (asserts
    it is measuring — 1144 lines, **unmerged**) · #488 (stops it silencing itself — in flight) ·
    #452 (attribution). Recommend landing them as one piece after wave 3.
-1. **The governor trip band at 17–21%.** Cost 6 of wave 2's 10 dispatches. A production default and a
+1. **The trip band — RECOMMENDATION CHANGED, don't ask the old question.** W3-C tripped on its
+   *wrap-up* gate with all work complete and verified; the trip cost a relaunch to open a PR and
+   nothing else. Wave 2's 6-of-10 relaunches were the same shape. So a retuned band changes *when*
+   the same relaunch happens, not what it costs. The trip was cheap because the crew wrote a
+   `refresh-request` and handed off — **A2's design working before A2 is built**, and wave 3 has now
+   run A2's DC5 round trip (trip → handoff → refresh → resume) by hand and successfully. Recommend:
+   leave the band, ship A2, and hand its Commander this run as a positive control.
+   *(Superseded framing, kept so it isn't re-asked:* **the governor trip band at 17–21%** *—)* Cost 6 of wave 2's 10 dispatches. A production default and a
    threshold question, so surfaced, not mine. Wave 3 gives the first **uncontaminated** Admiral-side
    measurement, because #488's fix restores my own gauge — the wave-2 number was taken while I was blind.
 2. **#457's lease-liveness defect** — evidenced and commented, deliberately **not** folded into wave 3.
