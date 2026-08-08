@@ -2506,3 +2506,19 @@ logged with total failure counts**. Noted approvingly: the implementer **reporte
 limitation rather than dressing a 47-failure mutation as proof**, and found the glossary defect via
 an **unprompted blast-radius grep** which it **flagged rather than edited**. Both are the tells worth
 trusting the rest of the evidence on.
+
+**g2-review CLOSED: `APPROVE`, `blocking_findings: 0` — and it matches the frozen `c3` exactly.**
+That is the confirmation that instance E's retraction was right and my blanket authorization was
+correctly withdrawn: **no amendment was ever needed.** The Commander wrote its own reviewer handoff
+in the house vocabulary the check already expected, and the gate passes as frozen. The g1 amendment
+remains a one-off, as E argued and I initially failed to check.
+
+**6/16 gates.** Two full gate groups closed: g1 proved the defect at unmodified HEAD; g2 built the
+fix and had it independently reviewed.
+
+**Worth naming: `g2-integrate.c2` is the anti-vacuity check, now load-bearing.** Its statement:
+*"the new begin-work guard tests EXIST and pass — pytest exits 5 on an empty selector."* The
+Commander invented that device unprompted at planning time; it is now a **frozen postcondition** on
+the gate that integrates the fix. **A gate that would otherwise pass by shipping no tests at all now
+fails on precisely that**, which is this epic's thesis converted from a finding into a mechanism, by
+a crew, inside the issue that exists to argue for it.
