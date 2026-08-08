@@ -12,6 +12,7 @@
     "g3-implement",
     "g3-review",
     "g3-integrate",
+    "g3b-glossary",
     "g4-implement",
     "g4-review",
     "g4-integrate",
@@ -650,7 +651,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT for g3-implement is attached as e-g3-implement-1 and I re-verified its freshness in my own shell this turn: run_crew.py --verify-result constellation/issue-467-trip-semantics/g3-implement/implementer/attempt-1 -> fresh (completed). Result artifact at .agent-work/issue-467-trip-semantics/crew-handoffs/g3-implementer-result.md; g3-implement is complete and committed at f9925be6. recover_crews.py issue-467-trip-semantics -> 5 crews, 0 unresolved, so no crew is in flight for this gate."
         }
       ],
       "postconditions": [
@@ -661,7 +663,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-2"
         }
       ],
       "constraints": [],
@@ -670,7 +673,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -682,6 +685,20 @@
             "seam": "g3-review",
             "why_ref": "w-8",
             "note": "Tripped at fill 0.153181 (>= hard 0.15, claude-opus-5) AFTER closing g3-implement and BEFORE starting g3-review. g3-review is still 'pending' and NO reviewer crew was dispatched -- deliberate: 'start' is a BEGIN-work verb, and opening a gate at/over hard is exactly the DC6 violation this issue's own fix (b) refuses. The compliant reading is 'do not open g3-review', not 'open it and hand off mid-gate'. This is a clean seam, not an interruption. Successor: claim BOTH spine.json and execute.json without --force (shared session id -> idempotent resume), attest g3-review p1 (the IMPLEMENTER_RESULT is attached as e-g3-implement-1 and verified fresh), then start g3-review and dispatch the reviewer against the frozen g3-review imperative. g3-implement is CLOSED and committed at f9925be6; do NOT redo it and do NOT re-run its mutations to 'check'. why_ref is the concrete w-8, read from execute.json's raw why_trail -- the engine's printed <why-id> is a literal placeholder that attaches exit 0 and silently does nothing."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "verdict_class": "REJECTED",
+            "blocking_findings": "1",
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g3-reviewer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g3-review/reviewer/attempt-1",
+            "verified": "run_crew.py --verify-result -> fresh (completed); B-1 independently reproduced by the commander in its own shell -- shipped engine REFUSES 'advance g2 --mechanical' at fill 0.12 with g2 carrying a 50000 reserve while g1 is blocked-behind, the M15 mutant closes it silently"
           },
           "produced_by": "engine",
           "ts": ""
@@ -1082,6 +1099,55 @@
       "finding": null,
       "evidence": [],
       "rework_count": 0
+    },
+    "g3b-glossary": {
+      "id": "g3b-glossary",
+      "title": "tc1: correct the one false glossary line about the HARD band",
+      "imperative": "REASONING GATE -- no implement crew and no review crew. Crew waiver reason: the deliverable is a ONE-LINE correction to a single table cell whose truth condition is a frozen, mechanically-checked string, and whose blast radius is bounded by an attested diff check; a crew round trip would sit between a one-line edit and the check that already decides it. Fix docs/agents/GLOSSARY.md, the `trip` row's Usage notes cell (line 13), which still reads \"HARD blocks `advance` until the agent requests a context refresh.\" That is FALSE against the engine shipped at 38f0b448: TRIP_HARD_GUARDED_VERBS / _trip_hard_gate now refuse the verbs that BEGIN work at a gate (`start`, `reopen`) and deliberately DO NOT refuse `advance` -- closing the gate you are already inside IS the handoff. Rewrite that cell so it names the begin-work verbs and says the closing advance is not refused. TOUCH THAT CELL AND NOTHING ELSE IN THE GLOSSARY. If correcting it accurately requires touching neighbouring text, STOP and float to the Admiral rather than expanding scope.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the shipped HARD-band semantics have been read from scripts/checklist_engine.py (TRIP_HARD_GUARDED_VERBS / _trip_hard_gate), so the replacement text is written against the code and not against memory of it",
+          "check": null
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the `trip` row no longer contains the false claim that HARD blocks `advance`, and it names BOTH begin-work verbs (`start`, `reopen`) -- a failable check: it fails today, before the edit",
+          "check": {
+            "kind": "command",
+            "command": "row=$(grep -n '^| `trip` |' docs/agents/GLOSSARY.md) && echo \"$row\" && ! echo \"$row\" | grep -q 'blocks `advance`' && echo \"$row\" | grep -q 'start' && echo \"$row\" | grep -q 'reopen'"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          }
+        },
+        {
+          "id": "c2",
+          "statement": "BLAST RADIUS: exactly one line of docs/agents/GLOSSARY.md changed and no other file in the repo -- proved by a git diff --numstat pasted into the attestation, not asserted",
+          "check": null
+        },
+        {
+          "id": "c3",
+          "statement": "the replacement wording is accurate against the shipped guard, checked clause by clause against the code read at p1 (guarded verbs = start + reopen; advance NOT refused; refresh-request is what releases)",
+          "check": null
+        }
+      ],
+      "constraints": [
+        "One line. Do not restructure the table, do not touch any other row, do not touch any other file.",
+        "The correction is a blast-radius fix carried by Admiral ruling, not a drive-by doc sweep -- cite the ruling in the evidence."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     }
   },
   "consolidation": null,
@@ -1159,19 +1225,25 @@
       "why": "g3-implement CLOSED. All four parts shipped by an independent opus implementer, no stop conditions hit, result verified fresh. (a) thresholds_for(model, headroom_tokens=0) subtracts an absolute-token reserve from both caps with two non-negative clamps. (b) ONE resolver _gate_headroom_tokens(cl, gate), tasks.<gate>.context_headroom_tokens only; missing/malformed/negative/config-tier all resolve to 0. (c) that same resolver feeds BOTH threshold call sites -- _trip_advisory (the number shown) and _trip_hard_band_reading (the number judged, which backs the begin-work guard AND g2's no-silent-close rule), so shown and judged cannot diverge. (d) exactly one gate carries an override: the spine's execute gate, context_headroom_tokens 30000. THE TWO VACUOUS-TEST TRAPS WERE BOTH DEFEATED, and not by assertion -- by mutation. The negative-only test carries its positive control in the same test through the same resolver, and M5 PROVES the control is load-bearing: dead-coding the resolver leaves all twelve negative assertions passing and only the control catches it (9 failed). THE ADMIRAL'S BINDING DC4 CONDITION IS MET: both sides asserted by name at one fill (12%) on one model (claude-opus-5) -- execute refuses, reconcile does not -- three ways (unit guard, CLI boundary, advisory text), the strongest being that the NEIGHBOUR's advisory is byte-identical to the no-override text while the overridden gate's is asserted not equal. Killed by M9 (reserve leaks to all gates, 7 failed) and M13 (guard judges the wrong gate, 1 failed). Tighten-only is structural in two independent layers and was attacked directly with -1, -1e308, -inf, nan, True, -0.0: nothing loosens; M1 drops the clamp and 18 subtests go red while NOTHING ELSE in the suite notices. 16 mutations, 15 killed by a named test, 1 declared EQUIVALENT rather than faked -- M15 has no narrow mutation because advance refuses a non-in-progress gate and start refuses a non-active one, so args.id == active_id in every reachable state; that is the second gate running where a crew declared a limitation instead of dressing up a blast-radius mutation, and it is the behaviour I want. Wiring grep: 2 production call sites, the advisory (:1486) and the guard (:1543) -- exactly the two that (c) requires, so the resolver is not shipped-inert on either side. Suites: 571 passed (four-suite), 20 passed / 125 subtests on the frozen headroom-or-override selector, full 1832 passed / 2 skipped / 806 subtests. Passed-count delta is exactly +17, its 17 new tests. RESERVE VALUE 30000, still @grade guess and honestly reasoned: execute is the gate that cannot be abandoned halfway; the only datum available bounds a gate's cost in the tens of thousands but cannot separate it from the resume baseline, so it supports a RANGE and 30K is its low end -- it moves execute's begin-work line 15%->12% and advisory 8%->5% on opus-5, leaves every other gate at the shipped default, and behaves sanely on the 200K model (30%/55%). Reasoning sits in context_headroom_note beside the value. SETTLE EXPERIMENT: I confirmed independently, and the implementer confirmed again, that the AUTHORED experiment is NOT RUNNABLE -- gauge.json keeps only the latest reading and the per-gate context manifests carry no fill. A cheaper replacement exists and I carry it to the Admiral: log (gate, fill_fraction) at each gate boundary, and after a handful of commander runs the number becomes measurable. The retracted role-blindness reading was used for nothing. tc3 flagged: the full-suite SUBTEST total is off by one and is NOT this diff -- the implementer measured 682 with its diff stashed against the 683 recorded at g2, so the tree yields either depending on the test_context_manifest clean-file filter. NEXT: g3-review. I am at fill 0.1478, just under hard 0.15.",
       "mechanical": false,
       "ts": "2026-08-08T14:08:23.182838+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "g3-review CLOSED with a BLOCK -- 1 blocking finding, and the finding is correct: I reproduced it end to end in my own shell before accepting it. B-1: the mutation log's M15 'EQUIVALENT' declaration is FALSE. Its reasoning enumerates start and advance but not block(), which carries no status guard and leaves 'blocked' outside TERMINAL, so active_id moves BACKWARDS behind a later in-progress gate. My repro, public verbs only, shipped engine at HEAD: two gates, g2 carrying context_headroom_tokens 50000 (hard 10% vs the 15% default on claude-opus-5); start g1 / advance g1 / start g2 / fill 0.02 -> 0.12 / block g1 -- now active_id is the BLOCKED g1 while the gate being closed is g2. SHIPPED refuses 'advance g2 --mechanical' with the no-silent-close message; the M15 mutant (drop the gate argument at checklist_engine.py:2857) prints 'g2 -> complete' on the identical fixture at the identical fill. So the gate argument g3 itself added has ZERO coverage, and deleting it silently disables this issue's own no-silent-close guarantee for the gate being closed. THE SHIPPED CODE IS CORRECT -- rework is one test plus a corrected log entry, no source change. Eight of nine close criteria PASS, verified by attack not by reading: 26 hostile values swept through the real resolver with nothing loosening; a four-way experiment showing the anti-vacuity positive control is the only discriminator; neighbour isolation asserted both sides by name four ways; _PROFILES byte-identical; exactly one override repo-wide; four mutations re-run with totals matching the log. Two things carried up: tc3 is RESOLVED and its cause was a handoff field -- the stated baseline d376b786 is not the diff's parent but spans 15 commits, and against the true parent 5a69a30b the deltas are exactly +17 passed and +125 subtests, so the stray one lived in the stated baseline, not the diff; and a reachable advisory/guard divergence on the reopen path (fail-safe direction, docstring overclaims) filed non-blocking. I also SAW that divergence in my own repro: current's advisory read '12% ... hand off here at g1' off the unoverridden active gate while the advance guard correctly judged g2. NEXT: g3-integrate opens on a BLOCK, so it returns the implementer for rework (attempt-2, Sonnet -- mechanical execution against a demonstrated target) rather than advancing.",
+      "mechanical": false,
+      "ts": "2026-08-08T14:55:05.522096+00:00"
     }
   ],
   "refusals": 6,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "released",
-    "claimed_at": "2026-08-08T11:30:51.929485+00:00",
-    "last_heartbeat": "2026-08-08T14:09:05.404146+00:00",
-    "claimed_by": "commander-w4-467-e",
-    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+    "status": "active",
+    "claimed_at": "2026-08-08T14:15:38.844412+00:00",
+    "last_heartbeat": "2026-08-08T14:55:05.522096+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-08T14:09:54.793822+00:00"
+    "takeover_reason": null
   },
   "amendments": [
     {
@@ -1180,6 +1252,14 @@
       "authority": "Admiral (epic #418 latitude contract, delegated adjudication)",
       "ops": [
         "retext-check g1-integrate.c3"
+      ]
+    },
+    {
+      "ts": "2026-08-08T14:17:49.828856+00:00",
+      "reason": "tc1 is ruled IN SCOPE and must not be deferred to triage. docs/agents/GLOSSARY.md:13 still reads 'HARD blocks `advance` until the agent requests a context refresh.' That is FALSE against the engine shipped in this very branch at 38f0b448, where the HARD band was moved OFF advance onto the begin-work verbs start/reopen. It is in the glossary every constellation agent reads, and it teaches the exact belief #431 came from -- shipping this fix while that line stands means shipping a change the documentation denies. Root-caused independently by both the g2 implementer and the g2 reviewer as shotgun surgery: the same fact mirrored in four hand-maintained places, three updated, one missed. WHY amend AND NOT a standalone ungated commit (the Admiral's own earlier instruction, which it overruled on my predecessor's proposal): amend adds a PENDING gate without cascading, so the work stays inside the plan with evidence attached, instead of an ungated commit no gate accounts for. WHY amend AND NOT reopen: reopen cascade-resets every downstream gate including the completed g3-implement. ONE task, scoped to that single line, with a failable command check (verified to exit 1 before the edit) plus an attested blast-radius diff.",
+      "authority": "Admiral (epic #418 latitude contract) -- ruling delivered at the g3-review seam, superseding the earlier 'pull it into g2's scope' instruction which is no longer mechanically available (g2 is closed; reopen would cascade-reset g3-implement and is itself a begin-work verb the shipped fix now guards)",
+      "ops": [
+        "added g3b-glossary"
       ]
     }
   ]

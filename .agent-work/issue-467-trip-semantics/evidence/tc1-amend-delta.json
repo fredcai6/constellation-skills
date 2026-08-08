@@ -1,0 +1,43 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "g3b-glossary",
+      "after": "g3-integrate",
+      "title": "tc1: correct the one false glossary line about the HARD band",
+      "imperative": "REASONING GATE -- no implement crew and no review crew. Crew waiver reason: the deliverable is a ONE-LINE correction to a single table cell whose truth condition is a frozen, mechanically-checked string, and whose blast radius is bounded by an attested diff check; a crew round trip would sit between a one-line edit and the check that already decides it. Fix docs/agents/GLOSSARY.md, the `trip` row's Usage notes cell (line 13), which still reads \"HARD blocks `advance` until the agent requests a context refresh.\" That is FALSE against the engine shipped at 38f0b448: TRIP_HARD_GUARDED_VERBS / _trip_hard_gate now refuse the verbs that BEGIN work at a gate (`start`, `reopen`) and deliberately DO NOT refuse `advance` -- closing the gate you are already inside IS the handoff. Rewrite that cell so it names the begin-work verbs and says the closing advance is not refused. TOUCH THAT CELL AND NOTHING ELSE IN THE GLOSSARY. If correcting it accurately requires touching neighbouring text, STOP and float to the Admiral rather than expanding scope.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the shipped HARD-band semantics have been read from scripts/checklist_engine.py (TRIP_HARD_GUARDED_VERBS / _trip_hard_gate), so the replacement text is written against the code and not against memory of it",
+          "check": null
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the `trip` row no longer contains the false claim that HARD blocks `advance`, and it names BOTH begin-work verbs (`start`, `reopen`) -- a failable check: it fails today, before the edit",
+          "check": {
+            "kind": "command",
+            "command": "row=$(grep -n '^| `trip` |' docs/agents/GLOSSARY.md) && echo \"$row\" && ! echo \"$row\" | grep -q 'blocks `advance`' && echo \"$row\" | grep -q 'start' && echo \"$row\" | grep -q 'reopen'"
+          },
+          "override_policy": {"allowed": true, "authority": "human", "reason_required": true}
+        },
+        {
+          "id": "c2",
+          "statement": "BLAST RADIUS: exactly one line of docs/agents/GLOSSARY.md changed and no other file in the repo -- proved by a git diff --numstat pasted into the attestation, not asserted",
+          "check": null
+        },
+        {
+          "id": "c3",
+          "statement": "the replacement wording is accurate against the shipped guard, checked clause by clause against the code read at p1 (guarded verbs = start + reopen; advance NOT refused; refresh-request is what releases)",
+          "check": null
+        }
+      ],
+      "constraints": [
+        "One line. Do not restructure the table, do not touch any other row, do not touch any other file.",
+        "The correction is a blast-radius fix carried by Admiral ruling, not a drive-by doc sweep -- cite the ruling in the evidence."
+      ]
+    }
+  ]
+}

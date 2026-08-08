@@ -1,0 +1,402 @@
+{
+  "work_id": "issue-467-trip-semantics-g3-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "cc1-tighten-only",
+    "cc2-antivacuity",
+    "cc3-neighbour",
+    "cc4-profiles",
+    "cc5-noconfigtier",
+    "cc6-shown-equals-judged",
+    "cc7-exactly-one",
+    "cc8-mutations",
+    "cc9-suite",
+    "cca-attack-neighbour",
+    "ccb-attack-tighten"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md (bundled), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g3 reviewer handoff, the g3 implementer handoff+result, the g3 mutation log, and the full source diff of f9925be6 (git show f9925be6 -- scripts tests skills). Baseline trees for pre/post comparison extracted from git archive at d376b786, 5a69a30b (true parent) and f9925be6.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All four parts of the frozen imperative shipped and verified independently. (a) thresholds_for(model, headroom_tokens=0) subtracts the reserve from BOTH caps before the division, two non-negative clamps. (b) ONE resolver _gate_headroom_tokens reading tasks.<gate>.context_headroom_tokens; no config tier exists. (c) that resolver feeds both :1485 (_trip_advisory) and :1542 (_trip_hard_band_reading). (d) exactly one gate carries an override, repo-wide. Map Impact notes checked line-by-line against the diff and are accurate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git show --stat f9925be6 touches, on the source side, ONLY: scripts/gauge_reader.py, scripts/checklist_engine.py, skills/commander/templates/COMMANDER_SPINE.template.json, tests/test_gauge_reader.py, tests/test_checklist_engine.py. All five are on the allowed list. test_init_work_area.py and test_install_constellation.py were pre-authorized and untouched. No exclusion touched: _PROFILES/_DEFAULT_PROFILE byte-identical (sha256[:16] fefce258ae14362b both sides, 2231 chars); no config tier; one override gate; the engine computes no threshold; nothing g2 shipped was reopened.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Evidence is largely reproducible and I reproduced the load-bearing parts myself. Reproduced: full suite 1832 passed / 2 skipped (subtests 808 in my tree vs 806 reported -- see cc9); focused selector 20 passed / 413 deselected / 125 subtests, exact match; mutations M1, M5, M9 reproduced with matching totals and named tests. ONE evidence claim FALSIFIED: the mutation log's M15 EQUIVALENT declaration ('args.id == active_id(cl) in every reachable state') is false -- see cc8 for the CLI-level reproduction. Per global-crew.md, a falsified evidence claim is a block finding, not an accepted fact.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints honoured. constraint:no-threshold-values: the engine passes a token count and reads fractions back; grep confirms thresholds_for has exactly two call sites, both in checklist_engine, both fed by the resolver, and no arithmetic on caps or windows appears in the engine. constraint:tighten-only: holds for every JSON-authorable value (see ccb-attack-tighten). constraint:global-default-untouched: verified byte-identical. Project deltas honoured: python (not py) used throughout; the change avoids raw byte comparison of working-tree files.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "One recorded-architecture divergence Commander must reconcile, plus two triage candidates. DIVERGENCE (non-blocking, flagged for reconcile): docs/CHECKLIST_SCHEMA.md documents the Task object's optional keys and now under-describes the schema by one key (context_headroom_tokens, plus the inert context_headroom_note). The implementer flagged this itself and correctly declined to edit it (out of its allowed scope); its natural home is this run's reconcile gate. TRIAGE: (1) the settle experiment for decision:execute-gate-reserve-value needs a per-gate (gate, fill_fraction) log -- already routed to the Admiral, confirmed by me as still un-runnable from existing artifacts but NOT re-derived; (2) the full-suite subtest count is tree-state dependent (tc3) -- I add a new data point, see cc9.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a .agent-work/issue-467-trip-semantics/g3-review/fowler-pass.json placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like issue-467-trip-semantics-g3-review on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/issue-467-trip-semantics/g3-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass run over the full source diff; record at .agent-work/issue-467-trip-semantics/g3-review/fowler-pass.json, rail exit 0: 'smells=12, flagged=[duplicated-code], overridden=[data-clumps, primitive-obsession, comments-as-deodorant]'. FLAGGED (non-blocking): the composition thresholds_for(model, _gate_headroom_tokens(cl, gate)) is written out twice (:1485 and :1542), so 'shown == judged' is held by convention across two copies rather than by one expression; one private helper would make it structural and delete M11/M12's failure mode entirely. Three overrides each carry the specific documented standard that wins and why.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/issue-467-trip-semantics/g3-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "cc1-tighten-only": {
+      "id": "cc1-tighten-only",
+      "title": "CC1: tighten-only unreachable to violate",
+      "imperative": "Try to LOOSEN a threshold through the override; show you cannot. Attack both layers (validating resolver + the two clamps in thresholds_for).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Tighten-only is genuinely unreachable to violate through the override, verified by attack rather than by reading the clamp. I swept 26 JSON-authorable values (-10**400, -1e308, -1, -0.0, 0, 1, 30000, 10**400, True, False, None, '30000', '-30000', 1.5, -1.5, nan, inf, -inf, [], {}, [30000], {'v':30000}, '1e9', '0x10', ' 30000 ') through the REAL resolver into the REAL thresholds_for on claude-opus-5: zero loosened, zero raised. Both layers attacked separately: with the resolver's negative check deleted (M6) thresholds_for's own clamp still refuses to loosen, and with thresholds_for's clamp deleted (M1) 18 subtests go red. max(0, headroom_tokens) is also in the SAFE argument order -- max(0, nan) returns 0, whereas max(nan, 0) would return nan.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "cc2-antivacuity": {
+      "id": "cc2-antivacuity",
+      "title": "CC2: malformed/negative test carries a positive control",
+      "imperative": "Prove the negative-only assertions pass with the mechanism dead-coded and that ONLY the positive control catches it.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CONFIRMED by a four-way experiment I ran myself, not by reading the log. On the frozen selector -k malformed_or_negative: (A) shipped code + shipped test = 1 passed, 12 subtests. (B) M5 (resolver dead-coded, 'return raw' -> 'return 0') + shipped test = 1 FAILED -- the positive control catches it. (C) M5 + positive control DELETED = 1 PASSED, 12 subtests -- all twelve negative assertions still green with the mechanism entirely off. (D) shipped code + positive control deleted = 1 passed. So C == D: without the control the test is exactly vacuous, and the control is the only thing that discriminates. Source restored and byte-verified after each step.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "cc3-neighbour": {
+      "id": "cc3-neighbour",
+      "title": "CC3: neighbour isolation asserted BOTH sides by name",
+      "imperative": "Overridden gate changes AND a named neighbour does not, same fill, same model, same test.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both sides asserted BY NAME, in the same test, at one fill (0.12) on one model (claude-opus-5), four independent ways: the unit guard (execute raises EngineError, reconcile returns None); the band decision itself (_trip_hard_band_reading not-None for execute, None for reconcile); the CLI boundary (dispatch start execute REFUSES and leaves it pending, start reconcile -> in-progress); and the strongest form, the neighbour's advisory asserted BYTE-IDENTICAL to the no-override text while the overridden gate's is asserted NOT equal. Anti-vacuity check applied: under M5 (mechanism deleted) all four of these tests go RED, so none is a negative-only assertion. Under M9 (per-gate scoping removed) exactly the neighbour tests go red.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "cc4-profiles": {
+      "id": "cc4-profiles",
+      "title": "CC4: _PROFILES untouched",
+      "imperative": "Assert the _PROFILES/_DEFAULT_PROFILE block is byte-identical pre vs post.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Byte-identical. Extracted the _PROFILES.._DEFAULT_PROFILE region from f9925be6^ and f9925be6: both 2231 chars, sha256[:16] = fefce258ae14362b, string equality True. The only diff lines mentioning _PROFILES are new docstring prose in thresholds_for.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "cc5-noconfigtier": {
+      "id": "cc5-noconfigtier",
+      "title": "CC5: no checklist-config tier",
+      "imperative": "Key resolves from tasks.<gate> only; root and config placements must be ignored.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No tier exists and none can be smuggled in. I placed 50000 at six different locations and resolved through the real resolver: checklist root -> 0, cl['config'] -> 0, the gate's directives -> 0, the gate's status_detail -> 0, the gate's constraints list -> 0, a sibling gate -> 0. Only tasks.<gate>.context_headroom_tokens resolves. M10 (a config-tier fallback added underneath) is killed by exactly one named test, which is the one that defends decision:no-config-tier.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "cc6-shown-equals-judged": {
+      "id": "cc6-shown-equals-judged",
+      "title": "CC6: advisory and guard read the same resolved number",
+      "imperative": "Demonstrate, do not accept prose. Hunt for a path where shown and judged diverge.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS for the gate the advisory is about, with one disclosed caveat. Demonstrated, not asserted: the shipped together-sweep runs 5 reserves x 13 fills = 65 samples and asserts advisory-says-hard == guard-refuses on every one, plus asserts the sweep crossed the line in BOTH directions so the equality is not vacuous. M11 (advisory drops the reserve) and M12 (band decision drops the reserve) both kill that sweep, from opposite sides -- which is what makes it evidence rather than an assertion. CAVEAT, non-blocking (finding NB-1): on the reopen path shown and judged CAN differ, because _trip_advisory always reports the ACTIVE gate while _trip_hard_gate is passed the gate being begun, and a reopen target is by definition never the active gate. Reproduced: execute complete with reserve 50000, reconcile active, fill 0.12 -- the advisory shows only the SOFT band while 'reopen execute' is REFUSED at the hard band. Direction is fail-safe (tighter, never looser) and the refusal message states the reason, so this is a docstring overclaim ('cannot diverge') plus a test gap, not a behavioural defect.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "cc7-exactly-one": {
+      "id": "cc7-exactly-one",
+      "title": "CC7: exactly one shipped gate carries an override",
+      "imperative": "Not zero, not many. Check every shipped template, not just the commander spine.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Exactly one, verified repo-wide rather than on the commander spine alone. Parsed every *.json under skills/ and listed every task carrying the key: one hit -- COMMANDER_SPINE.template.json, gate 'execute', 30000. Resolving all ten spine gates through the real resolver: init 0, context 0, understand 0, plan 0, execute 30000, reconcile 0, triage 0, review 0, feedback 0, archive 0. The shipped test pins both halves and reads the value back through the REAL resolver, so the authored number and the governed number cannot drift; M16 (delete the value) kills it. Separately: decision:execute-gate-reserve-value is honestly presented AS a guess and recorded where a later run can revise it -- the adjacent context_headroom_note says 'it is a GUESS, revisable in place', states the one observation it rests on and why that observation cannot separate resume baseline from gate cost, and the shipped test asserts the string GUESS is present so the label cannot be quietly dropped. Per handoff I did not re-derive the settle experiment's un-runnability and do not block on the grade.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "cc8-mutations": {
+      "id": "cc8-mutations",
+      "title": "CC8: every logged mutation turns its NAMED test red",
+      "imperative": "Re-run at least two yourself and paste output; judge the M15 EQUIVALENT declaration.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Four mutations re-run by me in a clean git-archive sandbox at f9925be6. THREE REPRODUCE EXACTLY -- M1: 18 failed, all SUBFAILED on ThresholdsHeadroomOverrideTests::test_headroom_override_can_only_tighten_never_loosen (log says 18). M5: 9 real failures, named test red, and the negative half proven vacuous without the control (log says 9). M9: 7 real failures, every one a NEIGHBOUR test (log says 7). BLOCKING FINDING B-1: M15's EQUIVALENT declaration is FALSE. The stated reason -- 'advance refuses any gate that is not in-progress, and start refuses to open a gate that is not the active one, so in every reachable state args.id == active_id(cl)' -- overlooks block(), which carries NO status guard and can block an already-COMPLETE gate, and 'blocked' is not in TERMINAL, so active_id moves BACKWARDS behind an in-progress later gate. Reached with public verbs only and reproduced at the CLI: start g1; advance g1; start g2 (g2 carries reserve 50000); context fills to 0.12; block g1 --blocker ... --authority human --next ...; now statuses are g1 blocked / g2 in-progress and current reports ACTIVE g1. In that state 'advance g2' with no --why is REFUSED by the shipped code ('this gate cannot be closed silently') and CLOSES SILENTLY ('g2 -> complete') under the M15 mutant. So the branch is genuinely unkilled: the getattr(args, 'id', None) argument that g3 itself added at :2857 has zero test coverage, and its removal silently disables g2's no-silent-close rule for the gate being closed, in a reachable state. The shipped CODE is correct -- rework is one test plus a corrected log entry, no source change.",
+      "evidence": [
+        {
+          "id": "e-cc8-mutations-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "blocking_findings": "1",
+            "result_path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g3-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "cc9-suite": {
+      "id": "cc9-suite",
+      "title": "CC9: suite green, deltas explained",
+      "imperative": "Confirm the +17 attribution independently; the +/-1 subtest is tc3 and not a blocker.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Green, and the +17 is now attributed two independent ways. (1) From the diff: the test diff is purely additive -- 2 hunks, ZERO deleted or modified lines, 17 new 'def test_' methods (5 in test_gauge_reader.py, 12 in test_checklist_engine.py). (2) From a controlled suite run: I extracted the TRUE parent 5a69a30b and f9925be6 with git archive into two clean sibling trees and ran the full suite in each under identical conditions -- parent 1795 passed / 10 skipped / 665 subtests, post 1812 passed / 10 skipped / 790 subtests, with the SAME 16 git-oracle failures in both (an artifact of running outside a git checkout, present identically on both sides). Delta = +17 passed and +125 subtests EXACTLY -- and 125 is exactly what the focused headroom selector reports. This resolves tc3 rather than merely tolerating it: the diff-attributable subtest delta is a clean +125, so the handoff's stated 683 baseline is one high; the discrepancy lives in the stated baseline number, not in the diff. I also measured 808 subtests in the live worktree at the same commit where the implementer measured 806, confirming the whole-suite subtest count varies with tree state. Live worktree full suite: 1832 passed, 2 skipped, 808 subtests. Focused selector: 20 passed, 413 deselected, 125 subtests -- exact match to the reported figure.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "cca-attack-neighbour": {
+      "id": "cca-attack-neighbour",
+      "title": "ATTACK: claim:dc4-neighbour-isolation",
+      "imperative": "Find a surface where the reserve leaks onto another gate.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "ATTACKED, no leak found. Surfaces tried: (a) the resolver asked about every non-carrying gate in the shipped spine -- all 0; (b) the sibling/root/config/directives/status_detail/constraints placements -- all 0; (c) the neighbour's ADVISORY TEXT compared with and without execute's override across ten fills (0.0, 0.02, 0.05, 0.08, 0.10, 0.12, 0.1499, 0.15, 0.3, 0.9) -- byte-identical at every one; (d) the band decision for the neighbour at the fill where the overridden gate is over hard -- None. The one place the reserve does NOT reach is also worth stating (finding NB-3, non-blocking): the spine's execute reserve does not propagate into the CHILD checklist execute.json, so a Commander already inside execute and driving crew gates is governed by the default. That matches the authored intent ('may not be BEGUN with less than this much room'), it is not a leak, and it is recorded so a reader of the note does not assume run-wide effect.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "ccb-attack-tighten": {
+      "id": "ccb-attack-tighten",
+      "title": "ATTACK: constraint:tighten-only",
+      "imperative": "Find a value or a path the implementer did not sweep.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "ATTACKED, tighten-only survives every reachable path; two unreachable curiosities recorded. Values the implementer did not sweep that I did: -10**400 and 10**400 (unbounded ints), Decimal('-1'), Fraction(-1,2), -sys.float_info.max, -sys.maxsize, '1e9', '0x10', ' 30000 ', [30000], {'v':30000} -- none loosens, none raises, through the resolver or directly. Two things thresholds_for's docstring overclaims (finding NB-2, non-blocking, UNREACHABLE from any shipped path): (i) Decimal('NaN') raises decimal.InvalidOperation rather than clamping; (ii) an object with a custom __gt__/__rsub__ defeats both clamps -- I produced (1000.08, 1000.15), i.e. thresholds 6600x LOOSER than shipped. Neither is reachable: the resolver's isinstance(raw, int) and not isinstance(raw, bool) gate admits only non-negative plain ints, and grep confirms thresholds_for has exactly two call sites in the repo, both fed by that resolver. So the docstring sentence 'for every input the returned pair is <= the un-overridden pair for that model' should read 'for every REAL-NUMBER input'. The safety property as it matters -- no authored checklist value can raise a threshold -- holds.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: Evidence is largely reproducible and I reproduced the load-bearing parts myself. Reproduced: full suite 1832 passed / 2 skipped (subtests 808 in my tree vs 806 reported -- see cc9); focused selector 20 passed / 413 deselected / 125 subtests, exact match; mutations M1, M5, M9 reproduced with matching totals and named tests. ONE evidence claim FALSIFIED: the mutation log's M15 EQUIVALENT declaration ('args.id == active_id(cl) in every reachable state') is false -- see cc8 for the CLI-level reproduction. Per global-crew.md, a falsified evidence claim is a block finding, not an accepted fact.",
+      "r5-reconciliation: One recorded-architecture divergence Commander must reconcile, plus two triage candidates. DIVERGENCE (non-blocking, flagged for reconcile): docs/CHECKLIST_SCHEMA.md documents the Task object's optional keys and now under-describes the schema by one key (context_headroom_tokens, plus the inert context_headroom_note). The implementer flagged this itself and correctly declined to edit it (out of its allowed scope); its natural home is this run's reconcile gate. TRIAGE: (1) the settle experiment for decision:execute-gate-reserve-value needs a per-gate (gate, fill_fraction) log -- already routed to the Admiral, confirmed by me as still un-runnable from existing artifacts but NOT re-derived; (2) the full-suite subtest count is tree-state dependent (tc3) -- I add a new data point, see cc9.",
+      "cc8-mutations: Four mutations re-run by me in a clean git-archive sandbox at f9925be6. THREE REPRODUCE EXACTLY -- M1: 18 failed, all SUBFAILED on ThresholdsHeadroomOverrideTests::test_headroom_override_can_only_tighten_never_loosen (log says 18). M5: 9 real failures, named test red, and the negative half proven vacuous without the control (log says 9). M9: 7 real failures, every one a NEIGHBOUR test (log says 7). BLOCKING FINDING B-1: M15's EQUIVALENT declaration is FALSE. The stated reason -- 'advance refuses any gate that is not in-progress, and start refuses to open a gate that is not the active one, so in every reachable state args.id == active_id(cl)' -- overlooks block(), which carries NO status guard and can block an already-COMPLETE gate, and 'blocked' is not in TERMINAL, so active_id moves BACKWARDS behind an in-progress later gate. Reached with public verbs only and reproduced at the CLI: start g1; advance g1; start g2 (g2 carries reserve 50000); context fills to 0.12; block g1 --blocker ... --authority human --next ...; now statuses are g1 blocked / g2 in-progress and current reports ACTIVE g1. In that state 'advance g2' with no --why is REFUSED by the shipped code ('this gate cannot be closed silently') and CLOSES SILENTLY ('g2 -> complete') under the M15 mutant. So the branch is genuinely unkilled: the getattr(args, 'id', None) argument that g3 itself added at :2857 has zero test coverage, and its removal silently disables g2's no-silent-close rule for the gate being closed, in a reachable state. The shipped CODE is correct -- rework is one test plus a corrected log entry, no source change."
+    ],
+    "summary": "BLOCK, 1 blocking finding. The mechanism itself is correct, tightly scoped and unusually well defended: tighten-only survives a 26-value hostile sweep through the real resolver, the anti-vacuity positive control is proven load-bearing by a four-way experiment, neighbour isolation is asserted both sides by name four independent ways, _PROFILES is byte-identical, exactly one shipped gate carries an override repo-wide, and the +17/+125 deltas are attributed exactly against the true parent. B-1: the mutation log's M15 EQUIVALENT declaration is falsified -- block() has no status guard, so a completed gate can be blocked, active_id moves behind an in-progress later gate, and in that reachable state the M15 mutant closes a gate silently that the shipped code correctly refuses. Genuinely unkilled branch on a line g3 itself added. Shipped code is correct; rework is one test plus a corrected log entry, no source change."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "docs/CHECKLIST_SCHEMA.md under-documents the Task object by one optional key: context_headroom_tokens (and the inert context_headroom_note). One table row plus a sentence in the Trip section. Outside the implementer's allowed scope; natural home is this run's reconcile gate."
+    },
+    {
+      "id": "tc2",
+      "from": "cc6-shown-equals-judged",
+      "statement": "NB-1: _trip_advisory always reports the ACTIVE gate while _trip_hard_gate judges the gate being BEGUN, so on the reopen path (whose target is never the active gate) the shown band and the enforced band can differ. Fail-safe direction only. Narrow the _trip_hard_band_reading docstring's 'cannot diverge' claim and add a reopen-with-a-reserve case to the together-sweep."
+    },
+    {
+      "id": "tc3",
+      "from": "ccb-attack-tighten",
+      "statement": "NB-2: thresholds_for's docstring claims 'for every input the returned pair is <= the un-overridden pair'. False for non-real-number arguments -- Decimal('NaN') raises decimal.InvalidOperation, and an object with custom __gt__/__rsub__ defeats both clamps. Unreachable from any shipped path (the resolver admits only non-negative plain ints and is the sole feeder of both call sites). Reword to 'for every real-number input'."
+    },
+    {
+      "id": "tc4",
+      "from": "r6-fowler",
+      "statement": "NB-4 (Fowler, duplicated-code): thresholds_for(model, _gate_headroom_tokens(cl, gate)) is written out at checklist_engine.py:1485 and :1542. Extracting one private _thresholds_for_gate(cl, model, gate) would make 'shown == judged' structural rather than conventional and would delete mutation M11/M12's failure mode."
+    },
+    {
+      "id": "tc5",
+      "from": "cc9-suite",
+      "statement": "tc3 update: the diff-attributable subtest delta is a clean +125 (measured parent 5a69a30b 665 -> f9925be6 790 in identical clean trees), so the +/-1 lives in the handoff's STATED 683 baseline, not in the diff. Separately, the whole-suite subtest count varies with tree state (I measured 808 where the implementer measured 806 at the same commit). Suite-hygiene item, not a gate blocker."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g3-review-rev-01",
+    "status": "released",
+    "claimed_at": "2026-08-08T14:22:39.576518+00:00",
+    "last_heartbeat": "2026-08-08T14:51:03.550740+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T14:51:04.100355+00:00"
+  }
+}
