@@ -1864,3 +1864,18 @@ satisfied or ignored with identical traces gets ignored, including by the person
 **Behaviour changed now, not at closeout:** commits stay local until the Commander's PR opens or a
 genuine boundary lands. Verified alongside this: `d376b786..origin/main` is **25 commits with ZERO
 non-`.agent-work` changes**, so the wave-4 branch needs **no rebase** — its ground has not moved.
+
+**Near-miss in my own liveness check, recorded because it is the family again.** I ran
+`recover_crews.py issue-467-trip-semantics` **from the main checkout** and got *"no recorded crews
+for this work-id"*. Read at face value that says the g1 reviewer never registered — a stalled or
+lost crew. It is wrong: the registry is `crew-runs.json` **inside the worktree**, and the Commander
+reported *1 crew, 0 unresolved* from its own cwd. **Run from the wrong directory, the registry
+returns exactly what it returns when nothing is registered.** I only caught it because I had also
+listed recent file writes. Same shape as `verify_worktree_isolation.py`'s two modes, already in the
+settled list: a command whose answer depends on cwd, whose failure mode is a confident empty result.
+
+**The g1 reviewer is alive and doing better than asked.** It is building **probe scratch spines** —
+`g1-review/probe-scratch/probe-below-hard/` and `probe-escape/`, each with its own `gauge.json`,
+`spine.json` and journal. That is a reviewer **constructing the healthy and defective worlds itself**
+rather than re-reading the crew's evidence, and a below-hard control alongside the escape probe is
+exactly the counterfactual discipline the wave has been demanding of implementers. Unprompted by me.
