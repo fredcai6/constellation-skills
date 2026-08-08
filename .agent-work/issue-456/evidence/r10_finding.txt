@@ -1,0 +1,34 @@
+PASS. Read `is_test_module` and the reworded `SPLIT_LEGEND` side by side in both files; the
+sentence is now TRUE of the code, not merely different, on both halves.
+
+`is_test_module`'s body (byte-identical in render.py and checks.py):
+    parts = mod.split(".")
+    last = parts[-1]
+    if last.startswith("test_") or last.endswith("_test"):
+        return True
+    return "tests" in parts
+
+Reworded legend (byte-identical in both files):
+    "split: production vs test caller module, by pytest's default discovery convention --
+    test_*.py / *_test.py naming, or a tests package anywhere on the module path. a module
+    matching neither is counted production."
+
+FILENAME HALF: legend says "test_*.py / *_test.py naming" -> predicate's first branch is exactly
+`last.startswith("test_") or last.endswith("_test")` on the module's last dotted segment (which
+render.py's docstring separately justifies as the correct restatement of the file-path convention
+on the dotted name -- "the two agree by construction"). Matches.
+
+PACKAGE HALF: legend says "a tests package anywhere on the module path" -> predicate's fallthrough
+is exactly `"tests" in parts`, a membership test over every dotted segment, not just the first.
+"Anywhere" is the correct word for that; "tests package" is a fair paraphrase of "a path segment
+literally named tests". Matches -- this is the exact half that was WRONG before (it said
+"top-level", i.e. `parts[0] == "tests"`, a claim the code never made).
+
+FALLTHROUGH: legend says "a module matching neither is counted production" -> the function returns
+True on both branches above and `"tests" in parts` (a bool) otherwise, so False (i.e. neither
+filename nor package match) is exactly "not a test module" = production by construction elsewhere
+in the split logic. Matches.
+
+No third respect in which the legend overclaims or underclaims: it names exactly the two halves
+the docstring itself calls "two independent halves of pytest's documented default `python_files`
+convention" and no more. True in both files, both halves, no third gap found.

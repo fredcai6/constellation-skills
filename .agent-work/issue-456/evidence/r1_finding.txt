@@ -1,0 +1,21 @@
+PASS. Reproduced directly, not taken on trust. Commit 588d5419 does exactly the three things the handoff describes.
+
+1. LEGEND reworded in both hand-independent copies. Diffed render.py:361 and checks.py:301 directly: both now read "...test_*.py / *_test.py naming, or a tests package anywhere on the module path. a module matching neither is counted production." -- byte-identical between the two files, dropping "top-level" entirely. is_test_module's predicate body is untouched in both (grepped the diff hunks for the function body -- zero hits inside either function).
+
+2. Pinning test added: ProductionTestCallerSplitTests.test_the_legend_states_the_rule_the_predicate_actually_applies, with a behavioural half (nested pkg.sub.tests.helper classifies as a test module in both copies) and a wording half (assertNotIn "top-level" against both legends).
+
+3. measure_split.py fixed to cross-tabulate by definer. Reran it myself against a fresh build: 88/2341/2/449/873/0, exact match to the claim, headline "genuinely unused production code: 88 (not the naive 2429...)".
+
+Boundary verification reproduced independently this run:
+- Fresh build: 111 modules, 3753 entities, 3865 pages -- exact match.
+- Fresh check: 7/7 ok (no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, page-location-matches-content, inbound-attribution, deterministic-rebuild).
+- Gate selector (tc38, run by hand with FORCE_COLOR/PYTHONIOENCODING cleared): 20 passed, 0 failed, exit 0 -- baseline 19 + the new test.
+- Full suite: backgrounded to completion this run (see r3-evidence for the exact figures).
+
+Attacked all four "where to spend your budget" items named in the handoff (full detail under r7-r10):
+1. Pinning-test mutation attack: mutated SPLIT_LEGEND to four DIFFERENT top-level-only overclaims that avoid the literal string "top-level" ("at the front of the module path", "as the first segment", "root-level", "outermost"). All four survived (mutant GREEN, test still passes) -- the wording half is a pin against the ONE literal string from the one real defect, not a semantic pin against the overclaim CLASS. Graded honestly at r7: this is real but narrow, and the test's own docstring only ever claims to guard against reverting to "TOP-LEVEL-only scope" wording -- it does not overclaim broader coverage than it has. Not a blocker; filed as a triage candidate for a more robust check.
+2. Independence: grepped checks.py for any import of render -- none. Reran the attempt-1 divergence attack (mutate ONLY checks.py's copy to also classify a module literally named "helpers" as a test module) against a real fixture: check goes red on refs-line-self-consistent AND inbound-attribution, same two independent checks as attempt-1 found. Still load-bearing.
+3. The +1 explanation: built the pre-remediation tree (1f5c8a6e) in a throwaway worktree and diffed the exact page filename lists against HEAD. The ONLY difference across all 3864/3865 pages is exactly one new file -- the new test's own page. Spot-checked an existing entity's page (render.is_test_module) before/after: its own inbound-caller counts gained one new TEST-side reference (the new test calling it) but its BUCKET (production, since production sites already >0) is unchanged. No existing entity reclassified.
+4. Legend truthfulness: read is_test_module's body (byte-identical in both files: `if last.startswith("test_") or last.endswith("_test"): return True` then `return "tests" in parts`) against the reworded legend text. Both halves (filename convention, "tests" package anywhere on the path) are now literally true statements about the code, in both files.
+
+No scope drift beyond what r2-scope covers in full.

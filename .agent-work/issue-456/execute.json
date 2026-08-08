@@ -1598,7 +1598,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received at .agent-work/issue-456/crew-handoffs/g5-rereview-RESULT.md from crew constellation/issue-456/g5/reviewer/attempt-2 (sonnet), verdict APPROVE. This is the re-review of the remediation commit 588d5419 that closed attempt-1's BLOCK. Commander verified the remediation independently before dispatching the re-review: legend reworded identically in both hand-independent copies with no import introduced, fresh build then check 7/7 exit 0, modules 111 entities 3753 pages 3865, suite 1781 passed 2 skipped 672 subtests 0 failed, commit explicit paths only with 0 tracked map files."
         }
       ],
       "postconditions": [
@@ -1607,14 +1608,15 @@
           "statement": "production and test callers are distinguished on every page; no page shows a bare 'referenced by: none' where test callers exist; test pages still render, asserted by a test that fails if they stop",
           "check": {
             "kind": "command",
-            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'caller_split' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'CallerSplit' -q"
           },
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-3"
         },
         {
           "id": "c2",
@@ -1626,17 +1628,57 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1",
+          "attested": {
+            "evidence": "e-g5-integrate-1",
+            "note": "Reviewer verdict APPROVE, evidence e-g5-integrate-1. The re-review attacked rather than reproduced: it mutated SPLIT_LEGEND to four differently-worded top-level-only overclaims that avoid the literal string \"top-level\" and found all four survive, correctly grading the pinning test's wording half as a pin against one literal rather than against the overclaim class -- filed as a triage candidate, not a blocker, because the test's own docstring does not overclaim its coverage and its behavioural half is a full general pin on the real code path. It re-ran attempt-1's independence divergence attack and confirmed the hand-restated checks.py copy is still load-bearing (two independent checks go red). It proved zero reclassification the hard way, by building the pre-remediation tree at 1f5c8a6e in a throwaway worktree and diffing the exact page-filename sets: the only difference across 3864/3865 pages is the one new test page. Fowler pass 12/12 rail exit 0 with one earned override."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-456/crew-handoffs/g5-rereview-RESULT.md",
+            "gate": "g5",
+            "attempt": "2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'caller_split' -q",
+            "exit": 5,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'CallerSplit' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "gb-implement": {
@@ -2371,6 +2413,16 @@
       "id": "tc3",
       "from": "g5-review",
       "statement": "tc46: a gate's own evidence script can reproduce the exact conflation the gate was built to remove, and nothing catches it because evidence scripts are not themselves checked. g5 de-conflated unused / test-only / production ON THE PAGE correctly -- TEST_NOTE verified on 2789 test-defined pages and 0 production-defined pages -- and then reported a headline of 'unused: 2428 (64.7%)' produced by measure_split.py, which buckets purely on the two rendered caller lines and never asks whether the entity is ITSELF test-defined. 2340 of those 2428 (96.4%) are test entities whose own pages say zero callers is the normal expected state. The number a reader wants, genuinely unused PRODUCTION code, is 88 -- a 27x difference. Production code called only by tests is 2. Confirmed independently by the reviewer, and confirmed NOT to escape into anything shipped (top_index and module_index read in full; scripts/ grepped for the bucket names; zero hits outside the split-grammar constants and measure_split.py itself). TWO ACTIONS: (1) fix measure_split.py to carry the definer dimension, template ready at .agent-work/issue-456/evidence/g5_reviewer_split_by_definer.py, BEFORE the 2428 number propagates past this gate's closeout; (2) the general lesson -- a gate's evidence script deserves the same adversarial read as its shipped code, because a wrong headline number is how a green gate gets mistaken for a validated capability."
+    },
+    {
+      "id": "tc4",
+      "from": "g5-integrate",
+      "statement": "tc47: a GATE'S OWN postcondition can be a check that could only ever fail, and nothing catches it until the gate tries to close. This is tc38's exact defect class found in the PLAN rather than in a crew's work, which is worse: the crew-facing version at least has a reviewer looking at it. g5-integrate's c1 selected -k 'caller_split', a name no test in this repo has ever carried. Measured by hand: it collects ZERO tests and pytest exits 5, so the && chain could never pass no matter how correct the capability was. The tests its statement describes do exist, in ProductionTestCallerSplitTests; -k 'CallerSplit' collects 7 and passes. The typo was authored at plan time, before the class was named, and survived plan review, the whole of g5-implement, a BLOCK, a remediation, and a re-review -- five opportunities -- because nothing runs a gate's own postcondition command until advance. TWO ACTIONS: (1) at plan time, every command-kind postcondition whose command is a test selector must be RUN once at authoring to prove it collects a non-zero number of tests -- a selector that collects zero is a plan defect, not a gate failure; (2) the deeper fix is that the engine could refuse or warn on a command postcondition that exits 5, since 'no tests collected' is categorically different from 'tests failed' and should never read as a normal red. Note the asymmetry this run keeps rediscovering: a check that cannot fail and a check that cannot pass are equally informationless, and the second is harder to spot because it looks like diligence."
+    },
+    {
+      "id": "tc5",
+      "from": "g5-integrate",
+      "statement": "tc48 (re-filed into execute.json from the g5 re-review's own survey, where it is that survey's tc1 -- do not double-count): the remediation's pinning test guards one literal string, not the class of defect. Its wording half is assertNotIn(\"top-level\", legend). The re-reviewer mutation-proved the gap by rewording SPLIT_LEGEND to four DIFFERENT top-level-only overclaims that avoid that exact substring -- \"at the front of the module path\", \"as the first segment\", \"root-level\", \"outermost\" -- and all four survived undetected, mutant green. Correctly graded NOT a blocker: the test's own docstring is honestly scoped to guarding a reversion of that specific wording and does not overclaim its coverage, and its behavioural half (a nested tests package still classifies as a test module in both hand-independent copies) is a full general pin on the real code path. The durable lesson generalizes past this test and joins tc45: pinning a printed legend to a predicate by asserting the ABSENCE of one wrong phrase is a pin against the last mistake, not against the failure mode. The robust form is to derive the legend's prose from the predicate's own literal values so the two cannot drift, or to assert a property of the predicate that the legend's claim implies. Worth doing when the legend-pinning pattern is generalized."
     }
   ],
   "blockers": [],
@@ -2500,6 +2552,13 @@
       "why": "g5 review returned BLOCK, and the block is correct. The reviewer confirmed BOTH Commander findings by running them rather than reading the diff, and went beyond its mandate on the rest.\n\nFINDING A -- CONFIRMED, BLOCKING. SPLIT_LEGEND, printed on all 3864 pages, states the rule is a TOP-LEVEL tests package; is_test_module matches a `tests` segment ANYWHERE on the dotted path, reproduced independently in BOTH copies. Nothing pins the legend to the predicate, unlike the existing REFS_LEGEND precedent. This lands on the gate's own close criterion judged verbatim and is this run's central defect class -- a stated rule that does not match the applied rule -- on the one sentence explaining the gate's mechanism, repeated on every page. The gate CANNOT close over it.\n\nFINDING B -- CONFIRMED as a real conflation, but it does NOT escape into anything shipped. The reviewer read top_index and module_index in full and grepped scripts/ for the bucket names: zero hits outside the split-grammar constants and measure_split.py itself. So the per-page capability is genuinely delivered and the defect is confined to the evidence layer.\n\nMY RULING ON FINDING A: fix the LEGEND, keep the PREDICATE, and add the pinning check. A nested pkg/tests/ subpackage is a real and common layout, so 'a tests segment anywhere on the dotted path' is the more defensible reading of the published convention and 'top-level' is simply the less accurate description. It is also the smaller diff and reclassifies ZERO entities, so no measured number in this gate's evidence changes -- the 88 / 2 / 873 / 2340 / 449 split stands as measured. The pinning check must go red if the legend text and the predicate drift again.\n\nWHAT THE REVIEWER PROVED BEYOND ITS MANDATE. tc32 attacked with three mutations the implementer did not choose: reverse-sort left the diff EMPTY (still visit-order-independent), while call-count-with-ties and reversed-insertion both went NON-EMPTY -- ties leak visit order through Python's stable sort. It also built a second fixture where the TEST bucket is the one with two external callers, proving BOTH bucket lines order deterministically rather than only production. tc32 is genuinely closed. Separately it proved the hand-restated is_test_module in checks.py is load-bearing rather than decoration: diverging ONLY the checks.py copy made TWO checks go red. That retires the standing worry that this gate would collapse g2's two-independent-declarations design into an import.\n\nEvery number reproduced exactly: suite 1780/2/672/exit 0, build 111/3752/3864, check 7/7, selector 19, and measure_split.py's headline byte-for-byte. No scope drift; all named tripwires re-verified directly, including zero line positions in page headers across all 3864 pages.\n\nNEW, out of this gate's scope: 386 pages are non-ASCII, every one traced to PRE-EXISTING docstring prose (an em-dash in scripts/agent_work_root.py). g5's own new strings are pure ASCII. Carried forward, not this gate's defect.\n\nNEXT: a remediation crew fixes the legend and adds the pinning check, then g5-integrate needs an APPROVE. g5-integrate must NOT be advanced on this BLOCK.",
       "mechanical": false,
       "ts": "2026-08-08T15:36:08.031936+00:00"
+    },
+    {
+      "id": "w-19",
+      "gate": "g5-integrate",
+      "why": "g5 closes on an APPROVE after one BLOCK and one remediation. The capability shipped: every entity page's single inbound line became two attributed lines, production callers separated from test callers, with a TEST_NOTE on test-defined pages so that zero callers reads as the normal expected state rather than a finding. Test pages are rendered, not deleted.\n\nThe BLOCK was correct and the remediation closed it: SPLIT_LEGEND, printed on every page, claimed the split keyed on a top-level tests package while is_test_module matched a tests segment anywhere on the dotted path. I ruled fix the legend and keep the predicate, because a nested pkg/tests/ subpackage is a real common layout and \"anywhere on the path\" is the more defensible reading of pytest's published convention; it was also the smaller diff and reclassified zero entities, so every measured number survived. A pinning test now guards both directions of drift.\n\nThree independent measurements agreed exactly on the corrected split: genuinely unused production code is 88, not the naive 2428/2429 headline, because 96.4% of that bucket is test-defined entities whose own pages say zero callers is normal. That conflation was confined to the evidence layer and never escaped into anything shipped -- verified by reading top_index and module_index in full and grepping scripts/ for the bucket names.\n\nTwo independence properties survived the gate most likely to break them: checks.py still re-declares the refs-line grammar and is_test_module by hand rather than importing from render.py, and that hand copy is provably load-bearing -- diverging only it makes two independent checks go red. Zero entities were reclassified, proved by building the pre-remediation tree in a throwaway worktree and diffing the exact page-filename sets.\n\nClosing at: modules 111, entities 3753, pages 3865, check 7/7 exit 0, suite 1781 passed 2 skipped 672 subtests 0 failed, 0 of 3865 page headers carrying a line position. One residual weakness carried to triage, not blocking: the pinning test's wording half pins one literal string rather than the overclaim class.",
+      "mechanical": false,
+      "ts": "2026-08-08T17:25:33.589045+00:00"
     }
   ],
   "amendments": [
@@ -2527,6 +2586,14 @@
       "authority": "commander",
       "ops": [
         "retext-check g2-integrate.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-08T17:19:30.240149+00:00",
+      "reason": "Repairing a check that could only ever FAIL -- this is tc38's exact defect class, found this time in the PLAN's own postcondition rather than in a crew's work. c1's second half selected -k 'caller_split', a name no test in this repo has ever carried. Measured by hand: that selector collects ZERO tests and pytest exits 5 (no tests collected), so the && chain could never pass no matter how correct the capability was. The tests the statement describes do exist -- they live in ProductionTestCallerSplitTests -- and -k 'CallerSplit' collects 7 of them (the 6 original split tests plus the remediation's new pinning test) and passes, exit 0. Only the selector string changes; both halves of the command, the env prefix, the statement, and the override policy are untouched, and the bar is not lowered. Verified the corrected check DISCRIMINATES rather than merely passing: the remediation's red-before-green ran test_the_legend_states_the_rule_the_predicate_actually_applies, a member of this very class, RED at exit 1 against the unfixed legend, so this selector demonstrably goes red when the thing it guards is broken. Authority is commander because this repairs a defective instrument rather than overriding a real failure; c1's human-authority override policy is untouched and unused -- nothing is being waived. Filed as a run candidate for triage.",
+      "authority": "commander",
+      "ops": [
+        "retext-check g5-integrate.c1"
       ]
     }
   ]

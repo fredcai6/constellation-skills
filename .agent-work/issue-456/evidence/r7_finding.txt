@@ -1,0 +1,36 @@
+PASS (non-blocking), with a real narrowness found and graded honestly per the handoff's own
+instruction not to just reproduce the author's own probe.
+
+Wrote `.agent-work/issue-456/evidence/g5_rereview_pin_attack.py`: mutates SPLIT_LEGEND in BOTH
+render.py and checks.py to four DIFFERENT overclaiming wordings the implementer did not choose,
+each restating the same false "top-level-only" rule without containing the literal substring
+"top-level":
+  front-of-path    "a tests package at the front of the module path"      -> GREEN (SURVIVED)
+  first-segment    "a tests package as the first segment of the module path" -> GREEN (SURVIVED)
+  root-level       "a root-level tests package"                           -> GREEN (SURVIVED)
+  outermost        "an outermost tests package"                           -> GREEN (SURVIVED)
+Every mutation asserted applied (`assert render_mut != ORIGINAL_RENDER`, `assert checks_mut !=
+ORIGINAL_CHECKS`) before the test ran; both files restored byte-identical and verified by
+read-back after every trial and again at the end.
+
+VERDICT: this is a pin against ONE literal string from the ONE real defect, not a semantic pin
+against the overclaim CLASS. `assertNotIn("top-level", legend)` catches only a legend that spells
+its overclaim with that exact substring. All four differently-worded overclaims -- which describe
+the identical false rule a reader would be equally misled by -- pass straight through undetected.
+
+Is that a blocker? No, graded on what the test actually CLAIMS, not what a skim might assume:
+- The docstring is honestly scoped: "the wording assertion fails if the legend is ever worded back
+  to overclaim TOP-LEVEL-only scope" -- it says "worded back" (a reversion of THIS wording), not
+  "any future overclaim of any shape." It does not overclaim its own coverage.
+- The BEHAVIOURAL half of the same test (nested `pkg.sub.tests.helper` classifies as a test module
+  in both copies) is a full, general pin on the actual code path -- untouched by this narrowness.
+  If the predicate itself regresses to top-level-only matching, the behavioural assertion catches
+  it regardless of what the legend then says.
+- CREW_CONTEXT's "assert against behaviour, never against text that describes it" is the doctrine
+  this brushes against -- but there genuinely is no behavior to assert against for "does the
+  legend's OWN TEXT say something false," since the legend's subject matter is the text itself.
+  A fully general fix (derive the prose from the predicate's literal values) is a larger scope
+  change than this remediation's mandate ("fix the LEGEND, keep the PREDICATE, add A pinning
+  check" -- singular, narrow).
+
+Filed as tc1 (see r5-reconciliation) for a future strengthening, not as a blocker here.

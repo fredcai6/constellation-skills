@@ -4,11 +4,71 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: `g5-rereview` — **DISPATCHED** 2026-08-08
-- **PID**: crew `constellation/issue-456/g5/reviewer/attempt-2`, Agent name `g5-rereviewer`,
-  model `sonnet`. Recover with `SendMessage` to that name (externally dispatched —
-  `recover_crews.py` will report it RESUMABLE, which means nudge in place, never relaunch).
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g5-rereview-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: **`gb`** — next gate, NOT yet started
+- **PID**: none in flight. All crews resolved.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md`
+
+## `g5` IS CLOSED — `g5-integrate -> complete` on an APPROVE
+
+**CLOSED: `g0` `g1` `g2` `g3` `g4` `g5`.** Six of eleven. Remaining: **`gb` `g6`
+`g7` `g8` `gs`**, then `reconcile → triage → review → feedback → archive`.
+
+### `tc47` — the trap that nearly ate the gate close, READ THIS BEFORE ANY GATE
+
+`g5-integrate`'s own postcondition `c1` selected `-k 'caller_split'` — **a name no
+test in this repo has ever carried**. It collects **ZERO** tests and pytest exits
+**5**, so the `&&` chain could never pass however correct the code was. This is
+`tc38`'s defect class in the PLAN's own check. It survived plan review, all of
+`g5-implement`, a BLOCK, a remediation and a re-review, because **nothing runs a
+gate's own postcondition command until `advance`**.
+
+**Repaired** by `amend --delta ... retext-check` (authority `commander`) to
+`-k 'CallerSplit'`, which collects **7** and passes. Only the selector changed;
+statement, env prefix and the human-authority override policy untouched — nothing
+was waived. Discrimination proved: the remediation's red-before-green ran a test
+inside that very class RED at exit 1.
+
+**DO THIS AT EVERY REMAINING GATE:** before dispatching, run that gate's own
+`c1`/`c2` command postcondition **by hand** and confirm any test selector collects
+a **non-zero** count. Exit 5 is "no tests collected" — categorically different
+from a red, and it looks like diligence.
+
+### Engine details learned this gate
+
+- `amend --delta` op key is **`"op"`, not `"kind"`** (a `"kind"` key fails with the
+  unhelpful `unknown op kind None`).
+- `retext-check` accepts a **pending or in-progress** gate; `reopen` a complete one.
+- **Registry vs recovery disagree:** `recover_crews.py` reports `0 unresolved`
+  while `run_crew.py` REFUSES the launch as a duplicate. An externally dispatched
+  crew stays `running` until closed with
+  `run_crew.py --verify-result <session-name>` — the correct close for a crew that
+  finished. `--abandon` also frees the hold but **misrecords a successful attempt**.
+- `.agent-work/issue-456/evidence/run_flag_candidate.py` points at the **reviewer's**
+  engine and takes 4 args. Commander wrappers that work are in the job tmp dir:
+  `run_advance.py`, `run_amend.py`, `run_attest.py`, `run_flag.py`.
+
+### Candidates filed at `g5-integrate` (numbering trap still applies)
+
+`execute.json`'s own counter printed these as **`tc4`/`tc5`**; run-wide they are
+**`tc47`/`tc48`**. Run-wide total is now **tc1–tc48**. Triage must not double-count
+— and `tc48` is ALSO the g5 re-review survey's own `tc1`, re-filed so the drain
+list holds it in one place.
+
+- **`tc47`** = a gate's own postcondition can be a check that could only ever fail;
+  run test selectors at authoring time; `exit 5` should never read as a normal red.
+- **`tc48`** = the new pinning test guards one literal string, not the defect class.
+  The re-reviewer mutation-proved it: four differently-worded top-level-only
+  overclaims that avoid the literal "top-level" all survive undetected. Not a
+  blocker — its docstring does not overclaim, and its behavioural half is a full
+  general pin. Joins **`tc45`**; the robust form derives the legend's prose from the
+  predicate's own literal values.
+
+### Also for feedback, new this gate
+
+`tc42` may be **retired**: the g5 re-reviewer resolved `<fowler-pass-record-path>`
+to a real path **at instantiation, before `claim`**, and needed **no waiver** —
+the first of six reviewers to get the normal path. The template's imperative text
+should state that as the default expectation.
 
 ## REMEDIATION LANDED — commit `588d5419`, verified by the Commander
 

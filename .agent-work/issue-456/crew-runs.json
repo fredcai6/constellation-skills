@@ -467,7 +467,7 @@
     "gate": "g5",
     "role": "reviewer",
     "attempt": 2,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/issue-456/g5/reviewer/attempt-2",
     "backend": "external",
     "pid": null,
@@ -477,10 +477,12 @@
     "stdout": ".agent-work/issue-456/crew-runs/g5-reviewer-attempt-2.stdout.txt",
     "stderr": ".agent-work/issue-456/crew-runs/g5-reviewer-attempt-2.stderr.txt",
     "started_at": "2026-08-08T16:51:13.134997+00:00",
-    "last_heartbeat": "2026-08-08T16:51:13.134997+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-08T17:08:56.985655+00:00",
+    "completed_at": "2026-08-08T17:08:56.985655+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "sonnet"
+    "model": "sonnet",
+    "result_present": true,
+    "result_fresh": true
   }
 ]
