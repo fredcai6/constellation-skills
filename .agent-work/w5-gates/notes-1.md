@@ -95,15 +95,15 @@ starts the branch after.
 ## Red repros captured (re-run these to confirm the fix)
 
 ```
-# B, main checkout — byte-identical to #501's quoted output
-$ py scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux
+# B, main checkout (cwd = C:/Programs/constellation-skills) — byte-identical to #501's quoted output
+$ python scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux
 REFUSED: installed public verifier is missing: C:\Programs\constellation-replan\scripts\verify_replan.py
 exit=1
 # B, installed copy, same packet
-$ py ~/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux
+$ python ~/.claude/skills/constellation-admiral/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux
 iterative role artifact ok: admiral-prelaunch (epic-418-redux)   exit=0
 # B, third manifestation — from this worktree
-$ py scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux
+$ python scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux
 REFUSED: role verifier must run from an installed constellation-* skill   exit=1
 # C, shipped check
 $ sh -c "gh pr list --head <branch> --state open --json number --jq 'length > 0'"
@@ -117,6 +117,30 @@ Live `stop` fixture for fix A already exists: `.agent-work/epic-418-redux/` carr
 `transitions/w4-to-close/` and `ADMIRAL_LOG.md:3242`
 `- TRANSITION | boundary=w4-to-close | decision=stop | verified`. Copy it into a test fixture; do
 not mutate the live epic's packet.
+
+## Interpreter — use `python`, never `py`, and match the gate
+
+Under the Bash tool `py` and `python` are **different interpreters**. Reproduced in this worktree:
+
+```
+py     -> C:\Users\fredc\.cache\codex-runtimes\...\python.exe            3.12.13   no pytest
+python -> C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\...     3.14.3    pytest 9.0.2
+py -m pytest --version      exit=1   ModuleNotFoundError: No module named 'pytest'
+python -m pytest --version  exit=0   pytest 9.0.2
+```
+
+`py -m pytest` fails with a **nonzero exit**, which reads exactly like a red suite. It is not — the
+tests never ran. Run the suite as `python -m pytest`.
+
+Two consequences beyond the suite:
+
+- **The version skew is its own hazard.** 3.12 vs 3.14 is not only a pytest difference. A stdlib
+  behaviour change between them could let a verifier script pass by hand and fail at the gate.
+- **The spine's own command postconditions invoke `python`**, not `py` — `execute.c2` is
+  `python scripts/verify_iterative_role_artifacts.py commander --work-id w5-gates`. So hand
+  verification must use `python` to predict what the gate will do. Every red repro above was
+  **re-derived under `python` (3.14.3)** and is identical to the `py` run — worktree refusal,
+  main-checkout refusal, installed-copy exit 0. No finding in this file depends on the interpreter.
 
 ## Fences
 
