@@ -2272,3 +2272,38 @@ blocked."** It never was.
 until the predecessor's idle notification has arrived; then stop it; then dispatch.* With the cost
 recorded — I overlapped two Commanders for four minutes and **nothing was lost purely by luck**,
 because the lease cannot exclude agents sharing a session id.
+
+**RULING | blanket amendment authorised for every remaining `*-integrate.c3`.** Instance E read the
+frozen plan ahead of itself and found the c3 defect is **not local to g1**: `g2-integrate.c3` is
+**character-identical** to the one that could not pass, and g3/g4/g5 are very likely the same. It
+floated rather than assuming, and asked before it was blocked rather than at the seam.
+
+Authorised as **my existing g1 ruling applied to identical instances** — adjudication, not new scope.
+
+**Why blanket rather than per-gate**, which was E's own stated alternative: the amendment does not
+depend on any gate's evidence. It normalises a **vocabulary** mismatch that exists independently of
+what a reviewer finds, and the facts it needs are already known. So per-gate rigour buys nothing
+real and costs **four stop-and-float round trips at the closing advance of each gate — precisely
+where four consecutive Commanders have tripped.** That is not a neutral trade; it is four more
+chances to lose a run to a defect already diagnosed.
+
+**Four conditions attached:** (1) amend only gates **verified** character-identical — read g3, g4,
+g5 first, exclude and float any variant, **never amend blind**; (2) exactly g1's ratified shape, with
+my failable condition unchanged and binding; (3) **one** amendment record naming every gate it
+touches, so the blast radius is visible without a diff; (4) **the reason must state this is a
+WORKAROUND, not a fix** — the root cause is that artifact `match` is exact equality per key and
+**cannot express "one of"**, and five amendments papering over that must not later read as the class
+being solved. The schema fix stays an open triage candidate.
+
+Also fenced: the amendment normalises **how a verdict is matched, never what the reviewer is asked to
+find**. If touching c3 tempts a change to the review imperative, stop and float.
+
+**Endorsed E's use of the unchanged-tree shortcut.** It attested g2's p1 on g1's closed evidence plus
+the contract — HEAD unchanged at `d80eda7c`, g1 touched no source, `w-4` records the repro re-run in
+its predecessor's own shell — rather than re-running. That is the sanctioned pattern used correctly,
+and I would have refused a re-run as waste.
+
+**The trust order is working.** E verified lease state and gate status from **raw task JSON**, not
+prose, and reported my briefing accurate on every point — the first handoff this wave where the
+incoming Commander found no contradiction. That is instance D's hard-won lesson paying off one
+handoff later.
