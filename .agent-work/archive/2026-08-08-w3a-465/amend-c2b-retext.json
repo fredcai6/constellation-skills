@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "archive",
+      "which": "postconditions",
+      "cond": "c2b",
+      "command": "gh pr list --head epic-418/w3a-465 --state open --json number --jq 'length > 0'"
+    }
+  ]
+}

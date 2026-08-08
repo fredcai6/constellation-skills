@@ -644,28 +644,32 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py w3a-465 --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-7"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c2b",
           "statement": "the work is REACHABLE: an open PR exists for this branch. A terminal spine and a pushed branch describe the run, not the ref -- CI never runs on an unopened branch, and every commander that reached a terminal spine without opening one had to be chased for it. Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up.",
           "check": {
             "kind": "command",
-            "command": "gh pr list --head <branch> --state open --json number --jq 'length > 0'"
+            "command": "gh pr list --head epic-418/w3a-465 --state open --json number --jq 'length > 0'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-8"
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Lease will be released as the very last action, immediately after this advance marks archive/spine complete, per doctrine ordering."
         },
         {
           "id": "c4",
@@ -700,38 +704,140 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-9"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w3a-465 --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "gh pr list --head <branch> --state open --json number --jq 'length > 0'",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w3a-465 --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "gh pr list --head epic-418/w3a-465 --state open --json number --jq 'length > 0'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-6",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-7",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w3a-465 --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-8",
+          "type": "command-output",
+          "payload": {
+            "cmd": "gh pr list --head epic-418/w3a-465 --state open --json number --jq 'length > 0'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-9",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 13,
+  "refusals": 15,
   "engine_session": {
     "session_id": "commander-w3a-465-c",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T07:12:10.178065+00:00",
-    "last_heartbeat": "2026-08-08T07:16:43.575050+00:00",
+    "last_heartbeat": "2026-08-08T07:37:06.715808+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": "commander-w3a-465-b",
-    "takeover_reason": "continuation after predecessor governor trip"
+    "takeover_reason": "continuation after predecessor governor trip",
+    "released_at": "2026-08-08T07:37:12.722151+00:00"
   },
   "why_trail": [
     {
@@ -796,6 +902,13 @@
       "why": "Reflected honestly on the run: predecessor's execute.json c2 check had a relative script path defect (template-instantiation bug), engine current/--session-id CLI inconsistency recurred this session, handoff quality gaps (invented amend --op flag, no named scratch home, reviewer criterion instructing a doctrine-forbidden JSON read), and plan template's bare-self-attestation TDD-red gap. 6 episodes captured to episodes/active via apply_episode_delta.py, verified via verify_episode_captured.py (6 episodes, phase feedback).",
       "mechanical": false,
       "ts": "2026-08-08T07:16:21.488972+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "All archive postconditions satisfied: c1 (episodes captured and tracked by git), c2 (branch committed and pushed, commit 8fdc530d), c2b (PR #499 open, FINAL), c3 (lease to be released as the immediate next and final action), c4 (no suspicious artifacts in staged diff). Spine w3a-465 is complete: init through archive all advanced. Release is the next and last action.",
+      "mechanical": false,
+      "ts": "2026-08-08T07:37:06.715780+00:00"
     }
   ],
   "amendments": [
@@ -805,6 +918,14 @@
       "authority": "Commander w3a-465-b",
       "ops": [
         "retext-check execute.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-08T07:36:37.188003+00:00",
+      "reason": "c2b's check command carried a literal unresolved <branch> placeholder from the template, never substituted with the actual branch name (epic-418/w3a-465) at instantiation -- same template-instantiation defect class as the earlier c2 relative-path fix. Retexted to the resolved gh command.",
+      "authority": "Commander w3a-465-c",
+      "ops": [
+        "retext-check archive.c2b"
       ]
     }
   ]
