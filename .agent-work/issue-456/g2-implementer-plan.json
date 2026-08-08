@@ -35,7 +35,19 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context",
+            "why_ref": "none",
+            "note": "HARD context trip at the advance boundary: gauge 17.9% of a 1M window (178K tokens) against a 150K hard cap. Parked, did not push through. Understanding is written down in .agent-work/issue-456/g2-design-note.md -- the fix design for all three defects, every measurement behind it, and the two g1 falsifiers a naive fix would destroy. Defect (a)'s reproducer is COMMITTED FAILING at 80702615 (exit 1, 9 failed, evidence/g2-red-d2.txt); baseline 1729/2/1xfail captured before any edit. Nothing in scripts/ touched. A fresh implementer resumes at m1-d2-symbol-identity."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m1-d2-symbol-identity": {
@@ -219,7 +231,7 @@
     "session_id": "g2-implementer-attempt-1",
     "status": "active",
     "claimed_at": "2026-08-08T04:55:30.791316+00:00",
-    "last_heartbeat": "2026-08-08T05:03:52.366102+00:00",
+    "last_heartbeat": "2026-08-08T05:08:48.377780+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
