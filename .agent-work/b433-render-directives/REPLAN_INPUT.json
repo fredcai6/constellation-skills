@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 redux — engine projection and completeness defects",
+      "spec_path": ".agent-work/epic-418-redux/launch-orders/LO-433.md",
+      "intent_and_why": "Close the class of Task fields the engine carries but never projects, so a gate's standing instruction actually reaches the agent it binds."
+    },
+    "definition_of_done": [
+      "A populated `directives` block renders in `current`.",
+      "The completeness property that guards the field class is capable of failing, and has been observed failing.",
+      "The schema record describes shipped behaviour."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No check that cannot fail; every red-proof reproduced in the Commander's own hands and the tree restored byte-identical.",
+      "sufficient_evidence": "Broad-suite green with the real exit code, plus a deliberate break that turns the property red by name.",
+      "appetite": "One bounded issue, three gates."
+    },
+    "hard_constraints": [
+      "Own scripts/checklist_engine.py only; do not edit scripts/collect_feedback.py, episodes/, or scripts/verify_worktree_precondition_coverage.py.",
+      "Do not rebase or merge main; the Admiral replants the branch.",
+      "The doc describes shipped behaviour; it never becomes the enforcement mechanism."
+    ],
+    "fixed_decisions": [
+      "Inventory verdict is RENDER, not delete: 8 populated corpus blocks, three of them in shipped spine templates.",
+      "The completeness property's extractor stays INDEPENDENT of the renderer, so one bug cannot render nothing and assert nothing in agreement."
+    ],
+    "current_wave": {
+      "objective": "Render `directives` and close the unrendered-field class.",
+      "exit_criteria": [
+        "g1 renders both live shapes with a golden captured RED first.",
+        "g2 ships a completeness property with a total extractor, a per-field ledger, a builder-superset assertion and an in-suite negative self-test.",
+        "g3 corrects the drifted schema row and the false Rendering claim.",
+        "Broad suite green at or above the recorded baseline with the real exit code."
+      ],
+      "issues": [
+        {
+          "id": "433",
+          "title": "Render `directives` in the engine's `current` projection",
+          "desired_outcome": "A populated `directives` block reaches the agent the gate binds, and the field class is guarded by a property that can actually go red.",
+          "useful_now": "Three shipped spine templates carry the field, so every run instantiated from them silently loses its standing contract.",
+          "appetite": "Three gates.",
+          "acceptance_or_falsification_evidence": "Before/after `current` on a populated block; the property observed failing by field name when a populated field is deliberately unrendered.",
+          "implementation_latitude": "Renderer internals free; the projection's existing omit-when-empty contract is preserved.",
+          "hard_constraints_no_gos": [
+            "No shared helper between the property's leaf extractor and the renderer.",
+            "No check that reports green without asserting anything."
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Wire the gauge writer hook so a fresh dispatch does not inherit its predecessor's context reading",
+        "why_likely": "Observed to cost real time on this run; #180's settings.json wiring is already a known open item",
+        "entry_conditions": [
+          "A human decides the wiring, since it touches settings.json"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether template-only Task fields need their own guard",
+        "affects": "How completely the unrendered-field class is actually closed",
+        "settle_by": "A survey of fields that appear in shipped checklist JSON but in neither the amend-task builder nor `append()`",
+        "current_evidence": "The property's superset assertion covers engine-introduced fields only; the limit is stated in the docstring and in the schema doc",
+        "next_probe": "Diff the union of template gate keys against the builder's key set"
+      }
+    ],
+    "parked_possibilities": [
+      "Rendering satisfied conditions (the satisfied-hiding behaviour is pre-existing and out of this issue's scope)"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "433",
+      "outcome": "g1 -- `state()` passes `directives` through and `render_human()` emits the block between `anchors:` and `next:`; both live shapes served (key-to-nested-contract-dict, which all 8 populated corpus gates carry, and the flat `[string]` the schema declares and the add/rescope amend ops build); absent, empty and unrecognized shapes add zero output. g2 -- the field class is closed by a property that can actually fail: `directives` un-excluded from TaskFieldCompleteness, `_flatten` replaced by a total recursive leaf extractor, the single `checked_any` flag replaced by a per-field ledger that names the offending field, the fixture's key set asserted a superset of the engine's own `_build_amend_task`, and an in-suite negative self-test added. g3 -- docs/CHECKLIST_SCHEMA.md corrected in both pinned places: the Task table's `directives` row now declares the dict shape, and the Rendering section states positively that a populated `directives` block renders, replacing a false 'Known gap, not yet closed' claim.",
+      "evidence": "Broad suite 1731 passed / 4 skipped / 647 subtests, REAL_EXIT=0 (baseline 1721/4/643). evidence/g1-before-after-current.txt (corpus-wide: 370 files, 2981 gates, exactly 8 gates change output, 0 first lines change); evidence/g1-RED-capture.txt and evidence/g1-integrate-commander-red-reproduction.txt (golden captured RED before the renderer existed); evidence/g2-r2-extractor-blind-to-dicts.txt, evidence/g2-r4-populated-field-flattens-to-nothing.txt, evidence/g2-r5-engine-field-forgotten-in-fixture.txt, evidence/g2-integrate-commander-red-reproduction.txt and evidence/g2-integrate-successor-commander-verification.txt (the property observed FAILING by field name, tree restored byte-identical ef979b43); evidence/g3-schema-doc-correction.txt (pinned c1/c2 greps exit 0)."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "A populated `directives` block now reaches the agent the gate binds.",
+      "expected": "The block appears in `current` for populated gates and nowhere else.",
+      "observed": "Corpus-wide: 370 checklist files, 2981 gates, exactly 8 gates change output — the 8 with a populated block — and 0 first lines change. This run's own spine `execute` gate renders its `replan_input` contract.",
+      "source": "evidence/g1-before-after-current.txt and the g1 REVIEW_RESULT"
+    },
+    {
+      "claim": "The completeness property is capable of failing, not merely observed passing.",
+      "expected": "Deliberately unrendering a populated field turns it red, naming the field.",
+      "observed": "Nulling the `directives` passthrough in `state()` fails the property with `populated field 'directives' ... missing from current()'s output`, exit 1, while `constraints:` and `anchors:` still render in the same failure message — so neither field covers for it. Reproduced independently by the implementer, a cold reviewer, and two successive Commanders.",
+      "source": "evidence/g2-integrate-successor-commander-verification.txt"
+    },
+    {
+      "claim": "The change is additive and the tree is unmodified after each proof.",
+      "expected": "Byte-identical restoration after every deliberate break.",
+      "observed": "git hash-object ef979b43de165da96610ac4f2fc90dbf3815ee31 before and after; git status --short empty.",
+      "source": "evidence/g2-integrate-successor-commander-verification.txt"
+    },
+    {
+      "claim": "The suite is green above baseline with the real exit code.",
+      "expected": "At or above 1721 passed / 4 skipped / 643 subtests, exit 0.",
+      "observed": "1731 passed, 4 skipped, 647 subtests passed, REAL_EXIT=0.",
+      "source": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "Simply un-excluding `directives` from the existing TaskFieldCompleteness property would have produced a check that CANNOT FAIL: `_flatten` returned [] for the nested-dict shape every populated corpus block carries, so the loop body never ran and the property asserted nothing while reporting green.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The current wave's exit criterion that the field class is actually closed",
+      "evidence": "evidence/g2-r2-extractor-blind-to-dicts.txt and evidence/g2-r4-populated-field-flattens-to-nothing.txt",
+      "reason": "Repaired inside the wave: total extractor, per-field ledger, builder-superset assertion, in-suite negative self-test. Exit criterion met rather than waived."
+    },
+    {
+      "id": "D1",
+      "signal": "A fresh dispatch inherits its predecessor's context-gauge reading. gauge.json held the second Commander's 18.4% (over the 15% hard band) and nothing refreshed it, because scripts/hooks/gauge_writer_hook.py is not wired into this worktree's .claude/settings.json. Every `advance` was blocked until the reading aged out of the reader's 30-minute window.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Relaunch cost for every multi-dispatch issue, and the integrity of the governor's own record",
+      "evidence": "gauge.json observed_at 2026-08-08T00:03:06.963Z, fill 0.184143, unchanged across the third dispatch's whole run; docs/GAUGE_WRITER_HOOK.md; engine output 'CONTEXT GAUGE SILENT ... sampled 38m15s ago'",
+      "reason": "The two available shortcuts are both dishonest — hand-writing a gauge record forges the instrument, and filing a refresh-request for an exhaustion this dispatch was not experiencing puts a false statement in the journal. The honest path costs a 30-minute wait, which quietly rewards the shortcuts. Needs a sanctioned way to invalidate an inherited reading."
+    },
+    {
+      "id": "D2",
+      "signal": "The completeness property's superset assertion closes the hole only for fields the ENGINE introduces. A field carried by a shipped template but built by neither `_build_amend_task` nor `append()` remains invisible to it.",
+      "classification": "later_only",
+      "affects": "How completely the unrendered-field class is closed",
+      "evidence": "Stated as the RESIDUAL LIMIT in the TaskFieldCompleteness docstring and now in docs/CHECKLIST_SCHEMA.md's Rendering section",
+      "reason": "Stated rather than implied, and out of this issue's authorized scope. A forecast amendment is sufficient."
+    },
+    {
+      "id": "D3",
+      "signal": "The carried g1-reviewer finding — a separate false sentence at docs/CHECKLIST_SCHEMA.md:138 that the pinned invariant chain would not catch — resolved benignly on inspection: the 'is not rendered' sentence IS the 'Known gap' sentence, so c1's conjunction does catch it.",
+      "classification": "evidence_only",
+      "affects": "Whether postcondition c1 needed amendment through the engine",
+      "evidence": "grep -n -i 'not rendered|never surfaced|known gap|directives' docs/CHECKLIST_SCHEMA.md — the only other `directives` mentions (lines ~237, ~288, ~290) are handoff and amend-op references that were already accurate",
+      "reason": "A real risk correctly raised that resolved in the benign direction by inspection rather than by assumption. No issue is warranted; recorded so the resolution is not re-litigated."
+    },
+    {
+      "id": "D4",
+      "signal": "The pre-declared subsumption candidate set (10 issues) was expected to close several as a side effect of this work.",
+      "classification": "drop",
+      "affects": "Expected subsumption yield for the wave",
+      "evidence": "0 of 10 closed; each declined in writing in .agent-work/epic-418-redux/notes-433.md. #345 (built-not-wired) is served in part and stays open.",
+      "reason": "The evidence falsified the expectation. Declining in writing is the correct outcome, not a shortfall to repair."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "gauge-writer-wiring",
+      "kind": "forecast"
+    },
+    {
+      "id": "template-only-field-guard",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "render-satisfied-conditions",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "tests/test_checklist_engine.py",
+      "docs/CHECKLIST_SCHEMA.md",
+      "scripts/hooks/gauge_writer_hook.py"
+    ],
+    "map_status": "No packet map: this is a skill-source repo with no docs/architecture/ directory. The structural record was reconciled directly, per the reconcile step's own fallback -- the change was folded into docs/CHECKLIST_SCHEMA.md, the schema doc it actually touches (Task table row and Rendering section), under gate g3."
+  }
+}

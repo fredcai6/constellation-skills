@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "b433-render-directives",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 4,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-reconcile@efc2b86f0edeac2b269243933e7c14e65385c501",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "b433-render-directives",
+    "generated_at": "2026-08-08T00:44:34Z"
+  }
+}

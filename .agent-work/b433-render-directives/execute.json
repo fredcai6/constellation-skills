@@ -417,7 +417,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-5"
         },
         {
           "id": "c2",
@@ -429,13 +430,18 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1",
+          "attested": {
+            "evidence": "e-g2-integrate-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -470,6 +476,28 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "ref": ".agent-work/b433-render-directives/evidence/g2-integrate-successor-commander-verification.txt",
+            "note": "Successor Commander own-hands verification: broad suite 1731 passed / 4 skipped / 647 subtests, exit 0; red-proof re-reproduced (directives passthrough nulled -> completeness property FAILS naming field 'directives', exit 1); tree restored byte-identical ef979b43.",
+            "exit_code": "0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -483,7 +511,8 @@
           "id": "p1",
           "statement": "g2 integrated: the property is in the suite, so the doc can describe shipped behaviour rather than intent",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -494,7 +523,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/r418-433 && ! grep -qi 'known gap' docs/CHECKLIST_SCHEMA.md && grep -qF 'a populated `directives` block' docs/CHECKLIST_SCHEMA.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-schema-2"
         },
         {
           "id": "c2",
@@ -503,7 +533,8 @@
             "kind": "command",
             "command": "cd C:/Programs/constellation-skills-wt/r418-433 && grep -F '| `directives` |' docs/CHECKLIST_SCHEMA.md | grep -q 'dict' && ! grep -qF 'null | forced primitive specifics handed down' docs/CHECKLIST_SCHEMA.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-schema-3"
         },
         {
           "id": "c3",
@@ -517,7 +548,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-schema-4"
         }
       ],
       "constraints": [
@@ -533,16 +565,107 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-schema-1",
+          "type": "command-output",
+          "payload": {
+            "ref": ".agent-work/b433-render-directives/evidence/g3-schema-doc-correction.txt",
+            "note": "Both doc corrections applied; pinned c1/c2 grep checks exit 0; broad suite 1731 passed / 4 skipped / 647 subtests, REAL_EXIT=0.",
+            "exit_code": "0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-schema-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && ! grep -qi 'known gap' docs/CHECKLIST_SCHEMA.md && grep -qF 'a populated `directives` block' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-schema-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && grep -F '| `directives` |' docs/CHECKLIST_SCHEMA.md | grep -q 'dict' && ! grep -qF 'null | forced primitive specifics handed down' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-schema-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/r418-433 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g2-review",
+      "statement": "append() and _build_amend_task duplicate the Task shape by hand; the new superset assertion reads only the latter, so a field added to append() alone stays invisible. One shared constructor removes the class."
+    },
+    {
+      "id": "tc2",
+      "from": "g2-review",
+      "statement": "A template-only Task field is invisible to the superset assertion. Live, not theoretical: anchors is emitted by neither builder. A check walking shipped templates' task objects for keys neither builder emits would close it."
+    },
+    {
+      "id": "tc3",
+      "from": "g3-schema",
+      "statement": "Nothing checks docs/CHECKLIST_SCHEMA.md's Task table against the builder. Such a check would have caught the stale directives row by itself."
+    },
+    {
+      "id": "tc4",
+      "from": "g1-implement",
+      "statement": "The CONTEXT gauge advisory is read from the checklist file's directory, so a crew's own plan inherits the Commander's gauge. A crew agent that obeyed it would hand off on turn one. Observed at 11% on a first claim."
+    },
+    {
+      "id": "tc5",
+      "from": "g1-implement",
+      "statement": "The engine mints a work-area directory keyed on work_id BESIDE the plan, not under it (.agent-work/<work-id>-g1-implement/). Both crew roles hit it in one gate."
+    },
+    {
+      "id": "tc6",
+      "from": "g1-review",
+      "statement": "An untested defensive branch in _render_directive_lines (dict value that is not a dict). Proved dead by mutation: replacing it with raise leaves the suite green. Kept deliberately, same posture as _render_anchor_lines."
+    },
+    {
+      "id": "tc7",
+      "from": "g1-review",
+      "statement": "The flat-list branch's silent drop -- found by the g1 reviewer, FIXED in g2. Recorded because it is the clearest evidence the defect class is real: it appeared inside the fix for it."
+    },
+    {
+      "id": "tc8",
+      "from": "g3-schema",
+      "statement": "A stale context-gauge reading survives the session it describes. A fresh dispatch inherits its predecessor's fill and is blocked at every advance until the reading ages out of the 30-minute window. Needs a sanctioned way to invalidate an inherited reading."
+    },
+    {
+      "id": "tc9",
+      "from": "g2-review",
+      "statement": "The reviewer skill and the workbench dogfooding reference conflict on which engine copy drives a review of the engine ITSELF. Both crews hit it; the g2 reviewer had to break the vendored engine mid-review. Neither document anticipates 'the engine you drive is the engine you break.'"
+    }
+  ],
   "blockers": [],
   "why_trail": [
     {
@@ -586,6 +709,20 @@
       "why": "Cold reviewer returned APPROVE on 10/10 criteria, having broken the tree itself three times: R2 gave the ledger set-mismatch naming anchors and directives, R4 failed by name on a zero-leaf field, R5 failed by name proving the superset test reads the LIVE builder rather than a re-listed copy. It also reverted the flat-list carry-over and saw it red. Tree restored byte-identical by git hash-object. One honest gap carried forward: the docstring states the residual limit as a class but does not name anchors as today's live instance.",
       "mechanical": false,
       "ts": "2026-08-07T23:45:54.667433+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "g2 verified in my own hands as the third dispatch: broad suite green (1731 passed / 4 skipped / 647 subtests, exit 0), and the completeness property re-proved capable of failing -- nulling the directives passthrough makes it fail NAMING the field 'directives', with constraints/anchors still rendered so neither covers for it, which is exactly the per-field-ledger fix working. Tree restored byte-identical ef979b43. Reviewer APPROVE on 10/10. Remaining: g3 schema-record correction.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:22:26.657099+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-schema",
+      "why": "Schema record corrected in both pinned places and verified by the gate's frozen command checks (c1/c2 exit 0), with the broad suite green at 1731 passed / 4 skipped / 647 subtests, exit 0. The carried g1-reviewer risk resolved benignly: the 'is not rendered' sentence IS the 'Known gap' sentence, so c1's conjunction catches it and no amendment to c1 was needed -- confirmed by grepping the whole file rather than assuming. The doc now describes shipped behaviour and stays a record, not an enforcement mechanism.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:41:06.627062+00:00"
     }
   ]
 }

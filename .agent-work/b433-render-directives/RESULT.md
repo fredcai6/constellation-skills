@@ -1,14 +1,11 @@
 # RESULT — issue #433, render `directives` in the `current` projection
 
-**Status: handed off at a seam, not finished.** Two of three execute gates are done, reviewed and
-committed; the third (`g3-schema`, a two-place doc correction) and the spine's closeout steps remain.
-The Commander driving this run tripped the context governor's HARD band at `g2-integrate`, filed the
-refresh-request the engine demands (`e-g2-integrate-3`, seam `g2-integrate`, `why_ref` `w-6`), and
-stopped. This is the second such handoff on this job; the predecessor stopped the same way at `plan`.
+**Status: complete.** All three execute gates are done and the spine is driven to closeout. This run
+was finished by the **third** Commander dispatched to it: the first stopped at the `plan` seam and
+the second at `g2-integrate`, both on context-governor HARD trips. No committed work was redone.
 
 Full detail — inventory, dispositions, triage candidates, crew workflow feedback — is in
-`.agent-work/epic-418-redux/notes-433.md` under "Execution log — successor Commander". Resume
-instructions are in `STATE_NOTE.md` beside this file.
+`.agent-work/epic-418-redux/notes-433.md`.
 
 ## Verdict
 
@@ -81,14 +78,37 @@ dicts**. Not vestigial: three shipped spine templates carry it (commander `execu
 `execute`, explorer `confirm`), every run instantiated from them inherits it, and
 `tests/test_iterative_planning_doctrine.py` asserts the parsed contract in all three. Rendered.
 
-The schema's declared type (`[string] | null`) is drifted — that correction is `g3-schema`, the
-remaining gate.
+The schema's declared type (`[string] | null`) was drifted; corrected in `g3-schema` below.
 
 ## Subsumption
 
 Pre-declared candidate set: **10** (filed before the first code change). **Closed: 0 of 10.** Each
 declined in writing with a reason in `notes-433.md`; #345 (built-not-wired) is served in part and
 stays open.
+
+## Triage — nine candidates, all filed
+
+Registered in `execute.json` as `tc1`-`tc9` and **filed to the tracker**, not banked worktree-locally:
+
+| candidate | issue |
+|---|---|
+| `append()`/`_build_amend_task` duplicate the Task shape by hand | #474 |
+| a template-only Task field is invisible to the superset assertion — **`anchors` is one today** | #475 |
+| nothing checks the schema doc's Task table against the builder | #476 |
+| the gauge is read per checklist directory, so a crew inherits its Commander's reading | #477 |
+| crew work areas are minted beside the owning plan, not under it | #478 |
+| dead defensive branch in `_render_directive_lines` (proved dead by mutation; kept deliberately) | #479 |
+| the flat-list silent drop — fixed in g2, filed as the record | #480 |
+| a stale gauge reading outlives its session | #481 |
+| reviewer/dogfooding conflict: the engine you drive is the engine you break | #482 |
+
+**Read #475 first.** It is the one candidate that shows the defect class #420 and #433 both attacked
+is *still open today*, by name: `anchors` reaches the corpus through templates only, so the superset
+assertion this issue shipped cannot see it.
+
+Authority to file: LO-433's Inherited Latitude floats *closing* an issue but not *filing* one, and
+the spine's triage step names the citation that satisfies its user-approval postcondition in
+delegated mode. The Admiral can overrule cleanly.
 
 ## Isolation proof
 
@@ -98,11 +118,64 @@ worktree OK: in C:/Programs/constellation-skills-wt/r418-433
 EXIT=0
 ```
 
-## What remains
+## The schema record (g3)
 
-1. `g3-schema` — correct `docs/CHECKLIST_SCHEMA.md`'s Task table row and the Rendering section, then
-   the broad-suite postcondition. **Read `STATE_NOTE.md` first**: the g1 reviewer found a third false
-   sentence at line 138 that the gate's pinned invariant chain does not currently catch.
-2. Spine closeout: reconcile → triage → review → feedback → archive, then release the lease last.
-3. Open the PR against `main` with `gh pr create -F <file>`. Not opened here: the deliverable is
-   incomplete, and LO-433 authorizes the PR "when green" in the sense of finished-and-green.
+`docs/CHECKLIST_SCHEMA.md` corrected in the two pinned places, verified by command postconditions
+frozen at plan time rather than proxies invented at execution time:
+
+- **Task table row** — declared `[string] | null`; now declares `{name: {…contract}}` | `[string]` |
+  `null`, names the dict shape the corpus actually carries, and carries the real `replan_input`
+  example.
+- **Rendering section** — asserted a **false** "Known gap, not yet closed: `directives` … is not
+  rendered". Now states positively that a populated `directives` block renders on the same
+  omit-when-empty terms, names both live shapes, and records what made the completeness property
+  capable of failing, including its stated residual limit (template-only fields).
+
+The carried-forward g1 reviewer finding is resolved rather than merely noted: the "is not rendered"
+sentence the reviewer flagged is the **same sentence** that carried "Known gap", so c1's conjunction
+does catch it. A grep for every `not rendered` / `never surfaced` / `known gap` / `directives`
+mention confirms the only remaining `directives` references (handoff and amend-op rows) were already
+correct and are untouched.
+
+```
+c1 $ ! grep -qi 'known gap' docs/CHECKLIST_SCHEMA.md && grep -qF 'a populated `directives` block' docs/CHECKLIST_SCHEMA.md   -> 0
+c2 $ grep -F '| `directives` |' docs/CHECKLIST_SCHEMA.md | grep -q 'dict' && ! grep -qF 'null | forced primitive specifics handed down' docs/CHECKLIST_SCHEMA.md   -> 0
+```
+
+## Third-dispatch independent verification
+
+The successor did not take the seam handoff on trust. In its own hands
+(`evidence/g2-integrate-successor-commander-verification.txt`):
+
+- Broad suite re-run: **1731 passed, 4 skipped, 647 subtests, REAL_EXIT=0**.
+- Red-proof re-reproduced from scratch by nulling the `directives` passthrough in `state()`. The
+  property failed **naming the field**, and the failure message shows `constraints:` and `anchors:`
+  still rendered while `directives:` is absent — i.e. neither of the other fields covered for it,
+  which is precisely the single-flag defect the per-field ledger replaced:
+
+```
+AssertionError: 'DIRECTIVE_TEMPLATE_UNIQUE_TEXT' not found in '...' : populated field 'directives'
+(value {'replan_input': {'template': 'DIRECTIVE_TEMPLATE_UNIQUE_TEXT', ...}}) has content
+'DIRECTIVE_TEMPLATE_UNIQUE_TEXT' missing from current()'s output
+REAL_EXIT=1
+```
+
+- Tree restored **byte-identical** by `git hash-object` (`ef979b43…` before and after),
+  `git status --short` empty, suite green again.
+
+## A note on the governor reading
+
+The `gauge.json` in this work dir held the **second** Commander's reading (18.4%, over the 15% hard
+band). The gauge writer hook is not wired into this worktree's `.claude/settings.json` — the known
+open item from #180 — so nothing refreshed it for the third dispatch. The successor neither
+hand-wrote a gauge record (that would forge the instrument) nor filed a refresh-request claiming a
+context exhaustion it was not experiencing (that would put a false statement in the journal and cost
+a fourth dispatch). It did the gate work, which needs no `advance`, and advanced once the stale
+reading aged out of the reader's 30-minute window on its own — the documented degradation. **This is
+worth an issue: a fresh dispatch inherits its predecessor's reading and is blocked by it.**
+
+## PR status
+
+Opened against `main`. The branch is based on `73b4517`, which the Admiral's squash-merge orphaned,
+so GitHub reports the PR **CONFLICTING**. That is expected and is not a defect in this work; the
+Admiral replants the branch onto `main`. No rebase or merge was attempted here, per LO-433.

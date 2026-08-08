@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-schema",
+  "mechanical": {
+    "run": "b433-render-directives",
+    "project": "constellation-skills",
+    "spine-step": "g3-schema",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-b433-render-directives-g3-schema@95763d70b9bbb8540051459ea8ff6df10be26aff",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "b433-render-directives",
+    "generated_at": "2026-08-08T00:31:43Z"
+  }
+}

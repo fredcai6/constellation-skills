@@ -186,3 +186,108 @@ of the ten; each is declined here rather than silently dropped.
 - Both handoffs drew the same criticism from opposite ends: an abbreviated example next to a
   "match the ACTUAL shipped thing" refusal condition (g1), and a red-proof set numbered R2/R4/R5 with
   no R1 or R3 and no note saying why (g2). Show the full artifact, or label the abbreviation.
+
+## Execution log — third Commander (successor at the `g2-integrate` seam)
+
+Took over after the second dispatch tripped the governor's HARD band at `g2-integrate` and filed
+`e-g2-integrate-3`. Cold-started from the engine's `current` on the existing `spine.json` and
+`execute.json`; reused the lease `commander-b433-render-directives` and the existing `why_trail`.
+No committed work redone.
+
+### What this dispatch actually did
+
+1. **Independent verification of the inherited g2 result** — did not take APPROVE on trust.
+   Broad suite: 1731 passed / 4 skipped / 647 subtests, `REAL_EXIT=0`. Then re-derived a red-proof
+   from scratch (nulled the `directives` passthrough in `state()`): the completeness property failed
+   naming the field, with `constraints:`/`anchors:` still rendered in the same failure message —
+   direct evidence that no field covers for another. Tree restored byte-identical
+   (`git hash-object` `ef979b43…` both sides). Capture:
+   `evidence/g2-integrate-successor-commander-verification.txt`.
+
+2. **g3-schema** — both doc corrections, verified against the gate's pre-authored command
+   postconditions (c1/c2 exit 0), plus the broad suite (c3, exit 0). Capture:
+   `evidence/g3-schema-doc-correction.txt`.
+
+3. **Resolved the carried g1-reviewer finding.** The STATE_NOTE warned that a separate sentence at
+   `docs/CHECKLIST_SCHEMA.md:138` asserts `directives` "is not rendered" and that c1's negation would
+   not catch it. On inspection that is the **same sentence** that carries "Known gap" — one sentence
+   held both claims — so c1's conjunction does catch it, and no amendment to c1 was needed. Verified
+   by grepping the whole file for `not rendered` / `never surfaced` / `known gap` / `directives`: the
+   only surviving `directives` mentions (lines ~237, ~288, ~290) are handoff and amend-op references
+   that were already accurate. Recording this because the warning was a real risk correctly raised —
+   it just resolved in the benign direction on inspection rather than by assumption.
+
+### Governor finding — worth an issue
+
+`gauge.json` held the SECOND dispatch's reading (0.184143, `observed_at` 00:03:06Z) and nothing
+refreshed it, because `scripts/hooks/gauge_writer_hook.py` is not wired into this worktree's
+`.claude/settings.json` (the known-open #180 wiring). A fresh dispatch therefore inherits its
+predecessor's exhaustion and is blocked by it at every `advance`.
+
+Two exits were available and both were refused as dishonest: hand-writing a gauge record (forging the
+instrument the governor reads) and filing a refresh-request for a context exhaustion this dispatch was
+not experiencing (a false statement in the journal, and a fourth dispatch for nothing). Instead: do
+all the gate work, which needs no `advance`, and let the reading age out of `gauge_reader`'s
+30-minute window on its own — the degradation `docs/GAUGE_WRITER_HOOK.md` explicitly designs for
+("writes nothing and leaves the existing file to age into staleness"). Advance then proceeded
+normally.
+
+**Triage candidate (new, #11):** a stale gauge reading survives the session it describes. Either the
+reader should discount a record whose writing session is gone, or a fresh dispatch should be able to
+invalidate an inherited reading through a sanctioned verb — not by hand-editing the file. Today the
+only honest path is to wait out a 30-minute timer, which is a real tax on every relaunch and quietly
+rewards the dishonest shortcuts.
+
+### Triage routed — all nine candidates FILED to the tracker (not banked)
+
+The notes above said "not filed — the Admiral's call". The third dispatch filed them instead, for two
+reasons stated so the Admiral can overrule cleanly: LO-433's Inherited Latitude floats *closing* an
+issue but not *filing* one, and the spine's triage step gives delegated mode an explicit path to
+satisfy c2 by citing that latitude. Banking findings worktree-locally for later harvest is also the
+exact habit Tommy has corrected three times.
+
+| # | candidate | issue |
+|---|---|---|
+| 1 | `append()`/`_build_amend_task` duplicate the Task shape | #474 |
+| 2 | template-only field invisible to the superset assertion (`anchors` is one **today**) | #475 |
+| 3 | nothing checks the schema doc's Task table against the builder | #476 |
+| 4 | the gauge is read per checklist dir, so a crew inherits the Commander's reading | #477 |
+| 5 | crew work areas minted beside the plan, not under it | #478 |
+| 6 | dead defensive branch in `_render_directive_lines` (kept deliberately) | #479 |
+| 7 | the flat-list silent drop — fixed in g2, filed as the record | #480 |
+| 8 | a stale gauge reading outlives its session | #481 |
+| 9 | reviewer/dogfooding conflict: the engine you drive is the engine you break | #482 |
+
+#475 is the one to read first: it is the only candidate that shows the field class #420 and #433 both
+attacked is **still open today**, by name.
+
+### Workflow feedback — third dispatch's own reflection
+
+**Followed closely:** the spine, gate order, and every pinned postcondition. Nothing was improvised
+around a frozen check; where a check refused (`attest execute.c1` — engine-checked, `advance
+reconcile` — gate still pending) the refusal was correct and the fix was to use the right verb.
+
+**Where I had to improvise, and it was a real gap:**
+
+1. **The inherited gauge reading.** Covered at length above and filed as #481. The mechanism has no
+   honest fast path for a fresh dispatch, only a 30-minute wait. That is the single biggest workflow
+   defect this run hit.
+2. **`REPLAN_INPUT.json` did not exist**, despite the execute imperative saying it should be written
+   "as execution proceeds". Two predecessors both ended without it, which suggests the instruction is
+   easy to defer past — it sits mid-paragraph in a very long imperative and has no gate of its own
+   until the step's exit. Authoring it retroactively is possible but weaker: the discrepancy
+   classifications are reconstructed rather than recorded live.
+3. **The G2 packet's shape is not discoverable from the template alone.** The template shows
+   `completed_outcomes: []`, so its required field set (`issue_id`/`outcome`/`evidence`) and the
+   partition rule (completed ∪ open must exactly equal the wave's issue ids) are only learnable by
+   reading `verify_replan.py`. Same for `diagnosis` in the episode delta, where the template implies a
+   dict and the writer requires a list of `{kind, ...}`. Two refusal round-trips each.
+
+**Contradiction, carried up rather than resolved:** LO-433 says do not edit `episodes/`; the spine's
+`feedback` step requires writing episodes through `apply_episode_delta.py`, whose only target is
+`episodes/`. I followed the spine (the writer is the sanctioned write path and I hand-edited nothing),
+but a sibling Commander is retiring `episodes/` under #447, so **these three new episode files may
+collide with that retirement.** Flagging rather than deciding — the Admiral owns the sequencing.
+
+**Not a 'none' answer:** confirmed after review of the two crew REVIEW_RESULTs, the two IMPLEMENTER
+RESULTs, and the g1/g2 fowler passes.

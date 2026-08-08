@@ -1,0 +1,40 @@
+g3-schema — the schema record now matches shipped behaviour
+
+Two corrections to docs/CHECKLIST_SCHEMA.md, both verified by the gate's
+PRE-AUTHORED command postconditions (frozen at plan time, not improvised here).
+
+[1] Task table row (was line 123) — the declared type was drifted.
+    BEFORE: | `directives` | `[string]` \| null | forced primitive specifics handed down |
+    AFTER:  declares `{name: {…contract}}` \| `[string]` \| null, names the dict
+            shape the corpus actually carries, gives the real `replan_input`
+            example, and points at the Rendering section.
+
+[2] Rendering section (was line 138) — asserted a false "Known gap".
+    BEFORE: "**Known gap, not yet closed:** `directives`, when populated, is not
+            rendered — same defect shape as `anchors`/`constraints` were..."
+    AFTER:  states positively that a populated `directives` block renders on the
+            same omit-when-empty terms, names both live shapes, and describes what
+            made the completeness property capable of failing. The stated residual
+            limit (template-only fields) is carried over from the test docstring.
+
+    NOTE — this is the one place where the same sentence carried BOTH stale claims
+    ("Known gap" and "is not rendered"), so correcting it satisfies c1's conjunction
+    without leaving a false sentence alive elsewhere. `grep -n -i "not rendered|
+    never surfaced|known gap|directives" docs/CHECKLIST_SCHEMA.md` confirms the only
+    other `directives` mentions (lines ~237, ~288, ~290) are handoff/amend-op
+    references that were already correct and are untouched.
+
+VERIFICATION — the gate's own pinned checks, run by hand:
+
+  c1 $ ! grep -qi 'known gap' docs/CHECKLIST_SCHEMA.md \
+       && grep -qF 'a populated `directives` block' docs/CHECKLIST_SCHEMA.md
+     -> c1_exit=0
+
+  c2 $ grep -F '| `directives` |' docs/CHECKLIST_SCHEMA.md | grep -q 'dict' \
+       && ! grep -qF 'null | forced primitive specifics handed down' docs/CHECKLIST_SCHEMA.md
+     -> c2_exit=0
+
+  c3 $ FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
+     1731 passed, 4 skipped, 647 subtests passed in 389.95s (0:06:29)
+     REAL_EXIT=0
+     (baseline before this issue: 1721 passed / 4 skipped / 643 subtests)
