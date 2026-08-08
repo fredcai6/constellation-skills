@@ -18,6 +18,33 @@ told only to run `current` and obey it. **Do not re-brief from your own memory o
 measures exactly whether a cold successor can resume from `current`, and briefing it destroys the
 measurement. Its own verdict on the handoff's sufficiency is part of its deliverable.
 
+> ## STOP — DO NOT RELAUNCH ON `REFRESH REQUESTED` ALONE. IT LIES.
+>
+> **I nearly destroyed a healthy Commander obeying this signal. Read this before you act on it.**
+>
+> The engine renders `REFRESH REQUESTED:` until the target gate is **started**, and the underlying
+> records are **permanent evidence attachments with empty `ts` fields**. So a request that was
+> **answered fifteen minutes ago still reads as outstanding** for the whole of the successor's
+> startup. Obeying it relaunches a working crew — and then relaunches *that* one, in a loop, each
+> cycle destroying work.
+>
+> Currently pending and **already served**: `e-plan-2` (seam `plan`, `why_ref w-3`) and
+> `e-execute-1` (seam `execute`, `why_ref w-4`). Both are the **first** Commander's. Commander B
+> answered them at 10:09:35.
+>
+> **Before relaunching, prove nobody is working:**
+> ```
+> find <worktree> -newermt "-6 minutes" -type f        # any recent write => SOMEONE IS WORKING
+> git -C <worktree> log --oneline main..HEAD           # new commits => working
+> <worktree>/.agent-work/issue-467-trip-semantics/gauge.json   # low fill => a FRESH agent, not a tripped one
+> ```
+> A tripped agent is **idle and high-fill**. A successor is **active and low-fill**. Commander B
+> read **6.9%** while the signal screamed refresh.
+>
+> **The reach-up signal has no notion of being served** — it cannot say who asked, when, or whether
+> anyone answered. It is unreadable when it matters (active-gate-keyed, so a compliant handoff
+> erases it) and unclearable when it does not. Routed to #467 triage.
+
 **LO-467 CONTAINS AN UNSATISFIABLE INSTRUCTION — do not repeat it in any future launch order.**
 It says *"write a `refresh-request` ... make sure your `current` carries the DIGEST ... go idle."*
 Both clauses cannot be obeyed: `current` carries the latest live why-record, only `advance` writes
