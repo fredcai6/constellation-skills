@@ -65,6 +65,7 @@ children = collections.defaultdict(list)     # parent symbol -> [(line, child sy
 members_of = collections.defaultdict(list)   # module -> [store symbol]
 page_file = {}                               # store symbol -> page filename
 ids = collections.defaultdict(list)          # authored slug -> [store symbol]
+tags = collections.defaultdict(list)         # gate g7: symbol -> [{"kind","text"}]
 stale_tags = []                              # gate g6: [{"id","s","old_hash","new_hash"}]
 MODULES = []
 BY_PKG = collections.defaultdict(list)
@@ -139,7 +140,7 @@ def load_stores(artifacts):
     artifacts = pathlib.Path(artifacts)
     for d in (docs, params, inherits, edges, inbound, imports_out, imported_by,
               children, members_of, page_file, BY_PKG, entities, modules, ids,
-              stale_tags):
+              tags, stale_tags):
         d.clear()
     MODULES.clear()
 
@@ -166,6 +167,15 @@ def load_stores(artifacts):
                 continue
             if p == "anchored":
                 ids[o].append(s)
+                continue
+            if p == "tag":
+                # Gate g7: must be intercepted explicitly, same as "anchored"
+                # above -- an unhandled predicate falls through to the
+                # edges/inbound catch-all below and would render as a bogus
+                # cross-module bullet on some entity's page instead of
+                # surfacing as the why-layer tag it is.
+                d = st["d"]
+                tags[s].append({"kind": o, "text": d["text"]})
                 continue
             if p == "stale-anchor":
                 # Gate g6: must be intercepted explicitly, same as "anchored"
@@ -277,6 +287,25 @@ def doc_block(summary, body):
             L.extend(body.split("\n"))
     else:
         L.append(HOLE)
+    L.append("")
+    return L
+
+
+def tag_lines(key):
+    """The entity or module's own why-layer: `Rationale:`/`Rejected:`/`See:`
+    paragraphs the author wrote directly above it (gate g7), one line per
+    tag in source order.
+
+    ONE loop, no branch on kind, for every tag regardless of which of the
+    three grammar words it carries -- this uniform treatment is itself the
+    cull test's evidence (see `.agent-work/issue-456/cull-verdict.json`): a
+    consumer that cannot tell `Assumption:`/`Constraint:`/`Rationale:` apart
+    gives the vocabulary nothing to earn a fourth word, so the shipped
+    grammar carries three."""
+    ts = tags.get(key)
+    if not ts:
+        return []
+    L = [f"{t['kind']}: {t['text']}" for t in ts]
     L.append("")
     return L
 
@@ -478,6 +507,7 @@ def entity_page(key, mod):
         L.append("")
 
     L.extend(doc_block(summary_of(key), e.get("doc_body")))
+    L.extend(tag_lines(key))
 
     attrs = [a for a in (e.get("attrs") or []) if not a["name"].startswith("__")]
     if attrs:
@@ -504,6 +534,7 @@ def module_index(mod):
     L = [f"# {mod}",
          f"{ms['file']}, {ms['loc']} lines" + (f", {holes} holes" if holes else ""), ""]
     L.extend(doc_block(mod_summary_of(mod), ms.get("doc_body")))
+    L.extend(tag_lines(mod + ":"))
 
     if ms.get("all"):
         L.append("__all__: " + ", ".join(str(x) for x in ms["all"]))

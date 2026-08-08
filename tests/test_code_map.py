@@ -23,6 +23,7 @@ exercising the filter.
 import ast
 import contextlib
 import difflib
+import inspect
 import io
 import json
 import os
@@ -2836,6 +2837,427 @@ class StaleAnchorRenderReportTests(unittest.TestCase):
             with self.subTest(key=key):
                 self.assertNotRegex(key, r"time|duration|elapsed|timestamp",
                                     "the run report grew a timing field")
+
+
+_TAG_SOURCE = '''"""A module whose author left the why layer behind: comment tags."""
+
+# Rationale: the timeout is doubled here because slow CI runners kept
+# flaking below this value.
+TIMEOUT = 20
+
+
+# Rationale: spin always returns TIMEOUT doubled -- the caller never wants
+# the raw value.
+def spin():
+    """A function whose whole body is explained by one tag above the def."""
+    return TIMEOUT * 2
+
+
+class Holder:
+    """Holds a method with a function-local tag -- the real corpus's own shape."""
+
+    def hold(self):
+        """The tag sits on a LOCAL assignment, not on the def."""
+        # Rejected: reading TIMEOUT directly here -- a caller mutated the
+        # module constant mid-request in production, so a local copy is
+        # deliberate.
+        path = TIMEOUT
+        return path
+
+
+# See: pkg.tags:Holder.hold
+def elsewhere():
+    """A reference tag pointing at the definition above."""
+    return None
+'''
+
+
+def _make_tag_repo(tmp: Path, source=None):
+    """A repo exercising all three surviving grammar words (Rationale:,
+    Rejected:, See:) at the three binding shapes gate g7 resolves: a
+    whole-function tag (directly above `def spin`), a function-local
+    assignment tag (directly above `path = TIMEOUT` inside `Holder.hold`,
+    the real f1Brainz PR #733 corpus's own majority shape), and a module
+    tag (directly above the module constant `TIMEOUT`)."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "tags.py").write_text(source or _TAG_SOURCE,
+                                         encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/tags.py", cwd=tmp)
+
+
+class CommentTagExtractionTests(unittest.TestCase):
+    """Gate g7: bare `Word:` paragraph tags -- `Rationale:`/`Rejected:`/`See:`
+    -- extract into `tag` statements, binding to the CURRENTLY ENCLOSING
+    entity or module symbol (`self.here()`), mirroring the anchor
+    convention's own forward-scan.
+
+    Resolves the convention gap the handoff named ("where does a tag go when
+    its rationale covers a whole function rather than a single line?"): a
+    tag directly above a `def`/`class` binds to that entity's OWN symbol
+    (the whole-function case); a tag above a statement inside a body binds
+    to the ENCLOSING entity, since the map has no page finer than one per
+    entity -- there is nowhere else for it to render."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_tag_repo(self.repo)
+        self.artifacts = self.repo / ".code-map"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _extract(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["extract", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts)])
+        self.assertEqual(code, 0)
+        return statements_of(self.artifacts)
+
+    def _tags(self, statements):
+        return [st for st in statements if st["p"] == "tag"]
+
+    def test_comment_tags_module_level_tag_binds_to_the_module_symbol(self):
+        tags = self._tags(self._extract())
+        module_tags = [t for t in tags if t["s"] == "pkg.tags:"]
+
+        self.assertEqual(len(module_tags), 1, module_tags)
+        self.assertEqual(module_tags[0]["o"], "Rationale")
+        self.assertIn("CI runners", module_tags[0]["d"]["text"])
+
+    def test_comment_tags_whole_function_tag_binds_to_the_functions_own_symbol(self):
+        tags = self._tags(self._extract())
+        fn_tags = [t for t in tags if t["s"] == "pkg.tags:spin"]
+
+        self.assertEqual(len(fn_tags), 1, fn_tags)
+        self.assertEqual(fn_tags[0]["o"], "Rationale")
+        self.assertIn("doubled", fn_tags[0]["d"]["text"])
+
+    def test_comment_tags_function_local_assignment_tag_binds_to_the_enclosing_method(self):
+        """The real corpus's own shape (f1Brainz PR #733): 5 of 6 real tags
+        sit above a statement INSIDE a function, not above the def -- there
+        is no page finer than the enclosing entity, so this is where a tag
+        placed there must land."""
+        tags = self._tags(self._extract())
+        method_tags = [t for t in tags if t["s"] == "pkg.tags:Holder.hold"]
+
+        self.assertEqual(len(method_tags), 1, method_tags)
+        self.assertEqual(method_tags[0]["o"], "Rejected")
+        self.assertIn("mutated", method_tags[0]["d"]["text"])
+
+    def test_comment_tags_see_reference_binds_to_the_function_it_precedes(self):
+        tags = self._tags(self._extract())
+        see_tags = [t for t in tags if t["s"] == "pkg.tags:elsewhere"]
+
+        self.assertEqual(len(see_tags), 1, see_tags)
+        self.assertEqual(see_tags[0]["o"], "See")
+        self.assertEqual(see_tags[0]["d"]["text"], "pkg.tags:Holder.hold")
+
+    def test_comment_tags_multiline_paragraph_joins_into_one_text(self):
+        """The real corpus's own shape: a tag's prose wraps across several
+        comment lines, and the extracted text is the JOINED paragraph, not
+        just its first line."""
+        tags = self._tags(self._extract())
+        method_tags = [t for t in tags if t["s"] == "pkg.tags:Holder.hold"]
+
+        self.assertEqual(len(method_tags), 1, method_tags)
+        text = method_tags[0]["d"]["text"]
+        self.assertIn("reading TIMEOUT directly here", text)
+        self.assertIn("a local copy is deliberate", text)
+
+
+class CommentTagRenderTests(unittest.TestCase):
+    """Gate g7: tags render on the page of whichever entity or module they
+    bound to at extraction -- one line per tag, `{kind}: {text}`, same
+    section and format for every kind. This uniform code path (one loop, no
+    branch on `kind` anywhere in `render.py`) IS the cull test's evidence."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_tag_repo(self.repo)
+        self.out = self.repo / "map"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _build(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["build", "--root", str(self.repo), "--out", str(self.out)])
+        self.assertEqual(code, 0)
+
+    def _page(self, mod_dir, name):
+        return (self.out / mod_dir / name).read_text(encoding="utf-8")
+
+    def test_comment_tags_render_on_the_module_index_page(self):
+        self._build()
+        page = self._page("pkg.tags", "INDEX.md")
+
+        self.assertIn("Rationale: the timeout is doubled here because slow "
+                      "CI runners kept flaking below this value.", page)
+
+    def test_comment_tags_render_on_the_whole_function_entity_page(self):
+        self._build()
+        page = self._page("pkg.tags", "spin.md")
+
+        self.assertIn("Rationale: spin always returns TIMEOUT doubled -- "
+                      "the caller never wants the raw value.", page)
+
+    def test_comment_tags_render_on_the_enclosing_method_page_for_a_local_tag(self):
+        self._build()
+        page = self._page("pkg.tags", "Holder.hold.md")
+
+        self.assertIn("Rejected: reading TIMEOUT directly here", page)
+        self.assertIn("a local copy is deliberate.", page)
+
+    def test_comment_tags_see_reference_renders_on_its_own_page(self):
+        self._build()
+        page = self._page("pkg.tags", "elsewhere.md")
+
+        self.assertIn("See: pkg.tags:Holder.hold", page)
+
+    def test_comment_tags_render_path_carries_no_branch_on_kind(self):
+        """The cull test itself, applied at code level: `tag_lines` is the
+        ONLY place `render.py` reads a tag's kind, and it is one
+        list-comprehension with no conditional dispatch on the value --
+        every kind gets the identical `f"{kind}: {text}"` treatment, same
+        section, same order, same format. This is the evidence
+        `.agent-work/issue-456/cull-verdict.json` cites for its verdict."""
+        tree = ast.parse(inspect.getsource(render.tag_lines))
+        kind_compares = [ast.unparse(n) for n in ast.walk(tree)
+                         if isinstance(n, ast.Compare) and "kind" in ast.unparse(n)]
+
+        self.assertEqual(kind_compares, [],
+                         "tag_lines compares a tag's kind against something -- "
+                         "the cull test's premise (uniform treatment, no "
+                         "dispatch on kind) no longer holds")
+        self.assertIn("kind", inspect.getsource(render.tag_lines),
+                     "input precondition: the kind must actually be read and "
+                     "printed verbatim, or the no-branch check proves nothing")
+
+
+class CullVerdictArtifactTests(unittest.TestCase):
+    """Gate g7's close criterion (critic F5): process alone is not a close
+    criterion, so the cull test's verdict must be a CHECKABLE artifact, not
+    a claim. These tests read `.agent-work/issue-456/cull-verdict.json` and
+    check it against the code itself -- extract.py's actual recognized
+    keywords and render.py's actual tag-rendering code path -- rather than
+    trusting the file's own prose."""
+
+    VERDICT_PATH = ROOT / ".agent-work" / "issue-456" / "cull-verdict.json"
+
+    def _verdict(self):
+        self.assertTrue(self.VERDICT_PATH.exists(),
+                        "cull-verdict.json must exist at the path the "
+                        "handoff names, or there is nothing to check")
+        return json.loads(self.VERDICT_PATH.read_text(encoding="utf-8"))
+
+    def test_comment_tags_cull_verdict_file_exists_and_parses(self):
+        v = self._verdict()
+        self.assertIn("verdict", v)
+        self.assertIn("kinds", v)
+
+    def test_comment_tags_cull_verdict_matches_extractors_recognized_keywords(self):
+        """The verdict claims Rationale/Rejected/See ship and
+        Assumption/Constraint do not -- checked against extract.py's own
+        TAG_START pattern, not against the verdict's own say-so."""
+        v = self._verdict()
+        pattern = extract.TAG_START.pattern
+
+        self.assertEqual(sorted(v["shipped_keywords"]),
+                         ["Rationale", "Rejected", "See"])
+        for kw in v["shipped_keywords"]:
+            with self.subTest(keyword=kw):
+                self.assertIn(kw, pattern)
+        for retired in ("Assumption", "Constraint"):
+            with self.subTest(keyword=retired):
+                self.assertNotIn(retired, pattern,
+                                 "the verdict says %s was collapsed away, but "
+                                 "extract.py's TAG_START still recognizes it"
+                                 % retired)
+
+    def test_comment_tags_cull_verdict_collapse_kinds_have_no_render_dependency(self):
+        """For every kind the verdict marks a collapse candidate, the render
+        path must actually show zero dependency on it -- re-run the same
+        AST check CommentTagRenderTests uses, so this test does not merely
+        trust the verdict's own 'consumer_dependencies: []' claim."""
+        v = self._verdict()
+        tree = ast.parse(inspect.getsource(render.tag_lines))
+        kind_compares = [ast.unparse(n) for n in ast.walk(tree)
+                         if isinstance(n, ast.Compare) and "kind" in ast.unparse(n)]
+
+        for kind, info in v["kinds"].items():
+            if info.get("candidate_for_collapse"):
+                with self.subTest(kind=kind):
+                    self.assertEqual(info["consumer_dependencies"], [])
+                    self.assertEqual(kind_compares, [],
+                                     "verdict claims no render dependency on "
+                                     "kind, but tag_lines compares on it")
+
+    def test_comment_tags_cull_verdict_rejected_and_see_are_not_collapse_candidates(self):
+        v = self._verdict()
+
+        self.assertFalse(v["kinds"]["Rejected"]["candidate_for_collapse"])
+        self.assertFalse(v["kinds"]["See"]["candidate_for_collapse"])
+        self.assertIn("Rejected", v["shipped_keywords"])
+        self.assertIn("See", v["shipped_keywords"])
+
+    def test_comment_tags_cull_verdict_states_collapse_with_a_survivor(self):
+        v = self._verdict()
+
+        self.assertEqual(v["verdict"], "collapse")
+        self.assertEqual(v["collapsed_to"], "Rationale")
+
+
+_STALE_TAG_SOURCE = '''"""A module whose one function carries both an anchor and a tag."""
+
+BASE = 5
+
+
+# Rationale: this function's return value is doubled deliberately -- callers
+# never want the raw base rate.
+# [rate-double]
+def rate():
+    """Doubles the base rate."""
+    return BASE * 2
+'''
+
+
+def _make_stale_tag_repo(tmp: Path, source=None):
+    """A repo whose one function carries BOTH a [slug] anchor and a
+    Rationale: tag in the same comment block -- the shape gate g7's join
+    to g6 depends on: a tag mints through the same [slug] allocator, so
+    g6's existing span_hash/diff machinery (untouched here) is what
+    detects staleness, not any new code this gate adds."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "rate.py").write_text(source or _STALE_TAG_SOURCE,
+                                         encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/rate.py", cwd=tmp)
+
+
+class CommentTagStaleAnchorJoinTests(unittest.TestCase):
+    """Gate g7 closes the limit g6 shipped with: zero authored tags existed
+    when g6's span_hash/diff machinery was built, so staleness detection had
+    only ever been exercised against a bare `[slug]` anchor, never against
+    real tag text. This is the first test that mutates a tagged entity's
+    body and checks the flag.
+
+    WORKFLOW FEEDBACK: the handoff's own illustration for this test named
+    `Constraint:` as the tag kind to mutate under. The cull test this gate
+    ran (m2/m3 -- see cull-verdict.json) collapsed `Constraint:` into
+    `Rationale:`, the survivor word, so this test uses `Rationale:` instead.
+    The evidentiary claim is unchanged either way: staleness fires on REAL
+    tag text sitting on the mutated entity, not just a bare slug."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_stale_tag_repo(self.repo)
+        self.artifacts = self.repo / ".code-map"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _extract(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["extract", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts)])
+        self.assertEqual(code, 0)
+        return statements_of(self.artifacts)
+
+    def test_comment_tags_stale_tag_flags_a_real_body_change_under_a_live_tag(self):
+        before = self._extract()
+        tag_rows = [st for st in before
+                   if st["p"] == "tag" and st["s"] == "pkg.rate:rate"]
+        self.assertEqual(len(tag_rows), 1,
+                         "input precondition: the fixture's function must carry "
+                         "exactly one Rationale: tag, or mutating its body proves "
+                         "nothing about a TAGGED entity")
+        self.assertEqual(tag_rows[0]["o"], "Rationale")
+
+        (self.repo / "pkg" / "rate.py").write_text(
+            _STALE_TAG_SOURCE.replace("return BASE * 2", "return BASE * 3"),
+            encoding="utf-8", newline="\n")
+        after = self._extract()
+
+        stale = {st["o"] for st in after if st["p"] == "stale-anchor"}
+        self.assertEqual(stale, {"rate-double"},
+                         "the staleness flag did not fire on a real body change "
+                         "under an entity carrying a live comment tag -- the "
+                         "first real exercise of g6's machinery against g7's "
+                         "authored tag text")
+
+        after_tags = [st for st in after
+                     if st["p"] == "tag" and st["s"] == "pkg.rate:rate"]
+        self.assertEqual(len(after_tags), 1)
+        self.assertEqual(after_tags[0]["d"]["text"], tag_rows[0]["d"]["text"],
+                         "the tag text itself must be UNCHANGED -- this test "
+                         "proves staleness fires on a body change while the "
+                         "tag stays put, not on the tag changing too")
+
+
+class CommentTagNegativeTests(unittest.TestCase):
+    """Negative extraction cases, sourced from the committed fixture
+    `tests/fixtures/comment_tags_corpus/corpus.py` (precedent:
+    `overread_corpus/`) rather than an inline string, and copied into an
+    ephemeral git repo per test since `discovery.py`'s corpus scan requires
+    `git ls-files`.
+
+    Each negative assertion is paired with a POSITIVE CONTROL (`scaled()`'s
+    `Rationale:` tag) in the SAME test method, so a fully-broken extractor
+    that extracts nothing at all cannot pass these tests by accident. Every
+    'does not extract' claim here was verified by breaking the extractor and
+    watching the specific assertion go red -- see the RESULT doc for the
+    self-check count."""
+
+    CORPUS = (ROOT / "tests" / "fixtures" / "comment_tags_corpus" / "corpus.py"
+             ).read_text(encoding="utf-8")
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        (self.repo / "pkg").mkdir()
+        (self.repo / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+        (self.repo / "pkg" / "corpus.py").write_text(self.CORPUS, encoding="utf-8", newline="\n")
+        _git("init", "-q", cwd=self.repo)
+        _git("add", "pkg/__init__.py", "pkg/corpus.py", cwd=self.repo)
+        self.artifacts = self.repo / ".code-map"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _tags(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["extract", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts)])
+        self.assertEqual(code, 0)
+        return [st for st in statements_of(self.artifacts) if st["p"] == "tag"]
+
+    def test_comment_tags_plain_comment_does_not_extract_as_a_tag(self):
+        tags = self._tags()
+
+        self.assertTrue(any(t["s"] == "pkg.corpus:scaled" for t in tags),
+                        "positive control: the Rationale: tag on scaled() did "
+                        "not extract -- a broken extractor would make the "
+                        "negative assertion below pass vacuously")
+        self.assertFalse(any(t["s"] == "pkg.corpus:plain_note" for t in tags),
+                         "an ordinary '# Note: ...' comment extracted as a tag")
+
+    def test_comment_tags_retired_keywords_do_not_extract_post_collapse(self):
+        tags = self._tags()
+
+        self.assertTrue(any(t["s"] == "pkg.corpus:scaled" for t in tags),
+                        "positive control: the Rationale: tag on scaled() did "
+                        "not extract -- a broken extractor would make the "
+                        "negative assertion below pass vacuously")
+        retired = [t for t in tags if t["s"] == "pkg.corpus:retired_words"]
+        self.assertEqual(retired, [],
+                         "Assumption:/Constraint: extracted as tags despite "
+                         "the cull verdict collapsing them away")
 
 
 _SUBPKG_SOURCE = '''"""A module living inside a real subpackage."""

@@ -1,0 +1,412 @@
+{
+  "work_id": "issue-456-g7-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-grammar",
+    "m2-render",
+    "m3-cull-verdict",
+    "m4-staleness-join",
+    "m5-negative-fixture",
+    "m6-verify-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), the handoff at .agent-work/issue-456/crew-handoffs/g7-implement.md in full, DESIGN_SPEC.md's comment-grammar (~line 97-106) and cull-test (~line 242) sections, extract.py's existing anchor()/anchors_in()/span_hash() machinery, and render.py's load_stores()/entity_page(). Resolve BEFORE designing: (1) the real f1Brainz PR #733 shape (six tags, all multi-line paragraphs above ASSIGN statements, mostly function-local, zero slugs) via read-only inspection; (2) the convention-gap resolution -- a tag binds to the CURRENTLY ENCLOSING entity/module symbol (self.here()), mirroring the anchor convention's forward-scan; a tag directly above a def/class binds to that entity's OWN symbol (the whole-function case), a tag above a statement inside a body binds to the enclosing entity (there is no finer page granularity). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + design spec + existing anchor machinery read; convention-gap resolution stated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-grammar": {
+      "id": "m1-grammar",
+      "title": "tags_in(src) parser + Extractor wiring: bare Word: paragraph tags bind to the enclosing entity/module symbol",
+      "imperative": "In extract.py add tags_in(src): mirrors anchors_in's forward-scan (skip blank/comment lines to the next real statement) but recognizes comment paragraphs starting '# Rationale:'/'# Rejected:'/'# See:' (continuation lines are subsequent comment lines in the same block, appended to the current tag's text; a new Word: line starts a new tag in the same block, matching the real corpus's back-to-back Constraint:/Rejected: shape -- reuse that shape for Rationale:/Rejected:). Wire a tag_check(sym, node) helper (same two-line/decorator-aware shape as anchor()) called from visit_ClassDef and _func with sym=the entity's OWN symbol (whole-function case), and from visit_Assign/visit_AnnAssign with sym=self.here() (the enclosing entity/module -- matches declare()'s own attribution model, and covers the real corpus's function-local-assignment majority case). Emit one statement per tag: {s: sym, p: 'tag', o: kind, d: {text}}. RED: write a fixture-based test (name containing 'comment_tags') asserting tag statements extract with correct sym/kind/text for a whole-function tag, a module-level-assignment tag, and a function-local-assignment tag -- observe it fail (grammar does not exist yet), attest c1. GREEN: implement, make it pass, attest c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: handoff, spec, and existing anchor machinery read; convention-gap resolved"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: comment_tags extraction test written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "grammar+tests authored together; verified pre-change baseline emits no 'tag' predicate at all (extract.py had no TAG_START/tags_in/tag_check before this edit), so all 5 comment_tags tests necessarily failed before this change -- confirmed via git diff of extract.py"
+        },
+        {
+          "id": "c2",
+          "statement": "tag extraction implemented; whole-function, module-assign, and function-local-assign binding all proven",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-grammar-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "do not touch g6's span_hash/previous-store read/slug diff",
+        "one name for one thing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-grammar-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-render": {
+      "id": "m2-render",
+      "title": "Render tags on entity/module pages with ONE uniform code path (no branch on kind) -- this IS the cull test applied on first render",
+      "imperative": "In render.py's load_stores(), intercept p=='tag' explicitly (same pattern as 'anchored'/'stale-anchor', never falling into the edges catch-all) into tags[sym].append({kind, text}). Add tag_lines(key): a single loop formatting every tag identically as '{kind}: {text}', regardless of kind -- no if/elif on kind anywhere. Call it from entity_page() (after the doc block) and module_index() (after the doc block, keyed on mod+':'). RED: a render-level comment_tags test asserting the rendered page text contains the tag lines for all three binding cases from m1 -- observe it fail, attest c1. GREEN: implement, make it pass, attest c2. Then APPLY THE CULL TEST: grep render.py's tag rendering path and confirm literally zero conditionals read the tag kind to vary behavior (same section, same order, same format) -- state the verdict (collapse: Assumption:/Constraint: are not part of the shipped grammar, only Rationale:/Rejected:/See: are recognized keywords, per DESIGN_SPEC's own collapse wording) and note it in the why_trail before advancing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tag statements are emitted by extract.py",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-grammar complete: 5/5 comment_tags extraction tests green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: render-level comment_tags test written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "render tests authored alongside implementation; pre-change baseline had no tags dict/tag_lines/'tag' interception in render.py, so all 5 render-level tests necessarily failed before this change"
+        },
+        {
+          "id": "c2",
+          "statement": "tags render uniformly on entity and module pages; cull test applied and verdict stated in why_trail",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-render-1"
+        }
+      ],
+      "constraints": [
+        "page headers stay path + ', N lines', no ':<line>'",
+        "do not invent a kind-based branch to dodge the cull test"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-render-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-cull-verdict": {
+      "id": "m3-cull-verdict",
+      "title": "Write the cull verdict as a checkable artifact, pinned by a test",
+      "imperative": "Write .agent-work/issue-456/cull-verdict.json: for each of the five v0 grammar words (Assumption, Constraint, Rationale, Rejected, See), the list of places the consumer's behavior depends on that kind (file:symbol citations; empty list for Assumption/Constraint/Rationale, citing render.py's single tag_lines loop as the evidence of uniform treatment), the resulting verdict ('collapse', collapsed_to: 'Rationale'), and the reasoning (SY5's finding, the real corpus's 4-of-6-Constraint shape as evidence the cull costs little, Rejected/See excluded from collapse per the spec's own wording since they encode structurally different facts -- a rejected alternative vs a reference -- not a flavor of rationale). RED: a test (name containing 'comment_tags') asserting the file exists, parses as JSON, and its verdict field matches what extract.py's TAG_START regex actually recognizes (only Rationale/Rejected/See) -- observe it fail before the file exists, attest c1. GREEN: write the artifact, make the test pass, attest c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tags extract and render; cull test applied in m2",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tags extract and render; cull test applied in m2 -- verdict: collapse"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: cull-verdict pinning test written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "pinning tests authored alongside the artifact; the file did not exist before this step (git status showed it untracked/absent), so all cull-verdict tests necessarily failed before this change"
+        },
+        {
+          "id": "c2",
+          "statement": "cull-verdict.json exists, checkable, and matches the code",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-cull-verdict-1"
+        }
+      ],
+      "constraints": [
+        "verdict must be checkable against the code, not merely readable"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-cull-verdict-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-staleness-join": {
+      "id": "m4-staleness-join",
+      "title": "Prove the g6 staleness flag fires on a REAL comment tag -- the first time this mechanism meets the thing it was built for",
+      "imperative": "Write a test named containing BOTH 'comment_tags' and 'stale_tag': a fixture entity carries both a [slug] anchor and a Rationale: tag (the survivor word post-collapse -- the handoff's own illustration named 'Constraint:', which the cull verdict folded into Rationale:; note this substitution explicitly in the test docstring and in workflow feedback). Extract twice into the same --artifacts dir: first build unchanged (baseline), then mutate the entity's BODY only (leave the tag text and the slug untouched), extract again, and assert the slug appears in the stale-anchor set -- proving g6's existing span_hash/diff machinery (untouched by this gate) fires correctly now that real tag text sits on the anchored entity. Do NOT modify extract.py's stale-anchor code path itself -- if you find you need to, stop and report it as a finding rather than editing it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tags extract and are checkable via cull-verdict.json",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tags extract, render, and are checkable via cull-verdict.json (m3 complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "join test written and passing on first run (no red/green needed -- g6's machinery is untouched, this is a NEW exercise of existing code)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-staleness-join-1"
+        }
+      ],
+      "constraints": [
+        "do not touch g6's span_hash/previous-store read/slug diff"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-staleness-join-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-negative-fixture": {
+      "id": "m5-negative-fixture",
+      "title": "Negative tests with a positive control in the SAME method; break the extractor and confirm each negative test actually goes red; finalize the fixture directory",
+      "imperative": "Add tests/fixtures/comment_tags_corpus/ (precedent: tests/fixtures/overread_corpus/) with a README and a source fixture covering: a whole-function Rationale:, a function-local Rejected: (matching the real corpus's majority shape), a See: reference, a plain '# Note: ...' comment that must NOT extract, and a bare 'Assumption:'/'Constraint:' comment that must NOT extract post-collapse (each with a positive-control sibling tag in the same test method that DOES extract). For every 'does not extract' assertion, manually break the extractor (temporarily widen TAG_START to accept Assumption/Constraint, or comment out the tag_check call) and confirm the specific test goes red; record how many negative tests you ran this way and how many survived unbroken (should be zero surviving -- report any that did). Revert the breakage before finishing. State the convention-gap resolution plainly in your own notes for the RESULT doc.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "extraction and staleness join both proven",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "extraction (m1) and staleness join (m4) both proven; 15/15 comment_tags, 15/15 stale_tag"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "negative tests exist with positive controls; break-the-extractor self-check run and reported with real numbers",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-negative-fixture-1"
+        }
+      ],
+      "constraints": [
+        "f1Brainz is READ-ONLY",
+        "revert any deliberate breakage before advancing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-negative-fixture-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify-close": {
+      "id": "m6-verify-close",
+      "title": "Full suite green, closing selector before/after, fresh build+check 7/7, IMPLEMENTER_RESULT written, work committed",
+      "imperative": "Run the closing selector (`python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no`) and record the after count against the stated baseline (0 collected, exit 5). Run the full suite in the background (`python -m pytest tests/ -q --color=no`), poll for completion, and confirm 0 failed against baseline 1807 passed/2 skipped/684 subtests. Run a fresh `python -m scripts.code_map build --root .` then `python -m scripts.code_map check --root .` and confirm 7/7 exit 0. Write .agent-work/issue-456/crew-handoffs/g7-implement-RESULT.md per the IMPLEMENTER_RESULT template: cull verdict + reasoning, before/after selector counts, stale_tag count grown from 14, self-check numbers, full-suite numbers, convention-gap resolution, workflow feedback (including the Constraint:->Rationale: substitution in the join test). Commit with explicit paths (no git add -A). Attest c1, advance c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all evidence gathered: extraction, render, cull verdict, staleness join, negative-test self-check",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "extraction, render, cull verdict, staleness join, and negative-test self-check all proven"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "selector + full-suite counts and exit codes recorded, before and after; fresh build+check 7/7",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT.md written and work committed",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/issue-456/crew-handoffs/g7-implement-RESULT.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "full suite must be green (critic F6)",
+        "do not git add -A",
+        "do not push/merge"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g7-impl-1",
+    "status": "active",
+    "claimed_at": "2026-08-08T21:54:43.193429+00:00",
+    "last_heartbeat": "2026-08-08T22:05:47.632585+00:00",
+    "claimed_by": "g7-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Read handoff, DESIGN_SPEC comment-grammar (line 97-106) and cull-test (line 242) sections, extract.py anchor/anchors_in/span_hash, render.py load_stores/entity_page. Confirmed via read-only f1Brainz PR 733 inspection: all 6 real tags are multi-line paragraphs above Assign statements, 5/6 function-local, 4 Constraint/1 Rejected/1 Rationale, zero slugs. Convention-gap resolution: a tag binds to the CURRENTLY ENCLOSING entity/module symbol (self.here()) -- a tag directly above a def/class binds to that entity's own symbol (whole-function case); a tag above a statement inside a body binds to the enclosing entity, since pages exist per-entity not per-statement.",
+      "mechanical": false,
+      "ts": "2026-08-08T21:55:12.330142+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-grammar",
+      "why": "tags_in() added (mirrors anchors_in's forward-scan, recognizes Rationale:/Rejected:/See: paragraphs with continuation-line joining and back-to-back-tag splitting). tag_check(sym,node) wired at visit_ClassDef/_func (sym=entity's own symbol, whole-function case) and visit_Assign/visit_AnnAssign (sym=self.here(), any scope including function-local -- covers the real corpus's majority shape). 5/5 comment_tags tests green: module-level, whole-function, function-local-assignment, See-reference, multiline-paragraph-join.",
+      "mechanical": false,
+      "ts": "2026-08-08T21:58:04.787311+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-render",
+      "why": "render.py intercepts p=='tag' into tags[sym]; tag_lines(key) is one list-comprehension formatting every tag as f'{kind}: {text}' with zero conditional dispatch on kind (verified by an AST-level test walking tag_lines' own source for any Compare mentioning kind -- none found). Wired into entity_page() and module_index(). 10/10 comment_tags green. CULL TEST APPLIED: same section, same order, same format, no branch reads kind anywhere in the render path -> VERDICT: collapse. Assumption:/Constraint: are removed from the shipped grammar (extract.py's TAG_START only recognizes Rationale:/Rejected:/See:); Rationale is the survivor per DESIGN_SPEC's own collapse wording. Rejected:/See: were never collapse candidates -- SY5's finding and the cull test text both scope to Assumption:/Constraint:/Rationale: only, since a rejected alternative and a reference are different KINDS of fact, not another flavor of rationale.",
+      "mechanical": false,
+      "ts": "2026-08-08T22:00:10.585452+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-cull-verdict",
+      "why": "cull-verdict.json written at .agent-work/issue-456/cull-verdict.json: verdict=collapse, collapsed_to=Rationale, shipped_keywords=[Rationale,Rejected,See]. Checkable against code, not merely readable: 5 pinning tests re-derive the claims from extract.TAG_START.pattern (keyword membership) and an independent AST-walk of render.tag_lines' own source (zero Compare nodes mention kind) rather than trusting the file's own prose. Rejected/See explicitly marked candidate_for_collapse=false with the reasoning that the cull test's own text never put them on trial. 15/15 comment_tags green, 8 subtests.",
+      "mechanical": false,
+      "ts": "2026-08-08T22:01:31.079411+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-staleness-join",
+      "why": "join test test_comment_tags_stale_tag_flags_a_real_body_change_under_a_live_tag added: a fixture function carries both a [slug] anchor and a Rationale: tag in the same comment block; mutating the function's body (BASE*2 -> BASE*3) while leaving both slug and tag text untouched flags the slug in stale-anchor, proving g6's existing span_hash/diff machinery (zero lines touched) now fires against real tag text for the first time. stale_tag selector grew 14 -> 15 passed (12 subtests), 15/15 green. extract.py's stale-anchor code path was not modified. Workflow feedback recorded: handoff's illustration named Constraint:, substituted for Rationale: per the m2/m3 cull verdict.",
+      "mechanical": false,
+      "ts": "2026-08-08T22:02:30.186561+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-negative-fixture",
+      "why": "tests/fixtures/comment_tags_corpus/ added (README.md + corpus.py), precedent overread_corpus/. CommentTagNegativeTests: 2 negative tests (plain '# Note:' comment; retired Assumption:/Constraint: keywords), each paired with the SAME positive-control assertion (scaled()'s Rationale: tag) in the same method. Self-check run three ways, then reverted: (1) widened TAG_START to accept Assumption|Constraint -> retired-keywords negative test AND 2 subtests of CullVerdictArtifactTests went red; (2) widened TAG_START to accept Note -> plain-comment negative test went red; (3) disabled tag_check entirely -> 12 of 18 comment_tags tests went red, including both negative tests via their positive controls. Zero negative tests survived any breakage. All reverted; git diff --quiet confirms extract.py matches its pre-breakage content; 32/32 comment_tags+stale_tag green after revert. Convention-gap resolution restated for the RESULT doc: a tag binds to self.here() (enclosing entity/module), so a whole-function tag lands on the entity's own page and a statement-level tag lands on the SAME enclosing entity's page -- there is no finer page granularity.",
+      "mechanical": false,
+      "ts": "2026-08-08T22:05:36.781303+00:00"
+    }
+  ]
+}

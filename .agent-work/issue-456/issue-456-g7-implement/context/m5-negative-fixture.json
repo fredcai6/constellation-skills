@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m5-negative-fixture",
+  "files": [],
+  "repo_rev": {
+    "commit": "e61e6fbe7119293483029a097ea6856bab34d1de"
+  },
+  "run": {
+    "work_id": "issue-456-g7-implement",
+    "generated_at": "2026-08-08T22:02:38Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

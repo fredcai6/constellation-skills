@@ -156,6 +156,67 @@ def anchors_in(src):
     return out
 
 
+#: Gate g7, grammar v0 as ruled by DESIGN_SPEC (the cull test is applied at
+#: render time, not here): a bare `Word:` paragraph prefix in an ordinary
+#: comment, prior art shape is Go's `Deprecated:` convention. `Rationale:` is
+#: the survivor of the cull test's collapse (see cull-verdict.json) --
+#: `Assumption:`/`Constraint:` are not recognised keywords in the shipped
+#: grammar, so a comment using either word is ordinary prose, not a tag.
+#: `Rejected:` and `See:` were never collapse candidates: SY5's finding and
+#: the cull test both scope to "Assumption:/Constraint:/Rationale:" only --
+#: a rejected alternative and a reference are different KINDS of fact, not
+#: another flavor of rationale.
+TAG_START = re.compile(r"^[ \t]*#[ \t]*(Rationale|Rejected|See):[ \t]*(.*)$")
+TAG_CONT = re.compile(r"^[ \t]*#[ \t]?(.*)$")
+
+
+def tags_in(src):
+    """1-based line -> the authored tags minted directly above it.
+
+    Mirrors `anchors_in`'s own forward-scan exactly: a tag paragraph binds to
+    the next line that is neither blank nor a comment, skipping over BOTH a
+    `[stable-id]` anchor bracket and any further comment lines in between --
+    the same permissiveness `anchors_in` already grants, so a tag and a slug
+    can share one comment block in either order.
+
+    A comment paragraph is one or more `Word:` lines; a plain comment line
+    right after one is a CONTINUATION of that same tag's text, and a second
+    `Word:` line in the same block starts a NEW tag -- the real corpus's own
+    shape (f1Brainz PR #733: a `Constraint:` paragraph immediately followed
+    by a `Rejected:` paragraph, no blank line between)."""
+    lines = src.splitlines()
+    n = len(lines)
+    out = {}
+    i = 0
+    while i < n:
+        m = TAG_START.match(lines[i])
+        if not m:
+            i += 1
+            continue
+        tags = []
+        kind, text = m.group(1), m.group(2).strip()
+        i += 1
+        while i < n and not ANCHOR.match(lines[i]):
+            m2 = TAG_START.match(lines[i])
+            if m2:
+                tags.append({"kind": kind, "text": text.strip()})
+                kind, text = m2.group(1), m2.group(2).strip()
+                i += 1
+                continue
+            cm = TAG_CONT.match(lines[i])
+            if cm and lines[i].strip() not in ("", "#"):
+                text = (text + " " + cm.group(1).strip()).strip()
+                i += 1
+                continue
+            break
+        tags.append({"kind": kind, "text": text.strip()})
+        for j in range(i, n):
+            if lines[j].strip() and not lines[j].lstrip().startswith("#"):
+                out.setdefault(j + 1, []).extend(tags)
+                break
+    return out
+
+
 def span_hash(node):
     """A normalised hash of an entity's own AST subtree (gate g6, stale-tag
     detection): immune to reformatting -- indentation, line wraps, blank
@@ -407,6 +468,7 @@ class Extractor(ast.NodeVisitor):
         self.tree = tree
         self.src = src            # the file's own text, for facts `ast` drops
         self.anchors = anchors_in(src)   # 1-based line -> authored slug
+        self.tags = tags_in(src)         # 1-based line -> authored [{"kind","text"}]
         # slug -> (owning symbol, span_hash) -- gate g6, collected as anchors
         # are emitted and read back by run() to diff against the PREVIOUS
         # extraction's own copy of this dict.
@@ -717,6 +779,30 @@ class Extractor(ast.NodeVisitor):
                 self.anchor_hashes[slug] = (sym, h, self.rel.replace("\\", "/"), ln, col)
                 return
 
+    def tag_check(self, sym, node):
+        """Emit any tag paragraph minted directly above `node`, attributed
+        to `sym` -- see `tags_in`.
+
+        Gate g7's convention-gap resolution: `sym` is the CALLER's choice, not
+        derived here. A whole-function tag (directly above a `def`/`class`)
+        is called with the entity's OWN symbol; a tag above a statement
+        inside a body is called with `self.here()`, the ENCLOSING entity or
+        module -- there is no page finer than one per entity, so that is
+        where it renders regardless of which statement it sat above. Same
+        decorator-aware two-line check as `anchor()`, for the same reason: a
+        reader writes the comment above the first decorator, not the `def`."""
+        lines = [node.lineno]
+        if getattr(node, "decorator_list", None):
+            lines.insert(0, node.decorator_list[0].lineno)
+        for line in lines:
+            found = self.tags.get(line)
+            if found:
+                ln, col = store_line(node.lineno), node.col_offset
+                for t in found:
+                    self.emit(sym, "tag", t["kind"], ln, col, "literal",
+                              d={"text": t["text"]})
+                return
+
     def described(self, node, decorators):
         """The facts a `contains` statement carries about the definition it
         names: kind, signature, span, docstring body, decorators, bases.
@@ -753,6 +839,7 @@ class Extractor(ast.NodeVisitor):
         self.emit(self.here(), "contains", sym, store_line(node.lineno),
                   node.col_offset, "internal", d=self.described(node, decorators))
         self.anchor(sym, node)
+        self.tag_check(sym, node)
         doc = ast.get_docstring(node)
         if doc:
             self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
@@ -781,6 +868,7 @@ class Extractor(ast.NodeVisitor):
         self.emit(self.here(), "contains", sym, store_line(node.lineno),
                   node.col_offset, "internal", d=self.described(node, decorators))
         self.anchor(sym, node)
+        self.tag_check(sym, node)
         doc = ast.get_docstring(node)
         if doc:
             self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
@@ -892,6 +980,12 @@ class Extractor(ast.NodeVisitor):
         self.anchor(self.child_sym(target.id), node)
 
     def visit_Assign(self, node):
+        # Gate g7: the tag check runs regardless of scope -- unlike declare(),
+        # which only fires at module/class level, a tag above a FUNCTION-LOCAL
+        # assignment is the real corpus's own majority shape (5 of 6 tags in
+        # f1Brainz PR #733), and it binds to the enclosing entity, not to a
+        # declared name that scope would refuse to record at all.
+        self.tag_check(self.here(), node)
         typ = self.infer_type(node.value)
         self.visit(node.value)
         for t in node.targets:
@@ -899,6 +993,7 @@ class Extractor(ast.NodeVisitor):
             self._store(t, typ)
 
     def visit_AnnAssign(self, node):
+        self.tag_check(self.here(), node)
         if node.value is not None:
             self.visit(node.value)
         self.visit(node.annotation)

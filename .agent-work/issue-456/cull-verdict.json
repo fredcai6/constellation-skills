@@ -1,0 +1,42 @@
+{
+  "gate": "g7",
+  "grammar_v0": ["Assumption", "Constraint", "Rationale", "Rejected", "See"],
+  "cull_test": "if the extractor's consumer treats Assumption:/Constraint:/Rationale: identically at first render, collapse them to Rationale:/Rejected:/See: (DESIGN_SPEC.md, SY5 disposition)",
+  "kinds": {
+    "Assumption": {
+      "candidate_for_collapse": true,
+      "consumer_dependencies": [],
+      "note": "never appears in the real f1Brainz PR #733 corpus (0 of 6). No code path in render.py ever read this kind differently from Rationale or Constraint. Folded into Rationale by this verdict."
+    },
+    "Constraint": {
+      "candidate_for_collapse": true,
+      "consumer_dependencies": [],
+      "note": "4 of 6 real f1Brainz PR #733 tags used this word -- the most common single kind in the only real corpus -- but AUTHOR popularity is not the cull test's question. The renderer (scripts/code_map/render.py:tag_lines) treats it identically to Rationale and Assumption: same section, same order, same format, no branch anywhere reads the kind to vary behavior. Folded into Rationale by this verdict."
+    },
+    "Rationale": {
+      "candidate_for_collapse": true,
+      "consumer_dependencies": [],
+      "note": "the survivor name. scripts/code_map/render.py:tag_lines is the ONE code path rendering all three trial words identically; no consumer in this build branches on kind."
+    },
+    "Rejected": {
+      "candidate_for_collapse": false,
+      "consumer_dependencies": [],
+      "note": "NOT a collapse candidate. The cull test's own text (DESIGN_SPEC.md's SY5 disposition) scopes the collapse question to 'Assumption:/Constraint:/Rationale:' only -- Rejected: was never on trial. It encodes a structurally different fact than a positive rationale (a road not taken, not a reason taken), which is why the spec names it as one of the three survivors regardless of what this gate found about the other three."
+    },
+    "See": {
+      "candidate_for_collapse": false,
+      "consumer_dependencies": [],
+      "note": "NOT a collapse candidate, for the same reason as Rejected: excluded from the cull test's scope by the spec itself. A See: tag is a reference (a pointer to another symbol), not a flavor of explanation -- its 'text' field holds a target, not prose, even though it renders through the same tag_lines loop as the other two survivors."
+    }
+  },
+  "verdict": "collapse",
+  "collapsed_to": "Rationale",
+  "shipped_keywords": ["Rationale", "Rejected", "See"],
+  "reasoning": "Applied honestly per the handoff's standard: the renderer was built first (scripts/code_map/render.py:tag_lines), and only then inspected for whether it needed to tell Assumption:/Constraint:/Rationale: apart. It does not -- one list comprehension formats every tag as f'{kind}: {text}' with zero conditional dispatch on the kind value, verified mechanically by an AST-walk test (tests/test_code_map.py:CommentTagRenderTests.test_comment_tags_render_path_carries_no_branch_on_kind) that fails if any Compare node in tag_lines' own source ever mentions 'kind'. No distinction was invented to dodge the test. The real corpus's own shape (4 of 6 tags already converged on one word, Constraint:) is read as evidence the cull costs little, not as a reason to keep the extra words: most authors were already picking one flavor without being asked to. Rejected: and See: are excluded from the collapse because the cull test's own wording never put them on trial -- they encode different KINDS of fact (a rejected alternative; a reference) rather than another flavor of positive rationale.",
+  "evidence": {
+    "render_uniform_treatment": "scripts/code_map/render.py:tag_lines -- one list comprehension, f\"{t['kind']}: {t['text']}\" for every tag regardless of kind; pinned by tests/test_code_map.py:CommentTagRenderTests.test_comment_tags_render_path_carries_no_branch_on_kind",
+    "real_corpus_shape": "f1Brainz PR #733 (read-only reference, commit e3d6b542): 4 Constraint, 1 Rejected, 1 Rationale, 0 Assumption, 0 See, 0 authored slugs -- inspected via `git show`, not built into this repo's test suite (f1Brainz is read-only)",
+    "shipped_grammar": "scripts/code_map/extract.py:TAG_START == r'^[ \\t]*#[ \\t]*(Rationale|Rejected|See):[ \\t]*(.*)$' -- Assumption and Constraint are not matched keywords"
+  },
+  "consequence": "Future authors write Rationale: where grammar v0 would have offered Assumption: or Constraint:; a comment using either retired word is now ordinary prose, not a tag -- it will not extract or render. This changes what every future author writes, not just what this build parses, so it is also surfaced as a decision candidate for confirmation beyond this gate (per the handoff's map-anchor note), not silently finalized here alone."
+}
