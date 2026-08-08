@@ -2112,3 +2112,60 @@ stood alone, that is the run's own fix working. If not, that is the honest DC5 r
 **C's gauge correction is now the firmest version.** *"Two resumes, one variable changed, opposite
 outcomes — a cleaner attribution than either run could produce alone."* Scoped to the window where
 the tripped predecessor is still taking tool calls. It classified it `drop` in its own REPLAN_INPUT.
+
+## 2026-08-08 — c3 amended and failable; then #431 refused the closing advance, live
+
+**The amend meets the condition, and its root cause is worth more than the fix.**
+`retext-check` on `g1-integrate.c3`, kind unchanged, authority recorded as Admiral / epic #418:
+`match: {verdict_class: "ACCEPTED", blocking_findings: "0"}`. **ACCEPT passes, ACCEPT WITH FINDINGS
+passes, REJECT fails twice over** — once on `verdict_class`, independently on `blocking_findings=0`,
+since a REJECT necessarily carries at least one. An ACCEPT-WITH-FINDINGS carrying blocking findings
+also correctly fails. Not loosened to accept any string. The reviewer's literal verdict still rides
+in the payload verbatim for audit.
+
+**ROOT CAUSE | artifact `match` is exact equality per key and CANNOT EXPRESS "one of."**
+`all(ev.payload[k] == v for k, v in want.items())`. **That is why the original author hard-coded a
+single verdict string — the schema gave them no way to write the check they meant.** The mismatch
+was never carelessness; it was the only expressible thing. So the Commander normalised the two
+accepting verdicts into one key rather than widening the match. **Every future verdict check has
+this failure mode latent in it**, and the general fix is `match` gaining a set/one-of form. Triage
+candidate, and a better finding than the gate it unblocked.
+
+**INCIDENT | #431 refused the closing `advance`, at 15%, with all three postconditions MET.**
+The one verb that writes the handoff, refused at the moment the handoff mattered most, **in the run
+whose entire purpose is to fix that.** The Commander **did not waive it** — filed the
+refresh-request, and needed the known workaround to file it correctly: the printed
+`why_ref=<why-id>` is a silent no-op and the real id is recoverable from neither `current` nor the
+refusal, so it read `w-3` out of `execute.json`'s raw `why_trail`. **Fourth independent confirmation.**
+
+**FINDING | three doors into the same room.** The DIGEST has now landed in `STATE_NOTE.md` instead
+of the why-trail **three times on this spine, from three unrelated causes**: (a) tripped mid-`execute`
+with no `advance` available; (b) an unpassable postcondition blocking `advance`; (c) the governor
+refusing `advance`. Same consequence every time, because **`advance` sits behind every postcondition
+of the step it closes AND behind the governor.** **#467 fixes one of the three.** Said out loud here,
+before g2-g4 land and it reads as solved.
+
+**The waiver attestation came back better than I asked for, and it is DC6's argument in one pair.**
+Same agent, same run: the band **released honestly** on its own reading at the start — no waive, no
+force, no authority string — and at the end it **stopped honestly** and was not waived either. The
+Commander's point: *"from the outside, an honest release and a quiet waiver produce identical
+artifacts."* That is exactly why DC6's observable must be *"did anyone BEGIN work while over the
+line"* rather than anything about handoffs appearing. **A single run demonstrating both directions
+without a waiver is stronger evidence than either half.**
+
+**The proposed gauge fix is now known to be incomplete, and the Commander killed it honestly.**
+Declining to write for an agent that does not hold the lease closes the **live-overlap** window only.
+Its own arrival reading is second-window evidence *precisely because nothing was writing* — **a stale
+value needs no writer, so declining to write cannot help.** Closing that window needs **ownership or
+freshness on the reading itself**. It flagged that its own earlier correction had been wrong, and put
+my reframing into `RESUME_OBSERVATION.md` as an addendum with predecessor content untouched.
+
+**ADMIRAL ACTION | collision avoided.** I had already dispatched instance D with the c3 ruling before
+C returned to apply it. Sent D a short correction: the amendment exists, do not author a second one,
+the remaining action is the single closing `advance` whose `--why` is pre-written under *"THE DIGEST
+I COULD NOT WRITE"* in the state note. Told it explicitly that this is a ruling and a
+collision-avoidance correction, **not** the projection guidance I deliberately withheld — its graded
+judgement on whether the artifacts sufficed stands unchanged.
+
+**State: HEAD `17c06f16`, tree clean, both leases released, 2 crews / 0 unresolved, nothing running.
+Three for three on lossless seams.**
