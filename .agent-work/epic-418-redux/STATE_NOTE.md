@@ -1,19 +1,28 @@
 # Crash-resume state note — epic-418-redux
 
-**WAVE 3: three of four issues MERGED and CLOSED. Only #465 remains in flight.**
+**WAVE 3: three of four issues MERGED and CLOSED. #465's PR is open and under review — that is the
+last thing standing between here and the boundary.**
 
 | Dispatch | Issue(s) | State |
 |---|---|---|
-| W3-B | #461 | **MERGED** PR #490 -> `ad149283`. Reviewed on the forge. **CLOSED.** Worktrees harvested + swept. |
-| W3-C | #488 + #489 | **MERGED** PR #491 -> `8b9330ea`. Reviewed on the forge. **CLOSED.** Worktrees harvested + swept. |
-| W3-A | #465 | **LIVE** in `C:/Programs/wt-w3a-465`, ~14% fill, 1 commit + 8 dirty. Chose the **affordance** path on evidence — NOT a new engine verb, so no shared-interface change and nothing to surface. |
+| W3-B | #461 | **MERGED** PR #490 -> `ad149283`, reviewed on the forge, **CLOSED**, worktrees harvested + swept |
+| W3-C | #488 + #489 | **MERGED** PR #491 -> `8b9330ea`, reviewed on the forge, **CLOSED**, worktrees harvested + swept |
+| W3-A | #465 | **PR #492 open** at `6774e75e`; review **LIVE** in `C:/Programs/wt-rev-465`. Commander still holds its own spine at `execute` with reconcile/triage/review/feedback/archive pending. |
 
-**Remaining to close the wave:** #465 returns -> provision a reviewer worktree at its PR head ->
-dispatch using `launch-orders/REVIEW-BRIEF-w3.md` -> gate -> merge -> harvest -> sweep -> close ->
-then the `w3-to-w4` boundary packet, then `closeout`.
+**Green main: `1789 passed / 2 skipped / 683 subtests / exit 0`** — batched re-verification on the
+final merged tree, 469s. #492's branch predates both merges, so it will report a **lower** count; that
+delta is explained by the missing merges, not a regression.
 
-**The Admiral's own gauge should now work** — #488's fix is in `main`. If `gauge-skip.json` still says
-`ambiguous-binding` after the next tool call, that is a finding, not a nuisance.
+**#465's fix is NOT a new engine verb** — it lifts the existing `amend --op retext-check` onto a
+survey. No shared-interface change, nothing to surface. Removal was ruled out on evidence: deleting
+the placeholder deletes the check.
+
+**Remaining:** #492 review -> gate on `gh pr checks` exit 0 -> merge -> verify MERGED via the forge ->
+harvest + sweep `wt-w3a-465` and `wt-rev-465` -> close #465 -> `w3-to-w4` boundary packet ->
+`closeout`.
+
+**MY GAUGE WORKS AGAIN** (#488's fix landed): last reading **0.3297 at 05:44:48Z**. That is ~2x the
+17-21% band every crew trips at. Watch it now that it is readable, and hand off on judgement.
 
 **Merge gate, in order, honoured for #490 and to be repeated for #491:** `gh pr checks <n>` exit 0 →
 independent review posted to the forge → merge → **verify MERGED via `gh pr view --json state`** →
