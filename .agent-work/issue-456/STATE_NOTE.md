@@ -18,13 +18,14 @@ dispatch (the PID changes every time).
   deleting a quarter of the pages, dropping all 112 module indexes, or writing
   the tree flat each leave the suite GREEN.
 
-  **EXACTLY ONE THING CLOSES `g0`, and it does NOT touch `render.py`:** rewrite
-  the misleading docstring at `tests/test_code_map.py:127-131`, which claims
-  `pages` "has to be a number that can be WRONG" and that "the count has to come
-  from the tree". The second clause is true; the first is now false, and shipping
-  it inside the gate whose subject is this defect shape is the finding. State
-  honestly that the test guards the counting **method** only. Then `advance
-  g0-review` → `g0-integrate`.
+  **B3 IS NOW CLOSED** (`e-g0-review-7`, commit `853be2bc`): the docstring at
+  `tests/test_code_map.py:127` states honestly that the test guards the counting
+  **method** only. Suite unmoved at `1709 / 2 / 0`. **THE ONLY REMAINING ACTION
+  AT THIS GATE IS `advance g0-review`**, which is refused solely because the
+  commander's context is at 19% against a 15% hard limit. The refresh-request is
+  already filed (`e-g0-review-6`). A fresh commander re-claims the lease
+  `commander-issue-456` idempotently (same id, NOT a takeover, no `--force`),
+  runs that advance, then `g0-integrate`.
 
   **Do NOT add the invariant assertion to `g0`** — `pages - 1 - modules` (3535)
   vs `entity_pages` (3536) is the falsifiable check and it is REAL, but it fails

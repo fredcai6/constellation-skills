@@ -306,6 +306,19 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-g0-review-7",
+          "type": "remediation-result",
+          "payload": {
+            "finding": "B3",
+            "change": "tests/test_code_map.py:127 docstring rewritten. It no longer claims 'pages' has to be a number that can be WRONG; it states that the test guards the counting METHOD only, carries the re-reviewer's measurement (deleting every second entity page, dropping all 112 module indexes, or writing the tree flat each leave it GREEN, because it computes its expected value with the same rglob expression as render.run), states explicitly that a green here is NOT evidence the page tree is complete, and names where the check that can fail lives (g1, with tc17, plus tc24's warning that counting the tree again is not the fix for entity_pages).",
+            "verification": "Docstring only, zero behavioral change. Full suite re-run by me in a cleared environment: 1709 passed, 2 skipped, 0 failed, 375s -- identical to the pre-change boundary, which is the required result for a comment-only edit and is itself the check that nothing else moved.",
+            "improvisation_disclosed": "This should have gone to an implementer crew and did not. run_crew.py --dispatch external refused THREE times, naming constellation/issue-456/g0/implementer/attempt-1 as 'running' when that crew had completed and returned its artifact. I ran the refusal's own prescribed recovery, --abandon, twice; both reported success and neither changed the refusal. crew-runs.json shows four entries sharing that one id from slot reuse, so abandon-by-id and the duplicate check never converge, while recover_crews reported 0 unresolved throughout. Filed as tc25 (hard blocker), building on tc22 and tc23. I judged a docstring rewrite with a suite that must not move to be the safest thing to carry myself, and I am recording it rather than letting it pass as a crew product.",
+            "scope_held": "No render.py change. The invariant assertion was NOT added here -- it is real (pages - 1 - modules vs entity_pages, differing by exactly the lost page) but would be red on arrival, so it stays assigned to g1 with tc17. entity_pages untouched, per tc18 as corrected by tc24."
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
