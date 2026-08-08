@@ -2997,3 +2997,36 @@ than its code changed, that is plan surgery and it floats to me.
 
 **No dispatch.** The Commander is alive and `g4-integrate`'s own imperative already says BLOCK -> return
 for rework. Rule 7 holds.
+
+## WAVE LAUNCH | 2026-08-08T18:09:30Z | commander-w4-467-h relaunched at the g4-integrate seam
+
+Predecessor `commander-w4-467-g` tripped at **0.169769** (hard 0.15), closed g4-review carrying its
+handoff, filed the refresh-request at the seam with concrete `why_ref=w-12`, **released the lease**, and
+stopped. Textbook. **This is the SECOND live #431 of the run:** main's pre-fix engine refused the
+advance that CARRIES the handoff, and it released it the engine's own way.
+
+**Rule 7 sequence, in order and for the record:** confirmed idle-shape from four independent signals
+(lease **released** — a deliberate act, not an inference; gauge **20.0% >= hard**; five refresh-requests
+with the newest at this seam; six minutes of no writes) -> **stopped it** (`TaskStop` confirmed) ->
+**then** dispatched. Not one before the other.
+
+Launched `commander-w4-467-h` (**Opus, named reason:** it must judge whether a proposed fix is itself a
+check that cannot fail — the exact discrimination this issue exists to make). Order:
+`launch-orders/LO-467-h.md`. **Cold-started from `current` alone** per job-file-not-agent-file; the order
+carries standing rulings only and deliberately does not re-narrate the run.
+
+**Rulings carried into it:** fix space is the reviewer's and narrow (correct the false sentence, declare
+the limit as plainly as the other three, render a HISTORICAL read alongside the live one — every entry
+is already on disk, **no new state needed**); **keying must not change**, and widening the selector to
+all why-records is **refused in advance**; **the test that pins the defect is the most important thing
+it will touch**; pin the engine **by `git rev-parse HEAD:scripts/checklist_engine.py`** — currently
+`c0faef06` — **not** by byte size, since the predecessor's own trap-6 size matched nothing on disk.
+
+**Two corrections the predecessor made against its own handoff, both carried:** the shape count is 12
+numbered rows not 11, and the byte-size pin is unusable. A crew correcting its own outgoing handoff is
+the behaviour I have been trying to get all epic.
+
+**Also captured from the review survey, for filing after the wave:** `amend`/`waive --authority` accepts
+**any string**, so "human ratification" is enforced by nothing. That is a **sixth specimen** of this
+epic's subject, sitting in the engine's own authority mechanism — the thing that is supposed to make my
+withdrawal of blanket amendment authorization mean something.
