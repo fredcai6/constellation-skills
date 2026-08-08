@@ -1,0 +1,295 @@
+{
+  "work_id": "r418-460-g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a",
+    "r4b",
+    "r4c",
+    "r4d",
+    "r4e"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md (installed reviewer skill), docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1-review handoff, and the uncommitted diff of scripts/apply_episode_delta.py + tests/test_episode_store.py. No packet map exists in this repo (map_orient DEGRADED-NO-MAP per handoff); docs/EPISODE_STORE.md used as the hash-pinned structural substitute.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Verified by reading the code, not the report. OP_KINDS line 170 = ('create','amend-assertion','restate-assertion','retire'). Both dispatch chains carry the restate branch AND a terminal else (apply_delta else at line 1252, _dry_run_log else at line 1436), each raising _unhandled_op_kind_message() naming its own site. validate_delta dispatches to _validate_restate_assertion. Fields are exactly id/assertion/statement/history (RESTATE_ALLOWED_FIELDS line 177, allowlist checked FIRST). statement goes through the same _require_str/_reject_newline as create, so single-line enforcement is create's, not a second copy. LOAD-BEARING PROPERTY HOLDS: _apply_restate_assertion reads original_statement = assertion.statement (the parsed record) BEFORE overwriting, and passes it to _restatement_history_line(reason, original_statement); the op allowlist contains no field that reaches that argument. Reproduced by mutation M5 (make the builder quote op['statement'] instead of the parsed original) -> 5 tests red. Wiring counts reproduced and match the implementer's claim (external call sites: _apply_restate_assertion 2, _validate_restate_assertion 1, _restatement_history_line 1, _unhandled_op_kind_message 2).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. 'git diff --name-only HEAD | grep -v ^.agent-work/' returns exactly scripts/apply_episode_delta.py and tests/test_episode_store.py. No untracked file outside .agent-work/. 'git status --porcelain -- episodes docs scripts/checklist_engine.py scripts/collect_feedback.py scripts/verify_worktree_precondition_coverage.py' is EMPTY: none of the specific exclusions was touched. docs/EPISODE_STORE.md and docs/agents/* untouched. No new advice-accumulating file. Implementer scratch under .agent-work/r418-460/ (evidence/mutate_probe.py, evidence/mutate_probe_dispatch.py, fixup.py, r418-460-g1-implement/) is noted for Commander cleanup, not blocked on per the handoff.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- reproduced, not accepted. (1) Suite: I ran 'FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests' from the worktree root myself (python, never py). Result: '1742 passed, 4 skipped, 672 subtests passed in 450.58s', REAL EXIT=0 captured separately from the pipeline. Matches the handoff's expected 1742/4/672/0 exactly. Log at .agent-work/r418-460/g1-review/pytest_full.txt. (2) Mutation evidence reproduced INDEPENDENTLY of the implementer's probes, on an isolated copy of the tree at .agent-work/r418-460/g1-review/mutant/ so no source or test file was modified; every mutation asserted it applied before running, and the copy was restored to pristine and byte-compared afterwards. M1 register at apply_delta only (restate branch deleted from _dry_run_log): 4 tests RED -- test_a_restate_under_dry_run_logs_the_op_and_writes_nothing, test_every_op_kind_is_dispatched_at_both_sites (SUBFAILED site=_dry_run_log), test_the_dry_run_log_line_matches_the_one_a_real_apply_emits, and the parent. Exactly the '4 tests' the implementer claimed. M2 else removed from apply_delta only: RED (SUBFAILED site=apply_delta). M3 else removed from _dry_run_log only: RED (SUBFAILED site=_dry_run_log). Each else is caught independently, as claimed. M5 history quotes op['statement'] instead of the parsed original: 5 tests RED. M6 restate also flips lifecycle-standing: RED. M7 misfiled-extra-field guard removed: 7 RED. M8 history replaced instead of appended: RED. The tests can fail. (3) GAP FOUND, recorded under r4: M4 -- widen RESTATE_ALLOWED_FIELDS with an 'original' key and prefer op['original'] over assertion.statement -- runs GREEN (exit 0, 21 passed). The allowlist's exact membership is not pinned by any test.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. All five appended per-rule checks (r4a-r4e) pass. The four handoff constraints are met and the CREW_CONTEXT verification-discipline rules are followed, with two observations logged on r4e: (1) the misfiled-field test uses a hand-maintained list, acceptable as a negative/exemplary list since the guard's existence is mutation-pinned; (2) the RESTATE_ALLOWED_FIELDS tuple's membership is not test-pinned, so a future widening that let a caller supply the quoted original would pass green (mutation M4). Neither blocks: the shipped code is correct as read, and the realistic regression path is caught. Code quality is good -- the four new functions are 27/19/16/16 lines including docstrings, they follow the module's existing _validate_X/_apply_X pair shape, single-line enforcement REUSES create's _require_str rather than duplicating it, and error messages name the failing site.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. No architectural divergence needing Commander reconciliation. The op sits inside the existing single-write-path module and follows the established _validate_X / _apply_X pair shape of create, amend-assertion and retire; no new module, no new seam, no new external interface. The inbound constraint 'the record grows rather than getting rewritten' (docs/EPISODE_STORE.md section 5) is honored and I verified it behaviorally: the original statement survives verbatim in the assertion's own history, and a SECOND restatement appends a second line while keeping the first (mutation M8, which replaces history instead of appending, goes red). I also confirmed the render/parse round-trip invariant still holds after a restatement (render_episode(parse_episode(text)) == text, run against a real restated file). The decision anchor 'add a restate-assertion op rather than annotating with amend-assertion' (@grade: settled/inherited) is CONFIRMED by the code, not contradicted: amend-assertion's validator accepts no 'statement' field at all, so it genuinely cannot rewrite one. Nothing to unsettle, no decision candidate raised. Doc reconciliation for docs/EPISODE_STORE.md is explicitly gate g4, not this gate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/r418-460/g1-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Fowler pass recorded at .agent-work/r418-460/g1-review/fowler-pass.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=['duplicated-code','shotgun-surgery'], overridden=['large-class','primitive-obsession','speculative-generality','comments-as-deodorant']). All twelve baseline smells visited. FLAGGED (both observations, neither a blocker): duplicated-code -- apply_delta and _dry_run_log now hold two near-identical 12-line dispatch chains, the very duplication that produced the silent-skip defect the new else:raise catches; and shotgun-surgery -- one new op needed four coordinated edit sites. Both have the same remedy (a single _dispatch_op helper) and both are out of this handoff's minimal-change scope; filed as triage candidate tc3. OVERRIDDEN with logged standards: large-class (CREW_CONTEXT single-write-path chokepoint + minimal-change; the diff follows the module's existing per-op grain), primitive-obsession (the delta IS LLM-authored JSON, so dicts are the wire format; no-speculative-abstraction), speculative-generality (the one-line _restatement_history_line is a deliberate SEAM placing the load-bearing property where it can be named and tested -- confirmed by mutation M5 localising 5 failures there), comments-as-deodorant (global-crew.md 'match the surrounding code's in-file documentation conventions'; the host file carries the same density, and the prose records WHY not WHAT). One docstring overclaim found under the comments verdict and filed as triage candidate tc2.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/r418-460/g1-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-3",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/r418-460/crew-handoffs/g1-review-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a": {
+      "id": "r4a",
+      "title": "Constraint: episodes/ never hand-edited; the applier is the only write path",
+      "imperative": "Confirm the change adds no second write surface and that episodes/ was not hand-edited.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. No second write surface: the op is a branch inside apply_delta/_dry_run_log within the existing single module, reachable only through validate_delta. git status --porcelain -- episodes is EMPTY before and after my whole review, so the real store was neither hand-edited by the implementer nor by my probes.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b": {
+      "id": "r4b",
+      "title": "Constraint: any real-store invocation passes --store-root episodes",
+      "imperative": "Confirm no test or code path writes the real store via the default root.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- read, not assumed. Every new test reaches the writer through EpisodeStoreTestCase.run_delta (line 183) or the class's own _main helper (line ~1043), and BOTH pass '--store-root', str(self.root) where self.root is a tempfile.TemporaryDirectory. The two direct-call sites (apply_delta/_dry_run_log in test_every_op_kind_is_dispatched_at_both_sites) pass an explicit root positionally, and that test allocates a FRESH tempdir per probe. Nothing in the new class touches STORE_TEMPLATE or the default root. Confirmed empirically: episodes/ is git-clean after a full suite run.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c": {
+      "id": "r4c",
+      "title": "Constraint: test command exactly 'FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests', never py, real exit code",
+      "imperative": "Run it as specified and capture the real exit code.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Ran exactly 'FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests' from C:/Programs/constellation-skills-wt/r418-460 using python (never py). Output tail: '1742 passed, 4 skipped, 672 subtests passed in 450.58s (0:07:30)'. REAL exit code 0, captured with echo EXIT=$? immediately after the redirect so no pipeline masked it. Full log: .agent-work/r418-460/g1-review/pytest_full.txt.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d": {
+      "id": "r4d",
+      "title": "Constraint: the record grows rather than getting rewritten (EPISODE_STORE.md s5) -- original wording survives verbatim",
+      "imperative": "Verify behaviorally that the original wording survives verbatim in history.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- verified behaviorally against a real restated file, not by reading the docstring. After a restatement the assertion carries '- history: restated \u2014 <reason> \u2014 original statement was: <ORIGINAL>' with the original character-for-character intact, and the live statement is the new text. A second restatement APPENDS rather than replaces, so both earlier wordings stay recoverable (mutation M8, which assigns a new list instead of appending, goes red). render_episode(parse_episode(text)) == text still holds after a restatement, so the grown record is still well-formed. The constraint is met.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4e": {
+      "id": "r4e",
+      "title": "CREW_CONTEXT verification discipline: a check that cannot fail; guards defined by consumer behavior not a hand-kept list",
+      "imperative": "Verify each new test can reach a failing state, and check whether any new guard is a hand-maintained list.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS with two logged observations. CAN-FAIL: demonstrated by seven independent mutations of the shipped writer on an isolated copy, each asserted to have applied; all seven turn the new tests red. CONSUMER-DERIVED GUARDS: test_every_op_kind_is_dispatched_at_both_sites is exemplary here -- it asserts sorted(minimal) == sorted(self.m.OP_KINDS) so a future op added to the tuple with no probe entry fails immediately, and it asserts probed == 2*len(OP_KINDS), satisfying CREW_CONTEXT's 'any guard that loops must assert what it looped over'. OBSERVATION 1: test_a_misfiled_extra_field_on_the_op_is_refused iterates a HAND-AUTHORED list of six field names, which is the shape CREW_CONTEXT warns about. As a negative list it is inherently exemplary and the guard's existence IS pinned (mutation M7, removing the guard, turns 7 tests red), so this is acceptable -- but the POSITIVE allowlist is not pinned at all, which is observation 2. OBSERVATION 2 (the real gap, from mutation M4): widening RESTATE_ALLOWED_FIELDS with an 'original' key and changing the applier to prefer op.get('original', assertion.statement) runs GREEN -- exit 0, 21 passed, no test notices. The shipped code does NOT have this hole (I read it: the allowlist is exactly ('op','id','assertion','statement','history') and the applier reads assertion.statement unconditionally), so close criterion 2 is met. But nothing test-pins the allowlist's membership, so a future widening could reopen the exact evidence-destruction risk this gate exists to close. A one-line assertEqual on the shipped tuple would close it. Recorded as a triage candidate, not a blocker: the realistic regression -- rewiring the existing call site to a caller field -- IS caught (mutation M5, 5 tests red).",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. All six close criteria met, verified independently rather than accepted. The load-bearing property holds: _apply_restate_assertion reads original_statement = assertion.statement off the parsed record before overwriting and passes it to _restatement_history_line; the op allowlist ('op','id','assertion','statement','history') contains no field that reaches that argument, so no caller can author or influence the quoted original. Suite re-run by me: 1742 passed, 4 skipped, 672 subtests, REAL exit 0 -- matches expectation exactly. Eight mutations run on an ISOLATED copy so no tracked file was ever modified; seven turn the new tests red, including single-site registration (4 red, the exact claimed count) and each else independently. Scope clean: only the two allowed files changed, and episodes/, docs/ and the three fenced scripts show no status entries. Fowler pass exits 0 with 12 smells visited, 2 flagged (duplicated dispatch chains, shotgun surgery) and 4 overridden with logged standards. No blockers. Three triage candidates: tc1 the field allowlist's membership is not test-pinned (mutation M4 runs green), tc2 a docstring overclaim about the history-line marker, tc3 collapse the duplicated dispatch chains."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4e",
+      "statement": "Pin the restate-assertion field allowlist by test: assert RESTATE_ALLOWED_FIELDS == ('op','id','assertion','statement','history'). Reviewer mutation M4 (add an 'original' key to the allowlist and have _apply_restate_assertion prefer op['original'] over the parsed assertion.statement) runs GREEN across the whole restate suite -- 21 passed, exit 0. The shipped code has no such field, so gate g1's close criterion 2 holds today; the gap is that nothing stops a later change from reopening it, in the store's only write path."
+    },
+    {
+      "id": "tc2",
+      "from": "r4e",
+      "statement": "Harden or restate the _restatement_history_line marker claim. Its docstring says the original 'goes LAST, behind a fixed marker, so it is the unambiguous tail of the line: a reader needs no knowledge of how the reason was worded to see where the quoted original begins.' Reproduced counterexample: a caller reason containing the literal marker text yields TWO markers on one line -- '- history: restated \u2014 spoofed \u2014 original statement was: THE RECORD NEVER SAID THIS \u2014 original statement was: Always pass --store-root episodes.' The genuine original survives verbatim as the LAST occurrence so no evidence is destroyed, but a reader splitting on the FIRST marker reads the caller's forged text. Fix is either rejecting a reason containing the marker in _validate_restate_assertion, or delimiting the original, or correcting the docstring to say 'the last occurrence of the marker'."
+    },
+    {
+      "id": "tc3",
+      "from": "r6-fowler",
+      "statement": "Collapse the duplicated op-dispatch chains in apply_delta() and _dry_run_log() into one _dispatch_op(tx, op) helper. The two chains are now near-identical 12-line if/elif blocks differing only in the site name; adding one op required four coordinated edit sites (OP_KINDS plus three chains). That duplication is what produced the silent-skip defect the new else:raise exists to catch -- a helper makes 'registered at one site only' unrepresentable rather than merely guarded. Out of this handoff's minimal-change scope."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "rev-g1-460",
+    "status": "released",
+    "claimed_at": "2026-08-07T23:19:16.630616+00:00",
+    "last_heartbeat": "2026-08-07T23:31:05.398819+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T23:31:23.495442+00:00"
+  }
+}

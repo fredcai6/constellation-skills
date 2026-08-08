@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "e0-context",
+  "mechanical": {
+    "run": "r418-460",
+    "project": "constellation-skills",
+    "spine-step": "e0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-r418-460-e0-context@dff23688e91e19ece914a8cd60435c414fe36f20",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "r418-460",
+    "generated_at": "2026-08-07T22:36:37Z"
+  }
+}

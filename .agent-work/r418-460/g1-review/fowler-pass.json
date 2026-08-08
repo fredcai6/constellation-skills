@@ -1,0 +1,90 @@
+{
+  "work_id": "r418-460-g1-review",
+  "diff_ref": "uncommitted working tree of C:/Programs/constellation-skills-wt/r418-460 -- scripts/apply_episode_delta.py (+126) and tests/test_episode_store.py (+475), the restate-assertion op for issue #460",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, docs/EPISODE_STORE.md, constellation-reviewer references/global-crew.md + references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "Measured with ast, not by eye. The four added functions are 27 / 19 / 16 / 16 lines INCLUDING docstrings: _validate_restate_assertion 27, _apply_restate_assertion 19, _restatement_history_line 16 (one line of code), _unhandled_op_kind_message 16 (one return). Code-line counts are ~15 / 7 / 1 / 5. The module's longest functions are all pre-existing (parse_episode 109, _validate_create 75, commit 75) and untouched by this diff.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "scripts/apply_episode_delta.py is now 1444 lines carrying grammar constants, the Assertion/Episode dataclasses, parse, render, per-op validation, per-op application, the transaction, and the CLI in one module.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md section 'Record Stores Are Never Hand-Edited' -- episodes/ has exactly one write path, scripts/apply_episode_delta.py; plus global-everyone.md 'One canonical path; no speculative abstraction' and global-crew.md 'Make the minimal change that satisfies the handoff'. The handoff's Allowed Scope names this one file.",
+        "reason": "The single-module shape IS the chokepoint the standard names: splitting validate/apply/render into importable siblings would create additional surfaces from which the store could be written, which is the property the standard exists to prevent. The diff also does not create the smell -- it adds a fourth op symmetric with three existing ones (create, amend-assertion, retire), each already laid out as a _validate_X / _apply_X pair, so the addition follows the module's established grain rather than adding a new responsibility. Re-shaping the module is a design decision above crew latitude and outside this handoff's scope."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "apply_delta() (lines ~1240-1253) and _dry_run_log() (lines ~1425-1437) now hold two near-identical 12-line if/elif/elif/elif/else dispatch chains over op kind, differing only in the site name passed to _unhandled_op_kind_message(). This diff widens the duplication from three branches to four in both copies. It is exactly the duplication that produced the defect the new `else: raise` exists to catch -- an op registered at one site and silently skipped at the other. The change MITIGATES the smell (both chains now raise, and test_every_op_kind_is_dispatched_at_both_sites drives every OP_KINDS member through both) but does not remove it. The structural fix is one `_dispatch_op(tx, op)` helper called by both, after which 'registered at only one site' becomes unrepresentable rather than merely guarded. OBSERVATION / triage candidate, not a blocker: the guard plus the consumer-derived test close the failure mode, and de-duplicating the pre-existing chains exceeds the handoff's minimal-change scope."
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "_apply_restate_assertion reads and writes assertion.statement / assertion.history, but Assertion is this module's own dataclass and _apply_amend_assertion (the immediately preceding sibling) manipulates it identically. The code is not more interested in another module's data than its own.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "The (episode id, assertion id) pair recurs across amend-assertion and restate-assertion, but it appears as two locals in one function per op, is never passed together as a parameter pair, and is pre-existing. No clump is introduced or widened by this diff.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Ops are raw dicts keyed by string, validated by hand per kind (op.get('id'), op['statement'], the RESTATE_ALLOWED_FIELDS string tuple) rather than parsed into typed op value objects.",
+      "override": {
+        "repo_standard": "global-everyone.md 'One canonical path; no speculative abstraction' and global-crew.md 'Make the minimal change that satisfies the handoff; no speculative abstraction'.",
+        "reason": "The delta is literally a JSON document an LLM authors (module docstring: 'The LLM proposes operations ... in a JSON delta file'), so the dict IS the wire format and the validators are the parse step. Introducing an op class hierarchy for one new op would abstract three existing ops that the handoff forbids touching, and would add a second place where field rules could drift from the shipped allowlist. The string allowlist is checked FIRST, before the per-field checks, which is the stronger guarantee the typed shape would have bought."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "_restatement_history_line(reason, original_statement) takes 2; _apply_restate_assertion(tx, op) and _validate_restate_assertion(op) match the module's existing op-handler signatures exactly; _unhandled_op_kind_message(kind, site) takes 2.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Adding one op required coordinated edits at four separate places -- the OP_KINDS tuple (line 170), the validate_delta dispatch chain, the apply_delta dispatch chain, and the _dry_run_log dispatch chain -- plus two new functions and an allowlist constant. The implementer found this the hard way: the dry-run site was the one that got missed, which is why _unhandled_op_kind_message and both `else: raise` clauses exist at all. Same root cause and same remedy as the duplicated-code finding above (a single dispatch table or helper collapses four edit sites to two). OBSERVATION / triage candidate: the diff leaves the fan-out in place but makes it loud instead of silent, which is the correct minimal response inside this handoff's scope."
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The module already changes for several unrelated reasons (record grammar, CLI, store layout). This diff touches only the op-grammar axis -- one new op kind and its two handlers -- and adds no new reason for the module to change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The deepest navigation added is tx.load(episode_id) then ep.all_assertions() then .get(assertion_id) -- two hops through the module's own objects, identical to _apply_amend_assertion's existing shape. No caller is walked through a chain of foreign intermediaries.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "overridden",
+      "finding": "_restatement_history_line is a 16-line function whose body is a single f-string, called from exactly one place. On its face that is a one-use abstraction anticipating a caller that does not exist.",
+      "override": {
+        "repo_standard": "global-everyone.md section 'Deep-module vocabulary' -- 'Seam: where an interface lives. Its placement is its own decision, not a byproduct of the implementation' and 'The interface is the test surface'; plus the g1-review handoff's Close Criterion 2, which makes 'the history line is built inside the writer from the parsed original' a named, load-bearing property of the gate.",
+        "reason": "The extraction is not anticipating a second caller -- it is placing the seam where the protected property can be named, read and tested. Its signature (reason, original_statement) is what makes 'a caller cannot forge the quoted original' inspectable in one place instead of inferred from an inline f-string buried in the applier. I confirmed the seam earns its keep by mutation: rewiring only that call site's original argument (M5) turns 5 tests red, which is exactly the localisation the seam buys."
+      }
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "Roughly 60 of the 126 added lines in the applier are prose: a 20-line module-docstring entry, a 6-line comment over RESTATE_ALLOWED_FIELDS, a 9-line docstring on _validate_restate_assertion, a 14-line docstring on _restatement_history_line, a 10-line docstring on _unhandled_op_kind_message, and a 6-line inline comment inside _apply_restate_assertion.",
+      "override": {
+        "repo_standard": "global-crew.md section 'Implementation discipline' -- 'Match the surrounding code's naming, labeling, and in-file documentation conventions -- the project's specific conventions are the local delta.'",
+        "reason": "The host file already carries this density and this voice: the existing module docstring documents each op the same way, ASSERTION_ALLOWED_FIELDS carries the same style of allowlist rationale, and lines ~452-500 carry a comparably long trap explanation for the active/retired split. More importantly the added prose records WHY (the defect class the else:raise closes; which field must never reach the quoted original; why lifecycle-standing is refused here), never restating WHAT the code does -- the opposite of deodorant, which hides code that should have been rewritten. CAVEAT logged as a review observation rather than a smell flag: one docstring claim on _restatement_history_line is an overclaim -- 'the original goes LAST, behind a fixed marker, so it is the unambiguous tail ... a reader needs no knowledge of how the reason was worded'. I reproduced a caller reason containing the marker text itself, which yields two markers on one line; the genuine original survives verbatim as the last one, so no evidence is destroyed, but a reader splitting on the FIRST marker reads the caller's forged text. CREW_CONTEXT's own rule ('assert against behaviour, never against text that describes it') is why this belongs in the result as an observation."
+      }
+    }
+  ],
+  "rail_exception": null
+}

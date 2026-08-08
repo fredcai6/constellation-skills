@@ -45,7 +45,12 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
+<<<<<<< ours
 - statement: Do the gate work that needs no `advance` (edits, suite runs, evidence capture) while the inherited record ages out, then advance normally; hand-writing a gauge record or filing a refresh-request for an exhaustion not being experienced were both available and both rejected as false.
+=======
+- statement: The dispatch did the gate work that needed no `advance` -- edits, suite runs, evidence capture -- while the inherited record aged out, and then advanced normally; hand-writing a gauge record and filing a refresh-request for an exhaustion that was not being experienced were both available and were both rejected as false.
+- history: restated — issue #460 gate g5 -- restated from imperative instruction to observation, grounded in a3 (the engine refused every advance while gauge.json held the predecessor's reading) and a4 (the block persisted until the record aged past the 30-minute staleness window rather than clearing on any action taken) — original statement was: Do the gate work that needs no `advance` (edits, suite runs, evidence capture) while the inherited record ages out, then advance normally; hand-writing a gauge record or filing a refresh-request for an exhaustion not being experienced were both available and both rejected as false.
+>>>>>>> theirs
 
 ## Diagnosis (optional)
 

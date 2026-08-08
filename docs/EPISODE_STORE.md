@@ -347,9 +347,54 @@ prior-art writer used).
 filename/id. `a3` (`observed-behavior`) stays exactly `lifecycle-standing: active` — a
 reviewer disputing one claim in an episode never forces a rewrite of, or even a touch to,
 any sibling claim. That is the concrete demonstration this document owes: an episode
-*never needs rewriting later* to become expressible under Stratum A, because it already
+never needs its SHAPE rewritten to become expressible under Stratum A, because it already
 *is* Stratum A assertions from the moment it is written (§6), and disputing one of them is
 a one-field, append-history mutation, not a record-shape change.
+
+**The second write path: `restate-assertion`, and which of the two is correct when.**
+`amend-assertion` changes `lifecycle-standing` and nothing else. That is the right op when
+the claim is still what the record meant to say and only its standing has moved — disputed,
+superseded, rejected. It is the wrong op when the sentence itself does not say what a
+record is for, because an assertion marked `superseded` still STANDS as the live statement:
+an agent opening the file reads the sentence, not the standing.
+
+So there is one further op, `restate-assertion` (issue #460), which replaces exactly one
+assertion's `statement` and appends one `history` line carrying **the original wording
+verbatim**. The original is rebuilt inside the writer from the parsed record, so no caller
+can supply the quoted text. Nothing the store once asserted is destroyed — it moves into
+the record's own history, which is what keeps §5's rule intact: the record still grows
+rather than getting overwritten.
+
+**Worked before/after — the inversion, and why it was wrong.** `issue-308-001.a5` recorded
+a real fix to a hung test harness, and stated it like this:
+
+> Give the harness the same fail-safe discipline as the production code under test: wrap
+> per-iteration work in try/except with a guaranteed stop-signal in `finally`, and mark
+> helper threads daemon=True as a backstop.
+
+Restated, and now carrying the sentence above verbatim on its `- history:` line:
+
+> The harness was given the same fail-safe discipline as the production code under test:
+> per-iteration work was wrapped in try/except with a guaranteed stop-signal in `finally`,
+> and helper threads were marked daemon=True as a backstop.
+
+Same information. The first tells a reader what to do; the second records what this run
+did. The store is a record of things that happened and is never read back as a rule — that
+constraint is doctrine at `docs/agents/ORCHESTRATOR_CONTEXT.md`, "The Retired Learning
+Playbook", and is not restated or extended here.
+
+This particular record is why the distinction earns a worked example rather than a
+sentence. The issue #447 handoff pointed a crew at `issue-308-001` as its migration
+precedent — so the store's own exemplar was an instruction, and the store could not be used
+as its own worked example. That is the failure this section now answers.
+
+**What keeps it true:** `scripts/verify_episode_observations.py`, run with `--strict`
+against `episodes/`. Its honest limit, stated in full in its own docstring: it is a lexical
+detector over a closed verb list, calibrated to this corpus, so a passing record is not
+thereby shown to be observational. It is a floor, not a proof. It carries an explicit
+exception list, because gate g2 correctly left five statements alone whose records cannot
+support a factual restatement, and a guard demanding a clean store would have gone red on
+exactly that honest outcome.
 
 ## 6. The Stratum A mapping — concrete, against the worked example
 

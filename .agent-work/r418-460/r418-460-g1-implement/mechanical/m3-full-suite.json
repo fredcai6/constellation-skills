@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-full-suite",
+  "mechanical": {
+    "run": "r418-460-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-full-suite",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-r418-460-g1-implement-m3-full-suite@75f4c47ef46acceba159f7c1294338723230580a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "r418-460-g1-implement",
+    "generated_at": "2026-08-07T22:56:59Z"
+  }
+}

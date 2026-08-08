@@ -185,3 +185,21 @@ skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md:through `scripts/apply_
 
 # superseding header on a retired design record: names where the CURRENT loop lives so a reader of the history is not left following it -- a write path and a denial of the read path, not an instruction to consult the store
 docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> `episodes/`, written only through `scripts/apply_episode_delta.py` and proved by
+
+# issue #460 observation guard, opening line of its docstring: states the record-not-a-rule property this guard exists to keep true -- a denial of the read path, not an instruction to consult the store
+scripts/verify_episode_observations.py:`episodes/` holds a record of *things that happened*. A record that tells a future
+
+# issue #460 observation guard: resolves the read primitives module by path so the guard shares the store's own record parser rather than a second copy of the grammar
+scripts/verify_episode_observations.py:_QUERY_PATH = Path(__file__).resolve().parent / "query_episodes.py"
+
+# issue #460 observation guard: the module name for that same lazy resolution
+scripts/verify_episode_observations.py:_QUERY_MODULE = "query_episodes"
+
+# issue #460 observation guard: explains why the read primitives are resolved lazily -- a note about module identity, naming no record and telling no agent to read one
+scripts/verify_episode_observations.py:`query_episodes.writer()` is: a caller that has already imported it shares that
+
+# issue #460 observation guard: names where the deleted-episode case is checked instead. This guard READS statements to test a property and emits episode ids, assertion ids and trigger names ONLY -- never statement text -- so it cannot become a path by which an agent reads the store for guidance
+scripts/verify_episode_observations.py:still names a live offender in episodes/. Only a scan of the real store can answer
+
+# issue #460 observation guard: --store-root help text, the same store-root seam every other episode script takes
+scripts/verify_episode_observations.py:help="the episode store to scan. Defaults to the writer's store_root().",

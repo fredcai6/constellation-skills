@@ -44,7 +44,12 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
+<<<<<<< ours
 - statement: Pair every negation postcondition with a positive one, and scope a grep to the specific line that must change rather than to the file, so a word added anywhere else cannot satisfy it.
+=======
+- statement: The gate was re-authored so that its negation postcondition was paired with a positive one, and a second check was narrowed from a whole-file grep to the specific table row that had to change, so that a word added anywhere else could not satisfy it.
+- history: restated — issue #460 gate g5 -- restated from imperative instruction to observation, grounded in a3, which records this exact re-authoring as done in this run, and a4, which records it as caught before execution at a cost of one planning revision — original statement was: Pair every negation postcondition with a positive one, and scope a grep to the specific line that must change rather than to the file, so a word added anywhere else cannot satisfy it.
+>>>>>>> theirs
 
 ## Diagnosis (optional)
 
@@ -58,7 +63,12 @@
 - kind: proposed-remedy
 - strength: medium
 - lifecycle-standing: active
+<<<<<<< ours
 - statement: State doc postconditions as what the document must now say, not only as what it must no longer say.
+=======
+- statement: The remedy this run applied was to state the doc postcondition as what the document now had to say rather than only as what it no longer had to say; d1 records why the negation-only form is satisfiable by deletion, and a3 records the re-authoring that carried this out.
+- history: restated — issue #460 gate g5 -- restated from imperative instruction to observation, grounded in a3 (the gate was re-authored as a conjunction pairing the negation with a positive assertion) and d1 (a postcondition phrased only as the absence of a bad string is satisfied by deleting the content entirely) — original statement was: State doc postconditions as what the document must now say, not only as what it must no longer say.
+>>>>>>> theirs
 
 ## Retirement
 - status: active

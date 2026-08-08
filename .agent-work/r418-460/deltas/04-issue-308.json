@@ -1,0 +1,124 @@
+{
+  "work_id": "r418-460-g2-implement",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-002",
+      "assertion": "a5",
+      "statement": "Before planning, the launch order's NAMED defect or sub-fix was grepped against current code, and any named EDIT TARGET (section heading, file path, anchor) was checked for existence at the named address.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a4 (\"Every instance was caught BEFORE planning by grepping the named symbol or token, so no rework is attributable to any of them\") and in a3 case (2) (\"A named EDIT TARGET did not exist under that name -- 'the Decision Anchors section of commander-core.md'\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-004",
+      "assertion": "a5",
+      "statement": "The field's presence was verified against the harness contract (docs) and the regression test was made to drive the REAL writer path that populates it -- running handle_post_tool_use to write the binding, then decide_stop -- rather than a hand-injected fixture.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"the docs confirmed `cwd` is present on every hook event, but a real non-fixture reproduction showed its SCOPE was wrong -- session-lifetime-fixed, not per-call-live -- for a Commander-in-worktree dispatch\"), which records both halves as done"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-005",
+      "assertion": "a5",
+      "statement": "In #301 the reviewer was told to AUTHOR adversarial fixtures that would make the tool return a WRONG answer -- false FAIL on a valid input, silent PASS on an invalid one -- rather than only re-run the suite over the real artifacts, and that is what found the defect.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a4 (\"In #301 the defect was found only because the reviewer was told to AUTHOR adversarial inputs rather than re-run the suite\") and in a3, which names both wrong-answer shapes; the original's generalization to 'every round-trip or enumeration test over real artifacts' is not grounded in this record and was not carried forward"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-006",
+      "assertion": "a5",
+      "statement": "The runs fell back to a manual attest-plus-advance where the child checklist was GATED rather than SURVEY; where --from-child was usable at all, only an absolute path to the child was accepted.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a4 (\"Forced a manual attest-plus-advance instead\") and in a3 (1) (\"It refuses a path to the child given relative to cwd, accepting only an absolute path\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-007",
+      "assertion": "a5",
+      "statement": "epic-226's own preventive extra-diligence workaround was to write explicit HARVEST EXECUTED and HARVEST MANIFEST entries into the Admiral log before any sweep ran.",
+      "history": "issue #460 gate g2 -- mood-only restatement from imperative to observation, adding no content: the assertion's own subject phrase already names this as epic-226's applied workaround, and the record's mechanical artifact-ref epic-226/ADMIRAL_LOG.md names the log it was written into"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-008",
+      "assertion": "a5",
+      "statement": "The cold plan critic was run as MANDATORY rather than bias-to-yes for gate plans whose acceptance depended on a before/after measurement or a required round-trip or parser test.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a4 (\"This run, #308, is a further instance: the mandatory cold critic returned 2 BLOCKING findings on this issue's own gate plan\"), read against a2 (\"The cold plan critic was optional (bias-to-yes) at the time\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-009",
+      "assertion": "a5",
+      "statement": "The ambient os.environ['PATH'] was mutated directly rather than a restricted `env=` override being passed.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"Established empirically by two pasted `py -c` transcripts comparing env={'PATH': d} against mutating os.environ['PATH'] directly\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-010",
+      "assertion": "a5",
+      "statement": "A `! <command>` bash-negation wrapper was used as the postcondition's `command` field, which turns 'the guard fired' into a mechanically re-verified engine check instead of a self-reported attest.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"Confirmed once in 303: three command postconditions using the negation wrapper, all satisfied on first advance with no rework, with the verbatim commands, exit codes and stderr recorded in notes-303.md\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-011",
+      "assertion": "a5",
+      "statement": "The canonical target was resolved FIRST under a launch order that fenced a contended file.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"Resolving the canonical target first made the contended edit unnecessary: under a PR-6-style canonical-source rule the content belonged in a different home, so the collision dissolved rather than needing resolution\"); the original's second clause, qualifying the stop-condition wording, is not grounded -- a4 records that nothing beyond the floated decision happened -- and was not carried forward"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-012",
+      "assertion": "a5",
+      "statement": "The crew plan file was placed in its own subdirectory, mirroring the reviewer role's <gate>-review/ convention, so that it got its own gauge.json. A third attempt using .agent-work/governor-261/g1-implement-rework2-attempt3/ completed cleanly on the same task.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in the assertion's own second sentence, which records the attempt that used the subdirectory and completed cleanly, and in a3 (\"checklist_engine.py's _gauge_path keys purely off the checklist file's own containing directory\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-013",
+      "assertion": "a5",
+      "statement": "The reviewer wrote a reviewer-side standalone script that loads the real module by file path (importlib) and defines the OLD handler inline as a local function, reusing the SAME real helpers the new code uses -- reproducing the contrast without ever mutating the file under review. The reviewer explicitly recommended promoting it as the documented default.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"The reviewer then improvised a working alternative within the same dispatch\") and a4 (\"no cost or rework is recorded; the reviewer solved it in-dispatch\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-018",
+      "assertion": "a5",
+      "statement": "#300's panel ran a shared-assumption audit over its own convergences, which retracted one of five reported convergences after finding it was the BRIEF handed back rather than independent agreement, treating unanimity across deliberately-differing constraints as evidence about the varied axis only.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"In #300 the panel's own shared-assumption audit retracted a 'metadata only, never file content' convergence after finding it was the BRIEF handed back rather than independent agreement\") and a4 (\"#300's audit retracted one of five reported convergences\"); the original's requirement that the auditor not have authored the brief is not grounded in this record and was not carried forward"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-020",
+      "assertion": "a5",
+      "statement": "For shape 2, a quote-id-and-count protocol: the live staged file was compared before harvest rather than a name taken earlier being trusted. Shape 1 is covered by ordinary verification. The lesson's author explicitly warns against graduating shape 1 alone and considering the class closed.",
+      "history": "issue #460 gate g2 -- restated the first sentence from imperative to observation; grounded in a3 (\"caught before harvest only by comparing the live staged file\"). The remaining two sentences already report rather than instruct and are unchanged"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-021",
+      "assertion": "a5",
+      "statement": "The hand-written enumeration was replaced with a script that enumerates the corpus itself and asserts the enumeration is non-empty -- .agent-work/issue-308/checks/lesson_intake_is_cut.py -- and the new guard was verified by reading which sites it actually named, not by its exit code.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a4 (\"Both were caught: the first by a cold plan critic, the second by running the guard and reading which sites it named\") and a3 (\"one revision later and inside the guard written to fix that\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-023",
+      "assertion": "a5",
+      "statement": "An independent cold sensor was dispatched in addition to the solo read, and it found a cluster the solo read had recorded as a singleton, so the solo read's singletons stand as unconfirmed rather than as negatives. The candidate instruction as the sensor phrased it, recorded as the sensor's words and deciding nothing: 'before a check counts as evidence, state the condition under which it would FAIL and show it can reach that condition; if that condition is unobservable to the instrument, report a measurement gap, not a pass.'",
+      "history": "issue #460 gate g2 -- restated the first sentence from imperative to observation; grounded in a1 (\"one solo read by the commander, plus an independent cold sensor over the same 7 episodes\"), a3 (\"The sensor found a second strong cluster the commander's solo read had MISSED -- the solo read had grouped issue-304-g3-005 as a singleton\") and a4 (\"one read is not enough to trust a null on any individual cluster\"). The sensor's quoted words are carried through verbatim inside their existing quotation frame"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-024",
+      "assertion": "a5",
+      "statement": "Both checks were corrected through the engine's sanctioned re-planning verbs (amend rescope for a gate, amend retext-check for one condition) rather than waived, and both replacements were re-verified RED before the work that turned them green. A waived check stays in the tree asserting the old rule; a corrected one becomes the acceptance test the gate actually needs.",
+      "history": "issue #460 gate g2 -- restated the first sentence from imperative to observation; grounded verbatim in a3 (\"Both were corrected through the engine's amend verb (rescope and retext-check) rather than waived, and both replacements were verified RED before the work that would make them green\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-025",
+      "assertion": "a5",
+      "statement": "The handoff instructed the downstream reader to verify BY CONTENT rather than by count, naming each item that had to survive, so the wrong total in the handoff did not become a wrong action. The count was wrong and the work was still correct, because nothing depended on the count alone.",
+      "history": "issue #460 gate g2 -- restated the first sentence from imperative to observation; grounded in a3 (\"It was caught by the g5 reviewer following an instruction the same handoff carried: verify the surviving writer BY CONTENT, not by count\") and a4 (\"the reviewer's by-content check confirmed all four survivors afterwards\")"
+    }
+  ]
+}
