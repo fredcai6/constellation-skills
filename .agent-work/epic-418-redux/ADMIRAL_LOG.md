@@ -3851,3 +3851,43 @@ is exactly the point crew 1 made and the reason the interpreter is now pinned in
 (`commander-issue-458-readiness`) and a `gauge.json` written inside the last six minutes. It is the
 slowest of the five and it is the only full Commander besides crew 1. **Alive on the live channel;
 no action.**
+
+### REVIEW — PR #509 (crew 5, #496 + #411): one half approved on source, one finding raised
+
+Crew 5 is an implementer with no reviewer gate of its own, so the cold read is mine. **CI green**
+(`test` pass, 7m20s). Its suite evidence used **`python`** and matches the known-good count exactly —
+1867 passed / 2 skipped / 829 subtests. Scope verified by me, not accepted on report: I diffed its
+branch against every file it does not own and it touched **none** of crew 4's.
+
+**#496 — APPROVED, verified against source.** The added sentence names `save()` as the sanctioned
+exception to the always-pass-`newline` rule. I checked the claim rather than the prose:
+
+```
+scripts/checklist_engine.py:191  def save(...)
+  """Write the checklist as JSON, PRESERVING the line ending the file already
+     uses, and write BYTES so nothing translates them again."""
+```
+
+The doc now says what the code does, and it explains *why* the exception is safe — a byte-faithful
+writer satisfies the rule's intent without its literal mechanism. That is the right shape: it will
+still read correctly to someone who meets it cold.
+
+**#411 — FINDING, raised to the crew rather than ruled.** The fix **deletes the `_shared` row from a
+fenced block that is verbatim output of a command printed immediately above it**. That block is a
+record of what the command printed at `fc1685a`; removing a row makes it no longer faithful to its own
+command. A successor who re-runs it gets `_shared` back, sees the disagreement, and now has reason to
+distrust the whole snapshot — **including the parts that are correct.** The file also lives under
+`.agent-work/archive/`, and correcting an archived *measurement* is a different act from correcting a
+live *doc*.
+
+Recommended instead: keep the row, keep the block reproducible, and let the note — which is already
+good, citing the installer's own exclusion rule — carry the correction. **#411's stated concern is
+that the error propagates to successors, and a note the successor reads solves that** without
+falsifying a record.
+
+**Raised as a finding with a reason demanded either way, not as an order.** The crew read the issue
+body and I did not; "the issue asks for the row's removal" would settle it against me. What is not
+acceptable is a silent change in either direction.
+
+**No merge while the crew is live.** Its spine still reads `execute [in-progress]`. A PR being green is
+not the same as a crew being done, and merging under a running crew risks landing a partial tree.
