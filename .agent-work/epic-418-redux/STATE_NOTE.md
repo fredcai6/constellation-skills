@@ -24,15 +24,18 @@
 >    substitution and the post succeeds with the phrase silently deleted. Write a file, use `-F`.
 
 
-**WAVE 4 IS LAUNCHING: one Commander on #467 (A2, trip semantics). Do not dispatch a second.**
+**WAVE 4 RUNNING: one Commander on #467 (A2, trip semantics). Never dispatch a second into this worktree.**
 
 - **step:** `execute` — in-progress (resumed 2026-08-08 on Tommy's *"keep rolling"*).
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
 - **wave-4 dispatch:** one Commander, issue **#467**, worktree
   `C:/Programs/constellation-skills-wt/epic418-a2-467`, branch `epic-418/a2-467-trip-semantics`,
   model **Opus**. Launch order: `launch-orders/LO-467.md`.
-  **Now on its THIRD instance (`commander-w4-467-c`)**, dispatched ~10:46Z. Instances A and B both
-  tripped, both handed off cleanly at seams, both lost nothing. **A and B are STOPPED.**
+  **Now on its FOURTH instance (`commander-w4-467-d`).** A, B and C each tripped, each handed off
+  cleanly at a seam, **none lost work**. A and B are STOPPED; C went idle with both leases released.
+  **The engine journal CANNOT tell the instances apart** — every entry carries the same `session_id`
+  (#419's identity problem, live in the journal). Read journal *verbs* and gate states, never the
+  lease field, and do not infer which instance did what.
   **The plan is FROZEN** at `<worktree>/.agent-work/issue-467-trip-semantics/execute.json` —
   16 tasks, 5 gates. **g1 COMPLETE — all four gates**: `e0-context`, `g1-implement`, `g1-review`, `g1-integrate`
   (`62f564c7`, `e4092af8`, `17c06f16`). **4/16.** Next: open **g2**.
