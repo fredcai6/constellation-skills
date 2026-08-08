@@ -2,11 +2,22 @@
 
 > ## THE SIX RULES — re-read this block before every batch of commands
 >
-> Everything below this box is reference. **These six are the ones that have actually been broken,
+> Everything below this box is reference. **These are the ones that have actually been broken,
 > by me, after I wrote them down.** This run's most repeated failure is not ignorance — it is
 > *written-down-and-ignored*, the human twin of the done-condition wave 4 is implementing: an
 > instruction satisfied or ignored with identical traces gets ignored, including by its author.
-> A 250-line note is a note whose rules get skipped. This block exists so that stops being true.
+>
+> **WHY SOME OF THESE WORK AND MOST DO NOT — the one thing to take from this run.**
+> Every rule I broke today was one I had to **remember to consult**. The only rule that ever
+> *fired* was **rule 7**, and it fired because it **gates an action**: it stands between me and a
+> dispatch, so the dispatch cannot happen without passing it. It caught a relaunch that would have
+> destroyed a healthy Commander, before I had weighed any evidence at all.
+>
+> So when you find yourself adding a rule here, ask which kind it is. **A rule phrased "remember
+> to X" is a rule that will be read past.** Convert it into a gate on the action it protects — a
+> command you must run first, a check that must pass — or expect it to fail exactly when it
+> matters. That is DC6's argument turned on its author, and it is the most useful thing this run
+> has taught me.
 >
 > 1. **Do NOT push after every log append.** `ci.yml` has no `paths-ignore`, so an
 >    `.agent-work`-only commit burns the full 8-minute suite. Commit locally; push at real
