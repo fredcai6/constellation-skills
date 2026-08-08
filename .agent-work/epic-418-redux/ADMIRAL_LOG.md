@@ -1478,3 +1478,88 @@ invention.
 
 **Deliberately not done: I did not pick the design.** I read three candidate headers and stopped.
 The distinguishing mechanism is listed under #467's **Open (Commander's call)**.
+
+## 2026-08-08 — the #467 Commander tripped on #467, and the trip is the best evidence of the run
+
+**INCIDENT | governor trip at the `plan` boundary, handled clean, no work lost.** Asserted reading:
+`fill_fraction 0.275764`, `claude-opus-5`, `observed_at 2026-08-08T10:05:53Z`; `_PROFILES` gives
+hard **0.15**, and the engine printed `CONTEXT 28% (>= hard)` — **proof the value was read, not
+inferred**. A governor that fired, not a silent one. Fifth successful hand-run of the loop in this
+epic, and **the first performed while implementing the fix for it**.
+
+**PREDICTION CONFIRMED — recorded before the fact, so it counts.** At 10:06 I wrote into
+`evidence/w4-467-gauge-observation.md`: *"this Commander trips on its next `advance`, not before."*
+It had been over the line since well before 19.4%, working inside `plan` the whole time, because
+**the trip is only evaluated when a gated verb is attempted.** It tripped closing `plan`. The
+mechanism is: cross the line unnoticed mid-gate, meet the refusal at the boundary.
+
+**Relaunched cold, per doctrine, and deliberately gave the successor NOTHING from my own memory.**
+Fresh Commander into the **same worktree and spine file**, instructed only to run `current` and do
+what it says. Re-briefing from my notes would have destroyed the very thing DC5 measures. Told it
+that its own judgement on whether the handoff sufficed is part of its deliverable, and that a frank
+*"the handoff was missing X"* is worth more than a smooth resume.
+
+### Four defects the Commander measured on itself — three are against MY work
+
+**1. My launch order's handoff instruction is UNSATISFIABLE under the shipped engine, and so is the
+global doctrine I copied it from.** LO-467 said: *"write a `refresh-request` into your `spine.json`,
+**make sure your `current` carries the DIGEST**, and go idle."* Those clauses cannot both be obeyed.
+`current` carries the latest live why-record; the only verb that writes one is `advance`; `advance`
+is the verb the refusal blocks. **Obeying my order literally would have cold-started the successor
+on the `understand` step's understanding — the deadlock is real, the plan unwritten, good luck.**
+This is not merely my drafting error: `global-everyone.md` §reach-up says the same thing, so **#431
+has propagated into the doctrine written on top of it.** That is precisely why #467 requires the fix
+to *dissolve* #431 rather than patch it.
+
+**2. The capability was never missing — only the instruction was.** The Commander did
+`attach` refresh-request keyed `w-3` → `advance plan --why "<the handoff>"` → `attach` a second
+request at `execute` keyed `w-4`. **The engine allowed all three.** Sharpest available evidence for
+DC1: the trip did not need new permissions, it needed to stop saying *"blocked"* and start saying
+*"close this gate carrying your handoff, then stop."*
+
+**3. `REFRESH REQUESTED:` is ACTIVE-GATE-KEYED, so a compliant handoff erases its own signal — and
+this one landed on my own instrument.** `_why_suffix` renders the line only while a pending request
+targets the *active* gate. The Commander's first request named `plan`; the moment it advanced
+`plan`, the active gate became `execute` and **the line vanished**. To the Admiral that reads as a
+fresh DIGEST with no reach-up signal at all — *a Commander that simply stopped*. It only stayed
+visible because it worked the defect out from source and filed a **second** request at the resume
+gate. **Nothing in doctrine or the engine tells anyone to do that.**
+
+**ADMIRAL ERROR, sixth of the day, and this one I had already "fixed" once.** My monitor keyed on
+exactly that `REFRESH REQUESTED` string in `current`. So **its correctness depended on this crew's
+diligence, not on the mechanism** — a compliant-but-ordinary agent would have gone invisible to me.
+I had already moved this detector once today, from grepping raw JSON to asking the engine, and the
+engine's own signal has this hole.
+
+Fixed properly: the monitor now runs **two detectors, because each is blind where the other sees** —
+the engine projection **plus** a gate-independent structural count of `"type": "refresh-request"`
+records (a typed field, never prose, which is what produced the earlier false positive). Verified
+against live controls before re-arming: **positive** = the tripped spine, **2** requests, exactly the
+two filed; **negative** = my own never-tripped Admiral spine, **0**.
+
+**4. The remedy hint asks for a value `current` never displays.** `_refresh_attach_hint` emits the
+literal placeholder `why_ref=<why-id>`; `current` shows the DIGEST *text* but never its id. The
+Commander had to read `spine.json` — which `global-everyone.md` calls a violation — to learn the id
+was `w-3`. **The one sanctioned reach-up move requires an over-read of the state file.** Its own
+plan's g2(d) already fixes this, written *before* it hit the defect.
+
+### What the DIGEST could not carry — the honest half of DC5
+
+Its own accounting: the DIGEST cannot carry **the reasoning behind rejected options** (a successor
+disagreeing with "guard `reopen`, not `resume`" has no way to know two critics disagreed and both
+were right); it cannot carry **crew state** (none dispatched, so nothing lost — but there is no
+field for it); and it cannot carry **that three of the four observations above exist at all**.
+
+Its conclusion is the one I would have written and could not have proved: *"the
+cold-start-from-`current`-alone doctrine works here because the work area is rich, not because the
+DIGEST is sufficient."* **A run without durable artifacts would have lost this.**
+
+### Carried to triage by the Commander, not fixed in #467
+
+1. Active-gate-keyed `REFRESH REQUESTED` erasing its own signal (above).
+2. **The engine accepted `attest` and `attach` on a `pending` gate** — four `plan` postconditions
+   were satisfied before `plan` was ever `start`ed, and only `advance` refused. **Evidence can
+   accumulate on a gate nobody has opened.**
+3. `grade_lint.py` fails `GL001 UNGRADED_DECISION` on any string in `anchors.decision[]`, including
+   the "decision pressure" entries `EXECUTE_PLAN.template.json` explicitly says carry no grade —
+   **the template and the linter contradict each other.**
