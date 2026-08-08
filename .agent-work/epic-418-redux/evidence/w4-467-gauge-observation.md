@@ -96,3 +96,57 @@ crew has been inside `plan` — writing a design-it-twice panel, running a cold 
 
 **Prediction on the record, before the fact:** this Commander trips on its next `advance`, not
 before. Recorded now so the outcome cannot be read back favourably either way.
+
+---
+
+## The claim I retracted, now re-derived properly — and it says something different
+
+The retraction above stands: *"the Admiral ran to 44% with no trip"* was unsound, because no
+reading was asserted. **I now have the asserted reading it lacked.**
+
+```json
+{"schema_version": 1, "fill_fraction": 0.26286, "model": "claude-opus-5",
+ "observed_at": "2026-08-08T10:11:26.677Z"}
+```
+
+`.agent-work/epic-418-redux/gauge.json` present, **no `gauge-skip.json`** — a single live binding,
+measured, not absent. Two asserted readings on the same machine, model and hour:
+
+| Role | Asserted fill | Over hard (0.15)? | Tripped? |
+|---|---|---|---|
+| **#467 Commander** | 0.2758 | yes | **yes — at the `plan` boundary** |
+| **Admiral (this run)** | 0.2629 | yes | **no** |
+
+**Both are over the line by a similar margin. Only one was ever asked.**
+
+### So the original conclusion was wrong, and the corrected one is more useful
+
+It is **not** that the band is role-blind. Both roles cross the same threshold at nearly the same
+fill. It is that **the evaluation points are role-asymmetric**:
+
+- A **Commander** crosses ten gates in a run — `init`, `context`, `understand`, `plan`, `execute`,
+  `reconcile`, `triage`, `review`, `feedback`, `archive`. It meets the question repeatedly.
+- An **Admiral** sits inside **`execute` for the entire epic** — one gate, many hours, many waves.
+  It can run arbitrarily far past the limit and **never be asked once**.
+
+The trip is evaluated on a gated verb. An orchestrator barely attempts them. So the governor's
+question reaches the role that is *already* handing off at seams, and skips the role that holds the
+most irreplaceable context in the fleet.
+
+### Why this matters to #467 specifically
+
+The shipped design refuses the verbs that **begin** work (`start`, `reopen`). That is the right
+shape, and it **inherits this property unchanged**: an Admiral deep inside `execute` begins nothing,
+so it is still never asked. **DC1 is satisfied for crews and structurally silent for
+orchestrators.**
+
+This is not a defect in the fix and not a reason to widen #467. It is the **honest boundary of what
+the fix covers**, and it belongs in the return's per-done-condition accounting rather than being
+discovered later by someone who assumed DC1 was universal.
+
+### Provenance
+
+Both readings exist only because **#488 shipped in wave 3**. My gauge was dark for roughly nine
+hours of this epic — two bindings resolving to one path read as ambiguous and the writer skipped —
+and the comparison that finally corrected my own retracted claim is only possible on the fixed
+writer. A wave-3 fix producing the wave-4 measurement that refutes the wave-4 Admiral.
