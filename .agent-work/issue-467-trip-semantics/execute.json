@@ -200,7 +200,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
         },
         {
           "id": "c2",
@@ -214,7 +215,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-5"
         },
         {
           "id": "c3",
@@ -227,13 +229,14 @@
               "blocking_findings": "0"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -272,6 +275,28 @@
             "seam": "g1-integrate",
             "why_ref": "w-3",
             "note": "Tripped at hard (15%) on the advance that would have CLOSED g1. All three g1-integrate postconditions are MET, not waived -- c1 and c2 verified in my own shell, c3 amended per the Admiral's ruling and the evidence attached (e-g1-integrate-2). The ONLY thing missing is the advance itself. why_ref is the concrete w-3, read from execute.json's raw why_trail: the engine's printed <why-id> placeholder is a silent no-op (attaches exit 0, does not release HARD) and the real id is not recoverable from current or the refusal -- that is triage candidate TC-4 / discrepancy D7, which g2(d) fixes. Successor: claim without --force, then run ONE command -- advance g1-integrate --why <the DIGEST in STATE_NOTE.md 'THE DIGEST I COULD NOT WRITE'> -- and g1 is closed. Do not redo any g1 work."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(git diff --stat -- scripts tests)\"",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -344,7 +369,19 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-implement",
+            "why_ref": "w-4",
+            "note": "Tripped at fill 0.165 (>= hard 0.15, claude-opus-5) BEFORE starting g2-implement, not during it. g2-implement is still 'pending' and NO crew was dispatched -- that is deliberate: 'start' is a BEGIN-work verb and dispatching an implementer at/over hard is exactly the DC6 violation this issue's own fix (b) is built to refuse. So the compliant reading of the governor is 'do not open g2', not 'open g2 and hand off mid-gate'. Successor: claim BOTH spine.json and execute.json (same session id -> idempotent resume, no --force), then start g2-implement and drive gate g2 from the frozen plan. g1 is CLOSED and its DIGEST (w-4) is complete -- do not redo any g1 work, do not re-run the repro to 'check'. why_ref is the concrete w-4, read from execute.json's raw why_trail because the engine's printed <why-id> is a literal placeholder that attaches exit 0 and silently does nothing (TC-4 / D7, which g2(d) fixes)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-review": {
@@ -974,9 +1011,16 @@
       "why": "g1-review CLOSED, verdict ACCEPT WITH FINDINGS, 0 blocking / 8 non-blocking. Independent opus reviewer answered all four handoff questions with commands it reproduced, and wrote FOUR adversarial probes to attack the claim rather than confirm it. THE RED IS GENUINE: (1) reading was READ -- engine printed its own 'CONTEXT 30% (>= hard)' four times in the reviewer's transcript, and gauge_reader.read() returns a Reading not None on the planted record; (2) the control is real -- normalized JSON diff shows the two scratch spines differ only in downstream consequences of the refusal, and advance is verified in source as the SOLE why_trail writer (both _append_why call sites inside advance()); (3) 11 of 24 assertions flip under the planned fix including every load-bearing #431 claim, and all 13 both-sides assertions are harness/setup/control/honest-scope -- no assertion is dressed up as #431 evidence, which was the thing to find and it is not there; (4) git diff --stat -- scripts tests empty, plus staged, status, and main...HEAD all empty, suite re-run at exact baseline 1793/2/683 REAL_EXIT=0. REVIEWER PROBE 2 IS A REFRAME g2-g4 MUST CARRY: the post-attach advance SUCCEEDS and writes a fresh DIGEST, so #431 is NOT a mechanical deadlock -- the engine PERMITS the advance while telling the agent in the same breath not to run it. #431 is an instruction-conformance defect, not a lock. The repro narrated this in prose (N3) rather than asserting it. PROBE 3 independently corroborates the copy-paste trap: literal why_ref=<why-id> attaches exit 0 and the next advance is STILL refused -- a silent no-op, which is what g2(d) fixes. I VERIFIED IN MY OWN SHELL: git diff --stat -- scripts tests empty AND main...HEAD empty; run_crew.py --verify-result reports fresh (completed). ONE FINDING I RE-DERIVED AND RE-ATTRIBUTED: N1 says the result's 'none under version control' claim is false -- it is, 29 files under red-repro/ are tracked (git ls-files count 29, check-ignore exit 1) so every repro re-run dirties tracked files, against decision:red-leaves-no-residue. But git log --diff-filter=A shows ALL 29 entered in 62f564c7, the PREDECESSOR COMMANDER's seam-commit at the trip, not any git add by the implementer. The implementer's claim was true when written and my predecessor's handoff commit falsified it. Residue is real; the attribution is not the implementer's. FLOATING to the Admiral, not deciding: untracking committed evidence is outside the frozen plan. ALSO FLOATING W1 -- the reviewer hit a check that CANNOT PASS (r6-fowler ships a literal placeholder command that a shell reads as a redirect; neither amend, which is gated-only, nor attest, which refuses engine-checked conds, can fill it) and force-waived it with the real exit 0 recorded. That is this epic's own defect INVERTED and it is live in REVIEW_SURVEY.template.json. STANDING TRAPS UNCHANGED: DC6's observable is 'did anyone BEGIN work while over the line', never 'did a handoff artifact appear'; at/over hard, advance --mechanical must be refused and why_exempt suspended. NEXT: g1-integrate.",
       "mechanical": false,
       "ts": "2026-08-08T11:04:38.927448+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "g1 CLOSED. RED verified genuine and reproduced in MY OWN shell as the fourth commander on this issue: repro_431.py --all -> 24 ASSERT OK / 0 FAIL, real exit 0; c1 pytest tests/test_checklist_engine.py tests/test_gauge_reader.py -> 394 passed, 30 subtests, real exit 0; c2 git diff --stat -- scripts tests EMPTY and main...HEAD -- scripts tests EMPTY, so this gate changed no source, before and after the repro run. c3 PASSED, NOT WAIVED: it was amended through the engine on the Admiral's ruling (retext-check g1-integrate.c3, authority \"Admiral, epic #418 latitude contract\"), from the literal string APPROVE -- which the frozen reviewer handoff made unreachable by prescribing ACCEPT / ACCEPT WITH FINDINGS / REJECT -- to verdict_class=ACCEPTED + blocking_findings=0. THE CHECK REMAINS FAILABLE, which was the Admiral's binding condition: ACCEPT and ACCEPT WITH FINDINGS pass; REJECT FAILS, twice over (verdict_class normalizes to REJECTED, and a REJECT necessarily carries blocking findings != 0). The literal reviewer verdict rides verbatim in the payload for audit; the normalization is additive. No APPROVE artifact was ever fabricated.\nCARRY INTO g2-g4, THIS IS THE ONE THAT INVALIDATES THE OBVIOUS TEST: the reviewer's PROBE 2 showed the post-attach advance SUCCEEDS and writes a fresh DIGEST. #431 is an INSTRUCTION-CONFORMANCE defect, not a mechanical deadlock -- the engine PERMITS the verb while telling the agent in the same breath not to run it. I proved it again by BEING it: I ran this very advance at fill 0.162 (>= hard 0.15 for claude-opus-5) and the engine let me, because a refresh-request was pending. So a g2-g4 acceptance test worded \"the advance is no longer blocked\" verifies something that was NEVER blocked and passes in BOTH worlds. The fix must be verified on what the agent is TOLD, not on whether the verb returns 0. Discrepancy D2.\nSTANDING TRAPS UNCHANGED: (1) DC6's observable is \"did anyone BEGIN work while over the line\", never \"did a handoff artifact appear\" -- the latter is true by construction and green in both worlds. (2) At/over hard, advance --mechanical must be REFUSED and why_exempt SUSPENDED, because _latest_why_record skips mechanical markers and would otherwise reproduce #431 after the fix.\nHANDOFF-INSTRUMENT DEFECTS I HIT COLD, for the epic's own ledger: STATE_NOTE.md is the STALEST artifact of the three -- it says the leases were RELEASED (they were active, re-claimed at 11:16:22Z) and describes c3 as an open unanswered float, when c3 had already been amended and the matching evidence attached. evidence e-g1-integrate-3 points a successor at a STATE_NOTE.md section titled \"THE DIGEST I COULD NOT WRITE\" that does not exist in the file. The engine state (execute.json tasks + amendments + evidence) was the ONLY projection that was correct end to end; the prose handoff and the dispatch briefing both told me to redo work already done. NEXT: g2.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:22:10.189065+00:00"
     }
   ],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "released",

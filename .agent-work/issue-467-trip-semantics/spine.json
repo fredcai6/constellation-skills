@@ -658,7 +658,7 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 6,
+  "refusals": 7,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "released",

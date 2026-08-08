@@ -10,12 +10,12 @@
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-red-repro-431-face-b-g2@366e3be4140c36c35bfc7552aa60463d0cfcef07",
+    "context-manifest-ref": "ctx-red-repro-431-face-b-g2@ff14188f49bbdfbcffa89199353596ae7d7f6b97",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "red-repro-431-face-b",
-    "generated_at": "2026-08-08T11:05:03Z"
+    "generated_at": "2026-08-08T11:21:28Z"
   }
 }

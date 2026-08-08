@@ -62,8 +62,8 @@
   "engine_session": {
     "session_id": "repro-431-a-cf",
     "status": "active",
-    "claimed_at": "2026-08-08T11:05:00.938187+00:00",
-    "last_heartbeat": "2026-08-08T11:05:02.129282+00:00",
+    "claimed_at": "2026-08-08T11:21:26.853441+00:00",
+    "last_heartbeat": "2026-08-08T11:21:27.774069+00:00",
     "claimed_by": "repro-431",
     "worktree": "C:\\Programs\\constellation-skills-wt\\epic418-a2-467",
     "previous_session_id": null,
@@ -75,14 +75,14 @@
       "gate": "g1",
       "why": "PRE-TRIP UNDERSTANDING: g1 established the seam contract; the writer is the only producer and the reader must fail safe to None.",
       "mechanical": false,
-      "ts": "2026-08-08T11:05:01.519182+00:00"
+      "ts": "2026-08-08T11:21:27.313471+00:00"
     },
     {
       "id": "w-2",
       "gate": "g2",
       "why": "CURRENT UNDERSTANDING: g2 found the reader's None path is reached from three distinct failure modes, so the retry belongs in the caller, not the reader.",
       "mechanical": false,
-      "ts": "2026-08-08T11:05:02.129270+00:00"
+      "ts": "2026-08-08T11:21:27.774060+00:00"
     }
   ]
 }

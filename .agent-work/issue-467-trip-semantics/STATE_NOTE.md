@@ -1,146 +1,122 @@
 # Crash-resume state note — issue-467-trip-semantics
 
-**Written by `commander-w4-467-c`, tripped at HARD on the advance that would have closed g1.**
+**Written by `commander-w4-467-d` at the g2 seam. Replaces `commander-w4-467-c`'s note wholesale —
+its content is either carried below or is now done.**
 
-## READ THIS FIRST — g1 is ONE COMMAND from closed. Do not redo any of it.
+## READ THIS FIRST — g1 is CLOSED. g2 has NOT been started.
 
-All three `g1-integrate` postconditions are **MET, not waived**. The c3 ruling is applied. The
-evidence is attached. **The only thing missing is the `advance` itself**, which the governor refused
-at 15%.
+The note you are replacing said "g1 is ONE COMMAND from closed." **I ran that command.**
+`advance g1-integrate` returned **`g1-integrate -> complete`** with the full DIGEST written to the
+why-trail as **`w-4`**. Do not re-run it, do not re-verify g1, do not re-run the repro to "check".
 
-**Your first real command, after claiming the lease:**
-
-```
-python C:/Programs/constellation-skills/scripts/checklist_engine.py \
-  --file .agent-work/issue-467-trip-semantics/execute.json \
-  advance g1-integrate --session-id <yours> --why "<paste the DIGEST below>"
-```
-
-Then g1 is closed and you open **g2 — the fix itself**.
-
-- **step:** spine `execute` (in-progress) · `execute.json` gate **`g1-integrate` (in-progress, all
-  postconditions met)**. `e0-context`, `g1-implement`, `g1-review` **complete**.
+- **step:** spine `execute` (in-progress) · `execute.json` gate **`g2-implement` — `pending`, NOT
+  started, NO crew dispatched.** `e0-context`, `g1-implement`, `g1-review`, `g1-integrate` are all
+  **complete**.
 - **slug:** issue-467-trip-semantics · branch `epic-418/a2-467-trip-semantics` · worktree
   `C:/Programs/constellation-skills-wt/epic418-a2-467`
+- **next command:** claim both leases, then
+  `checklist_engine.py --file .agent-work/issue-467-trip-semantics/execute.json start g2-implement`
+  and drive gate g2 from the frozen plan.
 - **pid:** none — foreground, nothing running. `recover_crews.py issue-467-trip-semantics` → **2
-  crews, 0 unresolved**.
-- **engine lease:** **RELEASED** on both `spine.json` and `execute.json`. Claim without `--force`.
-  Both are leased **separately** — claim each.
-- **refresh-request:** filed as `e-g1-integrate-3` with the **concrete** `why_ref=w-3`.
+  crews, 0 unresolved** (both g1).
+- **engine lease:** released on **both** `spine.json` and `execute.json`. Claim each **without
+  `--force`** — every agent in this session shares `session_01TTKPTbD6nnMt7jFWw9GtjX`, so `claim`
+  takes the idempotent-resume path. **Verify with `current`; do not trust this line** — see below.
+- **refresh-request:** `e-g2-implement-1`, concrete `why_ref=w-4`, targeting `g2-implement`.
 
 ---
 
-## THE DIGEST I COULD NOT WRITE
+## Why I stopped without opening g2 — read before "fixing" it
 
-`advance` is the why-trail's only writer and the governor refused it, so this text never reached the
-trail. **Paste it as your `--why` on the advance above** — it is written to be that argument.
+I crossed **hard** (fill **0.165** ≥ **0.15** for `claude-opus-5`) *before* starting `g2-implement`.
+`start` is a **BEGIN-work** verb, and dispatching an implementer crew at/over hard is precisely the
+**DC6** violation that this issue's own fix **(b)** is built to refuse. So the compliant reading of
+the governor is **"do not open g2"**, not "open g2 and hand off mid-gate". `g2-implement` is
+therefore still `pending` on purpose — this is a clean seam, not an interruption.
 
-> g1 CLOSED end to end. All three postconditions MET, not waived: c1 engine+gauge suites 394 passed /
-> 30 subtests / real exit 0; c2 no source change; c3 the AMENDED failable artifact check.
->
-> THE RED IS GENUINE and the Commander reproduced it in its own hands: `repro_431.py --all` → 24
-> ASSERT OK / 0 FAIL, real exit 0, with the engine's own `CONTEXT 30% (>= hard)` line in the
-> transcript — the reading was READ, not absently no-opping. Guards re-verified: `git diff --stat --
-> scripts tests` EMPTY *and* `main...HEAD` EMPTY; live `spine.json`/`execute.json` md5s UNCHANGED
-> across the repro run.
->
-> C3 RULING, so nobody re-litigates it: the Admiral ruled **AMEND, not waive** — a waiver hides the
-> bug and leaves the gate permanently unpassable for every future reviewer following that handoff; an
-> amend makes the check TRUE instead of SKIPPED. Binding condition: the amended check MUST still be
-> able to FAIL. It can. **ACCEPT passes, ACCEPT WITH FINDINGS passes, REJECT FAILS** — twice over,
-> once on `verdict_class` and independently on `blocking_findings=0`. Root cause, recorded in the
-> amendment: artifact `match` is EXACT EQUALITY per key, so it cannot express "one of", which is why
-> the original hard-coded a single verdict string. Loosening it to accept any verdict would have
-> converted a check that cannot pass into a check that cannot fail — the same defect wearing the other
-> mask, inside the wave hunting it.
->
-> THE FINDING g2–g4 MUST CARRY: reviewer PROBE 2 proves the post-attach `advance` **SUCCEEDS** and
-> writes a fresh DIGEST, so **#431 is an INSTRUCTION-CONFORMANCE defect, NOT a mechanical deadlock** —
-> the engine PERMITS the advance while telling the agent in the same breath not to run it. A fix
-> verified as "the advance is no longer blocked" verifies something that was NEVER blocked and passes
-> in both worlds. Recorded as REPLAN_INPUT discrepancy D2.
->
-> STANDING TRAPS UNCHANGED: (1) DC6's observable is "did anyone BEGIN work while over the line",
-> NEVER "did a handoff artifact appear" — the latter is true by construction and green in both
-> worlds; (2) at/over hard, `advance --mechanical` must be REFUSED and `why_exempt` SUSPENDED, since
-> `_latest_why_record` skips mechanical markers and would otherwise reproduce #431 after the fix.
->
-> For `r6-fowler`, do NOT re-waive: `amend`'s **`retext-check`** op IS available on surveys and is the
-> sanctioned way to fill that `<fowler-pass-record-path>` placeholder — wave 3's #465 shipped it. The
-> reviewer force-waived only because `retext-check` is documented in `docs/CHECKLIST_SCHEMA.md` and
-> mentioned NOWHERE in the reviewer's own SKILL.md: built but not wired, the third such instance this
-> epic.
->
-> NEXT: g2 — the fix itself.
+## TRUST ORDER — the instrument defect three commanders have now hit
 
----
+**`execute.json` (tasks + `amendments` + per-task `evidence`) is the only projection that was correct
+end to end.** Rank your sources:
 
-## What I hit, and why it is worth a paragraph in the record
+1. `execute.json current` and the raw task JSON — **authoritative**.
+2. This note — a *pointer*, correct only as of its timestamp.
+3. `MISSION_FRAME.md`, `LO-467.md` — **stale until proven otherwise**.
 
-**I tripped at HARD on the advance that closes the gate that proves #431 — which is #431.** The
-governor refused the one verb that writes the handoff, at the exact moment the handoff mattered most,
-in the run whose purpose is to fix that. I did not waive it. I filed the refresh-request and stopped.
+What I hit cold, in order, and how I settled it:
 
-Two things that made the recovery work, both of which are known defects:
+- The note I inherited said the leases were **released**. Both were **active** (re-claimed 11:16:22Z).
+  One `python -c` read of `engine_session` settled it; `claim` succeeded anyway because the session id
+  is shared.
+- The note said `c3` was **an open float awaiting a ruling**. `c3` had **already been amended** and the
+  matching evidence attached. Only the raw task JSON showed that; the note did not.
+- **`STATE_NOTE.md` was rewritten underneath me mid-run** (11:19:41Z) by a predecessor still live in
+  the same session. My first read and my later read were different documents. A note whose staleness
+  you detect by *re-reading it* is not an instrument.
 
-1. **`why_ref=<why-id>` is a silent no-op.** The engine prints that literal placeholder in its own
-   refusal; copy-pasting it attaches with exit 0 and does **not** release HARD. The real id is not
-   recoverable from `current` or from the refusal text. I read it out of `execute.json`'s raw
-   `why_trail` (`w-3`). This is TC-4 / discrepancy D7, with three independent confirmations, and
-   **g2(d) already plans the fix** — emit the concrete why-id.
-2. **The DIGEST had to go in this file instead of the trail**, for the second time in this run and
-   the third time on this spine. See "Why the DIGEST keeps landing here" below.
+None of this cost correctness — reading the raw task JSON settled all three in one command. It cost
+time, and it is this epic's own defect one level up: **the handoff content carries; the handoff
+instrument does not.**
 
-## Why the DIGEST keeps landing here, and what it generalizes to
+## What I did — the whole of it
 
-`advance` is the why-trail's only writer, and it sits behind **every** postcondition of the step it
-closes **and** behind the governor. So the cold-start surface is lost whenever *any* of those refuse:
+1. Claimed both leases (idempotent resume, no `--force`).
+2. Verified `g1-integrate` **in my own shell**, not from the record:
+   - c1 `FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py tests/test_gauge_reader.py`
+     → **394 passed, 30 subtests, real exit 0**
+   - c2 `git diff --stat -- scripts tests` **empty**, and `main...HEAD -- scripts tests` **empty**
+   - the gate's own imperative: `repro_431.py --all` → **24 ASSERT OK / 0 FAIL, real exit 0**, with
+     `scripts`/`tests` still clean **after** the run
+3. `advance g1-integrate --why <w-4>` → **`g1-integrate -> complete`**.
+4. Filed `e-g2-implement-1` and stopped at the seam.
 
-- **predecessor-a:** tripped mid-`execute`, which spans all 16 gates — no `advance` available at all.
-- **me, first time:** `g1-integrate` c3 was **unpassable** (the vocabulary mismatch).
-- **me, second time:** the **governor** refused at 15%.
+## Carry into g2–g4 — these do not decay
 
-Three losses, three unrelated causes, one consequence each time. The governor case is what #467 is
-fixing; the class is larger than the instance. Worth saying plainly before g2–g4 land and everyone
-concludes it is solved.
-
----
-
-## Done this session (all committed, tree clean)
-
-1. **`g1-review` CLOSED** — `ACCEPT WITH FINDINGS`, 0 blocking / 8 non-blocking, from an independent
-   reviewer that wrote four purpose-built probes to break the RED and failed to.
-2. **`g1-integrate`** — p1 attested, gate started, repro re-run by me, c3 **amended** per the Admiral's
-   ruling, evidence `e-g1-integrate-2` attached, refresh-request `e-g1-integrate-3` filed.
-3. **`REPLAN_INPUT.json`** — verified, `verify_iterative_role_artifacts.py commander` **real exit 0**.
-   6 wave-evidence claims, 7 classified discrepancies.
-4. **`triage-candidates/g1-candidates.md`** — six candidates, **none filed**.
-5. **`RESUME_OBSERVATION.md`** — second-resume section plus an addendum carrying the Admiral's
-   corrected framing of the gauge mechanism. Predecessor content untouched, deliberately.
-
----
-
-## Carry forward — these do not decay
-
-- **STANDING TRAP 1:** DC6's observable is **"did anyone BEGIN work while over the line"**, never "did
-  a handoff artifact appear."
+- **THE ONE THAT INVALIDATES THE OBVIOUS TEST (D2):** the post-attach `advance` **SUCCEEDS**. #431 is
+  an **instruction-conformance** defect, not a mechanical deadlock — the engine **permits** the verb
+  while telling the agent in the same breath not to run it. **I proved it again by being it:** I ran
+  the closing advance at fill 0.162, over hard, and the engine let me through because a
+  refresh-request was pending. A test worded *"the advance is no longer blocked"* verifies something
+  that was **never blocked** and passes in **both** worlds. Verify the fix on **what the agent is
+  told**, never on whether the verb returns 0.
+- **STANDING TRAP 1:** DC6's observable is **"did anyone BEGIN work while over the line"**, never
+  "did a handoff artifact appear" — the latter is true by construction and green in both worlds.
 - **STANDING TRAP 2:** at/over hard, `advance --mechanical` must be **refused** and `why_exempt`
-  **suspended**.
-- **#431 is instruction-conformance, not a lock** (reviewer PROBE 2 / D2). Do not let g2–g4 verify the
-  fix as "the advance is no longer blocked."
+  **suspended**, because `_latest_why_record` skips mechanical markers and would otherwise reproduce
+  #431 after the fix.
+- **The why-trail's single-writer problem is bigger than #467's instance.** `advance` is the trail's
+  only writer and sits behind *every* postcondition of the step it closes *and* behind the governor.
+  Three DIGESTs have now been lost to three unrelated causes — a step spanning 16 gates, an unpassable
+  check, and the governor. #467 fixes only the third. Do not let g2–g4 close reading as if the class
+  were solved.
+- **`retext-check` exists on surveys** (wave 3's #465) and is the sanctioned fix for a placeholder
+  check command — but it is absent from the reviewer's own SKILL.md, so its only user cannot find it.
+  **Do NOT re-waive `r6-fowler`; amend it.**
 - **`REPLAN_INPUT.json` schema gotchas:** G2 requires completed and open issue ids to be **disjoint**,
   so `completed_outcomes` **stays empty** while #467 is open; gate progress lives in `wave_evidence`.
   Also required: `appetite` and `hitl_reason` on the issue, `issue_id` (not `id`) on outcomes, and
   `blocks` may only name issues **in the wave**.
-- **`retext-check` exists on surveys** (wave 3's #465) and is the sanctioned fix for a placeholder
-  check command — but it is absent from the reviewer's SKILL.md, so its only user cannot find it.
+
+## Open floats the Admiral has NOT ruled on
+
+- **Residue, and I made it worse on purpose rather than hide it:** 29 files under `red-repro/` are
+  **tracked**, so re-running the repro dirties them. My own re-run modified **25 tracked files**, and I
+  committed that churn rather than `checkout`-ing it away — it is the cleanest live evidence that
+  `decision:red-leaves-no-residue` is violated. Untracking committed evidence is outside the frozen
+  plan, so I did not.
+- **W1:** `REVIEW_SURVEY.template.json` ships `r6-fowler` with a literal placeholder command that a
+  shell reads as a redirect — a check that **cannot pass**, force-waived at g1. This epic's own defect,
+  inverted, live in a template. See the `retext-check` note above for the fix that exists.
+- **TC-4 / D7:** the engine's refresh hint prints a literal `<why-id>`; attaching it exits 0 and
+  silently does nothing. `g2(d)` fixes it. Until then, read the real id from `execute.json`'s
+  `why_trail`.
 
 ## Environment invariants — reachable from NO projection, so they live here
 
 These are in `LO-467.md` under the Admiral's `.agent-work/epic-418-redux/launch-orders/` in the
 **main** repo, which the launch order fences you out of writing to. **Nothing in `spine.json current`
-or `execute.json current` points at them.** Copying them here is the current stopgap; two Commanders
-have now flagged it.
+or `execute.json current` points at them.** Three Commanders have now flagged this; copying them
+forward is still the only stopgap.
 
 - **Never run pytest via `py`** — #454 gives a false `HARNESS ERROR`. Use
   `FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests`.
@@ -156,7 +132,7 @@ have now flagged it.
 - **`MISSION_FRAME.md` line 85 is STALE** — it still says the band refuses `start`/`resume`, never
   `advance`. Critic finding 4 **dropped** the `resume` guard; finding 3 **added** `reopen`.
 
-## Engine mechanics that cost me refusals
+## Engine mechanics that cost my predecessors refusals
 
 - Every mutating verb needs **`--session-id`**, including `claim`.
 - `advance` needs the task **`in-progress`**: a `pending` gate needs `start` first, even though
@@ -164,6 +140,8 @@ have now flagged it.
 - **`amend --delta <file>`** takes a JSON file `{"ops":[...]}`, plus `--reason` and `--authority`.
   `retext-check` works on a **pending or in-progress** gate, never changes the check **kind**, and
   resets that condition to unsatisfied.
+- Artifact-kind `match` is **exact equality per key** — it cannot express "one of". That is why `c3`
+  hard-coded a single verdict string, and why the amended check normalizes into `verdict_class`.
 
-_Updated: 2026-08-08T11:22:00Z by commander-w4-467-c — tripped at HARD, refresh-request filed with
-concrete `why_ref=w-3`, both leases released, nothing running._
+_Updated: 2026-08-08T11:24:00Z by commander-w4-467-d — g1 CLOSED, g2 not started, both leases
+released, nothing running._
