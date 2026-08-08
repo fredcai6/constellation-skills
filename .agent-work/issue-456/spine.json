@@ -397,10 +397,10 @@
       "child_checklist": "execute.json",
       "status": "in-progress",
       "status_detail": {
-        "blocker": "COMMANDER CONTEXT SEAM. Three of eleven gates closed (g0 g1 g2); g3's implementer crew is STILL RUNNING and will finish on its own. Baseline 1744 passed / 2 skipped / 0 xfailed / 0 failed; scripts.code_map check exits 0, 6/6. Resume recipe is in .agent-work/issue-456/STATE_NOTE.md -- read it FIRST. Short form: re-claim lease commander-issue-456 idempotently (SAME id, no --force), resume execute, resume g3-implement, verify the g3 crew's result artifact, attach and advance or relaunch a successor. Then g3 review + integrate, then g4 g5 gb g6 g7 g8 gs, then reconcile, triage (tc1-tc38), review, feedback, archive. Release the lease LAST. Push and a full non-draft PR are PRE-APPROVED; MERGE TO MAIN IS NOT.",
+        "blocker": "Commander context exhausted at a CLEAN GATE BOUNDARY. g0 g1 g2 g3 g4 all CLOSED; g5 pending, nothing dispatched, no crew running (recover_crews reports 0 unresolved). Everything committed and pushed to issue-456/code-map at 5e5e2794. RESUME: re-claim lease commander-issue-456 idempotently (same id, NOT a takeover, no --force), then resume execute, then read .agent-work/issue-456/STATE_NOTE.md. NEXT GATE g5: de-conflate zero-inbound entities -- unused and untested look identical today; split the caller list into production and test callers and fix the useless 'referenced by: none' line on test pages; do NOT delete test pages (explicit ruling, critic IF7 over SY8). g5 also owns tc32: a green determinism run is not evidence of stable caller ordering. Dispatch crews at model sonnet -- the human asked for it and the g3/g4 crews proved the quality holds. Baseline: suite 1772 passed / 2 skipped / 0 failed; fresh build then check 7/7 exit 0; 0 map files tracked.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "resume_reason": "Context refreshed via compaction; commander skill active; resuming the run at g3."
+        "resume_reason": "Commander context restored by compaction; parked at a clean gate boundary with g0-g4 CLOSED and 0 unresolved crews. Resuming at g5."
       },
       "result": null,
       "finding": null,
@@ -938,7 +938,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T11:24:05.610381+00:00",
+    "last_heartbeat": "2026-08-08T13:03:44.955707+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

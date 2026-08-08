@@ -404,13 +404,14 @@
   "refusals": 6,
   "engine_session": {
     "session_id": "g5-implementer-attempt1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T13:13:49.790612+00:00",
     "last_heartbeat": "2026-08-08T15:06:04.416354+00:00",
     "claimed_by": "g5-implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T15:06:29.645809+00:00"
   },
   "why_trail": [
     {

@@ -1437,7 +1437,8 @@
           "id": "p1",
           "statement": "g2 -- referenced-by semantics must be trustworthy first",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -1448,7 +1449,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1",
+          "attested": {
+            "evidence": "e-g5-implement-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -1475,11 +1481,35 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g5-implement-RESULT.md",
+            "crew": "constellation/issue-456/g5/implementer/attempt-1",
+            "crew_model": "sonnet",
+            "blockers": "none declared by the crew",
+            "what_shipped": "Every entity page's single 'referenced by:' line becomes TWO independently-attributed lines, 'referenced by (production):' and 'referenced by (tests):', so unused / test-only / production-used are distinguishable on the page itself. New render.is_test_module derived from pytest's documented default python_files convention (test_*.py, *_test.py, or a tests package on the dotted path), restated BY HAND a second time in checks.py rather than imported. Test-defined entities additionally carry TEST_NOTE saying zero callers is the expected state, not a finding. SPLIT_LEGEND states the classification basis on every page.",
+            "test_pages_not_deleted": "HONORED -- critic IF7 over SY8. No page removed; the ruling's whole point is that you cannot say 'only tests call this' if the tests are not in the graph.",
+            "tc32_CLOSED": "CallerOrderStableUnderPermutedVisitTests: same corpus built under a permuted statement-visit order renders byte-identical caller lists; the falsifier is graded A and the crew VOLUNTEERED that its mutant initially SURVIVED against a 1-external-caller fixture and only bites at 2, so it committed the wider fixture. Honest disclosure of a near-miss rather than a silent pass.",
+            "no_absolute_threshold": "Critic F4 honored -- the split is by caller-module classification only, never by a count.",
+            "commander_integration_check": "Independently run, not taken on trust: fresh build then check -> 7/7 exit 0; report modules 111, entities 3752, pages 3864. checks.py grepped for any import of the grammar from render.py -- NONE, the independence g2 established survives the gate most likely to collapse it. TEST_NOTE verified present on 2789 test-defined entity pages and on ZERO production-defined pages.",
+            "COMMANDER_FINDING_A": "The legend printed on all 3864 pages says the rule is 'a TOP-LEVEL tests package'. The code is `return \"tests\" in parts` -- a tests segment ANYWHERE on the dotted path. Probed directly: scripts.tests.helpers -> True, pkg.sub.tests.foo -> True. The function docstring and the crew's own Assumptions section both say 'anywhere'; only the legend, the one surface a reader sees, says top-level. Nothing checks the legend against the predicate, so they can drift silently. This is the run's central defect class -- a stated rule that does not match the applied rule -- landing on this gate's own honesty surface. Handed to review as its lead mandate with a ruling demanded.",
+            "COMMANDER_FINDING_B": "The crew's headline evidence number reproduces the conflation the gate exists to remove. measure_split.py buckets purely on the two rendered lines and never asks whether the entity is ITSELF test-defined, so every uncalled test function lands in 'unused'. Re-measured over the same tree with that one dimension added: of the 2428 'unused', 2340 (96.4%) are test-defined -- the exact entities whose own pages say zero callers is normal. Genuinely unused PRODUCTION entities: 88, not 2428. A 27x difference. Production code called only by tests: 2. The PAGES are right; the CLAIM is not. Review must determine whether the conflation escapes measure_split.py into anything shipped.",
+            "cross_corpus": "f1Brainz (READ-ONLY, 1227 modules / 15037 entities, a 548-module tests package AND a separate run_tests module) built into scratch: check 7/7 exit 0 on the real 15037-entity tree. run_tests classifies PRODUCTION -- matching neither rule -- which is the predicate's stated degradation confirmed on real input rather than assumed. superCoolSpaceSim NOT used: it is C++/Obj-C with zero .py files, a null test, per my own earlier admitted error.",
+            "crew_conduct": "The crew stalled twice and needed two nudges. Cause, per its own report: one governed HARD context trip at the very start (a legitimate reach-up, handled by resuming the SAME session in place rather than relaunching -- the engine digest proved sufficient to resume from m1 without re-reading the source), then a genuinely long stretch across two full-suite runs at ~6 minutes each plus the 1227-module f1Brainz build. Not idle. The second nudge required a RESULT file with blockers named even if incomplete; the crew delivered a complete one instead.",
+            "workflow_feedback_from_crew": "Two engine findings worth triage: (1) the refresh-request why_ref identity rule keys on the CURRENT latest why-record and EVERY advance mints a new one, so the crew attached a stale why_ref four times in a row before deducing it -- undocumented in checklist-engine.md's refresh section; (2) a command postcondition always re-runs and cannot be satisfied by reference to evidence already gathered the way attest --evidence can, so a ~6-minute full suite was run twice for one advance."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g5-review": {
@@ -2405,6 +2435,13 @@
       "why": "STATED PLAINLY, as this check demands: THIS GATE'S MOTIVATING FALSIFIER CANNOT FIRE ON THIS CORPUS. The measurement that motivated the gate was 1233 index lines over 1223 modules; this repo has 111 modules, so a flat top index is roughly 115 lines and NO size threshold could distinguish before from after. No such threshold is proposed, and none exists in the diff -- the reviewer re-grepped and found exactly one numeric comparison in the whole change, a per-module structural fact. What ships is a reachability regression guard. THE ROUTING CLAIM ITSELF REMAINS UNFALSIFIED ON THIS CORPUS and is recorded as such so no later reader mistakes a green gate for a validated routing surface. The g4 reviewer independently sharpened that same point into tc44: the tests package is 74.3 percent of this corpus and completely flat, so the tier never fires for it, and a loose-module corpus degenerates tier one outright. Accepted non-blocking because the tier stays derived rather than tuned and reports nothing-to-group honestly. Reviewer verdict APPROVE, zero blockers; tc31 closed and survived two relocations the implementer never chose; suite 1772/2/0/0; fresh build then check 7/7 exit 0; zero line positions across all 3840 pages.",
       "mechanical": false,
       "ts": "2026-08-08T11:32:11.067118+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g5-implement",
+      "why": "g5 build CLOSED. Every entity page's single inbound line becomes TWO attributed lines -- referenced by (production) and referenced by (tests) -- so unused / test-only / production-used are distinguishable on the page itself, which is the gate's whole point. render.is_test_module is derived from pytest's documented default python_files convention and is restated BY HAND a second time in checks.py rather than imported: this was the gate most likely to collapse the two-independent-declarations design g2 established, and I grepped checks.py directly to confirm no import of the grammar from render.py exists. Test-defined entities carry TEST_NOTE saying zero callers is the expected state, not a finding -- verified present on 2789 test-defined pages and on ZERO production-defined pages. Test pages NOT deleted, honoring critic IF7 over SY8. tc32 closed with a permuted-visit-order falsifier the crew graded A, and the crew VOLUNTEERED that its mutant initially survived a 1-caller fixture and only bites at 2, committing the wider fixture instead of a silent pass. Critic F4 honored: classification is by caller module, never by a count. My own integration run, not taken on trust: fresh build then check 7/7 exit 0, modules 111, entities 3752, pages 3864.\n\nI FOUND TWO PROBLEMS MYSELF AND AM SENDING BOTH TO REVIEW RATHER THAN CLOSING OVER THEM. (A) SPLIT_LEGEND, printed on all 3864 pages, tells the reader the rule is a TOP-LEVEL tests package; the code is `return \"tests\" in parts`, a tests segment ANYWHERE on the dotted path. Probed: scripts.tests.helpers -> True, pkg.sub.tests.foo -> True. The docstring and the crew's own Assumptions section both say anywhere; only the legend -- the single surface a reader sees -- says top-level, and nothing checks the legend against the predicate so they can drift silently. That is this run's central defect class, a stated rule that does not match the applied rule, landing on this gate's own honesty surface. (B) The crew's headline number reproduces the exact conflation the gate exists to remove: measure_split.py buckets purely on the two rendered lines and never asks whether the entity is ITSELF test-defined, so every uncalled test function lands in unused. I re-measured over the same tree adding that one dimension: of the 2428 unused, 2340 (96.4%) are test-defined -- precisely the entities whose own pages say zero callers is normal. Genuinely unused PRODUCTION entities: 88, not 2428, a 27x difference. Production code called only by tests: 2. The pages are right; the claim is not. Review must determine whether the conflation escapes the evidence script into anything shipped, which would be materially more serious.\n\nCross-corpus: f1Brainz (1227 modules / 15037 entities, a 548-module tests package AND a separate run_tests module) built into scratch, check 7/7 exit 0 on the real tree, and run_tests classifies production -- the predicate's stated degradation confirmed on real input rather than assumed. superCoolSpaceSim deliberately NOT used as a shape test: it is C++/Obj-C with zero .py files, a null, per my own earlier admitted error.\n\nCrew conduct recorded honestly: the crew stalled twice and needed two nudges. Cause per its own report was one governed HARD context trip at the very start -- a legitimate reach-up, which I handled by resuming the SAME session in place rather than relaunching, and the engine digest proved sufficient to resume from m1 without re-reading the source tree -- then a genuinely long stretch across two ~6-minute full-suite runs plus the 1227-module f1Brainz build. Not idle. My second nudge demanded a RESULT file with blockers named even if incomplete; the crew returned a complete one.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:10:57.342967+00:00"
     }
   ],
   "amendments": [
