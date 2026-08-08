@@ -26,6 +26,19 @@
 >
 > **4. Then read the NINE rules.** They are the ones I broke *after writing them down*.
 >
+> **WHERE IT IS RIGHT NOW (2026-08-08, refresh at each launch):** **14/17 gates.** Three left:
+> `g5-acceptance` -> `g5-review` -> `g5-integrate`. Live Commander is **`commander-w4-467-i`**, launched
+> at the g5-acceptance seam. Three predecessors (g, h, and one before) each tripped, handed off cleanly,
+> and stopped — **that is working as designed, not a failure.**
+>
+> **THE ONE THING THAT CAN VOID THIS WAVE'S DELIVERABLE:** at `g5-acceptance`, agent **B's dispatch
+> prompt must contain NOTHING but the `current` output.** No summary, no context, no helpful pointer.
+> A prompt that helps B tests something other than the claim. If you see one, the measurement is void.
+>
+> **NEVER copy an engine hash forward from any document, including this one.** Pin with
+> `git rev-parse HEAD:scripts/checklist_engine.py`, re-derived at the moment of use. Byte-size pins are
+> unusable — a predecessor's own trap-6 size matched nothing on disk.
+>
 > **What this run is:** epic #418 wave 4, one Commander on **#467** (A2, trip semantics), worktree
 > `C:/Programs/constellation-skills-wt/epic418-a2-467`. **Never dispatch a second into it.**
 > **What is owed to Tommy:** ONLY scope past A2 (#424/#421/#423). The four cheap fixes are
