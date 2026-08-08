@@ -392,3 +392,29 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   I swept that worktree, so I checked rather than assumed: they survived because #487's merge
   carried them in — the same mechanism that stranded the fossil lease preserved the deliverable.
   The mission's hard boundary held: nothing in `docs/agents/*`, no file created to park them in.
+
+- `2026-08-08` — `RULING` (evidence-only; a new defect, and a correction of my own first guess):
+  **the Admiral's context governor goes dark for the rest of any run that does its latitude bookend
+  properly.** I first assumed the `r418-460` fossil lease was capturing the gauge binding. Wrong —
+  I checked instead of asserting. The binding registry (`.agent-work/.spine-rail-binding.json`) has
+  my session key bound to **two** checklists, both mine and both legitimate:
+  `epic-418-redux/spine.json` and `epic-418-redux/latitude-interrogation.json` — the Interrogator
+  survey the spine's `latitude` step *requires* me to drive.
+  **Both resolve to the identical gauge path** `.agent-work/epic-418-redux/gauge.json`. But
+  `resolve_gauge_path` (`scripts/hooks/gauge_writer_hook.py:257-264`) appends one candidate per
+  binding **without dedup**, and the caller treats `2+ candidates` as ambiguous and writes nothing.
+  So the count is of *bindings*, not of *distinct gauge paths*.
+  The skip's own rationale (`:530-541`, #261) is about misattribution — "two genuinely different
+  top-level agents share one session_id... cannot tell whose activity produced the latest usage
+  record." That rationale is **vacuous when both candidates are the same file**: there is no
+  whose-reading-is-it question when either answer writes to one place.
+  Measured consequence: my last real reading is `2026-08-07T20:58:07Z`; `gauge-skip.json` says
+  `{"reason":"ambiguous-binding","candidate_count":2}`, refreshed live at 02:49:41Z. I have run this
+  entire wave — every dispatch, merge, and adjudication — with **no governor coverage at all**,
+  while simultaneously reporting the governor's trip band as the wave's largest drag on my crews.
+  Exact onset not pinned (the survey file predates the last successful write by ~40m, so the second
+  binding registered later); the mechanism is proven regardless.
+  **Fourth instance of this wave's defect family**, and the sharpest: a guard that cannot distinguish
+  "two different agents" from "one agent counted twice" is a check whose value is identical in the
+  healthy and defective worlds. Likely one line (`len(set(candidates))`), but it is a change to main
+  under an expired contract. Not filed, not fixed. Surfaced.
