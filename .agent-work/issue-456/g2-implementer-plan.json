@@ -245,7 +245,8 @@
             "kind": "command",
             "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q --color=no"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m4-close-1"
         },
         {
           "id": "c2",
@@ -262,11 +263,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m4-close-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -292,13 +305,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "g2-implementer-attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T04:55:30.791316+00:00",
-    "last_heartbeat": "2026-08-08T05:54:53.860688+00:00",
+    "last_heartbeat": "2026-08-08T06:03:24.486202+00:00",
     "claimed_by": "implementer",
     "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T06:03:42.105825+00:00"
   },
   "why_trail": [
     {
@@ -328,6 +342,13 @@
       "why": "Defect (c) fixed and committed at cdfd8213. render.assign_page_filenames assigns page filenames per module directory: names grouped by FOLDED spelling, only a group with more than one member disambiguated as <name>~<sha1[:8]>.md. hashlib not hash(). All three filename spellings (run's emit, entity_page's child list, module_index's walk) read the same assignment, so links move with files. The INDEX family is deliberately left colliding: _make_collision_repo is page_accounting's only cross-platform falsifier and reserving the stem would make it unable to fail; filed as triage. class Verdict / def verdict NOT renamed -- ruling stands, not falsified. Real corpus after a fresh build: 3761 pages, 0 case-only folds, exactly 2 disambiguated filenames. The strict-xfail XPASSed and the marker, COLLISION_XFAIL_REASON, the case-sensitivity probe and the now-unused pytest import are all DELETED. tests/test_code_map.py: 52 passed, 0 xfailed. python -m scripts.code_map check after a fresh build: exit 0, all 6 checks ok.",
       "mechanical": false,
       "ts": "2026-08-08T05:43:25.587642+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-close",
+      "why": "Gate g2 closed. Full suite in a cleared environment: exit 0, 1744 passed / 2 skipped / 0 xfailed / 0 failed / 659 subtests passed, against a 1729 / 2 / 1 xfailed baseline -- +14 new tests plus the strict-xfail turning into a pass, exactly the shape the handoff predicted. python -m scripts.code_map check after a FRESH build: exit 0, 6/6 ok. Real map: 3761 pages, 0 case-only folds, exactly 2 disambiguated filenames. The strict-xfail marker and everything that existed only to gate it (COLLISION_XFAIL_REASON, CASE_INSENSITIVE_FS, the case-sensitivity probe, the pytest import) are deleted. No g1 check weakened; two strengthened and both re-attacked with mutations chosen for the new rule. Commander ruling on (c) not falsified. IMPLEMENTER_RESULT at .agent-work/issue-456/crew-handoffs/g2-implement-RESULT-2.md; work committed on issue-456/code-map.",
+      "mechanical": false,
+      "ts": "2026-08-08T06:03:24.486177+00:00"
     }
   ]
 }
