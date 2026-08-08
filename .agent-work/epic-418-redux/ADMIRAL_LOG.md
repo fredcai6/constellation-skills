@@ -4239,3 +4239,32 @@ install-time copy**, which the installer would have silently overwritten. Its co
 **#507 and #370 only**, correctly excluding #413.
 
 **PR #511 is up** (crew 3). Two PRs open now: #509 and #511. Neither merges while its crew is live.
+
+### REVIEW — PR #511 (crew 3, #507 + #370): work looks good, two things held before merge
+
+Crew 3 released its lease with m5 complete. **PR #511 up.** My cold read, with everything checked
+rather than accepted on report:
+
+- **Scope clean.** `commander-core.md`, `crew-dispatch.md`, both handoff templates, one new test file.
+  No other crew's files. **No `references/global-*.md`** — those are install-time copies the installer
+  regenerates, and an edit there would have been silently overwritten on the next sync.
+- **Commit message names #507 and #370 only**, correctly excluding #413 per the verdict it reached
+  independently and I accepted.
+- **The test looks like it does the hard thing**, not the easy one: a negative case
+  (`InstanceAddressingMisroutesAfterRelaunch`) and a positive one (`JobAddressedDeliverySurvivesRelaunch`),
+  with a **simulated relaunch that reloads the registry from disk sharing no state** — which is what
+  makes it an *announcement* test rather than a file-existence test. That distinction is the trap #507
+  names explicitly, and the test appears to have been built around it.
+
+**HELD — the red is missing.** The launch order made it NOT OVERRIDABLE: *shown failing on today's
+code and passing on yours, not just passing.* There is no `IMPLEMENTER_RESULT.md` in the work area and
+nothing in the PR records the run. **A green with no red behind it is the exact thing this wave is
+about, and the code reading well is not a substitute.** Asked for the two invocations with real
+unpiped exit codes — and told the crew that an honest *"I did not run the red"* costs it nothing, so
+the cheap answer is not the dishonest one.
+
+**HELD — `notes-1.md` still at the repo root**, my #409 reproduction. Asked for a `git mv`; PR
+auto-updates.
+
+**PR #509 CI: pass. PR #511 CI: pending.** Neither merges yet — #509 waits on crew 5 finishing its
+rework, #511 on these two items.
