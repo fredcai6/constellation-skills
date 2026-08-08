@@ -907,7 +907,8 @@
           "id": "p1",
           "statement": "g2 -- BEFORE productionizing the supplement, so a stage is removed rather than shipped-to-deprecate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g2 is complete and integrated; suite 1744/2/0/0 and check exit 0 6/6 verified by the engine's own c1 re-run after the selector correction."
         }
       ],
       "postconditions": [

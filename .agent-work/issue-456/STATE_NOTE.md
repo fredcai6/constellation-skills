@@ -4,7 +4,38 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch (the PID changes every time).
 
-- **step:** execute · item `g2-review` — dispatching the g2 REVIEWER.
+- **step:** execute · item `g3-implement` — dispatching the g3 IMPLEMENTER.
+
+  **g0 ✅ g1 ✅ g2 ✅ ARE ALL CLOSED AND INTEGRATED. Do NOT re-dispatch any of
+  their crews** (13 registered, 0 unresolved) and do NOT redo their work.
+  11 gates: g0 ✅ g1 ✅ g2 ✅ **g3** g4 g5 gb g6 g7 g8 gs
+
+  **CURRENT BASELINE: `1744 passed, 2 skipped, 0 xfailed, 0 failed`.**
+  `python -m scripts.code_map check` **exits 0, 6/6**. The old carry-forward
+  that it correctly exits 1 is **SPENT**. `check` reads a **STALE** tree at
+  `<root>/map` — run `build` first or the exit code means nothing.
+
+  **THE g3 RISK, named in its handoff:** g3 removes the supplement stage, which
+  is **one of the two independent derivations** `checks.entity_symbol_join`
+  compares. Left standing on one source it becomes a check that CANNOT FAIL —
+  the run's signature defect, arriving through a legitimate refactor. The crew
+  must either re-base the join on a genuinely independent second derivation
+  (proving independence by breaking each side in turn) or delete it and state
+  what coverage was lost. Keeping it silently is a BLOCK.
+
+  **tc38 STANDING RULE for every remaining gate:** before advancing any
+  `*-integrate`, run its `-k` selector BY HAND and confirm it selects a
+  NON-EMPTY set, then confirm that set can go red. `g2`'s matched zero tests,
+  pytest exited 5, and the refusal looked like broken code rather than a broken
+  check. Each gate's handoff must tell the crew its selector so the crew names
+  its test classes to match. g3's is
+  `-k 'schema or line_base or ids_jsonl'`.
+
+  **THE OLD g2 NOTE, now history:** all three g2 defects landed red-then-green
+  (`80702615`/`6d5b3131`, `fd9170f5`/`103d03b5`, `4ea174b3`/`cdfd8213`), the
+  strict-xfail was forced off by its own strict flag, and the `INDEX` collision
+  was deliberately LEFT COLLIDING because it is g1's only cross-platform
+  falsifier for `page-accounting` (`tc35`).
 
   **`g2-implement` IS COMPLETE.** Two attempts: attempt-1 parked cleanly at a
   context seam with defect (a) red-committed; attempt-2 resumed the SAME plan and
