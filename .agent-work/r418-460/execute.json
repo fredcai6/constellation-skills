@@ -375,8 +375,13 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Fourth dispatch closed out g2, g3 and g4 OUTSIDE this checklist, on the Admiral's standing instruction to finish and open the PR without further crew dispatch or review cycles. The work is committed (7df136e6 g2, cc74157b g3, 26056186 g4) and PR #486 is open. This file is NOT advanced past g2-implement because doing so honestly is impossible: the cR postconditions on g3-integrate and g4-integrate require an APPROVE review-result artifact, and no independent reviewer ran on those two gates. Attesting them would be a checklist that cannot fail, which is the exact defect class issue #460 is about. State left truthful rather than tidy.",
+        "authority_needed": "admiral",
+        "next_action": "Admiral: adjudicate PR #486. If g3/g4 need independent review, dispatch a reviewer against the shipped diff and advance this file from its verdict; otherwise close this checklist with the departure recorded.",
+        "prior_status": "pending"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -956,7 +961,14 @@
       "statement": "checklist_engine survey mode: the r6-fowler postcondition ships a literal <fowler-pass-record-path> placeholder and its imperative says to fill it in, but no engine verb can -- amend is refused on surveys, attest cannot satisfy a command postcondition, and record refuses with 'Do not edit the JSON -- use the engine.' The instruction and the refusal contradict each other. Belongs to issue #433, which owns scripts/checklist_engine.py this wave."
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "g2-implement",
+      "blocker": "Fourth dispatch closed out g2, g3 and g4 OUTSIDE this checklist, on the Admiral's standing instruction to finish and open the PR without further crew dispatch or review cycles. The work is committed (7df136e6 g2, cc74157b g3, 26056186 g4) and PR #486 is open. This file is NOT advanced past g2-implement because doing so honestly is impossible: the cR postconditions on g3-integrate and g4-integrate require an APPROVE review-result artifact, and no independent reviewer ran on those two gates. Attesting them would be a checklist that cannot fail, which is the exact defect class issue #460 is about. State left truthful rather than tidy.",
+      "authority_needed": "admiral",
+      "next_action": "Admiral: adjudicate PR #486. If g3/g4 need independent review, dispatch a reviewer against the shipped diff and advance this file from its verdict; otherwise close this checklist with the departure recorded."
+    }
+  ],
   "why_trail": [
     {
       "id": "w-1",
