@@ -4268,3 +4268,43 @@ auto-updates.
 
 **PR #509 CI: pass. PR #511 CI: pending.** Neither merges yet — #509 waits on crew 5 finishing its
 rework, #511 on these two items.
+
+### FINDING — PR #511's acceptance test passes on unmodified main. Derived, not reported.
+
+Rather than wait for crew 3's red, I derived it. Copied its test into a **clean** main checkout
+(0 dirty lines before and after, file removed) and ran it:
+
+```
+FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/_tmp_red_check.py
+2 passed in 0.37s        REAL_EXIT=0
+```
+
+**The test passes without the fix.**
+
+**And I do not think the crew did anything dishonest** — its own analysis predicted this and I missed
+the implication when I read it: *"the fix's real mechanism already exists in production — `run_crew.py`
+and `recover_crews.py`; the actual bug is narrower than 'build new machinery' — it's the doctrine
+telling crews the SendMessage announcement is load-bearing."*
+
+If that is right, and I think it is, then it follows that **the test characterises machinery that
+already worked, and the actual fix is prose no test can reach.** The test cannot fail on today's code
+**because the code was never the defect.**
+
+So the PR stands as: the mechanism is now pinned (worth keeping); the fix — four documents telling
+crews to stop treating the announcement as load-bearing — has **no evidence behind it at all**; and
+the green reads, to anyone who does not run it against main, exactly like proof that the fix works.
+
+**That is a check that cannot fail, inside the PR closing an addressing defect, in the wave whose
+whole subject is that pattern.** Census specimen, and one I only caught by **running the command
+instead of reading the code** — which is the census's own stated lesson about what actually finds
+these.
+
+**What I asked for is not an impossible test.** Say plainly in the return that it is a
+characterization test and that it passes on unmodified main — one sentence converts a misleading green
+into an honest one. Then tell me whether anything can reach the doctrine change even weakly (a shipped
+template asserted to contain the job-addressed path would at least fail on a revert), **and a reasoned
+"nothing worthwhile" is an acceptable answer.** And I invited correction: if the test really would fail
+without the change and my run was wrong, I want to be told what to re-run.
+
+**#511 does not merge until this is settled.** Notes file confirmed moved — repo root clean, that item
+is closed.
