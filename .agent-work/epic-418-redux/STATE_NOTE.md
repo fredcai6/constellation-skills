@@ -92,8 +92,13 @@
   (#419's identity problem, live in the journal). Read journal *verbs* and gate states, never the
   lease field, and do not infer which instance did what.
   **The plan is FROZEN** at `<worktree>/.agent-work/issue-467-trip-semantics/execute.json` —
-  16 tasks, 5 gates. **g1 COMPLETE — all four gates**: `e0-context`, `g1-implement`, `g1-review`, `g1-integrate`
-  (`62f564c7`, `e4092af8`, `17c06f16`). **4/16.** Next: open **g2**.
+  16 tasks, 5 gates. **6/16 COMPLETE.** g1 (all four: proved the defect at unmodified HEAD) and
+  g2-implement + g2-review. **The fix is committed: `38f0b448` — *move the HARD guard off `advance`
+  onto `start`/`reopen`; refuse the silent close*.** g2's review returned **APPROVE / 0 blocking**,
+  matching the frozen `c3` with no amendment. `g2-integrate` is verifying now; its `c2` is the
+  **anti-vacuity check** — *the guard tests must EXIST*, pytest exiting 5 on an empty selector.
+  **tc1 pulled into g2's scope:** `docs/agents/GLOSSARY.md:13` still teaches the pre-fix belief;
+  fix that one line only.
 
 > ### g1 IS CLOSED. The c3 ruling is APPLIED — do NOT author a second amendment.
 >
