@@ -906,3 +906,38 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   It is also told to **follow the shipped imperative from a clean checkout** — if a reviewer reading
   only the new text still cannot fill the placeholder, the issue is not fixed regardless of what the
   tests say.
+
+- `2026-08-08` — `RULING` (two decisions W3-A floated, both adjudicated inside delegated classes):
+  **1. Relaxing `amend --op retext-check` to run on a survey — DELEGATED, not surfaced.** The contract
+  surfaces an architecture change only when it *changes a load-bearing interface shape*, naming the
+  MCP tool surface, the gauge binding key, and the gate schema. This changes none of those: no schema
+  field, no key, no tool. It **relaxes one existing op's type guard** — strictly more permitted, no
+  caller broken — and `add`/`drop`/`rescope` stay gated-only with the refusal text saying that is a
+  conservative choice rather than a type-level impossibility. Adjudicated, logged, and **still named
+  to Tommy at the boundary** because it sits close to the line and he should see where I drew it.
+  **2. The fence extension into `docs/CHECKLIST_SCHEMA.md` and
+  `skills/workbench/references/checklist-engine.md` — RATIFIED, and it was the right call.** Neither
+  file was assigned to W3-A. Five statements in them said `amend` is gated-only, which this change
+  made **false**. Its reasoning, verbatim: *"shipping a fix that opens five new prose/affordance gaps
+  is this issue's own defect with my name on it."* Exactly so — #465 exists because an instruction and
+  its affordance disagreed; leaving five fresh disagreements behind would have reproduced the defect
+  while closing it. Neither file is owned by a sibling, so no crew was cut across. **Departure-is-the-
+  mode, ratified — the fifth such departure across this epic and all five have been right.**
+- `2026-08-08` — `RULING` (evidence quality; worth keeping for the CRLF doctrine): **on win32 the
+  discriminating fixture is the LF one, not the CRLF one.** W3-A's red:
+  `save() churned an LF file to CRLF (8 CRLF endings written)`. The **CRLF fixture PASSED against the
+  same broken `save()`** — so the obvious test, the one everyone would write for a CRLF bug, is on
+  this platform exactly the test that proves nothing. The crew wrote that into the test file rather
+  than hiding it, and added a negative control so the CRLF fixture still catches an "always write LF"
+  over-correction. **Sixth instance of the wave's pattern**, and the most counter-intuitive: the test
+  that names the bug is the one with no teeth.
+  Also from the same dispatch: **its cold critic caught that its own integrate gate could not fail** —
+  the check was `pytest -q tests`, green on a suite that had never gained the new tests. The wave's
+  organizing lesson reproduced inside the dispatch sent to apply it.
+- `2026-08-08` — `INCIDENT + RECOVERY` — W3-A's Commander HARD-tripped at `g1-implement` with the
+  **substance complete and PR #492 already open**; refresh-requests attached at both seams and its own
+  STATE_NOTE naming exact resume steps. Relaunched a fresh Commander into the same worktree and spine,
+  cold-started from `current`, explicitly told **not** to redo work, not to relaunch either completed
+  crew, and not to dispatch a second reviewer for #492 (an independent one is already running). Both
+  floated decisions were pre-answered in the relaunch brief so it would not re-litigate settled ground.
+  **Second successful trip→handoff→refresh→resume of this wave.**
