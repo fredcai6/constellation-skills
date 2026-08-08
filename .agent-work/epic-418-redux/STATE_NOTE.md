@@ -63,9 +63,15 @@
 > 829 subtests / real exit 0**, run with `python -m pytest`, exit read **unpiped**. Matches wave 4's
 > post-merge figure exactly, which is what makes it a baseline and not just a green.
 >
-> **NOTHING MERGES UNDER A LIVE CREW.** PR #509 is green and deliberately held: crew 5 finished, but a
-> PR being green is not the same as a crew being done, and I have one open review finding on it (it
-> deleted a row from a fenced block that is verbatim command output — see the log).
+> **NOTHING MERGES UNDER A LIVE CREW.** A PR being green is not the same as a crew being done.
+> **#509's review finding is RESOLVED** — it had dropped a row from a fenced block that is verbatim
+> command output; crew 5 restored the row and moved the correction into the surrounding note, and found
+> a better justification than mine (that file commits to reproducibility in its own §0). It is now held
+> only because `m3` is still pending and the rework is **on disk, unpushed**.
+>
+> **BOTH review findings this wave were resolved by the crew improving on the instruction, not by
+> arguing.** #509's rework beat my reasoning; #511's crew built a real doctrine guard when I had only
+> asked for an honest sentence. Do not read "held" as "disputed".
 >
 > **DO NOT re-poke a quiet crew.** Twice today disk silence looked like death and was reading. The
 > authoritative channel is the harness **idle notification**. Ask; never relaunch on an inference.
