@@ -407,7 +407,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for g2. Evidence e-g2-implement-2 attached; run_crew.py --verify-result constellation/issue-467-trip-semantics/g2-implement/implementer/attempt-1 -> fresh (completed). Result at .agent-work/issue-467-trip-semantics/crew-handoffs/g2-implementer-result.md. g2-implement is complete and committed at 38f0b448."
         }
       ],
       "postconditions": [
@@ -418,7 +419,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
         }
       ],
       "constraints": [],
@@ -427,11 +429,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "blocking_findings": "0",
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g2-reviewer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g2-review/reviewer/attempt-1",
+            "verified": "run_crew.py --verify-result -> fresh (completed)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-integrate": {
@@ -443,7 +459,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received for g2: verdict APPROVE, blocking_findings 0, at .agent-work/issue-467-trip-semantics/crew-handoffs/g2-reviewer-result.md. Verified fresh via run_crew.py --verify-result constellation/issue-467-trip-semantics/g2-review/reviewer/attempt-1 -> fresh (completed). Attached as e-g2-review-1; g2-review is complete."
         }
       ],
       "postconditions": [
@@ -459,7 +476,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-2"
         },
         {
           "id": "c2",
@@ -473,7 +491,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-3"
         },
         {
           "id": "c3",
@@ -485,17 +504,54 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "blocking_findings": "0",
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g2-reviewer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g2-review/reviewer/attempt-1",
+            "verified": "run_crew.py --verify-result -> fresh (completed); commander re-ran full suite (1815/2/683, exit 0), the closeout selector (25 passed, exit 0) and mutation M3 (6 failed, named DC2 guard among them) in its own shell"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-implement": {
@@ -1050,6 +1106,20 @@
       "why": "g2-implement CLOSED. An independent opus implementer shipped all five parts (a)-(e) and returned complete with no stop conditions hit; result verified fresh by run_crew.py --verify-result (not a stale leftover). THE SEAM HELD, which was the binding constraint: the guard moved from 'advance' to a new TRIP_HARD_GUARDED_VERBS={start,reopen} at the dispatch chokepoint, verbs stayed pure (advance gained one keyword require_why=False, and every direct E.advance(...) call in the suite is byte-identical), and one new _trip_hard_band_reading is the single place that decides 'are we at/over hard' so the begin-guard and the no-silent-close rule cannot drift apart. #190's identity check is preserved verbatim including the wid-is-None gate-only degradation. resume is untouched; _PROFILES untouched; no validation added to attach; no mid-gate channel built. I RAN THE FROZEN CLOSEOUT SELECTOR MYSELF: pytest tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff' -> 25 passed, 346 deselected, real exit 0 (it collected 0 and exited 5 before this gate), so the c2 empty-collection trap is cleared. Scope is clean in my own git status: only the three allowed source files (scripts/checklist_engine.py, tests/test_checklist_engine.py, docs/CHECKLIST_SCHEMA.md) plus work-area artifacts. THE TRAP WAS RESPECTED: the permanent DC2 guard test asserts BOTH preconditions inside itself -- fill>=hard AND _refresh_requests_anywhere(cl)==[] walking every task's evidence -- so it is red against today's code and cannot pass in both worlds. 12 mutations logged with per-mutation TOTAL failure counts; M4/M5 are deliberately paired so that only M5 catches a shipped-inert guard. HONESTY SIGNAL WORTH KEEPING: M11 (the None-reading fail-safe) is reported as a LIMITATION, not dressed as a pass -- no narrow mutation exists because nearly every fixture runs with no gauge file, so specificity is explicitly not claimed rather than a 47-failure mutation being passed off as proof. 6 existing Trip tests re-aimed, 0 deleted, each with a reason. Suite 1815 passed / 2 skipped / 682 subtests vs baseline 1793/2/683: +22 is exactly the new tests, and the -1 subtest was bisected to test_context_manifest.py's clean-file filter and is predicted to disappear once I commit -- I VERIFY THAT PREDICTION AT g2-integrate rather than accepting it. TWO CANDIDATES FLAGGED: tc1, docs/agents/GLOSSARY.md line 13 still asserts 'HARD blocks advance' -- now FALSE, and it is the glossary every agent reads, i.e. it teaches the exact belief #431 came from; the implementer found it by an unprompted blast-radius grep and correctly flagged rather than edited, out of scope. tc2, the mid-gate handoff channel, raised not built as instructed. NEXT: g2-review, and the reviewer must independently re-run at least two mutations.",
       "mechanical": false,
       "ts": "2026-08-08T12:29:55.385233+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "g2-review CLOSED. Verdict APPROVE, 0 blocking / 5 non-blocking, from an independent opus reviewer; result verified fresh by run_crew.py --verify-result. IT ATTACKED RATHER THAN CONFIRMED, which is what makes this verdict worth anything: it did NOT rely on the implementer's saved RED files. It rebuilt a scratch tree from git show 38f0b448^:scripts/checklist_engine.py (old guard confirmed present at :2679) and ran the NEW test file against the PRE-CHANGE engine -- 16 failed / 9 passed. The permanent DC2 guard is among the 16, red for the right reason, and the 9 survivors are all declared falsifiable-half/fail-safe companions with none dressed as a guard. THE LOAD-BEARING AUDIT: it checked _refresh_requests_anywhere against has_pending_refresh_request and found it a STRICT SUPERSET -- same task-evidence domain but it does NOT filter superseded -- so the no-pending-request assertion cannot miss a request that would lift the guard. A narrower helper would have made that assertion decorative. That is the check that decides whether this gate proves anything, and it holds. Four mutations re-run (M3/M5/M2/M8, chosen as most falsifiable, not the first four): counts 1/6/3/5 matched the log on BOTH totals and exact failure SETS; restore diffed identical; zero discrepancies. BOTH ATTACKED CLAIMS SURVIVED: M11 is genuinely honest -- the reviewer built two narrower candidates the implementer never tried (37 and 23 failures, the latter conflating M8) and confirmed no narrow mutation exists, so the limitation was declared correctly rather than a 47-failure mutation being passed off as proof. And the -1 subtest is GONE post-commit: 1815 passed / 2 skipped / 683 subtests, distribution derived mechanically. PROBE D is the evidence that matters for #431: it ran the whole scenario side by side. Old engine tells the agent advance is BLOCKED, hands it the literal why_ref=<why-id>, rc 1, gate stuck, digest pre-trip. New engine tells it 'your instruction has changed -- close THIS gate carrying your handoff', hands a working command with the CONCRETE id, rc 0, gate closes, digest fresh, ZERO refresh-requests in the spine so the guard never lifted, and the next gate is still refused. That verifies the fix on what the agent is TOLD and on whether anyone BEGAN work over the line -- not on whether the verb returns 0. PROBE A found a state delta and CONTROLLED it before naming it: byte-identical on the pre-change engine, so long-standing, not a regression. NON-BLOCKING CARRIED FORWARD: tc1 glossary line 13 confirmed by the reviewer's own grep and rated must-fix before the epic closes; no test executes the emitted hint (d)'s guard is an assertEqual on rendered text, against the repo's own execute-the-generated-advice rule; three Fowler smells with shotgun-surgery named as tc1's root cause; one doc sentence slightly overstates 'never mutates state'; --from-child advances at hard now require a --why, judged intended. TWO WORKFLOW DEFECTS FOR THE EPIC LEDGER: the reviewer skill's INSTALLED engine bundle is stale (refuses amend on surveys -- that is why the g1 reviewer force-waived its Fowler postcondition; the repo engine supports it and this reviewer's amend worked first try), and the two review surveys share item ids so their mechanical sidecars COLLIDE, overwriting g1's. NEXT: g2-integrate, where I re-run the suite and at least one mutation in my own hands.",
+      "mechanical": false,
+      "ts": "2026-08-08T13:00:15.917956+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "g2 CLOSED. Verdict APPROVE, 0 blocking. I VERIFIED IN MY OWN SHELL rather than accepting the crew's numbers. c1 full suite: 1815 passed, 2 skipped, 683 subtests, real exit 0 -- and note the 683: the implementer's reported -1 subtest was its bisected prediction that the delta was test_context_manifest's clean-file filter reacting to a dirty scripts/checklist_engine.py, and that it would vanish on commit. It did. I did not accept that prediction, I tested it, and it held; +22 over the 1793 baseline is exactly the new tests. c2 closeout selector: 25 passed, 346 deselected, real exit 0 -- it collected 0 and exited 5 before this gate, so the empty-collection trap is genuinely cleared. c3 APPROVE artifact attached, verified fresh. MUTATION M3 RE-RUN BY ME, the one that matters: I put advance back into TRIP_HARD_GUARDED_VERBS, and the distribution derived mechanically was 6 FAILED with the permanent DC2 guard test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest among them -- exactly the log's claim, on both the count and the named test. Restoring from my backup left scripts/checklist_engine.py out of git status entirely, so the mutation left no residue. WHY THIS GATE ACTUALLY PROVES SOMETHING, which was the standing risk: the reviewer did not trust the implementer's saved RED files. It rebuilt the pre-change engine from git show 38f0b448^ and ran the NEW tests against it -- 16 failed / 9 passed, the DC2 guard red for the right reason, the 9 survivors all declared falsifiable-half companions. And it audited _refresh_requests_anywhere against has_pending_refresh_request, confirming a STRICT SUPERSET that does not filter superseded, so the no-pending-request precondition cannot miss a request that would lift the guard. Without that audit the whole assertion would have been decorative. PROBE D ran the #431 scenario on both engines side by side: old tells the agent advance is BLOCKED and hands it the literal why_ref=<why-id>, rc 1, gate stuck, digest pre-trip; new tells it its instruction has CHANGED, hands a working command with the concrete id, rc 0, gate closes, digest fresh, zero refresh-requests in the spine, next gate still refused. That is the fix verified on what the agent is TOLD and on whether anyone BEGAN work over the line -- not on whether the verb returns 0, which was never the defect. CARRIED INTO g3: tc1 -- docs/agents/GLOSSARY.md:13 still reads 'HARD blocks advance until the agent requests a context refresh', now FALSE, independently confirmed by the reviewer's own grep, root-caused as shotgun surgery (the same fact mirrored in four hand-maintained places, three updated and one missed), rated must-fix before epic #418 closes by both crews and by me. It is outside g2's frozen scope; floated to the Admiral. tc2 mid-gate handoff channel, tc3 from the review survey. NON-BLOCKING WORTH ACTING ON: no test executes the emitted refresh hint -- (d)'s guard is an assertEqual on rendered text, which is against this repo's own execute-the-generated-advice rule, and it is the exact shape of the <why-id> trap that has now burned five instances. TWO INSTRUMENT DEFECTS FOR THE EPIC LEDGER: the reviewer skill's INSTALLED engine bundle is stale and refuses amend on surveys (that is why the g1 reviewer force-waived its Fowler postcondition -- the repo engine supports it and this reviewer's amend worked first try; re-run install_constellation.py), and the two review surveys share item ids so their mechanical sidecars collide -- g1's were overwritten by g2's run, visible in my git status. NEXT: g3.",
+      "mechanical": false,
+      "ts": "2026-08-08T13:13:10.221035+00:00"
     }
   ],
   "refusals": 6,
@@ -1057,7 +1127,7 @@
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T11:30:51.929485+00:00",
-    "last_heartbeat": "2026-08-08T12:29:55.385233+00:00",
+    "last_heartbeat": "2026-08-08T13:13:10.221035+00:00",
     "claimed_by": "commander-w4-467-e",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,

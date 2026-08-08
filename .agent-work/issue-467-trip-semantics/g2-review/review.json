@@ -1,0 +1,352 @@
+{
+  "work_id": "issue-467-trip-semantics",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "c1-dc2-guard-real",
+    "c2-dc2-two-way",
+    "c3-mechanical-refused",
+    "c4-reopen-vs-resume",
+    "c5-mutations",
+    "c6-none-failsafe",
+    "c7-pure-verbs",
+    "c8-reaimed-tests",
+    "c9-docs"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, both handoffs, the implementer result, the mutation log, and the full diff at 38f0b448 (28 files). Tree clean apart from expected engine-owned run artifacts. Noted the crew rule that decided PROBE E: generated advice/hint text must be EXECUTED, not string-matched.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All five parts (a)-(e) shipped and verified against the world, not the report. (a) dispatch's advance arm no longer calls _trip_hard_gate. (b) TRIP_HARD_GUARDED_VERBS={start,reopen} at the chokepoint, #190 identity check verbatim including the wid-is-None gate-only degradation. (c) --mechanical refused and why_exempt suspended at/over hard, with the why RECORDED (probe B: why_trail w-1 written, digest becomes it). (d) advisory rewritten as a changed instruction, concrete why-id emitted. (e) schema doc updated. PROBE D reproduced the whole #431 scenario end-to-end against the pre-change engine side by side: old = rc 1, gate stuck in-progress, digest stays PRE-TRIP; new = rc 0, gate closes, digest FRESH, and beginning the NEXT gate over the line is refused.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No exclusion touched, verified by command not by reading. scripts/gauge_reader.py has ZERO diff lines in 38f0b448 (_PROFILES untouched). No '+def resume'/'+def attach'/'+def start'/'+def reopen' in the engine diff -- those four bodies are byte-unchanged, so resume is unguarded at source and no validation was added to attach. No mid-gate handoff channel built; raised as a triage candidate instead. Zero tests deleted (see c8). Files changed are exactly the four allowed plus expected work-area run artifacts.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every load-bearing number independently reproduced. Full suite 1815 passed / 2 skipped / 683 subtests, exit 0, FAILED distribution derived mechanically (empty). Closeout selector 25 passed exit 0. Mutation baseline 416 passed / 30 subtests reproduced exactly in a clean scratch tree. Four mutations re-run (M2,M3,M5,M8): counts 1/6/3/5 and the named-red test matched the log EXACTLY in all four, with identical failure SETS. M11b/M11c reproduced at 59/47. Strongest evidence is mine, not the implementer's: running the NEW test file against the PRE-change engine reddens 16 of the 25 selector tests, including both DC2 guards.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraints honored. PURE VERBS: the only changed return strings in the engine diff are inside _trip_advisory and _refresh_attach_hint -- helpers, not verbs; no verb return string changed, and require_why defaults False so direct callers are byte-identical. REFUSAL ORDERING: measured, not read. The start/reopen guard changes ONLY the refusals counter (zero task mutation). engine_session.last_heartbeat is NOT refreshed by any of the three refusal paths. FIXED GROUP: the shipped advisory says 'your instruction has changed... close THIS gate carrying your handoff... and stop', with no alarm word, and the test asserts absence of BLOCKED/unsafe/runaway/lost by equality; a None reading still forces nothing; the reading is pushed by the engine. POINTERS ONLY: payload stays {seam, why_ref}.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The change matches its decision anchors exactly and re-opens neither. decision:hard-guards-begin-not-close: HARD refuses start+reopen, never advance -- implemented as given. decision:no-silent-close-at-hard: implemented as given. No contradiction with either settled/measured decision found. Map Impact notes check out against the diff line by line. One real architecture-record divergence found and flagged as a candidate rather than fixed here (GLOSSARY.md:13), correctly out of this gate's scope. Two further candidates flagged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-467-trip-semantics/g2-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass run and rail-verified: exit 0, smells=12, flagged=[long-method, duplicated-code, shotgun-surgery], overridden=[data-clumps, primitive-obsession, long-parameter-list, divergent-change, comments-as-deodorant]. Record at .agent-work/issue-467-trip-semantics/g2-review/fowler-pass.json. Sharpest find is shotgun-surgery: the fact 'HARD blocks advance' was mirrored in four hand-maintained places, three updated, one missed -- GLOSSARY.md:13 -- which is the root cause of triage candidate tc1. All three flagged smells are NON-BLOCKING. No waiver needed: the template's <fowler-pass-record-path> placeholder was filled by a real amend retext-check op (the g1 reviewer waived this, but that was a stale installed engine bundle, not an engine gap).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-467-trip-semantics/g2-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "c1-dc2-guard-real": {
+      "id": "c1-dc2-guard-real",
+      "title": "CC1: permanent DC2 guard is real",
+      "imperative": "Read test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest. Verify it pins fill>=hard AND no pending refresh-request anywhere in the spine, asserted inside the test body. A pending request anywhere = BLOCK.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- the claim is TRUE and I verified it three ways. (1) Read the test (tests/test_checklist_engine.py:3497-3517): line 3507 asserts _refresh_requests_anywhere(cl)==[] BEFORE the advance and line 3517 asserts it again AFTER; line 3510 asserts E._read_gauge(Path('.')).fill_fraction >= self.hard INSIDE the patch context. Both preconditions are in the test body, not the fixture comment. (2) Audited the helper at :3234 against the engine predicate it must dominate: _refresh_requests_anywhere walks every task's evidence and does NOT filter superseded, while has_pending_refresh_request (engine :1155) walks the same task-evidence domain and DOES skip superseded. The helper is therefore a strict SUPERSET of everything that could lift the guard -- it cannot miss a lifting request. (3) Falsified directly: ran the NEW test file against the PRE-change engine (git show 38f0b448^:scripts/checklist_engine.py in an isolated tree) and this exact test FAILS, for the right reason -- the pre-#467 dispatch raises 'advancing is blocked until you request a refresh'. A second independent guard exists at the real-file tier (TripRealGaugeFileWiring::test_handoff_fresh_hard_gauge_never_refuses_the_closing_advance) driving a REAL gauge.json through main(); it too is red pre-change (AssertionError: 1 != 0).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c2-dc2-two-way": {
+      "id": "c2-dc2-two-way",
+      "title": "CC2: DC2 test exercises both directions",
+      "imperative": "Verify both halves live: advance carrying a handoff NOT refused at/over hard with no pending request, AND beginning new work at/over hard IS refused.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- both directions live. NOT-REFUSED half: c1 above, plus my PROBE D which drove the whole scenario through main() with a real gauge -- advance g2 --why at fill 0.20 returns rc 0, g2 complete, digest fresh, and ZERO refresh-requests anywhere in the spine, so the guard was never lifted. REFUSED half: test_trip_begin_start_refused_at_and_above_hard_without_refresh (both at hard and above, asserting assertEqual(cl, before)) and test_trip_begin_reopen_refused_at_hard_without_refresh; both are red against the pre-change engine for the right reason ('EngineError not raised'). My PROBE D closes the loop the tests do not: after the tripped agent closes its own gate, its attempt to BEGIN g3 while STILL over the line is refused (rc 1). That is the DC6 observable -- did anyone begin work over the line -- answered live rather than by construction.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c3-mechanical-refused": {
+      "id": "c3-mechanical-refused",
+      "title": "CC3: --mechanical at hard refused, why_exempt suspended and RECORDS",
+      "imperative": "Confirm --mechanical is refused at/over hard, why_exempt suspended, and the suspension actually appends the --why to why_trail (a demand that records nothing reproduces #431).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- and the load-bearing half (it RECORDS, not merely demands) is confirmed live. PROBE B, real gauge.json at 0.20, all gates why_exempt=True: 'advance g1' with no --why returns rc 1 with the exact NO_SILENT_CLOSE message; 'advance g1 --why ...' returns rc 0 and the persisted why_trail is [{id: w-1, gate: g1, why: 'REVIEWER PROBE understanding at g1', mechanical: false, ts: ...}] with _digest == that string. So the exemption is suspended AND the understanding lands. CONTROL at fill 0.149 (just below hard): the same exempt gate closes rc 0 with why_trail absent -- the rule is gauge-scoped, not always-on. --mechanical at hard is refused by equality (NO_SILENT_CLOSE class constant, tests :3469-3475). Digest-cannot-go-stale is pinned by test_handoff_digest_names_the_understanding_written_at_the_tripping_gate, and my PROBE D reproduced it end to end. Ordering intact: test_handoff_unmet_postconditions_still_refuse_before_the_why_demand -- a failing postcondition still yields 'g1: postconditions unmet [c1]' at hard, so the why demand cannot buy past unfinished work.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c4-reopen-vs-resume": {
+      "id": "c4-reopen-vs-resume",
+      "title": "CC4: reopen guarded, resume NOT guarded",
+      "imperative": "Prove both directions live with my own probe, not by reading the diff.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- proved live through main() with a real gauge at fill 0.20, not by reading the diff. reopen a COMPLETE gate: rc 1, g1 stays 'complete', message names 'this is not the moment to BEGIN work here'. start a PENDING gate: rc 1, g2 stays 'pending'. resume a BLOCKED gate: rc 0, g1 -> 'in-progress', output 'g1 resumed -> in-progress (blocker resolved: ruling arrived)'. Source confirms it structurally: TRIP_HARD_GUARDED_VERBS = {start, reopen} and the engine diff contains no '+def resume' -- resume's body is byte-unchanged. Mutation M12 (adding resume to the set) is caught by exactly one test, which I did not re-run but which is corroborated by my live probe.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c5-mutations": {
+      "id": "c5-mutations",
+      "title": "CC5: every mutation reddens its NAMED test, counts stated",
+      "imperative": "Read the mutation log; re-run at least two mutations I judge most likely to be overclaimed. Attack M11 specifically.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- log is accurate; four mutations re-run, zero discrepancies. I picked the four most falsifiable rather than the first two: M3 (the deadlock restored -- if its count or named test were wrong, the permanent guard's whole mutation defence collapses), M5 (the ONLY evidence the no-silent-close rule is wired to the gauge rather than shipped inert), M2 (the strongest specificity claim in the log: exactly 1), M8 (the one whose blast radius is explained away as 'red for the correct reason'). Reproduced the mutation baseline exactly first: 416 passed, 30 subtests. Results, each matching the log on BOTH the count and the exact failure SET: M2 -> 1 failed, named test test_trip_begin_reopen_refused_at_hard_without_refresh. M3 -> 6 failed, named test = the permanent DC2 guard, all six the ones logged. M5 -> 3 failed, named test test_handoff_why_exempt_is_suspended_at_hard, the same three logged. M8 -> 5 failed, named test test_trip_begin_start_allowed_just_below_hard, the same five logged. Each anchor asserted unique before applying; restored from a pristine copy and diffed IDENTICAL afterwards. M11 attacked separately -- see the finding note in the result: the declared limitation is HONEST and holds; I built two narrower candidates the implementer did not try and both still redden 37 and 23 tests, so no narrow mutation is available.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c6-none-failsafe": {
+      "id": "c6-none-failsafe",
+      "title": "CC6: fail-safe on None reading survives at new guard sites",
+      "imperative": "Verify no-op on reading None and on surveys at start/reopen/advance guard sites, live.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. The fail-safe is now structural rather than duplicated: both bands read it from the single _trip_hard_band_reading predicate, which returns None for a non-GATED checklist and for a None reading, and every caller reads None as 'band inactive'. Covered by four named tests (none_reading_never_refuses_begin_work exercising BOTH start and reopen, no_base_dir_never_refuses_begin_work, survey_never_refuses_begin_work, and handoff_no_silent_close_never_fires_on_a_none_reading -- the last is the one that matters most, since a missing reading must not conjure a --why requirement onto an exempt gate). Specificity is NOT claimed for the None branch and I confirmed it cannot be: my own two narrower mutation candidates redden 37 and 23 tests. M10 does pin the survey half narrowly at 1 failure. The constraint is over-determined rather than under-tested.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c7-pure-verbs": {
+      "id": "c7-pure-verbs",
+      "title": "CC7: verb return strings unchanged",
+      "imperative": "Verify every direct E.advance/E.start/E.reopen return string in the suite is byte-identical; check the diff for return-value changes.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- verified by command, not by trusting the claim. Extracted every changed line containing 'return' from the engine diff: exactly four, all inside _trip_advisory (the advisory helper this gate deliberately rewrote), plus the return None/return reading lines of the new _trip_hard_band_reading predicate. ZERO changed return strings in start, advance, reopen or resume. Structural corroboration: the diff contains no '+def start', '+def reopen' or '+def resume' -- those three bodies are byte-unchanged; advance's signature changed only by gaining 'require_why: bool = False'. Behavioural corroboration: the full suite is 1815 passed with the pre-existing exact-equality tests untouched, which is what would break first if a verb string had moved. The seam held.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c8-reaimed-tests": {
+      "id": "c8-reaimed-tests",
+      "title": "CC8: re-aimed test count stated with per-test reason, nothing deleted",
+      "imperative": "Verify 6 re-aimed / 0 deleted / 3 renamed / 3 body-only against the actual diff. Confirm no Trip test was deleted to make a red go away.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- the claim (6 re-aimed, 0 deleted, 3 renamed, 3 body-only) is EXACTLY right, verified mechanically. Extracted the unique test-name sets from both sides of the commit: 348 old, 370 new. Set difference old-minus-new is exactly 3 names, and each maps to a rename present in the new set: test_hard_refuses_at_and_above_hard_without_refresh -> ..._refuses_begin_work_...; test_hard_passes_once_refresh_request_exists -> test_hard_handoff_close_needs_a_why_even_with_a_refresh_request_pending; test_fresh_hard_gauge_sibling_of_spine_refuses_then_passes_with_refresh -> ..._refuses_begin_work_then_.... Then parsed per-test bodies from both revisions and diffed same-named tests: EXACTLY 3 pre-existing tests kept their name and changed their body -- test_hard_advisory_on_current_points_at_attach, test_hard_coattails_fixed_stale_why_ref_refused_then_fresh_releases, test_hard_refusal_leaves_state_unmutated -- matching rows 4, 5 and 2 of the implementer's table. 25 names added minus 3 renames = 22 new tests, reconciling the +22 exactly. NOTHING was deleted. Each re-aim is a genuine fix rather than collateral: the strongest case is #3, whose old claim ('HARD forces until a request exists, then advance passes') would now be green in BOTH worlds and was correctly replaced with a live question rather than left as a decorative pass.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c9-docs": {
+      "id": "c9-docs",
+      "title": "CC9: CHECKLIST_SCHEMA.md describes shipped behaviour",
+      "imperative": "Read the shipped Trip section and the start/advance/reopen verb rows; verify they match shipped code, not the old refusal. Also judge the new advisory prose against the FIXED constraints.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS with one non-blocking accuracy nit. Read the shipped Trip section and the three verb rows and checked each claim against source: the section title changed from 'HARD refuse-advance' to 'HARD guards the BEGIN verbs'; it names TRIP_HARD_GUARDED_VERBS, states that HARD does NOT refuse advance and that resume is likewise unguarded, documents the no-silent-close rule with the #431 mechanism, states 'HARD means wrap up, never you are unsafe', and describes the require_why seam. The start and reopen rows say 'Refused at/over the Trip HARD threshold', the advance row says 'Never refused by Trip HARD'. All true of the shipped code. PROSE CHECK against the FIXED group -- I read the shipped strings, not the tests: the HARD advisory is 'your instruction has changed. You have taken this as far as this context can carry it -- now close THIS gate carrying your handoff (advance <g> --why \"<understanding>\"), request a refresh, and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate.' That reads as a changed instruction, contains no alarm word, does not claim advance is blocked, and tells the agent the one thing to do; the test pins the absence of BLOCKED/unsafe/runaway/lost. A missing reading still forces nothing, and the reading is pushed by the engine on the verb, never fetched. NON-BLOCKING NIT: the new sentence 'A refusal is raised before the liveness stamp, so it never refreshes the lease and never mutates state' is true of the start/reopen guard (I measured: only the refusals counter moves, and last_heartbeat is unchanged) but the 'never mutates state' half is not strictly true of the no-silent-close refusal inside advance, which lands AFTER the postcondition check has stamped satisfied and attached command-output. I confirmed against the pre-change engine that this is long-standing behaviour for any post-postcondition refusal, not a #467 regression -- but the doc sentence is new and now spans both refusals, so it slightly overstates. Suggest scoping it to the pre-verb guard.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE, zero blocking findings. All nine close criteria PASS, each verified against the world rather than the report. The decisive check (c1) holds: the permanent DC2 guard asserts BOTH preconditions inside its own body -- _refresh_requests_anywhere(cl)==[] before AND after, and fill>=hard inside the patch -- and the helper is a strict superset of the engine predicate that would lift the guard, so it cannot miss one. I falsified rather than confirmed: running the NEW test file against the PRE-change engine in an isolated tree reddens 16 of the 25 selector tests, including both DC2 guards at the mocked and real-file tiers; the 9 that stay green are all declared falsifiable-half/fail-safe companions, none dressed as a guard. Four mutations re-run (M3, M5, M2, M8 -- chosen as the most falsifiable, not the first two): counts 1/6/3/5 and the exact failure SETS matched the log with zero discrepancy, off a reproduced 416-passed baseline. Both claims I was told to attack survive: M11's declared limitation is honest -- my own two narrower candidates still redden 37 and 23 -- and the -1 subtest is GONE now that the gate is committed (1815 passed / 2 skipped / 683 subtests, exit 0, mechanically-derived failure distribution empty). Four adversarial probes through main() with a real gauge: the refusal does not refresh the lease and the begin-guard mutates nothing but a counter; why_exempt suspension actually WRITES the why_trail record; reopen refused / resume allowed; and the full #431 scenario side by side against the pre-change engine -- old: rc 1, gate stuck, digest stays PRE-TRIP; new: rc 0, gate closes, digest FRESH, and beginning the next gate over the line is still refused. Per inherited crew doctrine I EXECUTED the engine's emitted advice verbatim across all four dimensions and it released the guard every time. Non-blocking: GLOSSARY.md:13 still teaches 'HARD blocks advance' (out of scope, correctly escalated, must-fix before the epic closes); no test executes the emitted hint, so #467(d)'s guard is a string match; three Fowler smells flagged; one doc sentence slightly overstates 'never mutates state'."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "docs/agents/GLOSSARY.md:13 still teaches 'HARD blocks advance until the agent requests a context refresh' -- now false at source, and it is the glossary every constellation agent reads, so it re-teaches the exact belief #431 came from. CONFIRMED by my own blast-radius grep. OUT of this gate's allowed scope (which named CHECKLIST_SCHEMA.md's Trip section only) and correctly escalated rather than edited, so NOT blocking for g2. Must-fix before epic #418 closes: one line, one file."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "No test EXECUTES the emitted refresh hint -- the permanent guard for #467(d) is an assertEqual on the rendered string. Inherited crew doctrine says string-matching generated advice is not evidence; #467(d) IS that failure mode. Shipped behaviour is CORRECT (my PROBE E shlex-splits the engine's own emitted string and runs it across refusal/advisory surface x live-why-record/fallback -- releases in all four), but a future change that preserves the string and breaks the execution stays green. Recommend one execute-the-hint test."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "Mid-gate handoff channel for a gate that trips with UNMET postconditions -- raised by the implementer as instructed, not built. 'block --next' exists but 'current' does not render its text, so an agent that trips mid-gate with a failing postcondition has nowhere to leave the note the next agent needs. Confirmed in source. Carries no grade."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g2-review-rev467",
+    "status": "released",
+    "claimed_at": "2026-08-08T12:33:41.162743+00:00",
+    "last_heartbeat": "2026-08-08T12:55:42.352596+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T12:58:27.063623+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-08T12:53:14.112709+00:00",
+      "reason": "fill the template's <fowler-pass-record-path> placeholder with the real record path, exactly as r6-fowler's own imperative instructs",
+      "authority": "reviewer g2-review-rev467, per the r6-fowler imperative",
+      "ops": [
+        "retext-check r6-fowler.c1"
+      ]
+    }
+  ]
+}

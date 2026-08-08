@@ -1,21 +1,21 @@
 {
   "contract": 1,
-  "step": "r5-reconciliation",
+  "step": "g2-integrate",
   "mechanical": {
     "run": "issue-467-trip-semantics",
     "project": "constellation-skills",
-    "role": "reviewer",
-    "refusals": 0,
-    "spine-step": "r5-reconciliation",
+    "role": "commander-w4-467-e",
+    "refusals": 6,
+    "spine-step": "g2-integrate",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-issue-467-trip-semantics-r5-reconciliation@e0a5b030ffa3a4dad7b340bc0aa2b415c7b70e9c",
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-g2-integrate@398a2fd1e22e40d994e7de86b20626933b722e01",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "issue-467-trip-semantics",
-    "generated_at": "2026-08-08T12:49:34Z"
+    "generated_at": "2026-08-08T13:00:25Z"
   }
 }

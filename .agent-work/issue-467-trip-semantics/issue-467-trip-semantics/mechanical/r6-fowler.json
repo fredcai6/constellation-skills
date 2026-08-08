@@ -5,7 +5,7 @@
     "run": "issue-467-trip-semantics",
     "project": "constellation-skills",
     "role": "reviewer",
-    "refusals": 3,
+    "refusals": 0,
     "spine-step": "r6-fowler",
     "rework-count": 0,
     "failed-commands": 0,
@@ -16,6 +16,6 @@
   "refused": [],
   "run": {
     "work_id": "issue-467-trip-semantics",
-    "generated_at": "2026-08-08T10:58:32Z"
+    "generated_at": "2026-08-08T12:52:49Z"
   }
 }
