@@ -36,7 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.code_map import checks, cli, discovery  # noqa: E402
+from scripts.code_map import checks, cli, discovery, extract, render  # noqa: E402
 
 CODE_MAP = ROOT / "scripts" / "code_map"
 
@@ -709,6 +709,190 @@ class DeterminismTests(unittest.TestCase):
         self.assertIn("INDEX.md", proc.stdout)
 
 
+def _group_statement_lines_by_file(text):
+    """`statements.jsonl` text -> {source file: [its own lines, in order]},
+    grouped in FIRST-SEEN order. Each file's own line order is untouched --
+    that reflects the AST's own traversal of that one file, not the order
+    files were visited -- only the file-to-file grouping is exposed so a
+    caller can permute IT."""
+    groups = {}
+    for line in text.splitlines():
+        if not line:
+            continue
+        rec = json.loads(line)
+        groups.setdefault(rec["q"]["file"], []).append(line)
+    return groups
+
+
+def _permuted_statements(text):
+    """The SAME statements a real extraction produced, as if the extractor
+    had walked the corpus in the OPPOSITE file order. `discover_corpus`
+    always returns a sorted list, so this is the cheapest way to exercise a
+    visit order the real pipeline would never itself produce by accident --
+    deterministic and reversible, not a random shuffle, so a failure here is
+    reproducible."""
+    groups = _group_statement_lines_by_file(text)
+    out_lines = []
+    for f in reversed(list(groups)):
+        out_lines.extend(groups[f])
+    return "\n".join(out_lines) + "\n"
+
+
+_MULTI_CALLER_TARGET_SOURCE = '''"""The module two other modules point at, never its own."""
+
+
+def target():
+    """Called from two other modules."""
+    return 1
+'''
+
+_MULTI_CALLER_ALPHA_SOURCE = '''"""Calls target once."""
+from pkg.callee import target
+
+
+def a():
+    """Call target."""
+    return target()
+'''
+
+_MULTI_CALLER_BETA_SOURCE = '''"""Calls target once."""
+from pkg.callee import target
+
+
+def b():
+    """Call target."""
+    return target()
+'''
+
+
+def _make_multi_caller_repo(tmp: Path):
+    """`pkg.callee:target` is called from TWO other modules and never from its
+    own, so its EXTERNAL caller list has more than one element -- a removed
+    sort has somewhere to disagree. `_make_cross_module_repo` has only one
+    external caller module, and a one-element list orders the same with or
+    without a sort, so tc32 needs its own fixture with cardinality >= 2."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "callee.py").write_text(_MULTI_CALLER_TARGET_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "alpha.py").write_text(_MULTI_CALLER_ALPHA_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "beta.py").write_text(_MULTI_CALLER_BETA_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/callee.py", "pkg/alpha.py", "pkg/beta.py", cwd=tmp)
+
+
+#: tc32: delete the ONE `sorted(...)` governing caller-list order (see
+#: `_bucket_line`'s own docstring for why there is only one). Without it, the
+#: rendered order tracks `Counter` insertion order, which tracks the order
+#: statements were visited -- exactly the failure a permuted visit order is
+#: built to expose.
+CALLER_ORDER_MUTATION = (
+    ("    ext = sorted(m for m in counter if m != mod)\n",
+     "    ext = [m for m in counter if m != mod]\n"),
+)
+
+
+class CallerOrderStableUnderPermutedVisitTests(unittest.TestCase):
+    """tc32: a green `deterministic-rebuild` is NOT evidence that caller
+    ordering is stable. That check compares two builds of the SAME tree in
+    the SAME visit order, so it would stay green even if the caller list were
+    ordered by dict/Counter insertion -- both runs would insert in the same
+    order and agree with each other while both being visit-order-dependent.
+
+    This builds the SAME statement store twice into a rendered page tree,
+    permuting only which FILE's statements the store lists first, and asserts
+    the rendered caller lists are byte-identical either way. Proven
+    red-before-green: `_bucket_line` sorts the external caller list today,
+    but nothing forced that -- deleting the sort via a mutated package copy
+    reproduces the exact failure this test exists to catch."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_multi_caller_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _extract_statements(self):
+        artifacts = self.repo / ".code-map"
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["extract", "--root", str(self.repo),
+                                       "--artifacts", str(artifacts)]), 0)
+        return (artifacts / extract.STATEMENTS_NAME).read_text(encoding="utf-8")
+
+    def test_caller_lists_are_byte_identical_under_a_permuted_visit_order(self):
+        text = self._extract_statements()
+        groups = _group_statement_lines_by_file(text)
+        self.assertGreater(len(groups), 1,
+                           "input precondition: need more than one file's "
+                           "statements, or there is no visit order to permute")
+
+        canonical_out = self.repo / "map-canonical"
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["render", "--root", str(self.repo),
+                                       "--artifacts", str(self.repo / ".code-map"),
+                                       "--out", str(canonical_out)]), 0)
+        target_page = (canonical_out / "pkg.callee" / "target.md").read_text(encoding="utf-8")
+        stated = checks.parse_refs(checks.refs_lines(target_page)[0])
+        self.assertGreaterEqual(
+            stated.modules, 2,
+            "input precondition: the fixture's target must have at least 2 "
+            "external caller modules, or a one-element list orders the same "
+            "with or without a sort and this proves nothing")
+
+        permuted_artifacts = self.repo / ".code-map-permuted"
+        permuted_artifacts.mkdir()
+        (permuted_artifacts / extract.STATEMENTS_NAME).write_text(
+            _permuted_statements(text), encoding="utf-8", newline="\n")
+        permuted_out = self.repo / "map-permuted"
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["render", "--root", str(self.repo),
+                                       "--artifacts", str(permuted_artifacts),
+                                       "--out", str(permuted_out)]), 0)
+
+        diff = checks.tree_diff(canonical_out, permuted_out)
+        self.assertEqual(diff, [], diff)
+
+    def test_falsifier_bites_when_the_caller_order_sort_is_deleted(self):
+        text = self._extract_statements()
+        groups = _group_statement_lines_by_file(text)
+        self.assertGreater(len(groups), 1,
+                           "input precondition: need more than one file's "
+                           "statements, or there is no visit order to permute")
+        permuted_text = _permuted_statements(text)
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        host = mutated_package(tmp.name, "render.py", CALLER_ORDER_MUTATION)
+
+        canonical_artifacts = Path(tmp.name) / "artifacts-canonical"
+        canonical_artifacts.mkdir()
+        (canonical_artifacts / extract.STATEMENTS_NAME).write_text(
+            text, encoding="utf-8", newline="\n")
+        canonical_out = Path(tmp.name) / "map-canonical"
+        proc = run_code_map(host, "render", "--root", str(self.repo),
+                            "--artifacts", str(canonical_artifacts),
+                            "--out", str(canonical_out))
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+        permuted_artifacts = Path(tmp.name) / "artifacts-permuted"
+        permuted_artifacts.mkdir()
+        (permuted_artifacts / extract.STATEMENTS_NAME).write_text(
+            permuted_text, encoding="utf-8", newline="\n")
+        permuted_out = Path(tmp.name) / "map-permuted"
+        proc = run_code_map(host, "render", "--root", str(self.repo),
+                            "--artifacts", str(permuted_artifacts),
+                            "--out", str(permuted_out))
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+        diff = checks.tree_diff(canonical_out, permuted_out)
+        self.assertNotEqual(
+            diff, [],
+            "MUTANT SURVIVED: caller lists matched across a permuted visit "
+            "order even with the ordering sort deleted -- the falsifier does "
+            "not actually distinguish visit-order-dependent rendering")
+
+
 #: Inbound edges are `calls` AND `reads`. Count only the calls and every page
 #: that is handed around as a value under-reports who depends on it.
 DROP_READS_MUTATION = (
@@ -793,15 +977,15 @@ class InboundAttributionTests(unittest.TestCase):
                             "MUTANT SURVIVED: a map that credits every caller to the "
                             f"callee's own module passed `check`\n{proc.stdout}")
         self.assertIn("FAIL inbound-attribution", proc.stdout)
-        self.assertIn("as callers", proc.stdout)
+        self.assertIn("as production callers", proc.stdout)
 
 
 #: The renderer leaves the page's OWN module out of the named caller list,
 #: because the count already accounts for it. Name it anyway and the line
 #: contradicts its own convention -- visible without reading the store at all.
 OWN_MODULE_NAMED_MUTATION = (
-    ("    ext = sorted(m for m in callers if m != mod)\n",
-     "    ext = sorted(m for m in callers)\n"),
+    ("    ext = sorted(m for m in counter if m != mod)\n",
+     "    ext = sorted(m for m in counter)\n"),
 )
 
 
@@ -869,7 +1053,7 @@ class RefsLineSelfConsistencyTests(unittest.TestCase):
                          "or the two checks have the same scope and this proves nothing")
 
         top.write_text(top.read_text(encoding="utf-8")
-                       + "\nreferenced by: 1 sites in 3 modules (a, b, c)\n",
+                       + "\nreferenced by (production): 1 sites in 3 modules (a, b, c)\n",
                        encoding="utf-8", newline="\n")
         m = checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
 
@@ -891,8 +1075,8 @@ OWN_SITES_UNACCOUNTED_MUTATION = (
 #: total is still right; a reader whose grep disagrees still cannot tell which
 #: question either number answered.
 LEGEND_DROPPED_MUTATION = (
-    ('    return [s, REFS_LEGEND, ""]\n',
-     '    return [s, ""]\n'),
+    ("    L.append(REFS_LEGEND)\n",
+     "    pass\n"),
 )
 
 
@@ -944,10 +1128,15 @@ class RefsAccountingTests(unittest.TestCase):
     def test_a_reader_can_account_for_every_counted_site_from_the_line_alone(self):
         m = self._build()
         page = self._target_page(m)
-        line = checks.refs_lines(m.text(page))
-        self.assertEqual(len(line), 1, line)
-        stated = checks.parse_refs(line[0])
-        self.assertIsNotNone(stated, line[0])
+        lines = checks.refs_lines(m.text(page))
+        self.assertEqual(len(lines), 2, lines)
+        # the fixture has no test-shaped module, so every one of the fixture's
+        # 5 sites lands in the production bucket -- that is the line this test
+        # exercises; the tests bucket is `none found` and not the point here.
+        prod = [ln for ln in lines if ln.startswith(checks.REFS_PROD_PREFIX)]
+        self.assertEqual(len(prod), 1, lines)
+        stated = checks.parse_refs(prod[0])
+        self.assertIsNotNone(stated, prod[0])
 
         self.assertEqual(stated.sites, self.TARGET_SITES,
                          "input precondition: the fixture's target must be "
@@ -960,8 +1149,8 @@ class RefsAccountingTests(unittest.TestCase):
         # RED on the rendered text, not on a missing helper: the line published
         # today is `5 sites in 2 modules (pkg.far)` and stops there.
         self.assertIn(
-            f"{self.TARGET_OWN} in this module", line[0],
-            f"the line {line[0]!r} counts {stated.sites} sites across "
+            f"{self.TARGET_OWN} in this module", prod[0],
+            f"the line {prod[0]!r} counts {stated.sites} sites across "
             f"{stated.modules} modules but names {len(stated.named)}; a reader "
             f"cannot tell how many of those sites the unnamed module holds")
         self.assertEqual(
@@ -979,17 +1168,18 @@ class RefsAccountingTests(unittest.TestCase):
         seen = 0
         for page in m.pages:
             lines = m.text(page).splitlines()
-            for i, line in enumerate(lines):
-                if not line.startswith(checks.REFS_PREFIX):
-                    continue
-                seen += 1
-                follower = lines[i + 1] if i + 1 < len(lines) else ""
-                self.assertTrue(
-                    follower.startswith("counted:") and "not counted:" in follower,
-                    f"{m.rel(page)}: the inbound line {line!r} is not followed by "
-                    f"a statement of what the count counted, so a reader whose own "
-                    f"grep disagrees cannot tell which number is wrong; got "
-                    f"{follower!r}")
+            refs_idx = [i for i, ln in enumerate(lines) if checks.refs_prefix_of(ln) is not None]
+            if not refs_idx:
+                continue
+            seen += 1
+            last = refs_idx[-1]
+            follower = lines[last + 1] if last + 1 < len(lines) else ""
+            self.assertTrue(
+                follower.startswith("counted:") and "not counted:" in follower,
+                f"{m.rel(page)}: the inbound lines are not followed by "
+                f"a statement of what the count counted, so a reader whose own "
+                f"grep disagrees cannot tell which number is wrong; got "
+                f"{follower!r}")
         self.assertGreater(seen, 0, "input precondition: some page must carry an "
                                     "inbound line")
 
@@ -1047,6 +1237,134 @@ class RefsAccountingTests(unittest.TestCase):
                             f"\n{proc.stdout}")
         self.assertIn("FAIL refs-line-self-consistent", proc.stdout)
         self.assertIn("legend", proc.stdout)
+
+
+_SPLIT_TARGET_SOURCE = '''"""The module a production caller and a test both point at."""
+
+
+def target():
+    """Called from production and from a test."""
+    return 1
+'''
+
+_SPLIT_ONLY_TESTS_SOURCE = '''"""A helper only a test calls -- never referenced by production."""
+
+
+def helper():
+    """Used by a test only."""
+    return 2
+'''
+
+_SPLIT_PROD_CALLER_SOURCE = '''"""A production module that calls target. Nothing calls this one."""
+from pkg.callee import target
+
+
+def use():
+    """Call target from production code."""
+    return target()
+'''
+
+_SPLIT_TEST_MODULE_SOURCE = '''"""A pytest-shaped test module -- exercises target and helper."""
+from pkg.callee import target
+from pkg.only_tests import helper
+
+
+def test_target():
+    """Call target once and helper twice."""
+    target()
+    helper()
+    helper()
+'''
+
+
+def _make_prod_test_split_repo(tmp: Path):
+    """A repo shaped to exercise every fact gate g5's split must distinguish:
+    an entity called from BOTH production and a test (`pkg.callee:target`), an
+    entity called ONLY from a test (`pkg.only_tests:helper`), an entity nothing
+    calls at all (`pkg.caller:use`), and an entity DEFINED INSIDE a
+    pytest-shaped test module (`tests.test_thing:test_target`) whose own
+    zero-inbound line must read as expected rather than alarming."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "callee.py").write_text(_SPLIT_TARGET_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "only_tests.py").write_text(_SPLIT_ONLY_TESTS_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "caller.py").write_text(_SPLIT_PROD_CALLER_SOURCE, encoding="utf-8", newline="\n")
+    (tmp / "tests").mkdir()
+    (tmp / "tests" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "tests" / "test_thing.py").write_text(_SPLIT_TEST_MODULE_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/callee.py", "pkg/only_tests.py", "pkg/caller.py",
+         "tests/__init__.py", "tests/test_thing.py", cwd=tmp)
+
+
+class ProductionTestCallerSplitTests(unittest.TestCase):
+    """Gate g5: split the caller list into production and test callers, and
+    make a test-defined entity's inbound line say something true instead of
+    something alarming. `referenced by: none found` today conflates three
+    different facts -- dead in production and in tests, exercised by tests
+    only, and IS a test (so zero inbound is the normal state) -- and a reader
+    cannot tell which one a bare line means without opening another page."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_prod_test_split_repo(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _page(self, mod, name):
+        return (self.repo / "map" / mod / f"{name}.md").read_text(encoding="utf-8")
+
+    def test_an_entity_called_from_both_production_and_a_test_splits_the_two(self):
+        text = self._page("pkg.callee", "target")
+        self.assertIn(
+            "referenced by (production): 1 sites in 1 modules (pkg.caller)", text,
+            f"the production/test split must be visible on the page itself:\n{text}")
+        self.assertIn(
+            "referenced by (tests): 1 sites in 1 modules (tests.test_thing)", text,
+            f"the test caller must be counted separately from the production one:\n{text}")
+
+    def test_an_entity_called_only_from_tests_says_so_on_the_production_line(self):
+        text = self._page("pkg.only_tests", "helper")
+        self.assertIn(
+            "referenced by (production): none found", text,
+            f"an entity nothing in production calls must say so, even though a "
+            f"test calls it:\n{text}")
+        self.assertIn(
+            "referenced by (tests): 2 sites in 1 modules (tests.test_thing)", text,
+            f"the fact 'only tests use it' must be a distinct, visible line from "
+            f"'nothing calls it':\n{text}")
+
+    def test_a_truly_unused_entity_reads_none_found_on_both_lines(self):
+        text = self._page("pkg.caller", "use")
+        self.assertIn("referenced by (production): none found", text)
+        self.assertIn("referenced by (tests): none found", text,
+                      f"an entity dead in BOTH production and tests must not read "
+                      f"the same as one only tests use:\n{text}")
+
+    def test_a_test_defined_entity_carries_an_honest_note_not_a_bare_none_found(self):
+        text = self._page("tests.test_thing", "test_target")
+        self.assertIn(render.TEST_NOTE, text,
+                      f"a page whose OWN entity is defined in a test module must say "
+                      f"so -- zero inbound there is the normal state, not a finding:\n{text}")
+        self.assertIn("referenced by (production): none found", text)
+        self.assertIn("referenced by (tests): none found", text)
+
+    def test_a_production_defined_entity_carries_no_test_defined_note(self):
+        text = self._page("pkg.callee", "target")
+        self.assertNotIn(render.TEST_NOTE, text,
+                         f"a production entity must not be told it is a test:\n{text}")
+
+    def test_the_page_states_what_the_split_is_derived_from(self):
+        """Close criterion: the predicate is derived from a published convention
+        and the page (or report) says what it was based on."""
+        text = self._page("pkg.callee", "target")
+        self.assertIn(render.SPLIT_LEGEND, text)
+        self.assertIn("pytest", render.SPLIT_LEGEND.lower())
+        self.assertIn("test_", render.SPLIT_LEGEND)
 
 
 #: Break SIDE A of the comparison: the EXTRACTOR's name for a definition.

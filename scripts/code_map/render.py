@@ -332,29 +332,114 @@ REFS_LEGEND = ("counted: calls and reads that resolved to this symbol. "
                "not counted: its own definition, imports, inheritance, "
                "attribute writes, docstring mentions, unresolved references.")
 
+#: `referenced by: none found` used to answer three different questions with
+#: one sentence: nothing calls this, only tests call this, or this itself IS a
+#: test (pytest, not another module, is what invokes it -- zero inbound there
+#: is the expected state). A reader could not tell which without opening
+#: another page. These two prefixes split the caller list so the split is
+#: visible on the page itself; `checks.py` declares its own copies of both
+#: (never imported), the same way it already does for `REFS_LEGEND`.
+REFS_PROD_PREFIX = "referenced by (production): "
+REFS_TEST_PREFIX = "referenced by (tests): "
 
-def refs_line(key, mod):
-    """The page's inbound line, plus the legend that says what it counted.
+#: Shown on a test-defined entity's own page, directly above its two caller
+#: lines, so `none found` there reads as the normal state rather than a
+#: dead-code alarm. `checks.py` declares its own copy, byte for byte.
+TEST_NOTE = ("this entity is defined in a test module (see split legend "
+             "below): zero callers here is the normal, expected state, not "
+             "a finding.")
 
-    The site total and the module total have always included the page's own
-    module while the parenthesized list named only the others, so a reader could
-    not attribute the difference. The `+ N in this module` clause closes that
-    without naming the own module in the list -- the list stays the OTHER
-    modules, which is the convention `refs_line_self_consistent` holds every
-    page to."""
-    callers = inbound.get(key)
-    if not callers:
-        return ["referenced by: none found", REFS_LEGEND, ""]
-    n = sum(callers.values())
-    ext = sorted(m for m in callers if m != mod)
+#: What the production/test split is based on, said on every page that
+#: carries one -- the close criterion is that a reader who disagrees with the
+#: split can see the rule that produced it without leaving the page. Derived
+#: from pytest's own DOCUMENTED default discovery convention (the
+#: `python_files` glob `test_*.py` / `*_test.py`, and the `tests` package
+#: layout pytest's own docs recommend) rather than tuned to this repo's own
+#: layout -- see `is_test_module`. A corpus whose tests follow neither
+#: convention is classified production; that is a real degradation and this
+#: sentence is where it is named, not hidden.
+SPLIT_LEGEND = ("split: production vs test caller module, by pytest's "
+                "default discovery convention -- test_*.py / *_test.py "
+                "naming, or a top-level tests package. a module matching "
+                "neither is counted production.")
+
+
+def is_test_module(mod):
+    """True when `mod` is a pytest-discovered test module.
+
+    Restated on the module's own DOTTED NAME rather than its file path: a
+    module's last dotted segment is its file's basename with `.py` stripped
+    (`extract.mod_of`), so the two agree by construction and no file lookup
+    is needed here. Two independent halves of pytest's documented default
+    `python_files` convention:
+
+    - filename: `test_*.py` or `*_test.py` -- the last segment starts with
+      `test_` or ends with `_test`.
+    - layout: a `tests` package anywhere on the module's own dotted path --
+      the other of the two standard layouts pytest's own docs describe.
+
+    Derived, not tuned: nothing here reads this repo's own directory names.
+    A corpus whose tests follow neither convention (a `run_tests` module
+    alongside a `tests` package, for instance) classifies the outlier as
+    production -- stated in `SPLIT_LEGEND`, not hidden. `checks.py` restates
+    this same rule a second time, by hand, rather than importing it, so a
+    divergence between the two is something a check can actually catch."""
+    parts = mod.split(".")
+    last = parts[-1]
+    if last.startswith("test_") or last.endswith("_test"):
+        return True
+    return "tests" in parts
+
+
+def _bucket_line(prefix, counter, mod):
+    """One caller-list line for one bucket (production or test), in the same
+    grammar the single combined line always used -- `none found` / `N sites,
+    this module only` / `N sites in M modules (...) [+ K in this module]`.
+
+    Shared by both buckets so there is exactly ONE `sorted(...)` call in this
+    file governing caller-list order -- the anchor `tc32`'s falsifier mutates
+    to prove nothing but that sort keeps the rendered order stable."""
+    if not counter:
+        return prefix + REFS_NONE
+    n = sum(counter.values())
+    ext = sorted(m for m in counter if m != mod)
     if ext:
-        s = f"referenced by: {n} sites in {len(callers)} modules (" + ", ".join(ext) + ")"
-        own = callers.get(mod, 0)
+        s = prefix + f"{n} sites in {len(counter)} modules (" + ", ".join(ext) + ")"
+        own = counter.get(mod, 0)
         if own:
             s += f" + {own} in this module"
     else:
-        s = f"referenced by: {n} sites, this module only"
-    return [s, REFS_LEGEND, ""]
+        s = prefix + f"{n} sites, this module only"
+    return s
+
+
+#: Matches `checks.REFS_NONE` byte for byte -- declared independently there.
+REFS_NONE = "none found"
+
+
+def refs_line(key, mod):
+    """The page's two inbound lines -- production callers, then test callers
+    -- plus the legends that say what each counted and how the split was
+    made.
+
+    Splitting the SAME counted total (`REFS_LEGEND` is unchanged: still calls
+    and reads, still nothing else) into two buckets by caller module is what
+    turns `referenced by: none found` from one sentence doing three jobs into
+    three lines that can each only mean one thing. A test-defined entity
+    additionally gets `TEST_NOTE` first, so its own near-universal
+    `none found` / `none found` does not read as a dead-code finding."""
+    callers = inbound.get(key, {})
+    prod = {m: n for m, n in callers.items() if not is_test_module(m)}
+    test = {m: n for m, n in callers.items() if is_test_module(m)}
+    L = []
+    if is_test_module(mod):
+        L.append(TEST_NOTE)
+    L.append(_bucket_line(REFS_PROD_PREFIX, prod, mod))
+    L.append(_bucket_line(REFS_TEST_PREFIX, test, mod))
+    L.append(REFS_LEGEND)
+    L.append(SPLIT_LEGEND)
+    L.append("")
+    return L
 
 
 def entity_page(key, mod):

@@ -1,0 +1,466 @@
+{
+  "work_id": "issue-456-g5-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-grammar-red",
+    "m2-grammar-green",
+    "m3-tc32-falsifier",
+    "m4-repo-evidence",
+    "m5-f1brainz-evidence",
+    "m6-final"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the g5-implement.md handoff in full. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context",
+            "why_ref": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-grammar-red": {
+      "id": "m1-grammar-red",
+      "title": "RED: new production/test split behavior fails on current grammar",
+      "imperative": "Design the test/production caller predicate (derived from pytest's documented default discovery: test_*.py / *_test.py naming, or a tests package) and write a new test class in tests/test_code_map.py asserting the split page grammar (two labeled caller lines, and a distinct honest line for a test-defined entity). Run it and observe it fail against today's single-line grammar. Attest c1 with the failing output.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new split-grammar test written and observed failing against current render.py -- manual attest with the red output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "no absolute-count threshold",
+        "derived predicate, not tuned"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-grammar-red-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-grammar-red",
+            "why_ref": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-grammar-red-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-grammar-red",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-grammar-green": {
+      "id": "m2-grammar-green",
+      "title": "GREEN: implement the split in render.py and checks.py",
+      "imperative": "Implement is_test_module in render.py; rewrite refs_line to emit production/test caller lines plus an honest line for test-defined entities. In checks.py, independently redeclare the grammar constants and a second derivation of is_test_module (never import from render.py); rewrite refs_line_self_consistent and inbound_attribution for the new two-line grammar. Update every pre-existing test whose assertions hardcode the old single-line grammar. Run the gate selector to green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 red test exists and was observed failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 red test observed failing (6 failed), verified above"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "gate selector green: python -m pytest tests/test_code_map.py -k 'refs or caller' -q --color=no",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills/.claude/worktrees/issue-456 && python -m pytest tests/test_code_map.py -k 'refs or caller' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-grammar-green-2"
+        }
+      ],
+      "constraints": [
+        "checks.py grammar constants declared independently, never imported from render.py",
+        "test pages not deleted",
+        "page register stays ASCII"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-grammar-green-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-grammar-green",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-grammar-green-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills/.claude/worktrees/issue-456 && python -m pytest tests/test_code_map.py -k 'refs or caller' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-tc32-falsifier": {
+      "id": "m3-tc32-falsifier",
+      "title": "tc32: prove caller ordering stable under a permuted file-visit order",
+      "imperative": "Add a test that builds the same corpus under a permuted statement-visit order and asserts the rendered caller lists (both new lists) are byte-identical to the canonical-order build. Prove the falsifier bites: delete the sorted(...) it depends on via a mutated package copy and show it goes red; restore. Run the gate selector to green with the new test included.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 grammar is implemented and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 green, selector 17 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the falsifier reproduces red when the ordering sort is deleted -- manual attest with the mutation-kill output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "CallerOrderStableUnderPermutedVisitTests: mutant survives without cardinality>=2 fixture (0 diff), then killed (non-empty diff) once fixture widened to 2 external callers; restored to real fixture in the committed test"
+        },
+        {
+          "id": "c2",
+          "statement": "gate selector green including the new tc32 test",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills/.claude/worktrees/issue-456 && python -m pytest tests/test_code_map.py -k 'refs or caller' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-tc32-falsifier-2"
+        }
+      ],
+      "constraints": [
+        "no timings in any run report"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-tc32-falsifier-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-tc32-falsifier",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-tc32-falsifier-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills/.claude/worktrees/issue-456 && python -m pytest tests/test_code_map.py -k 'refs or caller' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-repo-evidence": {
+      "id": "m4-repo-evidence",
+      "title": "Full suite, build+check, and the three-way split measured on this repo",
+      "imperative": "Run the full suite to green. Run a fresh build then check on this repo. Write a small evidence script under .agent-work/issue-456/evidence/ that measures the three-way split (unused/test-only/production) over the built map and report counts and share of 3728. Attest c1 with the numbers.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "tc32 falsifier lands and selector is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tc32 falsifier landed, selector 19 passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green: python -m pytest tests/ -q --color=no",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills/.claude/worktrees/issue-456 && python -m pytest tests/ -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-repo-evidence-2"
+        },
+        {
+          "id": "c2",
+          "statement": "fresh build+check exit 0, and the three-way split measured and reported as counts and share of 3728 -- manual attest with the numbers",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "fresh build+check exit 0/0, 7/7 checks; modules=111 entities=3752 pages=3864 (grew from baseline 3728/3840 by the 8 new test methods/fixtures I added, which are themselves part of the mapped corpus); split via measure_split.py: unused=2428 (64.7%), test_only=451 (12.0%), production=873 (23.3%), total=3752"
+        }
+      ],
+      "constraints": [
+        "do not git add -A",
+        "no timings in report"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-repo-evidence-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-repo-evidence",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-repo-evidence-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills/.claude/worktrees/issue-456 && python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-f1brainz-evidence": {
+      "id": "m5-f1brainz-evidence",
+      "title": "Three-way split measured on f1Brainz (read-only), shape stated",
+      "imperative": "Run the built map/check pipeline read-only against C:/Programs/f1Brainz (1227 modules / 15037 entities, a tests package of 548 modules AND a separate run_tests module). Measure the three-way split there too and state the corpus shape and what the predicate was derived from and what shape defeats it. Do not run against superCoolSpaceSim as evidence (0 modules, a null test only). Attest c1 with the f1Brainz numbers.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "this-repo split measured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "this-repo split measured in m4: unused2428 test_only451 production873 of 3752"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "f1Brainz split measured and reported, with its shape and the predicate's stated basis and known blind spot -- manual attest with the numbers",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "f1Brainz (read-only): build 1227 modules/15037 entities/16265 pages (1 pre-existing parse failure, BOM char, unrelated); check 7/7 exit0 incl inbound-attribution and refs-line-self-consistent; split unused8485(56.4pct) test_only1498(10.0pct) production5054(33.6pct) of 15037; shape: tests/ package 548 files + separate top-level run_tests.py -- run_tests classifies production (no test_/*_test match, top segment != tests), confirming the predicate degrades to production on an outlier rather than misclassifying it as test"
+        }
+      ],
+      "constraints": [
+        "f1Brainz is READ-ONLY"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-f1brainz-evidence-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-f1brainz-evidence",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-f1brainz-evidence-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-f1brainz-evidence",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-final": {
+      "id": "m6-final",
+      "title": "Final verification and write IMPLEMENTER_RESULT",
+      "imperative": "Re-verify the specific exclusions stay green (collision fixture, OWN_MODULE_NAMED_MUTATION anchor, refs_lines_are_self_consistent precondition, entity_symbol_join independence, page headers, g4's page_location_matches_content). Confirm git status is clean of anything mutated-then-restored. Write IMPLEMENTER_RESULT to .agent-work/issue-456/crew-handoffs/g5-implement-RESULT.md. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "f1Brainz evidence recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "f1Brainz evidence recorded in m5"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "specific exclusions re-verified green, git status clean, IMPLEMENTER_RESULT written -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "specific exclusions re-verified green (32 passed), git status confirmed scoped, IMPLEMENTER_RESULT written"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-final-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m6-final",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-final-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m6-final",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 6,
+  "engine_session": {
+    "session_id": "g5-implementer-attempt1",
+    "status": "active",
+    "claimed_at": "2026-08-08T13:13:49.790612+00:00",
+    "last_heartbeat": "2026-08-08T15:06:04.416354+00:00",
+    "claimed_by": "g5-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "DESIGN LOCKED, HARD trip at m0-context, no code written yet. Predicate is_test_module(mod): last dotted segment startswith test_ or endswith _test, or tests in mod.split(dot) -- pytest default python_files + tests-package convention, derived not tuned. Duplicate this function verbatim a second time by hand in checks.py (never import from render), same as SourceScan is a second derivation of extract logic. New page grammar in render.refs_line: two lines REFS_PROD_PREFIX=referenced by (production): and REFS_TEST_PREFIX=referenced by (tests): each using the EXISTING none-found/this-module-only/N-in-M-modules body grammar via one shared helper fn (single sorted(...) call inside it, needed as the tc32 mutation anchor), own-module clause applies to whichever bucket the entity own module falls in. If is_test_module(mod) true, prepend a short TEST_NOTE line before the two bucket lines. Add SPLIT_LEGEND one-liner stating the pytest-derived basis, printed every page beside existing REFS_LEGEND. checks.py: redeclare REFS_PROD_PREFIX/REFS_TEST_PREFIX/TEST_NOTE/SPLIT_LEGEND independently byte for byte (tripwire: do not from .render import REFS_), rewrite refs_line_self_consistent to validate both lines per page plus TEST_NOTE presence (page-local, title-derived is_test_module needs no store since module dotted name alone decides it), rewrite inbound_attribution to compare both buckets against StoreScan.inbound split by checks own is_test_module copy. Existing tests to rewrite for new grammar: RefsAccountingTests ~899, RefsLineSelfConsistencyTests ~808, InboundAttributionTests ~729, plus OWN_MODULE_NAMED_MUTATION/OWN_SITES_UNACCOUNTED_MUTATION/LEGEND_DROPPED_MUTATION anchors (exact old render.py lines, must retarget to new source text). tc32: extract statements.jsonl once via cli extract, group lines by q.file preserving intra-file order, reverse file-block order, render both canonical and permuted stores via cli render into separate --out dirs, assert checks.tree_diff empty; red proof via mutated_package deleting the one sorted(...) in the new shared bucket helper, run_code_map render on both stores through the mutated host, assert tree_diff non-empty. Baseline before any change: selector -k refs or caller = 11 passed; full suite = 1772 passed 2 skipped 672 subtests 0 failed; build+check fresh = 7/7 exit 0, modules 111 entities 3728 pages 3840. Plan items m1..m6 remain pending: m1 red test, m2 green implementation, m3 tc32, m4 this-repo full-suite+build+check+3-way-split-counts evidence, m5 f1Brainz read-only split+shape evidence (tests pkg 548 modules + separate run_tests module must classify run_tests as production), m6 re-verify specific exclusions (collision fixture, OWN_MODULE_NAMED_MUTATION, entity_symbol_join independence, page headers, page_location_matches_content) + git status clean + write IMPLEMENTER_RESULT to .agent-work/issue-456/crew-handoffs/g5-implement-RESULT.md. Constraints: python never py, stdlib only, no timings in reports, do not git add -A (map/ tree untracked, stage explicit paths only), f1Brainz and superCoolSpaceSim read-only (do not use superCoolSpaceSim as evidence, 0 modules null test), wrapper scripts run_record.py/run_waive.py/run_consolidate.py/run_flag_candidate.py already exist under .agent-work/issue-456/evidence/ for shell-quoting-limited free text, reuse them.",
+      "mechanical": false,
+      "ts": "2026-08-08T13:16:54.896298+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-grammar-red",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T14:16:34.071255+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-grammar-green",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T14:22:21.196203+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-tc32-falsifier",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T14:25:52.243590+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-repo-evidence",
+      "why": "full suite 1780 passed/2 skipped/672 subtests exit0; fresh build+check 7/7 exit0 modules111 entities3752 pages3864; split unused2428(64.7pct) test_only451(12.0pct) production873(23.3pct) of 3752 total",
+      "mechanical": false,
+      "ts": "2026-08-08T14:41:27.517172+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-f1brainz-evidence",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T15:03:25.901091+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-final",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-08T15:06:04.416345+00:00"
+    }
+  ]
+}

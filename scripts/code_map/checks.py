@@ -277,19 +277,37 @@ class SourceScan:
 # modules, and which of them are named -- so a later gate that respells it
 # updates this and nothing else.
 
-REFS_PREFIX = "referenced by: "
+#: Two prefixes, not one -- `referenced by: none found` used to answer three
+#: different questions with one sentence (nothing calls this / only tests call
+#: this / this itself IS a test). Declared here, not imported from the
+#: renderer, for the same reason as always: a check that reads its expected
+#: text out of the code under test can only ever agree with it. The renderer
+#: spells these sentences too, and the two must match byte for byte.
+REFS_PROD_PREFIX = "referenced by (production): "
+REFS_TEST_PREFIX = "referenced by (tests): "
+REFS_PREFIXES = (REFS_PROD_PREFIX, REFS_TEST_PREFIX)
 REFS_NONE = "none found"
 REFS_SELF_ONLY = re.compile(r"^(\d+) sites, this module only$")
 REFS_MODULES = re.compile(
     r"^(\d+) sites in (\d+) modules \(([^)]*)\)(?: \+ (\d+) in this module)?$")
 
-#: Declared here, not imported from the renderer, for the same reason
-#: `REFS_PREFIX` is: a check that reads its expected text out of the code under
-#: test can only ever agree with it. The renderer spells this sentence too, and
-#: the two must match byte for byte.
 REFS_LEGEND = ("counted: calls and reads that resolved to this symbol. "
                "not counted: its own definition, imports, inheritance, "
                "attribute writes, docstring mentions, unresolved references.")
+
+#: What the production/test split is based on -- the renderer's own copy of
+#: this sentence is what a reader actually sees; this one is what holds the
+#: renderer to having printed it, byte for byte.
+SPLIT_LEGEND = ("split: production vs test caller module, by pytest's "
+                "default discovery convention -- test_*.py / *_test.py "
+                "naming, or a top-level tests package. a module matching "
+                "neither is counted production.")
+
+#: Shown on a test-defined entity's own page. Byte-for-byte copy of the
+#: renderer's `TEST_NOTE`.
+TEST_NOTE = ("this entity is defined in a test module (see split legend "
+             "below): zero callers here is the normal, expected state, not "
+             "a finding.")
 
 #: sites: total inbound edges, the page's own module included. modules: how many
 #: distinct modules they came from. named: the modules the line spells out --
@@ -299,10 +317,22 @@ REFS_LEGEND = ("counted: calls and reads that resolved to this symbol. "
 Refs = collections.namedtuple("Refs", "sites modules named own")
 
 
+def refs_prefix_of(line):
+    """Which of the two inbound-line prefixes `line` uses, or None."""
+    for prefix in REFS_PREFIXES:
+        if line.startswith(prefix):
+            return prefix
+    return None
+
+
 def parse_refs(line):
     """The rendered inbound line as numbers, or None when it is not one of the
-    forms this map writes."""
-    body = line[len(REFS_PREFIX):].strip()
+    forms this map writes. Works for either bucket prefix -- the BODY grammar
+    (the part after the prefix) is the same for both."""
+    prefix = refs_prefix_of(line)
+    if prefix is None:
+        return None
+    body = line[len(prefix):].strip()
     if body == REFS_NONE:
         return Refs(0, 0, (), 0)
     match = REFS_SELF_ONLY.match(body)
@@ -318,7 +348,23 @@ def parse_refs(line):
 
 
 def refs_lines(text):
-    return [ln for ln in text.splitlines() if ln.startswith(REFS_PREFIX)]
+    return [ln for ln in text.splitlines() if refs_prefix_of(ln) is not None]
+
+
+def is_test_module(mod):
+    """Second, independently hand-written reading of the SAME pytest-derived
+    rule `render.is_test_module` applies -- see that function's docstring for
+    the convention (`test_*.py` / `*_test.py` naming, or a `tests` package)
+    and why it is derived rather than tuned. Written a second time rather than
+    imported, same reason as `REFS_PROD_PREFIX`: importing a classification
+    from the code under test can only ever agree with it. This is what lets
+    `inbound_attribution` catch a renderer that classifies a caller module
+    differently than this second reading does."""
+    parts = mod.split(".")
+    last = parts[-1]
+    if last.startswith("test_") or last.endswith("_test"):
+        return True
+    return "tests" in parts
 
 
 # ------------------------------------------------------------------ checks
@@ -405,7 +451,7 @@ def page_accounting(m):
 
 
 def refs_line_self_consistent(m):
-    """A page's `referenced by:` line must agree with its own list.
+    """A page's inbound lines must agree with their own lists.
 
     PAGE-LOCAL: this reads the page and nothing else -- no store, no supplement.
     `inbound_attribution` is strictly stronger wherever the store can be read,
@@ -419,24 +465,28 @@ def refs_line_self_consistent(m):
     - it survives the store: a later gate that changes the schema breaks the
       second derivation, and this rule still holds.
 
-    The rules are the arithmetic the line is required to satisfy whatever the
-    numbers are: you cannot name a module twice, you cannot name more modules
+    Split into PRODUCTION and TEST buckets (gate g5): a page carrying an
+    inbound line must carry EXACTLY TWO, one per bucket, each named exactly
+    once. The arithmetic within each bucket is the rule the single line always
+    satisfied: you cannot name a module twice, you cannot name more modules
     than you counted, the counted modules you do not name must be EXACTLY the
     one the line accounts for with `+ N in this module` -- one when it does,
-    none when it does not -- you cannot attribute more sites to your own module
-    than you counted, the sites left over must cover the modules you named, you
-    cannot draw N sites from more than N modules, and zero sites and zero
-    modules must arrive together.
+    none when it does not -- you cannot attribute more sites to your own
+    module than you counted, the sites left over must cover the modules you
+    named, you cannot draw N sites from more than N modules, and zero sites
+    and zero modules must arrive together.
 
-    The unnamed-module rule used to be `at most one`, which let a page count a
-    module it neither named nor accounted for. It is now exact in both
-    directions, so the reader can attribute every counted site from the line
-    alone. Every failure the old rule caught it still catches.
+    The two inbound lines must be followed by `REFS_LEGEND` (what the count
+    counted) then `SPLIT_LEGEND` (what the split was based on) -- a number a
+    reader cannot interpret is the defect `g2` closed, and a split whose basis
+    is not stated is the defect `g5` exists to close the same way.
 
-    An inbound line must also be followed by the legend stating what the count
-    counted. A number a reader cannot interpret is the defect `g2` closed: the
-    page said 5, his grep said 7, and nothing told him which question either was
-    answering.
+    An entity's own module classification (page-local: derived from the
+    TITLE's dotted name, the same string this function already reads, so no
+    store lookup is needed) governs `TEST_NOTE`: it must be present when the
+    page's own module is a test module, and absent otherwise -- a test-defined
+    entity's near-universal none/none must not read as a bare, alarming line,
+    and a production entity must not be told it is a test.
 
     What it does NOT prove: that the numbers are RIGHT. A line can be perfectly
     self-consistent and completely wrong -- that is `inbound_attribution`'s
@@ -447,12 +497,32 @@ def refs_line_self_consistent(m):
         title = m.title_key(page) or ""
         own = title.split(":", 1)[0] if ":" in title else title
         lines = m.text(page).splitlines()
-        for i, line in enumerate(lines):
-            if not line.startswith(REFS_PREFIX):
-                continue
-            if lines[i + 1:i + 2] != [REFS_LEGEND]:
-                failures.append(f"{where}: the inbound line is not followed by the "
-                                f"legend saying what the count counted")
+        refs_idx = [i for i, ln in enumerate(lines) if refs_prefix_of(ln) is not None]
+        if not refs_idx:
+            continue
+
+        prefixes_seen = [refs_prefix_of(lines[i]) for i in refs_idx]
+        if len(refs_idx) != 2 or set(prefixes_seen) != set(REFS_PREFIXES):
+            failures.append(f"{where}: inbound lines are {prefixes_seen!r}, expected "
+                            f"exactly one production and one tests line")
+
+        last = refs_idx[-1]
+        if lines[last + 1:last + 3] != [REFS_LEGEND, SPLIT_LEGEND]:
+            failures.append(f"{where}: the inbound lines are not followed by the "
+                            f"legend saying what the count counted and what the "
+                            f"split was based on")
+
+        has_note = TEST_NOTE in lines
+        if own and is_test_module(own):
+            if not has_note:
+                failures.append(f"{where}: titled {title!r} in a test module but "
+                                f"carries no test-defined note")
+        elif has_note:
+            failures.append(f"{where}: carries the test-defined note but {own!r} "
+                            f"is not a test module")
+
+        for i in refs_idx:
+            line = lines[i]
             stated = parse_refs(line)
             if stated is None:
                 failures.append(f"{where}: cannot read the inbound line: {line!r}")
@@ -593,14 +663,17 @@ def page_location_matches_content(m):
 
 
 def inbound_attribution(m):
-    """Every page's caller set must match an independent full scan of the store.
+    """Every page's caller set must match an independent full scan of the
+    store, split into the SAME two buckets the page renders.
 
-    Four facts per page, all compared against the second scan rather than
-    against the renderer: how many inbound sites, how many distinct modules
-    they came from, which modules those are (less the page's own, which the
-    renderer accounts for with `+ N in this module` rather than naming), and how
-    many sites that own-module clause claims. The fourth is what keeps the
-    clause from being a number nobody checks.
+    Four facts per bucket, both buckets, all compared against the second scan
+    rather than against the renderer: how many inbound sites, how many
+    distinct modules they came from, which modules those are (less the page's
+    own, which the renderer accounts for with `+ N in this module` rather than
+    naming), and how many sites that own-module clause claims. The bucket
+    split itself uses `is_test_module` -- the SECOND, independently
+    hand-written copy declared above, not the renderer's -- so a caller the
+    renderer classifies wrongly is something this check can actually catch.
 
     This is the check that notices a map that lies about who uses what -- the
     single thing an agent reads the map FOR."""
@@ -608,30 +681,49 @@ def inbound_attribution(m):
     for page, key in m.entity_pages:
         where = m.rel(page)
         lines = refs_lines(m.text(page))
-        if len(lines) != 1:
-            failures.append(f"{where}: {len(lines)} inbound lines, expected exactly 1")
+        if len(lines) != 2:
+            failures.append(f"{where}: {len(lines)} inbound lines, expected exactly 2")
             continue
-        stated = parse_refs(lines[0])
-        if stated is None:
-            failures.append(f"{where}: cannot read the inbound line: {lines[0]!r}")
+        by_prefix = {}
+        broken = False
+        for line in lines:
+            stated = parse_refs(line)
+            if stated is None:
+                failures.append(f"{where}: cannot read the inbound line: {line!r}")
+                broken = True
+                continue
+            by_prefix[refs_prefix_of(line)] = stated
+        if broken or set(by_prefix) != set(REFS_PREFIXES):
+            if not broken:
+                failures.append(f"{where}: inbound lines are {sorted(by_prefix)!r}, "
+                                f"expected one production and one tests line")
             continue
 
         truth = m.scan.inbound.get(key, {})
         own_module = key.split(":", 1)[0]
-        expected_named = tuple(sorted(set(truth) - {own_module}))
+        truth_by_bucket = {
+            REFS_PROD_PREFIX: {mm: n for mm, n in truth.items() if not is_test_module(mm)},
+            REFS_TEST_PREFIX: {mm: n for mm, n in truth.items() if is_test_module(mm)},
+        }
 
-        if stated.sites != sum(truth.values()):
-            failures.append(f"{where}: page says {stated.sites} inbound sites, "
-                            f"the store has {sum(truth.values())}")
-        if stated.modules != len(truth):
-            failures.append(f"{where}: page says {stated.modules} calling modules, "
-                            f"the store has {len(truth)}")
-        if tuple(sorted(stated.named)) != expected_named:
-            failures.append(f"{where}: page names {list(stated.named)} as callers, "
-                            f"the store has {list(expected_named)}")
-        if stated.own != truth.get(own_module, 0):
-            failures.append(f"{where}: page attributes {stated.own} sites to its own "
-                            f"module, the store has {truth.get(own_module, 0)}")
+        for prefix, label in ((REFS_PROD_PREFIX, "production"), (REFS_TEST_PREFIX, "tests")):
+            stated = by_prefix[prefix]
+            bucket_truth = truth_by_bucket[prefix]
+            expected_named = tuple(sorted(set(bucket_truth) - {own_module}))
+
+            if stated.sites != sum(bucket_truth.values()):
+                failures.append(f"{where}: page says {stated.sites} {label} inbound "
+                                f"sites, the store has {sum(bucket_truth.values())}")
+            if stated.modules != len(bucket_truth):
+                failures.append(f"{where}: page says {stated.modules} {label} "
+                                f"calling modules, the store has {len(bucket_truth)}")
+            if tuple(sorted(stated.named)) != expected_named:
+                failures.append(f"{where}: page names {list(stated.named)} as "
+                                f"{label} callers, the store has {list(expected_named)}")
+            if stated.own != bucket_truth.get(own_module, 0):
+                failures.append(f"{where}: page attributes {stated.own} {label} "
+                                f"sites to its own module, the store has "
+                                f"{bucket_truth.get(own_module, 0)}")
     return failures
 
 
