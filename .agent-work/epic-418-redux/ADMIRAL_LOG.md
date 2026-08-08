@@ -4343,3 +4343,35 @@ as an established defect.
 
 The rule I was already applying to everyone else, now written down for myself: **do not hand a finding
 down until it has been run.** The command that falsified it cost one line.
+
+### RESOLVED — crew 3 answered the cannot-fail finding by closing the gap, not by arguing it
+
+I asked for one honest sentence plus a judgement call on whether the doctrine prose could be reached
+at all, and said a reasoned *"nothing worthwhile"* would be accepted. **It built the thing instead.**
+
+`bd31f69c test(#507,#370): add a real regression guard for the doctrine prose itself` — +74 lines.
+**Verified against a clean main checkout, by running it, not by reading it:**
+
+```
+FAILED DoctrineNamesJobAddressedDelivery::test_doctrine_drops_the_old_load_bearing_line_...
+FAILED DoctrineNamesJobAddressedDelivery::test_handoff_templates_name_the_crew_handoffs_result_path...
+2 failed, 2 passed        REAL_EXIT=1
+```
+
+**A genuine red-then-green, and the shape is right.** The two characterization tests still pass on
+main — correctly, they pin machinery that was never broken — and the two new guards go **red without
+the change**, reaching the prose where it matters: the shipped templates' Return Format sections and
+the doctrine line itself. **A revert now fails.** Anyone reading the suite can now tell the two halves
+apart, which is exactly what was missing.
+
+**Asked for one thing in the return and nothing else:** state that the two characterization tests pass
+on unmodified main — not as a confession but as a fact about what each half proves, so a future reader
+looking at four greens can tell which two would have caught a regression.
+
+**Recorded because it cuts against me:** I was prepared to hold this PR on the finding. The crew made
+the finding moot by fixing the underlying gap rather than by disputing it, and I did not have to
+insist. **That is the second time today a crew's response was better than the instruction it was
+answering** — the first was crew 5 finding a stronger justification for the #411 rework than the one I
+gave it.
+
+**#511 merges on green CI for `bd31f69c`.** Run in progress.
