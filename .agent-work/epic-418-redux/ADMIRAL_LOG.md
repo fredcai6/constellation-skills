@@ -4394,3 +4394,24 @@ Worth stating plainly because it is the kind of result that looks like nothing h
 is the outcome the assignment was designed to produce**, and it was checked by command rather than
 assumed from the design. Run before the first merge, when a collision would still be cheap to
 re-assign, rather than discovered at the second merge when it would not.
+
+### RULING — merge order, and crew 4 goes LAST among the code PRs
+
+Crew 4 edits `scripts/checklist_engine.py`: **the engine driving this Admiral spine right now**,
+mid-`execute`, with an active lease and a hash-chained journal. Its nine issues include the Task-shape
+unification (#474/#475/#476) and a journal-write change (#493), any of which can alter how an
+**already-written** `spine.json` or `spine.json.journal` is read.
+
+**So: crew 4 merges last among the code PRs**, and immediately after it lands, before anything else,
+`checklist_engine.py current` runs against my own spine expecting exit 0 with the lease still active.
+Every earlier merge is then verified with an engine that is still known-good, and if the engine merge
+does break my run, **nothing else is in flight to confuse the diagnosis.**
+
+**Recorded with its own stop condition, because the tempting repair is the wrong one:** if my spine
+stops parsing after that merge, that is a **blocking finding** — re-open it. **Do not hand-edit
+`spine.json` to make it parse.** The engine owns that file; an Admiral repairing it by hand to keep its
+own run alive would be falsifying the record its own gates read, which is the same act as flipping a
+boundary verdict to satisfy a check.
+
+Pinned in `STATE_NOTE.md` under its own heading rather than buried in the close sequence, because a
+fresh Admiral would meet the merge before it met the close.

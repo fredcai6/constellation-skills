@@ -76,6 +76,26 @@
 > **DO NOT re-poke a quiet crew.** Twice today disk silence looked like death and was reading. The
 > authoritative channel is the harness **idle notification**. Ask; never relaunch on an inference.
 >
+> ## MERGING CREW 4 CHANGES THE ENGINE UNDER YOUR OWN LIVE SPINE
+>
+> Crew 4 edits `scripts/checklist_engine.py` — **the engine driving this Admiral spine right now**,
+> mid-`execute`, with an active lease and a hash-chained journal. Its nine issues include the Task-shape
+> unification (#474/#475/#476) and a journal-write change (#493). Any of those can alter how an
+> **already-written** `spine.json` or `spine.json.journal` is read.
+>
+> **Immediately after merging crew 4, before anything else:**
+>
+> ```
+> python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current
+> ```
+>
+> Expect exit 0 and the lease still reported active. **If that breaks, the merge broke the Admiral's own
+> run** — that is a blocking finding, not a nuisance: re-open, do not work around it, and do not
+> hand-edit `spine.json` to make it parse. The engine owns that file.
+>
+> Merge crew 4 **last** among the code PRs for this reason — every other merge can be verified with an
+> engine that is still known-good.
+>
 > ## THE CLOSE SEQUENCE — get this order wrong and the epic cannot close. Read before merging crew 1.
 >
 > `execute.c3` runs **`admiral-prelaunch` from the INSTALLED skill bundle**, not from the repo. Crew 1's
