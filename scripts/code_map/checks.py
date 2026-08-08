@@ -48,7 +48,7 @@ import subprocess
 import sys
 import tempfile
 
-from .extract import STATEMENTS_NAME
+from .extract import STATEMENTS_NAME, WINDOW
 from .supplement import SUPPLEMENT_NAME
 
 #: How many offending items a failing check names before it summarizes. A check
@@ -168,9 +168,11 @@ class StoreScan:
 
     Two facts are collected:
 
-    - `defined_at`  (file, 1-based line) -> store symbol, from `contains`. The
-      store's `q.line` is 0-based and the schema does not say so (defect D1,
-      owned by g3), hence the +1.
+    - `defined_at`  (file, 1-based SOURCE line) -> store symbol, from `contains`.
+      The store declares the base its lines are written in, one
+      `extraction-window` statement per file, and this converts through that
+      declaration rather than compensating with an unexplained `+1` (defect D1,
+      closed at g3).
     - `inbound`     target symbol -> {caller module: sites}, from every `calls`
       and `reads` statement that did not resolve locally.
 
@@ -184,11 +186,15 @@ class StoreScan:
     def __init__(self, statements):
         self.defined_at = {}
         self.inbound = collections.defaultdict(collections.Counter)
+        self.line_base = {}
         for st in statements:
             predicate = st["p"]
-            if predicate == "contains":
+            if predicate == WINDOW:
+                self.line_base[st["q"]["file"]] = st["d"]["line_base"]
+            elif predicate == "contains":
                 q = st["q"]
-                self.defined_at[(q["file"], q["line"] + 1)] = st["o"]
+                self.defined_at[(q["file"],
+                                 q["line"] + (1 - self.line_base[q["file"]]))] = st["o"]
             elif predicate in ("calls", "reads") and st.get("res") != "local":
                 caller_module = st["s"].split(":", 1)[0]
                 self.inbound[st["o"]][caller_module] += 1

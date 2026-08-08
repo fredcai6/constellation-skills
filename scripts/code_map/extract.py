@@ -39,6 +39,21 @@ Statement line shape:
 plus two measurement-only fields:
   "res"  internal|external|local|unresolved|literal
   "why"  failure class, present only when res == unresolved
+
+THE LINE BASE IS DECLARED, NOT IMPLIED (defect D1)
+--------------------------------------------------
+`q.line` is written in the base named by `LINE_BASE` below, and every file the
+extractor reads gets an `extraction-window` statement that says so in the store
+itself. Before this the store was 0-based and the schema was silent; the proof
+of the silence was the renderer's bare `+1` at the read site, which a reader who
+trusted the schema had no way to know he needed. Consumers read the declared
+base; they do not add one.
+
+The window statement is also the extractor's own coverage boundary: a file that
+failed to parse gets no window, so a reader can tell a fact that is ABSENT FROM
+THE CODE from a fact that was never looked at. `q.line` on the window is the
+first line of the file in the declared base, so the window itself is not an
+exception to the base it declares.
 """
 import ast
 import builtins
@@ -56,6 +71,22 @@ BUILTINS = set(dir(builtins))
 
 STATEMENTS_NAME = "statements.jsonl"
 REPORT_NAME = "extract_report.json"
+
+#: The base every `q.line` in the store is written in. Declared here and in
+#: every `extraction-window` statement, so a consumer reads it instead of
+#: guessing. Moving it is a deliberate act with a test that says so
+#: (`StatementSchemaLineBaseTests`), because every consumer inherits it.
+LINE_BASE = 0
+
+#: The predicate carrying one file's extraction window and the conventions the
+#: facts in it were written under.
+WINDOW = "extraction-window"
+
+
+def store_line(lineno):
+    """A 1-based `ast` line number in the store's declared base."""
+    return lineno - 1 + LINE_BASE
+
 
 # ------------------------------------------------------------------ pass 1
 
@@ -253,13 +284,13 @@ class Scope:
 
 
 class Extractor(ast.NodeVisitor):
-    def __init__(self, path, tree, core):
+    def __init__(self, path, tree, src):
         self.path = path
         self.rel = os.path.relpath(path, ROOT)
         self.mod = mod_of(path)
         self.table = TABLES[self.mod]
         self.tree = tree
-        self.core = core          # True if this file is in the core slice
+        self.src = src            # the file's own text, for facts `ast` drops
         self.out = []
         self.scope = Scope("module")
         self.encl = [self.mod + ":"]     # enclosing transformer stack
@@ -275,7 +306,7 @@ class Extractor(ast.NodeVisitor):
             self.scope.bind(k, "import")
 
     # -------------------------------------------------------- emit helpers
-    def emit(self, s, p, o, line, col, res, why=None, extra=None):
+    def emit(self, s, p, o, line, col, res, why=None, extra=None, d=None):
         h = hashlib.sha1(("%s|%s|%s|%s|%s|%s" % (s, p, o, self.rel, line, col))
                          .encode("utf-8")).hexdigest()[:16]
         row = {"s": s, "p": p, "o": o,
@@ -285,6 +316,13 @@ class Extractor(ast.NodeVisitor):
             row["why"] = why
         if extra:
             row["q"].update(extra)
+        if d is not None:
+            # `d` is the DESCRIBED FACTS of the statement's object: a definition's
+            # kind, signature, span, docstring body and decorators; a value's
+            # annotation and value; a window's conventions. They ride the one
+            # statement that already names the thing, so a reader gets a
+            # definition's facts without a second store to join against.
+            row["d"] = d
         self.out.append(row)
 
     def here(self):
@@ -472,8 +510,8 @@ class Extractor(ast.NodeVisitor):
     def pos_of(self, node):
         """Position of the *identifier* SCIP would mark (0-based line/col)."""
         if isinstance(node, ast.Attribute):
-            return node.end_lineno - 1, node.end_col_offset - len(node.attr)
-        return node.lineno - 1, node.col_offset
+            return store_line(node.end_lineno), node.end_col_offset - len(node.attr)
+        return store_line(node.lineno), node.col_offset
 
     # -------------------------------------------------------- type inference
     def infer_type(self, value):
@@ -509,22 +547,36 @@ class Extractor(ast.NodeVisitor):
         return None
 
     # -------------------------------------------------------- visitors
+    def window(self):
+        """This file's extraction window: what was read, and under what
+        conventions the facts from it were written.
+
+        Emitted before the file's facts and only for a file that PARSED, so a
+        reader can tell a fact that is absent from the code from a fact nobody
+        looked for. The window is half-open in the declared base."""
+        loc = len(self.src.splitlines())
+        self.emit(self.mod + ":", WINDOW,
+                  "[%d,%d)" % (LINE_BASE, LINE_BASE + loc),
+                  LINE_BASE, 0, "literal",
+                  d={"line_base": LINE_BASE, "loc": loc})
+
     def run(self):
+        self.window()
         for n in self.tree.body:
             self.visit(n)
         doc = ast.get_docstring(self.tree)
         if doc:
             self.emit(self.mod + ":", "documents", doc.strip().splitlines()[0][:160],
-                      0, 0, "literal")
+                      LINE_BASE, 0, "literal")
         return self.out
 
     def visit_ClassDef(self, node):
         sym = self.child_sym(node.name)
-        self.emit(self.here(), "contains", sym, node.lineno - 1, node.col_offset, "internal")
+        self.emit(self.here(), "contains", sym, store_line(node.lineno), node.col_offset, "internal")
         doc = ast.get_docstring(node)
         if doc:
             self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
-                      node.lineno - 1, node.col_offset, "literal")
+                      store_line(node.lineno), node.col_offset, "literal")
         for b in node.bases:
             s2, r2, w2 = self.resolve_expr(b)
             ln, cl = self.pos_of(b)
@@ -545,11 +597,11 @@ class Extractor(ast.NodeVisitor):
 
     def _func(self, node):
         sym = self.child_sym(node.name)
-        self.emit(self.here(), "contains", sym, node.lineno - 1, node.col_offset, "internal")
+        self.emit(self.here(), "contains", sym, store_line(node.lineno), node.col_offset, "internal")
         doc = ast.get_docstring(node)
         if doc:
             self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
-                      node.lineno - 1, node.col_offset, "literal")
+                      store_line(node.lineno), node.col_offset, "literal")
         for d in node.decorator_list:
             self.visit(d)
         prev = self.scope
@@ -563,7 +615,7 @@ class Extractor(ast.NodeVisitor):
             allargs.append(args.kwarg)
         for a in allargs:
             self.emit("%s.%s" % (sym, a.arg), "param-of", sym,
-                      a.lineno - 1, a.col_offset, "internal")
+                      store_line(a.lineno), a.col_offset, "internal")
             self.scope.bind(a.arg, "param", self.infer_annotation(a.annotation))
             if a.annotation is not None:
                 self.visit(a.annotation)
@@ -721,7 +773,7 @@ class Extractor(ast.NodeVisitor):
     def visit_Import(self, node):
         for a in node.names:
             self.emit(self.mod + ":", "imports", a.name + ":",
-                      node.lineno - 1, node.col_offset,
+                      store_line(node.lineno), node.col_offset,
                       "internal" if a.name in TABLES else "external")
 
     def visit_ImportFrom(self, node):
@@ -731,12 +783,12 @@ class Extractor(ast.NodeVisitor):
         for a in node.names:
             if a.name == "*":
                 self.emit(self.mod + ":", "imports", srcmod + ":*",
-                          node.lineno - 1, node.col_offset,
+                          store_line(node.lineno), node.col_offset,
                           "unresolved", "star-import")
             else:
                 s, r, w = chase(srcmod, a.name)
                 self.emit(self.mod + ":", "imports", s,
-                          node.lineno - 1, node.col_offset, r, w)
+                          store_line(node.lineno), node.col_offset, r, w)
 
 
 def _target_names(t):
@@ -778,14 +830,15 @@ def run(root, artifacts):
         for rel in files:
             p = os.path.join(ROOT, rel)
             try:
-                tree = ast.parse(open(p, encoding="utf-8").read())
+                src = open(p, encoding="utf-8").read()
+                tree = ast.parse(src)
             except Exception as e:
                 failed.append((rel, "parse: " + str(e)))
                 continue
             if mod_of(p) not in TABLES:
                 failed.append((rel, "no module table"))
                 continue
-            ex = Extractor(p, tree, True)
+            ex = Extractor(p, tree, src)
             try:
                 rows = ex.run()
             except RecursionError:

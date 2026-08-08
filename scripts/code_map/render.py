@@ -9,9 +9,9 @@ Importing this module has no side effects: the prototype loaded both stores at
 import time, which made the module unimportable without a built store and
 impossible to run twice against different roots. `load_stores()` now owns that.
 
-Defects carried, each owned by a later gate:
-  D1 the store's q.line is 0-based and the schema does not say so, so every
-     line read out of a statement gets +1. Gate g3.
+D1 is FIXED (gate g3): the store declares its line base in every
+`extraction-window` statement, and `source_line` reads that declaration instead
+of compensating with an unexplained `+1`.
 D2 is FIXED (gate g2): `extract.py` now names every definition as its enclosing
 scope's symbol plus its own name, so the store's symbol equals the supplement's
 qualified key. Pages are still keyed by the supplement's key and the store symbol
@@ -34,7 +34,7 @@ import shutil
 import subprocess
 import sys
 
-from .extract import STATEMENTS_NAME
+from .extract import STATEMENTS_NAME, WINDOW
 from .supplement import SUPPLEMENT_NAME
 
 STDLIB = set(sys.stdlib_module_names)
@@ -70,6 +70,16 @@ intern = sys.intern
 
 def modof(symbol):
     return symbol.split(":", 1)[0] if ":" in symbol else symbol
+
+
+def source_line(line, base):
+    """A store line as the 1-based line the SOURCE FILE has.
+
+    The renderer used to write a bare `+1` here with a comment naming the
+    defect. That compensation was the proof the schema was silent: it was right
+    only for as long as everyone remembered it. The store now declares its base
+    in every `extraction-window` statement and this reads it."""
+    return line + (1 - base)
 
 
 def _case_tag(name):
@@ -128,16 +138,24 @@ def load_stores(artifacts):
     ent_supp.update(supp["entities"])
     mod_supp.update(supp["modules"])
 
+    # file -> the line base that file's facts were written in, read from the
+    # file's own extraction-window statement. The window is emitted before the
+    # file's facts, so the base is known by the time one is read.
+    base_of = {}
+
     with open(artifacts / STATEMENTS_NAME, encoding="utf-8") as f:
         for line in f:
             st = json.loads(line)
             p, s, o = st["p"], st["s"], st["o"]
+            if p == WINDOW:
+                base_of[st["q"]["file"]] = st["d"]["line_base"]
+                continue
             if p == "documents":
                 docs[s] = o
                 continue
             if p == "contains":
                 q = st["q"]
-                cont_at[(q["file"], q["line"] + 1)] = intern(o)   # D1: +1
+                cont_at[(q["file"], source_line(q["line"], base_of[q["file"]]))] = intern(o)
                 continue
             if p == "param-of":
                 q = st["q"]
