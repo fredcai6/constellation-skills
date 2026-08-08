@@ -868,3 +868,9 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   at least one role**, which is the "gate where it has bitten" that DC4's override is meant for.
   Recorded as the answer to take to Tommy at the boundary: not "retune 17-21%", but "the band is
   role-blind, and here is the measurement that shows it."
+
+- `2026-08-08` — `RULING` (batched re-verification, per the sanctioned pattern): after both wave-3
+  merges, one full-suite run on the **final merged `main`** rather than one per PR:
+  **1789 passed / 2 skipped / 683 subtests / exit 0 in 469s.** Exactly the wave-2 baseline of 1782
+  plus the 7 tests wave 3 added, with no drift. That is now the green baseline for #465's merge and
+  for closeout.
