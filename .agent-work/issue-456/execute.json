@@ -1276,7 +1276,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT on disk 19667 bytes and g4-implement complete; REVIEW_RESULT on disk 8791 bytes, crew verified fresh."
         }
       ],
       "postconditions": [
@@ -1287,7 +1288,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1",
+          "attested": {
+            "evidence": "e-g4-review-1",
+            "note": "REVIEW_RESULT returned, verdict APPROVE-WITH-FINDINGS, blockers none. Engine survey verdict APPROVE; the reviewer labelled the three-way verdict honestly because its finding is real but non-blocking."
+          }
         }
       ],
       "constraints": [],
@@ -1296,11 +1302,36 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "status": "complete",
+            "verdict": "APPROVE-WITH-FINDINGS",
+            "blockers": "none",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g4-review-RESULT.md",
+            "crew": "constellation/issue-456/g4/reviewer/attempt-1",
+            "crew_model": "sonnet",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Survey driven end to end at .agent-work/issue-456/g4-review/review.json, lease released.",
+            "lead_finding_tc44": "The corpus-shape trap is real and BIGGER than the implementer's own evidence caught, and the proof needed no invention -- it was sitting unexamined in this repo's own freshly built map/INDEX.md. The tests package is 50 modules / 2769 entities, 74.3 percent of the corpus and the EXACT proportion critic F9 named, but every module is two dotted segments, so the tier predicate len(m.split('.'))>=3 never fires for a single one. It renders as 50 undifferentiated bullets with ZERO subheadings at INDEX.md lines 89-140: the flat-list problem this gate exists to fix, unaddressed, in the single largest bucket. The implementer's g4_tier_shape.md measured tier-1 sizes for this repo but never looked at tier-2 behaviour on it, which is why it went unseen. Two synthetic corpora isolate the mechanism: shape A (flat single package, 30 modules) gives tier 2 zero benefit; shape B (loose top-level modules, no packages) degenerates TIER ONE, because BY_PKG keys on m.split('.')[0] so every module becomes its own package -- a one-bucket-per-module list. Shape B falsifies top_index's own docstring claim that tier 1 is bounded by package count and never by module count, and it falsifies the implementer's claim that none of the shapes is N-buckets-of-one (it had only checked the 0-module null). Both shapes are real-world, not pathological: A is the default pytest layout and this repo's own tests/, B is any script-bag repo.",
+            "routing_judgement": "Both. It routes genuinely where the corpus really nests (this repo's evals, partly scripts; f1Brainz's src/), and degenerates to a no-op on flat or loose shapes. Judged NON-BLOCKING because the tier stays derived rather than tuned -- it reports 'nothing to group' honestly instead of fabricating structure -- and no close criterion promises uniform routing. Tier 1 still routes a cold reader away from the 74 percent test bucket, which is the gate's core purpose. Filed as tc44.",
+            "tc31_attacked_and_holds": "Attacked with two relocations the implementer never chose: a MODULE page moved cross-module (scripts.code_map.discovery/INDEX.md into scripts.code_map.cli/), and an ENTITY page moved into a subdirectory of its own correct module. Both isolate page-location-matches-content as the sole failing check and both name the exact offending page; the other 6 checks stay green. Genuinely closed, not vacuous.",
+            "threshold_regrep": "Confirmed independently from the diff's own added lines: exactly ONE new numeric comparison in the whole diff, len(m.split('.'))>=3. No slice, sort-truncate or count threshold anywhere else in the tier path. Critic F4 holds.",
+            "non_falsifier_label_correct": "test_top_index_lists_a_loose_module_directly_with_no_subheading confirmed trivially true pre-gate (the old top_index never emitted ### at all), AND confirmed by hand-tracing module_group_key/subpkgs against the fixture that it WOULD catch a real regression (grouping widened to swallow loose modules). Correctly labelled a regression guard rather than a falsifier; not a check-that-cannot-fail.",
+            "numbers_reproduced": "Every claim independently re-run and matching exactly: full suite 1772 passed / 2 skipped / 672 subtests / 0 failed; gate selector 5 passed, 75 deselected; fresh build 111 modules / 3728 entities / 3840 pages; fresh check 7/7 including page-location-matches-content.",
+            "scope_and_tripwires": "No drift. git diff --name-only run by the reviewer: exactly scripts/code_map/checks.py, scripts/code_map/render.py, tests/test_code_map.py plus .agent-work artifacts. checks.py is the narrow handoff-predicted exception for tc31 ownership, same class as g3's. All exclusions re-verified directly: _make_collision_repo's INDEX collision still fires with a non-vacuous test body; OWN_MODULE_NAMED_MUTATION and test_refs_lines_are_self_consistent_on_an_intact_map green; entity_symbol_join's two derivations untouched; ZERO `:<line>` across all 3840 built pages, so the human's strip-the-line-numbers ruling holds at the new scale.",
+            "fowler_pass": "12/12 baseline smells rendered, ALL ABSENT for this diff, rail exit 0. _module_line's extraction actually removes a would-be duplication; every new function takes one parameter; top_index's 57 lines match the file's own module_index baseline of 58, so not an outlier.",
+            "verdict_label_note": "The engine-recorded survey verdict is APPROVE because the workbench consolidation guard is binary. The reviewer labelled it APPROVE-WITH-FINDINGS for the three-way verdict the handoff asked for, since the finding is real but non-blocking. Honest labelling, not a downgrade."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-integrate": {
@@ -1312,7 +1343,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: .agent-work/issue-456/crew-handoffs/g4-review-RESULT.md, 8791 bytes, verdict APPROVE-WITH-FINDINGS, blockers none, crew verified fresh."
         }
       ],
       "postconditions": [
@@ -1328,7 +1360,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
         },
         {
           "id": "c2",
@@ -1340,17 +1373,59 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1",
+          "attested": {
+            "evidence": "e-g4-integrate-1",
+            "note": "Engine survey verdict APPROVE, zero blockers. The reviewer additionally labelled it APPROVE-WITH-FINDINGS for the Commander-facing three-way verdict because its corpus-shape finding is real but non-blocking; that label is recorded alongside, not instead of, the APPROVE."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "status": "complete",
+            "verdict": "APPROVE",
+            "verdict_as_labelled_by_reviewer": "APPROVE-WITH-FINDINGS",
+            "blockers": "none",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g4-review-RESULT.md",
+            "crew": "constellation/issue-456/g4/reviewer/attempt-1",
+            "crew_model": "sonnet",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Survey driven end to end at .agent-work/issue-456/g4-review/review.json, lease released.",
+            "lead_finding_tc44": "The corpus-shape trap is real and BIGGER than the implementer's own evidence caught, and the proof needed no invention -- it was sitting unexamined in this repo's own freshly built map/INDEX.md. The tests package is 50 modules / 2769 entities, 74.3 percent of the corpus and the EXACT proportion critic F9 named, but every module is two dotted segments, so the tier predicate len(m.split('.'))>=3 never fires for a single one. It renders as 50 undifferentiated bullets with ZERO subheadings at INDEX.md lines 89-140: the flat-list problem this gate exists to fix, unaddressed, in the single largest bucket. The implementer's g4_tier_shape.md measured tier-1 sizes for this repo but never looked at tier-2 behaviour on it, which is why it went unseen. Two synthetic corpora isolate the mechanism: shape A (flat single package, 30 modules) gives tier 2 zero benefit; shape B (loose top-level modules, no packages) degenerates TIER ONE, because BY_PKG keys on m.split('.')[0] so every module becomes its own package -- a one-bucket-per-module list. Shape B falsifies top_index's own docstring claim that tier 1 is bounded by package count and never by module count, and it falsifies the implementer's claim that none of the shapes is N-buckets-of-one (it had only checked the 0-module null). Both shapes are real-world, not pathological: A is the default pytest layout and this repo's own tests/, B is any script-bag repo.",
+            "routing_judgement": "Both. It routes genuinely where the corpus really nests (this repo's evals, partly scripts; f1Brainz's src/), and degenerates to a no-op on flat or loose shapes. Judged NON-BLOCKING because the tier stays derived rather than tuned -- it reports 'nothing to group' honestly instead of fabricating structure -- and no close criterion promises uniform routing. Tier 1 still routes a cold reader away from the 74 percent test bucket, which is the gate's core purpose. Filed as tc44.",
+            "tc31_attacked_and_holds": "Attacked with two relocations the implementer never chose: a MODULE page moved cross-module (scripts.code_map.discovery/INDEX.md into scripts.code_map.cli/), and an ENTITY page moved into a subdirectory of its own correct module. Both isolate page-location-matches-content as the sole failing check and both name the exact offending page; the other 6 checks stay green. Genuinely closed, not vacuous.",
+            "threshold_regrep": "Confirmed independently from the diff's own added lines: exactly ONE new numeric comparison in the whole diff, len(m.split('.'))>=3. No slice, sort-truncate or count threshold anywhere else in the tier path. Critic F4 holds.",
+            "non_falsifier_label_correct": "test_top_index_lists_a_loose_module_directly_with_no_subheading confirmed trivially true pre-gate (the old top_index never emitted ### at all), AND confirmed by hand-tracing module_group_key/subpkgs against the fixture that it WOULD catch a real regression (grouping widened to swallow loose modules). Correctly labelled a regression guard rather than a falsifier; not a check-that-cannot-fail.",
+            "numbers_reproduced": "Every claim independently re-run and matching exactly: full suite 1772 passed / 2 skipped / 672 subtests / 0 failed; gate selector 5 passed, 75 deselected; fresh build 111 modules / 3728 entities / 3840 pages; fresh check 7/7 including page-location-matches-content.",
+            "scope_and_tripwires": "No drift. git diff --name-only run by the reviewer: exactly scripts/code_map/checks.py, scripts/code_map/render.py, tests/test_code_map.py plus .agent-work artifacts. checks.py is the narrow handoff-predicted exception for tc31 ownership, same class as g3's. All exclusions re-verified directly: _make_collision_repo's INDEX collision still fires with a non-vacuous test body; OWN_MODULE_NAMED_MUTATION and test_refs_lines_are_self_consistent_on_an_intact_map green; entity_symbol_join's two derivations untouched; ZERO `:<line>` across all 3840 built pages, so the human's strip-the-line-numbers ruling holds at the new scale.",
+            "fowler_pass": "12/12 baseline smells rendered, ALL ABSENT for this diff, rail exit 0. _module_line's extraction actually removes a would-be duplication; every new function takes one parameter; top_index's 57 lines match the file's own module_index baseline of 58, so not an outlier.",
+            "verdict_label_note": "The engine-recorded survey verdict is APPROVE because the workbench consolidation guard is binary. The reviewer labelled it APPROVE-WITH-FINDINGS for the three-way verdict the handoff asked for, since the finding is real but non-blocking. Honest labelling, not a downgrade."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'top_index' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g5-implement": {
@@ -2316,6 +2391,20 @@
       "why": "Second tier shipped and tc31 closed with a real check whose RED commit proves the gap: a page relocated into another module directory previously passed check. The tier carries exactly one predicate, a per-module structural fact not a corpus-size gate, so critic F4 holds. Suite 1767 to 1772, check 7/7 exit 0, selector -k top_index selects 5 and was demonstrably red at 4 failed. CRITICAL RESIDUAL for the review: my handoff named superCoolSpaceSim as one of two cross-corpus proofs; it is a C++ repo with zero Python files that indexes to nothing, so it is a null test not a counter-shape test. Only one corpus, f1Brainz, actually exercised critic F9's trap. The crew found this by running it and reported the null honestly instead of dressing it as a pass.",
       "mechanical": false,
       "ts": "2026-08-08T11:04:03.957252+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g4-review",
+      "why": "APPROVE-WITH-FINDINGS, no blockers. The reviewer beat its own mandate: I asked it to invent a third corpus shape, and it found the decisive one already sitting unexamined in this repo's own index. The tests package is 74.3 percent of the corpus, the exact proportion critic F9 named, and it is completely flat, so the tier predicate never fires and it renders as 50 undifferentiated bullets. Two synthetic shapes isolate the mechanism and one of them degenerates TIER ONE, falsifying both top_index's docstring and the implementer's no-N-buckets-of-one claim. Accepted as non-blocking: the tier stays derived rather than tuned and reports nothing-to-group honestly instead of fabricating structure, and tier 1 still routes a cold reader away from the test bucket, which is the gate's core purpose. Filed tc44 with two concrete actions. Everything else attacked and held: tc31 survived two relocations the implementer never chose; exactly one numeric comparison in the whole diff; the non-falsifier is honestly labelled and would still catch a real regression; all numbers reproduced exactly; zero line positions across all 3840 pages.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:25:22.575276+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g4-integrate",
+      "why": "STATED PLAINLY, as this check demands: THIS GATE'S MOTIVATING FALSIFIER CANNOT FIRE ON THIS CORPUS. The measurement that motivated the gate was 1233 index lines over 1223 modules; this repo has 111 modules, so a flat top index is roughly 115 lines and NO size threshold could distinguish before from after. No such threshold is proposed, and none exists in the diff -- the reviewer re-grepped and found exactly one numeric comparison in the whole change, a per-module structural fact. What ships is a reachability regression guard. THE ROUTING CLAIM ITSELF REMAINS UNFALSIFIED ON THIS CORPUS and is recorded as such so no later reader mistakes a green gate for a validated routing surface. The g4 reviewer independently sharpened that same point into tc44: the tests package is 74.3 percent of this corpus and completely flat, so the tier never fires for it, and a loose-module corpus degenerates tier one outright. Accepted non-blocking because the tier stays derived rather than tuned and reports nothing-to-group honestly. Reviewer verdict APPROVE, zero blockers; tc31 closed and survived two relocations the implementer never chose; suite 1772/2/0/0; fresh build then check 7/7 exit 0; zero line positions across all 3840 pages.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:32:11.067118+00:00"
     }
   ],
   "amendments": [

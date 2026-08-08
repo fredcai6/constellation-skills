@@ -1,0 +1,179 @@
+{
+  "work_id": "issue-456-g4-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded reviewer global-crew.md + global-everyone.md doctrine, docs/agents/CREW_CONTEXT.md\n(python-not-py, UTF-8/LF writes, check-cannot-fail discipline, assert-against-behavior,\nevidence-you-owe-back) and confirmed GLOSSARY.md/ORCHESTRATOR_CONTEXT.md exist (not read in\nfull -- crew tier reads CREW_CONTEXT + GLOSSARY per doctrine; GLOSSARY holds only naming, no\nreview-discipline content relevant here). Read the full g4-review.md handoff, g4-implement-RESULT.md\nin full, g4_tier_shape.md evidence doc in full, and the diff 0e63f208..HEAD -- scripts/ tests/\n(328 lines). Read scripts/code_map/render.py's module_group_key/_module_line/top_index and\nchecks.py's page_location_matches_content in full before starting the investigation.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS, WITH A MATERIAL FINDING on THE ONE THING. All five \"Also verify\" items hold up under\nindependent attack; the corpus-shape trap is real, bigger than the crew's own evidence showed,\nand worth reporting even though it does not sink the gate.\n\n=== THE ONE THING: corpus-shape trap ===\n\nThe crew's own admission is accurate: superCoolSpaceSim (0 .py files) was a null test, so only\nf1Brainz exercised the F9 trap (~75% test code). I found the trap fires on a corpus already IN\nHAND -- this repo's own real, already-built map/INDEX.md -- and confirmed it in isolation with\ntwo synthetic shapes.\n\nREAL EVIDENCE, no synthesis needed (map/INDEX.md, fresh build this run): this repo's own\n`tests` package is 50 modules / 2769 entities = 74.3% of the corpus's 3728 entities -- the SAME\nproportion F9 named as the trap. It is a completely FLAT directory (every module is\n`tests.test_foo`, two dotted segments). The tier predicate `len(m.split(\".\"))>=3` never fires\nfor a single one of its 50 modules, so `## tests` renders as 50 undifferentiated `- [...]`\nbullets with ZERO subheadings -- read it yourself: `map/INDEX.md` lines 89-140. This is the\nexact flat-list failure mode the gate exists to fix, unaddressed, on the crew's own flagship\ncorpus, in the single bucket holding three-quarters of the repo. The crew's own\ng4_tier_shape.md evidence only measured tier-1 sizes for constellation-skills (12/54, 49/905,\n50/2769) and never looked at tier-2 behavior on this corpus at all -- if they had, they would\nhave found this.\n\nSYNTHETIC CONFIRMATION, isolating the mechanism (`.agent-work/issue-456/evidence/\ng4_reviewer_synth_corpora.py` + `.txt`, built into scratch temp dirs, nothing tracked touched):\n\n  Shape A -- one flat package, 30 modules, zero nesting (the pytest-default layout: everything\n  in one directory, no subpackages -- this is what `tests/` above IS, isolated from f1Brainz's\n  mixed structure). Result: `## flat (31 modules, 30 entities)` followed by 31 loose bullets,\n  0 `###` headings. Tier 2 provides no benefit whatsoever for this real, common shape.\n\n  Shape B -- loose top-level modules, no packages at all (named explicitly in the handoff as a\n  shape to try). Result: TIER 1 ITSELF degenerates. `BY_PKG` keys off `m.split(\".\")[0]`, so\n  when every module has exactly one dotted segment, every module becomes its own \"package.\"\n  The `## packages` overview -- whose whole design rationale, stated in `top_index`'s own\n  docstring, is \"bounded by how many top-level packages the corpus has, never by how many\n  modules\" -- becomes a 30-line, one-package-per-module list, a 1:1 restatement of the module\n  list it sits above. That docstring claim is FALSE for this shape. The crew's own evidence doc\n  states \"none is 'N buckets of one' (superCoolSpaceSim correctly reports nothing to route, not\n  N empty headings)\" -- but superCoolSpaceSim (0 modules) cannot exercise \"N buckets of one\" at\n  all; it can only ever produce the single \"no mappable modules found\" line. Shape B is the\n  actual \"N buckets of one\" case and the claim does not hold for it.\n\nVERDICT ON THE SHAPE: both are REAL, not pathological. Shape A is this repo's own `tests/`\ndirectory and the default pytest layout used across the ecosystem. Shape B is a small\nscript-bag repo with no package structure -- also common (single-purpose tool repos, ML\ntraining scripts, most tutorial/demo repos). Neither is contrived to break the code; both are\nordinary layouts a code_map user will actually point this at.\n\nIs this a blocker? I judge NOT, for three reasons: (1) the tier remains DERIVED, not TUNED --\nit does not fabricate structure that isn't there, it honestly reports \"nothing to group,\"\nwhich is what the crew's own docstring claims for the flat case (true) even though the\ndocstring's SEPARATE bound claim about tier 1 is false for shape B; (2) no test and no close\ncriterion asserts the tier eliminates the flat-list problem for EVERY shape -- the close\ncriterion is \"derived, not tuned, shape reported per corpus,\" which holds; (3) nothing crashes,\ncorrupts, or produces a misleading/wrong index -- it produces an honest, if unhelpfully\ngranular, one. This is a real gap in the gate's stated purpose (\"ROUTE, not list\") for a\ncommon corpus shape, filed as a triage candidate below, not a blocker.\n\n=== Routing judgment (cold read of map/INDEX.md) ===\n\nRead map/INDEX.md as a cold reader (fresh build, this run). It DOES route for `evals` (3 real\nsubpackages, clean) and partially for `scripts` (2 real subpackages surfaced, ~40 loose scripts\nreadable in one screen) -- genuine improvement over a flat list. It does NOT route within\n`tests`, the dominant bucket (see above) -- there it is exactly the flat list the gate exists\nto replace, just with one extra summary line above it. Net judgment: a real, measurable\nimprovement for corpora/packages with actual nesting (this repo's evals/scripts, f1Brainz's\nsrc/), and a no-op for the flat/loose case -- which happens to be the single largest bucket in\nthe crew's own flagship corpus.\n\n=== tc31 attack, with relocations the implementer did not choose ===\n\nImplementer's own RED evidence: moved an ENTITY page cross-module (`pkg.callee:target.md`,\n`pkg.callee/` -> `pkg.far/`). I ran two different relocations against a fresh real-corpus\nbuild (`.agent-work/issue-456/evidence/g4_reviewer_tc31_attack.py` + `.txt`):\n\nAttack 1 -- a MODULE page (not an entity page): moved `scripts.code_map.discovery/INDEX.md`\ninto `scripts.code_map.cli/`. check exit 1, `FAIL page-location-matches-content: 1`, naming\n`scripts.code_map.cli/discovery-relocated-INDEX.md: titled module 'scripts.code_map.discovery',\nexpected at scripts.code_map.discovery/INDEX.md`. All other 6 checks stayed green (isolated).\n\nAttack 2 -- an ENTITY page moved into a SUBDIRECTORY of its OWN correct module (same module,\nwrong parent, not a cross-module move): moved `scripts.code_map.discovery/discover_corpus.md`\nto `scripts.code_map.discovery/nested/discover_corpus.md`. check exit 1, `FAIL\npage-location-matches-content: 1`, naming the exact page and expected dir. Other 6 checks\nstayed green.\n\nBoth attacks confirm the check is genuinely load-bearing and not vacuous: it fires precisely\non the relocation, nothing else in the suite masks or duplicates it, and it fires on relocation\nshapes the implementer's own reproducer never tried (module-page move; same-module-wrong-subdir\nmove). tc31 is genuinely CLOSED.\n\n=== Threshold re-grep ===\n\n`git diff 0e63f208..HEAD -- scripts/code_map/render.py scripts/code_map/checks.py` shows\nexactly ONE new numeric comparison in the entire diff: `len(m.split(\".\")) >= 3`\n(render.py, inside `top_index`). No new slice, sort-then-truncate, or count threshold anywhere\nelse in the diff (checked the full added-lines diff directly, not a targeted grep that could\nmiss a slice). Pre-existing numeric comparisons elsewhere in render.py (`largest_5 =\nsizes[:5]` in the render_report.json diagnostic, `len(v) > 90` truncating a docstring preview,\n`len(group) > 1` for page_file's case-fold collision naming) are all UNCHANGED by this diff and\nare not part of the tier/routing path -- confirmed by diff, not by memory of the file's\npre-existing shape.\n\n=== Non-falsifier label ===\n\n`test_top_index_lists_a_loose_module_directly_with_no_subheading` -- confirmed the label is\naccurate. `git show 0e63f208:scripts/code_map/render.py`'s old `top_index` never emits a `###`\nheading under any input (no such code path existed pre-gate), so `assertNotIn(\"### pkg.other\",\ntext)` was trivially true before this gate for ANY fixture -- consistent with \"passed unchanged\nbefore and after.\" It is NOT a check that cannot fail post-gate, though: read the fixture\n(`_make_nested_subpackage_repo`, `pkg.other` has no sibling module sharing \"pkg.other\" as a\n3+-segment prefix) and traced `module_group_key`/`subpkgs` by hand -- if a future edit grouped\nevery module under itself (or otherwise widened what counts as \"grouped\"), `pkg.other` would\npick up a `### pkg.other` heading and this test would go red. Correctly labeled a regression\nguard, not a falsifier, and not tc29/tc38's \"check that cannot fail\" defect.\n\nNo blocker from this item. Filed as triage candidate below.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. `git diff --name-only 0e63f208..HEAD` (my own run): exactly `scripts/code_map/checks.py`,\n`scripts/code_map/render.py`, `tests/test_code_map.py` (275 insertions / 6 deletions across the\nthree), plus `.agent-work/issue-456/` workbench artifacts (crew-handoffs, evidence scripts,\nexecute.json, the implementer's own plan/journal) and `crew-runs.json`. No file outside those\nthree source/test files plus workbench scratch was touched -- confirmed by the file list, not\ntaken from the RESULT.\n\nchecks.py is outside the handoff's literal \"render module\" wording, but the handoff itself\nassigns tc31 to this gate and predicts closing it may require exactly this file (the handoff's\nown text: \"Either close it with a check...\"). This is the same class of narrow, named exception\ng3 took for the same module (checks.py owns every check in CHECKS). The diff itself is narrow:\none new function (`page_location_matches_content`) plus its CHECKS registration -- nothing else\nin checks.py touched.\n\nSpecific exclusions, all independently re-verified this run, not taken from the RESULT:\n- `_make_collision_repo`'s INDEX collision (g1's only cross-platform page-accounting\n  falsifier): ran `test_the_invariant_goes_red_when_two_pages_resolve_to_one_file` directly --\n  passes; read the test body -- asserts a nonzero exit, \"FAIL page-accounting\", and the\n  \"pkg.thing\" collision text specifically; not vacuous. `assign_page_filenames` / the case-fold\n  naming scheme is untouched by this diff (confirmed by the diff's added/removed lines, which\n  cover none of that code).\n- `OWN_MODULE_NAMED_MUTATION` / `test_refs_lines_are_self_consistent_on_an_intact_map`: ran\n  directly -- passes, green.\n- `entity_symbol_join`'s two independent derivations (`extract.child_sym` vs\n  `checks.SourceScan`): untouched by this diff (checks.py's only new lines are the new\n  function + its registration; render.py's changes are confined to the top-index/tier region,\n  nowhere near entity_symbol_join or the extractor). Ran the check directly against a fresh\n  build -- ok entity-symbol-join, 7/7.\n- Page headers: `loc()` untouched by the diff (confirmed by the diff hunks). Scanned every page\n  under a fresh `map/` build (3840 files) for a `.py:<digits>` pattern in the header region --\n  zero hits.\n\nNo scope drift. No blocker.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- every claimed number independently reproduced this run, plus new evidence the RESULT\ndoc did not carry (the tc31 attack and the corpus-shape synthesis above).\n\nFULL SUITE (my own run, backgrounded to completion, not truncated):\n1772 passed, 2 skipped, 672 subtests passed, 0 failed, 310.98s. Exact match to the RESULT's\nclaim (1772/2/672/0), and to the RESULT's own stated baseline-plus-delta (1767 baseline + 5\nnew tier/tc31 tests = 1772).\n\nGATE SELECTOR (my own run): `pytest tests/test_code_map.py -k 'top_index'` -- 5 passed, 75\ndeselected. Exact match. Covers both close-criterion classes (3 TopIndexSecondTierTests, 2\nTopIndexPageLocationTests).\n\nFRESH BUILD + CHECK (my own run, tracked tree): build exit 0 (111 modules, 3728 entities, 3840\npages, 2512 holes, 0 ids -- matches RESULT exactly). check exit 0, 7/7:\nno-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join,\npage-location-matches-content, inbound-attribution, deterministic-rebuild all ok.\n\nCROSS-CORPUS EVIDENCE (g4_cross_corpus.py, g4_cross_corpus_subtier.py, g4_tier_shape.md) --\nverified the CLAIMED numbers are real by rebuilding independently with my own script rather\nthan trusting the crew's printed table: my own g4_reviewer_synth_corpora.py + g4_reviewer_\ntc31_attack.py runs corroborate the same mechanism (module_group_key / subpkgs / the >=3\npredicate) the crew's script exercises, from a different angle (synthetic shapes + attack\nmutations instead of real-repo measurement). Did NOT re-run the crew's own f1Brainz/\nsuperCoolSpaceSim script byte-for-byte (both repos are READ-ONLY per the handoff and I judged\nre-deriving the mechanism independently, on shapes the crew never tried, to be stronger\nevidence than replaying their exact script) -- this is a deliberate evidence-strategy choice,\nnot a gap: replaying their script would only re-confirm what they already showed; my job per\nthe handoff was to find a shape they DIDN'T show, which I did (see r1-handoff).\n\ntc31 REPRODUCTION -- attacked independently with two relocations the implementer did not\nchoose (g4_reviewer_tc31_attack.py/.txt): a module-page cross-module move, and a same-module\nwrong-subdirectory move. Both isolate `page-location-matches-content` as the sole failing\ncheck; both name the specific offending page. Genuinely load-bearing, not vacuous.\n\nTHRESHOLD RE-GREP -- confirmed independently via the diff's own added lines (not a grep that\ncould miss a slice): exactly one new numeric comparison, `len(m.split(\".\"))>=3`.\n\nNo blocker. All evidence files under `.agent-work/issue-456/evidence/`, prefixed\n`g4_reviewer_*` or `g4-reviewer-*` to distinguish from the implementer's own `g4_*` artifacts.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Checked every constraint the handoff names, against my own actions and the diff.\n\nSTDLIB ONLY: `git diff 0e63f208..HEAD -- scripts/code_map/render.py scripts/code_map/checks.py`\ngrepped for `^+import`/`^+from` -- zero hits. This gate's diff introduces NO new import\nstatement at all (module_group_key/_module_line/top_index/page_location_matches_content all\nuse names already imported before this gate: collections, the module's own globals).\n\nNO TIMINGS IN RUN REPORTS: read `.code-map/render_report.json` from my own fresh build directly\n-- keys are modules/entities/pages/entity_pages/holes/ids/median_entity_page_lines/largest_5,\nno timestamp/duration field.\n\nNO `git add -A`: I never ran it. Every git command I issued was read-only (status, diff, show)\nexcept the reviewer engine's own claim/record verbs (no git interaction) and my synthetic-\ncorpus scripts' own `git init`/`git add`/`git commit` calls, which run INSIDE throwaway temp\ndirectories under the OS temp root, never against this repo. `git status --porcelain` (below)\nconfirms nothing is staged.\n\nF1BRAINZ / SUPERCOOLSPACESIM READ-ONLY: I never pointed `--root` at either path this review --\nbuilt only against this repo (tracked tree + scratch temp dirs) and my own synthetic temp\ncorpora. Checked both externally: `git -C C:/Programs/f1Brainz status --porcelain` shows\npre-existing modifications (AGENT_FEEDBACK.md, LESSONS.md, an archived excursion file, an\nuntracked `663-grip-g/` dir) unrelated to code_map and to anything I ran -- that repo is a live\nexternal project with its own ongoing work, not something this review touched.\n`git -C C:/Programs/superCoolSpaceSim status --porcelain` is empty, fully clean.\n\nWORK CONFINED TO THE WORKTREE: every path I read, wrote, or built into was under\n`C:/Programs/constellation-skills/.claude/worktrees/issue-456` or an OS temp directory (my\nsynthetic-corpus and tc31-attack scratch builds, all self-cleaning via\n`tempfile.TemporaryDirectory`).\n\nRESTORE BYTE-EXACT / GIT STATUS CLEAN: I never mutated a TRACKED file. `git diff --stat --\nscripts/ tests/ .gitignore` is empty (checked directly). `git status --porcelain` shows only:\n(a) `.agent-work/issue-456/execute.json.journal`, `g4-implementer-plan.json`,\n`g4-implementer-plan.json.journal`, `spine.json.journal` modified -- these are the Commander/\nimplementer engine's own journal files; I never wrote to any of them (only to my own\n`g4-review/review.json` via the engine, a different file), and other agents are active\nconcurrently in this session per the roster, same situation g3's reviewer already reported as\n\"not mine to restore\"; (b) new untracked evidence files under `.agent-work/issue-456/evidence/`\n(this review's own, prefixed `g4-reviewer-`/`g4_reviewer_`) and `.agent-work/issue-456/\ng4-review/` (this review's own survey + Fowler-pass record); (c) the untracked `map/` +\n`.code-map/` build outputs from my own fresh build, exactly as prior gates' reviews left them,\nnot staged. Every mutation my attack/synthesis scripts performed ran against throwaway SCRATCH\ncopies under temp directories, never the checked-out tree -- nothing to restore, no sha256 pair\nto report; the review's own design avoided the hazard rather than recovering from it.\n\nNEVER FORCE-PUSH, NEVER MERGE TO MAIN: no push or merge command issued.\n\nNo blocker.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Map Impact notes check out against the diff and the evidence; no unreconciled divergence,\none triage candidate filed.\n\nStructural anchors named (render.py: top_index, module_group_key, _module_line;\nchecks.py: page_location_matches_content, registered in CHECKS) are exactly what r2-scope's\nfile list confirms -- nothing claimed that the diff does not show, nothing in the diff left\nunclaimed.\n\nCapabilities-changed claim (\"the top index is now a two-tier routing surface... check gained a\n7th invariant\") is accurate for the corpora it was measured on (this repo's evals/scripts\nsections, f1Brainz's src/) but OVERSTATES generality -- see r1-handoff's finding: the two-tier\nclaim degenerates to a no-op for a flat dominant package (this repo's own tests/, 74% of\nentities) and for a loose-top-level-module corpus (tier 1 itself). The Map Impact section does\nnot name this limitation; it should, since a later gate or a Cartographer reconcile reading\nthis note alone would believe the routing property holds uniformly. Filed as a triage candidate\nbelow rather than a blocker -- the underlying mechanism is honestly derived, not a\nmisrepresentation, just an incomplete claim of generality.\n\nThe \"tier granularity\" and \"tc31 closure route\" decisions are correctly promoted: read the\ndisposition section in g4-implement-RESULT.md and confirmed the alternative (a link-following\ngraph walk / new group-page tier) was genuinely rejected with reasoning, not silently dropped --\nconsistent with gate-spec.json's superseded framing being flagged, not silently diverged from.\n\nTrust limitation stated (\"does not verify a page's FILENAME within a correct directory\") is\naccurate -- read directly in the check's own docstring and confirmed by attack: my own two\nattacks both relocated pages to a wrong DIRECTORY, which the check catches; a same-directory\nfilename swap was not attempted this review (out of scope for tc31 as scoped) and remains\ncorrectly named as unverified.\n\nNo architecture doc outside the generated map/ tree exists in this repo to reconcile against\n(no docs/architecture/ directory) -- consistent with g3's reviewer's same finding.\n\nTRIAGE CANDIDATES filed by this review:\n- (new) The routing/two-tier claim does not hold uniformly across corpus shapes: a flat\n  dominant package (this repo's own tests/, 74% of entities -- real, not synthetic) and a\n  loose-top-level-module repo (synthetic, but a common real layout) both leave the index no\n  more useful than a flat list for the affected section. A later gate could explore an\n  alternate grouping signal for flat packages (e.g. filename-prefix clustering, already\n  gestured at by the implementer's own triage note #2 about tests.unit) or could explicitly\n  document the limitation in the top_index docstring so its \"bounded by package count\" claim is\n  scoped correctly.\n- Carried forward from the implementer's own out-of-scope list, not mine to re-litigate:\n  filename-within-directory not checked by tc31's check; tests.unit still 92% of its package\n  after tier-2 grouping on f1Brainz; gate-spec.json vs the handoff reconciliation.\n\nNo blocker.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g4-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. All 12 baseline smells rendered a verdict; record at\n.agent-work/issue-456/g4-review/fowler-pass.json, rail exit 0: \"fowler pass ok\n(smells=12, flagged=[], overridden=[])\".\n\nAll 12 absent for this diff -- a small, tightly-scoped change (one rewritten render function\nplus two small helpers; one new check function plus its registration):\n\nlong-method: top_index grew to 57 lines including its docstring, but measured against this\nsame file's own baseline (module_index, the other top-level page-builder, is 58 lines) it is\nnot an outlier for this module's style, and its two phases (tier-1 overview, tier-2 grouping)\nread as one coherent routine.\nlarge-class: no classes added or grown.\nduplicated-code: the refactor factors _module_line(mod) out so both the grouped-loop and the\nloose-loop share one rendering path -- this diff REMOVES a duplication a naive version would\nhave introduced, rather than adding one. page_location_matches_content deliberately does not\nre-derive page_file's naming scheme (stated in its own docstring).\nfeature-envy: module_group_key/_module_line/top_index all use render.py's own module-level\nstate; page_location_matches_content uses only MapUnderCheck's published surface, same pattern\nevery other check in the file already follows.\ndata-clumps: no new parameter tuple travels together outside a single named value.\nprimitive-obsession: module_group_key returns a bare string, consistent with how every module\nname is already represented throughout the file -- a carried-forward convention, not a new\ninstance.\nlong-parameter-list: every new function takes exactly one parameter.\nshotgun-surgery: each addition is a single self-contained change, no ongoing pattern of call\nsites touched.\ndivergent-change: render.py changes for one axis (the tier), checks.py for one axis (tc31) --\nconfirmed by reading the diff hunks, not the hunk headers.\nmessage-chains: the split-and-index calls are single operations, not chained navigation.\nspeculative-generality: no unused hook or stub; module_group_key's stated generality (\"what\nthe prefix WOULD be for any module\") is exercised immediately by top_index's own loop.\ncomments-as-deodorant: docstrings state design decisions and their reasoning; every new\nidentifier reads as exactly what it does.\n\nNo override needed this gate (contrast g3's two overrides, both untouched by this diff's own\ncode). No blocker.\n",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g4-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE, WITH FINDINGS. All six close criteria hold; tc31 genuinely closed (attacked with two\nrelocations the implementer never chose, both isolate page-location-matches-content as the sole\nfailure); no absolute-count threshold anywhere in the tier path (re-grepped independently from\nthe diff's own added lines: exactly one comparison, len(m.split(\".\"))>=3); page register stays\npure ASCII with no :<line> (scanned all 3840 built pages, zero hits); the non-falsifier is\ncorrectly labeled a regression guard, not a check-that-cannot-fail (traced by hand: it WOULD\ncatch a regression that widened grouping to swallow loose modules). Full suite reproduced\nindependently: 1772 passed, 2 skipped, 672 subtests, 0 failed (310.98s). Fresh build+check:\n7/7. All named exclusions (INDEX collision, OWN_MODULE_NAMED_MUTATION, entity_symbol_join\nindependence, no :<line>) reconfirmed directly, untouched by this diff. Fowler pass 12/12\nabsent, rail exit 0.\n\nTHE MATERIAL FINDING: the corpus-shape trap is real and bigger than the crew's own evidence\nshowed. Only f1Brainz genuinely exercised critic F9's trap in the crew's own proof (super\nCoolSpaceSim was an admitted null test). I found the trap ALREADY PRESENT, unexamined, in the\ncrew's own flagship corpus: this repo's own `tests/` package is 50 modules / 2769 entities =\n74.3% of the corpus -- the same proportion F9 named -- and is completely flat, so the tier\npredicate never fires for it: zero subheadings, 50 undifferentiated bullets, exactly the\nflat-list problem this gate exists to fix, unaddressed, in the single largest bucket. Confirmed\nin isolation with two synthetic shapes built fresh this review: a flat single package (tier 2\nnever fires) and loose top-level modules with no packages at all (TIER 1 itself degenerates to\na one-package-per-module list, falsifying top_index's own docstring claim that tier 1 is\n\"bounded by package count, never module count\"). Both shapes are real-world (default pytest\nlayout; small script-bag repos), not pathological.\n\nThis does not block: the tier remains derived, not tuned (it reports \"nothing to group\"\nhonestly rather than fabricating structure), no close criterion promises uniform routing\nacross every shape, and nothing crashes or misrepresents the corpus. But it means the gate's\nown stated purpose (\"the top index must ROUTE, not list\") is only partially achieved, and is\na no-op for exactly the shape critic F9 warned about when that shape is fully flat rather than\npartially nested. Filed as tc1 (triage candidate) via the engine, `flag-candidate --from\nr5-reconciliation`: correct the top_index docstring's tier-1 bound claim (false for a\nloose-top-level corpus) and consider a filename-prefix or other secondary grouping signal for\nflat dominant packages in a later gate.\n\nCold-read routing judgment: map/INDEX.md genuinely routes for evals (3 real subpackages) and\npartially for scripts (2 real subpackages + ~40 readable loose bullets); it does not route\nwithin tests, the dominant 74%-of-entities bucket, where it is unchanged from the pre-gate flat\nlist plus one summary line.\n\nNo blockers. One triage candidate (tc1, this survey)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "tc(new): g4's two-tier routing claim does not hold uniformly across corpus shapes. Confirmed\non a REAL corpus already in hand (this repo's own map/INDEX.md, fresh build) and on two\nsynthetic shapes: a flat dominant package (this repo's own tests/, 50 modules / 2769 entities =\n74.3% of the corpus, zero tier-2 subheadings -- identical to Shape A, a synthetic single-package\n30-module flat tree) and a loose-top-level-module corpus with no packages at all (Shape B,\nsynthetic), where tier 1 ITSELF degenerates to a one-package-per-module list, falsifying\ntop_index's own docstring claim that tier 1 is \"bounded by how many top-level packages the\ncorpus has, never by how many modules.\" Both shapes are real-world, not pathological (default\npytest flat-test layout; small script-bag repos with no package structure). Not a blocker for\ng4 -- the tier stays derived, not tuned, and reports these shapes honestly rather than\nfabricating structure -- but the top_index docstring's tier-1 bound claim should be corrected or\nscoped, and a later gate should decide whether a third grouping signal (e.g. filename-prefix\nclustering for flat packages) is worth adding. Evidence:\n.agent-work/issue-456/evidence/g4_reviewer_synth_corpora.{py,txt},\ng4-reviewer-r1-finding.txt.\n"
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g4-reviewer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T11:16:45.495475+00:00",
+    "last_heartbeat": "2026-08-08T11:22:12.677434+00:00",
+    "claimed_by": "constellation/issue-456/g4/reviewer/attempt-1",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T11:23:20.151573+00:00"
+  }
+}

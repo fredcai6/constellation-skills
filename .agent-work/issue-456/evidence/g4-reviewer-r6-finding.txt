@@ -1,0 +1,36 @@
+PASS. All 12 baseline smells rendered a verdict; record at
+.agent-work/issue-456/g4-review/fowler-pass.json, rail exit 0: "fowler pass ok
+(smells=12, flagged=[], overridden=[])".
+
+All 12 absent for this diff -- a small, tightly-scoped change (one rewritten render function
+plus two small helpers; one new check function plus its registration):
+
+long-method: top_index grew to 57 lines including its docstring, but measured against this
+same file's own baseline (module_index, the other top-level page-builder, is 58 lines) it is
+not an outlier for this module's style, and its two phases (tier-1 overview, tier-2 grouping)
+read as one coherent routine.
+large-class: no classes added or grown.
+duplicated-code: the refactor factors _module_line(mod) out so both the grouped-loop and the
+loose-loop share one rendering path -- this diff REMOVES a duplication a naive version would
+have introduced, rather than adding one. page_location_matches_content deliberately does not
+re-derive page_file's naming scheme (stated in its own docstring).
+feature-envy: module_group_key/_module_line/top_index all use render.py's own module-level
+state; page_location_matches_content uses only MapUnderCheck's published surface, same pattern
+every other check in the file already follows.
+data-clumps: no new parameter tuple travels together outside a single named value.
+primitive-obsession: module_group_key returns a bare string, consistent with how every module
+name is already represented throughout the file -- a carried-forward convention, not a new
+instance.
+long-parameter-list: every new function takes exactly one parameter.
+shotgun-surgery: each addition is a single self-contained change, no ongoing pattern of call
+sites touched.
+divergent-change: render.py changes for one axis (the tier), checks.py for one axis (tc31) --
+confirmed by reading the diff hunks, not the hunk headers.
+message-chains: the split-and-index calls are single operations, not chained navigation.
+speculative-generality: no unused hook or stub; module_group_key's stated generality ("what
+the prefix WOULD be for any module") is exercised immediately by top_index's own loop.
+comments-as-deodorant: docstrings state design decisions and their reasoning; every new
+identifier reads as exactly what it does.
+
+No override needed this gate (contrast g3's two overrides, both untouched by this diff's own
+code). No blocker.

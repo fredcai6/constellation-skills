@@ -1,0 +1,90 @@
+======================================================================
+A: flat single package (30 modules, no nesting)
+build exit: 0
+INDEX.md: 38 lines total
+--- first 40 lines ---
+# shape-a-flat-single-package map
+
+## packages
+flat: 31 modules, 30 entities
+
+## flat (31 modules, 30 entities)
+
+- [flat](flat/INDEX.md) (0 entities): HOLE: no docstring
+- [flat.mod00](flat.mod00/INDEX.md) (1 entities): Module 0.
+- [flat.mod01](flat.mod01/INDEX.md) (1 entities): Module 1.
+- [flat.mod02](flat.mod02/INDEX.md) (1 entities): Module 2.
+- [flat.mod03](flat.mod03/INDEX.md) (1 entities): Module 3.
+- [flat.mod04](flat.mod04/INDEX.md) (1 entities): Module 4.
+- [flat.mod05](flat.mod05/INDEX.md) (1 entities): Module 5.
+- [flat.mod06](flat.mod06/INDEX.md) (1 entities): Module 6.
+- [flat.mod07](flat.mod07/INDEX.md) (1 entities): Module 7.
+- [flat.mod08](flat.mod08/INDEX.md) (1 entities): Module 8.
+- [flat.mod09](flat.mod09/INDEX.md) (1 entities): Module 9.
+- [flat.mod10](flat.mod10/INDEX.md) (1 entities): Module 10.
+- [flat.mod11](flat.mod11/INDEX.md) (1 entities): Module 11.
+- [flat.mod12](flat.mod12/INDEX.md) (1 entities): Module 12.
+- [flat.mod13](flat.mod13/INDEX.md) (1 entities): Module 13.
+- [flat.mod14](flat.mod14/INDEX.md) (1 entities): Module 14.
+- [flat.mod15](flat.mod15/INDEX.md) (1 entities): Module 15.
+- [flat.mod16](flat.mod16/INDEX.md) (1 entities): Module 16.
+- [flat.mod17](flat.mod17/INDEX.md) (1 entities): Module 17.
+- [flat.mod18](flat.mod18/INDEX.md) (1 entities): Module 18.
+- [flat.mod19](flat.mod19/INDEX.md) (1 entities): Module 19.
+- [flat.mod20](flat.mod20/INDEX.md) (1 entities): Module 20.
+- [flat.mod21](flat.mod21/INDEX.md) (1 entities): Module 21.
+- [flat.mod22](flat.mod22/INDEX.md) (1 entities): Module 22.
+- [flat.mod23](flat.mod23/INDEX.md) (1 entities): Module 23.
+- [flat.mod24](flat.mod24/INDEX.md) (1 entities): Module 24.
+- [flat.mod25](flat.mod25/INDEX.md) (1 entities): Module 25.
+- [flat.mod26](flat.mod26/INDEX.md) (1 entities): Module 26.
+- [flat.mod27](flat.mod27/INDEX.md) (1 entities): Module 27.
+- [flat.mod28](flat.mod28/INDEX.md) (1 entities): Module 28.
+- [flat.mod29](flat.mod29/INDEX.md) (1 entities): Module 29.
+--- counts: ## headings=2 ### headings=0 bullet lines=31 ---
+======================================================================
+B: loose top-level modules (30 files, no packages)
+build exit: 0
+INDEX.md: 153 lines total
+--- first 40 lines ---
+# shape-b-loose-top-level map
+
+## packages
+mod00: 1 modules, 1 entities
+mod01: 1 modules, 1 entities
+mod02: 1 modules, 1 entities
+mod03: 1 modules, 1 entities
+mod04: 1 modules, 1 entities
+mod05: 1 modules, 1 entities
+mod06: 1 modules, 1 entities
+mod07: 1 modules, 1 entities
+mod08: 1 modules, 1 entities
+mod09: 1 modules, 1 entities
+mod10: 1 modules, 1 entities
+mod11: 1 modules, 1 entities
+mod12: 1 modules, 1 entities
+mod13: 1 modules, 1 entities
+mod14: 1 modules, 1 entities
+mod15: 1 modules, 1 entities
+mod16: 1 modules, 1 entities
+mod17: 1 modules, 1 entities
+mod18: 1 modules, 1 entities
+mod19: 1 modules, 1 entities
+mod20: 1 modules, 1 entities
+mod21: 1 modules, 1 entities
+mod22: 1 modules, 1 entities
+mod23: 1 modules, 1 entities
+mod24: 1 modules, 1 entities
+mod25: 1 modules, 1 entities
+mod26: 1 modules, 1 entities
+mod27: 1 modules, 1 entities
+mod28: 1 modules, 1 entities
+mod29: 1 modules, 1 entities
+
+## mod00 (1 modules, 1 entities)
+
+- [mod00](mod00/INDEX.md) (1 entities): Loose module 0.
+
+## mod01 (1 modules, 1 entities)
+
+--- counts: ## headings=31 ### headings=0 bullet lines=30 ---

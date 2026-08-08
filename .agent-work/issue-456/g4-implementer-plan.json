@@ -379,7 +379,8 @@
             "kind": "command",
             "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/ -q --color=no"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-final-2"
         },
         {
           "id": "c2",
@@ -395,7 +396,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -406,6 +407,17 @@
           "payload": {
             "seam": "m6-final",
             "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-final-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -420,13 +432,14 @@
   "refusals": 6,
   "engine_session": {
     "session_id": "g4-impl-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T10:29:11.663055+00:00",
-    "last_heartbeat": "2026-08-08T11:02:32.498132+00:00",
+    "last_heartbeat": "2026-08-08T11:07:51.047259+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T11:07:56.351764+00:00"
   },
   "why_trail": [
     {
@@ -470,6 +483,13 @@
       "why": "tier shape captured on all 3 corpora (constellation-skills 3 pkgs, f1Brainz 6 pkgs + src splits into 17 real subpackages, superCoolSpaceSim 0 modules -- degenerate honestly, not tuned); git status unchanged in both external repos; no absolute-count threshold in the new grouping code (grepped: only len(m.split('.'))>=3, a per-module structural predicate)",
       "mechanical": false,
       "ts": "2026-08-08T10:53:02.102654+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-final",
+      "why": "full suite already run manually (1772 passed, 2 skipped, 0 failed) and gate selector (5 passed) and build+check (7/7) all green; git status clean of stray edits; IMPLEMENTER_RESULT written. Engine now re-running the full-suite command check.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:07:51.047230+00:00"
     }
   ]
 }

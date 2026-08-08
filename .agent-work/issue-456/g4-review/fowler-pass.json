@@ -1,0 +1,80 @@
+{
+  "work_id": "issue-456-g4-review",
+  "diff_ref": "git diff 0e63f208..HEAD -- scripts/code_map/render.py scripts/code_map/checks.py tests/test_code_map.py (gate g4: top-index second tier + tc31 page_location_matches_content)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, scripts/code_map/checks.py module docstring, skills/constellation-reviewer/references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "top_index grew from ~15 lines to a 57-line function (incl. its 16-line docstring), with two clearly separated phases (tier-1 overview loop, tier-2 per-package grouping loop). Measured against this same file's own baseline: module_index (the other top-level page-builder in render.py) is 58 lines. Not an outlier for this module's style, and the two phases read as one coherent routine, not tangled concerns.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "No classes added or grown by this diff. checks.py gained one new function (page_location_matches_content), not a class.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "The refactor extracts _module_line(mod) so both the tier-2 grouped loop and the loose-module loop call the same four-line rendering logic, removing a duplication the naive version would have introduced (the old inline block would otherwise have to be copy-pasted into both loops). page_location_matches_content deliberately does NOT re-derive page_file's case-fold naming scheme (stated in its own docstring) -- it reads titles and module/entity dicts only, so it does not duplicate that logic either.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "module_group_key/_module_line/top_index all operate on render.py's own module-level state (BY_PKG, members_of, mod_summary_of); page_location_matches_content uses only MapUnderCheck's published surface (m.pages, m.title_key, m.rel, m.modules, m.entities), the same pattern every other check in the file already follows.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No new parameter tuple travels together outside a single named value (module_group_key takes one mod string; the (title, expected_dir) pair in page_location_matches_content is derived locally per page, never passed around as an unlabeled pair).",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "module_group_key returns a bare dotted-name string, consistent with how every module name is already represented throughout render.py/checks.py (carried-forward repo convention, not a new instance introduced by this diff).",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Every new function takes exactly one parameter (module_group_key(mod), _module_line(mod), top_index(title), page_location_matches_content(m)). No growth of an existing signature in this diff (contrast g3's flagged Extractor.emit, untouched here).",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The tier feature and tc31's check are each a single self-contained addition (one rewritten function + two new helpers in render.py; one new function + one CHECKS registration in checks.py). Neither required touching an ongoing pattern of call sites elsewhere.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "render.py's changes are all for one axis (the top index's own two-tier structure); checks.py's one addition is for one axis (tc31's location-vs-content gap). No file mixes two unrelated reasons to change in this diff.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "m.split(\".\") / title.split(\":\", 1)[0] are single split operations at their call sites, not chained navigation through multiple objects.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "No unused hook, no tier-3 stub, no parameter accepted and ignored. module_group_key's own docstring states it answers 'what the prefix WOULD be for any module' so the caller can test every module against the same rule -- that generality is exercised immediately by top_index's own loop, not spare capacity for an imagined future caller.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "Docstrings state design decisions and their reasoning (why tier 1 is bounded by package count not module count, what tc31's check does and does NOT prove) rather than papering over unclear naming. All new identifiers (module_group_key, _module_line, page_location_matches_content) read as exactly what they do.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

@@ -1,0 +1,41 @@
+APPROVE, WITH FINDINGS. All six close criteria hold; tc31 genuinely closed (attacked with two
+relocations the implementer never chose, both isolate page-location-matches-content as the sole
+failure); no absolute-count threshold anywhere in the tier path (re-grepped independently from
+the diff's own added lines: exactly one comparison, len(m.split("."))>=3); page register stays
+pure ASCII with no :<line> (scanned all 3840 built pages, zero hits); the non-falsifier is
+correctly labeled a regression guard, not a check-that-cannot-fail (traced by hand: it WOULD
+catch a regression that widened grouping to swallow loose modules). Full suite reproduced
+independently: 1772 passed, 2 skipped, 672 subtests, 0 failed (310.98s). Fresh build+check:
+7/7. All named exclusions (INDEX collision, OWN_MODULE_NAMED_MUTATION, entity_symbol_join
+independence, no :<line>) reconfirmed directly, untouched by this diff. Fowler pass 12/12
+absent, rail exit 0.
+
+THE MATERIAL FINDING: the corpus-shape trap is real and bigger than the crew's own evidence
+showed. Only f1Brainz genuinely exercised critic F9's trap in the crew's own proof (super
+CoolSpaceSim was an admitted null test). I found the trap ALREADY PRESENT, unexamined, in the
+crew's own flagship corpus: this repo's own `tests/` package is 50 modules / 2769 entities =
+74.3% of the corpus -- the same proportion F9 named -- and is completely flat, so the tier
+predicate never fires for it: zero subheadings, 50 undifferentiated bullets, exactly the
+flat-list problem this gate exists to fix, unaddressed, in the single largest bucket. Confirmed
+in isolation with two synthetic shapes built fresh this review: a flat single package (tier 2
+never fires) and loose top-level modules with no packages at all (TIER 1 itself degenerates to
+a one-package-per-module list, falsifying top_index's own docstring claim that tier 1 is
+"bounded by package count, never module count"). Both shapes are real-world (default pytest
+layout; small script-bag repos), not pathological.
+
+This does not block: the tier remains derived, not tuned (it reports "nothing to group"
+honestly rather than fabricating structure), no close criterion promises uniform routing
+across every shape, and nothing crashes or misrepresents the corpus. But it means the gate's
+own stated purpose ("the top index must ROUTE, not list") is only partially achieved, and is
+a no-op for exactly the shape critic F9 warned about when that shape is fully flat rather than
+partially nested. Filed as tc1 (triage candidate) via the engine, `flag-candidate --from
+r5-reconciliation`: correct the top_index docstring's tier-1 bound claim (false for a
+loose-top-level corpus) and consider a filename-prefix or other secondary grouping signal for
+flat dominant packages in a later gate.
+
+Cold-read routing judgment: map/INDEX.md genuinely routes for evals (3 real subpackages) and
+partially for scripts (2 real subpackages + ~40 readable loose bullets); it does not route
+within tests, the dominant 74%-of-entities bucket, where it is unchanged from the pre-gate flat
+list plus one summary line.
+
+No blockers. One triage candidate (tc1, this survey).

@@ -1,0 +1,15 @@
+tc(new): g4's two-tier routing claim does not hold uniformly across corpus shapes. Confirmed
+on a REAL corpus already in hand (this repo's own map/INDEX.md, fresh build) and on two
+synthetic shapes: a flat dominant package (this repo's own tests/, 50 modules / 2769 entities =
+74.3% of the corpus, zero tier-2 subheadings -- identical to Shape A, a synthetic single-package
+30-module flat tree) and a loose-top-level-module corpus with no packages at all (Shape B,
+synthetic), where tier 1 ITSELF degenerates to a one-package-per-module list, falsifying
+top_index's own docstring claim that tier 1 is "bounded by how many top-level packages the
+corpus has, never by how many modules." Both shapes are real-world, not pathological (default
+pytest flat-test layout; small script-bag repos with no package structure). Not a blocker for
+g4 -- the tier stays derived, not tuned, and reports these shapes honestly rather than
+fabricating structure -- but the top_index docstring's tier-1 bound claim should be corrected or
+scoped, and a later gate should decide whether a third grouping signal (e.g. filename-prefix
+clustering for flat packages) is worth adding. Evidence:
+.agent-work/issue-456/evidence/g4_reviewer_synth_corpora.{py,txt},
+g4-reviewer-r1-finding.txt.

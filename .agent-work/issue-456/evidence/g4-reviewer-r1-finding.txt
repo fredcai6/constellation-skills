@@ -1,0 +1,118 @@
+PASS, WITH A MATERIAL FINDING on THE ONE THING. All five "Also verify" items hold up under
+independent attack; the corpus-shape trap is real, bigger than the crew's own evidence showed,
+and worth reporting even though it does not sink the gate.
+
+=== THE ONE THING: corpus-shape trap ===
+
+The crew's own admission is accurate: superCoolSpaceSim (0 .py files) was a null test, so only
+f1Brainz exercised the F9 trap (~75% test code). I found the trap fires on a corpus already IN
+HAND -- this repo's own real, already-built map/INDEX.md -- and confirmed it in isolation with
+two synthetic shapes.
+
+REAL EVIDENCE, no synthesis needed (map/INDEX.md, fresh build this run): this repo's own
+`tests` package is 50 modules / 2769 entities = 74.3% of the corpus's 3728 entities -- the SAME
+proportion F9 named as the trap. It is a completely FLAT directory (every module is
+`tests.test_foo`, two dotted segments). The tier predicate `len(m.split("."))>=3` never fires
+for a single one of its 50 modules, so `## tests` renders as 50 undifferentiated `- [...]`
+bullets with ZERO subheadings -- read it yourself: `map/INDEX.md` lines 89-140. This is the
+exact flat-list failure mode the gate exists to fix, unaddressed, on the crew's own flagship
+corpus, in the single bucket holding three-quarters of the repo. The crew's own
+g4_tier_shape.md evidence only measured tier-1 sizes for constellation-skills (12/54, 49/905,
+50/2769) and never looked at tier-2 behavior on this corpus at all -- if they had, they would
+have found this.
+
+SYNTHETIC CONFIRMATION, isolating the mechanism (`.agent-work/issue-456/evidence/
+g4_reviewer_synth_corpora.py` + `.txt`, built into scratch temp dirs, nothing tracked touched):
+
+  Shape A -- one flat package, 30 modules, zero nesting (the pytest-default layout: everything
+  in one directory, no subpackages -- this is what `tests/` above IS, isolated from f1Brainz's
+  mixed structure). Result: `## flat (31 modules, 30 entities)` followed by 31 loose bullets,
+  0 `###` headings. Tier 2 provides no benefit whatsoever for this real, common shape.
+
+  Shape B -- loose top-level modules, no packages at all (named explicitly in the handoff as a
+  shape to try). Result: TIER 1 ITSELF degenerates. `BY_PKG` keys off `m.split(".")[0]`, so
+  when every module has exactly one dotted segment, every module becomes its own "package."
+  The `## packages` overview -- whose whole design rationale, stated in `top_index`'s own
+  docstring, is "bounded by how many top-level packages the corpus has, never by how many
+  modules" -- becomes a 30-line, one-package-per-module list, a 1:1 restatement of the module
+  list it sits above. That docstring claim is FALSE for this shape. The crew's own evidence doc
+  states "none is 'N buckets of one' (superCoolSpaceSim correctly reports nothing to route, not
+  N empty headings)" -- but superCoolSpaceSim (0 modules) cannot exercise "N buckets of one" at
+  all; it can only ever produce the single "no mappable modules found" line. Shape B is the
+  actual "N buckets of one" case and the claim does not hold for it.
+
+VERDICT ON THE SHAPE: both are REAL, not pathological. Shape A is this repo's own `tests/`
+directory and the default pytest layout used across the ecosystem. Shape B is a small
+script-bag repo with no package structure -- also common (single-purpose tool repos, ML
+training scripts, most tutorial/demo repos). Neither is contrived to break the code; both are
+ordinary layouts a code_map user will actually point this at.
+
+Is this a blocker? I judge NOT, for three reasons: (1) the tier remains DERIVED, not TUNED --
+it does not fabricate structure that isn't there, it honestly reports "nothing to group,"
+which is what the crew's own docstring claims for the flat case (true) even though the
+docstring's SEPARATE bound claim about tier 1 is false for shape B; (2) no test and no close
+criterion asserts the tier eliminates the flat-list problem for EVERY shape -- the close
+criterion is "derived, not tuned, shape reported per corpus," which holds; (3) nothing crashes,
+corrupts, or produces a misleading/wrong index -- it produces an honest, if unhelpfully
+granular, one. This is a real gap in the gate's stated purpose ("ROUTE, not list") for a
+common corpus shape, filed as a triage candidate below, not a blocker.
+
+=== Routing judgment (cold read of map/INDEX.md) ===
+
+Read map/INDEX.md as a cold reader (fresh build, this run). It DOES route for `evals` (3 real
+subpackages, clean) and partially for `scripts` (2 real subpackages surfaced, ~40 loose scripts
+readable in one screen) -- genuine improvement over a flat list. It does NOT route within
+`tests`, the dominant bucket (see above) -- there it is exactly the flat list the gate exists
+to replace, just with one extra summary line above it. Net judgment: a real, measurable
+improvement for corpora/packages with actual nesting (this repo's evals/scripts, f1Brainz's
+src/), and a no-op for the flat/loose case -- which happens to be the single largest bucket in
+the crew's own flagship corpus.
+
+=== tc31 attack, with relocations the implementer did not choose ===
+
+Implementer's own RED evidence: moved an ENTITY page cross-module (`pkg.callee:target.md`,
+`pkg.callee/` -> `pkg.far/`). I ran two different relocations against a fresh real-corpus
+build (`.agent-work/issue-456/evidence/g4_reviewer_tc31_attack.py` + `.txt`):
+
+Attack 1 -- a MODULE page (not an entity page): moved `scripts.code_map.discovery/INDEX.md`
+into `scripts.code_map.cli/`. check exit 1, `FAIL page-location-matches-content: 1`, naming
+`scripts.code_map.cli/discovery-relocated-INDEX.md: titled module 'scripts.code_map.discovery',
+expected at scripts.code_map.discovery/INDEX.md`. All other 6 checks stayed green (isolated).
+
+Attack 2 -- an ENTITY page moved into a SUBDIRECTORY of its OWN correct module (same module,
+wrong parent, not a cross-module move): moved `scripts.code_map.discovery/discover_corpus.md`
+to `scripts.code_map.discovery/nested/discover_corpus.md`. check exit 1, `FAIL
+page-location-matches-content: 1`, naming the exact page and expected dir. Other 6 checks
+stayed green.
+
+Both attacks confirm the check is genuinely load-bearing and not vacuous: it fires precisely
+on the relocation, nothing else in the suite masks or duplicates it, and it fires on relocation
+shapes the implementer's own reproducer never tried (module-page move; same-module-wrong-subdir
+move). tc31 is genuinely CLOSED.
+
+=== Threshold re-grep ===
+
+`git diff 0e63f208..HEAD -- scripts/code_map/render.py scripts/code_map/checks.py` shows
+exactly ONE new numeric comparison in the entire diff: `len(m.split(".")) >= 3`
+(render.py, inside `top_index`). No new slice, sort-then-truncate, or count threshold anywhere
+else in the diff (checked the full added-lines diff directly, not a targeted grep that could
+miss a slice). Pre-existing numeric comparisons elsewhere in render.py (`largest_5 =
+sizes[:5]` in the render_report.json diagnostic, `len(v) > 90` truncating a docstring preview,
+`len(group) > 1` for page_file's case-fold collision naming) are all UNCHANGED by this diff and
+are not part of the tier/routing path -- confirmed by diff, not by memory of the file's
+pre-existing shape.
+
+=== Non-falsifier label ===
+
+`test_top_index_lists_a_loose_module_directly_with_no_subheading` -- confirmed the label is
+accurate. `git show 0e63f208:scripts/code_map/render.py`'s old `top_index` never emits a `###`
+heading under any input (no such code path existed pre-gate), so `assertNotIn("### pkg.other",
+text)` was trivially true before this gate for ANY fixture -- consistent with "passed unchanged
+before and after." It is NOT a check that cannot fail post-gate, though: read the fixture
+(`_make_nested_subpackage_repo`, `pkg.other` has no sibling module sharing "pkg.other" as a
+3+-segment prefix) and traced `module_group_key`/`subpkgs` by hand -- if a future edit grouped
+every module under itself (or otherwise widened what counts as "grouped"), `pkg.other` would
+pick up a `### pkg.other` heading and this test would go red. Correctly labeled a regression
+guard, not a falsifier, and not tc29/tc38's "check that cannot fail" defect.
+
+No blocker from this item. Filed as triage candidate below.

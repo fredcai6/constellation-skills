@@ -925,6 +925,11 @@
       "id": "tc43",
       "from": "g3-review",
       "statement": "The Bash tool in an isolated worktree refuses long quoted strings, so engine verbs taking free text (--finding, --reason, --summary, --why) fail on any message of real length. The g3 reviewer solved it by writing tiny subprocess wrapper scripts that read the text from a file and pass a list argv, avoiding shell quoting entirely. Every crew rediscovers this at full cost. Two fixes: adopt the wrapper pattern as standing worktree doctrine, and add --finding-file / --reason-file / --summary-file options to the engine so no one has to. Routes to feedback."
+    },
+    {
+      "id": "tc44",
+      "from": "g4-review",
+      "statement": "The routing tier degenerates on flat corpus shapes, and the proof was sitting in this repo's own index unexamined. The tests package is 50 modules and 2769 entities, 74.3 percent of the corpus and the exact proportion critic F9 named, but every module is two dotted segments, so the tier predicate never fires and it renders as 50 undifferentiated bullets with zero subheadings. Two synthetic shapes isolate the mechanism: a flat single package gives tier 2 zero benefit, and a corpus of loose top-level modules with no packages degenerates TIER ONE into one bucket per module, which falsifies top_index's own docstring claim that tier 1 is bounded by package count and never by module count. Both shapes are real-world, not pathological: shape A is the default pytest layout and shape B is any script-bag repo. Two actions: correct the docstring's tier-1 bound claim, and consider a secondary grouping signal for flat dominant packages."
     }
   ],
   "blockers": [],
@@ -933,7 +938,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T10:01:43.997093+00:00",
+    "last_heartbeat": "2026-08-08T11:24:05.610381+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

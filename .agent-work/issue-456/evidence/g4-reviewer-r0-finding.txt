@@ -1,0 +1,8 @@
+Loaded reviewer global-crew.md + global-everyone.md doctrine, docs/agents/CREW_CONTEXT.md
+(python-not-py, UTF-8/LF writes, check-cannot-fail discipline, assert-against-behavior,
+evidence-you-owe-back) and confirmed GLOSSARY.md/ORCHESTRATOR_CONTEXT.md exist (not read in
+full -- crew tier reads CREW_CONTEXT + GLOSSARY per doctrine; GLOSSARY holds only naming, no
+review-discipline content relevant here). Read the full g4-review.md handoff, g4-implement-RESULT.md
+in full, g4_tier_shape.md evidence doc in full, and the diff 0e63f208..HEAD -- scripts/ tests/
+(328 lines). Read scripts/code_map/render.py's module_group_key/_module_line/top_index and
+checks.py's page_location_matches_content in full before starting the investigation.
