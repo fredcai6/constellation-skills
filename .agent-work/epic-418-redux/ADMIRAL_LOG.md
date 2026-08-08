@@ -2402,3 +2402,19 @@ purpose** and the classification→action mapping written into the file as comme
 boundary asks, and authoring them before the wave lands would be answering them early — the same
 reason I refused to pre-write the `w2-to-w3` *result* packet. What is pre-staged is only the shape
 the verifier checks mechanically, so the boundary costs a fill rather than four refusals.
+
+**MILESTONE | the fix exists.** `g2-implement` has landed real engine code in the worktree:
+`scripts/checklist_engine.py` (the refusal semantics) and `tests/test_checklist_engine.py`
+(**+198**), **247 insertions / 19 deletions** across two files.
+
+**The ratio is the signal** — roughly three lines of test per line of engine change, on the gate
+whose purpose is to make DC6's compliance observable **mechanical rather than prose**. A thin test
+here would have been the tell: converting a refusal into an instruction is cheap to write and
+almost impossible to observe, which is precisely the cost #467 exists to pay rather than dodge.
+
+Everything before this gate was *establishing* the defect — reproduced at unmodified HEAD, survived
+four adversarial probes, with 11 of 24 assertions verified to flip under the planned fix and every
+both-sides assertion honestly scoped. The fix is now being built against that demonstrated target
+rather than an assumed one, carrying the reviewer's reframe: **#431 is instruction-conformance, so a
+test worded "the advance is no longer blocked" verifies something that was never blocked and passes
+in both worlds.**
