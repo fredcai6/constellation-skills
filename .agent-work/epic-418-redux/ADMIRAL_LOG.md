@@ -2307,3 +2307,25 @@ and I would have refused a re-run as waste.
 prose, and reported my briefing accurate on every point — the first handoff this wave where the
 incoming Commander found no contradiction. That is instance D's hard-won lesson paying off one
 handoff later.
+
+**CORRECTION | I asserted my own error count from memory instead of deriving it, and understated it.**
+I told Tommy *"eight instances of this epic's own defect, seven of them mine."* Derived by command
+(`grep -c "^\*\*ADMIRAL ERROR" ADMIRAL_LOG.md`): **12 logged ADMIRAL ERROR entries**, plus 4
+INCIDENT and 28 RULING/FINDING.
+
+The two numbers are not the same thing and I ran them together, so both stated precisely:
+
+- **12** — every error I logged and owned today, of any kind. Includes four wrong PR numbers, an
+  epic run on a stale skill, an overclaimed finding amplified to Tommy, a regression of my own
+  CI-batching rule, messages that pushed a crew over its trip line, and the two-Commander overlap.
+- **~8** — the subset that are this epic's *specific* defect, a signal identical in the healthy and
+  broken worlds, built by me: the file-count crew monitor; the refresh flag stale for an hour; the
+  `-newermt` proof-of-life reading checkout mtimes; the substring trip detector firing on evidence
+  notes; the subprocess detector that would have returned "healthy" on its own failure (caught before
+  arming); the served refresh-request read as live; `recover_crews` from the wrong cwd; and worktree
+  activity unable to separate idle-waiting from dead.
+
+**The understatement is itself the pattern**, which is why it is logged rather than quietly fixed: I
+had the exact number available by one command and reported a remembered impression instead. Rule 2
+in the state note says *re-derive every status claim from its source before citing it* — I wrote that
+rule this morning, about this failure, and then broke it while describing that failure.
