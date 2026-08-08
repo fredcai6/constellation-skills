@@ -1029,3 +1029,35 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   fresh. Twenty minutes ago it read 27 minutes stale while the same crew was actively journaling. The
   crew was alive throughout, exactly as the mtime check said and the heartbeat did not. Calling it
   dead would have been wrong twice over — once about the crew, once about whose spine it was.
+
+- `2026-08-08` — `RULING` (authority question, decided and flagged): **relaunching an in-flight crew is
+  NOT "further dispatch" under the expired contract.** W3-A's Commander tripped a second time
+  mid-`triage` and filed a refresh-request. The contract's expiry clause forbids *further dispatch*
+  across the boundary. I am ruling that a **refresh-relaunch of a crew launched under the valid
+  contract is continuation of an authorised dispatch, not a new one** — this is the
+  job-file-not-agent-file doctrine: same worktree, same spine file, same work, a fresh process. The
+  alternative is letting an authorised crew die mid-gate with a held lease and an unswept worktree,
+  which serves nobody. **Flagged for Tommy to overrule if he reads the clause more strictly.**
+  Third trip, third clean handoff, all three at a *seam* with the substance already done.
+- `2026-08-08` — `RULING` (triage ratified, and it found more than it was sent for): W3-A's triage
+  drove all 7 candidates from its own `RESULT.md` and filed **six issues, #493-#498**, under inherited
+  latitude with `user-decision` evidence attached; `tc7` recorded `recommend-and-defer` as needing
+  Explorer-grade shaping. Verified all six OPEN on the tracker. **Ratified.**
+  **Two of them are this epic's own defect family, found by looking sideways from the fix:**
+  - **#494 — the interrogator's `zc-consolidate` carries the same placeholder/prose defect #465 just
+    fixed.** The blast radius of the *defect*, not of the change.
+  - **#493 — `checklist_engine.py`'s journal append is still text-mode**, the same line-ending defect
+    one write path over from the `save()` that #465 made byte-faithful.
+  A fix that closes one instance and leaves its siblings is the shape this epic exists to fight;
+  the crew went and enumerated instead of stopping at green. #495/#496 are the newline contract's own
+  gaps, #497 is `amend()` as a 215-line long method, #498 is applicability restated in six places.
+  **Surfaced to Tommy rather than actioned** — six new issues on a board he has said he would rather
+  keep uncluttered. My read: these are decisions, not typing, so the board is where they belong. His
+  call.
+- `2026-08-08` — `ADMIRAL NOTE` (predecessor error caught before it propagated): W3-A's return claimed
+  *"PR #492 is unchanged and still open."* **It is MERGED** (`4da9bc9b`), verified on the forge. It
+  never re-read the state after the fact — the same failure mode I owned at the start of this run with
+  the lease release. Corrected explicitly in the relaunch brief so the next Commander does not act on
+  it. Also carried up: `spine.json`'s `execute.c2` was instantiated with a **relative** script path
+  that can never resolve from a worktree; the predecessor repaired it by `retext-check` and it is a
+  **template defect affecting every Commander**, routed to its `feedback` gate.
