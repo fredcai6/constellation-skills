@@ -636,3 +636,28 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   `.claude/settings.local.json`, which is untracked. The series describes crews on *this machine*,
   not crews on a fresh clone, where the writer is not wired at all (#458). The measurement is real;
   its population is one laptop.
+
+- `2026-08-08` — `INCIDENT + RECOVERY` — **W3-C tripped the governor at 16% on its wrap-up gate
+  (`m3-verify`), filed a `refresh-request`, and went idle. Relaunched into the same worktree and the
+  same plan file, cold-started from `current` alone.** This is the refresh shape, not the dead-crew
+  drill: the lease is still held, the gate is still `in-progress`, and the work is intact.
+  **I saw it coming, which is new.** The fill series had W3-C at 15.5% then 16.2% before the trip
+  landed; I was positioned to relaunch rather than to discover it afterwards. Wave 2 had no such
+  visibility — its trip evidence was four dispatch counts taken while the orchestrator was blind.
+  **The crew's work was complete and both directions verified before it tripped.** #488:
+  `resolve_gauge_path` dedups by distinct `Path`, order-preserving; the Admiral shape (a spine plus
+  its own latitude survey under one work dir) now produces a reading, **and**
+  `test_admiral_shape_negative_direction_genuinely_different_paths_still_skip` confirms #261 is
+  unweakened. #489: `_resolve_revised_spec_matches` raises naming every match on 2+.
+  Both **before-states pasted** as the order demanded — the pre-fix code observed returning 2
+  candidates for one path and writing no gauge, and the pre-fix `matches[0]` observed silently
+  returning the wrong spec of two. Full suite **1789 passed / 2 skipped / 683 subtests / exit 0**,
+  which is the wave-2 baseline plus exactly the 7 new tests.
+- `2026-08-08` — `RULING` (crew workflow feedback, carried to closeout, not fixed here): W3-C returned
+  two engine-usability findings, both cheap and both real. (1) **`record` is not the verb for a
+  `command`-kind postcondition** — `advance` runs the check itself; the crew burned a call on a usage
+  error before finding this. (2) **`--session-id` is required on every verb after `claim`, not just
+  `start`**, and the template does not say so; its first `start` and `attest` were refused. I hit the
+  *same* `--session-id` friction myself this session on `resume`, and separately learned the flag must
+  come **after** the verb, not before. Three independent encounters with one under-documented
+  contract. Triage candidates for closeout; not folded into wave 3.
