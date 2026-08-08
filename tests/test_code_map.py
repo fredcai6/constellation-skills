@@ -798,6 +798,125 @@ class RefsLineSelfConsistencyTests(unittest.TestCase):
         self.assertTrue(any("INDEX.md" in f for f in failures), failures)
 
 
+class RefsAccountingTests(unittest.TestCase):
+    """Gate g2, defect (b): the count and the list must reconcile, and the page
+    must say what the count counted.
+
+    `pkg.callee:target` is called twice from its own module and referenced three
+    times from `pkg.far`, so its page has to publish 5 sites in 2 modules while
+    naming one module. Today the page says `5 sites in 2 modules (pkg.far)` and
+    stops: a reader who greps `pkg.far` finds 3 and has no way to learn where the
+    other 2 went, or whether the tool simply lost them. Both numbers are
+    defensible on their own; a page that shows them without saying what either
+    means is the defect.
+
+    Two arms, because the defect has two halves. The first is reconciliation --
+    every counted site is attributable from the line alone. The second is the
+    legend -- the page states what the count includes and excludes, so a reader
+    whose `grep` returns 7 knows which of the two numbers to trust rather than
+    guessing."""
+
+    #: Facts about the fixture, asserted as an input precondition before they
+    #: are used. If the fixture ever stops having own-module callers this test
+    #: silently stops testing anything, so it is checked, not assumed.
+    TARGET_PAGE = "target.md"
+    TARGET_SITES = 5
+    TARGET_OWN = 2
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_cross_module_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _build(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+        return checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
+
+    def _target_page(self, m):
+        for page, key in m.entity_pages:
+            if key == "pkg.callee:target":
+                return page
+        self.fail("input precondition: the fixture must render a page for "
+                  "pkg.callee:target")
+
+    def test_a_reader_can_account_for_every_counted_site_from_the_line_alone(self):
+        m = self._build()
+        page = self._target_page(m)
+        line = checks.refs_lines(m.text(page))
+        self.assertEqual(len(line), 1, line)
+        stated = checks.parse_refs(line[0])
+        self.assertIsNotNone(stated, line[0])
+
+        self.assertEqual(stated.sites, self.TARGET_SITES,
+                         "input precondition: the fixture's target must be "
+                         "referenced from both its own module and another one")
+        self.assertEqual(stated.modules, len(stated.named) + 1,
+                         "input precondition: exactly one counted module -- the "
+                         "page's own -- must go unnamed, or there is nothing here "
+                         "for a reader to fail to reconcile")
+
+        # RED on the rendered text, not on a missing helper: the line published
+        # today is `5 sites in 2 modules (pkg.far)` and stops there.
+        self.assertIn(
+            f"{self.TARGET_OWN} in this module", line[0],
+            f"the line {line[0]!r} counts {stated.sites} sites across "
+            f"{stated.modules} modules but names {len(stated.named)}; a reader "
+            f"cannot tell how many of those sites the unnamed module holds")
+        self.assertEqual(
+            stated.own, self.TARGET_OWN,
+            "the grammar in checks.py must expose the own-module sites as a "
+            "number, or no check can hold the renderer to them")
+        self.assertEqual(
+            stated.sites - stated.own, self.TARGET_SITES - self.TARGET_OWN,
+            "the sites left after the own-module clause must be the ones the "
+            "named modules hold, or the line still does not reconcile")
+
+    def test_every_inbound_line_states_what_the_count_includes_and_excludes(self):
+        m = self._build()
+
+        seen = 0
+        for page in m.pages:
+            lines = m.text(page).splitlines()
+            for i, line in enumerate(lines):
+                if not line.startswith(checks.REFS_PREFIX):
+                    continue
+                seen += 1
+                follower = lines[i + 1] if i + 1 < len(lines) else ""
+                self.assertTrue(
+                    follower.startswith("counted:") and "not counted:" in follower,
+                    f"{m.rel(page)}: the inbound line {line!r} is not followed by "
+                    f"a statement of what the count counted, so a reader whose own "
+                    f"grep disagrees cannot tell which number is wrong; got "
+                    f"{follower!r}")
+        self.assertGreater(seen, 0, "input precondition: some page must carry an "
+                                    "inbound line")
+
+    def test_the_legend_names_the_predicates_the_count_actually_counts(self):
+        """The legend is a claim about the code, not decoration.
+
+        `load_stores` counts inbound edges for `calls` and `reads` and nothing
+        else. If a later gate widens that predicate set and leaves the legend
+        alone, the page states something confident and untrue -- which is the
+        whole defect class this gate exists to close.
+
+        Falsifier grade B: red by absence today, because there is no legend to
+        contradict. It earns its place from the day after, when the legend is a
+        sentence someone can leave behind."""
+        source = (ROOT / "scripts" / "code_map" / "render.py").read_text(encoding="utf-8")
+        self.assertIn('if p in ("calls", "reads"):', source,
+                      "input precondition: the renderer must still count exactly "
+                      "these two predicates, or the legend below is stale")
+        for predicate in ("calls", "reads"):
+            self.assertIn(predicate, checks.REFS_LEGEND)
+        for excluded in ("definition", "import", "inherit", "write", "docstring",
+                         "unresolved"):
+            self.assertIn(excluded, checks.REFS_LEGEND)
+
+
 #: The supplement's entity line is one half of the (file, line) join that welds
 #: a page to its store symbol. Shift it and the join lands on whatever else is
 #: at that position -- or on nothing.
