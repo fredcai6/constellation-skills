@@ -73,9 +73,49 @@ frozen. No amendment needed.** When a `c3` looks unpassable, check the handoff a
 before concluding the plan is broken. My g2 reviewer handoff does this correctly — copy its Return
 Format section.
 
+## ADMIRAL RULINGS RECEIVED AT THIS SEAM — both binding on you
+
+**1. `tc1` IS RULED IN SCOPE AND MUST BE FIXED.** Correct `docs/agents/GLOSSARY.md:13` to match
+shipped behaviour — **that one line, nothing else in the glossary**. If correcting it accurately
+requires touching neighbouring text, **stop and float** rather than expanding. Cite it in the gate's
+evidence as a blast-radius fix, not a drive-by. The Admiral's reasoning: this is not ordinary doc
+staleness — it teaches the exact belief #431 came from, from the canonical source every agent reads,
+and shipping this fix while that line stands means shipping a change the documentation denies.
+
+**The ruling says "pull it into g2's scope", and that is NO LONGER MECHANICALLY AVAILABLE — do not
+force it.** It was written when g2 was believed in flight. **g2 is closed and committed, and so is
+`g3-implement`.** `reopen g2-integrate` would **cascade-reset every downstream gate, including the
+completed `g3-implement`** — and `reopen` is itself a BEGIN-work verb that the g2 fix now guards at
+hard. Do not do it.
+
+I floated the placement back with this recommendation: **one `amend` adding a small pending doc-fix
+task** — it adds a gate without cascading, which is exactly what `amend` is for. I did **not** amend
+it myself: I was over hard, plan surgery is not "closing the gate I am in", and the Admiral had just
+withdrawn a different amendment authorization. **Check for the answer before placing tc1.** Neither
+`g4` (engine trip-ledger work) nor `g5` (acceptance) has a natural home for it in its frozen scope.
+
+**2. IMPLEMENTER CREWS DISPATCH ON SONNET, not Opus.** Standing change from Tommy via the Admiral,
+**forward-looking only** — do not re-run or re-dispatch anything already complete to satisfy it.
+Reasoning: least-powerful model that works; a frozen plan executed against a demonstrated target,
+with mutation requirements to catch drift, is mechanical execution.
+
+**Escalate to Opus only for a named reason, stated in the dispatch text.** Sanctioned: a genuine
+design choice the plan left open; **engine-semantics work where being subtly wrong is invisible**;
+**adversarial review, where the job is to attack a claim rather than build to a spec**. "This gate
+feels important" is not a reason.
+
+My read for the gates you are about to run — take it or leave it, the judgement is yours:
+- **`g3-review`, `g4-review`, `g5-review` — Opus.** Adversarial review is the Admiral's own named
+  carve-out. The g2 reviewer's entire value came from attacking rather than confirming.
+- **`g4-implement` — a legitimate Opus escalation; name the reason if you take it.** It ships an
+  engine-only append-only trip ledger at mutating chokepoints: engine-semantics work where being
+  subtly wrong is invisible, which is the second sanctioned reason verbatim.
+- Anything more mechanical — **Sonnet**.
+
 ## OPEN, for the Admiral — carry these up, do not decide them
 
-- **`tc1` — `docs/agents/GLOSSARY.md:13`** still reads *"HARD blocks `advance` until the agent
+- **`tc1` placement** — ruled in scope (above); only *where* it lands is open. The finding itself:
+  **`docs/agents/GLOSSARY.md:13`** still reads *"HARD blocks `advance` until the agent
   requests a context refresh."* **Now false**, and it is the glossary every constellation agent
   reads — it teaches the exact belief #431 came from. Confirmed independently by the g2 implementer
   and the g2 reviewer; root-caused as shotgun surgery (same fact mirrored in four hand-maintained
