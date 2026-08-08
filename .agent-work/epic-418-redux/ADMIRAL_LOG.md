@@ -2536,3 +2536,15 @@ Two gate groups down: **g1 proved the defect at unmodified HEAD and survived fou
 probes; g2 built the fix, had it independently reviewed, and integrated it green.** The fix in one
 line, from its own commit: *move the HARD guard off `advance` onto `start`/`reopen`; refuse the
 silent close.*
+
+**8/16 | g3-implement landed: `f9925be6` — "per-gate tighten-only context-headroom override,
+exercised once".** That is **DC4**, built to the shape I approved: **tighten-only** (it can only make
+a gate trip earlier, never later, so it fails in the conservative direction), **exercised exactly
+once** rather than shipping 68 ungraded placeholders, and carrying my binding condition that it must
+change **that gate's behaviour and not its neighbours'** — the half of DC4 that is the entire reason
+the condition exists.
+
+Crew reading **15.8%, over the 0.15 hard line**, sitting **between gates**. That is the seam to hand
+off at, and five predecessors have done it cleanly with nothing lost. **Not acting on it:** rule 7 —
+wait for the idle notification, stop the predecessor, then dispatch, in that order. The one rule that
+has ever caught anything, and it caught a healthy-crew relaunch earlier today.
