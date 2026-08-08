@@ -231,9 +231,9 @@
     "session_id": "g2-implementer-attempt-1",
     "status": "active",
     "claimed_at": "2026-08-08T04:55:30.791316+00:00",
-    "last_heartbeat": "2026-08-08T05:08:48.377780+00:00",
-    "claimed_by": "agent",
-    "worktree": ".",
+    "last_heartbeat": "2026-08-08T05:12:44.236310+00:00",
+    "claimed_by": "implementer",
+    "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
     "previous_session_id": null,
     "takeover_reason": null
   }

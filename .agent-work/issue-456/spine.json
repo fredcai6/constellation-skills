@@ -875,6 +875,21 @@
       "id": "tc33",
       "from": "execute",
       "statement": "tc33 CHECKS THAT DEGRADE QUIETLY RATHER THAN LOUDLY -- four found by the g1 reviewer, none blocking, all real. The sharpest: respelling the inbound line makes refs-line-self-consistent return [] instead of going red, so a rename of the thing it parses silently empties its iteration set rather than failing. That is the 'wrong iteration set' route into a check that cannot fail, and it is the same family as the g0 defects. It is survivable today only because inbound-attribution catches that particular case, which is luck, not design. One assertion fixes it: require the iteration set to be non-empty on a corpus known to be non-empty. ROUTE: fold into gB or wherever the check family is next touched; do not let it sit because a sibling happens to cover it."
+    },
+    {
+      "id": "tc34",
+      "from": "execute",
+      "statement": "tc34: supplement.walk descends node.body ONLY, so any definition inside a compound statement (with/if/try/for) gets NO PAGE AT ALL. Measured by the g2 implementer: one of the four D2 collision members, at tests/test_context_manifest.py:771, sits inside a 'with' block and is invisible to the supplement while extract.py (which uses generic_visit) sees it. The two AST passes DISAGREE about what the corpus contains, and entity_symbol_join cannot see the gap because it iterates supplement keys. This is a real coverage hole in the map AND a blind spot in a g1 check -- any check that iterates supplement keys is blind to these definitions. Route: g4 (schema/top-index) or a dedicated fix; g4 already owns the link-following graph walk."
+    },
+    {
+      "id": "tc35",
+      "from": "execute",
+      "statement": "tc35: the INDEX page-filename collision family is left UNFIXED ON PURPOSE at g2. An entity named INDEX still overwrites its own module's index page. It cannot be fixed at g2 because _make_collision_repo is g1's ONLY cross-platform falsifier for the page-accounting check -- reserving the stem would make that g1 test unable to fail, which is the exact defect this run exists to stamp out. Fixing it requires rebuilding the falsifier on a different collision FIRST, then reserving the stem. Recorded rather than silently swallowed. Note the ordering constraint: falsifier first, fix second."
+    },
+    {
+      "id": "tc36",
+      "from": "execute",
+      "statement": "tc36: TWO defects in the Commander's own g2 handoff, both found by the crew through measurement, both corrected in the attempt-2 handoff. (1) It described the four D2 collisions as 'same-depth siblings' implying four PAGE-level merges; they are four STORE-SYMBOL merges and only three are two-page merges (see tc34). A crew hunting four page pairs would find three and wrongly conclude its own measurement was broken. (2) It prescribed 'env -u FORCE_COLOR -u PYTHONIOENCODING python ...' as the verification form, which the Bash tool REFUSES in a worktree-isolated session ('runs env with -m, whose effect on the command it wraps cannot be verified'). Correct hand-run form is 'unset FORCE_COLOR PYTHONIOENCODING && python ...'; the engine's own POSIX command checks are unaffected. PROCESS LESSON, generalizable beyond this run: a handoff that names an exclusion ('do not weaken any check the previous gate shipped') without naming WHERE the tripwires are makes each successor rediscover them at full cost. The crew named this as the single most expensive thing it rediscovered. Later gate handoffs must carry a per-defect list of the prior gate's tests and mutation anchors that constrain the fix."
     }
   ],
   "blockers": [],
@@ -883,7 +898,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T04:39:20.802415+00:00",
+    "last_heartbeat": "2026-08-08T05:12:38.420505+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
