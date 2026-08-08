@@ -340,5 +340,27 @@
     "model": "sonnet",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/issue-456/g4/implementer/attempt-1",
+    "work_id": "issue-456",
+    "gate": "g4",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/issue-456/g4/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": ".",
+    "handoff": ".agent-work/issue-456/crew-handoffs/g4-implement.md",
+    "result": ".agent-work/issue-456/crew-handoffs/g4-implement-RESULT.md",
+    "stdout": ".agent-work/issue-456/crew-runs/g4-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/issue-456/crew-runs/g4-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-08T10:10:14.820362+00:00",
+    "last_heartbeat": "2026-08-08T10:10:14.820362+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "sonnet"
   }
 ]

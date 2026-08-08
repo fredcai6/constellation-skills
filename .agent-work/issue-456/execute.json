@@ -1166,7 +1166,8 @@
           "id": "p1",
           "statement": "g3 -- schema settled before the routing surface is cut",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g3 closed: all three items advanced, engine re-ran g3-integrate's command check itself and it passed. The statement schema is settled -- supplement.py deleted, LINE_BASE declared and pinned by a flip-test, ids.jsonl positionless. Verified on disk: supplement.py absent from scripts/code_map, suite 1767/2/0/0, fresh build then check 6/6 exit 0."
         }
       ],
       "postconditions": [
@@ -1207,7 +1208,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
