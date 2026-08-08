@@ -4,11 +4,53 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`g6-review`** — handoff WRITTEN, dispatching now
-- **PID**: crew `constellation/issue-456/g6/reviewer/attempt-1` dispatching. Before this: `recover_crews.py` → 24 crews, **0 unresolved**, no g6/reviewer entry.
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g6-review-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: **`g6-remediate`** — brief WRITTEN, dispatching now
+- **PID**: crew `constellation/issue-456/g6/implementer/attempt-2` dispatching. `g6/reviewer/attempt-1` closed via `--verify-result` → `fresh (completed)`.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g6-remediate-RESULT.md`
 
-## NEXT ACTION, ready to fire
+## g6 REVIEW RETURNED **BLOCK** — correct, and reproduced not asserted
+
+`g6-review -> complete` (evidence `e-g6-review-1`, verdict BLOCK, refresh `e-g6-review-2`).
+Result at `.agent-work/issue-456/crew-handoffs/g6-review-RESULT.md`; reviewer
+committed it itself at `29ba98ff`.
+
+**The blocker:** forcing `stale = []` after the real computation in
+`extract.run()` — a whole-feature disable on one code path — left **9 of 12
+tests green**, including *every* dedicated does-not-flag test. Only the two
+flags-a-real-change tests went red, plus one incidentally. Reverted cleanly,
+12/12 restored. tc38/tc47 class: the feature works, its evidence can't fail.
+
+**Three other questions came back answered, not deferred.** Q1 slug-match is a
+correctly-deferred `g7` concern. Q3 ran **8 novel mutations the crew did not
+choose** — all predictions matched, no accidental behavior, no new defect, so
+reformatting immunity holds under attack its author didn't design. Q2 severity
+ruling (advisory-only) **stands and was affirmed**; only the text was wrong.
+
+**Filed:** `tc7` uncaught `JSONDecodeError` on a truncated leftover
+`statements.jsonl` — a NEW failure mode this gate introduces, real because the
+writer has no atomic rename. `tc8` advisory line prints literal `FAIL` while
+exiting 0, colliding with the genuine-failure convention. `tc9` **nothing in the
+routine pipeline exercises the staleness path at all** — `check` never calls
+`render.py`, `deterministic-rebuild` always builds into fresh dirs; the only
+exerciser is a human not wiping `.code-map`, an unenforced convention. tc7+tc8
+ride the rework; tc9 is a design question for triage.
+
+Reviewer also settled the RESULT doc's 16-vs-12 test count at **12** (drafting
+error, nothing dropped) and independently **affirmed** the crew's rename
+overrule — over-flag-never-under-flag is the mechanism's consistent posture.
+
+### The rework brief makes the attack the acceptance test
+`.agent-work/issue-456/crew-handoffs/g6-remediate.md`. Fix 1 (blocker): a
+positive control INSIDE each of the five does-not-flag methods, verified by
+re-running the disable attack and requiring all five to go red — a criterion
+that can fail. Fix 2: guard the read, actionable message, never silent. Fix 3:
+`FAIL` → `ADVISORY`. Plus a citation nit. Explicitly NOT in scope: severity
+ruling, rename sensitivity, a routine exerciser (tc9), splitting `run()`.
+
+Dispatch: `python scripts/run_crew.py --dispatch external --work-id issue-456 --gate g6 --role implementer --model sonnet`
+Then the **SAME reviewer** re-verifies — do not self-grade the repair.
+
+## NEXT ACTION (superseded above — kept for the g6-implement close record)
 
 **`g6-implement` is CLOSED** — `c1` attested via evidence `e-g6-implement-1`
 (refresh-request `e-g6-implement-2`, why `w-22`), `g6-implement -> complete`.

@@ -539,7 +539,7 @@
     "gate": "g6",
     "role": "implementer",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/issue-456/g6/implementer/attempt-1",
     "backend": "external",
     "pid": null,
@@ -549,11 +549,13 @@
     "stdout": ".agent-work/issue-456/crew-runs/g6-implementer-attempt-1.stdout.txt",
     "stderr": ".agent-work/issue-456/crew-runs/g6-implementer-attempt-1.stderr.txt",
     "started_at": "2026-08-08T19:08:50.925588+00:00",
-    "last_heartbeat": "2026-08-08T19:08:50.925588+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-08T20:40:36.475237+00:00",
+    "completed_at": "2026-08-08T20:40:36.475237+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "sonnet"
+    "model": "sonnet",
+    "result_present": true,
+    "result_fresh": true
   },
   {
     "crew_id": "constellation/issue-456/g6/reviewer/attempt-1",
@@ -578,5 +580,27 @@
     "model": "sonnet",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/issue-456/g6/implementer/attempt-2",
+    "work_id": "issue-456",
+    "gate": "g6",
+    "role": "implementer",
+    "attempt": 2,
+    "status": "running",
+    "session_name": "constellation/issue-456/g6/implementer/attempt-2",
+    "backend": "external",
+    "pid": null,
+    "worktree": ".",
+    "handoff": ".agent-work/issue-456/crew-handoffs/g6-remediate.md",
+    "result": ".agent-work/issue-456/crew-handoffs/g6-remediate-RESULT.md",
+    "stdout": ".agent-work/issue-456/crew-runs/g6-implementer-attempt-2.stdout.txt",
+    "stderr": ".agent-work/issue-456/crew-runs/g6-implementer-attempt-2.stderr.txt",
+    "started_at": "2026-08-08T20:40:45.631745+00:00",
+    "last_heartbeat": "2026-08-08T20:40:45.631745+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "sonnet"
   }
 ]
