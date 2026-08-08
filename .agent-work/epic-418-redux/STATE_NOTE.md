@@ -34,26 +34,21 @@
   **Now on its THIRD instance (`commander-w4-467-c`)**, dispatched ~10:46Z. Instances A and B both
   tripped, both handed off cleanly at seams, both lost nothing. **A and B are STOPPED.**
   **The plan is FROZEN** at `<worktree>/.agent-work/issue-467-trip-semantics/execute.json` —
-  16 tasks, 5 gates. **`e0-context`, `g1-implement` and `g1-review` COMPLETE** (`62f564c7`,
-  `e4092af8`). `g1-integrate` in progress; **3/16**.
+  16 tasks, 5 gates. **g1 COMPLETE — all four gates**: `e0-context`, `g1-implement`, `g1-review`, `g1-integrate`
+  (`62f564c7`, `e4092af8`, `17c06f16`). **4/16.** Next: open **g2**.
 
-> ### STANDING RULING — g1-integrate c3. Apply it; do not re-litigate it.
+> ### g1 IS CLOSED. The c3 ruling is APPLIED — do NOT author a second amendment.
 >
-> **c3 (`verdict: "APPROVE"`) cannot pass as written**: the frozen reviewer handoff prescribed
-> `ACCEPT / ACCEPT WITH FINDINGS / REJECT`, the reviewer obeyed the handoff, and the plan and the
-> handoff disagree on the word. The verdict is genuine approval — **0 blocking / 8 non-blocking**.
+> `advance g1-integrate` succeeded **11:22:10Z**. **`amendments: 1`** in `execute.json`:
+> `retext-check` on `g1-integrate.c3`, kind unchanged, authority Admiral / epic #418 —
+> `match: {verdict_class: "ACCEPTED", blocking_findings: "0"}`. **ACCEPT and ACCEPT WITH FINDINGS
+> pass; REJECT fails twice over** (verdict_class, and independently blocking_findings, since a
+> REJECT always carries at least one). Verify it exists before touching c3; do not re-apply.
 >
-> **Ruling: AMEND c3 through the engine. Do NOT waive. Authority: Admiral, delegated adjudication.**
-> A waiver hides the bug and leaves the gate unpassable for every future reviewer on that handoff;
-> an amend makes the check *true* rather than *skipped*.
->
-> **Condition — the amended check MUST still be able to FAIL:** `ACCEPT` and `ACCEPT WITH FINDINGS`
-> pass, **`REJECT` must still fail**. Accepting any string converts a check-that-cannot-pass into a
-> check-that-cannot-fail — the same bug wearing the other mask.
->
-> **Never fabricate an `APPROVE` artifact to satisfy it.** The Commander refused to and was right.
-> If the engine demands human authority rather than Admiral, **stop and surface it** — do not fake
-> an authority string.
+> **Root cause, worth more than the fix and not yet fixed:** artifact `match` is **exact equality
+> per key** (`all(ev.payload[k] == v ...)`) — **it cannot express "one of."** The original author
+> hard-coded a single verdict string because that was the only expressible thing. **Every future
+> verdict check has this latent.** General fix is `match` gaining a set/one-of form. Triage.
 >
 > **Related, already checked so nobody repeats it:** the reviewer force-waived `r6-fowler` c1
 > believing no verb could fill its literal `<fowler-pass-record-path>`. **The verb exists** —

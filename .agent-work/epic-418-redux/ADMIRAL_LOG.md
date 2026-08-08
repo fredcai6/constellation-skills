@@ -2169,3 +2169,16 @@ judgement on whether the artifacts sufficed stands unchanged.
 
 **State: HEAD `17c06f16`, tree clean, both leases released, 2 crews / 0 unresolved, nothing running.
 Three for three on lossless seams.**
+
+**MILESTONE | g1 CLOSED, 4/16 gates.** `advance g1-integrate` succeeded **11:22:10Z** with
+`amendments: 1`. The whole first gate group is done: **reproduce → review → integrate.** This was the
+hard one — g1 had to prove the defect exists at *unmodified* code, so everything after it builds
+against a demonstrated target rather than an assumed one.
+
+**Caution on my own reading, not a finding.** The lease field showed `status: released,
+claimed_by: commander-w4-467-d` at 11:16 while journal entries continued through 11:17, 11:18 and
+11:22 — and **every journal entry carries the same `session_id` regardless of which of the four
+instances wrote it.** So the engine's own record cannot tell my Commanders apart. That is #419's
+identity problem, solved for the governor and still live in the journal. I am reading **journal verbs
+and gate states**, not the lease field, and I am not inferring which instance did what from the
+record. Recorded so a successor does not try.
