@@ -58,14 +58,45 @@ still *measuring*, the guard that would have caught this epic's dark governor �
 `test_chain_ambiguous_binding_writes_no_gauge_and_flags_every_candidate`, which uses **distinct
 parent paths** and so specifies the negative direction #488's fix had to preserve.
 
-**Harvested, sweep-safe at closeout:** `epic418-a-419`, `epic418-a2-440`, `epic418-b-420`,
-`epic418-d-422`, `epic418-g-425`, `epic418-h-447`; `verify-w0` is a detached scratch tree.
-Harvest output is at `.agent-work/harvest-418-redux/` (4 files that existed **nowhere in the git
-object store**, identified by `h=$(git hash-object <f>); git cat-file -e "$h"`, not by filename).
+**SWEPT 2026-08-08 — 7 worktrees removed, 6 branches deleted.** Gone: `epic418-a-419`,
+`epic418-a2-440`, `epic418-b-420`, `epic418-d-422`, `epic418-g-425`, `epic418-h-447`, `verify-w0`.
+Harvest output survives at `.agent-work/harvest-418-redux/` (4 files that existed **nowhere in the
+git object store**). Nothing further is owed by those trees.
+
+**TWO different hazards need TWO different tests — do not conflate them again.**
+- **Uncommitted work** → `h=$(git hash-object <f>); git cat-file -e "$h"` (non-zero = nowhere in git).
+- **Committed but UNMERGED work** → `git rev-list --count main..<branch>` + `git diff --name-only
+  main...<branch> -- . ':(exclude).agent-work'`.
+
+The first test is **blind to the second hazard** — an unmerged branch's blobs *are* in the object
+store, so `cat-file -e` resolves them happily. The harvest test would have waved **governor-264**
+straight through. Positive control for the second test: governor-264 reports `ahead=3,
+uniquefiles=2` where every swept branch reported `0/0`.
 
 **Order is not optional:** harvest each worktree's durable trio **before** `git worktree remove` —
 under an epic lease `durable_root()` returns the **worktree** root, so the trio lands where the
 sweep eats it.
+
+**Retained branches, dispositioned not abandoned:** `b-433-render-directives`,
+`b-460-episodes-observations`, `b-464-lesson-field-rename`, `d-436-enumeration-falsification` —
+the **pre-replant attempts**, superseded and nothing owed, kept because they are the only record of
+the abandoned attempt. Routed to the closeout audit.
+
+## CORRECTED wave-2 PR mapping — my ledger named the wrong PRs
+
+The forge says the PRs I had recorded are **CLOSED, merged=null**. All four issues are genuinely
+CLOSED; the work was relaunched on fresh ground and landed via **replant** branches.
+
+| Issue | PR I wrongly recorded | PR that actually merged |
+|---|---|---|
+| #433 | #483 (closed, unmerged) | **#485** |
+| #436 | #469 (closed, unmerged) | **#472** |
+| #460 | #486 (closed, unmerged) | **#487** |
+| #464 | #471 (closed, unmerged) | **#473** |
+
+Cause: PR numbers carried forward from before the relaunch and never re-derived after the merge —
+the same root as the A2 error above. **Before citing any PR number from this file, re-derive it
+from the forge.**
 
 ## Still owed to Tommy at the wave-4 checkpoint
 
