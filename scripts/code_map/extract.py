@@ -88,6 +88,58 @@ def store_line(lineno):
     return lineno - 1 + LINE_BASE
 
 
+def signature_of(node):
+    """A function's signature as source: annotations, defaults, `*args`,
+    `**kwargs`, the keyword-only marker and the return type.
+
+    The whole value of the field is that a reader answers a cross-module
+    signature question without opening the file -- the two clear wins of the
+    rendering trial were exactly that."""
+    a = node.args
+    parts = []
+    posonly = getattr(a, "posonlyargs", [])
+
+    def one(arg, default=None):
+        s = arg.arg
+        if arg.annotation is not None:
+            s += ": " + ast.unparse(arg.annotation)
+        if default is not None:
+            s += ("=" if arg.annotation is None else " = ") + ast.unparse(default)
+        return s
+
+    defaults = list(a.defaults)
+    positional = posonly + a.args
+    pad = [None] * (len(positional) - len(defaults)) + defaults
+    for arg, d in zip(posonly, pad[: len(posonly)]):
+        parts.append(one(arg, d))
+    if posonly:
+        parts.append("/")
+    for arg, d in zip(a.args, pad[len(posonly):]):
+        parts.append(one(arg, d))
+    if a.vararg is not None:
+        parts.append("*" + one(a.vararg))
+    elif a.kwonlyargs:
+        parts.append("*")
+    for arg, d in zip(a.kwonlyargs, a.kw_defaults):
+        parts.append(one(arg, d))
+    if a.kwarg is not None:
+        parts.append("**" + one(a.kwarg))
+    ret = " -> " + ast.unparse(node.returns) if node.returns is not None else ""
+    return "(%s)%s" % (", ".join(parts), ret)
+
+
+def doc_body_of(node):
+    """A docstring past its summary line, or None.
+
+    The summary already has its own `documents` statement. The BODY is the
+    Args/Returns/Raises/Examples a reader wanted the docstring for, and the
+    store used to drop it."""
+    doc = ast.get_docstring(node, clean=True)
+    if not doc:
+        return None
+    return "\n".join(doc.strip().split("\n")[1:]).strip() or None
+
+
 # ------------------------------------------------------------------ pass 1
 
 
@@ -570,9 +622,41 @@ class Extractor(ast.NodeVisitor):
                       LINE_BASE, 0, "literal")
         return self.out
 
+    def described(self, node, decorators):
+        """The facts a `contains` statement carries about the definition it
+        names: kind, signature, span, docstring body, decorators, bases.
+
+        `kind` follows the rule the removed supplement stage used -- a
+        definition whose enclosing scope is not the module is a `method` -- so
+        the rendered word on a page did not change when the second pass went
+        away."""
+        if isinstance(node, ast.ClassDef):
+            kind, signature = "class", None
+            bases = [ast.unparse(b) for b in node.bases]
+        else:
+            kind = "method" if self.here() != self.mod + ":" else "function"
+            if isinstance(node, ast.AsyncFunctionDef):
+                kind = "async " + kind
+            if "property" in decorators:
+                kind = "property"
+            elif "staticmethod" in decorators:
+                kind = "static method"
+            elif "classmethod" in decorators:
+                kind = "class method"
+            signature, bases = signature_of(node), None
+        end = getattr(node, "end_lineno", None)
+        return {"kind": kind,
+                "signature": signature,
+                "end": store_line(end) if end is not None else None,
+                "doc_body": doc_body_of(node),
+                "decorators": decorators,
+                "bases": bases}
+
     def visit_ClassDef(self, node):
         sym = self.child_sym(node.name)
-        self.emit(self.here(), "contains", sym, store_line(node.lineno), node.col_offset, "internal")
+        decorators = [ast.unparse(d) for d in node.decorator_list]
+        self.emit(self.here(), "contains", sym, store_line(node.lineno),
+                  node.col_offset, "internal", d=self.described(node, decorators))
         doc = ast.get_docstring(node)
         if doc:
             self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
@@ -597,7 +681,9 @@ class Extractor(ast.NodeVisitor):
 
     def _func(self, node):
         sym = self.child_sym(node.name)
-        self.emit(self.here(), "contains", sym, store_line(node.lineno), node.col_offset, "internal")
+        decorators = [ast.unparse(d) for d in node.decorator_list]
+        self.emit(self.here(), "contains", sym, store_line(node.lineno),
+                  node.col_offset, "internal", d=self.described(node, decorators))
         doc = ast.get_docstring(node)
         if doc:
             self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
