@@ -1,0 +1,54 @@
+{
+  "work_id": "r418-460-g2-implement",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "issue-304-g3-001",
+      "assertion": "a5",
+      "statement": "None was needed for the deletion itself. For the sentinels, each of the two out-of-scope test files had its prose sentinel re-pointed at surviving degraded-mode prose, and each edit was named as a deviation rather than silently widening scope.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a4 (\"Two out-of-scope test files had to be edited to re-point their prose sentinels at surviving degraded-mode prose, each named as a deviation\"); the original's 'preserving the test's intent and its assertion count' clause is not independently grounded in this record and was not carried forward"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-304-g3-001",
+      "assertion": "d2",
+      "statement": "Before the shipped prose was deleted, the deleted phrases were grepped corpus-wide and every hit was treated as a pin until proven otherwise, rather than the handoff's suite list being trusted; doing so also found two live non-test references (a script docstring and a drill record) that the suite list could never have surfaced.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in the assertion's own record that the sweep was actually performed (\"Doing so here also found two live non-test references (a script docstring and a drill record) that the suite list could never have surfaced\") and in d1 (\"Grepping the deleted phrases across the repo finds those; listing the suites does not\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-304-g3-003",
+      "assertion": "a5",
+      "statement": "The question 'was this already done?' was answered with a command over git history rather than a reading of the current file, since it is a question about history: git log --format=%h -- <file>, then git show <sha>:<file> for each, printing the phrase under test.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"checking every one of the 8 commits that ever touched the template showed tasks.plan.imperative's opening phrase 'produce a mission frame from the current map' byte-identical from 5fad3e3 through fdec654 (the g2 anchor commit) to HEAD\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-304-g3-003",
+      "assertion": "d2",
+      "statement": "The handoff asserted that a prior gate had already made a specific textual change; verifying the specific STRING across the 8 commits that touched the file, rather than the step's diff size or the commit message, is what falsified that premise.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"the handoff's premise was falsified: checking every one of the 8 commits that ever touched the template showed ... g2 APPENDED verify-frame prose without retargeting the phrase T3 named\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-304-g3-004",
+      "assertion": "a5",
+      "statement": "The block was located by unique opening and closing phrases and the span between them deleted, with the uniqueness of both asserted before the file was touched; the invariant was put in the editing tool as a refusal, not only in the test that runs afterwards.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"The deletion was performed by an offset-bounded slice located by the block's opening and closing phrases, each asserted UNIQUE in the raw file, never by a replace on the ambiguous phrase; the deletion script itself refuses ... rather than leaving the guard only to the test suite\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-304-g3-004",
+      "assertion": "d2",
+      "statement": "This deletion was pinned in BOTH directions -- dead text absent AND the survivor present -- rather than by an absence-only assertion, which passes just as happily on an emptied field; and because the deletion was disambiguating rather than removing, an occurrence-count assertion was included, pinning the survivor as present exactly once.",
+      "history": "issue #460 gate g2 -- restated from imperative to observation; grounded in a3 (\"The survivor is pinned three ways in tests/test_prose_deletions.py::SubstituteAndRecordRuleSurvives -- present, exactly once, and at the offset INSIDE the substitute-and-record sentence, so no other sentence can satisfy the count\")"
+    },
+    {
+      "op": "restate-assertion",
+      "id": "issue-304-g3-005",
+      "assertion": "a5",
+      "statement": "None was available at this gate. What the gate established instead is the forward requirement: separating 'insufficient' from 'irrelevant' requires runs sampled under BOTH the late anchor and the context anchor with map_before_src measured the same way, which re-reporting map_before_src under the new anchor alone cannot supply.",
+      "history": "issue #460 gate g2 -- restated from a forward-aimed deontic ('POST must sample ...') into the record's own factual statement of the same requirement; grounded in a3 (\"separating the two requires runs under BOTH anchors with map_before_src measured identically -- a comparative experiment nobody has run\")"
+    }
+  ]
+}

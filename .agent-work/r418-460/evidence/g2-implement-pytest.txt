@@ -1,0 +1,90 @@
+........................................................................ [  4%]
+.................................................... [  7%]
+........................................................................ [ 11%]
+.................................................................. [ 14%]
+........................................................................ [ 19%]
+.......................................................... [ 22%]
+.................................................................................. [ 27%]
+........................................................................ [ 31%]
+..................................................................... [ 35%]
+.....................................................F................................................................................................................ [ 44%]
+..................s..................................................... [ 48%]
+........................................................................ [ 52%]
+........................................................................ [ 57%]
+........................................................................................................................................................................... [ 66%]
+..................................................................................................... [ 72%]
+....................................................... [ 75%]
+..................................................... [ 78%]
+...................................... [ 80%]
+........................................................................ [ 85%]
+........................................................................ [ 89%]
+........................................................................ [ 93%]
+.................................................................... [ 97%]
+..............ss.....s............................                       [100%]
+================================== FAILURES ===================================
+_____________________ test_canon_episode_store_untouched ______________________
+
+seeded_store = {'log': ['created episode:cluster-001', 'created episode:cluster-002', 'created episode:cluster-003', 'created episode:outsider-001'], 'root': WindowsPath('C:/Users/fredc/AppData/Local/Temp/pytest-of-fredc/pytest-5382/epistore0/episodes')}
+
+    def test_canon_episode_store_untouched(seeded_store):
+        """Belt and braces (b): the tracked store's blob OIDs are READ and compared, not
+        assumed. Empty-vs-empty passes a naive equality check, so the store's NON-emptiness
+        is asserted first — this repo's `episodes/active/` carries real episodes plus
+        `.gitkeep`, and that is what makes the comparison meaningful."""
+        listing = subprocess.run(
+            ["git", "ls-files", "-s", "episodes/active/"],
+            cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8",
+        ).stdout
+        tracked = {ln.split("\t")[-1]: ln.split()[1] for ln in listing.splitlines() if ln.strip()}
+        assert len(tracked) >= 2, f"canon store looks empty; the comparison would be vacuous: {tracked}"
+        assert any(name.endswith(".md") for name in tracked), tracked
+        # Nothing this module wrote lives here: the whole exercise ran in a temp store,
+        # outside the repository.
+        assert REPO_ROOT not in seeded_store["root"].parents
+        # And the working tree agrees with the index for every tracked episode file, so the
+        # synthetic consolidation left no residue in canon.
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "episodes/"],
+            cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8",
+        ).stdout.strip()
+>       assert dirty == "", f"canon episode store is dirty: {dirty}"
+E       AssertionError: canon episode store is dirty: M episodes/active/issue-304-g3-001.md
+E          M episodes/active/issue-304-g3-003.md
+E          M episodes/active/issue-304-g3-004.md
+E          M episodes/active/issue-304-g3-005.md
+E          M episodes/active/issue-308-001.md
+E          M episodes/active/issue-308-002.md
+E          M episodes/active/issue-308-004.md
+E          M episodes/active/issue-308-005.md
+E          M episodes/active/issue-308-006.md
+E          M episodes/active/issue-308-007.md
+E          M episodes/active/issue-308-008.md
+E          M episodes/active/issue-308-009.md
+E          M episodes/active/issue-308-010.md
+E          M episodes/active/issue-308-011.md
+E          M episodes/active/issue-308-012.md
+E          M episodes/active/issue-308-013.md
+E          M episodes/active/issue-308-018.md
+E          M episodes/active/issue-308-020.md
+E          M episodes/active/issue-308-021.md
+E          M episodes/active/issue-308-023.md
+E          M episodes/active/issue-308-024.md
+E          M episodes/active/issue-308-025.md
+E          M episodes/active/issue-309-001.md
+E          M episodes/active/issue-309-002.md
+E       assert 'M episodes/a...ue-309-002.md' == ''
+E         
+E         + M episodes/active/issue-304-g3-001.md
+E         +  M episodes/active/issue-304-g3-003.md
+E         +  M episodes/active/issue-304-g3-004.md
+E         +  M episodes/active/issue-304-g3-005.md
+E         +  M episodes/active/issue-308-001.md
+E         +  M episodes/active/issue-308-002.md...
+E         
+E         ...Full output truncated (18 lines hidden), use '-vv' to show
+
+tests\test_episode_negative_control.py:1150: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_episode_negative_control.py::test_canon_episode_store_untouched
+1 failed, 1744 passed, 4 skipped, 677 subtests passed in 426.93s (0:07:06)
+EXIT=1

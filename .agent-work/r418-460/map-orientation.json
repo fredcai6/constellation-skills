@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "work_id": "r418-460",
+  "root": "C:/Programs/constellation-skills-wt/r418-460",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/EPISODE_STORE.md",
+      "content_hash": "33e060bf3c57ef52861739bd68aca47eede06d5f7b5e9a2ab4ba0d020d69813a",
+      "source": "agent-declared"
+    },
+    {
+      "path": "episodes/README.md",
+      "content_hash": "7771dc30c58d3ec6f1ae94cd0512e5bfe8cb2bd01caf57871d65e5d31759afb1",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "7c8b5cba1b7301ab9a8f7cba60583b311e31a6719ba2f384e4af05661e046c64",
+      "source": "agent-declared"
+    },
+    {
+      "path": "README.md",
+      "content_hash": "4c98eae16f4d7a2bb91996762ca7b8945ae85bd6d478ca6dc05313c3cc759ea2",
+      "source": "known-fallback"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "4c98eae16f4d7a2bb91996762ca7b8945ae85bd6d478ca6dc05313c3cc759ea2"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This skill-source repo ships no docs/architecture packet map; the episode store's structural record is docs/EPISODE_STORE.md plus episodes/README.md, and the governing doctrine is docs/agents/ORCHESTRATOR_CONTEXT.md 'The Retired Learning Playbook'. No decision anchors, no capability packets, no overlays exist to route from."
+  ],
+  "escalation": "No map exists to build; reconcile will fold this run's change into docs/EPISODE_STORE.md rather than a packet map. Recorded to the Admiral in the return.",
+  "emitted_at": "2026-08-07T21:37:57.062119+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

@@ -697,6 +697,546 @@ class SurgicalDisputeTests(EpisodeStoreTestCase):
         self.assertFalse(episode_path(self.root, "governor-268-001").exists())
 
 
+class RestateAssertionTests(EpisodeStoreTestCase):
+    """The `restate-assertion` op (issue #460): rewrite exactly ONE assertion's statement
+    and append ONE history line carrying the ORIGINAL statement verbatim.
+
+    Why the op exists at all, since these tests are the only place it is pinned down:
+    amend-assertion accepts no `statement` and changes only lifecycle-standing, so an
+    assertion written as an instruction and then marked `superseded` still STANDS as the
+    live statement — an agent opening the record still finds an instruction. Restating it
+    is the only way to make the record read as an observation, and EPISODE_STORE.md
+    section 5 ("the record grows rather than getting rewritten") is satisfied by keeping
+    the original wording verbatim in the assertion's own history."""
+
+    # A prescriptive statement of exactly the shape issue #460 is rewriting, and the
+    # observation it becomes.
+    PRESCRIPTIVE = "Always pass --store-root episodes when invoking the writer."
+    OBSERVATION = "The run passed --store-root episodes on every writer invocation."
+    REASON = "restated as an observation (issue #460, gate g2)"
+
+    def _seed(self, run="governor-268", workaround=None):
+        """One episode whose `workaround` assertion (a5) carries a prescriptive
+        statement. a5 is the real target: `workaround` is the bin issue #460 rewrites."""
+        op = create_op(run=run)
+        op["agent_supplied"]["workaround"]["statement"] = workaround or self.PRESCRIPTIVE
+        self.run_delta({"work_id": "seed", "ops": [op]})
+        return episode_path(self.root, f"{run}-001")
+
+    def _restate_op(self, episode_id="governor-268-001", assertion="a5", **overrides):
+        op = {
+            "op": "restate-assertion",
+            "id": episode_id,
+            "assertion": assertion,
+            "statement": self.OBSERVATION,
+            "history": self.REASON,
+        }
+        op.update(overrides)
+        return op
+
+    def _snapshot(self):
+        """Every file under the store root as raw bytes, keyed by path -- content AND the
+        exact set of files present, so a stray write anywhere in the store is caught, not
+        just a change to the file under test."""
+        return {p: p.read_bytes() for p in sorted(self.root.rglob("*")) if p.is_file()}
+
+    def _history_lines(self, text, aid):
+        return [
+            line
+            for line in _assertion_block(text, aid).splitlines()
+            if line.startswith("- history: ")
+        ]
+
+    # --- (a) --------------------------------------------------------------------------
+
+    def test_restate_changes_only_the_named_assertions_statement(self):
+        path = self._seed()
+        before = read_exact(path)
+
+        self.run_delta({"work_id": "i1", "ops": [self._restate_op()]})
+        after = read_exact(path)
+
+        # Every SIBLING assertion is byte-identical.
+        for aid in ("a1", "a2", "a3", "a4"):
+            self.assertEqual(
+                _assertion_block(before, aid),
+                _assertion_block(after, aid),
+                f"sibling assertion {aid} changed under a restatement of a5",
+            )
+
+        # The ## Mechanical bin is byte-identical.
+        self.assertEqual(
+            before[before.index("## Mechanical") : before.index("## Agent-supplied")],
+            after[after.index("## Mechanical") : after.index("## Agent-supplied")],
+        )
+        # The ## Retirement block (to end of file) is byte-identical.
+        self.assertEqual(
+            before[before.index("## Retirement") :], after[after.index("## Retirement") :]
+        )
+
+        # Within the target itself: kind, strength and lifecycle-standing are untouched.
+        a5_before, a5_after = _assertion_block(before, "a5"), _assertion_block(after, "a5")
+        self.assertIn("- kind: workaround", a5_after)
+        self.assertIn("- strength: strong", a5_after)
+        self.assertIn("- lifecycle-standing: active", a5_after)
+
+        # The statement is replaced -- the prescriptive sentence no longer STANDS as the
+        # statement, which is the whole point the amend-assertion route could not deliver.
+        self.assertIn(f"- statement: {self.OBSERVATION}", a5_after)
+        self.assertNotIn(f"- statement: {self.PRESCRIPTIVE}", a5_after)
+
+        # Exactly ONE history line is appended, where there were none.
+        self.assertEqual(self._history_lines(before, "a5"), [])
+        self.assertEqual(len(self._history_lines(after, "a5")), 1)
+
+        # And the record still parses and still carries all five agent-supplied kinds.
+        self.assertEqual(len(self.m.parse_episode(after).agent_supplied), 5)
+
+    def test_restate_targets_a_diagnosis_assertion_too(self):
+        # The op's `assertion` field accepts a<n> or d<n>; the diagnosis bin is reachable
+        # through the same all_assertions() map amend-assertion uses.
+        op = create_op()
+        op["diagnosis"] = [
+            {"kind": "proposed-remedy", "strength": "medium", "statement": self.PRESCRIPTIVE}
+        ]
+        self.run_delta({"work_id": "seed", "ops": [op]})
+        path = episode_path(self.root, "governor-268-001")
+
+        self.run_delta({"work_id": "i1", "ops": [self._restate_op(assertion="d1")]})
+        d1 = _assertion_block(read_exact(path), "d1")
+        self.assertIn(f"- statement: {self.OBSERVATION}", d1)
+        self.assertIn(self.PRESCRIPTIVE, self._history_lines(read_exact(path), "d1")[0])
+
+    # --- (b) --------------------------------------------------------------------------
+
+    def test_the_appended_history_line_carries_the_original_statement_verbatim(self):
+        path = self._seed()
+        self.run_delta({"work_id": "i1", "ops": [self._restate_op()]})
+
+        line = self._history_lines(read_exact(path), "a5")[0]
+        self.assertIn(self.PRESCRIPTIVE, line)  # verbatim, character for character
+        self.assertIn(self.REASON, line)  # the caller's value supplies only the reason
+
+    def test_the_history_line_quotes_the_record_not_the_caller(self):
+        """The protected property, stated as an experiment rather than an assertion about
+        the format: run the SAME op text -- same statement, same history value -- against
+        two records whose originals differ, and the two history lines must differ exactly
+        by the original. A line assembled from anything the caller supplied would come out
+        identical, so this fails against any implementation that lets the caller author or
+        influence the quoted text."""
+        first = self._seed(run="governor-268", workaround=self.PRESCRIPTIVE)
+        other_original = "Re-run the sweep by hand until the flake stops."
+        second = self._seed(run="governor-269", workaround=other_original)
+
+        self.run_delta(
+            {
+                "work_id": "i1",
+                "ops": [
+                    self._restate_op(episode_id="governor-268-001"),
+                    self._restate_op(episode_id="governor-269-001"),
+                ],
+            }
+        )
+
+        line_one = self._history_lines(read_exact(first), "a5")[0]
+        line_two = self._history_lines(read_exact(second), "a5")[0]
+        self.assertNotEqual(line_one, line_two)
+        self.assertIn(self.PRESCRIPTIVE, line_one)
+        self.assertIn(other_original, line_two)
+        self.assertNotIn(other_original, line_one)
+        self.assertNotIn(self.PRESCRIPTIVE, line_two)
+
+    def test_a_reason_that_misquotes_the_record_does_not_change_what_is_quoted(self):
+        # The failure this guards: a caller who could author the history line could record
+        # that the store said something it never said. The reason field is free text and
+        # may say anything -- the quoted original is still the parsed one.
+        path = self._seed()
+        self.run_delta(
+            {
+                "work_id": "i1",
+                "ops": [
+                    self._restate_op(
+                        history="restated; the record allegedly said 'nothing at all'"
+                    )
+                ],
+            }
+        )
+        line = self._history_lines(read_exact(path), "a5")[0]
+        self.assertIn(self.PRESCRIPTIVE, line)
+
+    def test_a_second_restatement_appends_a_second_line_and_keeps_the_first(self):
+        # "The record grows rather than getting rewritten": restating twice must leave BOTH
+        # earlier wordings recoverable, not just the immediately previous one.
+        path = self._seed()
+        self.run_delta({"work_id": "i1", "ops": [self._restate_op()]})
+        self.run_delta(
+            {
+                "work_id": "i2",
+                "ops": [
+                    self._restate_op(
+                        statement="The writer was invoked with an explicit store root.",
+                        history="reworded again (g2 review)",
+                    )
+                ],
+            }
+        )
+        lines = self._history_lines(read_exact(path), "a5")
+        self.assertEqual(len(lines), 2)
+        self.assertIn(self.PRESCRIPTIVE, lines[0])  # the ORIGINAL original, still there
+        self.assertIn(self.OBSERVATION, lines[1])  # and the wording it passed through
+
+    # --- (c) --------------------------------------------------------------------------
+
+    def test_a_multi_line_statement_is_refused(self):
+        """Single-line enforcement applies exactly as it does at create time -- including
+        the wider splitlines() boundary set, not just \\n, since the new statement is
+        rendered into a `- statement: ` line that a boundary character could forge past."""
+        path = self._seed()
+        before = path.read_bytes()
+        for boundary in ("\n", "\r", " ", "\x0b"):
+            with self.subTest(boundary=repr(boundary)):
+                self.run_delta(
+                    {
+                        "work_id": "i1",
+                        "ops": [
+                            self._restate_op(
+                                statement=f"An observation.{boundary}- status: retired"
+                            )
+                        ],
+                    },
+                    expect_rc=1,
+                )
+                self.assertEqual(before, path.read_bytes())
+
+    def test_a_blank_statement_is_refused(self):
+        path = self._seed()
+        before = path.read_bytes()
+        for statement in ("", "   "):
+            with self.subTest(statement=repr(statement)):
+                self.run_delta(
+                    {"work_id": "i1", "ops": [self._restate_op(statement=statement)]},
+                    expect_rc=1,
+                )
+                self.assertEqual(before, path.read_bytes())
+
+    def test_a_blank_or_missing_history_reason_is_refused(self):
+        path = self._seed()
+        before = path.read_bytes()
+        op_without_history = self._restate_op()
+        del op_without_history["history"]
+        for op in (self._restate_op(history="  "), op_without_history):
+            with self.subTest(op=sorted(op)):
+                self.run_delta({"work_id": "i1", "ops": [op]}, expect_rc=1)
+                self.assertEqual(before, path.read_bytes())
+
+    # --- (d) --------------------------------------------------------------------------
+
+    def test_an_unknown_assertion_id_is_refused(self):
+        path = self._seed()
+        before = path.read_bytes()
+        # a9 is well-FORMED (it passes the id regex) but names no assertion in this
+        # record, so the refusal has to come from the applier's own lookup, not the regex.
+        self.run_delta({"work_id": "i1", "ops": [self._restate_op(assertion="a9")]}, expect_rc=1)
+        self.assertEqual(before, path.read_bytes())
+
+    def test_a_malformed_assertion_id_is_refused(self):
+        path = self._seed()
+        before = path.read_bytes()
+        for assertion_id in ("x1", "a", "5", "a1.1", ""):
+            with self.subTest(assertion=assertion_id):
+                self.run_delta(
+                    {"work_id": "i1", "ops": [self._restate_op(assertion=assertion_id)]},
+                    expect_rc=1,
+                )
+                self.assertEqual(before, path.read_bytes())
+
+    def test_an_unknown_episode_id_is_refused(self):
+        path = self._seed()
+        before = self._snapshot()
+        self.run_delta(
+            {"work_id": "i1", "ops": [self._restate_op(episode_id="governor-268-999")]},
+            expect_rc=1,
+        )
+        self.assertEqual(before, self._snapshot())
+        self.assertTrue(path.exists())
+
+    # --- (e) --------------------------------------------------------------------------
+
+    def test_a_two_op_delta_with_an_invalid_second_op_leaves_the_first_ops_file_unchanged(self):
+        first = self._seed(run="governor-268")
+        second = self._seed(run="governor-269")
+        before = self._snapshot()
+
+        # op1 is individually valid and would, on its own, have rewritten governor-268-001.
+        # op2 fails only once apply_delta REACHES it (the episode does not exist), so this
+        # proves the write plan defers every filesystem write until every op has succeeded
+        # -- not merely that structural validation runs before any of them.
+        self.run_delta(
+            {
+                "work_id": "i1",
+                "ops": [
+                    self._restate_op(episode_id="governor-268-001"),
+                    self._restate_op(episode_id="governor-268-404"),
+                ],
+            },
+            expect_rc=1,
+        )
+
+        self.assertEqual(before, self._snapshot(), "the first op's write landed anyway")
+        self.assertIn(f"- statement: {self.PRESCRIPTIVE}", read_exact(first))
+        self.assertEqual(self._history_lines(read_exact(first), "a5"), [])
+        self.assertEqual(self._history_lines(read_exact(second), "a5"), [])
+
+    def test_the_two_op_atomicity_exercise_is_not_vacuous(self):
+        # The same two-op delta with a VALID second op does mutate both files -- so the
+        # test above is watching a write that would really have happened, not an op that
+        # was never going to write in the first place.
+        first = self._seed(run="governor-268")
+        second = self._seed(run="governor-269")
+        self.run_delta(
+            {
+                "work_id": "i1",
+                "ops": [
+                    self._restate_op(episode_id="governor-268-001"),
+                    self._restate_op(episode_id="governor-269-001"),
+                ],
+            }
+        )
+        for path in (first, second):
+            self.assertIn(f"- statement: {self.OBSERVATION}", read_exact(path))
+            self.assertEqual(len(self._history_lines(read_exact(path), "a5")), 1)
+
+    # --- (g) --------------------------------------------------------------------------
+
+    def test_a_misfiled_extra_field_on_the_op_is_refused(self):
+        """The op takes EXACTLY id, assertion, statement and history. The dangerous inputs
+        are the plausible ones -- a caller who assumes a restatement also carries epistemic
+        status, or who files amend-assertion's or retire's own fields here."""
+        path = self._seed()
+        before = path.read_bytes()
+        for field_name, value in (
+            ("lifecycle-standing", "superseded"),  # amend-assertion's field
+            ("strength", "weak"),
+            ("kind", "workaround"),
+            ("reason", "because"),  # retire's field
+            ("retired-at", "2026-08-07"),
+            ("statment", "typo'd key, so the real one is missing too"),
+        ):
+            with self.subTest(field=field_name):
+                self.run_delta(
+                    {"work_id": "i1", "ops": [self._restate_op(**{field_name: value})]},
+                    expect_rc=1,
+                )
+                self.assertEqual(before, path.read_bytes())
+
+    # --- (f) --------------------------------------------------------------------------
+
+    def _main(self, delta, *extra_argv):
+        """Run the writer's CLI and return (exit code, stdout). Captures stdout because
+        the dry-run contract is about what the caller is TOLD, not only about what does or
+        does not land on disk."""
+        delta_path = Path(self.tmp.name) / "dry-run-delta.json"
+        delta_path.write_text(json.dumps(delta), encoding="utf-8")
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            rc = self.m.main(
+                ["--delta", str(delta_path), "--store-root", str(self.root), *extra_argv]
+            )
+        return rc, buffer.getvalue()
+
+    def test_a_restate_under_dry_run_logs_the_op_and_writes_nothing(self):
+        """The defect this exists to prevent: apply_delta() and _dry_run_log() dispatch on
+        op kind through SEPARATE if/elif chains. Registering the op in only the first left
+        --dry-run silently skipping it -- no log line, no error, exit 0, and a cheerful
+        "DRY RUN — no write". A caller would read that as "your op is fine" when the op had
+        never been looked at, in the store's only write path."""
+        self._seed()
+        before = self._snapshot()
+
+        rc, out = self._main({"work_id": "i1", "ops": [self._restate_op()]}, "--dry-run")
+
+        self.assertEqual(rc, 0)
+        self.assertIn("restated governor-268-001.a5", out)  # the op WAS dispatched
+        self.assertIn("DRY RUN — no write", out)
+        self.assertEqual(before, self._snapshot(), "a dry run wrote to the store")
+
+    def test_the_dry_run_log_line_matches_the_one_a_real_apply_emits(self):
+        # Otherwise a dry run could "log the op" with text no real apply would ever
+        # produce, and still read as registered.
+        self._seed()
+        _, dry = self._main({"work_id": "i1", "ops": [self._restate_op()]}, "--dry-run")
+        wet_rc, wet = self._main({"work_id": "i2", "ops": [self._restate_op()]})
+        self.assertEqual(wet_rc, 0)
+        dry_lines = [line for line in dry.splitlines() if line != "DRY RUN — no write"]
+        self.assertEqual(dry_lines, wet.splitlines())
+
+    def test_a_dry_run_of_an_invalid_restate_still_refuses(self):
+        # A dry run answers about the store that is really there: an op a real apply would
+        # refuse must be refused here too, not waved through because nothing writes.
+        self._seed()
+        rc, out = self._main(
+            {"work_id": "i1", "ops": [self._restate_op(assertion="a9")]}, "--dry-run"
+        )
+        self.assertEqual(rc, 1)
+        self.assertNotIn("DRY RUN", out)
+
+    # --- both dispatch sites carry an else ---------------------------------------------
+
+    def test_an_op_kind_in_op_kinds_but_absent_from_a_dispatch_site_fails_visibly(self):
+        """The silent-skip defect itself, reproduced: admit a kind to OP_KINDS (so
+        validate_delta lets it through) that neither dispatch chain has a branch for.
+
+        Without the `else: raise`, apply_delta() returns an empty log and commits, and
+        _dry_run_log() returns only "DRY RUN — no write" -- both exit 0, both silent. Each
+        now raises and names the site that missed it, so the next op added to this module
+        cannot repeat the defect. Both sites are asserted SEPARATELY: one else does not
+        imply the other, and that asymmetry is exactly what went wrong the first time."""
+        self._seed()
+        delta = {"work_id": "i1", "ops": [{"op": "future-op", "id": "governor-268-001"}]}
+
+        original_kinds = self.m.OP_KINDS
+        self.m.OP_KINDS = original_kinds + ("future-op",)
+        try:
+            # The premise: validate_delta now ACCEPTS this kind, so the refusals below have
+            # to come from the dispatch chains, not from the OP_KINDS membership check.
+            self.m.validate_delta(delta)
+
+            for site, call in (
+                ("apply_delta", lambda: self.m.apply_delta(self.root, delta)),
+                ("_dry_run_log", lambda: self.m._dry_run_log(self.root, delta)),
+            ):
+                with self.subTest(site=site):
+                    with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+                        call()
+                    self.assertIn(site, str(caught.exception))
+                    self.assertIn("future-op", str(caught.exception))
+        finally:
+            self.m.OP_KINDS = original_kinds
+
+    def test_every_op_kind_is_dispatched_at_both_sites(self):
+        """Define the guard by the consumer's own behaviour rather than a hand-kept list:
+        drive EVERY member of the shipped OP_KINDS through both dispatch chains and assert
+        none of them reaches the else. A future op added to OP_KINDS and wired into only
+        one chain fails here without anyone remembering to extend this test."""
+        minimal = {
+            "create": create_op(run="probe-run"),
+            "amend-assertion": {
+                "op": "amend-assertion",
+                "id": "governor-268-001",
+                "assertion": "a5",
+                "lifecycle-standing": "disputed",
+                "history": "probe",
+            },
+            "restate-assertion": self._restate_op(),
+            "retire": {"op": "retire", "id": "governor-268-001", "reason": "probe"},
+        }
+        # The list above is checked against the shipped tuple rather than trusted: an op
+        # added to OP_KINDS with no entry here fails right now, instead of this loop
+        # quietly probing three of four kinds.
+        self.assertEqual(sorted(minimal), sorted(self.m.OP_KINDS))
+
+        probed = 0
+        for kind, op in minimal.items():
+            for site, call in (
+                ("apply_delta", self.m.apply_delta),
+                ("_dry_run_log", self.m._dry_run_log),
+            ):
+                with self.subTest(kind=kind, site=site):
+                    # A fresh store per probe so the ops cannot interfere with each other.
+                    with tempfile.TemporaryDirectory() as tmp:
+                        root = Path(tmp) / "episodes"
+                        self.m.ensure_store_layout(root)
+                        seed = create_op()
+                        seed["agent_supplied"]["workaround"]["statement"] = self.PRESCRIPTIVE
+                        self.m.apply_delta(root, {"work_id": "seed", "ops": [seed]})
+                        log = call(root, {"work_id": "probe", "ops": [op]})
+                    self.assertTrue(
+                        [line for line in log if line != "DRY RUN — no write"],
+                        f"{kind} produced no log line at {site} — it was silently skipped",
+                    )
+                    probed += 1
+        self.assertEqual(probed, 2 * len(self.m.OP_KINDS))
+
+    # --- the allowlist itself is the guard, so pin it -----------------------------------
+
+    def test_the_op_field_allowlist_is_pinned_to_its_exact_membership(self):
+        """g1 review, mutation M4: adding an `original` key to RESTATE_ALLOWED_FIELDS and
+        having the applier prefer op["original"] over the parsed statement ran GREEN --
+        21 passed, exit 0. The shipped code has no such hole, but every other test here
+        checks what the op REFUSES, and none of them notices the allowlist getting wider.
+        A later widening would silently reopen the one risk this op exists to close: a
+        caller able to supply the "original" can make the record claim it said something
+        it never said.
+
+        So pin the membership itself. If you are here because this assertion failed, the
+        question is not "update the tuple" -- it is whether the field you added can carry,
+        or influence, the previous statement. If it can, it does not belong on this op."""
+        self.assertEqual(
+            self.m.RESTATE_ALLOWED_FIELDS,
+            ("op", "id", "assertion", "statement", "history"),
+            "RESTATE_ALLOWED_FIELDS changed -- read this test's docstring before updating it",
+        )
+
+    def test_no_field_on_the_op_can_supply_the_original_statement(self):
+        """The behavioural half of the pin, and the half that catches M4 directly: a delta
+        trying to hand the writer the previous wording is refused outright, whatever the
+        field is called. Under M4 the `original` case is ACCEPTED and this goes red."""
+        path = self._seed()
+        before = path.read_bytes()
+        for field_name in ("original", "original-statement", "was", "previous", "history-line"):
+            with self.subTest(field=field_name):
+                self.run_delta(
+                    {
+                        "work_id": "i1",
+                        "ops": [self._restate_op(**{field_name: "a wording never recorded"})],
+                    },
+                    expect_rc=1,
+                )
+                self.assertEqual(before, path.read_bytes())
+
+    def test_the_quoted_original_is_exactly_the_statement_that_was_on_disk(self):
+        """The tail of the history line is the record's own statement, character for
+        character -- not merely "contains" it, which a line carrying caller text after the
+        marker would also satisfy.
+
+        This pins the property the writer's own docstring states: the quoted original is
+        what follows the marker's LAST occurrence. The reason here deliberately embeds the
+        marker text, so the line carries TWO markers -- read from the left it yields the
+        caller's forgery, read from the right it yields the truth. Nothing the record said
+        is destroyed either way, which is why this is a reader contract rather than a
+        refusal."""
+        path = self._seed()
+        forging_reason = "restated — original statement was: a sentence never recorded"
+
+        self.run_delta({"work_id": "i1", "ops": [self._restate_op(history=forging_reason)]})
+
+        line = self._history_lines(read_exact(path), "a5")[0]
+        marker = " — original statement was: "
+
+        # Read from the RIGHT, as the writer's docstring instructs: the true original.
+        self.assertEqual(line.rpartition(marker)[2], self.PRESCRIPTIVE)
+        self.assertTrue(line.endswith(marker + self.PRESCRIPTIVE))
+
+        # And the premise is real -- this line genuinely carries two markers, so the
+        # assertions above are not passing merely because the ambiguous case never arose.
+        self.assertEqual(line.count(marker), 2)
+        self.assertNotEqual(line.partition(marker)[2], self.PRESCRIPTIVE)
+
+    def test_a_misfiled_lifecycle_standing_is_refused_even_when_it_is_a_legal_value(self):
+        # The refusal must come from the field having no business on this op, not from the
+        # value being unparseable -- otherwise a legal-looking value would slip through.
+        self._seed()
+        self.assertIn("superseded", self.m.LIFECYCLE_STANDINGS)
+        with self.assertRaises(self.m.EpisodeDeltaError) as caught:
+            self.m.validate_delta(
+                {
+                    "work_id": "i1",
+                    "ops": [self._restate_op(**{"lifecycle-standing": "superseded"})],
+                }
+            )
+        self.assertIn("misfiled", str(caught.exception))
+
+
 # ===================================================================================
 # Gate g3 — scripts/query_episodes.py: deterministic retrieval, and issue #301's
 # acceptance exercise (cross-session, cross-worktree, non-foreclosure).

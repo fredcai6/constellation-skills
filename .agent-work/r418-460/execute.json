@@ -1,0 +1,1002 @@
+{
+  "work_id": "r418-460",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read docs/agents/ORCHESTRATOR_CONTEXT.md (The Retired Learning Playbook), docs/EPISODE_STORE.md, episodes/README.md, and .agent-work/r418-460/MISSION_FRAME.md. Confirm the frozen plan's intent and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + store doctrine + mission frame loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read docs/agents/ORCHESTRATOR_CONTEXT.md 'The Retired Learning Playbook' (record-not-rule, no successor playbook, docs/agents promotion is the human's call), docs/EPISODE_STORE.md sections 3 and 5 (record grammar; per-field assertion addressability; the record grows), episodes/README.md (active/retired layout, only write path), and MISSION_FRAME.md. Frozen plan intent and scope confirmed: four gates, restate-assertion departure ratified."
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "restate-assertion write path: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer.\n\nTASK: add a fourth op kind, `restate-assertion`, to scripts/apply_episode_delta.py.\n\nWHY IT IS NEEDED, AND WHY NOT THE CHEAPER ALTERNATIVE. Issue #460 asks for the prescriptive `workaround` statements in episodes/active/ to be rewritten as observations, and asserts the rewrite goes through `amend-assertion`. That is not true of the code: _validate_amend_assertion (:970) accepts no `statement` field and _apply_amend_assertion (:1227) changes only `lifecycle-standing` plus one appended history line, deliberately, per its own comment. A cold critic raised the cheaper route -- leave the text alone and mark it `lifecycle-standing: superseded` with a history line. It is rejected, on the record: the prescriptive sentence would still stand as the live statement, so an agent opening the file still finds an instruction, and the issue's first acceptance criterion is that every workaround READS as an observation. episodes/ must never be hand-edited, so there is no third way.\n\nTHE CONSTRAINT THIS OP MUST ANSWER TO: docs/EPISODE_STORE.md section 5 says the record grows rather than getting rewritten, and its worked example deliberately leaves `statement` untouched. That section is not support for this op -- it is what the op has to satisfy. It is satisfied by preserving the original wording verbatim in the assertion's own history, so nothing the store ever asserted is destroyed.\n\nSHAPE: `restate-assertion` takes `id`, `assertion` (a<n> or d<n>), `statement` (the new text), and `history` (why it was restated). It replaces exactly that one assertion's `statement` and appends ONE history line that carries the ORIGINAL statement verbatim. Build that history line INSIDE the writer from the parsed original, so a caller cannot supply a history line that misquotes what was there. It must NOT touch kind, strength, lifecycle-standing, any sibling assertion, any mechanical line, or the retirement block. Single-line enforcement on the new statement applies exactly as at create time. Validation must refuse an unknown episode id, an unknown assertion id, a missing/blank statement, a missing/blank history reason, and any misfiled extra field.\n\nTWO DISPATCH SITES, NOT ONE (cold-critic finding, verify it yourself): apply_delta (:1167) and _dry_run_log (:1308) dispatch on op kind independently and NEITHER has an else branch. An op registered in only one of them makes --dry-run silently skip it: no log line, no error, exit 0, \"DRY RUN -- no write\". Register `restate-assertion` in OP_KINDS and at BOTH sites, and add an else-raise at both so the next op added cannot repeat this.\n\nEVIDENCE REQUIRED: tests in tests/test_episode_store.py covering --\n (a) a restate changes only the named assertion's statement and leaves every sibling assertion, every mechanical line, strength, kind, lifecycle-standing and the retirement block byte-identical;\n (b) the appended history line contains the original statement verbatim;\n (c) a multi-line statement is REFUSED;\n (d) an unknown assertion id is REFUSED;\n (e) the delta is all-or-nothing -- a two-op delta whose second op is invalid leaves the first op's file unchanged on disk;\n (f) a restate under --dry-run LOGS the op and writes nothing;\n (g) a misfiled extra field on the op is REFUSED.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "none -- first gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "none -- first gate; e0-context complete and the frozen plan's intent confirmed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "anchors": {
+        "structural": [
+          "docs/EPISODE_STORE.md -- record grammar, seam set, write-path doctrine (hash-pinned substitute; this repo has no packet map)",
+          "episodes/README.md -- store layout: active/ is the ordinary set, retired/ the archive",
+          "scripts/apply_episode_delta.py -- the only write path"
+        ],
+        "capability": [
+          "episode write path",
+          "episode record content in episodes/active/"
+        ],
+        "constraint": [
+          "an episode records what happened and is never read back as a rule (docs/agents/ORCHESTRATOR_CONTEXT.md, The Retired Learning Playbook)",
+          "docs/EPISODE_STORE.md section 5 says the record grows rather than getting rewritten -- that is the constraint a restatement must answer to, NOT support for one; this run answers it by preserving the original wording verbatim in history and reconciling section 5 at g4"
+        ],
+        "decision": [
+          "add a restate-assertion op rather than annotating with amend-assertion @grade: settled/inherited - leans g1-implement - amend-assertion can only set lifecycle-standing, which leaves the prescriptive sentence standing as the live statement and fails the issue's acceptance criterion that every workaround READS as an observation; LO-460 Inherited Latitude puts how the rewrite is applied with the Commander; the cheaper standing-annotation alternative was raised by the cold critic and is rejected on that ground, with the original wording preserved verbatim in history so nothing the store asserted is destroyed",
+          "decision pressure: which observed rules deserve docs/agents/* doctrine -- floated to the human, never decided here"
+        ],
+        "evidence": [
+          "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, real exit code",
+          "count of records examined (48) and restated, out of the 32 in scope",
+          "the guard observed REFUSING a record that plainly instructs"
+        ],
+        "confidence_flags": [
+          "no packet map exists (map_orient DEGRADED-NO-MAP, discharged with four hash-pinned substitutes); docs/EPISODE_STORE.md is the structural record this run reconciles into"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/r418-460/crew-handoffs/g1-implement-result.md",
+            "session": "constellation/r418-460/g1-implement/implementer/attempt-1",
+            "verified": "fresh",
+            "note": "restate-assertion shipped: OP_KINDS + validator + applier + writer-built history line, registered at both dispatch sites with else-raise at each; 21 new tests; suite 1742 passed 4 skipped exit 0; nine mutation probes each drive the new tests red; no unresolved blockers"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "restate-assertion write path: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-implement complete; IMPLEMENTER_RESULT verified fresh by run_crew.py --verify-result"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "anchors": {
+        "inherits": "g1-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/r418-460/crew-handoffs/g1-review-result.md",
+            "verdict": "APPROVE",
+            "session": "constellation/r418-460/g1-review/reviewer/attempt-1",
+            "verified": "fresh",
+            "note": "reviewer reproduced the suite (1742 passed, 4 skipped, exit 0), re-ran the mutations in an isolated tree copy, and confirmed the load-bearing property by code and by experiment: no caller-supplied field reaches the quoted-original text. Three non-blocking triage candidates returned."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "restate-assertion write path: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate. BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-review complete, verdict APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the restate-assertion op exists in the writer and the store tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q --color=no tests/test_episode_store.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-4"
+        },
+        {
+          "id": "cR",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1",
+          "attested": {
+            "evidence": "e-g1-integrate-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/r418-460/crew-handoffs/g1-review-result.md",
+            "note": "carried from g1-review (e-g1-review-1). Rework 1 landed after the reviewer's APPROVE and was verified by the Commander instead: the M4 probe re-run here shows the pre-rework suite GREEN under the widened-allowlist mutation and the post-rework suite RED, restored byte-for-byte; tests/test_episode_store.py 130 passed 1 skipped exit 0 in the Commander's own hands"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-integrate",
+            "why_ref": "w-3",
+            "note": "HARD context trip at 153K against the calibrated 150K cap for claude-opus-5 (gauge fill_fraction 0.153, observed fresh). Second commander on this spine to trip at a gate seam. g1 is DONE and verified in the Commander's own hands -- reviewer APPROVE, Rework 1 mutation re-run by me (pre-rework GREEN, post-rework RED, source restored byte-for-byte), tests/test_episode_store.py 130 passed 1 skipped exit 0. Only the g1-integrate advance itself is outstanding; the successor re-runs it first. Gate handoffs for g2 are already written."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q --color=no tests/test_episode_store.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q --color=no tests/test_episode_store.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "restate the prescriptive records: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer.\n\nTASK: rewrite every prescriptive agent-supplied statement in episodes/active/ as a record of what happened, using ONLY the g1 `restate-assertion` op through scripts/apply_episode_delta.py --store-root episodes.\n\nSCOPE: examine ALL 48 records in episodes/active/. The 32 pre-#447 records (issue-304-g3-* x5, issue-308-* x25, issue-309-* x2) are the ones in scope for rewriting. The 16 issue-447-* records are believed already to honour the constraint -- CHECK them and report the result, do not assume it. Report as \"48 examined / 32 in scope / N restated\".\n\nTHE WORDING STANDARD (Commander-set, this gate applies it): a statement is an OBSERVATION when it says what was done, by whom or by what, in the run being recorded -- past tense, a real subject, no second person, no forward-aimed modal. It is an INSTRUCTION when it is in imperative mood (a bare base-form verb opening a sentence or clause with no subject), addresses a reader (you, your), or carries a deontic modal aimed forward (must, should, always, never used as a directive).\n\nONE DELIBERATE EXEMPTION, DO NOT \"FIX\" IT: `task-intent` is written in the bare infinitive by house convention -- \"Fix the STATE_NOTE-fallback wording gap...\" is the form the store's own canonical worked record uses at docs/EPISODE_STORE.md:171. That is the format, not drift. Leave task-intent alone unless it addresses a reader in the second person.\n\nWORKED CONTRAST from the issue, use it as the model:\n  BEFORE (issue-308-001, prescriptive): \"Give the harness the same fail-safe discipline as the production code under test: wrap per-iteration work in try/except with a guaranteed stop-signal in `finally`, and mark helper threads daemon=True as a backstop.\"\n  AFTER-SHAPE (issue-447-005, observational): \"The run paired each -k gate with an unfiltered whole-file and whole-suite run, and that pairing is what caught both defects.\"\nSame information. No imperative mood, no second person, no forward-aimed modal.\n\nHARD RULE -- DO NOT INVENT FACTS. Rewrite ONLY into what the record itself supports. Every episode carries task-intent, expected-behavior, observed-behavior and impact-cost alongside the workaround; use them to ground what actually happened. Where a statement's grounding does NOT support a factual rewrite -- typically because it was written as advice and the record never says whether it was applied -- LEAVE IT ALONE and list it in the result as UNGROUNDED, with the episode id, assertion id, and the specific reason the record cannot support a factual restatement. Reporting an ungrounded record is a correct outcome and g3 has an exception mechanism for exactly these; synthesising a past-tense claim the record cannot support is a falsification of the store and is the one unrecoverable failure of this gate.\n\nALSO CHECK, DO NOT SYNTHESISE: the other agent-supplied kinds (expected-behavior, observed-behavior, impact-cost) and the diagnosis assertions (suspected-cause, proposed-remedy) for the same drift. `proposed-remedy` is the one most likely to carry it. Restate the ones that plainly instruct AND are grounded; report the rest.\n\nDOCTRINE CANDIDATES: several of these workarounds state what look like genuine rules. Collect each one -- episode id, assertion id, the rule as stated, and why it looks like doctrine -- into the IMPLEMENTER_RESULT for the human's decision. DO NOT write any of them into docs/agents/*, and DO NOT create any new file to hold them. That boundary is absolute.\n\nEVIDENCE REQUIRED: the delta file(s) used, the writer invocations with --store-root episodes, the 48/32/N count, the UNGROUNDED list with reasons, the doctrine-candidate list, and `git diff --stat episodes/`.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 shipped the restate-assertion op",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-integrate is complete; restate-assertion shipped in c9d9dd7c (registered in OP_KINDS and at both dispatch sites, reviewer APPROVE, allowlist pinned by three tests) and the 27 restatements at 7df136e6 were applied through it."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1",
+          "attested": {
+            "evidence": "e-g2-implement-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "anchors": {
+        "structural": [
+          "docs/EPISODE_STORE.md -- record grammar, seam set, write-path doctrine (hash-pinned substitute; this repo has no packet map)",
+          "episodes/README.md -- store layout: active/ is the ordinary set, retired/ the archive",
+          "scripts/apply_episode_delta.py -- the only write path"
+        ],
+        "capability": [
+          "episode write path",
+          "episode record content in episodes/active/"
+        ],
+        "constraint": [
+          "an episode records what happened and is never read back as a rule (docs/agents/ORCHESTRATOR_CONTEXT.md, The Retired Learning Playbook)",
+          "docs/EPISODE_STORE.md section 5 says the record grows rather than getting rewritten -- that is the constraint a restatement must answer to, NOT support for one; this run answers it by preserving the original wording verbatim in history and reconciling section 5 at g4"
+        ],
+        "decision": [
+          "add a restate-assertion op rather than annotating with amend-assertion @grade: settled/inherited - leans g1-implement - amend-assertion can only set lifecycle-standing, which leaves the prescriptive sentence standing as the live statement and fails the issue's acceptance criterion that every workaround READS as an observation; LO-460 Inherited Latitude puts how the rewrite is applied with the Commander; the cheaper standing-annotation alternative was raised by the cold critic and is rejected on that ground, with the original wording preserved verbatim in history so nothing the store asserted is destroyed",
+          "decision pressure: which observed rules deserve docs/agents/* doctrine -- floated to the human, never decided here"
+        ],
+        "evidence": [
+          "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, real exit code",
+          "count of records examined (48) and restated, out of the 32 in scope",
+          "the guard observed REFUSING a record that plainly instructs"
+        ],
+        "confidence_flags": [
+          "no packet map exists (map_orient DEGRADED-NO-MAP, discharged with four hash-pinned substitutes); docs/EPISODE_STORE.md is the structural record this run reconciles into"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Fourth dispatch closed out g2, g3 and g4 OUTSIDE this checklist, on the Admiral's standing instruction to finish and open the PR without further crew dispatch or review cycles. The work is committed (7df136e6 g2, cc74157b g3, 26056186 g4) and PR #486 is open. This file is NOT advanced past g2-implement because doing so honestly is impossible: the cR postconditions on g3-integrate and g4-integrate require an APPROVE review-result artifact, and no independent reviewer ran on those two gates. Attesting them would be a checklist that cannot fail, which is the exact defect class issue #460 is about. State left truthful rather than tidy.",
+        "authority_needed": "admiral",
+        "next_action": "Admiral: adjudicate PR #486. If g3/g4 need independent review, dispatch a reviewer against the shipped diff and advance this file from its verdict; otherwise close this checklist with the departure recorded.",
+        "prior_status": "pending"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/r418-460/crew-handoffs/g2-implement-result.md",
+            "count": "48 examined / 32 in scope / 27 restated",
+            "commit": "7df136e6",
+            "ungrounded": "5: issue-304-g3-005.d2, issue-308-014.a5, issue-308-015.a5, issue-308-017.a5, issue-308-019.a5",
+            "doctrine_candidates": "22",
+            "blocker_resolved": "test_canon_episode_store_untouched asserts git status --porcelain episodes/ is empty, so it reds for any uncommitted episode change; cleared by committing, no code change; logged as triage candidate",
+            "verified_by_commander": "git diff --stat 7df136e6 HEAD -- episodes/ empty; 24 files, 54 insertions, 27 deletions; zero issue-447 files in the diff; all 5 UNGROUNDED assertions unmodified"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "test-run",
+          "payload": {
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "result": "1745 passed, 4 skipped, 677 subtests",
+            "exit_code": "0",
+            "log": ".agent-work/r418-460/evidence/g2-integrate-pytest.txt",
+            "note": "run by the Commander at HEAD after committing the 27 restatements; identical to the post-g1 baseline, so the restatements regressed nothing, and test_canon_episode_store_untouched passes now that episodes/ is clean against the index"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-implement",
+            "why_ref": "w-4",
+            "trip": "HARD: gauge fill_fraction 0.198 = ~198K against the calibrated 150K hard cap for claude-opus-5, observed fresh and derived from this agent's own transcript, not inherited from a predecessor. Third commander on this spine to trip.",
+            "state": "g2 IS DONE AND VERIFIED. 48 examined / 32 in scope / 27 restated / 5 UNGROUNDED by design / 16 issue-447 checked and correctly untouched. Committed 7df136e6. Suite green 1745 passed, 4 skipped, 677 subtests, EXIT 0, run by me at HEAD. g2-implement p1 and c1 are BOTH attested and evidence e-g2-implement-1 and e-g2-implement-2 are attached.",
+            "next_action": "advance g2-implement --why <understanding>, then dispatch the g2 reviewer using the handoff ALREADY WRITTEN at .agent-work/r418-460/crew-handoffs/g2-review-handoff.md. Register it first with run_crew.py --backend external, as g1 and g2 were.",
+            "g3_input": "the pre-g2 sha the detector is measured against is c9d9dd7c; g3's exception list is seeded from the 5 UNGROUNDED ids in e-g2-implement-1.",
+            "g4_input": "docs/EPISODE_STORE.md's own canonical worked record carries a prescriptive assertion at governor-268-003.d2, so the document defining the format models the shape this issue removes. Confirmed, and it belongs in g4.",
+            "collision": "another commander is live on this same worktree: 770f3e06 (empty no-op) and 00986ad5 / 1dfd06ae (notes-460.md) landed from it mid-run. episodes/ at HEAD is byte-identical to my 7df136e6 and nothing is damaged, but two commanders on one worktree needs the Admiral."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "restate the prescriptive records: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "restate the prescriptive records: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate. BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the restated store is well-formed and the store tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q --color=no tests/test_episode_store.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the IMPLEMENTER_RESULT reports 48 examined / 32 in scope / N restated, plus the UNGROUNDED list with a reason each and the doctrine-candidate list -- no doctrine candidate written into docs/agents/* and no new file created to hold them",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "cR",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "the guard that can fail: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer.\n\nTASK: ship something that CAN FAIL and that keeps episodes/active/ free of prescriptive statements going forward -- or return a measured honest null saying no command can do it reliably.\n\nDELIVERABLE: scripts/verify_episode_observations.py plus tests/test_episode_observations.py.\n\nSCOPE OF THE DETECTOR -- narrowed by measurement, do not widen it. A cold critic ran the naive three-trigger form over all 253 assertion statements in episodes/active/ and measured 41 imperative hits, 30 deontic-modal hits, 2 second-person hits -- roughly 65 flags against ~24 real defects. 31 of the 41 imperative hits were `task-intent`, which is bare-infinitive BY CONVENTION (docs/EPISODE_STORE.md:171 is the store's own canonical record in that form). Named false positives the naive form produced: issue-308-003 observed-behavior, issue-304-g3-005 suspected-cause, issue-308-010 observed-behavior (\"A gate that MUST prove a refusal has no direct expression...\" -- descriptive `must`), issue-309-002 expected-behavior (\"...SHOULD exit 0\" -- a recorded expectation).\nSo: apply the imperative rule ONLY to `workaround` and `proposed-remedy`. Apply the second-person rule to every kind. Do NOT match a bare modal anywhere -- the measurement shows `must`/`should` in this corpus are overwhelmingly descriptive or recorded expectations, not directives. Re-measure after narrowing and REPORT THE NUMBERS: flags before, flags after, false positives remaining, over all 253 statements.\n\nTHE EXCEPTION LIST, AND WHY IT EXISTS (cold-critic finding, load-bearing). g2 correctly leaves ungrounded prescriptive records alone. Those records are still prescriptive, so a guard that demands a clean store would go red on exactly the honest outcome, and the only escapes would be to fabricate a rewrite or to file the lexicon down until the corpus passes -- the checks-that-cannot-fail class this repo has a label for. So the guard carries an explicit exception list keyed by (episode id, assertion id) with a REQUIRED non-empty reason per entry, seeded from g2's UNGROUNDED list and from nothing else. The guard fails on any offender NOT on the list. It ALSO fails on a STALE entry -- one whose episode or assertion no longer exists, or that no longer trips any trigger -- so the list cannot quietly outlive its reason.\n\nSTRICT VS REPORT (cold-critic finding): --strict exits non-zero on any unlisted offender; the default exits 0 and prints the report. That is what lets the honest-null branch below ship without contradicting the red-proof.\n\nTHE MEASUREMENT THIS GATE OWES (LO-460 pre-ruling honest-null-on-the-check): run the detector over the 32 canon records as they were BEFORE the g2 rewrite -- recover them with `git show <pre-g2-sha>:episodes/active/<id>.md` into a temp store root; the Commander supplies <pre-g2-sha> in the handoff -- and over the corpus AFTER. Report the false-positive rate as a number, not an impression. If it makes the check unusable as a gate, SAY SO: report the honest null, ship report-only as the default, and state plainly that the invariant is routed to a named human rather than a machine. A measured negative is a complete deliverable here.\n\nTHE RED-PROOF, MANDATORY AND DOUBLE (LO-460 pre-ruling the-guard-must-be-able-to-fail): the guard must be OBSERVED REFUSING a record that plainly instructs, not merely observed passing. Ship BOTH:\n  (r1) a test building a temp store whose one episode carries the pre-rewrite text of issue-308-001 verbatim -- \"Give the harness the same fail-safe discipline as the production code under test: wrap per-iteration work in try/except with a guaranteed stop-signal in `finally`, and mark helper threads daemon=True as a backstop.\" -- asserting the guard exits NON-ZERO under --strict and NAMES that episode and assertion;\n  (r2) a second red case whose text is NOT drawn from this corpus, so the detector cannot pass r1 by special-casing a known literal. Write a fresh plainly-instructing workaround of your own.\nALSO ship a committed red fixture store at .agent-work/r418-460/red-fixture/episodes/ (active/ + retired/, one plainly-instructing episode) built through apply_episode_delta.py, because the Commander runs the guard against it as an engine command postcondition at this gate's integrate step.\n\nKEEPING IT TRUE GOING FORWARD (cold-critic finding): nothing currently registers this script anywhere, so without wiring it runs once and never again. tests/test_episode_observations.py MUST contain a test that runs the guard over the REAL episodes/ store root at repo root and asserts it is clean under --strict. That test is the delivery.\n\nSTATE THE HONEST LIMIT IN THE SCRIPT'S OWN DOCSTRING: this detector catches the MARKED forms of prescription. It cannot catch an unmarked one (\"The right approach is to X\"), the trigger lexicon is hand-maintained and will drift, and the kind-scoping above is a measured compromise rather than a general rule. Name that residue at the code site rather than letting the guard imply a completeness it does not have.\n\nDO NOT create a file that accumulates advice for future agents. This is a verifier, not a playbook.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 restated the prescriptive records",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "anchors": {
+        "structural": [
+          "docs/EPISODE_STORE.md -- record grammar, seam set, write-path doctrine (hash-pinned substitute; this repo has no packet map)",
+          "episodes/README.md -- store layout: active/ is the ordinary set, retired/ the archive",
+          "scripts/apply_episode_delta.py -- the only write path"
+        ],
+        "capability": [
+          "episode write path",
+          "episode record content in episodes/active/"
+        ],
+        "constraint": [
+          "an episode records what happened and is never read back as a rule (docs/agents/ORCHESTRATOR_CONTEXT.md, The Retired Learning Playbook)",
+          "docs/EPISODE_STORE.md section 5 says the record grows rather than getting rewritten -- that is the constraint a restatement must answer to, NOT support for one; this run answers it by preserving the original wording verbatim in history and reconciling section 5 at g4"
+        ],
+        "decision": [
+          "add a restate-assertion op rather than annotating with amend-assertion @grade: settled/inherited - leans g1-implement - amend-assertion can only set lifecycle-standing, which leaves the prescriptive sentence standing as the live statement and fails the issue's acceptance criterion that every workaround READS as an observation; LO-460 Inherited Latitude puts how the rewrite is applied with the Commander; the cheaper standing-annotation alternative was raised by the cold critic and is rejected on that ground, with the original wording preserved verbatim in history so nothing the store asserted is destroyed",
+          "decision pressure: which observed rules deserve docs/agents/* doctrine -- floated to the human, never decided here"
+        ],
+        "evidence": [
+          "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, real exit code",
+          "count of records examined (48) and restated, out of the 32 in scope",
+          "the guard observed REFUSING a record that plainly instructs"
+        ],
+        "confidence_flags": [
+          "no packet map exists (map_orient DEGRADED-NO-MAP, discharged with four hash-pinned substitutes); docs/EPISODE_STORE.md is the structural record this run reconciles into"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "the guard that can fail: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "the guard that can fail: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate. BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the guard's own tests pass, including the two red-proofs and the test that runs it over the real episodes/ store",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q --color=no tests/test_episode_store.py tests/test_episode_observations.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the guard runs GREEN under --strict against the real episodes/ store",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_episode_observations.py --store-root episodes --strict"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the guard runs RED under --strict against a fixture store holding a record that plainly instructs -- the guard is observed refusing, not merely observed passing",
+          "check": {
+            "kind": "command",
+            "command": "! python scripts/verify_episode_observations.py --store-root .agent-work/r418-460/red-fixture/episodes --strict"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "the before/after false-positive measurement over all 253 statements is reported as numbers, and the honest limit is stated in the script's own docstring",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "cR",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "reconcile the store doc: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer.\n\nTASK: reconcile docs/EPISODE_STORE.md with what this run changed, and give it a worked example of the observation/instruction inversion so the next migration has a correct precedent to point at (issue #460 acceptance criterion 4).\n\nEdit docs/EPISODE_STORE.md ONLY. Do NOT touch docs/agents/*. Do NOT create a new file.\n\nWHERE (cold-critic finding -- section 10 is a build inventory and does NOT enumerate ops; the doc catalogues ops nowhere, and the only mention of amend-assertion is at section 5 line 325): document `restate-assertion` where the op semantics already live -- section 5 and section 7 -- or add a short ops subsection. Choose and say which.\n\nTIGHT BOUND, AND WHY IT MATTERS. A cold critic named this gate as the real leak point for the hard boundary: writing distilled normative guidance about how future episodes SHOULD be phrased into a file agents read for the store's grammar promotes rules to doctrine while every stated constraint stays satisfied. So this gate ships exactly two things: (a) the mechanics of the new op, and (b) ONE before/after pair with the reason it was wrong. No general advice about how to write episodes. The record-not-rule constraint is already doctrine in docs/agents/ORCHESTRATOR_CONTEXT.md; cite it, do not restate or extend it.\n\nPRE-AUTHORED INVARIANTS -- verify each by inspection and state the result for each, one line each:\n  I1. docs/EPISODE_STORE.md names `restate-assertion` and states that it preserves the original statement verbatim in the assertion's history.\n  I2. The worked example carries both the prescriptive BEFORE text and the observational AFTER text of issue-308-001.\n  I3. The example says why the inversion matters, citing that the #447 handoff pointed a crew at that record as a migration precedent, so the store could not be used as its own worked example.\n  I4. scripts/verify_episode_observations.py is named as what keeps it true, with its honest limit stated.\n  I5. `git diff --name-only docs/agents/` is EMPTY.\n  I6. No new file is created.\n  I7. Section 5 is RECONCILED: it currently says an episode \"never needs rewriting later\" and its worked example changes only lifecycle-standing. The doc must now state plainly when a statement may be restated versus when standing-only amendment is correct, so the two do not contradict each other.\n  I8. No normative rule beyond the already-doctrinal record-not-rule constraint is introduced anywhere in the diff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 shipped the guard",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "anchors": {
+        "structural": [
+          "docs/EPISODE_STORE.md -- record grammar, seam set, write-path doctrine (hash-pinned substitute; this repo has no packet map)",
+          "episodes/README.md -- store layout: active/ is the ordinary set, retired/ the archive",
+          "scripts/apply_episode_delta.py -- the only write path"
+        ],
+        "capability": [
+          "episode write path",
+          "episode record content in episodes/active/"
+        ],
+        "constraint": [
+          "an episode records what happened and is never read back as a rule (docs/agents/ORCHESTRATOR_CONTEXT.md, The Retired Learning Playbook)",
+          "docs/EPISODE_STORE.md section 5 says the record grows rather than getting rewritten -- that is the constraint a restatement must answer to, NOT support for one; this run answers it by preserving the original wording verbatim in history and reconciling section 5 at g4"
+        ],
+        "decision": [
+          "add a restate-assertion op rather than annotating with amend-assertion @grade: settled/inherited - leans g1-implement - amend-assertion can only set lifecycle-standing, which leaves the prescriptive sentence standing as the live statement and fails the issue's acceptance criterion that every workaround READS as an observation; LO-460 Inherited Latitude puts how the rewrite is applied with the Commander; the cheaper standing-annotation alternative was raised by the cold critic and is rejected on that ground, with the original wording preserved verbatim in history so nothing the store asserted is destroyed",
+          "decision pressure: which observed rules deserve docs/agents/* doctrine -- floated to the human, never decided here"
+        ],
+        "evidence": [
+          "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, real exit code",
+          "count of records examined (48) and restated, out of the 32 in scope",
+          "the guard observed REFUSING a record that plainly instructs"
+        ],
+        "confidence_flags": [
+          "no packet map exists (map_orient DEGRADED-NO-MAP, discharged with four hash-pinned substitutes); docs/EPISODE_STORE.md is the structural record this run reconciles into"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "reconcile the store doc: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, constraints, the inbound map anchors from this gate's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "anchors": {
+        "inherits": "g4-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "reconcile the store doc: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification command yourself, then advance this gate. BLOCK: send the implementer back for rework or raise a blocker. Log any out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the store doc carries the worked example and the guard plus store tests still pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q --color=no tests/test_episode_store.py tests/test_episode_observations.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "no file under docs/agents/ was modified by this run",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git diff --name-only origin/main -- docs/agents/)\""
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "invariants I1-I8 each verified by inspection and reported one line each; the doctrine-candidate list is carried into the PR body for the human",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "cR",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "episodes/ is NEVER hand-edited: scripts/apply_episode_delta.py is the only write path.",
+        "Pass --store-root episodes on EVERY apply_episode_delta.py invocation. The default resolves against the installed skill directory and would silently build a store outside the repo while every gate reported green.",
+        "Do NOT edit docs/agents/* . Promoting an observation into doctrine is the HUMAN's call. Collect candidates and report them; do not park them in a new file either.",
+        "Do NOT create any file that accumulates distilled advice for future agents to consult, whatever it is named. If the fix seems to need one, STOP and report.",
+        "Do NOT edit scripts/checklist_engine.py, scripts/collect_feedback.py, or scripts/verify_worktree_precondition_coverage.py -- concurrent siblings own those.",
+        "Nothing in episodes/retired/ is in scope.",
+        "Test with: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests . Never `py` for pytest. Capture the REAL exit code. Branch baseline is 1721 passed, 4 skipped, 643 subtests, exit 0.",
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-review",
+      "statement": "scripts/apply_episode_delta.py: apply_delta and _dry_run_log carry two near-identical op-dispatch chains. A _dispatch_op helper would make single-site registration unrepresentable rather than merely guarded by the else-raise this gate added. Out of scope for #460."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-implement",
+      "statement": "scripts/apply_episode_delta.py: _apply_amend_assertion and _apply_restate_assertion now share an identical four-line prologue differing only in the op name in the error message. Extracting a shared helper would touch amend-assertion's path, which #460 has no mandate over."
+    },
+    {
+      "id": "tc3",
+      "from": "g1-review",
+      "statement": "checklist_engine survey mode: the r6-fowler postcondition ships a literal <fowler-pass-record-path> placeholder and its imperative says to fill it in, but no engine verb can -- amend is refused on surveys, attest cannot satisfy a command postcondition, and record refuses with 'Do not edit the JSON -- use the engine.' The instruction and the refusal contradict each other. Belongs to issue #433, which owns scripts/checklist_engine.py this wave."
+    }
+  ],
+  "blockers": [
+    {
+      "item": "g2-implement",
+      "blocker": "Fourth dispatch closed out g2, g3 and g4 OUTSIDE this checklist, on the Admiral's standing instruction to finish and open the PR without further crew dispatch or review cycles. The work is committed (7df136e6 g2, cc74157b g3, 26056186 g4) and PR #486 is open. This file is NOT advanced past g2-implement because doing so honestly is impossible: the cR postconditions on g3-integrate and g4-integrate require an APPROVE review-result artifact, and no independent reviewer ran on those two gates. Attesting them would be a checklist that cannot fail, which is the exact defect class issue #460 is about. State left truthful rather than tidy.",
+      "authority_needed": "admiral",
+      "next_action": "Admiral: adjudicate PR #486. If g3/g4 need independent review, dispatch a reviewer against the shipped diff and advance this file from its verdict; otherwise close this checklist with the departure recorded."
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution context loaded: the store's grammar, the only write path, and the doctrine that binds the rewrite. The restate-assertion departure answers EPISODE_STORE section 5 by preserving the original statement verbatim in the assertion's own history rather than destroying it.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:37:15.327022+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer returned a fresh, verified IMPLEMENTER_RESULT with no unresolved blockers. The two-dispatch-site defect the cold critic named was confirmed against the code and closed with an else-raise at both sites, and a mutation probe shows the new tests actually catch the single-site registration.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:17:00.863745+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "Independent reviewer verdict APPROVE with the load-bearing property verified by code reading and by mutation, not taken on the implementer's word. Its first triage candidate -- the allowlist is not test-pinned, so a later widening could silently reopen the evidence-destruction hole -- is being closed by a bounded rework before integrate; the other two are logged as candidates.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:32:55.157733+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Third commander, fresh context, cold-started from this file. g1 is integrated: reviewer APPROVE (e-g1-integrate-1) with the load-bearing property reproduced by mutation, and the M4 rework already committed in c9d9dd7c and pinned by three tests including a behavioural refusal. I re-ran the c1 command check myself in this session. The restate-assertion op is the accepted departure from the launch order's false baseline -- the store grows records, it never rewrites statement text -- and the Admiral ratified it. Moving to g2: restate the prescriptive canon records using that op.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:13:47.920437+00:00"
+    }
+  ]
+}

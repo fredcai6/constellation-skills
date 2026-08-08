@@ -1,0 +1,36 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "m5-rework1",
+      "title": "Rework 1 — pin the allowlist, correct the history-line docstring",
+      "imperative": "Two bounded follow-ups from Commander r418-460 after g1-review returned APPROVE, both inside the existing allowed scope. (1) Add a test assertion pinning RESTATE_ALLOWED_FIELDS to its exact expected tuple, so a later widening of the allowlist — the reviewer's mutation M4, which adds an `original` key and has the applier prefer op['original'] over the parsed statement, and which currently runs GREEN at 21 passed exit 0 — cannot silently reopen the evidence-destruction risk this op exists to close. Prove the new assertion drives red under exactly that mutation, with numbers. (2) Correct the _restatement_history_line docstring: it claims the original is an unambiguous tail needing no knowledge of the reason's wording, but a reason containing the marker text yields two markers on one line. The real original survives verbatim as the LAST marker, so nothing is destroyed — state that truth in one or two sentences. Do NOT change the line format and do NOT add escaping. Then re-run the full suite and append a Rework 1 section to the existing result file; do not create a new result file and do not commit.",
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the allowlist-pinning assertion and the corrected docstring are in; the full suite is green with the real exit code captured",
+          "check": {"kind": "command", "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"},
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the new assertion is non-vacuous: the reviewer's M4 widening mutation drives the suite RED, and the source is restored byte-for-byte",
+          "check": {"kind": "command", "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python .agent-work/r418-460/evidence/mutate_probe_m4.py"},
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "a Rework 1 section is appended to the EXISTING result file; no new result file was created",
+          "check": {"kind": "command", "command": "cd /c/Programs/constellation-skills-wt/r418-460 && grep -q '## Rework 1' .agent-work/r418-460/crew-handoffs/g1-implement-result.md && test \"$(ls .agent-work/r418-460/crew-handoffs/ | grep -c 'implement-result')\" -eq 1"},
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Allowed scope unchanged: scripts/apply_episode_delta.py and tests/test_episode_store.py only.",
+        "Do not change the history-line format and do not add escaping — the Commander is not widening this gate.",
+        "Leave the duplicated dispatch chains alone; the Commander is logging that as a triage candidate.",
+        "Do not create a new result file. Do not commit."
+      ]
+    }
+  ]
+}

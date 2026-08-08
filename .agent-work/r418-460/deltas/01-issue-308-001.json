@@ -1,0 +1,12 @@
+{
+  "work_id": "r418-460-g2-implement",
+  "ops": [
+    {
+      "op": "restate-assertion",
+      "id": "issue-308-001",
+      "assertion": "a5",
+      "statement": "The harness was given the same fail-safe discipline as the production code under test: per-iteration work was wrapped in try/except with a guaranteed stop-signal in `finally`, and helper threads were marked daemon=True as a backstop.",
+      "history": "issue #460 gate g2 -- restated from imperative instruction to observation; grounded in a4 (\"7 green re-runs followed the fix\") and a3, which names exactly the two defects this fix addresses (a writer thread dying without signalling stop, and a non-daemon reader thread spinning forever)"
+    }
+  ]
+}
