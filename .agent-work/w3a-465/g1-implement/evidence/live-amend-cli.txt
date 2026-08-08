@@ -1,0 +1,33 @@
+### platform
+win32
+
+### 0. claim the REAL survey lease (instantiated from the SHIPPED reviewer template)
+claimed lease live-w3a-465 -> active
+REAL exit=0
+
+### 1. record r6-fowler pass with the SHIPPED placeholder still in the check -- reproduces captured RED 2
+REFUSED: r6-fowler: command postconditions unmet ['c1']; cannot record pass Recovery: fix the underlying issue so postcondition c1 passes, then retry record r6-fowler. Do not edit the JSON — use the engine.
+REAL exit=1
+
+### 2. amend --op retext-check on the SURVEY -- the change under test
+amended: retext-check r6-fowler.c1 (authority Commander w3a-465 (LO-465))
+REAL exit=0
+
+### 3. record r6-fowler pass again -- the corrected check now runs and passes
+r6-fowler recorded pass: Fowler pass clean
+REAL exit=0
+
+### 4. add / drop / rescope on the SAME survey -- still refused
+--- drop ---
+REFUSED: amend on a survey accepts a retext-check-only delta; drop refused here. This is a CONSERVATIVE choice, not a type-level impossibility: adding, dropping or rescoping a survey item is a coherent thing to want, and it is refused only because nothing needs it yet. Split the retext-check ops into their own delta, or raise the need with the authority named in your handoff.
+REAL exit=1
+--- add ---
+REFUSED: amend on a survey accepts a retext-check-only delta; add refused here. This is a CONSERVATIVE choice, not a type-level impossibility: adding, dropping or rescoping a survey item is a coherent thing to want, and it is refused only because nothing needs it yet. Split the retext-check ops into their own delta, or raise the need with the authority named in your handoff.
+REAL exit=1
+--- rescope ---
+REFUSED: amend on a survey accepts a retext-check-only delta; rescope refused here. This is a CONSERVATIVE choice, not a type-level impossibility: adding, dropping or rescoping a survey item is a coherent thing to want, and it is refused only because nothing needs it yet. Split the retext-check ops into their own delta, or raise the need with the authority named in your handoff.
+REAL exit=1
+
+### 5. release
+released lease live-w3a-465
+REAL exit=0

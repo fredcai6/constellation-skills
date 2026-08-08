@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "mechanical": {
+    "run": "probe-465",
+    "project": "constellation-skills",
+    "role": "reviewer probe",
+    "refusals": 0,
+    "spine-step": "r0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-probe-465-r0-context@8fc473e0c994cd02a396cad8a44caf0d10a59bdd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "probe-465",
+    "generated_at": "2026-08-08T05:58:46Z"
+  }
+}
