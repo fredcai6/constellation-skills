@@ -86,7 +86,16 @@ python -m scripts.code_map check --root .
 Exists at `.agent-work/issue-456/cull-verdict.json`; parses; verdict matches the code per 5 dedicated pinning tests (`CullVerdictArtifactTests`), each re-deriving the claim from `extract.TAG_START.pattern` or an independent AST walk of `render.tag_lines`, not from the file's own prose.
 
 ### 7. Git status
-`git status --porcelain` — reported clean of untracked surprises for the touched scope once committed (see commit below). `map/` remains untracked, deliberately not staged (per handoff).
+Committed as `0d1af801` ("g7: authored comment-tag extraction + render; cull test collapses to Rationale/Rejected/See"), 23 files, explicit paths only (no `git add -A`). Post-commit `git status --porcelain`:
+```
+ M .agent-work/issue-456/execute.json.journal
+?? .agent-work/g1-implement/ .agent-work/g2-implement/ .agent-work/issue-456-g4-implement/ .agent-work/issue-456-g5-implement/
+?? .agent-work/issue-456/context/g6-*.json .agent-work/issue-456/mechanical/g6-*.json
+?? .agent-work/issue-456/evident_record.py
+?? .agent-work/issue-456/issue-456-g5-rereview/ .agent-work/issue-456/issue-456-g6-review/ .agent-work/issue-456/issue-456-gb-review/
+?? map/
+```
+Every line is either another crew's own loose bookkeeping (g1/g2/g4/g5/g6/gb artifacts, none of which this gate touched) or `map/` (deliberately untracked, staged at the final gate). Nothing from this gate's own scope is left uncommitted.
 
 ## TDD evidence, if required
 **Stated plainly, not left to the workflow-feedback section:** for gates m1-m4 (extraction, render, cull-verdict artifact, staleness join) I collapsed strict red-then-green TDD into single edit passes — test and implementation were written together in the same edit, not sequenced. RED was **inferred** after the fact from the baseline's absence of the code paths under test (the predicates/functions the new tests assert on did not exist before the change, so the tests necessarily would have failed), not **observed** by actually running the tests against the pre-change code. This is a real gap against the letter of the TDD instruction, disclosed rather than hidden.
