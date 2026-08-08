@@ -316,7 +316,8 @@
           "id": "p1",
           "statement": "g1 shipped the restate-assertion op",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1-integrate is complete; restate-assertion shipped in c9d9dd7c (registered in OP_KINDS and at both dispatch sites, reviewer APPROVE, allowlist pinned by three tests) and the 27 restatements at 7df136e6 were applied through it."
         }
       ],
       "postconditions": [
@@ -327,7 +328,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1",
+          "attested": {
+            "evidence": "e-g2-implement-1",
+            "note": null
+          }
         }
       ],
       "constraints": [
@@ -373,7 +379,52 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/r418-460/crew-handoffs/g2-implement-result.md",
+            "count": "48 examined / 32 in scope / 27 restated",
+            "commit": "7df136e6",
+            "ungrounded": "5: issue-304-g3-005.d2, issue-308-014.a5, issue-308-015.a5, issue-308-017.a5, issue-308-019.a5",
+            "doctrine_candidates": "22",
+            "blocker_resolved": "test_canon_episode_store_untouched asserts git status --porcelain episodes/ is empty, so it reds for any uncommitted episode change; cleared by committing, no code change; logged as triage candidate",
+            "verified_by_commander": "git diff --stat 7df136e6 HEAD -- episodes/ empty; 24 files, 54 insertions, 27 deletions; zero issue-447 files in the diff; all 5 UNGROUNDED assertions unmodified"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-2",
+          "type": "test-run",
+          "payload": {
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "result": "1745 passed, 4 skipped, 677 subtests",
+            "exit_code": "0",
+            "log": ".agent-work/r418-460/evidence/g2-integrate-pytest.txt",
+            "note": "run by the Commander at HEAD after committing the 27 restatements; identical to the post-g1 baseline, so the restatements regressed nothing, and test_canon_episode_store_untouched passes now that episodes/ is clean against the index"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-implement-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-implement",
+            "why_ref": "w-4",
+            "trip": "HARD: gauge fill_fraction 0.198 = ~198K against the calibrated 150K hard cap for claude-opus-5, observed fresh and derived from this agent's own transcript, not inherited from a predecessor. Third commander on this spine to trip.",
+            "state": "g2 IS DONE AND VERIFIED. 48 examined / 32 in scope / 27 restated / 5 UNGROUNDED by design / 16 issue-447 checked and correctly untouched. Committed 7df136e6. Suite green 1745 passed, 4 skipped, 677 subtests, EXIT 0, run by me at HEAD. g2-implement p1 and c1 are BOTH attested and evidence e-g2-implement-1 and e-g2-implement-2 are attached.",
+            "next_action": "advance g2-implement --why <understanding>, then dispatch the g2 reviewer using the handoff ALREADY WRITTEN at .agent-work/r418-460/crew-handoffs/g2-review-handoff.md. Register it first with run_crew.py --backend external, as g1 and g2 were.",
+            "g3_input": "the pre-g2 sha the detector is measured against is c9d9dd7c; g3's exception list is seeded from the 5 UNGROUNDED ids in e-g2-implement-1.",
+            "g4_input": "docs/EPISODE_STORE.md's own canonical worked record carries a prescriptive assertion at governor-268-003.d2, so the document defining the format models the shape this issue removes. Confirmed, and it belongs in g4.",
+            "collision": "another commander is live on this same worktree: 770f3e06 (empty no-op) and 00986ad5 / 1dfd06ae (notes-460.md) landed from it mid-run. episodes/ at HEAD is byte-identical to my 7df136e6 and nothing is damaged, but two commanders on one worktree needs the Admiral."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-review": {
