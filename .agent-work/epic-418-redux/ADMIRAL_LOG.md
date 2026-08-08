@@ -1195,3 +1195,37 @@ refusal thrashing (>=12), does.
 - `closeout/LESSONS_RUN_BRIEF.md` drafted through wave 3 — 17 routed candidates in seven groups,
   including group D, which audits my own errors as harshly as everyone else's. Wave 4 is a **marked
   empty slot** and the brief says in the file that it is not dispatchable until that slot is filled.
+
+**ADMIRAL ERROR | FOURTH instance — my trip detector fired in the healthy world.** The monitor
+reported `REFRESH REQUESTED` at `context=complete`, which would have had me tear down a Commander
+20 minutes into a multi-hour dispatch and relaunch it for no reason. I checked before acting, and
+the alert was false: my detector was a substring search for `refresh-request` across the whole
+spine JSON, and it matched **the Commander's own evidence notes** — it was *reading the
+refresh-request documentation* as part of its context step, exactly as its launch order asked.
+
+The shape is worth naming precisely, because it is the mirror of the wave-3 family rather than a
+repeat of it. Wave 3's issues were signals that stayed **quiet** in the defective world. This one
+**fires** in the healthy world. Both are the same underlying defect — *the signal's value does not
+depend on the condition it claims to measure* — and I have now built it four times in the epic
+that exists to find it. That is not carelessness I can log away; it is evidence about how easy this
+class is to write, which is the strongest argument the epic has for **#467's DC6** being real.
+
+Fixed properly rather than patched: the detector now asks the **engine** for its `current`
+projection and looks for the `REFRESH REQUESTED` marker the doctrine actually specifies. `current`
+is read-only — it neither claims nor heartbeats — so polling it does not disturb the Commander's
+lease.
+
+**And I closed the hole that fix would otherwise have opened.** A subprocess-based detector that
+returns "no refresh" when the subprocess *failed* reads identically to a healthy run — the same
+defect, one level down, and I would have shipped it. The detector now requires **positive proof the
+projection was produced** (`ACTIVE`/`LEASE` present) before it will trust a negative, and emits a
+`WARN` naming the return code otherwise. Verified both directions before re-arming, per the
+mutation-testing discipline I have been putting in every launch order since wave 2:
+
+- live healthy spine -> `False`, silent (projection produced, genuinely no trip)
+- deliberately broken invocation -> `False` **with `[WARN] ... treating trip state as UNKNOWN, not
+  healthy`** (rc=1 surfaced, not swallowed)
+
+Routed to the closeout brief under D9. The general form now has a second half worth keeping:
+*key a monitor on something that changes when the watched thing changes* — **and make the monitor's
+own failure louder than its silence.**
