@@ -1998,3 +1998,66 @@ against its context budget — that is the operating change I made two hours ago
 messages pushed instance B from 0.147 over the 0.15 line. The risk is already covered by a control I
 have verified; spending a live crew's headroom to re-cover it would be the more expensive mistake.
 Recorded here instead, which costs nothing.
+
+## 2026-08-08 — g1 review CLOSED; and "a check that cannot PASS" enters the epic
+
+**g1's RED is genuine and independently adversarial.** An opus reviewer wrote **four adversarial
+probes to break the claim; it held.** `ACCEPT WITH FINDINGS`, **0 blocking / 8 non-blocking.**
+Commander C re-ran the repro in its own shell: **24 ASSERT OK / 0 FAIL, real exit 0**, with the
+engine's own `CONTEXT 30% (>= hard)` in its transcript. `git diff --stat -- scripts tests` empty
+**and** `main...HEAD` empty; live `spine.json`/`execute.json` md5s unchanged across the run. The
+reproduction touched nothing it was proving against.
+
+**The reviewer reframed #431, and g2-g4 must be measured against the new framing.** Its PROBE 2 shows
+the post-attach `advance` **succeeds and writes a fresh DIGEST**. So **#431 is not a mechanical
+deadlock** — the engine *permits* the advance and, in the same breath, tells the agent not to run it.
+It is an **instruction-conformance defect**. The repro narrated this in prose rather than asserting
+it (its own finding N3). That changes what the fix has to be measured against, and it came from an
+adversary, not the author.
+
+**RULING | g1-integrate c3: AMEND, not waive. Authority: Admiral, delegated adjudication.**
+The frozen plan requires `verdict: "APPROVE"`; the frozen reviewer handoff prescribed
+`ACCEPT / ACCEPT WITH FINDINGS / REJECT` and said in terms that a bare `ACCEPT` would itself read as
+a check that could not fail. **The reviewer obeyed the handoff, so plan and handoff disagree on the
+word and c3 cannot pass as written.**
+
+Waiving hides the bug: it leaves the gate permanently unpassable for every future reviewer following
+the same handoff, and reads as a judgement call rather than a defect. Amending makes the check
+**true** rather than **skipped**.
+
+**Condition attached, and it is the whole point: the amended check must still be able to FAIL** —
+`ACCEPT` and `ACCEPT WITH FINDINGS` pass, **`REJECT` must still fail**. Amending it to accept any
+string converts a check-that-cannot-pass into a check-that-cannot-fail: the same bug wearing the
+other mask, shipped inside the wave hunting it. If the engine refuses Admiral authority and demands
+human ratification, the Commander is to **stop and tell me**, never fake an authority string.
+
+**The Commander refused to fabricate an `APPROVE` artifact to satisfy the gate.** It said so plainly
+and floated instead. That is the correct call and it is the second time this wave a crew has declined
+the easy green.
+
+**FINDING | "a check that cannot PASS" — accepted as a first-class result and carried up.** The
+epic has hunted checks whose value is identical in both worlds **by staying green**. The reviewer
+found the mirror: checks that stay **red** regardless — equally invisible, and **equally likely to be
+waived away rather than fixed**, which is exactly how they survive. Two instances in one gate: c3
+above, and `r6-fowler`'s c1. **This reframes the epic's thesis and it came from the review floor.**
+
+**FINDING | wave 3's #465 is technically complete and practically unreachable by its only user.**
+The reviewer force-waived `r6-fowler` c1 on the grounds that *"no engine verb can fill"* the literal
+`<fowler-pass-record-path>` placeholder. **I checked: the verb exists.** `amend` with a
+**`retext-check`** op is available on surveys and is the *only* op permitted there — **#465 shipped
+exactly that.** But `retext-check` appears in `docs/CHECKLIST_SCHEMA.md` and **nowhere in the
+reviewer's SKILL.md**, repo copy or installed copy (grepped both). **The role that needs the
+capability has no pointer to it from where it stands**, so it waived instead. Third *built-but-not-
+wired* instance this epic (#458 the governor; the lessons-auditor dangling reference; now this).
+Triage candidate. Told the Commander not to re-waive but not to re-litigate either — closing g1
+matters more than tidying it.
+
+**ADMIRAL ERROR | the N1 residue is a cost of MY handoff instruction, and the attribution was
+pointed at the wrong agent.** 29 files under `red-repro/` are tracked, so every repro re-run dirties
+25 tracked files, against `decision:red-leaves-no-residue`. `git log --diff-filter=A` puts all 29 in
+**`62f564c7` — the predecessor's seam-commit at the trip** — not in any `git add` by the implementer.
+**The implementer's "not git added" claim was true when written; my handoff protocol falsified it.**
+I told three Commanders to commit at clean seams before handing off, and nobody priced that **the
+trip protocol sweeps deliberately disposable evidence into permanent history.** Float accepted;
+untracking is outside the frozen plan and is **not** to be done. Goes to triage as a cost of the
+handoff doctrine, **attributed to me**.
