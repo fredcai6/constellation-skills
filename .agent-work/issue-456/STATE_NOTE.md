@@ -54,6 +54,38 @@ behaviour mean the flag can be ignored forever — and is that right? (3) attack
 reformatting immunity with mutations the crew did NOT choose. (4) confirm the new
 report field cannot perturb `deterministic-rebuild`.
 
+## Three facts from crew debriefs — worth real time to a successor
+
+1. **`g7` wires into `g6` by joining on slug — no rework in `g6` is needed.** The
+   `g6` crew established the dependency direction from `gate-spec.json`: **`g7`
+   depends on `g6`**, not the reverse. No comment-tag vocabulary
+   (`Assumption:`/`Constraint:`/…) exists yet — that IS `g7`'s build. The only
+   pre-`g7` authored-identity surface is the `[slug]` anchor
+   (`extract.ANCHOR` / the `anchored` predicate), and per `DESIGN_SPEC` §3
+   **`g7`'s real tags mint with the SAME `[slug]` allocator**. So `g7` joins real
+   tag text on slug and the staleness mechanism needs no change. Put this in the
+   `g7` handoff.
+
+2. **`stale_tags: []` on the real repo is CORRECT, not a silent failure.** The repo
+   has **zero anchors today** (`ids: 0`), so nothing can be flagged yet. Do not
+   read the empty list as the detector being broken. Corollary and a real
+   limitation to carry: **the mechanism has never been exercised against real
+   authored tags** — only the fixture. That validation belongs to `g7`.
+
+3. **ENGINE: survey `reopen` does not exist** — it is gated-checklist-only and
+   refuses with `REFUSED: reopen applies to gated checklists`. To re-verify a fix
+   against an **already-consolidated** survey, the pattern is **`append` a recheck
+   item → `record` it → re-`consolidate` with `--override-reason` pointing at that
+   item**. The original failing item stays in the record for audit and simply stops
+   blocking. The `gb` reviewer used exactly this to move BLOCK → APPROVE honestly
+   rather than hand-editing the survey. **Route to feedback**, and reuse the pattern
+   the next time a reviewer must re-verify a Commander-applied fix.
+
+Also reinforcing **`tc39`**: the governor's HARD band fired for BOTH the `gb` and
+`g6` crews **at `m0-context`, before either had written a line of code** — ~19–22%
+fill from the upfront reading a bounded gate requires. It is tripping on
+orientation cost, not on runaway work. That is the concrete argument for feedback.
+
 ## Record correction (do not propagate the error)
 
 `cb99a901`'s message says the crew "again left its work uncommitted". **That is
