@@ -30,8 +30,6 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
@@ -1320,32 +1318,6 @@ class CaseOnlyPageIdentityTests(unittest.TestCase):
         self.assertEqual(dangling, [])
 
 
-def _filesystem_is_case_insensitive():
-    """Does a path written as `A` come back as `a`?
-
-    Measured, never assumed from `sys.platform`: the answer is a property of the
-    FILESYSTEM, and a case-sensitive volume on Windows or a case-insensitive one
-    on Linux both exist."""
-    with tempfile.TemporaryDirectory() as d:
-        (Path(d) / "CaseProbe.tmp").write_text("x", encoding="utf-8", newline="\n")
-        return (Path(d) / "caseprobe.tmp").exists()
-
-
-CASE_INSENSITIVE_FS = _filesystem_is_case_insensitive()
-
-COLLISION_XFAIL_REASON = (
-    "RED BY DESIGN, owned by gate g2. scripts/run_skill_eval.py declares both "
-    "`class Verdict` and `def verdict`; their pages resolve to one filename on a "
-    "case-insensitive filesystem, so the map advertises 3694 pages and holds 3693. "
-    "g1 asserts the loss; g2 renames. strict=True on purpose: when g2 lands the "
-    "rename this XPASSes, the run goes RED, and g2 is forced to delete this marker "
-    "-- the defect cannot be silently left behind and the check cannot be silently "
-    "left disabled. The marker is CONDITIONAL because the collision itself is: on a "
-    "case-sensitive filesystem the two are separate files, nothing is lost, and the "
-    "assertion below simply passes."
-)
-
-
 class RealCorpusPageAccountingInvariantTests(unittest.TestCase):
     """The accounting invariant against THIS repository.
 
@@ -1379,9 +1351,10 @@ class RealCorpusPageAccountingInvariantTests(unittest.TestCase):
         if cls._tmp is not None:
             cls._tmp.cleanup()
 
-    def test_this_repo_declares_two_entities_whose_pages_share_one_filename(self):
-        """The input precondition for the xfail below, asserted rather than
-        trusted: without a real collision the marker is decoration.
+    def test_this_repo_declares_two_entities_whose_names_differ_only_by_case(self):
+        """The input precondition for the invariant below, asserted rather than
+        trusted: with no case-only pair in the corpus, the assertion that
+        follows would pass on a renderer that never disambiguated anything.
 
         Two names collide only if they are in the SAME module — that is what
         puts their pages in one directory. `tests.test_map_orient:verdict` is
@@ -1395,11 +1368,14 @@ class RealCorpusPageAccountingInvariantTests(unittest.TestCase):
 
         self.assertEqual(collisions, [("scripts.run_skill_eval:Verdict",
                                        "scripts.run_skill_eval:verdict")],
-                         "the collision set moved; the xfail reason below names a "
-                         "specific pair and must move with it")
+                         "the case-only pair set moved; the assertion below is "
+                         "only evidence while this repository still has one")
 
-    @pytest.mark.xfail(CASE_INSENSITIVE_FS, strict=True, reason=COLLISION_XFAIL_REASON)
     def test_every_page_this_repo_claims_is_a_page_this_repo_has(self):
+        """Was `xfail(strict=True)` through gate g1, because `Verdict` and
+        `verdict` landed on one file and the map advertised 3694 pages while
+        holding 3693. `g2` made the collision impossible by construction, the
+        marker XPASSed, and `strict` forced it off — which is what it was for."""
         self.assertEqual(checks.page_accounting(self.m), [])
 
 

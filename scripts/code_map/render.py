@@ -26,6 +26,7 @@ Output layout:
   map/ids.jsonl                      id -> symbol-path lookup
 """
 import collections
+import hashlib
 import json
 import os
 import pathlib
@@ -60,6 +61,7 @@ alias = {}                                   # supplement key -> store symbol
 alias_missing = 0
 children = collections.defaultdict(list)     # parent supp key -> [(line, child key)]
 members_of = collections.defaultdict(list)   # module -> [supplement key]
+page_file = {}                               # supplement key -> page filename
 MODULES = []
 BY_PKG = collections.defaultdict(list)
 
@@ -70,13 +72,54 @@ def modof(symbol):
     return symbol.split(":", 1)[0] if ":" in symbol else symbol
 
 
+def _case_tag(name):
+    """A short, stable tag that tells two case-only spellings apart.
+
+    `hashlib`, never the builtin `hash()`: `PYTHONHASHSEED` varies per process,
+    so a `hash()`-derived filename would differ between two builds of the same
+    source and the determinism check would -- correctly -- go red on it."""
+    return hashlib.sha1(name.encode("utf-8")).hexdigest()[:8]
+
+
+def assign_page_filenames(keys):
+    """supplement key -> page filename, for the keys of ONE module.
+
+    A page used to be named after its entity alone, so two entities in one
+    module whose names differ only by case resolved to one file: on a
+    case-insensitive filesystem the second write destroyed the first, and the
+    map advertised a page a reader could not open.
+
+    Names are grouped by their FOLDED spelling, and only a group with more than
+    one member is disambiguated -- so the common case keeps the readable
+    `<Entity>.md` and nothing else in the tree moves. `~` cannot occur in a
+    Python qualified name, so a disambiguated filename can never collide with an
+    undisambiguated one.
+
+    Deliberately NOT handled: an entity literally named `INDEX`, which still
+    lands on its module's own index page. Reserving that stem would make
+    `page_accounting`'s only cross-platform falsifier unable to fail, and a
+    check that cannot fail is the thing this gate exists to stamp out. Filed as
+    a triage candidate instead."""
+    groups = collections.defaultdict(list)
+    for key in keys:
+        groups[key.split(":", 1)[1].lower()].append(key)
+    out = {}
+    for group in groups.values():
+        for key in group:
+            name = key.split(":", 1)[1]
+            out[key] = (f"{name}~{_case_tag(name)}.md" if len(group) > 1
+                        else f"{name}.md")
+    return out
+
+
 def load_stores(artifacts):
     """Read the statement store and the supplement, and build every index the
     page builders read. Safe to call repeatedly: it resets state first."""
     global alias_missing
     artifacts = pathlib.Path(artifacts)
     for d in (docs, params, inherits, edges, inbound, imports_out, imported_by,
-              cont_at, alias, children, members_of, BY_PKG, ent_supp, mod_supp):
+              cont_at, alias, children, members_of, page_file, BY_PKG,
+              ent_supp, mod_supp):
         d.clear()
     MODULES.clear()
     alias_missing = 0
@@ -140,6 +183,8 @@ def load_stores(artifacts):
         BY_PKG[m.split(".")[0]].append(m)
     for key in ent_supp:
         members_of[modof(key)].append(key)
+    for keys in members_of.values():
+        page_file.update(assign_page_filenames(keys))
 
 
 # ---------------------------------------------------------------- formatting
@@ -324,7 +369,7 @@ def entity_page(key, mod):
         for _, k in kids:
             kn = k.split(":", 1)[1]
             ke = ent_supp[k]
-            L.append(f"- [{kn.split('.')[-1]}]({kn}.md) {ke.get('kind', '')}: "
+            L.append(f"- [{kn.split('.')[-1]}]({page_file[k]}) {ke.get('kind', '')}: "
                      + (summary_of(k) or HOLE))
         L.append("")
 
@@ -370,7 +415,7 @@ def module_index(mod):
     def walk(key, depth):
         nm = key.split(":", 1)[1]
         e = ent_supp[key]
-        L.append("  " * depth + f"- [{nm}]({nm}.md) {e.get('kind', '')}: "
+        L.append("  " * depth + f"- [{nm}]({page_file[key]}) {e.get('kind', '')}: "
                  + (summary_of(key) or HOLE))
         for _, kid in children.get(key, []):
             walk(kid, depth + 1)
@@ -435,7 +480,7 @@ def run(root, artifacts, out):
 
         def emit(key):
             page = entity_page(key, mod)
-            (d / (key.split(":", 1)[1] + ".md")).write_text(
+            (d / page_file[key]).write_text(
                 page, encoding="utf-8", newline="\n")
             sizes.append((page.count("\n"), key))
             for _, kid in children.get(key, []):

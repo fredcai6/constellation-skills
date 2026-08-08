@@ -1,0 +1,7 @@
+ok   no-empty-pages
+ok   page-accounting
+ok   refs-line-self-consistent
+ok   entity-symbol-join
+ok   inbound-attribution
+ok   deterministic-rebuild
+passed 6 checks
