@@ -163,10 +163,20 @@ Tommy's to authorize — see the checkpoint report.
    `.agent-work/r418-460/crew-handoffs/g2-implement-result.md` § "Evidence 4" (survived the worktree
    sweep because #487's merge carried it into main). Nothing was written to `docs/agents/*` and no
    file was created to park them in. Promoting any of them is his call, always.
-4. **One pattern showed up three times this wave** — worth considering as wave 3's organizing theme,
+4. **MY OWN CONTEXT GOVERNOR HAS BEEN DARK ALL WAVE — and the latitude step causes it.**
+   `gauge-skip.json` = `{"reason":"ambiguous-binding","candidate_count":2}`; last real reading
+   `2026-08-07T20:58:07Z`. The two bindings are my spine and
+   `latitude-interrogation.json` — the survey the spine's `latitude` step *requires*. **Both resolve
+   to the same gauge path.** `resolve_gauge_path` (`scripts/hooks/gauge_writer_hook.py:257-264`)
+   appends per binding without dedup; the caller skips on `2+`. It counts bindings, not distinct
+   paths. So **every Admiral run that does its latitude bookend properly blinds its own governor for
+   the rest of the run** — while I was reporting the governor as my crews' largest drag. Not fixed
+   (change to main, expired contract). Likely `len(set(candidates))`.
+5. **One pattern showed up four times this wave** — worth considering as wave 3's organizing theme,
    since it is what #418 is fundamentally about. A signal whose value is *identical* in the healthy
    and defective worlds: (a) #433's naive fix would have been a check that cannot fail; (b) the
    lease field indicates liveness in neither direction (above); (c) `matches[0]` cannot signal
-   ambiguity. Three independent discoveries, three subsystems, one defect family.
+   ambiguity; (d) the gauge writer cannot tell "two agents" from "one agent counted twice".
+   Four independent discoveries, four subsystems, one defect family.
 
 _Updated: 2026-08-08T02:50:00Z_
