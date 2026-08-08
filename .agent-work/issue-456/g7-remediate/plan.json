@@ -321,13 +321,14 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "g7-remediate-attempt2",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T23:10:48.446625+00:00",
     "last_heartbeat": "2026-08-08T23:36:41.093437+00:00",
     "claimed_by": "g7-remediator",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T23:37:09.628916+00:00"
   },
   "why_trail": [
     {
