@@ -602,3 +602,18 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   wave-3 boundary:** not "make the defect family a wave", but "the epic already has this as its
   spine — the governor thread (#458/#264/#488/#452) is the instance where three of four parts are
   already written." Recorded, not acted on.
+
+- `2026-08-08` — `RULING` (delegated: wave mechanics): **pre-wrote the wave-3 review brief** at
+  `.agent-work/epic-418-redux/launch-orders/REVIEW-BRIEF-w3.md`, to be instantiated per PR the moment
+  a crew returns. Directly targets a wave-2 failure I own: **PR #470 was merged on self-verified
+  evidence because no reviewer artifact had landed**, and the two reviewers who later returned APPROVE
+  **posted to neither the PR nor the issue** — `gh pr view 470 --json reviews` is still empty. Good
+  review, invisible forever.
+  Three things the brief makes non-negotiable: (1) the reviewer **runs the new test against the
+  unfixed code and confirms it goes red**, because for all four wave-3 issues green is what the
+  broken version already does — accepting the crew's pasted evidence as proof of itself would ship a
+  check that cannot fail *inside the fix for checks that cannot fail*; (2) the **negative direction**
+  is verified, especially #488, where a fix that merely stops skipping is a regression no green run
+  reveals; (3) the verdict is **posted to the forge with `-F <file>`**, both because a session-only
+  verdict is what went wrong on #470 and because a backticked code span in a quoted `gh` argument is
+  executed as command substitution and posts silently truncated — which happened to me on #264 today.
