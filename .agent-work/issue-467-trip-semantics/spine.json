@@ -661,13 +661,14 @@
   "refusals": 7,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T11:30:51.746387+00:00",
     "last_heartbeat": "2026-08-08T11:30:51.746387+00:00",
     "claimed_by": "commander-w4-467-e",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T14:09:54.905503+00:00"
   },
   "why_trail": [
     {
