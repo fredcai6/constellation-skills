@@ -463,3 +463,23 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   defect family in non-overlapping files — cheaper as one crew than two.
   **Budget: two dispatches per issue** — every wave-2 agent tripped the governor at the plan seam.
 - TRANSITION | boundary=w2-to-w3 | decision=replan | verified
+
+- `2026-08-08` — `WAVE LAUNCH` — **wave 3, three dispatches, four issues.** Boundary `w2-to-w3`
+  recorded, `decision=replan`, `verify_iterative_role_artifacts.py admiral-prelaunch` **exit 0**
+  (installed copy, per #468). Isolation gate on all three worktrees: exit 0, "3 distinct worktrees".
+  | Dispatch | Issue(s) | Worktree | Tier | Owns |
+  |---|---|---|---|---|
+  | W3-A | #465 | `C:/Programs/wt-w3a-465` | Opus, full Commander | reviewer skill + `checklist_engine.py` |
+  | W3-B | #461 | `C:/Programs/wt-w3b-461` | Sonnet, implementer | `tests/test_episode_negative_control.py` |
+  | W3-C | #488 + #489 | `C:/Programs/wt-w3c-488-489` | Sonnet, implementer | `gauge_writer_hook.py`, `tests/test_verify_spec_confirmed.py` |
+  Fences verified disjoint before launch, not asserted.
+  **One instruction is in all three orders and it is wave 2's lesson turned into a method: build the
+  defective world and observe the current code getting it wrong BEFORE fixing.** For all four issues
+  green is what the broken version already does, so green alone is not evidence. Each order names the
+  specific defective world to construct and demands the before-state pasted.
+  **The verifier refused this boundary four times before passing** — an out-of-plan `blocks` target;
+  string `completed_outcomes` where objects are required; #470 in completed outcomes when it was never
+  a wave-2 issue (caught by the exact-partition rule); string `material_changes`. All four were my
+  shape errors, all recorded in the state note so the next boundary costs one attempt instead of five.
+  **Also caught: I captured `tail`'s exit code instead of the verifier's** on the first run and read a
+  refusal as `VERIFY_EXIT=0`. Same defect as the wave-2 push. Redone with output to a file.
