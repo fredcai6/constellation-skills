@@ -1159,3 +1159,39 @@ can carry. Goes to him at the wave-4 checkpoint.
 `installed public verifier is missing: C:\Programs\constellation-replan\scripts\verify_replan.py`
 — that is **#468** biting exactly as recorded. Boundary `w3-to-w4`, `decision=replan`,
 `launch_id=wave4-a2-trip-semantics`.
+
+**WAVE 4 LAUNCHED** — 2026-08-08. One Commander, issue **#467** (A2, trip semantics), model
+**Opus**, worktree `C:/Programs/constellation-skills-wt/epic418-a2-467` (isolation verified, exit 0),
+branch `epic-418/a2-467-trip-semantics` off `main@d376b786`. Launch order `LO-467.md`; wave-4 review
+brief `REVIEW-BRIEF-w4.md` pre-staged so a review dispatches the moment the PR lands. State note
+rewritten first (precondition p2). Proof of life confirmed: `.agent-work/issue-467-trip-semantics/`
+created; spine now `init=complete context=in-progress`.
+
+**ADMIRAL ERROR | my proof-of-life check was, again, a check that cannot fail — caught before I
+trusted it.** My first liveness probe was `find <worktree> -newermt "-10 minutes"`, which returned
+20 files and looked like vigorous activity. Every one of them was a *historical* `.agent-work` file
+whose mtime was the **worktree checkout I had just done**. The probe would have returned exactly
+that list if the Commander had never started. Discriminator that actually works, and what I used
+instead: `git -C <worktree> status --porcelain` — untracked paths are work only the Commander could
+have created. This is the **third** instance of me building this defect during the epic about it
+(the other two: counting carried `.agent-work` files as crew progress; reporting `refresh=1` for an
+hour after a relaunch superseded it). Routed to the closeout brief as D9 with the general form:
+*key a monitor on something that changes when the thing you are watching changes.*
+
+**INCIDENT | my wave-4 monitor crashed on its second poll and would have been silently dead.**
+`TypeError: object of type 'int' has no len()` — I wrote `len(d['refusals'])` against a spine field
+that is an **int counter**, not a list. Note the shape: a crashed monitor emits nothing, and
+"emitting nothing" is indistinguishable from "nothing has happened." The only reason I caught it is
+that the **harness** reports a monitor's non-zero exit — a signal my own code did not have. Fixed
+(`_count` handles int and list), smoke-tested against the live spine **before** re-arming rather
+than re-arming and hoping, and re-armed. Also tuned: engine **refusals are routine** — a refusal is
+the engine naming missing work — so they no longer alert on their own; only a real blocker, or
+refusal thrashing (>=12), does.
+
+**Closeout prep done while the Commander works** (none of it touches its fences):
+- Cross-project feedback sweep run over the three dogfood roots (`f1Brainz`, `network_elo`,
+  `story_time`): **"No new or open candidates"**, exit 0. Evidence at
+  `closeout/feedback-sweep-2026-08-08.md`. A clean sweep is a **result**, not a skipped step.
+- `closeout/LESSONS_RUN_BRIEF.md` drafted through wave 3 — 17 routed candidates in seven groups,
+  including group D, which audits my own errors as harshly as everyone else's. Wave 4 is a **marked
+  empty slot** and the brief says in the file that it is not dispatchable until that slot is filled.
