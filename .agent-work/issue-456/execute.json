@@ -968,6 +968,26 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-g3-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "status": "complete",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g3-implement-RESULT.md",
+            "crew": "constellation/issue-456/g3/implementer/attempt-1",
+            "crew_verification": "run_crew.py --verify-result -> fresh (completed). Plan driven end to end, 7 items all complete.",
+            "suite": "1767 passed, 2 skipped, 672 subtests passed, 0 failed, 0 xfailed. Baseline entering the gate was 1744/2/0/0: +23 passed, skips unchanged.",
+            "gate_selector_verified": "tc38 rule applied and it worked: the crew was told its own selector up front and ran it by hand -- -k 'schema or line_base or ids_jsonl' selects 21 tests, 54 deselected, EXIT=0. Non-empty and covering the gate's work, unlike g2 where the equivalent selector matched zero.",
+            "close_criteria": "All five met. One schema carries all six fields (kind, signature, span, doc body, decorators, bases on contains; annotation, value, form on declares). supplement.py DELETED and the stage dropped from cli.py and __init__.py -- gone, not deprecated. LINE_BASE = 0 declared plus one extraction-window statement per file, asserted by StatementSchemaLineBaseTests which fails if the base flips. ids.jsonl is {id, s} with no position, exercised by minting two anchors and renaming one (IdsJsonlTests, 5 tests). The dead supplement entry removed from .gitignore.",
+            "named_risk_disposition": "ROUTE 1 -- re-based, and the crew CONFIRMED THE TRAP WAS REAL BEFORE CHOOSING. Removing the supplement collapses the renderer's join to identity: a page is keyed by the store symbol and the check compared the page title against the store symbol at that position, so both sides would have been one derivation and the check would have passed forever. Instead of leaving it, the crew introduced a new SourceScan and re-based entity_symbol_join's naming arm to compare the WHOLE qualified chain against THE SOURCE FILE ITSELF rather than against a second extraction pass -- so a definition that flattened its enclosing chain now fails against the file. That is a genuinely independent second derivation, not a second pass over the same machinery.",
+            "g1_g2_tripwires_held": "_make_collision_repo's INDEX collision still collides (PageAccountingInvariantTests green; assign_page_filenames untouched; an entity named INDEX still lands on its module's index page). OWN_MODULE_NAMED_MUTATION and test_refs_lines_are_self_consistent_on_an_intact_map both green. No specific exclusion touched.",
+            "tc34": "The tc34 reproducer was committed RED at 4246e87d -- a definition inside a `with` block gets no page. Whether removing the supplement stage closed it by construction must be read from the result and VERIFIED by the reviewer, not assumed.",
+            "red_before_green": "Held throughout: 91da2500 RED / 0782ff2b GREEN (schema can say what a value is), 4246e87d RED (tc34), 0d821d6f GREEN (supplement removed + join re-based), 70b60555 RED / 68f4a2eb GREEN (ids.jsonl).",
+            "commander_caveat": "The Commander was parked at a context seam when this landed and has NOT independently attacked the re-based join. The reviewer must: (1) prove the new SourceScan derivation is genuinely independent by breaking each side in turn and confirming the check goes red for each -- this is the gate's whole named risk; (2) verify whether tc34 actually closed, with a definition inside a `with` block now getting a page; (3) confirm ids.jsonl carries no position under a code move."
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0

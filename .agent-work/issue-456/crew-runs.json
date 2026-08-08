@@ -300,7 +300,7 @@
     "gate": "g3",
     "role": "implementer",
     "attempt": 1,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/issue-456/g3/implementer/attempt-1",
     "backend": "external",
     "pid": null,
@@ -310,9 +310,11 @@
     "stdout": ".agent-work/issue-456/crew-runs/g3-implementer-attempt-1.stdout.txt",
     "stderr": ".agent-work/issue-456/crew-runs/g3-implementer-attempt-1.stderr.txt",
     "started_at": "2026-08-08T06:42:16.342809+00:00",
-    "last_heartbeat": "2026-08-08T06:42:16.342809+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-08T07:33:49.937102+00:00",
+    "completed_at": "2026-08-08T07:33:49.937102+00:00",
     "abandoned": false,
-    "dispatch": "external"
+    "dispatch": "external",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

@@ -13,7 +13,29 @@ dispatch (the PID changes every time).
      takeover, no `--force`
   2. `--file .agent-work/issue-456/spine.json resume execute --session-id commander-issue-456 --reason "context refreshed"`
   3. `--file .agent-work/issue-456/execute.json resume g3-implement --session-id commander-issue-456 --reason "context refreshed"`
-  4. Check whether the crew finished:
+  **UPDATE — THE g3 CREW FINISHED BEFORE THE COMMANDER RE-PARKED.** Result
+  verified `fresh (completed)`, status **complete**, all 7 plan items done, and
+  it is already **attached as `e-g3-implement-2`**. Suite **1767 passed, 2
+  skipped, 0 failed, 0 xfailed** (baseline was 1744/2/0/0, so +23). The gate's
+  own selector `-k 'schema or line_base or ids_jsonl'` selects **21 tests**,
+  EXIT=0 — the tc38 rule worked on its first application.
+  **So step 4 below is already done: just `start`/`advance` `g3-implement`,
+  then write the g3 REVIEW handoff and dispatch the reviewer.**
+
+  **WHAT THE g3 REVIEWER MUST ATTACK — the Commander was parked when this
+  landed and has NOT independently verified any of it:**
+  1. **The re-based join.** The crew took route 1 and confirmed the trap was
+     real first: removing the supplement collapsed the join to identity (page
+     keyed by store symbol, compared against store symbol — it would have
+     passed forever). It introduced a new `SourceScan` and re-based
+     `entity_symbol_join`'s naming arm against **the source file itself**.
+     The reviewer must PROVE that independence by breaking each side in turn
+     and showing the check goes red for each. This is the gate's whole risk.
+  2. **Whether `tc34` actually closed** — a definition inside a `with` block
+     must now get a page. Its reproducer was committed RED at `4246e87d`.
+  3. **`ids.jsonl` carries no position** under a code move.
+
+  4. (already satisfied) Check whether the crew finished:
      `python scripts/run_crew.py --verify-result constellation/issue-456/g3/implementer/attempt-1`.
      If the result artifact
      `.agent-work/issue-456/crew-handoffs/g3-implement-RESULT.md` exists, read

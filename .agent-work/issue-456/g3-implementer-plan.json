@@ -420,7 +420,8 @@
           "id": "c1",
           "statement": "the gate's own -k selector selects a non-empty set covering this work, confirmed by hand",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Ran the gate's exact selector by hand: -k 'schema or line_base or ids_jsonl' selects 21 tests (not zero), covering all four close criteria, and every one of the 21 was committed RED before its fix - so the set is proven able to go red, not assumed. Collected list in the IMPLEMENTER_RESULT."
         },
         {
           "id": "c2",
@@ -452,7 +453,19 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m6-verify-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m6-verify",
+            "why_ref": "w-6",
+            "judgment": "Recorded, declined - final item, work complete and committed. Reported in the IMPLEMENTER_RESULT workflow feedback."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -464,7 +477,7 @@
     "session_id": "g3-implementer-attempt-1",
     "status": "active",
     "claimed_at": "2026-08-08T06:46:33.759647+00:00",
-    "last_heartbeat": "2026-08-08T07:24:16.498209+00:00",
+    "last_heartbeat": "2026-08-08T07:34:09.557011+00:00",
     "claimed_by": "constellation/issue-456/g3/implementer/attempt-1",
     "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
     "previous_session_id": null,
