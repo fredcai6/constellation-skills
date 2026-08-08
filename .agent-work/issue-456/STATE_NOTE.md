@@ -8,6 +8,40 @@ dispatch.
 - **PID**: none in flight. All four g6 crews closed via `--verify-result`.
 - **expected artifact**: `.agent-work/issue-456/crew-handoffs/g7-implement-RESULT.md`
 
+## ⚖️ HUMAN RULING 2026-08-08 — what of `map/` gets committed at `gs`
+
+Tommy, verbatim: *"middle point sounds fine, I could buy local regeneration, but
+if we think we can choose a stable landing zone we should."*
+
+**Ruling: commit the stable landing zone, regenerate the rest locally.** The
+criterion is **stability**, not tier depth — pick what does not churn, and prove
+it by measurement rather than assertion. This SUPERSEDES the plan-of-record
+assumption ("commit the whole tree, owned here") recorded in `gs`'s decision
+anchor, which was explicitly marked *pending Tommy*.
+
+**The tree's shape makes this clean.** `map/` is two tiers:
+- **Landing zone — 115 files.** `map/INDEX.md` (18KB), `map/ids.jsonl`, and one
+  `INDEX.md` in each of the **113** module directories.
+- **Body tier — ~3,815 files.** One page per symbol.
+
+The landing zone tracks the **shape** of the codebase (what exists); the body
+tier tracks **content** (what it does). A body-only edit — the overwhelming
+majority of commits — should not touch the landing zone at all. Adds, removes
+and renames do touch it, which is correct and rare.
+
+**`gs` MUST MEASURE THIS, not assume it.** Make a body-only edit to a function,
+rebuild into a scratch dir, and diff. The landing zone must come back byte-
+identical. If it does not, the landing zone is drawn in the wrong place and must
+be redrawn before anything is committed. Do the same for an add and a rename and
+record what moves, so the churn a real commit produces is a stated number rather
+than a hope. NOTE: `gb` measured a rename touching **217 of 3865** pages — check
+how many of those were INDEX pages, since that bounds rename churn in the zone.
+
+`gs`'s original close criterion ("the committed map tree matches a fresh build,
+asserted by a rebuild-and-diff") still applies — but now scoped to the landing
+zone, and the map-entry-point instruction must still resolve to a file that
+exists, which is the whole reason to commit anything at all.
+
 ## ✅ `g6` IS CLOSED — `g6-integrate -> complete`. **8 of 11 gates done.**
 
 Closed on an APPROVE from the SAME reviewer that issued the original BLOCK
