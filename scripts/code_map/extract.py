@@ -60,6 +60,7 @@ import builtins
 import hashlib
 import json
 import os
+import re
 import sys
 
 from .discovery import discover_corpus
@@ -126,6 +127,33 @@ def signature_of(node):
         parts.append("**" + one(a.kwarg))
     ret = " -> " + ast.unparse(node.returns) if node.returns is not None else ""
     return "(%s)%s" % (", ".join(parts), ret)
+
+
+#: An authored identity: a comment line holding NOTHING but a bracketed
+#: kebab slug, directly above the definition or assignment it names. `ast`
+#: discards comments, so this is read from the file's own text.
+ANCHOR = re.compile(r"^[ \t]*#[ \t]*\[([a-z0-9]+(?:-[a-z0-9]+)*)\][ \t]*$")
+
+
+def anchors_in(src):
+    """1-based line -> the authored slug minted at it.
+
+    Ids are minted ON DEMAND: most definitions never get one, and that is the
+    point -- the symbol path is derived and disposable, and the slug is the one
+    thing the mind map stores. The slug binds to the next line that is neither
+    blank nor a comment, so a reader can stack a bracket above a docstringed
+    comment block and still name what he meant."""
+    lines = src.splitlines()
+    out = {}
+    for i, line in enumerate(lines):
+        match = ANCHOR.match(line)
+        if not match:
+            continue
+        for j in range(i + 1, len(lines)):
+            if lines[j].strip() and not lines[j].lstrip().startswith("#"):
+                out[j + 1] = match.group(1)
+                break
+    return out
 
 
 def doc_body_of(node):
@@ -343,6 +371,7 @@ class Extractor(ast.NodeVisitor):
         self.table = TABLES[self.mod]
         self.tree = tree
         self.src = src            # the file's own text, for facts `ast` drops
+        self.anchors = anchors_in(src)   # 1-based line -> authored slug
         self.out = []
         self.scope = Scope("module")
         self.encl = [self.mod + ":"]     # enclosing transformer stack
@@ -623,6 +652,21 @@ class Extractor(ast.NodeVisitor):
                       LINE_BASE, 0, "literal")
         return self.out
 
+    def anchor(self, sym, node):
+        """Emit the authored id minted directly above `node`, if there is one.
+
+        A decorated definition is anchored above its FIRST decorator as well as
+        above its `def`, because that is where a reader writes the comment."""
+        lines = [node.lineno]
+        if getattr(node, "decorator_list", None):
+            lines.insert(0, node.decorator_list[0].lineno)
+        for line in lines:
+            slug = self.anchors.get(line)
+            if slug:
+                self.emit(sym, "anchored", slug, store_line(node.lineno),
+                          node.col_offset, "literal")
+                return
+
     def described(self, node, decorators):
         """The facts a `contains` statement carries about the definition it
         names: kind, signature, span, docstring body, decorators, bases.
@@ -658,6 +702,7 @@ class Extractor(ast.NodeVisitor):
         decorators = [ast.unparse(d) for d in node.decorator_list]
         self.emit(self.here(), "contains", sym, store_line(node.lineno),
                   node.col_offset, "internal", d=self.described(node, decorators))
+        self.anchor(sym, node)
         doc = ast.get_docstring(node)
         if doc:
             self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
@@ -685,6 +730,7 @@ class Extractor(ast.NodeVisitor):
         decorators = [ast.unparse(d) for d in node.decorator_list]
         self.emit(self.here(), "contains", sym, store_line(node.lineno),
                   node.col_offset, "internal", d=self.described(node, decorators))
+        self.anchor(sym, node)
         doc = ast.get_docstring(node)
         if doc:
             self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
@@ -793,6 +839,7 @@ class Extractor(ast.NodeVisitor):
         self.emit(self.here(), "declares", self.child_sym(target.id),
                   store_line(node.lineno), node.col_offset, "internal",
                   d={"annotation": annotation, "value": value, "form": form})
+        self.anchor(self.child_sym(target.id), node)
 
     def visit_Assign(self, node):
         typ = self.infer_type(node.value)

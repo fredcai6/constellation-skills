@@ -64,6 +64,7 @@ imported_by = collections.defaultdict(set)   # module -> {importing module}
 children = collections.defaultdict(list)     # parent symbol -> [(line, child symbol)]
 members_of = collections.defaultdict(list)   # module -> [store symbol]
 page_file = {}                               # store symbol -> page filename
+ids = collections.defaultdict(list)          # authored slug -> [store symbol]
 MODULES = []
 BY_PKG = collections.defaultdict(list)
 
@@ -136,7 +137,7 @@ def load_stores(artifacts):
     Safe to call repeatedly: it resets state first."""
     artifacts = pathlib.Path(artifacts)
     for d in (docs, params, inherits, edges, inbound, imports_out, imported_by,
-              children, members_of, page_file, BY_PKG, entities, modules):
+              children, members_of, page_file, BY_PKG, entities, modules, ids):
         d.clear()
     MODULES.clear()
 
@@ -160,6 +161,9 @@ def load_stores(artifacts):
                                        "doc_body": d["doc_body"],
                                        "decorators": d["decorators"],
                                        "bases": d["bases"], "attrs": []}
+                continue
+            if p == "anchored":
+                ids[o].append(s)
                 continue
             if p == "declares":
                 d = st["d"]
@@ -508,9 +512,14 @@ def run(root, artifacts, out):
             emit(k)
     (out / "INDEX.md").write_text(top_index(repo_name(root)),
                                   encoding="utf-8", newline="\n")
-    # ids.jsonl: id -> symbol path. This repo carries no anchor comments yet, so
-    # the file is empty by construction; it establishes the well-known location.
-    (out / "ids.jsonl").write_text("", encoding="utf-8", newline="\n")
+    # ids.jsonl: the mind map's one lookup. Sorted, so its git diff IS the
+    # id-motion report, and `{id, s}` with NO position, so an edit anywhere else
+    # in the file leaves it byte-identical. The symbol path is derived and
+    # disposable; the authored slug is what the mind map stores.
+    (out / "ids.jsonl").write_text(
+        "".join(json.dumps({"id": i, "s": ids[i][0]}) + "\n" for i in sorted(ids)),
+        encoding="utf-8", newline="\n")
+    duplicates = sorted(i for i in ids if len(ids[i]) > 1)
 
     # Count the tree, not the writes. A per-write counter reports what the
     # renderer TRIED to do, so two pages resolving to one path -- a name
@@ -530,12 +539,19 @@ def run(root, artifacts, out):
         "pages": npages,
         "entity_pages": len(sizes),
         "holes": holes,
+        "ids": len(ids),
         "median_entity_page_lines": sizes[len(sizes) // 2][0] if sizes else 0,
         "largest_5": [[n, k] for n, k in sizes[:5]],
     }
     print(json.dumps(report, indent=1))
+    for slug in duplicates:
+        # An authored mistake, and the run report is where the ruling says it
+        # surfaces. Keeping one silently would leave the mind map pointing at
+        # whichever definition happened to win.
+        print("FAIL duplicate id [%s] claimed by: %s"
+              % (slug, ", ".join(sorted(ids[slug]))))
     artifacts = os.fspath(artifacts)
     os.makedirs(artifacts, exist_ok=True)
     with open(os.path.join(artifacts, REPORT_NAME), "w", encoding="utf-8") as f:
         json.dump(report, f, indent=1)
-    return 0
+    return 1 if duplicates else 0
