@@ -179,8 +179,13 @@
         }
       },
       "child_checklist": null,
-      "status": "in-progress",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "The latitude contract expired by its own terms: its expiry clause is 'the wave-2 boundary (after the B-extended wave's PRs merge), or 72 hours, whichever comes first', and wave 2's four PRs are all merged (#472 #473 #485 #487) with main green at 476e044d (1782 passed, 2 skipped, exit 0). The contract states that crossing the expiry forces a contract-refresh decision before further dispatch, so wave 3 is not launched and the w2-to-w3 replan packet is deliberately unwritten -- its content is Tommy's question, not mine.",
+        "authority_needed": "human",
+        "next_action": "Tommy refreshes or amends the latitude contract, and rules on: (1) the governor trip band at 17-21% which cost 6 of the wave's 10 dispatches; (2) closing #433 #436 #460 #464, all merged but unclosed because issue closing is surfaced; (3) whether wave 3 is #461 + #465 as held, or something else. Then write the w2-to-w3 replan packet, run the admiral-prelaunch verifier, and launch.",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -272,13 +277,20 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "execute",
+      "blocker": "The latitude contract expired by its own terms: its expiry clause is 'the wave-2 boundary (after the B-extended wave's PRs merge), or 72 hours, whichever comes first', and wave 2's four PRs are all merged (#472 #473 #485 #487) with main green at 476e044d (1782 passed, 2 skipped, exit 0). The contract states that crossing the expiry forces a contract-refresh decision before further dispatch, so wave 3 is not launched and the w2-to-w3 replan packet is deliberately unwritten -- its content is Tommy's question, not mine.",
+      "authority_needed": "human",
+      "next_action": "Tommy refreshes or amends the latitude contract, and rules on: (1) the governor trip band at 17-21% which cost 6 of the wave's 10 dispatches; (2) closing #433 #436 #460 #464, all merged but unclosed because issue closing is surfaced; (3) whether wave 3 is #461 + #465 as held, or something else. Then write the w2-to-w3 replan packet, run the admiral-prelaunch verifier, and launch."
+    }
+  ],
   "refusals": 2,
   "engine_session": {
     "session_id": "admiral-epic-418-redux",
     "status": "active",
     "claimed_at": "2026-08-07T20:54:20.583520+00:00",
-    "last_heartbeat": "2026-08-07T21:19:22.283366+00:00",
+    "last_heartbeat": "2026-08-08T02:37:30.976541+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,

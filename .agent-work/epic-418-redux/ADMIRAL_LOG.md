@@ -248,6 +248,26 @@ What carries forward, and must not be re-derived:
 
   Everything is merged, pushed, and green. Nothing is in flight; no worktree holds unmerged work.
 
+
+- `2026-08-07` — `INCIDENT`: **#457 fired on me, and I refused it.** After blocking my own `execute`
+  gate on the contract expiry, the stop rail ordered me to work an `execute` gate whose lease was
+  **`commander-r418-460-b`** and whose work-id was **`r418-460`** — the #460 Commander's spine, which
+  lives inside that Commander's worktree, not mine. The imperative it handed me was a Commander's
+  (drive `execute.json` gate by gate, dispatch crew via `run_crew.py`).
+
+  Verified before deciding, rather than reasoning about it: my own spine
+  (`.agent-work/epic-418-redux/spine.json`) reports `LEASE admiral-epic-418-redux` and
+  `ACTIVE execute [blocked]`, `next: resume execute`. Exactly where I left it. The rail was
+  describing someone else's spine.
+
+  **Obeying it would have meant a second agent driving a live-leased spine** — the thing the epic
+  forbids outright. The predecessor run recorded ten firings of this and warned that the
+  three-strike escape hatch cannot save you, because `spine_rail.py:897` resets the counter on the
+  *watched* spine's progress: the better a descendant works, the more relentlessly its ancestor is
+  nudged. This firing is consistent with that and adds a detail worth having — it fired **after** the
+  descendant's work was fully merged and its Commander was gone, so a dead descendant's stale spine
+  still captures its ancestor's rail. Evidence added to #457.
+
 ## Merges` heading while appending the baseline
   ruling — my replacement text dropped the heading it was anchored on. Caught when the next edit
   could not find it. No data lost (the section was empty); heading restored below. Cost: one
