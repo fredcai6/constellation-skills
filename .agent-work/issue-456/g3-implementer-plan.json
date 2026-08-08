@@ -430,7 +430,8 @@
             "kind": "command",
             "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/ -q --color=no"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-2"
         },
         {
           "id": "c3",
@@ -439,7 +440,8 @@
             "kind": "command",
             "command": "unset FORCE_COLOR PYTHONIOENCODING && python -m scripts.code_map build && python -m scripts.code_map check"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-3"
         }
       ],
       "constraints": [
@@ -449,7 +451,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -461,6 +463,28 @@
             "seam": "m6-verify",
             "why_ref": "w-6",
             "judgment": "Recorded, declined - final item, work complete and committed. Reported in the IMPLEMENTER_RESULT workflow feedback."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset FORCE_COLOR PYTHONIOENCODING && python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "unset FORCE_COLOR PYTHONIOENCODING && python -m scripts.code_map build && python -m scripts.code_map check",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -477,7 +501,7 @@
     "session_id": "g3-implementer-attempt-1",
     "status": "active",
     "claimed_at": "2026-08-08T06:46:33.759647+00:00",
-    "last_heartbeat": "2026-08-08T07:34:09.557011+00:00",
+    "last_heartbeat": "2026-08-08T07:42:21.793837+00:00",
     "claimed_by": "constellation/issue-456/g3/implementer/attempt-1",
     "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
     "previous_session_id": null,
@@ -525,6 +549,13 @@
       "why": "Anchor comments become anchored statements; ids.jsonl is sorted {id, s} with no position. Mint-two-rename-one exercised, and the payoff proved: a 5-line insertion above an anchor moves the recorded definition line by exactly 5 and leaves ids.jsonl byte-identical. Duplicate slug fails the build. RED 5 failed at 70b60555, GREEN 5 passed at 68f4a2eb, code_map suite 75 passed.",
       "mechanical": false,
       "ts": "2026-08-08T07:24:00.437723+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-verify",
+      "why": "Full suite 1767 passed / 2 skipped / 0 failed against a 1744 baseline; fresh build then check exit 0, 6/6 on the real corpus; the gate's own -k selector selects 21 tests, all of which were committed red before their fix. Work committed on issue-456/code-map across 11 commits, explicit paths only. IMPLEMENTER_RESULT written.",
+      "mechanical": false,
+      "ts": "2026-08-08T07:42:21.793809+00:00"
     }
   ]
 }
