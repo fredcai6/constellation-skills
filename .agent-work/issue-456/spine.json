@@ -395,12 +395,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "blocked",
+      "status": "in-progress",
       "status_detail": {
         "blocker": "COMMANDER CONTEXT SEAM. Three of eleven gates closed (g0 g1 g2); g3's implementer crew is STILL RUNNING and will finish on its own. Baseline 1744 passed / 2 skipped / 0 xfailed / 0 failed; scripts.code_map check exits 0, 6/6. Resume recipe is in .agent-work/issue-456/STATE_NOTE.md -- read it FIRST. Short form: re-claim lease commander-issue-456 idempotently (SAME id, no --force), resume execute, resume g3-implement, verify the g3 crew's result artifact, attach and advance or relaunch a successor. Then g3 review + integrate, then g4 g5 gb g6 g7 g8 gs, then reconcile, triage (tc1-tc38), review, feedback, archive. Release the lease LAST. Push and a full non-draft PR are PRE-APPROVED; MERGE TO MAIN IS NOT.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "prior_status": "in-progress"
+        "resume_reason": "Context refreshed via compaction; commander skill active; resuming the run at g3."
       },
       "result": null,
       "finding": null,
@@ -912,20 +912,13 @@
       "statement": "tc40: 'add an extraction-window statement' appears in the g3 gate spec but is DEFINED NOWHERE in the run's artifacts. The g3 implementer designed it itself -- the per-file coverage boundary plus the home for the declared line base -- and flagged that a reviewer should check that design against intent rather than inherit it. This is the right disclosure and it must not be lost: the g3 reviewer has to judge whether the invented definition matches what the plan meant, because nothing else in the run can settle it. Generalisable: a gate spec phrase that names an artifact the run never defines will be silently invented by whoever implements it, and it will then read as settled."
     }
   ],
-  "blockers": [
-    {
-      "item": "execute",
-      "blocker": "COMMANDER CONTEXT SEAM. Three of eleven gates closed (g0 g1 g2); g3's implementer crew is STILL RUNNING and will finish on its own. Baseline 1744 passed / 2 skipped / 0 xfailed / 0 failed; scripts.code_map check exits 0, 6/6. Resume recipe is in .agent-work/issue-456/STATE_NOTE.md -- read it FIRST. Short form: re-claim lease commander-issue-456 idempotently (SAME id, no --force), resume execute, resume g3-implement, verify the g3 crew's result artifact, attach and advance or relaunch a successor. Then g3 review + integrate, then g4 g5 gb g6 g7 g8 gs, then reconcile, triage (tc1-tc38), review, feedback, archive. Release the lease LAST. Push and a full non-draft PR are PRE-APPROVED; MERGE TO MAIN IS NOT.",
-      "authority_needed": "parent agent",
-      "next_action": ""
-    }
-  ],
+  "blockers": [],
   "refusals": 4,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T07:44:39.173744+00:00",
+    "last_heartbeat": "2026-08-08T09:26:36.994899+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

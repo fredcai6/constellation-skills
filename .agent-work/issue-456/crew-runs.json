@@ -316,5 +316,27 @@
     "dispatch": "external",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/issue-456/g3/reviewer/attempt-1",
+    "work_id": "issue-456",
+    "gate": "g3",
+    "role": "reviewer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/issue-456/g3/reviewer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": ".",
+    "handoff": ".agent-work/issue-456/crew-handoffs/g3-review.md",
+    "result": ".agent-work/issue-456/crew-handoffs/g3-review-RESULT.md",
+    "stdout": ".agent-work/issue-456/crew-runs/g3-reviewer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/issue-456/crew-runs/g3-reviewer-attempt-1.stderr.txt",
+    "started_at": "2026-08-08T09:28:44.795276+00:00",
+    "last_heartbeat": "2026-08-08T09:28:44.795276+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "sonnet"
   }
 ]

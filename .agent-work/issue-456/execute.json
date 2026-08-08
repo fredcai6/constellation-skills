@@ -919,7 +919,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-2"
         }
       ],
       "constraints": [
@@ -949,12 +950,12 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "COMMANDER CONTEXT SEAM ONLY -- the g3 implementer crew is STILL RUNNING and unaffected. Gauge 16% at/over the hard limit; refresh-request e-g3-implement-1 filed. Resume: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), resume execute on spine.json, resume g3-implement, then run scripts/run_crew.py --verify-result constellation/issue-456/g3/implementer/attempt-1. If .agent-work/issue-456/crew-handoffs/g3-implement-RESULT.md exists, attach it and advance; if the crew parked, abandon and relaunch a SUCCESSOR against the same plan -- do not restart the gate. Read .agent-work/issue-456/STATE_NOTE.md first. Gates g0 g1 g2 are CLOSED; do not redo them or re-dispatch their crews.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "prior_status": "pending"
+        "resume_reason": "Implementer result returned and attached; commander independently verified suite 1767/2/0, build+check 6/6 exit 0, tree clean."
       },
       "result": null,
       "finding": null,
@@ -2085,14 +2086,7 @@
       "statement": "tc26: the render report's page count still cannot notice a zero-byte page -- rglob('*.md') counts a file that was created and never written. Raised by the g0 closing reviewer (A5). NOT a blocker at g0: it weakens only the one field the B3 docstring now explicitly forbids trusting, and g1's structural invariant subsumes it. Goes to g1 with tc17."
     }
   ],
-  "blockers": [
-    {
-      "item": "g3-implement",
-      "blocker": "COMMANDER CONTEXT SEAM ONLY -- the g3 implementer crew is STILL RUNNING and unaffected. Gauge 16% at/over the hard limit; refresh-request e-g3-implement-1 filed. Resume: re-claim lease commander-issue-456 idempotently (SAME id, not a takeover, no --force), resume execute on spine.json, resume g3-implement, then run scripts/run_crew.py --verify-result constellation/issue-456/g3/implementer/attempt-1. If .agent-work/issue-456/crew-handoffs/g3-implement-RESULT.md exists, attach it and advance; if the crew parked, abandon and relaunch a SUCCESSOR against the same plan -- do not restart the gate. Read .agent-work/issue-456/STATE_NOTE.md first. Gates g0 g1 g2 are CLOSED; do not redo them or re-dispatch their crews.",
-      "authority_needed": "parent agent",
-      "next_action": ""
-    }
-  ],
+  "blockers": [],
   "why_trail": [
     {
       "id": "w-1",
@@ -2163,6 +2157,13 @@
       "why": "g2 integrated on an APPROVE verdict with no blockers. The gate fixed three defects that all shared one shape -- the map stating something specific, confident and untrue: merged symbols whose caller sets unioned, a count that disagreed with its own list, and a page that silently overwrote another. Suite 1729/2/1xfail -> 1744/2/0xfail; check exits 0, 6/6. The strict-xfail g1 planted did its job -- it XPASSed the moment the fix landed and forced its own removal. c1 first REFUSED and the cause was the check, not the code: its selector matched zero tests so it could only ever fail (tc38, second instance after tc29). Corrected to a selector that picks exactly the 14 tests the gate added, proven still able to go red before installing. CARRY-FORWARD UPDATE: the old note that check correctly exits 1 is SPENT -- it exits 0 now, and check reads a STALE tree at <root>/map so build must run first or the exit code means nothing.",
       "mechanical": false,
       "ts": "2026-08-08T06:40:09.886610+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g3-implement",
+      "why": "Route 1 taken and proven: the crew confirmed the trap was real (deleting the supplement collapses entity_symbol_join to identity) before choosing, then re-based the naming arm on a new checks.SourceScan that derives qualified names from source text, sharing no code path with the extractor. All five close criteria met; supplement.py deleted not deprecated; LINE_BASE=0 declared with a test that fails if the base flips; ids.jsonl is {id,s} with no position, exercised by mint-two-rename-one. Red-before-green held across five commits. tc34 closed by construction: 8 definitions the old node.body-only recursion could never see now have pages. Commander independently verified 1767 passed/2 skipped/0 failed, fresh build then check 6/6 exit 0, tree clean, 0 map files tracked. Independence of the re-based join is NOT yet commander-verified and is the review's named mandate.",
+      "mechanical": false,
+      "ts": "2026-08-08T09:26:57.263789+00:00"
     }
   ],
   "amendments": [
