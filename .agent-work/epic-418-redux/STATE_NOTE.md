@@ -1,18 +1,36 @@
 # Crash-resume state note — epic-418-redux
 
-**Wave 2 is NEARLY DONE. Only #460 remains, on its FOURTH dispatch.**
+**WAVE 2 IS COMPLETE AND MERGED. Nothing is in flight. The latitude contract has EXPIRED by its
+own terms and the `execute` gate is BLOCKED awaiting Tommy's refresh. Do not dispatch anything.**
 
-**One agent is working. Read the replant recipe below before
-touching any wave-2 PR — every one of them will report CONFLICTING, and it is not their fault.**
-
-- **step:** `execute` — in progress. **4 wave PRs merged** (#470, #472, #473, #485). Only **#460** remains. Remaining after `execute`: `closeout`.
+- **step:** `execute` — **blocked** on contract expiry. Remaining after `execute`: `closeout` only.
 - **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` at
-  **`538d5fd7`** (= `origin/main`, pushed)
+  **`476e044d`** (= `origin/main`, pushed, working tree clean)
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
-  — then poll `r418-433` / `r418-460` for their PRs and REPLANT each per the recipe below
-- **pid:** two live background subagents (`cmd-433b`, `cmd-460b`), harness-managed, no OS pids.
-  Poll by worktree writes and `gh pr list`, never by waiting on a completion signal alone.
-- **expected artifact:** a PR from #460 — it WILL need the replant recipe
+  — then get the contract refreshed before anything else
+- **pid:** none — no agents in flight
+- **expected artifact:** a refreshed latitude contract, then a `w2-to-w3` replan packet
+
+**Green main: `476e044d` → 1782 passed, 2 skipped, 683 subtests, exit 0** (real exit code captured).
+
+## Wave 2 — all four issues merged
+
+| Issue | PR | What landed |
+|---|---|---|
+| #433 | #485 | `directives` renders; naive fix would have been a check that cannot fail (2955 gates scanned, 8 populated) |
+| #436 | #472 | enumeration check observed REFUSING a new entry; count added to its failure output |
+| #460 | #487 | episode records restated as observations; guard caught 4 real offenders on first live run |
+| #464 | #473 | `Lesson` → `Episode`, with the legacy fallback and hash prefix deliberately preserved |
+| — | #470 | the Admiral's own fixture-path breakage |
+
+## NOT done — carried
+
+- **#461** (negative control fails between `git add` and `git commit`) — **reproduced first-hand
+  during #460's merge and evidenced on the issue**; deliberately not fixed, held to wave 3.
+- **#465** (reviewer r6-fowler placeholder + CRLF) — held to wave 3, touches `checklist_engine.py`.
+- **#433, #436, #460, #464 are MERGED BUT NOT CLOSED** on the tracker — issue closing is a
+  `surfaced` class and Tommy has not been asked.
+- Worktrees `r418-433/436/460/464` still exist, unswept, pending closeout harvest.
 
 ## Landed so far
 
@@ -24,7 +42,7 @@ touching any wave-2 PR — every one of them will report CONFLICTING, and it is 
 | #473 | #464 rename (replant of #471) | **MERGED** `0b4a11a7` |
 | #485 | #433 render directives (replant of #483) | **MERGED** `538d5fd7` |
 | #483 | #433, original | closed — superseded by #485 |
-| #471 | #464, original | closed — superseded by #473 (squash-orphan, not rework) |
+| #471 / #483 / #486 | originals | closed — all superseded by replants (squash-orphan, not rework) |
 | — | #433, #460 | agents still working in their worktrees |
 
 ## THE REPLANT RECIPE — read this before touching any wave-2 PR
@@ -43,14 +61,14 @@ git apply --3way /tmp/x.patch
 # 3. verify, commit, push, PR, then close the original as superseded
 ```
 Get the changed-path list with `git diff --name-only 73b4517 origin/<their-branch>`.
-Worked cleanly three times: #436→#472, #464→#473, #433→#485.
+Worked cleanly four times: #436→#472, #464→#473, #433→#485, #460→#487.
 
 **Never use an ancestry test to decide whether a wave-2 branch merged** — under squash-merge it
 returns the same answer for merged and abandoned. Ask the forge (`gh pr view <n> --json state`).
 
 ## Settled — do NOT re-derive
 
-- **Green baseline is now `538d5fd7`.** Expect **1726 passed, 2 skipped** (1723/2 after #470's fix,
+- **Green baseline is now `476e044d`: 1782 passed, 2 skipped.** Expect **1726 passed, 2 skipped** (1723/2 after #470's fix,
   plus #436's 3 new tests). The earlier "1721 passed, 4 skipped" was **my own breakage**, not
   environment-conditional: archiving the run moved `REVISED_SPEC.md` out from under a hardcoded
   fixture path. Fixed in #470 (fixture now found by glob).
@@ -86,4 +104,4 @@ returns the same answer for merged and abandoned. Ask the forge (`gh pr view <n>
 3. #460 will return **doctrine candidates** — records that look like real rules. Promoting any of
    them into `docs/agents/*` is his call, always.
 
-_Updated: 2026-08-08T01:10:00Z_
+_Updated: 2026-08-08T02:35:00Z_

@@ -198,6 +198,56 @@ What carries forward, and must not be re-derived:
   and not held against either commander. The fence was written to stop two writers editing the same
   records, and that did not happen.
 
+
+- `2026-08-07` — **PR #487 merged** (`476e044d`), squash. **#460 done — WAVE 2 IS COMPLETE.**
+  Gated on check exit code (0 non-SUCCESS), verified MERGED at the forge.
+
+  This is the wave's best result and it earned its four dispatches. The guard it ships was
+  **observed failing**, not merely observed passing: on its first live run against merged main it
+  caught **four real offenders** — the three episode records #433 had added after this branch was
+  cut, whose statements read *"Do the gate work…"*, *"Pair every negation postcondition…"*, *"State
+  doc postconditions as…"*. Those are prescriptions, in the store that exists to hold observations.
+
+  **I ruled against the cheap fix.** The guard carries an exception list for records that predate
+  it, and adding these four would have turned CI green in one line. I sent it back to the Commander
+  to **restate** them instead: the list is for what predates the guard, and grandfathering records
+  written *during the same wave* is precisely the erosion this issue exists to stop. Final scan:
+  274 statements examined, 11 excepted, **0 unlisted offenders**.
+
+  It also closes the gap I left open when I closed #447 with its fourth done-condition marked
+  PARTIAL. That partial is now paid.
+
+- `2026-08-07` — `RULING`: **#461 confirmed first-hand during the merge, and left open.** The
+  replant's full suite failed on `test_canon_episode_store_untouched` — the negative control asserts
+  `git status --porcelain episodes/` is empty, so it fails for any run that legitimately changes the
+  store **between `git add` and `git commit`**. Committing made it pass. That is exactly what #461
+  reports, reproduced by accident rather than by design. Recorded as evidence on the issue; **not
+  fixed here** — #461 is held to the wave's second half and fixing it in passing would have been
+  scope I was not given.
+
+- `2026-08-07` — `WAVE`: **wave 2 "B extended" COMPLETE.** #433, #436, #460, #464 all merged; no open
+  PRs. Cost, measured rather than estimated: **4 issues, 10 Commander/implementer dispatches, 5
+  replants, 1 self-inflicted CI outage.** The trip band accounts for 6 of the 10 dispatches and the
+  squash-orphan for all 5 replants — both of those are mine or the governor's, not the crews'.
+
+
+- `2026-08-07` — `RULING`: **green main verified once on the final merged tree, not per PR.** The
+  sanctioned batched pattern: `476e044d` → **1782 passed, 2 skipped, 683 subtests, exit 0** (353s,
+  real exit code). Against the corrected `1723/2` baseline that is **+59 tests** from the wave, with
+  skips unchanged at 2.
+
+- `2026-08-07` — `ESCALATION`: **the latitude contract has EXPIRED by its own terms and I am
+  stopping.** Its expiry clause reads *"the wave-2 boundary (after the B-extended wave's PRs merge),
+  or 72 hours, whichever comes first"*, and wave 2's PRs are now all merged. The contract's own words
+  are that crossing it **forces a contract-refresh decision before further dispatch**.
+
+  So I am not launching wave 3, and I have deliberately **not** written the `w2-to-w3` replan packet
+  either — its content is a question for Tommy (what the next wave should be), and authoring it now
+  would be me answering a question the expiry just handed to him. The engine gate is blocked on this
+  rather than left open, so the state is honest rather than merely paused.
+
+  Everything is merged, pushed, and green. Nothing is in flight; no worktree holds unmerged work.
+
 ## Merges` heading while appending the baseline
   ruling — my replacement text dropped the heading it was anchored on. Caught when the next edit
   could not find it. No data lost (the section was empty); heading restored below. Cost: one
