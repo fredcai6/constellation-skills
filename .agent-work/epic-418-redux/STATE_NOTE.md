@@ -5,7 +5,11 @@ own terms and the `execute` gate is BLOCKED awaiting Tommy's refresh. Do not dis
 
 - **step:** `execute` — **blocked** on contract expiry. Remaining after `execute`: `closeout` only.
 - **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` at
-  **`1ce2e807`** (= `origin/main`, pushed, working tree clean)
+  **`main` == `origin/main`, pushed, working tree clean** — verify with
+  `git rev-parse --short HEAD origin/main` rather than trusting a hash written here. A literal hash
+  in this field is wrong the moment this file is committed, since committing it advances main; it
+  was stale twice for exactly that reason. The green baseline below is a *tagged* commit and is
+  safe to write down; this one is not.
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
   — then get the contract refreshed before anything else
 - **pid:** none — no agents in flight
