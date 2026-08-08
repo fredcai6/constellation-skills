@@ -4,13 +4,68 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: `gb-implement` — **DISPATCHED** 2026-08-08
-- **PID**: crew `constellation/issue-456/gb/implementer/attempt-1`, Agent name
-  `gb-implementer`, model `sonnet`. Recover with `SendMessage` to that name
+- **step**: `execute` (in-progress) · **slug**: `gb-review` — **DISPATCHED** 2026-08-08
+- **PID**: crew `constellation/issue-456/gb/reviewer/attempt-1`, Agent name
+  `gb-reviewer`, model `sonnet`. Recover with `SendMessage` to that name
   (externally dispatched — nudge in place, never relaunch).
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md`
-- `gb-implement.p1` already **attested**. Handoff written at
-  `.agent-work/issue-456/crew-handoffs/gb-implement.md`.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/gb-review-RESULT.md`
+
+## `gb` BUILD LANDED and is Commander-verified — commit `3a9b4495`
+
+`gb-implement.p1` attested; the build is done and pushed. **Still open:**
+`gb-implement` needs its `c1` (artifact `IMPLEMENTER_RESULT`, no unresolved
+blockers) attested + advanced, then `gb-review`, then `gb-integrate`.
+
+Four families committed in the NEW `scripts/code_map/thresholds.py`, each a ratio
+or run-time invariant, each with its own one-line "what to do when this fires":
+`HOLE_RATIO_CEILING` **0.90** (measured 0.673 here / 0.572 f1Brainz);
+`CHURN_RATIO_CEILING_LOCAL_EDIT` and `..._RENAME` both **3.0** (measured **1.27x**
+and **1.02x**); `RECALL_FLOORS` **1.0** for `calls`/`reads`/`writes` off an
+11-edge hand fixture; `TEMPLATE_ASCII_INVARIANT` as an AST scan of `render.py`'s
+own literal `Constant` nodes — structurally blind to the 386 pre-existing
+non-ASCII pages, never a substring match.
+
+**Headline: the widely-referenced-symbol rename was measured for the first time
+and HELD at 1.02x** — flat, not a near-miss. Signed off "accepted-untested" at
+design confirm; now resolved. Structural reason: a pure identifier rename changes
+one line per call site on BOTH sides of the ratio, so the diff-LINES ratio stays
+near 1x however many callers exist, even though 217 of 3865 pages changed. **Had
+churn been measured in PAGES the honest finding would have been "blew the
+ceiling" — and it would have been wrong, an artifact of the unit.** Vindicates
+DESIGN_SPEC line 180.
+
+Commander-verified: suite **1793 passed / 2 skipped / 672 subtests / 0 failed**
+(baseline 1781 + 12 new methods); closing selector **13 passed exit 0**; fresh
+`build` then `check` **7/7 exit 0**. **The crew left its work UNCOMMITTED with
+`thresholds.py` untracked** — the Commander committed it, explicit paths only.
+
+### COMMANDER ERROR #7, caught by the crew — fix carried
+
+My `gb` handoff said the closing selector collects **17**. It collects **1**.
+My scanner ran selectors against the whole `tests/` directory; the gates' real
+commands target **`tests/test_code_map.py`** only. **Corrected table (re-run
+against the right file):**
+
+| gate | selector | collects |
+|---|---|---|
+| `gb-integrate` | `baseline or churn or recall or ascii` | 1 before / **13** after |
+| `g6-integrate` | `stale_tag` | **0** |
+| `g7-integrate` | `comment_tags` | **0** |
+| `g8-integrate` | `bom or docstring` | **3** |
+| `gs-integrate` | `map_tree_freshness` | **0** |
+
+Conclusions unchanged: the three zeroes are unbuilt gates, so the selector is a
+**specification** for a test that gate must create, not a `tc47` defect. Every
+remaining handoff must still state the exact closing selector.
+
+### For the `gb` reviewer / next Commander to settle
+
+The two loose ceilings are the live question: **0.90 vs measured 0.673**, and
+**3.0 vs 1.27x/1.02x**. A threshold no realistic regression can reach is the
+"check that cannot fail" wearing a number. The crew's framing — the hole ratio is
+a canary for catastrophic extraction collapse, not a documentation gate — is a
+legitimate design choice IF stated and IF the canary can still fire. That is the
+review's central call.
 
 ## `g5` IS CLOSED — `g5-integrate -> complete` on an APPROVE
 
