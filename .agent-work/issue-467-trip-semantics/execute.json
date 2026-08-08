@@ -1698,13 +1698,14 @@
   "refusals": 10,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T20:38:11.885377+00:00",
     "last_heartbeat": "2026-08-08T21:23:51.843912+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T21:24:58.933340+00:00"
   },
   "amendments": [
     {
