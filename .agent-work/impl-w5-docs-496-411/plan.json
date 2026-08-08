@@ -109,7 +109,7 @@
           "statement": "issue #411 checked against TREND_SNAPSHOT.md and install_constellation.py; verdict (holds/refuted) recorded with quotes",
           "check": null,
           "satisfied": true,
-          "satisfied_by": "VERDICT: HOLDS. TREND_SNAPSHOT.md sec2 (before edit) listed '_shared 6 files 6729 words' as the first of 20 per-role table rows. install_constellation.py:268: 'if path.is_dir() and not path.name.startswith(\"_\")  # _shared holds bundled refs, not a skill'. README.md: 'skills/_shared/ is not a skill -- it is shared doctrine'. Confirmed _shared was mis-listed as a peer role; dropped the row, added a note stating 19 roles + bundled-surface explanation, and flagged the per-role attribution recompute as unresolved (pointing at #411) rather than fabricating new numbers."
+          "satisfied_by": "VERDICT: HOLDS (unchanged from first pass). REWORK per Admiral review finding on PR #509: the deleted _shared row sat inside a fenced block that is verbatim '$ for d in ...' command output; TREND_SNAPSHOT.md sec0 commits to reproducibility ('every figure below is derived from a git command, and the command is printed next to its output so the successor can re-derive'). Restored the row verbatim; the note now does the correction work instead: '_shared is not a role... the table above is 19 roles, not 20', explains bundled-surface, and explicitly answers pre-ruling 3 (propagation): 'Nothing here stops the mistake recurring -- this note only corrects THIS reading of THIS block... the propagation path #411 names is closed only if the command itself excludes _-prefixed directories, or a later snapshot format labels the row inline.'"
         },
         {
           "id": "c2",
@@ -119,7 +119,7 @@
             "command": "git diff --name-only | grep -F 'archive/2026-08-02-issue-304/TREND_SNAPSHOT.md'"
           },
           "satisfied": true,
-          "satisfied_by": "e-m2-issue-411-trend-snapshot-shared-row-1"
+          "satisfied_by": "e-m2-issue-411-trend-snapshot-shared-row-2"
         }
       ],
       "constraints": [
@@ -128,7 +128,9 @@
       "directives": null,
       "child_checklist": null,
       "status": "complete",
-      "status_detail": {},
+      "status_detail": {
+        "reopen_reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead."
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -141,10 +143,26 @@
             "shell": "posix"
           },
           "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2-issue-411-trend-snapshot-shared-row",
+            "reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead.",
+            "ts": "2026-08-08T23:19:10.175668+00:00"
+          }
+        },
+        {
+          "id": "e-m2-issue-411-trend-snapshot-shared-row-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --name-only | grep -F 'archive/2026-08-02-issue-304/TREND_SNAPSHOT.md'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
           "ts": ""
         }
       ],
-      "rework_count": 0
+      "rework_count": 1
     },
     "m3-artifact-and-pr": {
       "id": "m3-artifact-and-pr",
@@ -155,8 +173,7 @@
           "id": "p1",
           "statement": "both issues verified/fixed (or refuted) with evidence",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "both issues verified against source and fixed per m1/m2"
+          "satisfied": false
         }
       ],
       "postconditions": [
@@ -164,8 +181,7 @@
           "id": "c1",
           "statement": "notes + result written, branch pushed, PR opened",
           "check": null,
-          "satisfied": true,
-          "satisfied_by": "notes.md + IMPLEMENTER_RESULT.md written; commit a4ad153a pushed to epic-418/w5-docs; PR #509 opened: https://github.com/fredcai6/constellation-skills/pull/509"
+          "satisfied": false
         },
         {
           "id": "c2",
@@ -174,15 +190,16 @@
             "kind": "command",
             "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
           },
-          "satisfied": true,
-          "satisfied_by": "e-m3-artifact-and-pr-1"
+          "satisfied": false
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "complete",
-      "status_detail": {},
+      "status": "pending",
+      "status_detail": {
+        "superseded_by_reopen": "m2-issue-411-trend-snapshot-shared-row"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -193,6 +210,21 @@
             "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
             "exit": 0,
             "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2-issue-411-trend-snapshot-shared-row",
+            "reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead.",
+            "ts": "2026-08-08T23:19:10.175687+00:00"
+          }
+        },
+        {
+          "id": "e-m3-artifact-and-pr-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-artifact-and-pr",
+            "why_ref": "w-7"
           },
           "produced_by": "engine",
           "ts": ""
@@ -207,14 +239,13 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "impl-w5-docs-496-411",
-    "status": "released",
-    "claimed_at": "2026-08-08T22:56:13.084622+00:00",
-    "last_heartbeat": "2026-08-08T23:17:05.103391+00:00",
+    "status": "active",
+    "claimed_at": "2026-08-08T23:19:02.718284+00:00",
+    "last_heartbeat": "2026-08-08T23:20:30.322568+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-08T23:17:24.552769+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -244,6 +275,27 @@
       "why": "notes.md + IMPLEMENTER_RESULT.md written; full suite green as sanity check; commit a4ad153a pushed to epic-418/w5-docs; PR #509 opened.",
       "mechanical": false,
       "ts": "2026-08-08T23:17:05.103357+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m2-issue-411-trend-snapshot-shared-row",
+      "reopen": true,
+      "reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead.",
+      "ts": "2026-08-08T23:19:10.175694+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m3-artifact-and-pr",
+      "reopen": true,
+      "reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead.",
+      "ts": "2026-08-08T23:19:10.175698+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m2-issue-411-trend-snapshot-shared-row",
+      "why": "Reworked per Admiral review finding: restored the verbatim _shared row inside the command-output block (this file commits to reproducibility, sec0), moved the correction entirely into the surrounding note, and added the propagation answer pre-ruling 3 asked for (nothing yet stops the mistake recurring on a re-run of the raw command).",
+      "mechanical": false,
+      "ts": "2026-08-08T23:20:13.153357+00:00"
     }
   ]
 }

@@ -13,8 +13,13 @@ Both issues verified against source and confirmed to hold; both fixed with the m
 - **#411**: `.agent-work/archive/2026-08-02-issue-304/TREND_SNAPSHOT.md` §2 listed `_shared` as a
   peer row in a 20-row "per-role surface" table, contradicting `install_constellation.py`'s own
   exclusion rule (`_shared holds bundled refs, not a skill`) and the README's "not a skill"
-  doctrine. Dropped the row; added a note stating the role count at that snapshot (`fc1685a`) was
-  19 and explaining `_shared` as bundled shared surface.
+  doctrine. **Reworked per Admiral review finding on PR #509:** the row sits inside a fenced
+  block that is verbatim `$ for d in ...` command output, and this file's own §0 commits every
+  figure to being reproducible from its printed command — deleting the row (the first-pass fix)
+  broke that contract. Restored the row verbatim; moved the correction into the surrounding note
+  instead (`_shared` is not a role, the table is 19 roles not 20, `_shared` is bundled shared
+  surface); and added the propagation answer the review raised but hadn't ruled on: nothing yet
+  stops the miscount recurring on a bare re-run of the command.
 
 ## Scope
 **Files changed:**
@@ -43,7 +48,9 @@ full suite run as a sanity check.
 FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
 ```
 
-**Result:** pass — `1867 passed, 2 skipped, 829 subtests passed in 449.32s`, exit 0.
+**Result:** pass — `1867 passed, 2 skipped, 829 subtests passed in 940.41s`, exit 0. Re-run after
+the #411 rework as the m3 sanity check; same pass count as the pre-rework run, confirming the
+rework (a doc-only edit) broke nothing.
 
 ```bash
 git diff --name-only

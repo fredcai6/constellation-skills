@@ -78,6 +78,7 @@ $ for d in $(git ls-files 'skills/*' | cut -d/ -f2 | sort -u); do
 ```
 
 ```
+_shared                         6 files     6729 words
 admiral                         6 files     7733 words
 cartographer                    7 files     3786 words
 charter                        15 files     6293 words
@@ -99,13 +100,22 @@ workbench                       9 files     4663 words
 write-a-skill                   4 files      989 words
 ```
 
-**19 roles**, not 20 — `install_constellation.py` excludes any `skills/` directory starting
-with `_` when enumerating skills (`_shared holds bundled refs, not a skill`), so `_shared` is
-not a peer row in this table. It is **bundled shared surface**: 6 files / 6,729 words that
+The row above is what the command printed — kept verbatim so a successor who re-runs it gets a
+matching block, per this file's own §0 reproducibility contract. **But `_shared` is not a role,
+and the table above is 19 roles, not 20** (#411): `install_constellation.py` excludes any
+`skills/` directory starting with `_` when enumerating skills (`_shared holds bundled refs, not
+a skill`). `_shared` is **bundled shared surface** instead: 6 files / 6,729 words that
 `install_constellation.py`'s `SKILL_REFERENCE_BUNDLES` copies into a majority of roles'
-`references/` at install time, so those words already count toward the roles that bundle
-them and are not a 20th role's own surface. This snapshot did not attribute each role's
-bundled `_shared` files individually — that recomputation is unresolved; see #411.
+`references/` at install time, so those words already count toward the roles that bundle them,
+not toward a 20th role's own surface. This snapshot does not attribute each role's bundled
+`_shared` files individually — that recomputation is unresolved.
+
+**Nothing here stops the mistake recurring** — this note only corrects THIS reading of THIS
+block. The `for d in ...` command has no `_shared` exclusion of its own, so anyone re-running it
+gets the same unlabeled 20-row output and must rediscover, from this note or from #411, that the
+first row isn't a role. The propagation path #411 names is closed only if the command itself (or
+its successor) excludes `_`-prefixed directories, or a later snapshot format labels the row
+inline instead of relying on a reader finding this paragraph.
 
 Two features a successor should watch rather than re-notice:
 

@@ -25,7 +25,7 @@ stands.
 
 ## #411 — TREND_SNAPSHOT.md lists `_shared` as a 20th role
 
-**Verdict: HOLDS.**
+**Verdict: HOLDS** (unchanged across the rework below — only the fix shape changed).
 
 - `.agent-work/archive/2026-08-02-issue-304/TREND_SNAPSHOT.md` §2 (before edit) listed
   `_shared   6 files   6729 words` as the first of 20 rows in a "per-role surface" table.
@@ -39,9 +39,25 @@ is **20 skills**" after #463/#466) — that is a separate, already-fixed fact fr
 target, which is the historical snapshot's own mis-categorization of `_shared` as a peer role at
 the commit (`fc1685a`) it was taken.
 
-**Fix applied:** dropped the `_shared` row from the per-role table; added a note stating the
-role count at that snapshot was 19 (derived from the installer's exclusion rule) and explaining
-`_shared` as bundled shared surface rather than a role's own surface.
+**First-pass fix (superseded):** dropped the `_shared` row from the per-role table outright.
+
+**Admiral review finding on PR #509 (correct, reworked from):** the deleted row sat inside a
+fenced block that is verbatim output of the `$ for d in ...` command printed immediately above
+it. TREND_SNAPSHOT.md's own §0 commits every figure in the file to being derived-and-reproducible
+from a printed command — deleting the row breaks that contract: a successor who re-runs the
+command gets `_shared` back and hits an unexplained mismatch against the doc.
+
+**Fix as reworked:** restored the `_shared` row verbatim inside the command-output block, and
+moved all the correction work into the surrounding note instead of the table. The note now says
+`_shared` is not a role and the table above is 19 roles, not 20; explains `_shared` as bundled
+shared surface (`install_constellation.py`'s `SKILL_REFERENCE_BUNDLES` copies its 6 files into
+most roles' `references/` at install time, so those words already count toward the roles that
+bundle them, not toward a 20th role's own surface); and directly answers a propagation question
+the review raised but hadn't ruled on: nothing currently stops the miscount recurring — the
+`for d in ...` command has no `_shared` exclusion of its own, so a bare re-run reproduces the
+same unlabeled 20-row output, and the gap only closes if the command (or a later snapshot format)
+excludes `_`-prefixed directories or labels the row inline instead of relying on a reader finding
+this paragraph.
 
 **Deliberately not done:** recomputing each role's individual bundled-`_shared` word-count
 attribution (`SKILL_REFERENCE_BUNDLES`) — the issue's third suggested-fix bullet. That is a new
