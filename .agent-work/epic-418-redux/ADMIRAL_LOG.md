@@ -3599,3 +3599,53 @@ will pass the flag explicitly from here.
 
 Filed as **#508**, with #344 named as its mirror (that issue is the corpus going stale relative to
 main; this is the agent going stale relative to the corpus, **caused by the fix for #344**).
+
+### ERROR (mine) — the probe I wrote to remove a check-that-cannot-fail WAS one
+
+Acting on #508's third remedy, I wrote `closeout/harvest_probe.sh` so that "nothing to collect" and
+"the file is not called that any more" would stop rendering identically before I sweep any worktree.
+
+**Version 1 tested `[ -f .agent-work/CONSTELLATION_FEEDBACK.md ]` and reported PRESENT for every
+worktree, including ones with no work in them at all.** Because that file is **tracked** —
+`git ls-files` confirms it, along with **57 tracked files** under `.agent-work/staged-feedback/` — so
+every fresh checkout has it. **PRESENT was true in the healthy world and the empty world alike.**
+
+I caught it only because the output looked too uniform: seven worktrees, byte-identical findings,
+including one provisioned forty minutes earlier that could not possibly have produced an export.
+
+**This is the second time this epic that a fixture built to prevent a class of error reproduced that
+exact error** — the first was the pre-staged boundary skeleton, built specifically to prevent shape
+refusals, which used the wrong field names and caused one. Worth the retrospective: **being the
+author of the countermeasure is not protection; it may be the opposite**, because the author is the
+one person who cannot read the countermeasure cold.
+
+**Corrected.** A harvest source is content **not already on main**, queried through two channels:
+`git status --porcelain` (uncommitted) and `git diff --name-only main...HEAD` (committed on the
+branch since it forked). **Three-dot, not two** — two-dot would also list everything *main* changed
+since the fork, which is my own Admiral commits, not the crew's work. The rewrite states its own v1
+defect in a comment block so the next reader inherits the correction, not just the fix.
+
+**The corrected probe immediately paid for itself**, distinguishing what v1 could not:
+
+| worktree | verdict |
+|---|---|
+| `epic418-w5-gates` / `-readiness` / `-addressing` / `-docs` | real work areas, uncommitted, **would be destroyed by removal** |
+| `epic418-w5-engine` | **nothing at all** — see the liveness note below |
+| `epic418-a2-467`, `governor-264` | genuine nulls, both channels queried and both empty |
+
+**Incidental, and it is DC1 evidence:** four of the five crews have written a `gauge.json`. **The
+governor is firing on live dispatched agents**, on the shipped-to-them corpus, without anyone
+arranging it.
+
+### Liveness — crew 4 quiet at ~30 minutes, asked rather than acted on
+
+`epic418-w5-engine` has written **nothing** since checkout: no work area, no gauge, clean
+`git status`. The other four all have both.
+
+**No idle notification has arrived, so it is running.** That is the authoritative channel and I am not
+overriding it with an inference from disk. Reading nine issue bodies through `gh` writes nothing, so
+the observation is fully consistent with a crew doing exactly what it was told first.
+
+**Action: asked it for one line of proof-of-life**, and told it explicitly that a float costs me
+nothing and that I would rather re-cut the assignment now than take a soft pass on nine issues. **No
+stop, no relaunch, no second Commander into that worktree.**
