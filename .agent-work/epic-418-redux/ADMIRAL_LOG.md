@@ -886,3 +886,23 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   shipped rather than after.
   Not intervening. It is inside its latitude, the design choice it made (affordance, not a new verb)
   needs no surfacing, and steering a running Commander is the thing doctrine forbids.
+
+- `2026-08-08` — `WAVE PROGRESS` — **PR #492 (#465) open at `6774e75e`; independent review dispatched**
+  into `C:/Programs/wt-rev-465` (isolation exit 0). Non-workarea diff is six files:
+  `scripts/checklist_engine.py` (+60/-4), a new `tests/test_engine_survey_retext_and_newlines.py`
+  (+225), `skills/reviewer/SKILL.md`, `skills/reviewer/templates/REVIEW_SURVEY.template.json`,
+  `docs/CHECKLIST_SCHEMA.md`, `skills/workbench/references/checklist-engine.md`.
+  **The design question came back answered on evidence, and answered the way I could not have called
+  from the outside.** Removal was ruled out because *deleting the placeholder deletes the check*, and
+  the affordance is a deliberate logged escape hatch matching the Fowler `overridden` verdict already
+  in that skill. It is **not a new engine verb** — it lifts the existing `amend --op retext-check` to
+  work on a survey. So no shared-interface change and nothing to surface, which is the outcome my
+  launch order asked it to flag if it went the other way.
+  **The review's highest-value instruction is the CRLF mutation test**: a round-trip test run against
+  a file with no CRLF in it passes in both worlds and proves nothing. The reviewer is told to defeat
+  the byte-faithful write and confirm the new tests go red, and that failing to go red is a
+  **blocking** finding. That instruction exists because #491's reviewer invented the technique
+  unprompted an hour ago; it is now standard for this wave.
+  It is also told to **follow the shipped imperative from a clean checkout** — if a reviewer reading
+  only the new text still cannot fill the placeholder, the issue is not fixed regardless of what the
+  tests say.
