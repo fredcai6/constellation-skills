@@ -3,11 +3,27 @@
 **WAVE 3 IN FLIGHT. Four agents have run; two are live right now. Do not re-dispatch anything
 without checking the worktrees and the forge first.**
 
-| Dispatch | Issue(s) | State as of 05:35Z |
+| Dispatch | Issue(s) | State |
 |---|---|---|
-| W3-B | #461 | **DONE — PR #490 open, CI `test` PASS (7m27s), MERGEABLE, 16 behind main (my bookkeeping only, no file overlap). Awaiting the independent review before merge.** Reviewer dispatched into `C:/Programs/wt-rev-461` (branch `review/w3-461`, at PR head `fa1378ed`). **LIVE** |
-| W3-C | #488 + #489 | tripped the governor at 16% on `m3-verify`, filed `refresh-request`, **relaunched** into the same worktree + `IMPLEMENTER_PLAN.json`. Both fixes code-complete and verified; only PR + result artifact remain. **LIVE** |
-| W3-A | #465 | 1 commit, still working, no PR yet |
+| W3-B | #461 | **MERGED** PR #490 -> `ad149283`. Reviewed on the forge (APPROVE, re-derived). **Issue CLOSED.** Both worktrees harvested and swept. |
+| W3-C | #488 + #489 | **PR #491 open**, CI running, **review LIVE** in `C:/Programs/wt-rev-488489`. Crew tripped, was relaunched, completed the full round trip and released its lease. |
+| W3-A | #465 | 1 commit, 8 dirty, still implementing. Chose the **affordance** path on evidence (NOT a new engine verb — so no shared-interface change and nothing to surface). |
+
+**Merge gate, in order, honoured for #490 and to be repeated for #491:** `gh pr checks <n>` exit 0 →
+independent review posted to the forge → merge → **verify MERGED via `gh pr view --json state`** →
+harvest the worktrees → sweep → close the issue.
+
+**Two silent `gh` hazards, both hit this session:**
+- **`gh pr merge` exits 1 on a merge that SUCCEEDED** when `--delete-branch` fails (a worktree holds
+  the branch). Cleanup runs after the merge. **Never read its exit code as the merge verdict.**
+- **`gh issue close -F <file>` accepts the unsupported flag, prints nothing, and does not close.**
+  Use `--comment "$(cat <file>)"` — command-substitution output is not rescanned, so it is also safe
+  from the backtick trap.
+
+**Self-approve is blocked by GitHub** — every agent authenticates as the same identity, which authored
+every PR. `gh pr review --approve` is refused. Sanctioned substitute: `--comment -F <file>` with the
+verdict stated at the top of the body. **This probably explains #470's "missing" reviews last wave —
+a platform refusal, not reviewer negligence. Correct that claim wherever it appears.**
 
 **If you are resuming cold:** W3-C's lease `impl-w3c-488-489` is still held and its gate is still
 `in-progress` — that is the **refresh** shape, not a dead crew. Do not force-claim it or restart it
