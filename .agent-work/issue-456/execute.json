@@ -430,7 +430,8 @@
           "id": "p1",
           "statement": "g0 -- there must be a pipeline to check",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g0 is complete: package + CLI run extract -> render -> check end to end on this repo, on an APPROVE verdict (e-g0-integrate-1). There is a pipeline to check."
         }
       ],
       "postconditions": [
@@ -472,7 +473,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,

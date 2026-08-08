@@ -4,38 +4,40 @@ If this session dies, a fresh agent resumes from exactly these five lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch (the PID changes every time).
 
-- **step:** execute · item `g0-integrate` — **in-progress.** `g0-implement` and
-  `g0-review` are both **complete**. All three review findings (B1, B2, B3) are
-  closed and independently verified; do **not** reopen them and do **not**
-  re-dispatch any g0 implementer or remediation crew — all six prior crews are
-  terminal (`recover_crews` reports 0 unresolved).
+- **step:** execute · item `g1-implement` — **in-progress, implementer crew
+  dispatched.** **`g0` IS FULLY CLOSED** on an APPROVE verdict
+  (`e-g0-integrate-1`); do **not** reopen it and do **not** re-dispatch any g0
+  crew — all seven are terminal (`recover_crews`: 0 unresolved).
 
-  `g0-integrate` has two postconditions:
-  - **c1 (command) — ALREADY PASSING, verified by the Commander in a cleared
-    environment on this run:** full suite `1709 passed / 2 skipped / 0 failed`,
-    and `tests/test_code_map.py -k "discovery or cli"` `14 passed`. It is a
-    command-kind check, so it is satisfied by `advance` re-running it, never by
-    `attest`.
-  - **c2 (artifact) — THE ONLY THING OUTSTANDING:** it requires an evidence
-    artifact of type `review-result` whose verdict is **APPROVE**. Both reviews
-    on record returned **BLOCK**, and the B3 fix (the docstring at
-    `tests/test_code_map.py:127`) was the **Commander's own edit, reviewed by
-    nobody**. A third scoped reviewer pass is dispatched to close it:
-    handoff `crew-handoffs/g0-approve.md`, slot
-    `constellation/issue-456/g0/reviewer/attempt-3`, result expected at
-    `crew-handoffs/g0-approve-RESULT.md`.
+  Crew: handoff `crew-handoffs/g1-implement.md`, slot
+  `constellation/issue-456/g1/implementer/attempt-1`, result expected at
+  `crew-handoffs/g1-implement-RESULT.md`.
 
-  If that pass returns APPROVE: attach it as `review-result` with
-  `--field verdict=APPROVE`, then `advance g0-integrate`. If it returns BLOCK:
-  fix the finding at `g0` and re-review — do not attest around c2.
+  **`g1` REWRITES `scripts/code_map/checks.py`** — today every function prints
+  and `run()` ends in a literal `return 0`, so a broken map passes. Three
+  families only: nonzero exit on failure; determinism (double build
+  byte-identical); structural assertions provable by mutation (caller set vs an
+  independent full scan; referenced-by count vs its own list). Corpus-count
+  thresholds and render-shape baselines belong to `gB`, NOT here.
 
-  **Do NOT add the `pages - 1 - modules` vs `entity_pages` invariant to `g0`.**
-  It is the real falsifiable check, it would be RED today (the page genuinely is
-  lost and `g2` owns the rename), and it belongs to `g1` with `tc17`. `tc24`
-  corrects the misdirection in `tc18` — the root is `sizes`, which feeds three
-  fields, and counting the tree again is NOT the fix.
+  **THE KEY CALL IN THIS GATE, already made and written into the handoff:** the
+  best check available is RED today. `pages - 1 - modules` = 3535 vs
+  `entity_pages` = 3536, differing by exactly the `Verdict`/`verdict` filename
+  collision. `g1` ASSERTS it; `g2` owns the rename that fixes it. It ships as
+  `xfail(strict=True)` so that when `g2` lands the rename the XPASS turns the
+  suite red and forces the marker off — the defect cannot be silently left
+  behind and the check cannot be silently left disabled. `tc26` (a zero-byte
+  page is invisible to `rglob`) folds in here too. **Do NOT "fix"
+  `entity_pages` by counting the tree again** — `tc24` corrects `tc18`; the root
+  is `sizes`, which feeds three fields.
 
-  11 gates: g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs
+  **ALL 11 GATE COMMAND CHECKS WERE REPAIRED** at `g0-integrate` (`tc29`): each
+  was authored as two commands joined by the prose word `AND` and could only
+  ever fail through the engine's POSIX shell. Now ` && ` with
+  `env -u FORCE_COLOR -u PYTHONIOENCODING` on each half. Do not reintroduce the
+  old form.
+
+  11 gates: g0 ✅ g1 g2 g3 g4 g5 gb g6 g7 g8 gs
 - **slug:** work-id `issue-456` · branch `issue-456/code-map` (pushed to origin)
   · worktree `C:/Programs/constellation-skills/.claude/worktrees/issue-456`
 - **next command:** `python C:/Users/fredc/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/issue-456/spine.json current` — then re-claim lease `commander-issue-456` idempotently (same id, NOT a takeover, no `--force`), read the DIGEST, and drive `.agent-work/issue-456/execute.json` from `current`. Before any crew: `python scripts/recover_crews.py issue-456`, then dispatch only via `python scripts/run_crew.py --dispatch external --verify-result`.
