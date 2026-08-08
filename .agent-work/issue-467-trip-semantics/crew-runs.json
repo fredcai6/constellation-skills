@@ -284,5 +284,29 @@
     "model": "sonnet",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/issue-467-trip-semantics/g4-review/reviewer/attempt-2",
+    "work_id": "issue-467-trip-semantics",
+    "gate": "g4-review",
+    "role": "reviewer",
+    "attempt": 2,
+    "status": "completed",
+    "session_name": "constellation/issue-467-trip-semantics/g4-review/reviewer/attempt-2",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+    "handoff": ".agent-work/issue-467-trip-semantics/crew-handoffs/g4-rework-reviewer-handoff.md",
+    "result": ".agent-work/issue-467-trip-semantics/crew-handoffs/g4-rework-reviewer-result.md",
+    "stdout": ".agent-work/issue-467-trip-semantics/crew-runs/g4-review-reviewer-attempt-2.stdout.txt",
+    "stderr": ".agent-work/issue-467-trip-semantics/crew-runs/g4-review-reviewer-attempt-2.stderr.txt",
+    "started_at": "2026-08-08T19:12:40.161166+00:00",
+    "last_heartbeat": "2026-08-08T19:34:13.674767+00:00",
+    "completed_at": "2026-08-08T19:34:13.674767+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "sonnet",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

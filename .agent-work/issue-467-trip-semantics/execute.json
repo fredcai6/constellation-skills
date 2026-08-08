@@ -999,7 +999,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-3"
         },
         {
           "id": "c2",
@@ -1013,7 +1014,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-4"
         },
         {
           "id": "c3",
@@ -1025,17 +1027,68 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g4-rework-reviewer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g4-review/reviewer/attempt-2",
+            "verdict": "APPROVE",
+            "blocking_findings": "0",
+            "verified": "run_crew.py --verify-result -> fresh (completed); recover_crews.py shows no crew in flight",
+            "commander_broke_it_myself": "I did not accept this on the report. I broke the ledger WRITE branch in my own shell -- ledger = cl.setdefault('trip_ledger', []) replaced with ledger = [] in _append_trip_entry, the single anchor asserted to occur exactly once -- and the compliance slice went RED in my hands: 29 failed, 5 passed, 384 deselected, real exit 1, with every named compliance and historical test among the failures. Reverted with git checkout --; git status --porcelain on scripts/ tests/ docs/ is empty and the slice is back to 34 passed, 384 deselected, 21 subtests, real exit 0.",
+            "commander_full_suite": "My own run at HEAD e33f9eb1: 1867 passed, 2 skipped, 829 subtests, REAL exit 0 (redirected to a file with $? appended, not a piped exit code). Delta from main's baseline of 1858/2/821 is +9 passed and +8 subtests, and it reconciles exactly: 10 new 'def test_' lines of which one is a rename, so 9 net-new methods, and 8 new subtests from the two subTest-bearing tests. The implementer reported 828 subtests and could not reconcile the last one; the reviewer and I both measured 829 -- the difference is test_context_manifest filtering its subTest targets to files with an empty git status --porcelain, so a dirty tree moves that count by one. Verified by reading that test, not assumed."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g4-integrate",
+            "why_ref": "w-13",
+            "reading": "fill 0.151841 >= hard 0.15 on claude-opus-5, my own fresh reading at 2026-08-08T19:43:46Z",
+            "note": "THIRD live #431 on this run: MAIN's pre-#467 engine drives this spine, and it refuses the advance that CARRIES the handoff -- the exact defect #467 fixes. Releasing it the engine's own way with a concrete why_ref, then closing this gate carrying my handoff and stopping."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g5-acceptance": {
@@ -1360,6 +1413,16 @@
       "id": "tc18",
       "from": "g4-review",
       "statement": "From the g4 review survey (reviewer tc5, from the Fowler pass). 'outcome' is a bare string whose two legal values live in three places that must agree by convention. A named constant would make N10's defect shape structurally impossible rather than test-caught."
+    },
+    {
+      "id": "tc19",
+      "from": "g4-integrate",
+      "statement": "CLOSEOUT SILENCE -- B1 wearing a third hat, and the Admiral has ruled it OUT of this wave. Once a checklist has no active gate left (fully done), _trip_advisory returns '' immediately on the 'gate is None' path, so BOTH the live TRIP LEDGER line and the new TRIP HISTORY line go silent at closeout. The trip_ledger data is never deleted and stays readable in the JSON, but no verb surfaces it at the moment a run closes -- which is exactly when an auditor looks. Found by the g4 rework re-reviewer (its tc2) during its silencing battery; pre-existing, unrelated to this diff. NOT FIXED HERE for a decisive reason: touching that code now would void the approval this rework cycle just earned, since a re-review is only worth what the diff it examined is worth. Which verb should surface trip_ledger at closeout is an open design question, not a typo. The Admiral is filing it against the epic with this evidence as the first candidate for the follow-on."
+    },
+    {
+      "id": "tc20",
+      "from": "g4-integrate",
+      "statement": "From the g4 rework re-review (its tc1, and its Fowler pass's one flagged smell). begin_over_line_records_historical's loop is a near-total textual clone of begin_over_line_records minus the why_ref filter; a shared filter-and-collect helper would remove the duplication. Non-blocking and deliberately not done: the fix space was ruled narrow, both selectors are independently proven correct by mutation, and the reviewer notes the textual independence is arguably defence-in-depth against a future edit silently coupling the two signals -- which is the exact failure shape mutation N22 exists to catch. Consolidate only with that trade-off stated."
     }
   ],
   "blockers": [],
@@ -1454,14 +1517,21 @@
       "why": "g4-review CLOSED with verdict BLOCK, 1 blocking finding, and the BLOCK IS RIGHT -- I reproduced it in my own shell with the reviewer's own probe rather than accepting it on the report. B1: the close the HARD band ORDERS the agent to make is guaranteed to clear the compliance signal, and the shipped line says the opposite. Three shipped mechanisms compose: at/over hard 'advance --mechanical' is refused so the only legal close is 'advance --why'; that appends a new why-record; and begin_over_line_records matches only entries keyed to the LIVE why-record. The mandated close therefore supersedes every ledger entry at once. Measured at gauge 0.20 / hard 0.15: selector reads 1 after a refused begin, 2 after a released begin, 0 after the same agent closes that gate. Across a 3-gate runaway with 3 over-the-line begins on disk the rendered line peaked at 2 and was ABSENT AT THE SEAM -- byte-identical to a compliant agent that closed and stopped. Green in both worlds, at exactly the place the next reader looks. The engine's own line ends 'Closing this gate does not clear the record'; I closed that gate and it vanished. Their own test test_compliance_line_is_absent_once_the_recorded_begin_is_superseded runs byte-for-byte the OFFENDER's path and labels it 'a fresh agent' in a comment, so it PINS THE DEFECT AS INTENDED. That is close criterion 5 failing on the one limit deciding whether the observable survives to the seam. EVERYTHING ELSE HELD: 17/17 defect shapes constructed by the reviewer itself and all 17 discriminate; 19/19 mutations re-run and killed, tree clean after every revert; write-site claim and its ast method independently verified; every evidence number reproduced. Reviewer rulings on the claims I set: A1 KEEP why_ref but REJECT the offered evidence (N7's 12-test radius is coupling, not load-bearingness; the real argument is that the supersede rule cannot be replayed from the trail); A2 all four single-test mutations are specificity not triviality; A3 the TDD deviation STRENGTHENS the guarantee; A5 the amend record is honest. FIX SPACE for the rework, narrow and cheap, and the reviewer explicitly does NOT ask the keying to change since criterion (b) is correctly implemented: correct the false sentence, declare this limit as plainly as the other three, and render a HISTORICAL read alongside the live one -- every entry is already on disk, so no new state is needed. Five new triage candidates from the survey (amend/waive --authority accepts any string so 'human ratification' is enforced by nothing; N15/N16 share one point of coverage; a crashing mutation is not a kill; the Trip section now assembles the band judgment by hand at three sites; 'outcome' is a bare string whose two legal values live in three places). TWO FAIR CORRECTIONS AGAINST MY OWN HANDOFF, both to carry: the shape count is 12 numbered rows not 11, and my trap-6 engine byte-size (156060) matches nothing on disk (161503 CRLF, 158377 as a blob) so it cannot confirm you have the right file -- use 'git rev-parse HEAD:scripts/checklist_engine.py', which also gives g5 the checkable hash pin it needs. I AM TRIPPED AND STOPPING HERE: fill 0.169769 >= hard 0.15, my own fresh reading. This is the SECOND live #431 on this run -- the pre-#467 engine driving the spine refused the advance that CARRIES the handoff, and I released it the engine's own way with the concrete why_ref w-12. NEXT: g4 rework -- dispatch a rework implementer against the fix space above, then an independent re-review. Do NOT start it over the line.",
       "mechanical": false,
       "ts": "2026-08-08T17:51:08.308277+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g4-integrate",
+      "why": "g4-integrate CLOSED on a real re-review: g4-review returned BLOCK on B1, the BLOCK was right, I returned it for rework per this gate's own imperative, and the independent re-review returned APPROVE with ZERO blocking findings. B1 was that the close the HARD band ORDERS an agent to make -- `advance --why`, the only legal close at/over hard -- appends a new why-record and supersedes every ledger entry at once, so the one required close was guaranteed to silence the only rendered signal, and the shipped line said the opposite. THE FIX IS ADDITIVE AND CARRIES NO NEW STATE: a second PURE, UNKEYED selector `begin_over_line_records_historical` over the same entries, and a second rendered TRIP HISTORY line computed once and appended to both HARD sub-branches, which renders even when the live line has gone silent. The live selector's keying is close criterion (b), it is correct, and it is UNTOUCHED (zero diff inside `begin_over_line_records`, read from the diff by both the reviewer and me) -- widening it was refused in advance because that turns a check that cannot fail into one that cannot pass. The false sentence is corrected, the fourth limit is declared in CHECKLIST_SCHEMA.md in the same plain voice as the other three, and `test_compliance_line_is_absent_once_the_recorded_begin_is_superseded` -- A PASSING TEST THAT CERTIFIED THE BUG, running the offender's path byte for byte while calling it \"a fresh agent\" -- is renamed and corrected to assert the live line goes absent AND the historical line still names the retained begin. Committed at e33f9eb1. I DID NOT ACCEPT ANY OF THIS ON THE REPORT: I broke the ledger WRITE branch in my own shell (`ledger = cl.setdefault(\"trip_ledger\", [])` -> `ledger = []`, anchor asserted unique) and the compliance slice went RED in my hands -- 29 failed, real exit 1, every named compliance and historical test among them -- then reverted, source porcelain-empty, slice back to 34 passed at exit 0. My own full suite at e33f9eb1: 1867 passed, 2 skipped, 829 subtests, REAL exit 0; the +9 passed / +8 subtests delta from main's 1858/821 baseline reconciles exactly (9 net-new methods after one rename; 8 subtests from the two subTest-bearing tests), and the implementer's unreconciled 828 was `test_context_manifest` filtering its subTest targets to files with an empty `git status --porcelain`, so a dirty tree moves it by one -- verified by reading that test, not assumed. THE RE-REVIEWER VERIFIED THE TWO ADMIRAL-NAMED CHECKS BY MUTATION, NOT BY READING: dead-coding the historical selector turns the corrected test RED (9 failed / 3 passed), and under that same mutation its own independent two-worlds probe flips to \"seam output identical between H and D = True\" -- so the SEAM MEASUREMENT itself goes red, not merely a pytest assertion. N22, which keys the historical selector to the live record and re-creates B1 exactly, is caught by both. Nine silencing attempts against an armed runaway (reopen, block/resume, skip, mechanical close, amend, attach, dry-run, a why_exempt spine, and closing out) reduced the historical count in NONE of them; `reopen` is itself refused over the line and its refusal ADDS an entry. DEFERRED BY ADMIRAL RULING, RECORDED AS tc19 -- do NOT carry it into g5: once a checklist has no active gate left, `_trip_advisory` returns early on the `gate is None` path and BOTH lines go silent at closeout, which is B1's shape at the vantage point an auditor actually occupies. It is not fixed here because touching that code would VOID the approval this rework cycle just earned -- a re-review is only worth what the diff it examined is worth -- and which verb should surface `trip_ledger` at closeout is an open design question, not a typo. The Admiral is filing it against the epic. tc20 records the duplicated filter loop between the two selectors, left alone deliberately as defence against a future edit coupling the two signals; tc14-tc18 carry the five candidates from the first review survey, tc14 (amend/waive --authority accepts any string, so \"human ratification\" is enforced by nothing) being this issue's own subject sitting in the engine's authority mechanism. I AM TRIPPED AND STOPPING HERE: fill 0.151841 >= hard 0.15, my own fresh reading, refresh-request filed against w-13. THIRD live #431 on this run -- main's pre-#467 engine refuses the advance that CARRIES the handoff. NEXT: g5-acceptance, and it is the gate this whole issue exists for. Five things a successor needs. ONE: drive the SPINE with MAIN's engine at C:/Programs/constellation-skills/scripts/checklist_engine.py; g5-acceptance is the DELIBERATE EXCEPTION -- it exercises the BRANCH engine and pins it by hash, so re-derive `git rev-parse HEAD:scripts/checklist_engine.py` at the moment you use it (c281cb68eaac65d1169dd6737a6a322728df98eb at HEAD e33f9eb1, and it MOVES with every engine commit -- never copy a number forward, and never pin by byte size). TWO, BINDING AND EASY TO BREAK WITH GOOD INTENTIONS: agent B's dispatch prompt must contain NOTHING BUT THE `current` OUTPUT. No re-briefing, no separate handoff document, no summary from you meaning well. If it carries anything else the measurement is VOID and the wave produces no acceptance evidence. Record B's VERBATIM prompt in ACCEPTANCE.md so the cold-start claim stays falsifiable. THREE: g5-acceptance takes no implement crew (the waiver reason is in its own imperative -- the instrument is two dispatched agents, and a crew implementing it would sit between the measurement and the thing measured), but it DOES get an independent g5-review. FOUR: crews dispatch on SONNET; Opus only for a reason you name in the dispatch. FIVE: a crew you dispatch is owned by the main session, so TaskStop will refuse you -- when the result is written, the registry says completed, `--verify-result` is fresh and disk is unchanged, THAT IS the idle determination; ask main for the stop and keep working, and if no answer comes in ~10 minutes dispatch anyway and log that you did. Do not let the ritual outlive the hazard.",
+      "mechanical": false,
+      "ts": "2026-08-08T19:51:02.659029+00:00"
     }
   ],
-  "refusals": 9,
+  "refusals": 10,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T18:09:53.972633+00:00",
-    "last_heartbeat": "2026-08-08T18:12:20.123685+00:00",
+    "last_heartbeat": "2026-08-08T19:51:02.659050+00:00",
     "claimed_by": "commander-w4-467-h",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,

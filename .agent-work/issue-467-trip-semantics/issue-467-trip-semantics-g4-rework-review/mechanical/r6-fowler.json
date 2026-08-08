@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "mechanical": {
+    "run": "issue-467-trip-semantics-g4-rework-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r6-fowler",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-g4-rework-review-r6-fowler@a470e22b36804964ed6967a5219787b8319f8625",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-trip-semantics-g4-rework-review",
+    "generated_at": "2026-08-08T19:30:54Z"
+  }
+}
