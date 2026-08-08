@@ -23,26 +23,16 @@ wave-2 baseline of 1782 plus 11 new tests (7 from #491, 4 from #492). This is th
 
 Boundary `w3-to-w4` recorded, `decision=replan`, `admiral-prelaunch` verifier **exit 0**.
 
-## STILL RUNNING — do not sweep, and do NOT judge it by its heartbeat
+## Nothing is running — all wave-3 worktrees swept
 
-**`C:/Programs/wt-w3a-465`** — W3-A's continuation Commander (`commander-w3a-465-b`) is **alive** and
-driving its own spine's bookkeeping. Its PR is **merged** and #465 **closed**, so the epic outcome is
-settled and nothing waits on it.
+Every wave-3 worktree is harvested and removed; every branch deleted. `git worktree list | grep wt-`
+returns nothing. W3-A's Commander drove its spine to terminal and released its lease last; its
+bookkeeping landed via **PR #499 (`f348ab2b`)**, and I verified **after** the merge — 105 files under
+`.agent-work/archive/2026-08-08-w3a-465/` and **6 episodes** (`w3a-465-001..006`) tracked in `main` —
+**before** sweeping. That ordering is the harvest rule and it is not optional.
 
-**Its `spine.json` heartbeat is stale by design and that is not death.** A Commander mid-`execute`
-drives the **inner** `execute.json`; the outer `spine.json` only takes a heartbeat when an outer verb
-runs, so it goes stale for as long as an inner gate takes — eight minutes for a full-suite
-postcondition. I measured 27 minutes stale on a crew that was actively journaling.
-
-**Check liveness by mtime, never by heartbeat:**
-
-```
-find C:/Programs/wt-w3a-465 -newermt "-6 minutes" -type f -not -path "*/.git/*"
-```
-
-Before sweeping: confirm dead **by that command**, harvest its durable trio (under an epic lease the
-trio lands at `<worktree>/.agent-work/`, not the main checkout), then `git worktree remove` and
-delete the branch. All other wave-3 worktrees are already harvested and swept.
+**Still NOT swept, deliberately:** `C:/Programs/constellation-skills-wt/governor-264`. It holds 3
+unmerged commits (1144 lines) against **#264, still open**. See the sweep verdict below.
 
 ## Why blocked — three reasons, one refresh clears them
 
