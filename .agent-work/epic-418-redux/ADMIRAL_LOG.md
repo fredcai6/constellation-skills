@@ -3891,3 +3891,31 @@ acceptable is a silent change in either direction.
 
 **No merge while the crew is live.** Its spine still reads `execute [in-progress]`. A PR being green is
 not the same as a crew being done, and merging under a running crew risks landing a partial tree.
+
+### Merge baseline established — main green under the correct interpreter
+
+`FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests` on current main (`43ccff7f` + log commits):
+**1867 passed, 2 skipped, 829 subtests passed in 556.04s, real exit 0** — exit code read from an
+unpiped run, not from a pipe.
+
+This is the reference point every wave-5 merge is gated against, and it also confirms that my own
+commits this session — three episodes into the tracked `episodes/` path, plus `.agent-work` — moved
+nothing. **The number matches wave 4's post-merge figure exactly**, which is what makes it usable as
+a baseline rather than just a green.
+
+### Crew 5 complete — `plan.json` lease RELEASED, PR #509 open and green
+
+`impl-w5-docs-496-411` finished and released its lease. Two commits: the fix, then a closeout log.
+**It is the first crew of the wave to finish.**
+
+Its return is the shape I keep asking for and rarely get: scope stated with the exclusions it
+deliberately did **not** touch (crew 4's two files, *"read for verification only, never edited"*),
+test mode declared as `evidence-only` with the doctrine line justifying it rather than a skipped
+check, and a suite run under `python` matching the known-good count.
+
+**My #411 finding reached it after it had already released.** That is a real sequencing gap of my
+own making — the review arrived after the reviewed party stood down — and it is the same class as
+#507, one tier over: a message addressed to a live agent that is no longer live by the time it lands.
+The finding is a judgement call about whether an archived *measurement* may be edited, not a defect,
+so it is **not blocking**. Holding briefly to see whether the crew resumes and answers; if it does not,
+I will decide and record the reason rather than let a PR sit on an unanswered question.
