@@ -2061,3 +2061,54 @@ I told three Commanders to commit at clean seams before handing off, and nobody 
 trip protocol sweeps deliberately disposable evidence into permanent history.** Float accepted;
 untracking is outside the frozen plan and is **not** to be done. Goes to triage as a cost of the
 handoff doctrine, **attributed to me**.
+
+## 2026-08-08 — instance C hands off; the why-trail defect generalises beyond the governor
+
+**Clean handoff, third in a row.** 13.1% against a 15% line, `git status --porcelain` **0 lines**,
+**both leases released without force**, `recover_crews.py` 2 crews / **0 unresolved**. Commits
+`e4092af8` → `3b8f7535` (REPLAN_INPUT, `verify_iterative_role_artifacts.py commander` real exit
+**0**, 6 wave-evidence claims and **7 classified discrepancies, none auto-filed**) → `ff224b09`.
+My c3 ruling did not reach it before it handed off; it is in the state note, which is where the
+successor reads it.
+
+**FINDING | #467 is fixing one instance of a defect that is not about the governor at all.** C could
+not write its handoff DIGEST — because **`advance` is the why-trail's only writer, and `advance` was
+blocked by c3 being unpassable.** Its predecessor could not write the *spine's* DIGEST because
+`execute` spans 16 gates. **Same failure, two entirely unrelated causes**, neither of them the
+governor.
+
+The generalisation, in C's words and worth quoting: *the why-trail's single writer sits behind every
+postcondition of the step it closes, so **any** unpassable check silently costs the run its
+cold-start surface — exactly as the governor did.* **The class is bigger than the instance.**
+Recorded before g2-g4 land, precisely so nobody reads the governor fix as having solved it.
+
+**FINDING | the residue tension is structural, and C proved it by living it.** It flagged that the
+commit-at-the-seam protocol swept the disposable repro into permanent history — then its own gate
+imperative required re-running the repro, which dirtied 25 tracked files, and its own seam-commit
+committed them. **It did this deliberately and said so:** leaving a dirty tree for a successor is
+worse, and committing at the seam is doctrine. *"It won't be fixed by telling people to be careful."*
+Both horns are correct behaviour; the conflict is between two rules I am enforcing simultaneously.
+**Attributed to me, not to any crew.**
+
+**FINDING WITH TEETH | the fix could be verified against something that was never broken.** The
+reviewer's PROBE 2 showed the post-attach `advance` **succeeds**. So if g2-g4 verify *"the advance is
+no longer blocked"*, they verify a proposition that was **never true**, and that check **passes in
+both worlds**. This epic's central defect, one level up, living in the verification of its own fix.
+C flagged it as the thing most likely to be quietly dropped between agents; I have carried it
+verbatim into instance D's dispatch.
+
+**RULING | I changed the experiment on this relaunch, deliberately.** C's honest DC5 verdict was that
+the handoff sufficed **because I hand-corrected which projection to trust** — *"your two lines were
+the difference"* — and that the open question is no longer *does the round trip close* (it does) but
+**does it close without a human telling the successor which projection to trust.** For C it did not.
+
+So instance D was dispatched with **only the c3 ruling**, which is mine to give, and pointed at the
+run's own artifacts for everything else — **no projection correction, no state summary from me** —
+with its judgement on whether those artifacts sufficed named as a **graded deliverable**. Repeating
+the correction would have masked the very thing being measured, and the measurement has already been
+taken twice; a third hand-corrected resume would tell us nothing new. If D reports the artifacts
+stood alone, that is the run's own fix working. If not, that is the honest DC5 result.
+
+**C's gauge correction is now the firmest version.** *"Two resumes, one variable changed, opposite
+outcomes — a cleaner attribution than either run could produce alone."* Scoped to the window where
+the tripped predecessor is still taking tool calls. It classified it `drop` in its own REPLAN_INPUT.
