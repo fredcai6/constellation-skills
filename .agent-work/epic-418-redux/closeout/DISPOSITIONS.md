@@ -6,8 +6,9 @@ command (`gh issue list --search "418 in:body"` plus direct `gh issue view` on t
 workstream issues), **not from memory** — the run has already produced three errors this week from
 claims carried forward and never re-derived.
 
-**Population: 48 issues — 17 closed, 31 open.** Every one gets a line below. Nothing is left
-unrouted; that is the point of the ledger.
+**Population: 56 issues — 19 closed, 37 open.** Re-derived by command at 23:21Z on 2026-08-08 (`gh issue list --state all --search "418 in:body"`), **not carried forward** — the wave-4 figure was 48/17/31 and eight issues have been filed since (#500-#504, #506, #507, #508), every one of them found while doing something else. Every issue gets a line below. Nothing is left unrouted; that is the point of the ledger.
+
+**All 21 wave-5 issues verified still OPEN at that same moment.** That is correct, not a lag: a crew closes its issues only after the code lands, and no wave-5 PR has merged yet. An issue closed ahead of its merge would be the failure this ledger exists to catch.
 
 **A rising open count is not a failure here, and the spec says so.** E's fourth done-condition was
 **retired** during the 2026-08-07 revision precisely because it was falsified by this epic's own
