@@ -483,3 +483,47 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   shape errors, all recorded in the state note so the next boundary costs one attempt instead of five.
   **Also caught: I captured `tail`'s exit code instead of the verifier's** on the first run and read a
   refusal as `VERIFY_EXIT=0`. Same defect as the wave-2 push. Redone with output to a file.
+
+- `2026-08-08` — `RULING` (evidence-only, found while surveying stale worktrees for closeout; **not
+  acted on, deliberately**): **there is finished, unmerged work on this wave's exact theme sitting in
+  a worktree, and its issue is still open.**
+  Branch `governor/264-e2e-assertion`, worktree `C:/Programs/constellation-skills-wt/governor-264`,
+  **3 commits, 211 behind main, absent from main** (`git ls-files | grep gauge_chain` returns
+  nothing). Issue **#264 is OPEN**: *"governor: no end-to-end assertion that a live run produces a
+  sane reading — 8 days of 1.0s raised nothing"*.
+  It is **1144 lines** of end-to-end gauge test, 13 tests, traversing a real writer process to a real
+  Trip verdict. Two of them matter to us right now:
+  - `test_ladder_fill_series_is_non_decreasing_and_actually_moves` — the anti-vacuity assertion for
+    *"8 days of 1.0s raised nothing"*. **This is the guard that would have caught my dark governor**,
+    and it has existed, written and unmerged, the whole time I ran blind.
+  - `test_chain_ambiguous_binding_writes_no_gauge_and_flags_every_candidate` — which at first read
+    looked like it would **lock in the #488 defect**, since it asserts an ambiguous binding writes no
+    gauge. **It does not.** I checked rather than assumed: it builds `_ambiguous_work_trees(tmp_path)`
+    and asserts `not (spine.parent / "gauge.json").exists()` **per spine**, so its candidates have
+    *distinct parents*. That is exactly the **negative direction #488's fix must preserve** —
+    genuinely different paths still skip — specified independently, months before #488 was found.
+    So it corroborates W3-C's mission instead of contradicting it.
+  **Not acted on, three reasons.** (1) Landing it is a **scope change**, which the contract marks
+  `surfaced`. (2) It would shift ground under a running Commander — W3-C owns
+  `gauge_writer_hook.py` right now, and doctrine is stop-and-relaunch on fresh ground, never steer
+  mid-flight. (3) 211 commits behind: whether it still runs is an open question, not an assumption.
+  **Surfaced to Tommy at the wave-3 boundary**, with a recommendation to land it.
+  Sweeping that worktree would have destroyed it. This is the harvest-before-sweep rule earning its
+  place: the survey was routine closeout hygiene and it turned up the wave's most useful artifact.
+
+- `2026-08-08` — `ADMIRAL ERROR` (caught, corrected, verified): posting the #264 comment, I passed the
+  body as a **double-quoted bash string containing a markdown code span**. Bash executed the
+  backticked contents as **command substitution**: `len(set(candidates))` became a syntax error and
+  the phrase was **silently deleted from the posted comment**, which still posted successfully.
+  Exit status was fine. The forge accepted it. Only re-reading the posted body found it.
+  Corrected via `gh api -X PATCH ... -F body=@<file>` and **verified by re-reading the comment**, not
+  by trusting the PATCH's exit code — the same discipline whose absence produced the false
+  lease-release claim earlier in this run.
+  **This is a platform hazard, not a one-off.** Every launch order already carries *"PR bodies via
+  `gh pr create -F <file>`, never a heredoc or here-string"*. This is the same trap one door over:
+  **`gh issue comment --body "..."` with any backtick in it**. Markdown code spans are exactly what
+  a well-written comment is full of, so the hazard fires on good writing.
+  It also has the wave's signature shape: **the failure is invisible at the point of failure.**
+  Non-zero exit went to stderr while the comment posted anyway, so every success signal said success.
+  Carried as a triage candidate for closeout; the fix is to extend the existing `-F <file>` rule to
+  cover issue comments, not just PR bodies.
