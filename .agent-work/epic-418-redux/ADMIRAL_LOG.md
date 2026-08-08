@@ -326,9 +326,39 @@ What carries forward, and must not be re-derived:
 
 - TRANSITION | boundary=w1-to-w2 | decision=replan | verified
 
+- `2026-08-08` — `ADMIRAL ERROR`: **I reported releasing `r418-460`'s orphaned lease. I did not,
+  and it could not have worked.** `.agent-work/r418-460/spine.json` in the main checkout still reads
+  `LEASE active: commander-r418-460-b` / `execute [in-progress]`. I released the copy under the
+  *worktree* and then swept the worktree; the copy in main is a **different file that arrived via
+  the merge of PR #487** (`git log -- .agent-work/r418-460/spine.json` → exactly one commit,
+  `476e044d`). My release never addressed it. Cost: nothing operationally — but I stated a
+  remediation as done in both the state note and my checkpoint report to Tommy, and it was not.
+  Both corrected in place. The reason I believed it is worth naming: I verified the *action*
+  (release exited 0) instead of re-running the *observation* that had prompted it. Re-reading the
+  spine after the sweep would have shown the lease still active in one command.
+
+- `2026-08-08` — `RULING` (evidence-only; supersedes my own earlier #457 comment): **the lease field
+  read from disk is not a liveness signal, in either direction.** Enumerated by command, not memory:
+  of 147 tracked plan/spine files, **18 carry `engine_session.status == "active"` and exactly one is
+  a live run** — mine. Fifteen are deliberate records (`/archive/`, `/harvest/`, eval corpora under
+  `epic-298/{post,preb}/runs/`); three sit in live work areas and two of those three are fossils.
+  A Commander that commits its own spine to its PR branch ships a mid-run snapshot into main on
+  merge — `r418-460`'s is frozen 90 seconds into a multi-hour run — and git then preserves an active
+  lease and an `in-progress` gate forever. This **compounds with cmd-460's finding from the other
+  direction**: it read `lease: null`, concluded the run was abandoned, and raced a live Commander
+  (its own `770f3e06` landed 44s behind the real work), because a crew that releases between gates
+  produces exactly that reading. So `null` does not mean dead and `active` does not mean alive. Same
+  family as **a check that cannot fail**: the signal's value is identical in both worlds. My earlier
+  #457 comment blamed abandoned agents leaving leases behind — that is a symptom; the defect is that
+  liveness was never encoded, only a snapshot of it. **What does discriminate, and needs no fix:**
+  match the lease's `session_id` against your own — presence proves nothing, ownership proves
+  everything. That is what let me refuse #457's rail twice. **Not filed as an issue:** filing is a
+  delegated class and the contract granting it expired at the wave-2 boundary. Surfaced to Tommy.
+
 ## Merges
 
-- _none yet_
+Logged chronologically above, not here — see the `2026-08-07` entries for #470, #472/#469, #473,
+#485, #487. All five gated on check exit code and verified `state=MERGED` at the forge.
 
 ## Closeout
 

@@ -5,7 +5,7 @@ own terms and the `execute` gate is BLOCKED awaiting Tommy's refresh. Do not dis
 
 - **step:** `execute` — **blocked** on contract expiry. Remaining after `execute`: `closeout` only.
 - **slug:** `epic-418-redux` · main checkout `C:/Programs/constellation-skills` · `main` at
-  **`0cb9ca2a`** (= `origin/main`, pushed, working tree clean)
+  **`1ce2e807`** (= `origin/main`, pushed, working tree clean)
 - **next command:** `python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current`
   — then get the contract refreshed before anything else
 - **pid:** none — no agents in flight
@@ -31,9 +31,15 @@ own terms and the `execute` gate is BLOCKED awaiting Tommy's refresh. Do not dis
 - **#433, #436, #460, #464 are MERGED BUT NOT CLOSED** on the tracker — issue closing is a
   `surfaced` class and Tommy has not been asked.
 - ~~Worktrees pending sweep~~ — **DONE**: all four harvested (nothing to harvest; their exports were
-  behind main, not ahead) and swept. `r418-460`'s orphaned lease released first.
-- **`governor-264` still holds a live lease with a 2026-07-28 heartbeat** — an unrelated issue's
-  abandoned Commander. Left alone, but it is a standing #457 rail-capture hazard for whoever runs next.
+  behind main, not ahead) and swept.
+- **CORRECTION — I claimed `r418-460`'s orphaned lease was released. It was not.**
+  `.agent-work/r418-460/spine.json` in this checkout still reads `LEASE active:
+  commander-r418-460-b` / `execute [in-progress]`. I released the *worktree* copy and then swept the
+  worktree; the copy in main is a **different file that arrived via the merge of PR #487** and my
+  release never touched it. See "The lease field is not a liveness signal" below — this is not a
+  missed step, it is a class of thing that cannot be fixed by releasing.
+- **`governor-264` holds a lease with a 2026-07-28 heartbeat** — left alone; it lives in a worktree
+  outside this epic.
 
 ## Landed so far
 
@@ -68,6 +74,42 @@ Worked cleanly four times: #436→#472, #464→#473, #433→#485, #460→#487.
 
 **Never use an ancestry test to decide whether a wave-2 branch merged** — under squash-merge it
 returns the same answer for merged and abandoned. Ask the forge (`gh pr view <n> --json state`).
+
+## The lease field is not a liveness signal — supersedes what I filed on #457
+
+**Measured, not reasoned.** 147 tracked plan/spine files in this checkout; **18 carry
+`engine_session.status == "active"`. Exactly one is a live run — mine.**
+
+```
+git ls-files .agent-work | (spine.json|execute.json|IMPLEMENTER_PLAN.json)
+  → 18 with status=="active":  15 in archive//harvest//runs/ (deliberate records)
+                                3 in live work areas: b420-engine-channel, r418-460, epic-418-redux
+                                   ...of which 1 (epic-418-redux) is actually running
+```
+
+A Commander that commits its own `.agent-work/<id>/spine.json` to its PR branch ships a **mid-run
+snapshot** into main on merge. `r418-460`'s frozen at `claimed_at 22:35:04 / heartbeat 22:36:26` —
+90 seconds into a run that went on for hours. Git preserves it forever with an active lease and an
+`in-progress` gate. Releasing the live copy cannot touch it; sweeping the worktree cannot remove it.
+
+**Both readings of the lease field are uninformative, in opposite directions:**
+
+| reading | looks like | also produced by |
+|---|---|---|
+| `lease: null` | abandoned run | a crew that released between gates (cmd-460 raced a live Commander on exactly this) |
+| `lease: active` | live run | a committed snapshot — 17 of 18 here |
+
+So the field carries **no information about liveness** when read from disk. This is the same family
+as **a check that cannot fail**: a signal whose value is identical in the healthy and defective
+worlds. #457 currently says the hazard is abandoned agents leaving leases behind; that is a symptom.
+The defect is that liveness was never encoded — only a serialized snapshot of it was.
+
+**What actually discriminates** (and what let me refuse #457's rail twice): match the lease's
+`session_id` against *your own*. Presence of a lease proves nothing; ownership of it proves
+everything. That check is available today and needs no fix.
+
+**Not filed.** Issue filing is a delegated class and the contract granting it has expired. This is
+Tommy's to authorize — see the checkpoint report.
 
 ## Settled — do NOT re-derive
 
