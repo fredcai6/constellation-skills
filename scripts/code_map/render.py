@@ -718,13 +718,15 @@ def run(root, artifacts, out):
         # tag might still be true. What a human does when this fires: open
         # the tag at `t['s']` and re-read it against the current code; update
         # or remove it if it no longer holds.
-        print("FAIL stale tag [%s]: anchor body changed, tag text did not -- "
+        print("ADVISORY stale tag [%s]: anchor body changed, tag text did not -- "
               "review %s and update or remove the tag" % (t["id"], t["s"]))
     artifacts = os.fspath(artifacts)
     os.makedirs(artifacts, exist_ok=True)
     with open(os.path.join(artifacts, REPORT_NAME), "w", encoding="utf-8") as f:
         json.dump(report, f, indent=1)
     # Stale tags do NOT fail the build: unlike a duplicate id, they are not
-    # unambiguous corruption, so failing the build on one would be exactly
-    # the twitchy tripwire that trains people to ignore it (gb's ruling).
+    # unambiguous corruption, so failing the build on one would be the same
+    # twitchy tripwire `gb`'s ratio-over-count reasoning warns against --
+    # `gb`'s own ruling scoped only its four ratio-based thresholds, not
+    # this check's severity, but the underlying reasoning carries over.
     return 1 if duplicates else 0

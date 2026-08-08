@@ -2605,10 +2605,24 @@ class StaleAnchorExtractionTests(unittest.TestCase):
     def test_stale_tag_first_extraction_flags_nothing(self):
         """Bootstrap: no previous store exists yet, so there is nothing to
         compare against -- the correct behavior is silence, not a false
-        positive on every anchor in a brand-new repo."""
+        positive on every anchor in a brand-new repo.
+
+        Positive control, same method: a SECOND extraction after a real
+        body change must flag. Without it, this method cannot tell
+        "correctly silent on bootstrap" apart from "staleness detection
+        disabled" -- both look like an empty stale set."""
         statements = self._extract()
 
         self.assertEqual(self._stale_slugs(statements), set())
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        after = self._extract()
+
+        self.assertEqual(self._stale_slugs(after), {"widget-spin"},
+                         "positive control: a real body change on the second "
+                         "extraction was not flagged")
 
     def test_stale_tag_does_not_flag_a_reformat_across_two_extractions(self):
         self._extract()
@@ -2622,6 +2636,18 @@ class StaleAnchorExtractionTests(unittest.TestCase):
 
         self.assertEqual(self._stale_slugs(after), set(),
                          "a blank line plus a trailing comment flagged a tag as stale")
+
+        # Positive control, same method/fixture/build path/assertion
+        # mechanism: a real body change on top of the reformat must still
+        # flag, proving the silence above is reformat-immunity, not a
+        # disabled check.
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        control = self._extract()
+
+        self.assertEqual(self._stale_slugs(control), {"widget-spin"},
+                         "positive control: a real body change was not flagged")
 
     def test_stale_tag_flags_a_real_body_change_across_two_extractions(self):
         self._extract()
@@ -2638,7 +2664,12 @@ class StaleAnchorExtractionTests(unittest.TestCase):
     def test_stale_tag_does_not_flag_an_unrelated_anchor(self):
         """Only the mutated slug's body changed; the other anchor in the same
         file must stay silent, or the flag is not attributing the change to
-        the right tag."""
+        the right tag.
+
+        Positive control, same method: the actually-mutated slug must be
+        in the SAME assertion's stale set. Checking only the unrelated
+        anchor's absence cannot tell "correct attribution" apart from
+        "nothing flags, ever"."""
         self._extract()
 
         (self.repo / "pkg" / "anchors.py").write_text(
@@ -2646,7 +2677,37 @@ class StaleAnchorExtractionTests(unittest.TestCase):
             encoding="utf-8", newline="\n")
         after = self._extract()
 
-        self.assertNotIn("holder-hold", self._stale_slugs(after))
+        stale = self._stale_slugs(after)
+        self.assertNotIn("holder-hold", stale)
+        self.assertIn("widget-spin", stale,
+                      "positive control: the actually-mutated slug was not flagged")
+
+    def test_stale_tag_extract_survives_a_truncated_previous_store(self):
+        """A truncated/malformed leftover statements.jsonl -- e.g. from an
+        interrupted prior run, since the writer has no atomic rename -- is a
+        real scenario, and the user's natural next action (run `extract`
+        again) must not crash on it. Before this gate, nothing read the
+        previous store, so a corrupted leftover was harmless; this gate
+        introduces the read, so it must survive a bad one: treat it as
+        absent, the same path a first-ever run takes, with one actionable
+        line saying so -- not a silent skip."""
+        self.artifacts.mkdir(parents=True, exist_ok=True)
+        (self.artifacts / "statements.jsonl").write_text(
+            '{"s": "widget-spin", "p": "anchored", "o": "widget-spin", '
+            '"d": {"span_hash": "abc',
+            encoding="utf-8")
+
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = cli.main(["extract", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts)])
+
+        self.assertEqual(code, 0, buffer.getvalue())
+        self.assertIn("unreadable", buffer.getvalue())
+        statements = statements_of(self.artifacts)
+        self.assertEqual(self._stale_slugs(statements), set(),
+                         "a corrupted previous store must be treated as "
+                         "absent, not compared against")
 
 
 class StaleAnchorRenderReportTests(unittest.TestCase):
@@ -2689,6 +2750,17 @@ class StaleAnchorRenderReportTests(unittest.TestCase):
         self.assertEqual(report.get("stale_tags"), [])
         self.assertNotIn("stale tag", out)
 
+        # Positive control, same method/build path/assertion mechanism: a
+        # real body change on top must still flag in the run report.
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        control_report, control_out = self._build()
+
+        self.assertEqual(control_report.get("stale_tags"), ["widget-spin"],
+                         "positive control: a real body change was not flagged")
+        self.assertIn("stale tag", control_out)
+
     def test_stale_tag_render_report_flags_a_real_body_change(self):
         self._build()
 
@@ -2705,7 +2777,11 @@ class StaleAnchorRenderReportTests(unittest.TestCase):
         """Advisory, not blocking: unlike a duplicate id (unambiguous data
         corruption), a stale tag might still be true -- a human has to look.
         Failing the build on it would be the twitchy tripwire the ruling
-        this gate inherits (`gb`) warns against."""
+        this gate inherits (`gb`) warns against.
+
+        Positive control, same method: the build must have actually
+        flagged the tag. Exit-0 alone cannot tell "advisory" apart from
+        "disabled" -- both exit 0."""
         self._build()
 
         (self.repo / "pkg" / "anchors.py").write_text(
@@ -2718,6 +2794,32 @@ class StaleAnchorRenderReportTests(unittest.TestCase):
                              "--out", str(self.out)])
 
         self.assertEqual(code, 0, buffer.getvalue())
+        report = json.loads((self.artifacts / "render_report.json").read_text(encoding="utf-8"))
+        self.assertEqual(report.get("stale_tags"), ["widget-spin"],
+                         "positive control: the build exited 0 but never actually "
+                         "flagged the tag it is supposed to be advisory about")
+
+    def test_stale_tag_advisory_line_does_not_begin_with_fail(self):
+        """The advisory line must not begin with `FAIL` -- that prefix is
+        `checks.py`'s and `render.py`'s own convention for genuine
+        build-failing defects, and a single `build`'s stdout can legally
+        carry both, distinguishable only by exit code."""
+        self._build()
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        _, out = self._build()
+
+        stale_lines = [line for line in out.splitlines() if "stale tag" in line]
+        self.assertTrue(stale_lines, "input precondition: the build must actually "
+                                     "print a stale-tag line, or checking its "
+                                     "prefix proves nothing")
+        for line in stale_lines:
+            with self.subTest(line=line):
+                self.assertFalse(line.startswith("FAIL"),
+                                 "advisory stale-tag line collides with the FAIL "
+                                 "prefix used for genuine build-failing defects")
 
     def test_stale_tag_render_report_carries_no_timing_field(self):
         self._build()

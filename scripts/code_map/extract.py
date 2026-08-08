@@ -1042,13 +1042,25 @@ def run(root, artifacts):
     # behaviour rather than a false positive on every anchor in a new repo.
     old_hashes = {}
     if os.path.exists(outp):
-        with open(outp, encoding="utf-8") as f:
-            for line in f:
-                st = json.loads(line)
-                if st["p"] == "anchored":
-                    sh = (st.get("d") or {}).get("span_hash")
-                    if sh is not None:
-                        old_hashes[st["o"]] = sh
+        try:
+            with open(outp, encoding="utf-8") as f:
+                for line in f:
+                    st = json.loads(line)
+                    if st["p"] == "anchored":
+                        sh = (st.get("d") or {}).get("span_hash")
+                        if sh is not None:
+                            old_hashes[st["o"]] = sh
+        except (json.JSONDecodeError, UnicodeDecodeError, KeyError) as e:
+            # A truncated or malformed leftover store -- e.g. from an
+            # interrupted prior run, since the write below has no atomic
+            # rename -- must not crash the run that reads it. Treat it as
+            # absent, the same path a first-ever run takes: not a silent
+            # skip, since a corrupt store silently disabling staleness
+            # detection forever is the same disease in a different organ.
+            old_hashes = {}
+            print("previous statements store at %s is unreadable (%s: %s) -- "
+                  "treating as absent; staleness comparison is skipped for "
+                  "this run" % (outp, type(e).__name__, e))
 
     new_hashes = {}   # slug -> (sym, hash, file, line, col)
     with open(outp, "w", encoding="utf-8", newline="\n") as f:
