@@ -1844,3 +1844,23 @@ in either version.
 own reading. A successor that had waived, or been told to waive, would have produced an
 **identical-looking green run**. That is DC6's entire argument, demonstrated on itself rather than
 argued.
+
+**ADMIRAL ERROR | I regressed my own operating change, and it is aimed at the wave I am protecting.**
+Earlier this run I recorded: *"batch bookkeeping commits; push at boundaries, not after every log
+append"* — because `.github/workflows/ci.yml` has no `paths-ignore`, so an `.agent-work`-only commit
+runs the full 8-minute suite, and doing this per-entry once put six concurrent runs on `main`, all
+mine, starving PR #490's check for ~25 minutes.
+
+I have been pushing after every log append again. **Three CI runs are in progress on `main` right
+now, all mine, all `.agent-work`-only.** The Commander's #467 PR is coming and will need a check.
+
+Not a new lesson — a **rediscovery of one I wrote down and then stopped following**, which is a
+different and more interesting failure than not knowing. The operating change was recorded in the
+state note under "keep it" and I read past it, the same way I read past `CONTEXT GAUGE SILENT` and
+the same way I carried "A2 has no issue cut" across three waves. **Written-down-and-ignored is this
+run's most repeated failure mode, and it is the human-facing twin of DC6:** an instruction that is
+satisfied or ignored with identical traces gets ignored, including by the person who wrote it.
+
+**Behaviour changed now, not at closeout:** commits stay local until the Commander's PR opens or a
+genuine boundary lands. Verified alongside this: `d376b786..origin/main` is **25 commits with ZERO
+non-`.agent-work` changes**, so the wave-4 branch needs **no rebase** — its ground has not moved.
