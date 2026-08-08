@@ -830,7 +830,8 @@
           "id": "p1",
           "statement": "the per-gate override resolver exists, so the ledger records the threshold actually in force at the gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Attested by commander-w4-467-g, verified in my own shell against the worktree engine at HEAD 9997c32d. The per-gate override resolver EXISTS and is live on the path the ledger must record: _gate_headroom_tokens(cl, gate) is defined at scripts/checklist_engine.py:1277; _trip_hard_band_reading(cl, base_dir, gate=None) at :1520 resolves the model-keyed thresholds through it at :1543 via thresholds_for(reading.model, _gate_headroom_tokens(cl, gate or active_id(cl))); the HARD guard consumes that resolved reading at :1565 inside _trip_hard_gate; the advisory render resolves the same way at :1486; and the close-side require_why flag at :2857 is computed from the same _trip_hard_band_reading call. So the threshold actually in force AT THE GATE -- not the bare model default -- is what the guard judges against, which is what the ledger's {fill, hard} pair must carry. Known duplication, already filed as a g3-review triage candidate and NOT to be fixed in g4: thresholds_for(model, _gate_headroom_tokens(...)) is written out twice, at :1486 and :1543."
         }
       ],
       "postconditions": [
@@ -841,7 +842,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
         }
       ],
       "constraints": [
@@ -883,11 +885,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g4-implement/implementer/attempt-1",
+            "verified": "run_crew.py --verify-result -> fresh (completed)",
+            "blockers": "none unresolved; three items declared for Commander adjudication (why_ref ninth field, a self-caught check-that-cannot-fail in the crew's own plan, one declared TDD deviation)",
+            "commander_reverify": "re-run by commander-w4-467-g at HEAD f74ef422: frozen selector 25 passed/384 deselected/13 subtests exit 0 (exit 5 at parent 9997c32d); full suite 1858 passed/2 skipped/821 subtests exit 0 vs parent baseline 1833/2/808 -- delta +25 passed +13 subtests, exactly the selector's own collection, zero FAILED lines"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-review": {
@@ -1252,6 +1268,16 @@
       "id": "tc6",
       "from": "g3-integrate",
       "statement": "The two g3 review surveys write their mechanical sidecars into a directory derived from the survey name, and the first g3 review also left an orphan '.agent-work/issue-467-trip-semantics/issue-467-trip-semantics-g3-review/' tree carrying a duplicate r0-context.json. Same family as the known g1/g2 survey-id collision. Cosmetic for a verdict, corrupting for an audit trail -- three runs now."
+    },
+    {
+      "id": "tc7",
+      "from": "g4-implement",
+      "statement": "TOOLING, not doctrine: a lint for the '| tail' class of unfailable command check. The g4 implementer shipped SIX of them in its own plan for this gate -- piping pytest into tail makes the shell's exit status tail's, so the check passes on a failing run AND on an empty collection, silently defeating the exit-5 anti-vacuity device frozen into the closeout selector. It caught, measured and fixed them itself via amend. Cheap mechanical guard: refuse or warn on a command check whose text pipes a test runner into anything."
+    },
+    {
+      "id": "tc8",
+      "from": "g4-implement",
+      "statement": "git status and git diff disagree about a renormalized file in this CRLF checkout, and a test silently loses coverage because of it. A tracked file rewritten with LF is 'git diff --quiet'-clean but ' M' to 'git status --porcelain'; test_context_manifest's clean-file filter uses status, so a committed byte-identical file read as dirty, that target was silently DROPPED, and the file's subtest count shrank by one WITH NO ASSERTION FAILING. Same defect class as the gate itself -- a check that quietly covers less than it claims. Fix offered: compare blob OIDs, and assert HOW MANY targets survived the filter."
     }
   ],
   "blockers": [],
@@ -1332,6 +1358,13 @@
       "why": "g3b-glossary CLOSED. docs/agents/GLOSSARY.md line 13, the trip row's Usage-notes cell, said 'HARD blocks advance until the agent requests a context refresh' -- false against the engine this branch ships. Replaced with: HARD refuses the verbs that BEGIN work at a gate -- start and reopen -- until a refresh-request is pending; the advance that closes the gate you are already in is never refused, only closing it silently is. Written against the code, not memory: TRIP_HARD_GUARDED_VERBS={start,reopen} at :83, _trip_hard_gate at :1549, the dispatch guard at :2821 which fires only for that set, the band comment at :1221-1232, and advance's require_why at :2026 for the close-side no-silence rule. c1 is genuinely failable -- I ran it before the edit and it exited 1, after the edit it exits 0. Blast radius measured: source-tree diff excluding engine state is exactly '1 1 docs/agents/GLOSSARY.md', one -/+ pair, only the fifth cell of that row differing; the .agent-work churn is the engine's own claim/attest/start writes, declared in the c2 attestation rather than hidden behind a filtered pathspec. I ADDED A THIRD CLAUSE beyond the two the imperative named ('only closing it silently is') and declared it for the Admiral: 'advance is never refused' standing alone would replace a false line with a misleading one, since advance --mechanical IS refused at/over hard. It stays inside the one sanctioned cell. Authority: Admiral ruling at the previous seam, epic #418 latitude contract, tc1. CONTEXT NOTE for whoever reads this next: the gauge went stale-looking at the seam (it held the predecessor's 20.9% for the first minutes of my session) and then refreshed to my own 8.8% -- I did NOT file a refresh-request and did NOT waive anything; there was no governor stop. NEXT: g4-implement, the append-only trip ledger -- Opus, engine-semantics reason named in the dispatch.",
       "mechanical": false,
       "ts": "2026-08-08T15:41:06.446236+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g4-implement",
+      "why": "g4-implement CLOSED. Shipped in 20240f44 + f74ef422 on parent 9997c32d: trip_ledger (optional top-level, append-only via setdefault, written ONLY inside _trip_hard_gate, recording both begin-refused and begin-released), begin_over_line_records (pure selector keyed to the live why-record, emptiness IS the predicate), the EXISTING _trip_advisory HARD branch extended in both sub-branches with one computation, and docs/CHECKLIST_SCHEMA.md carrying the shape, the predicate and the scoped limit. I VERIFIED THE TWO HEADLINE NUMBERS IN MY OWN SHELL rather than on report: frozen closeout selector 25 passed / 384 deselected / 13 subtests, exit 0, against exit 5 at the parent -- and 384 deselected matches the parent's deselect count exactly, so all 25 are genuinely new; full suite 1858 passed / 2 skipped / 821 subtests, exit 0, zero FAILED lines, against my measured parent baseline 1833/2/808, so the delta is +25 passed +13 subtests and is exactly the selector's own collection. 19 mutations, all 19 killed by their named test, no equivalent mutants declared -- the g4 reviewer re-runs EVERY one of them, not a sample. THREE ITEMS DECLARED BY THE IMPLEMENTER, none blocking, all carried forward: (1) a NINTH entry field why_ref, which REVERSES critic-panel finding 14 -- the handoff granted 'entry field encoding' to the implementer, the field is load-bearing (mutation N7 turns 12 tests red without it), and keying by why_ref is already the established idiom on this exact code path at :1575, but it reverses a triaged critic disposition so I am floating it to the Admiral rather than absorbing it; (2) the implementer shipped SIX checks-that-cannot-fail in its OWN plan for this gate (pytest piped into tail, so the exit status was tail's), caught and measured and fixed them itself via amend, and wrote them up as specimen 4 of CHECK_THAT_CANNOT_FAIL.md -- the required Admiral-condition artifact landed at 219 lines and is the most valuable thing in this gate; (3) one declared TDD deviation, m2's RED obtained by dead-coding the selector rather than by its absence. Also declared: it drove its own plan with the INSTALLED implementer engine deliberately, so its provenance never ran through a binary it mutated nineteen times. Two triage candidates flagged: tc7 a lint for the pipe-into-tail class of unfailable check, tc8 a git status/git diff renormalization disagreement that makes test_context_manifest silently drop a target with no assertion failing. NEXT: g4-review on Opus, the adversarial-review carve-out -- it must construct each defective spine ITSELF and re-run every mutation.",
+      "mechanical": false,
+      "ts": "2026-08-08T17:08:12.963561+00:00"
     }
   ],
   "refusals": 7,
@@ -1339,7 +1372,7 @@
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T15:37:23.500685+00:00",
-    "last_heartbeat": "2026-08-08T15:41:06.446254+00:00",
+    "last_heartbeat": "2026-08-08T17:08:12.963571+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
