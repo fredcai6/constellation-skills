@@ -44,6 +44,27 @@
 > **CREW 1 IS NOW `commander-w5-gates-b`.** The first instance tripped at `plan` on a HARD reading,
 > wrote its refresh-request, committed `eff00abf` and stood down — working as designed, not a failure.
 >
+> **LIVE POSITION @ 23:24Z 2026-08-08 — five crews out, ONE home.**
+>
+> | crew | state | evidence |
+> |---|---|---|
+> | 1 gates | **running** (`-b`, the refresh) | 2 commits, `aa2038d9` |
+> | 2 readiness | running, **slowest** | lease active; asked for proof-of-life, it resumed |
+> | 3 addressing | running | work area `issue-507-370-413-addressing/` |
+> | 4 engine | running | on `execute`; its 30-min silence was reading 9 issue bodies |
+> | 5 docs | **DONE, lease released** | **PR #509 open, CI green** |
+>
+> **MERGE BASELINE (use this, do not re-guess it):** main is green at **1867 passed / 2 skipped /
+> 829 subtests / real exit 0**, run with `python -m pytest`, exit read **unpiped**. Matches wave 4's
+> post-merge figure exactly, which is what makes it a baseline and not just a green.
+>
+> **NOTHING MERGES UNDER A LIVE CREW.** PR #509 is green and deliberately held: crew 5 finished, but a
+> PR being green is not the same as a crew being done, and I have one open review finding on it (it
+> deleted a row from a fenced block that is verbatim command output — see the log).
+>
+> **DO NOT re-poke a quiet crew.** Twice today disk silence looked like death and was reading. The
+> authoritative channel is the harness **idle notification**. Ask; never relaunch on an inference.
+>
 > | Crew | Worktree | Issues | Model |
 > |---|---|---|---|
 > | 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484, #446 | Opus, Commander |
