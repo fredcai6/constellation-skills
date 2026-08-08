@@ -171,13 +171,14 @@
             "kind": "command",
             "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -191,6 +192,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-m3-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -199,16 +211,17 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "impl-w3c-488-489-b",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T05:13:00.156306+00:00",
-    "last_heartbeat": "2026-08-08T05:13:00.156306+00:00",
+    "last_heartbeat": "2026-08-08T05:32:53.964237+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": "impl-w3c-488-489",
-    "takeover_reason": "continuation after predecessor governor trip"
+    "takeover_reason": "continuation after predecessor governor trip",
+    "released_at": "2026-08-08T05:33:07.569257+00:00"
   },
   "why_trail": [
     {
@@ -231,6 +244,13 @@
       "why": "Extracted _resolve_revised_spec_matches(agent_work_root) in tests/test_verify_spec_confirmed.py: returns the sorted match list unchanged on 0 or 1, raises AssertionError naming every match on 2+. _fixture now delegates to it, preserving the skipTest-on-zero behaviour. Added tests for zero/one/two/three-match cases (tmp_path fixtures only, never touching the real .agent-work/epic-418-redux tree). All 26 tests pass, including the 2 pre-existing live-regression tests against the real one-match fixture -- unaffected.",
       "mechanical": false,
       "ts": "2026-08-08T05:03:10.463762+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": "Continuation session ran the full suite with a captured real exit code (1789 passed, 2 skipped, 683 subtests, exit 0 via echo EXIT_CODE=$? -- not a pipe), fast-forwarded the branch to origin/main (it had zero commits of its own), committed both fixes plus notes/plan artifacts, pushed epic-418/w3c-488-489, opened PR #491 with -F against the pr-body.md file (verified 37-line body posted intact, no truncation), and wrote IMPLEMENTER_RESULT.md with before/after evidence for both missions and the isolation proof.",
+      "mechanical": false,
+      "ts": "2026-08-08T05:32:53.964208+00:00"
     }
   ]
 }
