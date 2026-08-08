@@ -3514,3 +3514,20 @@ read-only, before any of them could hit it. Crew 1 needed none.
 **Ordering rule, for the retrospective:** commit the launch orders **before** cutting the worktrees,
 or cut the worktrees from the commit that contains them. The dispatch step should verify the order is
 readable **at the address the prompt gives**, not merely that the file was written somewhere.
+
+### Closeout input, taken early: cross-project feedback sweep — HONEST NULL
+
+Run while wave 5 is in flight, because it depends on nothing the crews are doing. Mandated for
+self-maintenance epics by the Admiral closeout doctrine; roots per `docs/DEBT_SWEEP_CADENCE.md`.
+
+```
+py scripts/collect_feedback.py C:/Programs/f1Brainz C:/Programs/network_elo C:/Programs/story_time
+-> "No new or open candidates."   real exit 0 (unpiped)
+```
+
+All three roots verified present first — a sweep over a missing root would report the same clean
+result as a sweep over a healthy one, which is the defect class this epic is about. **Dry run only:
+no `--mark`, no `--confirm`.** Issue filing stays human-gated and nothing was mutated.
+
+Result archived at `.agent-work/debt-sweeps/2026-08-08-epic-418-closeout.md`. **This is a real null,
+not a skipped step** — the cross-project loop has nothing outstanding to carry into this closeout.
