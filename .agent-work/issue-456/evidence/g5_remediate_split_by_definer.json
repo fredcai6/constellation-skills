@@ -1,0 +1,10 @@
+{
+ "unused_prod_defined": 88,
+ "unused_test_defined": 2341,
+ "test_only_prod_defined": 2,
+ "test_only_test_defined": 449,
+ "production_prod_defined": 873,
+ "production_test_defined": 0,
+ "headline": "genuinely unused production code: 88 (not the naive 2429 -- 2341/2429, 96.4%, of that bucket is test-defined, where zero callers is the normal expected state, not a finding)",
+ "unreadable_refs_lines": []
+}

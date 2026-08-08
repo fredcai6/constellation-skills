@@ -360,8 +360,8 @@ TEST_NOTE = ("this entity is defined in a test module (see split legend "
 #: sentence is where it is named, not hidden.
 SPLIT_LEGEND = ("split: production vs test caller module, by pytest's "
                 "default discovery convention -- test_*.py / *_test.py "
-                "naming, or a top-level tests package. a module matching "
-                "neither is counted production.")
+                "naming, or a tests package anywhere on the module path. "
+                "a module matching neither is counted production.")
 
 
 def is_test_module(mod):

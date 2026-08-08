@@ -1366,6 +1366,42 @@ class ProductionTestCallerSplitTests(unittest.TestCase):
         self.assertIn("pytest", render.SPLIT_LEGEND.lower())
         self.assertIn("test_", render.SPLIT_LEGEND)
 
+    def test_the_legend_states_the_rule_the_predicate_actually_applies(self):
+        """SPLIT_LEGEND is a claim about is_test_module's code, not decoration.
+
+        is_test_module's layout half is `"tests" in parts` -- a `tests`
+        segment ANYWHERE on the dotted path, not just a top-level one (the
+        Django-style app-local `pkg/tests/` layout is a real, common one). If
+        the legend ever claims a narrower TOP-LEVEL-only rule while the
+        predicate keeps matching anywhere, the page states something false
+        about its own code -- the defect this gate exists to close.
+
+        The two assertions guard both directions of drift: the behavioural
+        pin (a NESTED tests package still classifies as a test module) fails
+        if the predicate is ever narrowed without this test being touched;
+        the wording assertion fails if the legend is ever worded back to
+        overclaim TOP-LEVEL-only scope.
+
+        Falsifier grade A: reproduces on real input today. RED against the
+        unfixed legend (it says "a top-level tests package"); GREEN once the
+        legend is reworded to state the rule the code applies."""
+        nested = "pkg.sub.tests.helper"
+        self.assertTrue(
+            render.is_test_module(nested),
+            "input precondition: a nested (non-top-level) tests package must "
+            "classify as a test module in render.py's copy")
+        self.assertTrue(
+            checks.is_test_module(nested),
+            "input precondition: a nested (non-top-level) tests package must "
+            "classify as a test module in checks.py's independent copy")
+
+        for legend in (render.SPLIT_LEGEND, checks.SPLIT_LEGEND):
+            self.assertNotIn(
+                "top-level", legend,
+                f"the legend claims a TOP-LEVEL tests package while "
+                f"is_test_module matches a `tests` segment anywhere on the "
+                f"path -- {legend!r} overclaims what the code does")
+
 
 #: Break SIDE A of the comparison: the EXTRACTOR's name for a definition.
 #: Positions are untouched, so the map still builds, every page still lands and

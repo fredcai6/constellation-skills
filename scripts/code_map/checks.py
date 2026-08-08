@@ -300,8 +300,8 @@ REFS_LEGEND = ("counted: calls and reads that resolved to this symbol. "
 #: renderer to having printed it, byte for byte.
 SPLIT_LEGEND = ("split: production vs test caller module, by pytest's "
                 "default discovery convention -- test_*.py / *_test.py "
-                "naming, or a top-level tests package. a module matching "
-                "neither is counted production.")
+                "naming, or a tests package anywhere on the module path. "
+                "a module matching neither is counted production.")
 
 #: Shown on a test-defined entity's own page. Byte-for-byte copy of the
 #: renderer's `TEST_NOTE`.

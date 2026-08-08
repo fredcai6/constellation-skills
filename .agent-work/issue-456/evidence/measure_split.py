@@ -1,5 +1,6 @@
 """gate g5 evidence: measure the three-way production/test caller split over
-a BUILT map tree.
+a BUILT map tree, crossed with the ONE dimension the original version of this
+script omitted -- whether the entity ITSELF is defined in a test module.
 
 Reads each entity page's two rendered inbound lines the same way a human
 reader would -- through `checks.parse_refs` / `checks.refs_lines`, never
@@ -9,6 +10,17 @@ those two lines say:
   unused      production sites == 0 AND tests sites == 0
   test-only   production sites == 0 AND tests sites  > 0
   production  production sites  > 0 (tests may or may not also be > 0)
+
+The g5 review found that the "unused" bucket alone conflates two very
+different facts: a page whose OWN entity is test-defined reads `none found`
+on both lines as its NORMAL, expected state (see `render.TEST_NOTE`), not as
+a dead-code finding. A naive headline built from the three buckets above
+("unused: 2428, 64.7%") reproduces exactly that conflation -- the defect this
+gate exists to remove. Crossing each bucket with the entity's own definer
+(prod-defined vs test-defined), read off the page's own title line the same
+way `checks.is_test_module` classifies a caller module, is what makes the
+number a reader actually wants -- genuinely unused PRODUCTION code -- visible
+on its own.
 
 Usage:
     python .agent-work/issue-456/evidence/measure_split.py --out <map dir>
@@ -30,7 +42,11 @@ from scripts.code_map import checks  # noqa: E402
 
 def measure(out_dir):
     out_dir = pathlib.Path(out_dir)
-    unused = test_only = production = 0
+    table = {
+        ("unused", "prod-defined"): 0, ("unused", "test-defined"): 0,
+        ("test-only", "prod-defined"): 0, ("test-only", "test-defined"): 0,
+        ("production", "prod-defined"): 0, ("production", "test-defined"): 0,
+    }
     unreadable = []
     for page in sorted(out_dir.rglob("*.md")):
         text = page.read_text(encoding="utf-8")
@@ -50,27 +66,49 @@ def measure(out_dir):
         prod = by_prefix[checks.REFS_PROD_PREFIX].sites
         test = by_prefix[checks.REFS_TEST_PREFIX].sites
         if prod > 0:
-            production += 1
+            bucket = "production"
         elif test > 0:
-            test_only += 1
+            bucket = "test-only"
         else:
-            unused += 1
-    total = unused + test_only + production
-    share = (lambda n: round(100 * n / total, 1) if total else 0.0)
-    return {
-        "total_entity_pages": total,
-        "unused": {"count": unused, "share_pct": share(unused)},
-        "test_only": {"count": test_only, "share_pct": share(test_only)},
-        "production": {"count": production, "share_pct": share(production)},
-        "unreadable_refs_lines": unreadable,
-    }
+            bucket = "unused"
+
+        # own-module classification: title line is "# <module>:<entity>"
+        title_line = text.splitlines()[0]
+        title = title_line[2:].strip() if title_line.startswith("# ") else title_line
+        own_mod = title.split(":", 1)[0] if ":" in title else title
+        definer = "test-defined" if checks.is_test_module(own_mod) else "prod-defined"
+
+        table[(bucket, definer)] += 1
+
+    return table, unreadable
 
 
 def main(argv=None):
     p = argparse.ArgumentParser()
     p.add_argument("--out", default=str(ROOT / "map"))
     args = p.parse_args(argv)
-    report = measure(args.out)
+    table, unreadable = measure(args.out)
+
+    unused_prod = table[("unused", "prod-defined")]
+    unused_test = table[("unused", "test-defined")]
+    unused_total = unused_prod + unused_test
+    naive_pct = round(100 * unused_test / unused_total, 1) if unused_total else 0.0
+    headline = (
+        f"genuinely unused production code: {unused_prod} "
+        f"(not the naive {unused_total} -- {unused_test}/{unused_total}, "
+        f"{naive_pct}%, of that bucket is test-defined, where zero callers "
+        f"is the normal expected state, not a finding)")
+
+    report = {
+        "unused_prod_defined": unused_prod,
+        "unused_test_defined": unused_test,
+        "test_only_prod_defined": table[("test-only", "prod-defined")],
+        "test_only_test_defined": table[("test-only", "test-defined")],
+        "production_prod_defined": table[("production", "prod-defined")],
+        "production_test_defined": table[("production", "test-defined")],
+        "headline": headline,
+        "unreadable_refs_lines": unreadable,
+    }
     print(json.dumps(report, indent=1))
     return 0
 
