@@ -1130,7 +1130,19 @@ def test_canon_episode_store_untouched(seeded_store):
     """Belt and braces (b): the tracked store's blob OIDs are READ and compared, not
     assumed. Empty-vs-empty passes a naive equality check, so the store's NON-emptiness
     is asserted first — this repo's `episodes/active/` carries real episodes plus
-    `.gitkeep`, and that is what makes the comparison meaningful."""
+    `.gitkeep`, and that is what makes the comparison meaningful.
+
+    **The property is worktree-vs-index, and only that.** `git status --porcelain` also
+    reports index-vs-HEAD, so a `git add episodes/...` staged ahead of a real capture's
+    commit — the normal `write -> git add -> suite -> commit` order the archive-phase
+    gate requires — read as "dirty" under the old predicate though nothing untracked or
+    unstaged existed. `git diff --name-only` (a tracked file changed but not staged) and
+    `git ls-files --others --exclude-standard` (a file present but never staged at all)
+    are the pair that stays worktree-vs-index only: a stray write or a stray untracked
+    file still fails either one; a legitimate capture that is staged but not yet
+    committed fails neither, because staging moves it into the index these commands
+    compare against, not past it.
+    """
     listing = subprocess.run(
         ["git", "ls-files", "-s", "episodes/active/"],
         cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8",
@@ -1141,10 +1153,15 @@ def test_canon_episode_store_untouched(seeded_store):
     # Nothing this module wrote lives here: the whole exercise ran in a temp store,
     # outside the repository.
     assert REPO_ROOT not in seeded_store["root"].parents
-    # And the working tree agrees with the index for every tracked episode file, so the
-    # synthetic consolidation left no residue in canon.
-    dirty = subprocess.run(
-        ["git", "status", "--porcelain", "episodes/"],
+    # Worktree-vs-index, half one: a tracked file edited but left unstaged.
+    unstaged = subprocess.run(
+        ["git", "diff", "--name-only", "episodes/"],
         cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8",
     ).stdout.strip()
-    assert dirty == "", f"canon episode store is dirty: {dirty}"
+    assert unstaged == "", f"canon episode store has unstaged edits: {unstaged}"
+    # Worktree-vs-index, half two: a file present in the tree but never staged at all.
+    untracked = subprocess.run(
+        ["git", "ls-files", "--others", "--exclude-standard", "episodes/"],
+        cwd=str(REPO_ROOT), capture_output=True, text=True, encoding="utf-8",
+    ).stdout.strip()
+    assert untracked == "", f"canon episode store has untracked files: {untracked}"
