@@ -34,8 +34,33 @@
   **Now on its THIRD instance (`commander-w4-467-c`)**, dispatched ~10:46Z. Instances A and B both
   tripped, both handed off cleanly at seams, both lost nothing. **A and B are STOPPED.**
   **The plan is FROZEN** at `<worktree>/.agent-work/issue-467-trip-semantics/execute.json` —
-  16 tasks, 5 gates. **`e0-context` and `g1-implement` are COMPLETE, committed `62f564c7`.**
-  `g1-review` is in progress; 13 gates remain.
+  16 tasks, 5 gates. **`e0-context`, `g1-implement` and `g1-review` COMPLETE** (`62f564c7`,
+  `e4092af8`). `g1-integrate` in progress; **3/16**.
+
+> ### STANDING RULING — g1-integrate c3. Apply it; do not re-litigate it.
+>
+> **c3 (`verdict: "APPROVE"`) cannot pass as written**: the frozen reviewer handoff prescribed
+> `ACCEPT / ACCEPT WITH FINDINGS / REJECT`, the reviewer obeyed the handoff, and the plan and the
+> handoff disagree on the word. The verdict is genuine approval — **0 blocking / 8 non-blocking**.
+>
+> **Ruling: AMEND c3 through the engine. Do NOT waive. Authority: Admiral, delegated adjudication.**
+> A waiver hides the bug and leaves the gate unpassable for every future reviewer on that handoff;
+> an amend makes the check *true* rather than *skipped*.
+>
+> **Condition — the amended check MUST still be able to FAIL:** `ACCEPT` and `ACCEPT WITH FINDINGS`
+> pass, **`REJECT` must still fail**. Accepting any string converts a check-that-cannot-pass into a
+> check-that-cannot-fail — the same bug wearing the other mask.
+>
+> **Never fabricate an `APPROVE` artifact to satisfy it.** The Commander refused to and was right.
+> If the engine demands human authority rather than Admiral, **stop and surface it** — do not fake
+> an authority string.
+>
+> **Related, already checked so nobody repeats it:** the reviewer force-waived `r6-fowler` c1
+> believing no verb could fill its literal `<fowler-pass-record-path>`. **The verb exists** —
+> `amend` with a **`retext-check`** op, the survey-only exception, shipped by wave 3's **#465**.
+> It is documented in `docs/CHECKLIST_SCHEMA.md` and **nowhere in the reviewer's SKILL.md** (repo
+> or installed), so the reviewer could not have found it. Triage candidate; do not re-open the gate
+> to tidy it.
 
 > ## READ `execute.json current` — THE SPINE'S DIGEST IS STALE
 >
