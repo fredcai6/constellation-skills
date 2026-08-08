@@ -231,3 +231,49 @@ is *not* a cheap fix. `null` and `active` are both uninformative when read from 
 that means deciding how liveness gets encoded at all, which is a design question with a
 load-bearing interface at the end of it. The superseding evidence is posted to #457. Folding it
 into wave 3 on an "easy fixes" amendment would misread the instruction.
+
+---
+
+# Addendum R2 — closeout refresh (2026-08-08)
+
+The wave-3 boundary triggered R1's expiry and `execute` blocked. I surfaced three things at that
+checkpoint: the contract refresh, A2's cut, and the disposition of #493-#498. Tommy answered,
+verbatim:
+
+> *"keep rolling"*
+
+Everything carries forward unchanged. Two deltas, and one deliberate non-delta.
+
+1. **New expiry: epic close (user acceptance at `closeout`), or 72 hours from 2026-08-08T07:00Z.**
+   This is the last expiry this contract needs — there is no wave 4 in scope under it.
+
+2. **The lessons-auditor dispatch is authorized.** This is the specific thing I named as blocking
+   the *next spine step* rather than the next wave: `closeout` substep 1 mandates a fresh-context
+   subagent invoking `constellation-lessons-auditor`. "Keep rolling" on a run whose only remaining
+   step needs that dispatch grants it. Scope: the closeout dispatches the spine mandates
+   (lessons auditor, cartographer reconcile) and nothing else. **No new wave, no new Commander.**
+
+**CORRECTED, minutes after writing the above — I had A2 wrong, and the correction reverses the
+conclusion.** I wrote that A2 was uncut, was new scope, and therefore went to him at the summary.
+Then I read the board: **A2 is #467, OPEN, already cut and fully specified** — six done-conditions
+(DC1-DC6 verbatim), a fixed-decisions list, a stated Commander's-call set, an evidence protocol
+including the *"no absence is evidence"* clause, and `Blocks: #424`. It is dispatch-ready as a
+single Commander issue.
+
+What I had been calling "A2's cut" was **decomposition** of an already-cut issue into roughly three
+— which is exactly the board clutter he has now warned against twice. So the thing I was holding
+back was the thing he did not want, and the thing he *did* want is already on the board.
+
+**Therefore wave 4 is authorized: one Commander on #467, no new issues filed.** The reasoning is
+not "keep rolling means anything I like" — it is that the epic's own confirmed execution order is
+**B extended → A2 → F → C → E**, wave 3 finished B extended, and #467 is the next link, already
+written. Launching it is continuing the epic as specified, not opening scope. Model tier: **Opus**
+(#467 changes the engine's refusal semantics and its consumers).
+
+**Still surfaced, still not mine:** whether the epic continues past A2 into **F (#424), C (#421),
+E (#423)**. Those are three more workstreams and a materially larger commitment than "keep rolling"
+can be read to grant. They go to him at the wave-4 checkpoint.
+
+**#493-#498** are already filed, so the live question is whether to *keep* them, not whether to
+open them. That is acceptance-time, and the closeout audit is the machinery that produces the
+evidence for it. Noted: **#494 is already CLOSED**, so it is five, not six.

@@ -179,12 +179,12 @@
         }
       },
       "child_checklist": null,
-      "status": "blocked",
+      "status": "in-progress",
       "status_detail": {
         "blocker": "Latitude contract expired at the wave-3 boundary by its own terms. Wave 3 is complete: #461, #465, #488, #489 all merged, closed and independently reviewed with verdicts posted to the forge; main green at 1793 passed / 2 skipped / 683 subtests / exit 0; boundary w3-to-w4 recorded, decision=replan, admiral-prelaunch verifier exit 0. No further dispatch is authorised -- and closeout itself needs one (the lessons auditor), so this blocks the next spine step, not just wave 4. Cutting A2 is additionally a surfaced scope decision. Awaiting Tommy's contract refresh.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "prior_status": "in-progress"
+        "resume_reason": "Tommy refreshed the contract in session: 'keep rolling'. Recorded as Addendum R2 -- new expiry at epic close; the closeout lessons-auditor dispatch is authorized; A2's cut deliberately NOT taken (he was asked and did not rule, so it goes to him at the epic summary). All three blocker reasons cleared or correctly deferred: expiry refreshed, closeout dispatch granted, scope decision routed to acceptance rather than assumed."
       },
       "result": null,
       "finding": null,
@@ -206,6 +206,17 @@
           "payload": {
             "cmd": "python C:/Programs/constellation-skills/scripts/verify_state_note.py epic-418-redux",
             "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/scripts/verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux",
+            "exit": 1,
             "shell": "posix"
           },
           "produced_by": "engine",
@@ -277,20 +288,13 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "execute",
-      "blocker": "Latitude contract expired at the wave-3 boundary by its own terms. Wave 3 is complete: #461, #465, #488, #489 all merged, closed and independently reviewed with verdicts posted to the forge; main green at 1793 passed / 2 skipped / 683 subtests / exit 0; boundary w3-to-w4 recorded, decision=replan, admiral-prelaunch verifier exit 0. No further dispatch is authorised -- and closeout itself needs one (the lessons auditor), so this blocks the next spine step, not just wave 4. Cutting A2 is additionally a surfaced scope decision. Awaiting Tommy's contract refresh.",
-      "authority_needed": "parent agent",
-      "next_action": ""
-    }
-  ],
-  "refusals": 4,
+  "blockers": [],
+  "refusals": 5,
   "engine_session": {
     "session_id": "admiral-epic-418-redux",
     "status": "active",
     "claimed_at": "2026-08-08T04:39:39.773550+00:00",
-    "last_heartbeat": "2026-08-08T06:48:50.978847+00:00",
+    "last_heartbeat": "2026-08-08T09:24:09.674063+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

@@ -1114,3 +1114,48 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   verdicts; a fifth bookkeeping PR merged; every worktree harvested and swept; every branch deleted;
   the boundary recorded and G2-verified. `execute` remains **blocked** on the expired contract, which
   is the only thing standing between here and `closeout`.
+
+## 2026-08-08 — wave 4 launch
+
+**RULING | contract refreshed, Addendum R2.** Tommy, verbatim: *"keep rolling"*. Recorded as
+Addendum R2. New expiry: epic close, or 72h from 2026-08-08T07:00Z. `resume execute` accepted the
+blocker as cleared.
+
+**ADMIRAL ERROR | I had A2's status wrong, and the error pointed my first ruling backwards.**
+For the whole of wave 3 my state note and my checkpoint to Tommy both said *"A2 has no issue cut"*,
+and I twice told him cutting it was a surfaced scope decision I would not take. On the strength of
+that I wrote R2's first draft holding A2 back as "new scope."
+
+Then I read the board. **A2 is #467, OPEN**, carrying six done-conditions verbatim (DC1-DC6), a
+`Fixed` list, a `Blocks: #424`, a stated Commander's-call set, and an evidence protocol that
+already contains the *no absence is evidence* clause. It has been dispatch-ready the entire time.
+
+What I had been calling "cutting A2" was **decomposing an already-cut issue into three** — which is
+the exact board clutter Tommy has now warned against twice (*"id rather not clutter the issue
+board"*). So the thing I was holding back for his ruling was the thing he had already ruled
+against, and the thing he wanted was sitting on the board written.
+
+Cause, recorded because it is this epic's own defect family pointed at me: **I carried a claim in
+my state note across three waves and a compaction without ever re-deriving it from the tracker.**
+`STATE_NOTE.md` said "A2 has no issue cut"; `gh issue view 467` says otherwise. A note that is
+never re-checked against its source reads identically whether it is true or stale — a check that
+cannot fail. Same class as counting `.agent-work` files and calling it a liveness monitor.
+
+**RULING | wave 4 = ONE Commander on #467. No new issues filed.** Justified not by a loose reading
+of "keep rolling" but by the epic's own confirmed execution order, **B extended -> A2 -> F -> C ->
+E**: wave 3 completed B extended, #467 is the next link, and it is already written. Launching it
+continues the epic as specified rather than opening scope. Model tier **Opus** — #467 changes the
+engine's refusal semantics and every consumer downstream of them.
+
+Departure from my own forecast, logged: `revised_forecast[0]` said A2 would be *"provisionally
+three issues."* Forecast is provisional by directive; the tracker beat the forecast.
+
+**Still surfaced, deliberately NOT taken:** whether the epic continues past A2 into **F (#424),
+C (#421), E (#423)**. Three more workstreams is a materially larger commitment than "keep rolling"
+can carry. Goes to him at the wave-4 checkpoint.
+
+**TRANSITION verified** — `admiral-prelaunch` **exit 0** via the *installed* verifier at
+`C:/Users/fredc/.claude/skills/constellation-admiral/scripts/`. The repo-vendored copy REFUSED with
+`installed public verifier is missing: C:\Programs\constellation-replan\scripts\verify_replan.py`
+— that is **#468** biting exactly as recorded. Boundary `w3-to-w4`, `decision=replan`,
+`launch_id=wave4-a2-trip-semantics`.
