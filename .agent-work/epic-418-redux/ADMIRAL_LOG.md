@@ -4086,3 +4086,35 @@ be an array; `later_only` maps to `amend_forecast_or_parked`; `record_evidence_o
 
 **All five crews confirmed writing** at 23:31Z — gates 11 dirty files, engine 15 writes in 5 minutes,
 readiness recovered from the stale-gauge correction and moving. No crew idle, no crew silent.
+
+### Sweep list decided in advance — and building it produced specimen 22
+
+`git worktree remove` is the only destructive step in closeout, so I decided it now rather than at the
+end of a long run. `closeout/SWEEP_LIST.md`, derived by command.
+
+**The obvious eligibility test is a check that cannot fail.** *"Is the branch merged into main?"* —
+`git branch --merged main` reports `w5-crew-addressing`, `w5-engine-internals` and `w5-readiness-458`
+as **merged**. They are not. They have **zero commits**, so they are trivially ancestors of main.
+**A branch with no work is indistinguishable from a branch whose work landed** — and on a live crew,
+`ahead=0` means *uncommitted work in progress*, which is the single most destructive thing to sweep.
+
+Correct test recorded: **`ahead` count AND forge state together.** `ahead=0 AND pr=MERGED` is landed;
+`ahead=0 AND pr=none` is empty. That is the fourth time this run that a plausible one-line check has
+turned out to be blind, and the third time I wrote the blind version first.
+
+**SWEEP (6):** the five wave-5 worktrees after merge, plus **`epic418-a2-467`, eligible now** —
+`ahead=0`, PR #505 MERGED, harvest probe returns a genuine null on both channels.
+
+**DO NOT SWEEP (8), each with its reason on the record:**
+
+- **`governor-264`** — protected, `ahead=3`, carries #264's unmerged 1144 lines. Destroying it would
+  delete the work the decline decision deliberately preserved.
+- **`issue-456` (`ahead=134`) and `explore-code-map` (`ahead=36`)** — the code-map effort, not this
+  epic. Sweeping `issue-456` would be the worst single action available in this repo.
+- **The three `.proto-*` trees** — and this is the part worth flagging: **they read as stale leftovers
+  and are load-bearing for work that has not happened yet.** `.proto-exc9-mcp-front-door` is the
+  prototype **F (#424) will be built from**, and F is the next effort after this epic closes.
+- The two harness-created `.claude/worktrees/agent-*` trees are not this run's to dispose of.
+
+Order pinned as mandatory: **harvest → verify MERGED on the forge → remove → prune.** Never on an
+ancestry test — squash-merge returns the same answer for merged and abandoned.
