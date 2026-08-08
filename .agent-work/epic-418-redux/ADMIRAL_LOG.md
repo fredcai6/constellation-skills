@@ -3182,3 +3182,59 @@ claim, and will assert the reading existed before every trip claim.
 
 **No reply sent.** It explicitly needs no decision, and a message to a live crew is a charge against its
 context budget — the lesson two of my own messages taught me when they pushed a Commander over the line.
+
+---
+
+## MILESTONE | 2026-08-08T20:37:10Z | THE ROUND TRIP CLOSED — DC5 done. 15/17. Launched commander-w4-467-j.
+
+**This is what wave 4 was for.** On a separate acceptance spine: A (`acc-89f734`) worked a1, was
+**REFUSED at `start a2`** (ledger `tl-2`, begin-refused), ran the exact command the refusal printed,
+released and stopped. B (`acc-7f3d1b`) was dispatched **COLD** and closed a2. Journal shows no overlap
+(A last 20:08:25, B first 20:11:11).
+
+**I verified the one constraint that could have voided the wave myself, not on report.**
+`PROMPT-B.txt`: **3754 bytes**, sha256 `3da641137aa5b7c67bf59c35c6991911a05adb3958458bbbf8f505a98d92f80f`
+— matching the Commander's claim exactly — opening with the engine's own `RAIL:`/`LEASE`/`ACTIVE` output
+and containing **zero briefing language**. The prompt was engine output and nothing else.
+
+**Two design choices did the real work, and neither was in my order:**
+
+- **The trip fires on a REAL reading, not a large plant.** Both gates declare
+  `context_headroom_tokens=149000`, putting the per-gate hard line at **0.001**. Verified in force: at
+  fill 0.05 — **below** the shipped 0.15 — the engine renders the HARD band, which the default cannot do.
+  That is DC4's tighten-only override doing exactly the job it was approved for.
+- **The handoff is load-bearing.** a1 made A **invent a six-hex nonce and forbade writing it to disk**;
+  a2 required item 6 to **BE** that nonce. B wrote `4b3dc4`, which existed **only in A's why-record**.
+  **B could not have finished without reading A's understanding.** That is the difference between a round
+  trip and two agents doing adjacent chores, and it is the single cleverest thing produced this epic.
+
+**Eighth specimen, and it is the crew's own:** the verifier's `--self-test` caught a defect **in that
+verifier** — an assertion that only ever fired behind an earlier one, a check that cannot fail — and the
+Commander added an isolated mutation rather than shipping it.
+
+**RED no longer reproduces (exit 1), reading asserted first. #431 verified DISSOLVED, not closed.**
+
+**Accounting, honest:** DC1 done · **DC2 done-by-different-means** (the engine draws the line **between
+verbs** — `start`/`reopen` guarded, `advance` never governor-refused — so #467's literal text names a
+distinction the engine does not have) · DC3 done · DC4 done · DC5 done · **DC6 PARTIAL** — both lines
+observed live in B's prompt and the historical line survives the mandated close, but #504's closeout
+silence stands. **DC6 stays partial. I will report it as partial.**
+
+**RULING — the acceptance verifier stays where the plan declared it.** The Commander asked whether to
+promote it to `scripts/`. No: moving it changes the artifact under review after the measurement.
+Promotion is a follow-on question and is recorded as one.
+
+**Carried into the next order:** never pipe pytest before reading its status — the Commander read
+`EXIT=0` from `tail` **on the very command that exits 5**, while proving an anti-vacuity check fires.
+That is my own rule 5, rediscovered independently by a crew, on the one command where a false green would
+have been invisible.
+
+**tc21 filed by the crew:** on the acceptance spine the **governor** was never silent (fired at all six
+recorded events); the **writer** was, for A only, with no skip record saying why. ACCEPTANCE.md §0 names
+which of the two was observed rather than collapsing them.
+
+Rule 7: notification received -> predecessor confirmed terminated -> **then** launched
+`commander-w4-467-j` (Opus, named reason: it adjudicates a review of the wave's own acceptance evidence).
+Order `launch-orders/LO-467-j.md`. Told to warn its reviewer that **A and B were deliberately not
+dispatched through `run_crew.py`** — otherwise it finds an apparent process violation and reports a
+defect that is a deliberate design choice.
