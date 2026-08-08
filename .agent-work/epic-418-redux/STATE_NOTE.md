@@ -65,6 +65,33 @@
 > **DO NOT re-poke a quiet crew.** Twice today disk silence looked like death and was reading. The
 > authoritative channel is the harness **idle notification**. Ask; never relaunch on an inference.
 >
+> ## THE CLOSE SEQUENCE — get this order wrong and the epic cannot close. Read before merging crew 1.
+>
+> `execute.c3` runs **`admiral-prelaunch` from the INSTALLED skill bundle**, not from the repo. Crew 1's
+> #506 fix lands in the **repo**. So:
+>
+> 1. merge crew 1's PR
+> 2. **RE-INSTALL** (`python scripts/install_constellation.py --agent claude --scope user --force`)
+> 3. **verify the installed verifier actually carries the fix** — `git hash-object` the installed file
+>    against the repo blob, do **not** trust the installer's own report
+> 4. only then build the `w5-to-close` packet and expect c3 to pass on a `stop` exit
+>
+> **Skip step 2 and c3 still fails with the OLD logic, on a tree that already contains the fix.** That
+> is the corpus-drift trap (#344) and it already bit this run once: at wave-5 launch, **all nine**
+> installed bundles were pre-#467 and nothing reported it. Never pass `--wire-hooks` — `settings.json`
+> is a hard constraint.
+>
+> **If #506 does NOT land:** the close needs a `waive` of `execute.c3` **on Tommy's authority**, with
+> #506 cited as the defect that forced it. Do not flip the boundary decision from `stop` to `advance`
+> to make it green — that is falsifying a verdict to fit a check, forbidden in three launch orders.
+>
+> **Boundary builder:** copy `C:/Users/fredc/.claude/jobs/*/tmp/build_w5_boundary.py` (the one that
+> produced a G2-clean packet on its second try) and edit its content. Do **not** author a fresh
+> skeleton — the last pre-staged skeleton reproduced the exact shape error it was built to prevent.
+> Contract gotchas already paid for: `entry_conditions` must be an **array**; a `stop`/`later_only`
+> disposition maps to `amend_forecast_or_parked`; `record_evidence_only` requires `issue_created=false`;
+> a fixed-boundary change requires `applicable=false`.
+>
 > ## THE TRIP-LOOP — the one that can silently eat this wave. Read before relaunching anything.
 >
 > **A fresh agent reads its PREDECESSOR'S gauge until its own first tool call lands.** The gauge is

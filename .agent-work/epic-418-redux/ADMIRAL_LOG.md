@@ -4057,3 +4057,32 @@ and runnable" cannot mean "a value was read."* It was handed a nine-minute-old n
 staleness marker and no way to tell it was not its own. A readiness check that reports an observation
 should report **when** it was made and **by whom**; a reading with no provenance is the exact shape
 that just bit it.
+
+### RULING (pre-emptive) — the close sequence, pinned before it can bite
+
+`execute.c3` runs `admiral-prelaunch` **from the installed skill bundle**, not from the repo. Crew 1's
+#506 fix lands in the **repo**. Those are different files.
+
+**So the close order is: merge crew 1 → RE-INSTALL → verify the installed verifier carries the fix by
+hashing it against the repo blob (not by trusting the installer's report) → only then build the
+`w5-to-close` packet.** Skip the re-install and **c3 still fails with the OLD logic on a tree that
+already contains the fix** — and the failure would look exactly like "#506 did not work".
+
+This is not hypothetical: **at wave-5 launch all nine installed bundles were pre-#467 and nothing
+reported it.** Same trap (#344), same run, second time. Pinned in `STATE_NOTE.md` rather than left to
+be rediscovered at the moment it costs most.
+
+**Recorded alongside it, so the fallback cannot quietly become the shortcut:** if #506 does not land,
+the close needs a **`waive` of `execute.c3` on Tommy's authority** with #506 cited as the defect that
+forced it. **Flipping the boundary decision from `stop` to `advance` to make it green is falsifying a
+verdict to fit a check** — forbidden in three consecutive launch orders and not available to me either.
+
+**Boundary builder preserved** as `closeout/build_boundary_reference.py` — the script that produced a
+G2-clean packet on its second try. The instruction with it is to **copy and edit, never author a fresh
+skeleton**, because the last pre-staged skeleton reproduced the exact shape error it was built to
+prevent. The four contract gotchas already paid for are written down with it: `entry_conditions` must
+be an array; `later_only` maps to `amend_forecast_or_parked`; `record_evidence_only` requires
+`issue_created=false`; a fixed-boundary change requires `applicable=false`.
+
+**All five crews confirmed writing** at 23:31Z — gates 11 dirty files, engine 15 writes in 5 minutes,
+readiness recovered from the stale-gauge correction and moving. No crew idle, no crew silent.
