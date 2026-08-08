@@ -23,11 +23,13 @@ come from a memory of this corpus, or from the map itself?
 
 What these checks read
 ----------------------
-The store and the supplement DIRECTLY, never through `render.load_stores`. A
-check whose expected value is computed by the code under test can only ever
-agree with it, which is not a check. So the store scan below is written a second
-time on purpose, and it is compared against the RENDERED PAGES -- the artifact a
-reader actually gets -- rather than against the renderer's own in-memory state.
+The store DIRECTLY, never through `render.load_stores`, and -- since `g3` --
+the SOURCE. A check whose expected value is computed by the code under test can
+only ever agree with it, which is not a check. So the store scan below is
+written a second time on purpose, the source scan beside it derives definition
+names without borrowing a line of the extractor, and both are compared against
+the RENDERED PAGES -- the artifact a reader actually gets -- rather than against
+the renderer's own in-memory state.
 
 What they do NOT prove is recorded honestly beside each check.
 
@@ -38,6 +40,7 @@ What they do NOT prove is recorded honestly beside each check.
 advertises a page it does not have. Gate `g2` owns the rename; `g1` only asserts
 it. Do not silence the check to make the command green.
 """
+import ast
 import collections
 import json
 import os
@@ -49,7 +52,6 @@ import sys
 import tempfile
 
 from .extract import STATEMENTS_NAME, WINDOW
-from .supplement import SUPPLEMENT_NAME
 
 #: How many offending items a failing check names before it summarizes. A check
 #: reports every failure it found in its count; it prints the first few.
@@ -74,27 +76,20 @@ class MapUnderCheck:
         self.root = pathlib.Path(root)
         self.artifacts = pathlib.Path(artifacts)
         self.out = pathlib.Path(out)
-        self._supplement = None
         self._pages = None
         self._scan = None
+        self._source = None
         self._text = {}
 
     # -- the stores ------------------------------------------------------
 
     @property
-    def supplement(self):
-        if self._supplement is None:
-            self._supplement = json.loads(
-                (self.artifacts / SUPPLEMENT_NAME).read_text(encoding="utf-8"))
-        return self._supplement
-
-    @property
     def entities(self):
-        return self.supplement["entities"]
+        return self.scan.entities
 
     @property
     def modules(self):
-        return self.supplement["modules"]
+        return self.scan.modules
 
     def statements(self):
         with open(self.artifacts / STATEMENTS_NAME, encoding="utf-8") as f:
@@ -108,18 +103,25 @@ class MapUnderCheck:
             self._scan = StoreScan(self.statements())
         return self._scan
 
-    def symbol_of(self, key):
-        """The store symbol for a supplement key, joined on (file, line).
+    @property
+    def source(self):
+        """The corpus read from SOURCE -- see `SourceScan`."""
+        if self._source is None:
+            self._source = SourceScan(
+                self.root, {m["file"] for m in self.modules.values()})
+        return self._source
 
-        The renderer performs the same join to decide whose inbound edges a page
-        shows. Re-deriving it here is not independent OF the join -- it is the
-        same two facts read twice -- so `entity_symbol_join` cross-checks the
-        join's result against the entity's own name instead of trusting it."""
-        entity = self.entities[key]
+    def position_of(self, key):
+        """Where the store says a definition is: (file, 1-based source line).
+
+        Not a symbol lookup. The position is what the source scan is asked
+        about, and the symbol is what the two derivations are compared on."""
+        entity = self.entities.get(key)
         module = self.modules.get(key.split(":", 1)[0])
-        if module is None:
+        if entity is None or module is None:
             return None
-        return self.scan.defined_at.get((module["file"], entity["line"]))
+        return (module["file"],
+                entity["line"] + (1 - self.scan.line_base[module["file"]]))
 
     # -- the page tree ---------------------------------------------------
 
@@ -185,19 +187,88 @@ class StoreScan:
 
     def __init__(self, statements):
         self.defined_at = {}
+        self.entities = {}
+        self.modules = {}
         self.inbound = collections.defaultdict(collections.Counter)
         self.line_base = {}
         for st in statements:
             predicate = st["p"]
+            q = st["q"]
             if predicate == WINDOW:
-                self.line_base[st["q"]["file"]] = st["d"]["line_base"]
+                self.line_base[q["file"]] = st["d"]["line_base"]
+                self.modules[st["s"].split(":", 1)[0]] = {
+                    "file": q["file"], "loc": st["d"]["loc"]}
             elif predicate == "contains":
-                q = st["q"]
+                self.entities[st["o"]] = {"line": q["line"], "end": st["d"]["end"]}
                 self.defined_at[(q["file"],
                                  q["line"] + (1 - self.line_base[q["file"]]))] = st["o"]
             elif predicate in ("calls", "reads") and st.get("res") != "local":
                 caller_module = st["s"].split(":", 1)[0]
                 self.inbound[st["o"]][caller_module] += 1
+
+
+class SourceScan:
+    """Every definition in the corpus and its QUALIFIED NAME, derived from the
+    source text and sharing no code path with the extractor.
+
+    This exists because gate `g3` deleted the map's second AST pass. That pass
+    was one of two independent derivations `entity_symbol_join` compared; left
+    on one derivation the check would have compared a symbol against itself and
+    become incapable of failing -- the exact defect this gate exists to stamp
+    out, arriving through a legitimate refactor.
+
+    So the second derivation moved HERE, where a second derivation belongs: a
+    check is the right home for one, a pipeline stage was not. Nothing is
+    imported from `extract`; the module name comes from the file path, the
+    qualified name from this recursion, and the two are compared only on the
+    position.
+
+    It is deliberately NOT the recursion the deleted stage had. That one
+    descended `node.body`, so a definition inside a `with`, `if`, `try` or `for`
+    block was invisible to it (`tc34`). This descends EVERY child node and
+    extends the qualified prefix only at a definition, which is what Python
+    actually does.
+
+    Every child, not every statement child: `scripts/checklist_engine.py`
+    defines a fallback function inside an `except ImportError:` handler, and an
+    `ExceptHandler` is not an `ast.stmt`. A statement-only descent skipped it,
+    and this check went red on the real corpus and said so -- which is the
+    behavior a second derivation is for."""
+
+    def __init__(self, root, files):
+        self.root = pathlib.Path(root)
+        self.qualified_at = {}      # (file, 1-based line) -> "module:Qualified.name"
+        self.unreadable = []
+        for rel in sorted(files):
+            try:
+                tree = ast.parse((self.root / rel).read_text(encoding="utf-8"))
+            except Exception as error:
+                self.unreadable.append((rel, str(error)))
+                continue
+            self._walk(tree, rel, self.module_of(rel), "")
+
+    @staticmethod
+    def module_of(rel):
+        """`pkg/thing.py` -> `pkg.thing`, `pkg/__init__.py` -> `pkg`.
+
+        Written out rather than imported: half of a comparison that borrows the
+        other half's code is not a comparison."""
+        parts = rel.split("/")
+        if parts[-1] == "__init__.py":
+            parts = parts[:-1]
+        else:
+            parts[-1] = parts[-1][:-len(".py")]
+        return ".".join(parts)
+
+    def _walk(self, node, rel, module, prefix):
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                qualified = f"{prefix}.{child.name}" if prefix else child.name
+                self.qualified_at[(rel, child.lineno)] = f"{module}:{qualified}"
+                self._walk(child, rel, module, qualified)
+            else:
+                # not a definition, so not a scope: descend, do not qualify
+                self._walk(child, rel, module, prefix)
 
 
 # ------------------------------------------------------- the rendered line
@@ -420,40 +491,57 @@ def refs_line_self_consistent(m):
 
 
 def entity_symbol_join(m):
-    """A page's title must agree with the store symbol found at its position.
+    """A page's title must be what the SOURCE says is defined at its position.
 
-    Two INDEPENDENT AST passes produce the map: `extract.py` emits a `contains`
-    statement naming the symbol at (file, line), and `supplement.py` records the
-    entity's qualified name and its line. The renderer welds them with a
-    (file, line) join -- that join is what decides whose docstring and whose
-    callers a page shows. If the two passes ever disagree about what sits at a
-    position, the join silently lands a page on another entity's facts.
+    RE-BASED AT `g3`, and the reason is worth stating. This check used to
+    compare two independent AST passes -- the extractor's symbol against a
+    second pass's qualified key -- welded on (file, line). `g3` deleted that
+    second pass. Left standing on one derivation the check would have compared
+    the store symbol against a page title RENDERED FROM THAT SAME SYMBOL: a
+    tautology that cannot fail, which is the exact defect this run exists to
+    stamp out and would have arrived through a legitimate refactor.
 
-    Comparing the join's OUTPUT against the entity's own name is what makes this
-    a check rather than a restatement: the join is re-derived here from the same
-    two facts, so it is not independent OF the join, but the name is a third fact
-    neither pass shares with the other.
+    So the second derivation is `SourceScan`, here in the checks, deriving every
+    definition's qualified name from the source text with no code path in common
+    with `extract.py`. The comparison is now a stronger one than the old pair
+    made: it is the map against the SOURCE, not one pass against another.
 
-    The WHOLE symbol, not just the leaf: since `g2` fixed D2, `extract.py` names
-    every definition as its enclosing scope's symbol plus its own name, so the
-    store symbol equals the supplement's qualified key for every entity in the
-    corpus. Comparing leaves would let the two passes disagree about the whole
-    enclosing chain -- exactly the merge D2 was -- and still pass.
+    Two arms, and they fail in opposite directions.
 
-    An entity that joins to NO symbol is a failure too: the renderer falls back
-    to the key, and the page then shows no docstring and no callers from the
-    store while still looking like a finished page."""
+    - NAMING: for every entity page, the definition the source finds at the
+      store's recorded position must have the page's own title as its qualified
+      name. This catches a symbol that drops its enclosing chain, a symbol
+      recorded at the wrong line, and a page titled after something that is not
+      there at all.
+    - COVERAGE: every definition the source scan finds must have a page. This is
+      the arm that catches LOSS -- `tc34`, where the deleted second pass never
+      descended into a `with` block, so definitions inside one had no page and
+      nothing in the map said they were missing.
+
+    What it does NOT prove: that the page's CONTENT is right. A page can be
+    titled correctly and carry another entity's callers; that is
+    `inbound_attribution`'s job."""
     failures = []
+    titled = set()
     for page, key in m.entity_pages:
         where = m.rel(page)
-        symbol = m.symbol_of(key)
-        if symbol is None:
-            failures.append(f"{where}: {key} joins to no store symbol, so the page "
+        titled.add(key)
+        position = m.position_of(key)
+        if position is None:
+            failures.append(f"{where}: {key} has no recorded position, so the page "
                             f"carries nothing the store knows about it")
             continue
-        if key != symbol:
-            failures.append(f"{where}: page is titled {key} but the store symbol at "
-                            f"that position is {symbol}")
+        found = m.source.qualified_at.get(position)
+        if found is None:
+            failures.append(f"{where}: the store puts {key} at {position[0]} line "
+                            f"{position[1]}, where the source defines nothing")
+        elif found != key:
+            failures.append(f"{where}: page is titled {key} but the source defines "
+                            f"{found} at that position")
+    for position, qualified in sorted(m.source.qualified_at.items()):
+        if qualified not in titled:
+            failures.append(f"{qualified}: defined at {position[0]} line "
+                            f"{position[1]} and the map has no page for it")
     return failures
 
 
@@ -481,8 +569,7 @@ def inbound_attribution(m):
             failures.append(f"{where}: cannot read the inbound line: {lines[0]!r}")
             continue
 
-        symbol = m.symbol_of(key)
-        truth = m.scan.inbound.get(symbol, {}) if symbol is not None else {}
+        truth = m.scan.inbound.get(key, {})
         own_module = key.split(":", 1)[0]
         expected_named = tuple(sorted(set(truth) - {own_module}))
 
@@ -591,8 +678,8 @@ def run(root, artifacts, out):
     A check stage that cannot look must not report success -- a missing page
     tree or a missing store is a failure, not a skip."""
     m = MapUnderCheck(root, artifacts, out)
-    missing = [str(p) for p in (m.out, m.artifacts / SUPPLEMENT_NAME,
-                                m.artifacts / STATEMENTS_NAME) if not p.exists()]
+    missing = [str(p) for p in (m.out, m.artifacts / STATEMENTS_NAME)
+               if not p.exists()]
     if missing:
         print("FAIL cannot check: nothing built at " + ", ".join(missing)
               + " -- run `build` first")

@@ -1,9 +1,8 @@
 """The code_map command line: one entrypoint in front of the whole pipeline.
 
-    python -m scripts.code_map build          extract -> supplement -> render
+    python -m scripts.code_map build          extract -> render
     python -m scripts.code_map discover       print the mappable corpus
     python -m scripts.code_map extract        the statement store only
-    python -m scripts.code_map supplement     the supplement only
     python -m scripts.code_map render         the page tree only
     python -m scripts.code_map check          the print-only diagnostics
 
@@ -21,7 +20,7 @@ from pathlib import Path
 # scripts/code_map/cli.py -> scripts/code_map -> scripts -> the repository root.
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# Rebuilt artifacts (the statement store, the supplement) live here; the page
+# The rebuilt statement store lives here; the page
 # tree lives in MAP_DIRNAME. Both are relative to --root.
 ARTIFACTS_DIRNAME = ".code-map"
 MAP_DIRNAME = "map"
@@ -29,13 +28,12 @@ MAP_DIRNAME = "map"
 STAGES = (
     ("discover", "print the mappable corpus and stop"),
     ("extract", "walk the corpus and write the statement store"),
-    ("supplement", "second AST pass for what the statement vocabulary lacks"),
     ("render", "write the page tree from the stores"),
-    ("build", "run extract, supplement and render end to end"),
+    ("build", "run extract and render end to end"),
     ("check", "print the diagnostics over the built map"),
 )
 
-_WANTS_ARTIFACTS = {"extract", "supplement", "render", "build", "check"}
+_WANTS_ARTIFACTS = {"extract", "render", "build", "check"}
 _WANTS_OUT = {"render", "build", "check"}
 
 
@@ -83,18 +81,13 @@ def _extract(args):
     return extract.run(Path(args.root), Path(args.artifacts))
 
 
-def _supplement(args):
-    from . import supplement
-    return supplement.run(Path(args.root), Path(args.artifacts))
-
-
 def _render(args):
     from . import render
     return render.run(Path(args.root), Path(args.artifacts), Path(args.out))
 
 
 def _build(args):
-    for stage in (_extract, _supplement, _render):
+    for stage in (_extract, _render):
         status = stage(args)
         if status:
             return status
@@ -109,7 +102,6 @@ def _check(args):
 HANDLERS = {
     "discover": _discover,
     "extract": _extract,
-    "supplement": _supplement,
     "render": _render,
     "build": _build,
     "check": _check,

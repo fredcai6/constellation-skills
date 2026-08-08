@@ -1,23 +1,29 @@
 """Full-repo derived map -- one page per entity, agent-lean.
 
-The module list is DERIVED from the extraction, not hardcoded. The entity tree
-is driven by the supplement's structurally-correct keys, joined to the store's
-symbols on (file, line). The top INDEX groups modules by top-level package so it
+The module list and the entity tree are both DERIVED from the statement store
+and from nothing else. The top INDEX groups modules by top-level package so it
 stays a routing surface as the module count grows.
 
-Importing this module has no side effects: the prototype loaded both stores at
+Importing this module has no side effects: the prototype loaded its stores at
 import time, which made the module unimportable without a built store and
 impossible to run twice against different roots. `load_stores()` now owns that.
+
+ONE STORE (gate g3). There used to be a second AST pass whose entity keys the
+renderer joined to the store's symbols on (file, line), because the statement
+vocabulary could not say what a definition WAS. It can now, so the pass and the
+join are both gone: a page is keyed by the store symbol itself.
+
+That removal also closed `tc34`. The second pass descended `node.body` only, so
+a definition inside a `with`, `if`, `try` or `for` block was not an entity at
+all -- no page, no caller list, and no report saying it was missing. The
+statement extractor is an `ast.NodeVisitor` and always reached those
+definitions, so they get pages now.
 
 D1 is FIXED (gate g3): the store declares its line base in every
 `extraction-window` statement, and `source_line` reads that declaration instead
 of compensating with an unexplained `+1`.
-D2 is FIXED (gate g2): `extract.py` now names every definition as its enclosing
-scope's symbol plus its own name, so the store's symbol equals the supplement's
-qualified key. Pages are still keyed by the supplement's key and the store symbol
-is still reached through the (file, line) join, but that join is now a redundancy
-check between two agreeing passes rather than a translation between two spellings
--- `checks.entity_symbol_join` compares the WHOLE symbol because of it.
+D2 is FIXED (gate g2): `extract.py` names every definition as its enclosing
+scope's symbol plus its own name.
 
 Output layout:
   map/INDEX.md                       top index, grouped by package
@@ -35,7 +41,6 @@ import subprocess
 import sys
 
 from .extract import STATEMENTS_NAME, WINDOW
-from .supplement import SUPPLEMENT_NAME
 
 STDLIB = set(sys.stdlib_module_names)
 REPORT_NAME = "render_report.json"
@@ -47,8 +52,8 @@ HOLE = "HOLE: no docstring"
 # the way the prototype did, rather than threading one context object through
 # every formatter.
 
-ent_supp = {}                                # supplement key -> entity record
-mod_supp = {}                                # module name -> module record
+entities = {}                                # store symbol -> definition facts
+modules = {}                                 # module name -> module facts
 docs = {}                                    # store symbol -> doc summary
 params = collections.defaultdict(list)       # store symbol -> [(order, name)]
 inherits = collections.defaultdict(list)     # store symbol -> [base symbol]
@@ -56,12 +61,9 @@ edges = collections.defaultdict(list)        # store symbol -> [(p, o, res, why)
 inbound = collections.defaultdict(collections.Counter)   # symbol -> {caller module: n}
 imports_out = collections.defaultdict(list)  # "mod:" -> [(o, res)]
 imported_by = collections.defaultdict(set)   # module -> {importing module}
-cont_at = {}                                 # (file, line1) -> store symbol
-alias = {}                                   # supplement key -> store symbol
-alias_missing = 0
-children = collections.defaultdict(list)     # parent supp key -> [(line, child key)]
-members_of = collections.defaultdict(list)   # module -> [supplement key]
-page_file = {}                               # supplement key -> page filename
+children = collections.defaultdict(list)     # parent symbol -> [(line, child symbol)]
+members_of = collections.defaultdict(list)   # module -> [store symbol]
+page_file = {}                               # store symbol -> page filename
 MODULES = []
 BY_PKG = collections.defaultdict(list)
 
@@ -92,7 +94,7 @@ def _case_tag(name):
 
 
 def assign_page_filenames(keys):
-    """supplement key -> page filename, for the keys of ONE module.
+    """store symbol -> page filename, for the symbols of ONE module.
 
     A page used to be named after its entity alone, so two entities in one
     module whose names differ only by case resolved to one file: on a
@@ -123,39 +125,48 @@ def assign_page_filenames(keys):
 
 
 def load_stores(artifacts):
-    """Read the statement store and the supplement, and build every index the
-    page builders read. Safe to call repeatedly: it resets state first."""
-    global alias_missing
+    """Read the statement store and build every index the page builders read.
+
+    ONE store. Every fact a page shows -- kind, signature, span, docstring body,
+    values, decorators -- now rides the statement that names the thing, so the
+    second AST pass this used to join against is gone, and with it the join.
+    A page is keyed by the store symbol itself, because there is no longer a
+    second spelling to translate to.
+
+    Safe to call repeatedly: it resets state first."""
     artifacts = pathlib.Path(artifacts)
     for d in (docs, params, inherits, edges, inbound, imports_out, imported_by,
-              cont_at, alias, children, members_of, page_file, BY_PKG,
-              ent_supp, mod_supp):
+              children, members_of, page_file, BY_PKG, entities, modules):
         d.clear()
     MODULES.clear()
-    alias_missing = 0
-
-    supp = json.loads((artifacts / SUPPLEMENT_NAME).read_text(encoding="utf-8"))
-    ent_supp.update(supp["entities"])
-    mod_supp.update(supp["modules"])
-
-    # file -> the line base that file's facts were written in, read from the
-    # file's own extraction-window statement. The window is emitted before the
-    # file's facts, so the base is known by the time one is read.
-    base_of = {}
 
     with open(artifacts / STATEMENTS_NAME, encoding="utf-8") as f:
         for line in f:
             st = json.loads(line)
             p, s, o = st["p"], st["s"], st["o"]
             if p == WINDOW:
-                base_of[st["q"]["file"]] = st["d"]["line_base"]
+                d = st["d"]
+                modules[modof(s)] = {"file": st["q"]["file"], "loc": d["loc"],
+                                     "doc_body": d["doc_body"], "all": d["all"],
+                                     "attrs": []}
                 continue
             if p == "documents":
                 docs[s] = o
                 continue
             if p == "contains":
-                q = st["q"]
-                cont_at[(q["file"], source_line(q["line"], base_of[q["file"]]))] = intern(o)
+                d = st["d"]
+                entities[intern(o)] = {"line": st["q"]["line"], "end": d["end"],
+                                       "kind": d["kind"], "signature": d["signature"],
+                                       "doc_body": d["doc_body"],
+                                       "decorators": d["decorators"],
+                                       "bases": d["bases"], "attrs": []}
+                continue
+            if p == "declares":
+                d = st["d"]
+                owner = modules[modof(s)] if s.endswith(":") else entities[s]
+                owner["attrs"].append({"name": o.split(":", 1)[1].rsplit(".", 1)[-1],
+                                       "annotation": d["annotation"],
+                                       "value": d["value"], "form": d["form"]})
                 continue
             if p == "param-of":
                 q = st["q"]
@@ -177,29 +188,18 @@ def load_stores(artifacts):
             if p in ("calls", "reads"):
                 inbound[o][intern(modof(s))] += 1
 
-    # D2: supplement key -> store symbol, joined on (file, line).
-    for key, e in ent_supp.items():
-        mod = modof(key)
-        f = mod_supp[mod]["file"]
-        sym = cont_at.get((f, e["line"]))
-        if sym is None:
-            alias_missing += 1
-            alias[key] = key
-        else:
-            alias[key] = sym
-
-    # children, by supplement key: parent is the qualified name minus its last part
-    for key, e in ent_supp.items():
+    # children: the parent is the symbol minus its last qualified part
+    for key, e in entities.items():
         mod, name = key.split(":", 1)
         parent = mod + ":" + name.rsplit(".", 1)[0] if "." in name else mod + ":"
         children[parent].append((e["line"], key))
     for v in children.values():
         v.sort()
 
-    MODULES.extend(sorted(mod_supp))
+    MODULES.extend(sorted(modules))
     for m in MODULES:
         BY_PKG[m.split(".")[0]].append(m)
-    for key in ent_supp:
+    for key in entities:
         members_of[modof(key)].append(key)
     for keys in members_of.values():
         page_file.update(assign_page_filenames(keys))
@@ -223,12 +223,12 @@ def tally(items):
 
 
 def summary_of(key):
-    """Store first (that is the map's source of truth); supplement fills gaps."""
-    return docs.get(alias[key]) or ent_supp[key].get("doc_summary")
+    """The docstring summary the store recorded for this symbol."""
+    return docs.get(key)
 
 
 def mod_summary_of(mod):
-    return docs.get(mod + ":") or mod_supp[mod].get("doc_summary")
+    return docs.get(mod + ":")
 
 
 def loc(key, e):
@@ -243,10 +243,12 @@ def loc(key, e):
     {file, line, col} and is gitignored, so the positions remain available to
     anything that needs them; they are simply not committed.
 
-    Supplement lines are 1-based already (D1 applied at load)."""
-    head = mod_supp[modof(key)]["file"]
-    if e.get("end_line"):
-        head += f", {e['end_line'] - e['line'] + 1} lines"
+    The span is a DIFFERENCE of two store lines, so it is the same number in
+    any line base -- the one number on this page the declared base cannot
+    move."""
+    head = modules[modof(key)]["file"]
+    if e.get("end") is not None:
+        head += f", {e['end'] - e['line'] + 1} lines"
     return head
 
 
@@ -285,11 +287,10 @@ def attr_lines(attrs):
 
 
 def uses_lines(key, mod):
-    sym = alias[key]
     buckets = collections.defaultdict(list)
     unresolved = collections.Counter()
-    ownparams = {f"{sym}.{pn}" for _, pn in params.get(sym, [])}
-    for p, o, res, why in edges.get(sym, []):
+    ownparams = {f"{key}.{pn}" for _, pn in params.get(key, [])}
+    for p, o, res, why in edges.get(key, []):
         if o in ownparams and p == "reads":
             continue
         if res == "unresolved":
@@ -337,7 +338,7 @@ def refs_line(key, mod):
     without naming the own module in the list -- the list stays the OTHER
     modules, which is the convention `refs_line_self_consistent` holds every
     page to."""
-    callers = inbound.get(alias[key])
+    callers = inbound.get(key)
     if not callers:
         return ["referenced by: none found", REFS_LEGEND, ""]
     n = sum(callers.values())
@@ -354,8 +355,7 @@ def refs_line(key, mod):
 
 def entity_page(key, mod):
     name = key.split(":", 1)[1]
-    sym = alias[key]
-    e = ent_supp[key]
+    e = entities[key]
     kind = e.get("kind", "?")
     L = [f"# {key}", f"{kind}, {loc(key, e)}", ""]
 
@@ -370,7 +370,7 @@ def entity_page(key, mod):
             L.append(f"{'async ' if kind.startswith('async') else ''}"
                      f"def {name.split('.')[-1]}{sig}")
         elif kind == "class":
-            bases = ", ".join(b.split(":")[-1] for b in inherits.get(sym, []))
+            bases = ", ".join(b.split(":")[-1] for b in inherits.get(key, []))
             L.append(f"class {name.split('.')[-1]}({bases})" if bases
                      else f"class {name.split('.')[-1]}")
         L.append("```")
@@ -386,7 +386,7 @@ def entity_page(key, mod):
     if kids:
         for _, k in kids:
             kn = k.split(":", 1)[1]
-            ke = ent_supp[k]
+            ke = entities[k]
             L.append(f"- [{kn.split('.')[-1]}]({page_file[k]}) {ke.get('kind', '')}: "
                      + (summary_of(k) or HOLE))
         L.append("")
@@ -397,7 +397,7 @@ def entity_page(key, mod):
 
 
 def module_index(mod):
-    ms = mod_supp[mod]
+    ms = modules[mod]
     members = members_of.get(mod, [])
     holes = sum(1 for k in members if not summary_of(k))
     L = [f"# {mod}",
@@ -432,7 +432,7 @@ def module_index(mod):
 
     def walk(key, depth):
         nm = key.split(":", 1)[1]
-        e = ent_supp[key]
+        e = entities[key]
         L.append("  " * depth + f"- [{nm}]({page_file[key]}) {e.get('kind', '')}: "
                  + (summary_of(key) or HOLE))
         for _, kid in children.get(key, []):
@@ -522,15 +522,14 @@ def run(root, artifacts, out):
     # file.
     npages = sum(1 for _ in out.rglob("*.md"))
 
-    holes = sum(1 for k in ent_supp if not summary_of(k))
+    holes = sum(1 for k in entities if not summary_of(k))
     sizes.sort(reverse=True)
     report = {
         "modules": len(MODULES),
-        "entities": len(ent_supp),
+        "entities": len(entities),
         "pages": npages,
         "entity_pages": len(sizes),
         "holes": holes,
-        "alias_missing": alias_missing,
         "median_entity_page_lines": sizes[len(sizes) // 2][0] if sizes else 0,
         "largest_5": [[n, k] for n, k in sizes[:5]],
     }

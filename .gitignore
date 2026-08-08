@@ -27,10 +27,8 @@ evals/**/_runs/
 # Narrow by file, not a blanket .code-map/ rule: the page tree under map/ IS
 # committed, and a later gate may add a store that has to be reviewed.
 .code-map/statements.jsonl
-.code-map/supplement.json
-# The three run reports are rebuilt beside the stores on every run. Listed one
-# per line for the same reason: a blanket rule would also swallow a store a
-# later gate wants reviewed.
+# The run reports are rebuilt beside the store on every run. Listed one per
+# line for the same reason: a blanket rule would also swallow a store a later
+# gate wants reviewed.
 .code-map/extract_report.json
-.code-map/supplement_report.json
 .code-map/render_report.json

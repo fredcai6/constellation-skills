@@ -2,9 +2,11 @@
 
 Gate g0 introduces exactly two behaviors of its own: the discovery layer that
 enumerates the **mappable corpus**, and the argparse CLI. Those two are
-test-first. The three pipeline stages (extract, supplement, render) are a port
-of the reference prototype and are covered by end-to-end evidence, not by unit
-tests that would freeze prototype behavior gates g2/g3 are going to change.
+test-first. The pipeline stages (extract, render) are a port of the reference prototype
+and are covered by end-to-end evidence, not by unit tests that would freeze
+prototype behavior gates g2/g3 are going to change. A third stage, a second AST
+pass over the same source, was removed at g3 when the statement schema learned
+to say the six facts it had been fetching.
 
 `mappable corpus` is the set of source files the map is derived FROM. It is not
 the skills `corpus` of docs/agents/GLOSSARY.md — different thing, same English
@@ -494,9 +496,10 @@ class RenderReportTests(unittest.TestCase):
     def _write_calls(self):
         """What a per-write counter would report: the top index, one index per
         module, and one page per entity."""
-        supp = json.loads(
-            (self.repo / ".code-map" / "supplement.json").read_text(encoding="utf-8"))
-        return 1 + len(supp["modules"]) + len(supp["entities"])
+        statements = statements_of(self.repo / ".code-map")
+        modules = sum(1 for st in statements if st["p"] == "extraction-window")
+        entities = sum(1 for st in statements if st["p"] == "contains")
+        return 1 + modules + entities
 
     def test_render_report_page_count_equals_the_files_on_disk(self):
         self.assertGreater(
@@ -1046,31 +1049,49 @@ class RefsAccountingTests(unittest.TestCase):
         self.assertIn("legend", proc.stdout)
 
 
-#: The supplement's entity line is one half of the (file, line) join that welds
-#: a page to its store symbol. Shift it and the join lands on whatever else is
-#: at that position -- or on nothing.
-JOIN_SHIFT_MUTATION = (
-    ('                        "line": child.lineno,      # store has this\n',
-     '                        "line": child.lineno + 1,  # store has this\n'),
+#: Break SIDE A of the comparison: the EXTRACTOR's name for a definition.
+#: Positions are untouched, so the map still builds, every page still lands and
+#: every caller list is still internally consistent -- the pages are simply
+#: titled after entities that do not exist under that name.
+EXTRACTOR_RENAME_MUTATION = (
+    ('        return base + name if base.endswith(":") else base + "." + name\n',
+     '        return base + name.lower() if base.endswith(":") '
+     'else base + "." + name.lower()\n'),
 )
 
-#: Rename every entity in the supplement while leaving every POSITION intact.
-#: The join still resolves, the page still shows the right callers -- and the
-#: page is titled after an entity that does not exist under that name. This is
-#: the mutation `inbound_attribution` cannot see.
-SUPPLEMENT_RENAME_MUTATION = (
-    ('                    qual = f"{prefix}.{child.name}" if prefix else child.name\n',
-     '                    qual = f"{prefix}.{child.name.lower()}" if prefix else child.name.lower()\n'),
+#: Break SIDE B: the CHECK's own reading of the source. Drop the enclosing
+#: chain, so a method reads as a module-level function. If breaking this side
+#: does not go red, the check is not really consulting it.
+SOURCE_SCAN_FLATTEN_MUTATION = (
+    ('                qualified = f"{prefix}.{child.name}" if prefix else child.name\n',
+     '                qualified = child.name\n'),
+)
+
+#: Break the POSITION the two sides are joined on: emit lines one off while the
+#: schema goes on declaring the base it always declared. This is defect D1 as a
+#: mutation, and it is what gives the declared line base a consumer that can go
+#: red.
+POSITION_SHIFT_MUTATION = (
+    ("    return lineno - 1 + LINE_BASE\n", "    return lineno + LINE_BASE\n"),
 )
 
 
 class EntitySymbolJoinTests(unittest.TestCase):
-    """Gate g1: a page's title must agree with the store symbol at its position.
+    """Gate g1, RE-BASED at g3: a page's title must be what the SOURCE defines
+    at the position the store records.
 
-    `extract.py` and `supplement.py` are two independent AST passes over the
-    same source, welded by a (file, line) join. This is the check that notices
-    them disagreeing about what sits at a position — which is the map landing a
-    page on another entity's docstring and another entity's callers."""
+    This check used to compare the extractor's symbol against a second AST
+    pass's qualified key. `g3` deleted that second pass. Left standing on one
+    derivation the check would have compared the store symbol against a page
+    title rendered FROM that symbol — a tautology that cannot fail, which is the
+    exact defect this run exists to stamp out and would have arrived here
+    through a legitimate refactor.
+
+    The second derivation now lives in `checks.SourceScan`, which reads the
+    source and shares no code path with `extract.py`. The three mutations below
+    are the independence proof: break the extractor's naming, break the check's
+    own reading, break the position they are joined on, and the check goes red
+    for each."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -1080,56 +1101,77 @@ class EntitySymbolJoinTests(unittest.TestCase):
     def tearDown(self):
         self._tmp.cleanup()
 
-    def _package(self, subs=()):
+    def _package(self, module, subs):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)
-        return mutated_package(tmp.name, "supplement.py", subs)
+        return mutated_package(tmp.name, module, subs)
 
-    def test_every_page_title_agrees_with_the_store_symbol_it_is_joined_to(self):
+    def _checked(self, module, subs):
+        host = self._package(module, subs)
+        self.assertEqual(
+            run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+        return run_code_map(host, "check", "--root", str(self.repo))
+
+    def test_every_page_title_agrees_with_the_source_at_its_position(self):
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
         m = checks.MapUnderCheck(self.repo, self.repo / ".code-map", self.repo / "map")
 
         self.assertTrue(m.entity_pages,
                         "input precondition: the tree must hold entity pages, or this "
-                        "check joins nothing and cannot fail")
+                        "check compares nothing and cannot fail")
+        self.assertTrue(m.source.qualified_at,
+                        "input precondition: the source scan must find definitions, or "
+                        "the second derivation is empty and agrees with anything")
 
         self.assertEqual(checks.entity_symbol_join(m), [])
 
-    def test_join_goes_red_when_the_two_ast_passes_disagree_about_a_position(self):
-        host = self._package(JOIN_SHIFT_MUTATION)
-        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+    def test_the_two_derivations_do_not_share_a_code_path(self):
+        """Stated as a test because it is the property the check rests on.
 
-        proc = run_code_map(host, "check", "--root", str(self.repo))
+        `checks.py` imports two names from `extract.py` — the store's filename
+        and the window predicate. Neither is a symbol derivation. If a later
+        gate imports the naming itself, this check becomes a restatement and
+        this test is what says so."""
+        source = (CODE_MAP / "checks.py").read_text(encoding="utf-8")
+        imported = re.findall(r"^from \.extract import (.+)$", source, re.M)
 
-        self.assertNotEqual(proc.returncode, 0,
-                            "MUTANT SURVIVED: a map whose pages are joined to the wrong "
-                            f"position passed `check`\n{proc.stdout}")
-        self.assertIn("FAIL entity-symbol-join", proc.stdout)
+        self.assertEqual(imported, ["STATEMENTS_NAME, WINDOW"])
+        for borrowed in ("child_sym", "Extractor", "mod_of", "store_line"):
+            with self.subTest(name=borrowed):
+                self.assertNotIn(borrowed, source)
 
-    def test_join_catches_a_rename_that_every_other_check_agrees_with(self):
-        """The independence proof for this check.
-
-        The supplement renames each entity and moves nothing. Every position is
-        still right, so the join still resolves, the caller sets are still
+    def test_join_goes_red_when_the_extractor_renames_a_definition(self):
+        """SIDE A. Every position is still right, so the caller lists are still
         correct, no page is empty, no page is lost and the build is still
-        deterministic — every other check in the gate passes. The map is
-        nonetheless titling pages after entities that do not exist under that
-        name, and only this check says so."""
-        host = self._package(SUPPLEMENT_RENAME_MUTATION)
-        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
-
-        proc = run_code_map(host, "check", "--root", str(self.repo))
+        deterministic. The map is nonetheless titling pages after entities that
+        do not exist under that name."""
+        proc = self._checked("extract.py", EXTRACTOR_RENAME_MUTATION)
 
         self.assertNotEqual(proc.returncode, 0,
-                            "MUTANT SURVIVED: a map titling pages after entities that do "
-                            f"not exist passed `check`\n{proc.stdout}")
+                            "MUTANT SURVIVED: a map titling pages after entities that "
+                            "do not exist passed `check`\n" + proc.stdout)
         self.assertIn("FAIL entity-symbol-join", proc.stdout)
-        failed_lines = [ln for ln in proc.stdout.splitlines() if ln.startswith("FAIL ")]
-        self.assertEqual(
-            [ln.split(":")[0] for ln in failed_lines], ["FAIL entity-symbol-join"],
-            "if another check also caught this, the independence claim above is "
-            f"overstated and must be rewritten, not left standing\n{proc.stdout}")
+
+    def test_join_goes_red_when_the_checks_own_reading_of_the_source_breaks(self):
+        """SIDE B. A check nobody can break on its own side is a check that is
+        not consulting that side."""
+        proc = self._checked("checks.py", SOURCE_SCAN_FLATTEN_MUTATION)
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: the check's own second derivation was "
+                            "flattened and it still agreed\n" + proc.stdout)
+        self.assertIn("FAIL entity-symbol-join", proc.stdout)
+
+    def test_join_goes_red_when_the_recorded_position_shifts(self):
+        """The position the two sides meet on — and the live consumer that makes
+        the declared line base worth declaring."""
+        proc = self._checked("extract.py", POSITION_SHIFT_MUTATION)
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: definitions recorded one line off the "
+                            "source passed `check`\n" + proc.stdout)
+        self.assertIn("FAIL entity-symbol-join", proc.stdout)
 
 
 class FunctionNestedSymbolIdentityTests(unittest.TestCase):
@@ -1629,7 +1671,7 @@ class CliArgumentTests(unittest.TestCase):
 
     def test_cli_parses_every_pipeline_stage_as_a_subcommand(self):
         parser = cli.build_parser()
-        for name in ("discover", "extract", "supplement", "render", "build", "check"):
+        for name in ("discover", "extract", "render", "build", "check"):
             with self.subTest(subcommand=name):
                 args = parser.parse_args([name])
                 self.assertEqual(args.command, name)
@@ -1681,10 +1723,11 @@ class CliDiscoverCommandTests(unittest.TestCase):
 
 
 class CliBuildCommandTests(unittest.TestCase):
-    """`build` is the whole pipeline's caller. This asserts that the three
-    ported stages are WIRED and produce their artifacts — not what they put in
-    them. Pinning page content here would freeze prototype behavior that gates
-    g2 and g3 exist to change."""
+    """`build` is the whole pipeline's caller. This asserts that the stages are
+    WIRED and produce their artifacts — not what they put in them.
+
+    Two stages now, not three: `g3` folded the second AST pass's six facts into
+    the statement schema and removed the stage rather than deprecating it."""
 
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
@@ -1698,7 +1741,7 @@ class CliBuildCommandTests(unittest.TestCase):
         with contextlib.redirect_stdout(io.StringIO()):
             code = cli.main(["build", "--root", str(self.repo)])
         self.assertEqual(code, 0)
-        for produced in (".code-map/statements.jsonl", ".code-map/supplement.json",
+        for produced in (".code-map/statements.jsonl",
                          "map/INDEX.md", "map/ids.jsonl"):
             with self.subTest(artifact=produced):
                 self.assertTrue((self.repo / produced).exists())
