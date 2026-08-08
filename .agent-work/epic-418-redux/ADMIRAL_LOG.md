@@ -4308,3 +4308,38 @@ without the change and my run was wrong, I want to be told what to re-run.
 
 **#511 does not merge until this is settled.** Notes file confirmed moved — repo root clean, that item
 is closed.
+
+### ERROR (mine) — I handed a crew a finding I had asserted rather than measured, then measured it
+
+Crew 1's worktree showed my two boundary-render artifacts modified. I told it the launch verifier
+*"mutates the run's own rendered truth as a side effect of being run"*, called that a finding worse
+than its other three, and asked it to carry it in its return.
+
+**Then I tested it:**
+
+```
+main checkout, transitions/ dirty:   0
+admiral-prelaunch                 -> exit 0
+transitions/ dirty AFTER:            0
+```
+
+**Unmodified `admiral-prelaunch` re-renders those files byte-identically. It is idempotent on
+unchanged input.** My claim was not supported.
+
+**Retracted to the crew within a minute, explicitly and before it could write it up.** What is actually
+true is narrower and I do not know the cause: the shipped verifier does not dirty the render, and yet
+**its** worktree shows both files modified. I gave it the two candidates worth one command each — its
+own #506 fix may legitimately change what the render produces (a real and reportable consequence of
+its change, not a verifier defect), or it is line endings under `* text=auto`. **The crew holds the
+evidence; I do not.** The merge-hygiene instruction stands regardless of cause, because that part does
+not depend on it.
+
+**Worth recording as more than an apology.** I have spent this wave insisting that crews derive rather
+than report, refusing a PR for a green with no red behind it, and re-deriving my own verifier results
+under a second interpreter. And then I manufactured a finding from a two-line `git status` and pushed
+it downward with authority attached. **A wrong claim from the Admiral is more expensive than a wrong
+claim from a crew, because a crew treats it as settled** — this one was heading into a return document
+as an established defect.
+
+The rule I was already applying to everyone else, now written down for myself: **do not hand a finding
+down until it has been run.** The command that falsified it cost one line.
