@@ -325,3 +325,26 @@ it.
 which is a defensible Opus case — but I never made that case, I just defaulted. Future waves state
 the tier and the reason in the launch order's Budget slot, which is the field that exists for exactly
 this and which I left doing no work.
+
+---
+
+## Addendum R4 — 2026-08-08 — cheap fixes are in scope
+
+Tommy, mid-turn: *"keep rolling and include cheap fixes in your plans."*
+
+**Scope delta.** The four cheap fixes I had surfaced as *his* decision are now *my* scope. They are
+**filed scope, sequenced after #467**, not wave-4 scope — the wave currently under measurement does not
+absorb work discovered while measuring it.
+
+**Routing (see ADMIRAL_LOG, RULING 2026-08-08T16:04:50Z):** new issue **#500**; comments on **#313**,
+**#442**, **#371**, **#266**. Two of the four needed no new issue — #371 already existed, and #313 owns
+the interpreter problem once the root cause is attached to it. Filing four issues because four findings
+were surfaced would have forked two identities.
+
+**Standing pre-ruling this establishes.** "Include the cheap fixes" is a grant to **route** findings, not
+a grant to **implement** them mid-wave. Anything a cheap fix touches that is also under measurement waits
+for the measurement to land. If a cheap fix turns out to be load-bearing for a gate in flight, that is an
+out-of-taxonomy escalation, not a self-adjudicated merge.
+
+**Unchanged:** expiry (epic close or 72h from 2026-08-08T07:00Z), Sonnet-for-implementers (R3), and the
+withdrawal of blanket amendment authorization.

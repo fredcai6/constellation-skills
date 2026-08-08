@@ -2790,3 +2790,38 @@ would have sent the successor to the wrong gate.
 
 **`commander-w4-467-g` dispatched.** Idle notification 15:32:57Z → stopped F → verified state in my
 own shell → dispatched. **10/17, `amendments: 2`, leases released, tree clean at `cca83cc6`.**
+
+---
+
+## RULING | 2026-08-08T16:04:50Z | cheap fixes are in scope — routed, not banked
+
+Tommy, mid-turn: *"keep rolling and include cheap fixes in your plans."* That converts the four
+surfaced-but-unowned findings from a decision I was holding into scope I own. Routed to the tracker
+immediately rather than banked in this worktree — third time that rule has had to be applied.
+
+**Rule 8 fired twice, and both times it changed the finding.** Before filing anything I ran the
+command that would show each defect was FINE.
+
+| # | What I was going to file | What the command showed | Routed to |
+|---|---|---|---|
+| 1 | "the installer writes the forbidden interpreter into shipped skills" | **Overstated.** `py .../verify_iterative_role_artifacts.py --help` and `py .../run_crew.py --help` both exit 0. Repo scripts have no third-party imports, so the installed commands work. | comment on **#313** |
+| 2 | reach-up signal can't tell served from live | Confirmed at `checklist_engine.py:1146` — pending == present-and-not-superseded, and the docstring defers the fulfil flow to **#183, which is closed**. | new issue **#500** |
+| 3 | the printed remedy succeeds while doing nothing | Confirmed. `:1256` prints a literal `<why-id>`; `attach` does no validation. Branch fixes the *printed* half only. | comment on **#442** |
+| 4 | artifact `match` cannot express "one of" | Confirmed at `:838`, strict conjunctive equality. **Already filed as #371** — no new issue. | comment on **#371** |
+
+**Finding #1 got better by being wrong.** The real defect is not a bad interpreter — it is that
+`resolve_interpreter()` proves *this interpreter starts and runs a script*, a signal **identical in the
+healthy world and the defective one**, because the failing interpreter also starts and also runs
+scripts. It never asks the discriminating question, *can it run the suite?* `py` and `python` are two
+different installations here; only `python` has pytest. **That is this epic's own subject, found in
+the installer.** Had I filed my first draft, I'd have reported a broken command that works, and missed
+the check-that-cannot-fail sitting underneath it.
+
+Also commented **#266** ("trip has never fired on a correct reading") as **falsified** — it fired twice
+in anger this wave, and firing is precisely what exposed #431, #442 and #500. Recommended it close as
+answered once #467's acceptance evidence lands, rather than close silently.
+
+**Standing frame unchanged:** none of this is dispatched into the running crew. `g4-implement` is
+mid-flight (+91 engine / +329 test lines, 12.6% fill, writing). Cheap fixes are now *filed scope*, not
+*wave-4 scope* — they sequence after #467 lands, so the wave under measurement is not perturbed by
+work discovered while measuring it.
