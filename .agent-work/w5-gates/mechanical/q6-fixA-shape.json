@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q6-fixA-shape",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 2,
+    "spine-step": "q6-fixA-shape",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-q6-fixA-shape@174cc3742e227473bb20b1b3fc8e85e4c389554a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-08T23:05:51Z"
+  }
+}

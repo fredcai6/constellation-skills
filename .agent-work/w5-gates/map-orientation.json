@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "work_id": "w5-gates",
+  "root": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "README.md",
+      "content_hash": "4c98eae16f4d7a2bb91996762ca7b8945ae85bd6d478ca6dc05313c3cc759ea2",
+      "source": "known-fallback"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "7c8b5cba1b7301ab9a8f7cba60583b311e31a6719ba2f384e4af05661e046c64",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "206071ed4c7b6b49d002d990b12f4aed0e42077ccca5acc6d34aaa6116cdc139",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_SCHEMA.md",
+      "content_hash": "afff92e2289ac1e6ad8cf469a7a30db84f663f811a86bea6ea6a6144346051fd",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "4c98eae16f4d7a2bb91996762ca7b8945ae85bd6d478ca6dc05313c3cc759ea2"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This is the constellation skill-SOURCE repo: it carries no docs/architecture/ packet map, no overlays and no decision anchors, so the structural relationship between skills/<name>/templates/*.template.json, the top-level scripts/ they invoke, and the installed ~/.claude/skills/constellation-*/ bundles those templates are copied into is unmapped. The specific unmapped seam for this run is the source-repo/installed-bundle duality that issues #501 and #468 are about -- nothing in the repo records it as an architectural fact."
+  ],
+  "escalation": "Escalating the absent architecture map to the epic-418 Admiral (main session) as a standing repo-level gap, not as a blocker for this run: README.md documents the repo-vs-installed layout duality in prose (section 'Repo layout vs. installed layout'), which is the one map fact this run needs, and it is hash-pinned here as a substitute.",
+  "emitted_at": "2026-08-08T22:55:45.909131+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

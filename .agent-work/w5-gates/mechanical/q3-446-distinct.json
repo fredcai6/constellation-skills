@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q3-446-distinct",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 2,
+    "spine-step": "q3-446-distinct",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-q3-446-distinct@4cfd7f1c659afa0589cee1172ae91496c20ca6cd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-08T23:01:13Z"
+  }
+}
