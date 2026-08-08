@@ -2522,3 +2522,17 @@ Commander invented that device unprompted at planning time; it is now a **frozen
 the gate that integrates the fix. **A gate that would otherwise pass by shipping no tests at all now
 fails on precisely that**, which is this epic's thesis converted from a finding into a mechanism, by
 a crew, inside the issue that exists to argue for it.
+
+**MILESTONE | g2 CLOSED — 7/16. The fix is integrated and the suite is green.**
+All three `g2-integrate` postconditions satisfied, **none waived**: the full suite against main's
+baseline; the **anti-vacuity** check (the begin-work guard tests must EXIST — pytest exits 5 on an
+empty selector); and the reviewer's `APPROVE` **matching the frozen `c3` with no amendment**.
+
+**That settles the retraction empirically.** The check instance E and I nearly amended — I had
+authorised amending it across four gates — **passed exactly as frozen.** Its retraction was correct,
+my withdrawal was correct, and the g1 amendment remains the one-off it was diagnosed to be.
+
+Two gate groups down: **g1 proved the defect at unmodified HEAD and survived four adversarial
+probes; g2 built the fix, had it independently reviewed, and integrated it green.** The fix in one
+line, from its own commit: *move the HARD guard off `advance` onto `start`/`reopen`; refuse the
+silent close.*
