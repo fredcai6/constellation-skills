@@ -2756,3 +2756,37 @@ workbench"*, it is **which engine is authoritative and does `g5-acceptance` pin 
   mutations yourself."* They solved it two different good ways; doctrine should pick one.
 - **tc3 confirmed by controlled sibling-tree runs** at the true parent `5a69a30b`: +17 passed,
   +125 subtests, **same 16 sandbox failures both sides**.
+
+**RULING | the instrument question, settled: drive with main's engine; TEST the branch engine.**
+Three engines differ by exactly the thing under test — `installed workbench 140170 / no fix`,
+`main 146457 / no fix`, `branch worktree 156060 / HAS the fix`.
+
+- **Drive the spine with main's engine.** It is what every launch order this wave has specified and
+  what produced ten gates of evidence. **Switching the driving instrument mid-run is plan surgery**
+  and would perturb the instrument that produced the record — in a wave whose subject is evidence
+  integrity.
+- **`g5-acceptance` is the exception and the whole point:** it exercises the **branch** engine
+  explicitly and **pins the binary by hash**, naming which one it ran. Acceptance evidence produced
+  through a pre-#467 bundle proves nothing about the fix.
+- **Reinstall nothing.** Both installed bundles are pre-#467; syncing from main still lands without
+  the fix. Closeout, after merge.
+
+That separation is clean: **drive with the old engine, test the new one.** It also means the run's
+ten gates of evidence were produced by a consistent instrument, which is what makes them comparable.
+
+**VERIFIED LIVE: two of this issue's fixes work.** Running `current` through the **branch** engine,
+the trip now reads *"your instruction has changed... close THIS gate carrying your handoff... do not
+begin work at another gate"* — **an instruction, not a refusal** — and it hands over a **concrete**
+`why_ref=w-10` instead of the literal `<why-id>` placeholder that attaches with exit 0 and silently
+does nothing. **DC1 and the g2(d) hint fix, both observed working**, in the same command, without
+staging anything.
+
+**Checked before dispatching rather than repeating the handoff (rule 8):** `amend` **appends**, so
+`g3b-glossary` sits **last** in the task list — after `g5-integrate`. Its predecessor said "next
+command: start g3b-glossary", which list order contradicts. **The engine settles it:**
+`ACTIVE g3b-glossary [pending]`, `next: attest g3b-glossary --cond p1`. The predecessor was right and
+the list order was the misleading signal. Had I passed on either claim without asking the engine, I
+would have sent the successor to the wrong gate.
+
+**`commander-w4-467-g` dispatched.** Idle notification 15:32:57Z → stopped F → verified state in my
+own shell → dispatched. **10/17, `amendments: 2`, leases released, tree clean at `cca83cc6`.**
