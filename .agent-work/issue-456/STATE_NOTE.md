@@ -4,11 +4,52 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`g6-remediate`** — brief WRITTEN, dispatching now
-- **PID**: crew `constellation/issue-456/g6/implementer/attempt-2` dispatching. `g6/reviewer/attempt-1` closed via `--verify-result` → `fresh (completed)`.
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g6-remediate-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: **`g7-implement`** — handoff NOT yet written
+- **PID**: none in flight. All four g6 crews closed via `--verify-result`.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g7-implement-RESULT.md`
 
-## g6 REVIEW RETURNED **BLOCK** — correct, and reproduced not asserted
+## ✅ `g6` IS CLOSED — `g6-integrate -> complete`. **8 of 11 gates done.**
+
+Closed on an APPROVE from the SAME reviewer that issued the original BLOCK
+(resumed with context intact, not a fresh crew). Numbers at close, all re-run by
+the Commander: suite **1807 passed, 2 skipped, 684 subtests, 0 failed**; selector
+`-k 'stale_tag'` **14 passing** (baseline 0 by design), all 14 ids confirmed to
+carry `stale_tag` via `--collect-only`; fresh `build` then `check` **7/7 exit 0**;
+tree clean. Commits: build `55b95314`, remediation `cf36071f`.
+
+### The lesson worth carrying: FOUR disable points, not one
+The BLOCK was that 9 of 12 tests stayed green when the feature was disabled. The
+fix was verified at four independent disable points, deliberately: (1) emission
+forced empty in `extract.run()` — the reviewer's original attack, reproduced by
+the crew's script; (2) **`span_hash` forced to a constant** — the Commander's own
+mutation, chosen because neither the reviewer nor the crew picked it (reproducing
+an author's own falsifier proves only that the author's probe works); (3)
+`render.py`'s interception and (4) the persistence of `span_hash` onto the
+statement — both added by the re-review with predictions stated in advance. Five
+negative tests, red at every point, zero survivors. That is what separates a fix
+coupled to the feature from one shaped to a known attack.
+
+### Fixed in the rework
+`tc7` uncaught `JSONDecodeError` on a truncated leftover `statements.jsonl` — now
+takes the bootstrap path with one actionable line, deliberately NOT a silent skip
+(a silent skip converts a corrupt store into permanently dead detection).
+`tc8` advisory prefix `FAIL` → `ADVISORY`. Severity ruling unchanged and affirmed.
+
+### Still open, filed not fixed
+`tc9` **nothing in the routine pipeline exercises the staleness path** — `check`
+never calls `render.py`, `deterministic-rebuild` always builds fresh. Design
+question about what `check` is for. `tc10` evidence scripts self-check reverts
+with `git status --porcelain`, which false-negatives under `core.autocrlf`; TWO
+independent scripts hit it in this one gate despite the hazard being documented
+in CREW_CONTEXT.md. Fix: `git diff --quiet -- <path>` or blob OIDs.
+
+### Two limits ship with g6, recorded not smoothed over
+Detector reports nothing stale here because **zero authored anchors exist** — so
+it has only been exercised against a fixture; real validation belongs to `g7`,
+which joins on the same slug allocator and needs no rework here. Docstring-only
+and comment-only edits are invisible by construction.
+
+## g6 review history (superseded — kept for the record)
 
 `g6-review -> complete` (evidence `e-g6-review-1`, verdict BLOCK, refresh `e-g6-review-2`).
 Result at `.agent-work/issue-456/crew-handoffs/g6-review-RESULT.md`; reviewer

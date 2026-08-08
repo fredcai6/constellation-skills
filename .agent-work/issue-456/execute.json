@@ -2080,7 +2080,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream verified before opening integration. g6-implement and g6-review are both complete. The review returned BLOCK on one finding, the remediation landed at cf36071f, and the same reviewer re-verified it and returned APPROVE at .agent-work/issue-456/crew-handoffs/g6-rereview-RESULT.md with no blockers. I did not grade my own crew's repair.\n\nVerified first-hand rather than accepted from either crew. Full suite 1807 passed 2 skipped 684 subtests 0 failed, up from 1805/683 by exactly the two new test methods and one new subtest. Closing selector -k 'stale_tag' 14 passing, up from 12; the reviewer additionally collected it with --collect-only and confirmed all 14 ids carry stale_tag in the method name, so nothing new is invisible to the command that closes this gate. Fresh build then check, in that order: 7/7 ok exit 0 with deterministic-rebuild included, stale_tags empty. Working tree clean; crew committed with explicit paths and no map files were staged.\n\nThe blocker is genuinely closed, tested across FOUR independent disable points rather than one. The reviewer's original attack forced stale = [] at emission in extract.run(). The crew's acceptance script reproduces that: all five negative tests red, no survivors. I then ran a mutation neither of them chose, forcing span_hash to return a constant so the detector dies at its root while every surrounding code path still executes: all five red again, 10 of 14 failing. The re-review then added two more points I had not used, render.py's stale-anchor interception and the persistence of span_hash onto the emitted statement, both matching its a-priori predictions. A fix that holds at four separate disable points is coupled to the feature, not shaped to any one attack.\n\nTwo findings from the original review are fixed and independently re-verified: the uncaught JSONDecodeError on a truncated leftover statements.jsonl now takes the bootstrap path with one actionable printed line rather than dying, and deliberately not a silent skip; and the advisory line no longer prints the FAIL prefix that collided with genuine failures. The advisory-only severity ruling was examined and affirmed rather than changed.\n\nOne caveat carried forward honestly rather than buried. Both the crew's evidence script and my own attack script reported a false revert-not-clean, because they compared working-tree bytes under core.autocrlf. In both cases the revert was byte-perfect, confirmed by git diff --quiet and a matching blob OID against HEAD. The reviewer filed this as a candidate and named the fix, comparing normalized content or blob OIDs rather than raw bytes. It affects the evidence scripts, not the shipped code."
         }
       ],
       "postconditions": [
@@ -2096,7 +2097,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g6-integrate-3"
         },
         {
           "id": "c2",
@@ -2108,17 +2110,55 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g6-integrate-1",
+          "attested": {
+            "evidence": "e-g6-integrate-1",
+            "note": "Reviewer verdict is APPROVE, recorded as e-g6-integrate-1 from .agent-query-safe path .agent-work/issue-456/crew-handoffs/g6-rereview-RESULT.md, return status complete, blockers none.\n\nThis is the same reviewer that issued the original BLOCK, resumed with its context intact rather than a fresh crew, so the approval comes from the party that owns the finding. I did not grade my own crew's repair, and I asked it explicitly to block again if the fix were not real rather than approve to be agreeable.\n\nThe approval is earned rather than nodded through. It re-attacked the fix at two disable points that neither its own original review nor the crew's acceptance script had used, render.py's stale-anchor interception and the persistence of span_hash onto the emitted statement, stating its predictions in advance and matching both. Together with the crew's reproduction of the original emission-point attack and my own root-level attack forcing span_hash to a constant, the fix now holds at four independent disable points, which is what distinguishes a fix coupled to the feature from one shaped to a known attack. It also verified the closing selector by --collect-only, confirming all 14 collected ids carry stale_tag in the method name, so the gate's own command sees every new test.\n\nIt scoped its effort honestly rather than padding: it did not re-run the whole-gate scope-drift sweep or the Fowler pass, naming both as whole-gate checks out of scope for a rework verification, and it declined to re-run the eight-minute suite because I had already run it independently and had asked it to spend its effort on the adversarial re-attack. Those are stated as deliberate scope calls, not passed off as done.\n\nIt filed one new candidate rather than staying silent about an inconvenience: the crew's evidence script self-checks its revert with git status --porcelain, which is unreliable here under core.autocrlf, and it reproduced a false not-clean on a byte-perfect revert, confirming byte-identity by git diff --quiet and a matching blob OID. My own attack script hit the same false negative, so this is independently corroborated. The fix it names is to compare normalized content or blob OIDs rather than raw working-tree bytes. Evidence-script hygiene, not shipped code."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g6-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g6-rereview-RESULT.md",
+            "verdict": "APPROVE",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g6-integrate-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g6-integrate",
+            "why_ref": "w-24"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g6-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'stale_tag' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g7-implement": {
@@ -2595,6 +2635,11 @@
       "id": "tc9",
       "from": "g6-integrate",
       "statement": "Nothing in the routine pipeline exercises the staleness path. The g6 reviewer confirmed this by reading the call graph rather than assuming it: check never calls render.py at all, and deterministic-rebuild structurally cannot reach the path because it builds into two fresh scratch artifact directories on every call, so the previous-store read always sees nothing. The mechanism's only routine exerciser today is a human or agent NOT wiping .code-map between local build runs -- an unenforced convention, not a guarantee.\n\nThis matters beyond g6. A detector that no automated path ever runs is one refactor away from being silently dead, and the tests are its only remaining witness -- which is precisely why g6's vacuous-negative-test defect was worth blocking on. Worth deciding at triage whether some check should deliberately build twice into the same directory so the staleness path has a guaranteed exerciser, or whether the tests alone are accepted as sufficient with that limitation recorded. Not fixed in the g6 rework: it is a design question about what check is for, not a defect in what g6 built."
+    },
+    {
+      "id": "tc10",
+      "from": "g6-integrate",
+      "statement": "Evidence scripts on this run self-check their own revert with git status --porcelain, which is unreliable in this repo under core.autocrlf plus .gitattributes text=auto, and it produced a FALSE not-clean on a byte-perfect revert. Independently corroborated rather than reported once: the g6 re-reviewer reproduced it on the crew's acceptance script and confirmed byte-identity via git diff --quiet exit 0 and a matching git hash-object blob OID against HEAD, and my own Commander attack script hit the identical false negative on the same file in the same session.\n\nWhy this is worth keeping rather than shrugging off. An acceptance script that cries wolf about a dirty tree trains its readers to ignore the one signal that would catch a real un-reverted mutation, and a mutation left behind by an attack script is exactly the kind of damage that would otherwise ship silently. The failure is also in the direction that looks like diligence, which is what makes it durable.\n\nThe fix is one line and already demonstrated: compare normalized content or blob OIDs rather than raw working-tree bytes -- git diff --quiet -- <path>, exit 0 means clean. The re-review's own two attack scripts use the corrected form and stand as working examples. The re-reviewer additionally suggested a small shared helper so every future evidence script inherits the correct check instead of each one re-deriving it; worth weighing at triage against adding another moving part. CREW_CONTEXT.md already documents this exact hazard, so the deeper question for triage is why a documented trap still reached two independent scripts in one gate."
     }
   ],
   "blockers": [],
@@ -2766,6 +2811,13 @@
       "why": "Advancing g6-review because a substantive REVIEW_RESULT came back, which is the whole of what this item's postcondition asks. A BLOCK is a completed review, not a failed one, and treating it as a reason to hold this item open would confuse the verdict with the deliverable.\n\nThe review earned its keep. It reproduced the defect rather than asserting it: forcing stale = [] after the real computation in extract.run() left 9 of 12 tests green, every dedicated does-not-flag test among them, then reverted cleanly and confirmed 12/12. The feature works -- proven independently under two separate attacks -- but most of the evidence shipped to prove it cannot fail, which is the same class as tc38 and tc47 on this run. It also brought two findings nobody had: an uncaught JSONDecodeError on a truncated leftover statements.jsonl, a new failure mode this gate introduces because the writer has no atomic rename, and confirmation that check never calls render.py, so nothing in the routine pipeline exercises the staleness path at all.\n\nI advance rather than reworking under this item because the two are different jobs. Rework belongs to g6-integrate, which is the item that reads the verdict and routes on it, and the remediation is narrow and already fully specified: a positive control inside each does-not-flag test so a whole-feature disable cannot leave it green, a guarded read with an actionable message, and the advisory line's FAIL prefix renamed so it stops colliding with the real failure convention. The same reviewer re-verifies the fix; I do not grade my own crew's repair.",
       "mechanical": false,
       "ts": "2026-08-08T20:37:17.212998+00:00"
+    },
+    {
+      "id": "w-25",
+      "gate": "g6-integrate",
+      "why": "Closing g6. The gate's own command postcondition is satisfied by this advance, which re-runs the check rather than taking my word for it, and the reviewer verdict is APPROVE from the same reviewer that issued the original BLOCK.\n\nThis gate is the first build of a design the human signed accepted-untested at confirm, so the standard it had to clear was higher than working. It works and its evidence can now fail. The route there was a correct BLOCK: the reviewer disabled the whole feature on one code path and 9 of 12 tests stayed green, every dedicated does-not-flag test among them. The feature was never broken; its regression evidence was, which is the same class as tc38 and tc47 on this run and the reason a passing suite was not proof of anything here.\n\nThe remediation is verified at four independent disable points, not one. Emission forced to empty in extract.run(), which was the reviewer's original attack, reproduced by the crew's acceptance script. span_hash forced to a constant, killing the detector at its root while every surrounding path still executes -- my own mutation, chosen precisely because neither the reviewer nor the crew had picked it, since reproducing a falsifier its author designed proves only that the author's probe works. Then render.py's stale-anchor interception, and the persistence of span_hash onto the emitted statement, both added by the re-review with predictions stated in advance and both matching. Five negative tests, red at every point, no survivors anywhere.\n\nTwo real defects were found and fixed along the way, both of which a green suite had been hiding. A truncated leftover statements.jsonl killed every subsequent extract with an uncaught JSONDecodeError -- a new failure mode this gate introduced, and a live one because the writer has no atomic rename, so an interrupted build leaves exactly that state and the natural next action is the run that dies. It now takes the bootstrap path with one actionable line, deliberately not a silent skip, because a silent skip would convert a corrupt store into permanently dead detection with no signal. And the advisory line no longer prints the FAIL prefix that was indistinguishable from a genuine build failure in the same stream.\n\nNumbers at close, all re-run by me and not read back from a crew: full suite 1807 passed 2 skipped 684 subtests 0 failed; closing selector 14 passing against a designed baseline of zero, with all 14 ids confirmed to carry stale_tag so the gate's own command sees every one; fresh build then check 7/7 exit 0 including deterministic-rebuild; working tree clean.\n\nTwo limits ship with this gate, recorded rather than smoothed over. The detector reports nothing stale on this repo, which is correct because zero authored anchors exist yet -- so it has only ever been exercised against a fixture, and validation against real tag text belongs to g7, which joins on the same slug allocator and needs no rework here. And nothing in the routine pipeline exercises the staleness path at all: check never calls render.py, and deterministic-rebuild always builds into fresh directories. That second one is filed as a candidate rather than fixed here, because it is a design question about what check is for, not a defect in what this gate built. Also filed: the evidence scripts' false not-clean self-check under core.autocrlf, which two independent scripts hit in this one gate despite the hazard already being documented.",
+      "mechanical": false,
+      "ts": "2026-08-08T21:41:19.020576+00:00"
     }
   ],
   "amendments": [
