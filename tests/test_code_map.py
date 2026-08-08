@@ -367,6 +367,86 @@ def contains_sites(artifacts):
     return sites
 
 
+_SCHEMA_SOURCE = '''"""A module carrying every fact the statement schema must hold.
+
+This second paragraph is the docstring BODY. The store used to keep only the
+summary line, so a reader who wanted the Args section had to open the file.
+"""
+__all__ = ["Gadget", "spin_up"]
+
+WIDTH: int = 7
+NAME = "gadget"
+
+
+class Gadget:
+    """A gadget."""
+
+    slots: int = 3
+    label: str
+
+    @property
+    def size(self):
+        """How big it is."""
+        return self.slots
+
+
+async def spin_up(gadget: Gadget, *, times: int = 2) -> int:
+    """Spin the gadget up.
+
+    Args:
+        times: how many turns to take.
+    """
+    return times
+
+
+with open(__file__) as _f:
+    def inside_a_with_block():
+        """Defined inside a `with`, which is still a definition (tc34)."""
+        return 4
+'''
+
+
+def _make_schema_repo(tmp: Path):
+    """A repo exercising every field the statement schema has to carry at once.
+
+    One module, because the subject is the schema of a line and not the shape of
+    a corpus: a module docstring with a body, `__all__`, an annotated and a bare
+    module constant, a class with an annotated field and an annotation-only
+    field, a decorated property, an async function with annotations, a keyword
+    default and a return type -- and a definition inside a `with` block, which
+    the supplement stage could not see at all (`tc34`)."""
+    (tmp / "pkg").mkdir()
+    (tmp / "pkg" / "__init__.py").write_text("", encoding="utf-8", newline="\n")
+    (tmp / "pkg" / "shape.py").write_text(_SCHEMA_SOURCE, encoding="utf-8", newline="\n")
+    _git("init", "-q", cwd=tmp)
+    _git("add", "pkg/__init__.py", "pkg/shape.py", cwd=tmp)
+
+
+def statements_of(artifacts):
+    """Every line of the statement store, as dicts, read straight off disk.
+
+    Never through `render.load_stores`: gate g3's whole subject is what the
+    store's own schema says, and asking the renderer would ask the code under
+    test what it thinks it wrote."""
+    with open(Path(artifacts) / "statements.jsonl", encoding="utf-8") as f:
+        return [json.loads(line) for line in f]
+
+
+def physical_line_of(source, needle):
+    """The 1-based line of `needle` in `source` -- GROUND TRUTH for the line
+    base, read from the source text and from nothing the extractor produced.
+
+    A line base cannot be checked against the store that declares it. It can
+    only be checked against the file both of them are talking about."""
+    hits = [i for i, line in enumerate(source.splitlines(), start=1)
+            if needle in line]
+    if len(hits) != 1:
+        raise HarnessError(
+            f"HARNESS ERROR: {needle!r} occurs {len(hits)} time(s) in the fixture, "
+            f"expected exactly 1; the ground truth is not a single line")
+    return hits[0]
+
+
 #: A source position in a rendered page: a Python file path with a line number
 #: welded to it. The confirmed ruling is that nothing committed carries one.
 POSITION = re.compile(r"\.py:\d+")
@@ -1633,6 +1713,144 @@ class CliBuildCommandTests(unittest.TestCase):
             cli.main(["build", "--root", str(self.repo)])
         rendered = sorted(p.name for p in (self.repo / "map").iterdir() if p.is_dir())
         self.assertEqual(rendered, ["b", "src.a"])
+
+
+#: Emit the definition line 1-based while the schema goes on declaring the base
+#: it always declared. This is defect D1 as a mutation: the store and its own
+#: declaration disagree, and every reader who trusts the declaration is off by
+#: one and never told.
+LINE_BASE_SILENT_FLIP = (
+    ("    return lineno - 1 + LINE_BASE\n",
+     "    return lineno + LINE_BASE\n"),
+)
+
+#: Flip the DECLARED base. The emission follows it, so the store stays honest --
+#: what this must not be is silent, because every consumer inherits the base.
+LINE_BASE_DECLARED_FLIP = (
+    ("LINE_BASE = 0\n", "LINE_BASE = 1\n"),
+)
+
+
+class StatementSchemaLineBaseTests(unittest.TestCase):
+    """Gate g3, defect D1: the line base is DECLARED, not implied.
+
+    The store has always been 0-based and the schema has always been silent
+    about it. The proof of the silence was the renderer's bare `+1` at the read
+    site: a reader who trusted the schema was off by one and had nothing to
+    check against. The base is now declared by an extraction-window statement,
+    one per file the extractor actually read.
+
+    The declaration is checked against the SOURCE TEXT, never against the store
+    that makes it. A store cannot corroborate its own convention."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_schema_repo(self.repo)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _extract(self, host=None):
+        if host is None:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(cli.main(["extract", "--root", str(self.repo)]), 0)
+        else:
+            self.assertEqual(
+                run_code_map(host, "extract", "--root", str(self.repo)).returncode, 0)
+        return statements_of(self.repo / ".code-map")
+
+    def _package(self, subs):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        return mutated_package(tmp.name, "extract.py", subs)
+
+    @staticmethod
+    def _windows(statements):
+        return [st for st in statements if st["p"] == "extraction-window"]
+
+    @staticmethod
+    def _definition_line(statements, symbol):
+        lines = [st["q"]["line"] for st in statements
+                 if st["p"] == "contains" and st["o"] == symbol]
+        if len(lines) != 1:
+            raise HarnessError(
+                f"HARNESS ERROR: {symbol} has {len(lines)} definition statements, "
+                f"expected exactly 1")
+        return lines[0]
+
+    def test_line_base_is_declared_once_for_every_file_the_extractor_read(self):
+        statements = self._extract()
+        windows = self._windows(statements)
+
+        self.assertEqual(sorted(st["q"]["file"] for st in windows),
+                         ["pkg/__init__.py", "pkg/shape.py"],
+                         "a file the extractor read and did not declare a window for "
+                         "is a file whose absent facts a reader cannot tell from "
+                         "facts that are not there")
+        for window in windows:
+            with self.subTest(file=window["q"]["file"]):
+                self.assertIn("line_base", window["d"])
+
+    def test_line_base_declaration_agrees_with_the_source_text(self):
+        """The assertion that fails if the base flips underneath the schema."""
+        statements = self._extract()
+        base = {st["d"]["line_base"] for st in self._windows(statements)}
+        self.assertEqual(len(base), 1, f"the store declares {base} as its line base")
+        base = base.pop()
+
+        for symbol, needle in (("pkg.shape:Gadget", "class Gadget:"),
+                               ("pkg.shape:spin_up", "async def spin_up"),
+                               ("pkg.shape:inside_a_with_block",
+                                "def inside_a_with_block")):
+            with self.subTest(symbol=symbol):
+                stored = self._definition_line(statements, symbol)
+                self.assertEqual(
+                    stored + (1 - base),
+                    physical_line_of(_SCHEMA_SOURCE, needle),
+                    f"{symbol} is stored at line {stored} under a declared base of "
+                    f"{base}, which is not where it is in the file")
+
+    def test_line_base_is_zero_so_a_flip_is_a_deliberate_change(self):
+        """Pinned, because every consumer inherits it.
+
+        Not a corpus baseline: the base is a decision, and the point of
+        declaring it is that changing it is an act rather than a drift. A gate
+        that means to move it edits this line and says why."""
+        statements = self._extract()
+
+        self.assertEqual({st["d"]["line_base"] for st in self._windows(statements)},
+                         {0})
+
+    def test_line_base_check_goes_red_when_the_emission_flips_silently(self):
+        """Attack: emit 1-based lines, keep declaring 0.
+
+        Nothing else in the pipeline notices -- the offsets are internally
+        consistent, so pages still render and the map still builds. Only a
+        comparison against the source text sees it."""
+        statements = self._extract(self._package(LINE_BASE_SILENT_FLIP))
+        base = {st["d"]["line_base"] for st in self._windows(statements)}.pop()
+
+        stored = self._definition_line(statements, "pkg.shape:Gadget")
+
+        self.assertNotEqual(
+            stored + (1 - base), physical_line_of(_SCHEMA_SOURCE, "class Gadget:"),
+            "MUTANT SURVIVED: the store emitted a base it did not declare and the "
+            "declaration still looked right")
+
+    def test_line_base_declaration_follows_a_deliberate_flip(self):
+        """The other half: move the base ON PURPOSE and the store stays honest.
+
+        This is what makes the declaration worth having. A schema that could
+        only ever say `0` would be a constant, not a declaration -- and the
+        source-text check above would pass for the wrong reason."""
+        statements = self._extract(self._package(LINE_BASE_DECLARED_FLIP))
+        base = {st["d"]["line_base"] for st in self._windows(statements)}.pop()
+
+        self.assertEqual(base, 1)
+        self.assertEqual(
+            self._definition_line(statements, "pkg.shape:Gadget") + (1 - base),
+            physical_line_of(_SCHEMA_SOURCE, "class Gadget:"))
 
 
 if __name__ == "__main__":
