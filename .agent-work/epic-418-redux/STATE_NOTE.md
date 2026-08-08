@@ -5,7 +5,7 @@ without checking the worktrees and the forge first.**
 
 | Dispatch | Issue(s) | State as of 05:35Z |
 |---|---|---|
-| W3-B | #461 | **DONE — PR #490 open.** Reviewer dispatched into `C:/Programs/wt-rev-461` (branch `review/w3-461`, at PR head `fa1378ed`). **LIVE** |
+| W3-B | #461 | **DONE — PR #490 open, CI `test` PASS (7m27s), MERGEABLE, 16 behind main (my bookkeeping only, no file overlap). Awaiting the independent review before merge.** Reviewer dispatched into `C:/Programs/wt-rev-461` (branch `review/w3-461`, at PR head `fa1378ed`). **LIVE** |
 | W3-C | #488 + #489 | tripped the governor at 16% on `m3-verify`, filed `refresh-request`, **relaunched** into the same worktree + `IMPLEMENTER_PLAN.json`. Both fixes code-complete and verified; only PR + result artifact remain. **LIVE** |
 | W3-A | #465 | 1 commit, still working, no PR yet |
 
@@ -138,6 +138,15 @@ All five confirmed MERGED via `gh pr view --json state`. **Never use an ancestry
   I proposed: critic **F8** (*"the purest check-that-cannot-fail in the document"* — *no absence is
   evidence*), **A2's DC6** pricing it as a deliberate design cost (*"an instruction is satisfied or
   ignored with identical traces"*), and wave 2's four field findings.
+
+## Operating change made mid-wave — keep it
+
+**Batch bookkeeping commits; push at boundaries, not after every log append.** `.github/workflows/
+ci.yml` has no `paths-ignore`, so an `.agent-work/`-only commit runs the full 8-minute suite. Pushing
+after every entry put **6 concurrent CI runs on `main`, all mine**, and PR #490's own check sat
+`pending` ~25 minutes behind them. Push at natural boundaries (crew return, merge, checkpoint) — that
+still satisfies crash-resume durability. Adding `paths-ignore` to the workflow is the source fix and
+is a **closeout triage candidate**, deliberately not done while PRs are gating on CI.
 
 ## Settled — do NOT re-derive
 

@@ -708,3 +708,21 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   **The generalisable bit:** instrumentation is exempt from nothing. I wrote three orders demanding
   crews build the defective world before trusting a signal, then read my own dashboard for an hour
   without asking what it would show if the thing I was watching had already gone wrong.
+
+- `2026-08-08` — `ADMIRAL ERROR` (self-inflicted, measured, behaviour changed): **my commit-and-push
+  cadence queued six concurrent CI runs on `main` and delayed the merge gate for the wave's first
+  PR.** `gh run list` showed **6 in-flight, all on `main`, all mine**, while PR #490's own `test`
+  check sat `pending` for ~25 minutes. It was not stuck — it was queued behind me.
+  Every one of those six was an **`.agent-work/`-only commit**: log entries, the state note, the
+  evidence series. None can affect a test. I pushed each one immediately because Tommy granted commit
+  authority for hygiene and I read "keep things clean" as "push continuously" — but the CI trigger
+  makes each push cost an 8-minute suite run on a shared runner, and I was competing with the very
+  PRs I am waiting to merge.
+  **Behaviour changed now:** batch bookkeeping commits and push at natural boundaries (a crew return,
+  a merge, a checkpoint) rather than after every log append. The durability argument for pushing
+  often is real — a crash-resume needs the state note in `origin` — but it is satisfied by pushing at
+  boundaries, not by pushing twelve times an hour.
+  **Candidate, deliberately not done now:** `.github/workflows/ci.yml` has no `paths-ignore`, so a
+  documentation-only commit runs the full suite. Adding one would fix this at the source. **Not
+  touching CI config while three PRs are gating on it** — that is the wrong moment by definition.
+  Carried to closeout as a triage candidate.
