@@ -2708,3 +2708,51 @@ overclaiming docstrings, **tc6** survey sidecar collision now across three runs.
 
 **10/17** — the count moved from 16 because the tc1 `amend` added `g3b-glossary`, whose command check
 F verified **failable** (exits 1 before the edit) rather than assuming it.
+
+**ADMIRAL ERROR | "byte-identical to the repo engine" was misleading, and the crew caught it.**
+After reinstalling the reviewer bundle I reported it **"byte-identical to the repo engine."** I had
+run `diff` against **main's** engine (146,457) from the main checkout, and it matched. Instance F
+measured against the **branch worktree** engine (156,060) — the one that actually carries the fix —
+and it does not.
+
+**Both measurements are right; my sentence was not.** I never said *which* repo state, in a run
+where branch and main differ by **exactly the thing under test**. Read in context it implied the
+bundle was current with the fix. It is not: `TRIP_HARD_GUARDED_VERBS` is **ABSENT** from it.
+
+Measured, all three, by F in one command:
+`workbench 140170 / 9c05192f0feb3d4d / ABSENT` · `reviewer 146457 / e997cd2a3e6e766a / ABSENT` ·
+`repo worktree 156060 / ccbc247e0de0dcaa / PRESENT`.
+
+**So the reinstall did real work and my claim about it overshot.** The bundle went from pre-wave-1-3
+to current-with-main, which is why the g3 reviewer used `amend` on its survey **cleanly, without
+force-waiving, exactly as predicted** — but it remains pre-#467. **Every agent on this run,
+Commander and reviewers alike, has been driving a pre-fix engine.** The g3 findings stand only
+because that reviewer chose to verify engine behaviour **against the repo copy rather than its own
+bundle** — a discipline nothing required of it.
+
+**RULING | the BRANCH WORKTREE engine is authoritative for this run. The installed bundles are
+tools, never the subject.** F sharpened its own question correctly: it was never *"reinstall
+workbench"*, it is **which engine is authoritative and does `g5-acceptance` pin it by hash.**
+
+- **Authoritative = the branch worktree engine** (`156060 / ccbc247e0de0dcaa`). It is the code under
+  test. Nothing else can be.
+- **Any acceptance evidence produced through an installed bundle proves nothing about the fix** —
+  it exercises pre-#467 code. `g5` **pins the binary by hash** (ruled last entry, reaffirmed) and
+  states which one it ran.
+- **Do not reinstall workbench mid-run.** Confirmed for a second reason now: it would move the
+  spine's engine from 140170 to 146457, **still without the fix**, while perturbing the instrument
+  that produced ten gates of evidence. Closeout, after merge.
+
+**Carried from the crews' reports, all now in the state note:**
+- **Seven triage candidates live in the review surveys and on no gate** — they would have been lost.
+  Two worth naming: `thresholds_for`'s docstring claims its guarantee holds *"for every input"*,
+  false for non-real arguments but **unreachable from any shipped path**, so the fix is rewording,
+  not a guard; and one private helper would make **"shown == judged" structural**, deleting M11/M12's
+  failure mode outright rather than testing around it.
+- **Both reviewers independently reported the same two handoff-doctrine defects:** a criterion asking
+  for a suite delta must **name the diff's parent commit** — that one missing field caused the ±1
+  mystery that cost two agents — and the handoff must **sanction a method for re-running mutations**,
+  because *"don't modify `scripts/` or `tests/`"* is in direct tension with *"re-run at least two
+  mutations yourself."* They solved it two different good ways; doctrine should pick one.
+- **tc3 confirmed by controlled sibling-tree runs** at the true parent `5a69a30b`: +17 passed,
+  +125 subtests, **same 16 sandbox failures both sides**.
