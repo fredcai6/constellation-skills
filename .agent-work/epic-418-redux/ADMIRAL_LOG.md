@@ -726,3 +726,20 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   documentation-only commit runs the full suite. Adding one would fix this at the source. **Not
   touching CI config while three PRs are gating on it** — that is the wrong moment by definition.
   Carried to closeout as a triage candidate.
+
+- `2026-08-08` — `WAVE PROGRESS` — **two of wave 3's three dispatches have returned with PRs, both
+  under independent review.**
+  | PR | Issues | CI | Review |
+  |---|---|---|---|
+  | #490 | #461 | **PASS** 7m27s | dispatched, live in `C:/Programs/wt-rev-461` |
+  | #491 | #488 + #489 | pending | dispatched, live in `C:/Programs/wt-rev-488489` |
+  Isolation gate re-run with five worktrees in play: exit 0, "5 distinct worktrees".
+  **Nothing merged yet, deliberately.** Both are green-or-pending on CI and neither has a posted
+  verdict. Wave 2 merged #470 on self-verified evidence with no reviewer artifact, and the two
+  reviewers who later approved posted to neither the PR nor the issue — that PR still shows zero
+  reviews on the forge today. Both wave-3 review orders make forge posting non-negotiable and require
+  the reviewer to run each new test against the **unfixed** code and observe it go red.
+  **#491's review carries one instruction the others do not**, because it is the highest-risk change
+  in the wave: a #488 fix that merely stops skipping is a regression **no green run will reveal**. The
+  reviewer is told that if the crew's negative test would still pass with the skip removed entirely,
+  that is a **blocking** finding. Guarding the guard.
