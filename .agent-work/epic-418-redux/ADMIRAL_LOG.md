@@ -3030,3 +3030,24 @@ the behaviour I have been trying to get all epic.
 **any string**, so "human ratification" is enforced by nothing. That is a **sixth specimen** of this
 epic's subject, sitting in the engine's own authority mechanism — the thing that is supposed to make my
 withdrawal of blanket amendment authorization mean something.
+
+## FINDING | 2026-08-08T18:40:23Z | filed #503 — the authority field enforces nothing; sixth specimen
+
+Verified against source before filing rather than taking the reviewer's survey line on trust.
+`amend` (:2192) and `waive` (:2490) validate `--authority` as **non-empty string and nothing else**,
+while `amend`'s own docstring calls it *"human ratification"*. `--authority x` passes. The value is
+stored verbatim and echoed back as provenance.
+
+**Why this one stings.** It is the mechanism that is supposed to make **my own withdrawal of blanket
+amendment authorization** mean something. It does not. Any later `amend --authority "Admiral"` produces
+a record **byte-identical** to one issued under a live grant. I withdrew a grant that was never
+enforceable in the first place.
+
+Filed with the cheapest fix first — **rename to `--authority-claimed`** so the artifact stops
+overstating itself — rather than the expirable-grants design, which is only worth building if grants
+get withdrawn in practice. In this epic they did, so I noted it as option 3 and left the call open.
+
+**Running specimen count for this epic's own subject: six.** Four in the crew's catalogue, one inside
+the fix for those four, one in the authority mechanism. Plus three of mine today (#313 probe, #501
+launch gate, #502 provenance chain), which sit in **verification and provisioning machinery** rather
+than in the work — the layer whose whole job is to be trustworthy and which nothing reports on.
