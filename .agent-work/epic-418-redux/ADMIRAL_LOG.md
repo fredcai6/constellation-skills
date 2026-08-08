@@ -989,3 +989,26 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   `execute`). Its PR is merged and its issue closed, so the epic outcome is settled — but **that
   worktree must not be swept until it finishes**, and its trio must be harvested first. Recorded in
   the state note.
+
+- `2026-08-08` — `RULING` (liveness adjudication, and a **seventh** instance of the wave's defect
+  family — this one in the liveness signal itself): W3-A's continuation Commander's **`spine.json`
+  heartbeat read 06:23 at 06:50 — 27 minutes stale.** By the reading everyone takes at face value,
+  that is a dead crew.
+  **It is not. It is working.** I checked file mtimes instead of trusting the heartbeat:
+  `.agent-work/w3a-465/execute.json` and its journal were written **within the last six minutes**.
+  A Commander mid-`execute` drives the **inner** `execute.json` gate-by-gate; the **outer**
+  `spine.json` only gets a heartbeat when an outer verb runs. So the outer heartbeat goes stale for
+  as long as an inner gate takes — which for a full-suite postcondition is eight minutes at a time.
+  **A stale `spine.json` heartbeat is identical for "the Commander died" and "the Commander is busy
+  at an inner gate."** Same defect family as the lease field (#457), and the consequence is worse:
+  wave 2's cmd-460 read a stale-looking signal, concluded abandonment, and **raced a live Commander
+  by 44 seconds.** Had I taken this heartbeat at face value I would have force-claimed or swept a
+  worktree with a live agent in it.
+  **What actually discriminates, and costs one command:** file mtimes under the work area, or the
+  inner checklist's own heartbeat. `find <worktree> -newermt "-6 minutes" -type f`.
+  **Not sweeping `C:/Programs/wt-w3a-465`.** Its PR is merged and #465 closed, so nothing in the epic
+  waits on it; it finishes its own bookkeeping in its own time. Harvest its trio, then sweep, and only
+  after its lease is released or it is confirmed dead **by mtime, not by heartbeat**.
+  **Doctrine candidate for closeout** — this belongs with the lease-liveness finding on #457, as the
+  same lesson in a second field: *neither the lease nor the heartbeat, read from the outer checklist,
+  carries liveness information about a Commander mid-execute.*
