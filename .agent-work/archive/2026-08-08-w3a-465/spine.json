@@ -349,16 +349,18 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json driven to DONE through the engine: e0-context, g1-implement, g1-review, g1-integrate all complete with integrated evidence (implementer-result e-g1-implement-1, review-result e-g1-review-1 verdict APPROVE, g1-integrate real full-suite command check exit 0). recover_crews reports 2 crews, 0 unresolved -- both complete, neither relaunched. commit 6774e75e pushed, PR #492 open."
         },
         {
           "id": "c2",
           "statement": "the run's REPLAN_INPUT.json returns observed execution discrepancies/evidence through the exact verified G2 input without automatic issue filing",
           "check": {
             "kind": "command",
-            "command": "python scripts/verify_iterative_role_artifacts.py commander --work-id w3a-465"
+            "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id w3a-465"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-3"
         }
       ],
       "constraints": [],
@@ -383,7 +385,7 @@
         }
       },
       "child_checklist": "execute.json",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -409,6 +411,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id w3a-465",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -422,7 +435,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete (advanced this run)"
         }
       ],
       "postconditions": [
@@ -430,13 +444,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "MISSION_FRAME.md: DEGRADED-NO-MAP, no docs/architecture/ ships in this repo, so the structural record is the schema/design docs the change actually touches. Commit 6774e75e already folds it in: docs/CHECKLIST_SCHEMA.md (+8/-1) and skills/workbench/references/checklist-engine.md (+2/-1) both updated to reflect the relaxed amend guard and the byte-faithful save() -- the same fence-extension work reviewed APPROVE at g1-review. Verified via git show --stat 6774e75e. No further reconciliation target exists; nothing else touched a schema or design doc."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -452,7 +467,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile advanced complete this run"
         }
       ],
       "postconditions": [
@@ -460,7 +476,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "all 7 triage_candidates (tc1-tc7 in execute.json) routed: tc1-tc6 filed as GitHub issues #494,#493,#495,#496,#497,#498; tc7 recorded recommend-and-defer (cross-corpus architecture road, needs Explorer-grade shaping, already cross-referenced in REPLAN_INPUT.json parked_possibilities). Full record at .agent-work/w3a-465/triage-candidates/TRIAGE_RECOMMENDATIONS.md."
         },
         {
           "id": "c2",
@@ -469,17 +486,44 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "decision": "Six candidates filed to the tracker (issues #493-498); one (tc7, a cross-corpus architecture road) recorded recommend-and-defer per .agent-work/w3a-465/triage-candidates/TRIAGE_RECOMMENDATIONS.md, deferred to Explorer-grade shaping rather than filed as an under-specified issue."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-triage-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "triage",
+            "why_ref": "none",
+            "reason": "context governor HARD trip at 16%; triage fully routed (6 issues filed #493-#498, 1 recommend-and-defer tc7, user-decision evidence attached), attest/attach done -- just needs the final advance re-run after refresh"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -491,7 +535,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -502,17 +547,33 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "decision": "Run summary accepted. Gates closed: init, context, understand, plan, execute (solution merged as PR #492, merge commit 4da9bc9b, issue #465 CLOSED), reconcile, triage (7 candidates routed: tc1-tc6 filed as issues #493-#498, tc7 recommend-and-defer). Architecture reconciled per reconcile step. No open crew work remains (recover_crews.py reports 0 unresolved). Delegated-mode acceptance per Inherited Latitude; Admiral ratifies at epic return boundary."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -524,7 +585,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -535,17 +597,30 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py w3a-465 --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w3a-465 --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -557,7 +632,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -635,7 +711,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -646,16 +722,16 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 8,
+  "refusals": 13,
   "engine_session": {
-    "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+    "session_id": "commander-w3a-465-c",
     "status": "active",
-    "claimed_at": "2026-08-08T04:56:49.378282+00:00",
-    "last_heartbeat": "2026-08-08T06:12:54.834407+00:00",
-    "claimed_by": "commander-delegated:w3a-465",
-    "worktree": "C:/Programs/wt-w3a-465",
-    "previous_session_id": null,
-    "takeover_reason": null
+    "claimed_at": "2026-08-08T07:12:10.178065+00:00",
+    "last_heartbeat": "2026-08-08T07:16:43.575050+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": "commander-w3a-465-b",
+    "takeover_reason": "continuation after predecessor governor trip"
   },
   "why_trail": [
     {
@@ -685,6 +761,51 @@
       "why": "Plan frozen: one gate, three coupled changes (survey retext-check affordance, byte-faithful save, two prose corrections). Cold critic caught that my own integrate gate could not fail; it now names the four new test node ids.",
       "mechanical": false,
       "ts": "2026-08-08T05:10:42.431168+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "all four execute.json gates complete with integrated evidence; REPLAN_INPUT.json written and verified against G2 (verify_iterative_role_artifacts.py commander), c2 check command corrected via amend --op retext-check to the canonical absolute installed-skill path (authority Commander w3a-465-b) after the relative repo-local form proved unresolvable from a worktree",
+      "mechanical": false,
+      "ts": "2026-08-08T06:58:01.404960+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "structural record (docs/CHECKLIST_SCHEMA.md, skills/workbench/references/checklist-engine.md) already reflects the implemented changes as of commit 6774e75e; no packet map exists to fold into (DEGRADED-NO-MAP)",
+      "mechanical": false,
+      "ts": "2026-08-08T06:58:46.522256+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "All 7 triage candidates routed: tc1-tc6 filed as GitHub issues #493-#498, tc7 recorded recommend-and-defer per TRIAGE_RECOMMENDATIONS.md. User-decision evidence e-triage-1 cites LAUNCH_ORDER:Inherited Latitude for issue-filing authority; now attested to c2. No re-routing or re-filing performed this session per predecessor's completed work.",
+      "mechanical": false,
+      "ts": "2026-08-08T07:12:28.896548+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary presented: PR #492 merged (4da9bc9b), issue #465 closed, all 7 triage candidates routed. Accepted per LAUNCH_ORDER:Return Shape delegated authority.",
+      "mechanical": false,
+      "ts": "2026-08-08T07:13:03.561655+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Reflected honestly on the run: predecessor's execute.json c2 check had a relative script path defect (template-instantiation bug), engine current/--session-id CLI inconsistency recurred this session, handoff quality gaps (invented amend --op flag, no named scratch home, reviewer criterion instructing a doctrine-forbidden JSON read), and plan template's bare-self-attestation TDD-red gap. 6 episodes captured to episodes/active via apply_episode_delta.py, verified via verify_episode_captured.py (6 episodes, phase feedback).",
+      "mechanical": false,
+      "ts": "2026-08-08T07:16:21.488972+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-08T06:57:33.077032+00:00",
+      "reason": "c2's command was instantiated with a relative repo-local script path (scripts/verify_iterative_role_artifacts.py), which cannot resolve _installed_skills_root() from a worktree since the repo's own copy is source, not an installed layout (confirmed against tests/test_iterative_planning_doctrine.py's InstalledIterativeRoleRuntimeTests, which builds a real installed layout via install_constellation.py before invoking this exact check). The canonical form, per constellation-commander's own COMMANDER_SPINE.template.json c2, is the absolute installed-skill path. Restoring it, not changing scope or intent.",
+      "authority": "Commander w3a-465-b",
+      "ops": [
+        "retext-check execute.c2"
+      ]
     }
   ]
 }

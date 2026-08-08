@@ -26,7 +26,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -54,7 +54,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
         }
       ],
       "constraints": [
@@ -91,7 +92,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -130,7 +131,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT for g1-implement attached and integrated (e-g1-implement-1, status complete, no unresolved blockers)"
         }
       ],
       "postconditions": [
@@ -141,7 +143,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
         }
       ],
       "constraints": [],
@@ -150,11 +153,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/w3a-465/g1-review/REVIEW_RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-integrate": {
@@ -166,7 +181,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT (e-g1-review-1) received: APPROVE, no blockers"
         }
       ],
       "postconditions": [
@@ -182,7 +198,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
         },
         {
           "id": "c2",
@@ -194,32 +211,126 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": "reviewer verdict APPROVE, no blockers (g1-review REVIEW_RESULT.md)"
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_engine_survey_retext_and_newlines.py::test_retext_check_works_on_a_survey tests/test_engine_survey_retext_and_newlines.py::test_add_drop_rescope_still_refuse_a_survey tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_lf_line_endings tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_crlf_line_endings && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_engine_survey_retext_and_newlines.py::test_retext_check_works_on_a_survey tests/test_engine_survey_retext_and_newlines.py::test_add_drop_rescope_still_refuse_a_survey tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_lf_line_endings tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_crlf_line_endings && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g1-implement",
+      "statement": "skills/interrogator/templates/INTERROGATION.template.json zc-consolidate carries the identical placeholder defect word for word (and the identical open-fail prose claim). Its template is type: survey, so this fix already supplies the engine half -- only its prose remains."
+    },
+    {
+      "id": "tc2",
+      "from": "g1-implement",
+      "statement": "The engine journal append (checklist_engine.py, jp.open('a', encoding='utf-8')) is still text-mode -- same defect class as save(), deliberately fenced out of this gate."
+    },
+    {
+      "id": "tc3",
+      "from": "g1-implement",
+      "statement": "Six repo JSON writers pass encoding but not newline, against CREW_CONTEXT's always-pass-newline rule: collect_feedback.py:290,365; install_constellation.py:911,1182,1241; build_architecture_map.py:385."
+    },
+    {
+      "id": "tc4",
+      "from": "g1-implement",
+      "statement": "CREW_CONTEXT's always-pass-newline rule now has an unnamed exception in save(), which satisfies the rule's intent more strongly than its prescribed mechanism -- same prose-contradicts-code class, one tier up."
+    },
+    {
+      "id": "tc5",
+      "from": "g1-implement",
+      "statement": "amend() is 215 lines. Fowler long-method, flagged not overridden -- global-crew.md's 'split a unit when its intent blurs' agrees with the smell."
+    },
+    {
+      "id": "tc6",
+      "from": "g1-implement",
+      "statement": "amend's type applicability is restated in six places. The first implementer return shipped without the five prose sites; the structure guarantees recurrence."
+    },
+    {
+      "id": "tc7",
+      "from": "g1-implement",
+      "statement": "The {checklist_dir} substitution road, named untaken in plan-alternatives.md. It would kill this defect class corpus-wide and is additive, but it does not fix the residual case that drives hand-editing."
+    }
+  ],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 6,
   "engine_session": {
-    "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+    "session_id": "commander-w3a-465-b",
     "status": "active",
-    "claimed_at": "2026-08-08T06:10:20.382014+00:00",
-    "last_heartbeat": "2026-08-08T06:12:36.205144+00:00",
-    "claimed_by": "commander-delegated:w3a-465",
-    "worktree": "C:/Programs/wt-w3a-465",
-    "previous_session_id": null,
-    "takeover_reason": null
-  }
+    "claimed_at": "2026-08-08T06:24:19.458517+00:00",
+    "last_heartbeat": "2026-08-08T06:59:46.236851+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+    "takeover_reason": "continuation after predecessor governor trip"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "plan intent and scope confirmed against LO-465 and MISSION_FRAME.md; orchestrator context and glossary already loaded at spine context step",
+      "mechanical": false,
+      "ts": "2026-08-08T06:24:24.678305+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "implementer-result attached (e-g1-implement-1), status complete, no unresolved blockers",
+      "mechanical": false,
+      "ts": "2026-08-08T06:25:07.489895+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "REVIEW_RESULT APPROVE, no blockers, four triage candidates recorded; independent red observed per handoff",
+      "mechanical": false,
+      "ts": "2026-08-08T06:25:53.232154+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "named tests pass, full suite passes real exit 0, reviewer verdict APPROVE confirmed",
+      "mechanical": false,
+      "ts": "2026-08-08T06:50:58.524359+00:00"
+    }
+  ]
 }

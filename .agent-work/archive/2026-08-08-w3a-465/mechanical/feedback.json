@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "w3a-465",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 13,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3a-465-feedback@635bab3caa60b68535f9a783e40ccf09e772bade",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3a-465",
+    "generated_at": "2026-08-08T07:16:02Z"
+  }
+}
