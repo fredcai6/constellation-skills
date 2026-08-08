@@ -2560,6 +2560,182 @@ class IdsJsonlTests(unittest.TestCase):
         self.assertIn("widget-spin", buffer.getvalue())
 
 
+class StaleAnchorExtractionTests(unittest.TestCase):
+    """Gate g6: `extract` persists a span_hash on every `anchored` statement,
+    and on a SECOND extraction into the SAME `--artifacts` dir, diffs the
+    previous run's hashes against the new ones by slug -- the only identity
+    an anchor carries today (`g7`'s Assumption:/Constraint:/etc. vocabulary,
+    the real 'tag text', has not been built yet; see the handoff's resolved
+    decision). A slug present in both runs whose hash now differs gets one
+    `stale-anchor` statement appended to the store.
+
+    Two extractions into the SAME artifacts directory, mirroring
+    `IdsJsonlTests`'s own before/after pattern -- that is the only place a
+    'previous run' can be read from before this run's write overwrites it."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_anchor_repo(self.repo)
+        self.artifacts = self.repo / ".code-map"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _extract(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = cli.main(["extract", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts)])
+        self.assertEqual(code, 0)
+        return statements_of(self.artifacts)
+
+    def _stale_slugs(self, statements):
+        return {st["o"] for st in statements if st["p"] == "stale-anchor"}
+
+    def test_stale_tag_span_hash_is_persisted_on_every_anchored_statement(self):
+        statements = self._extract()
+        anchored = [st for st in statements if st["p"] == "anchored"]
+
+        self.assertTrue(anchored, "input precondition: the fixture must mint anchors, "
+                                  "or there is nothing to check a hash on")
+        for st in anchored:
+            with self.subTest(id=st["o"]):
+                self.assertIn("span_hash", st.get("d") or {})
+
+    def test_stale_tag_first_extraction_flags_nothing(self):
+        """Bootstrap: no previous store exists yet, so there is nothing to
+        compare against -- the correct behavior is silence, not a false
+        positive on every anchor in a brand-new repo."""
+        statements = self._extract()
+
+        self.assertEqual(self._stale_slugs(statements), set())
+
+    def test_stale_tag_does_not_flag_a_reformat_across_two_extractions(self):
+        self._extract()
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace(
+                "    return WIDTH\n",
+                "\n    return WIDTH  # trailing comment\n"),
+            encoding="utf-8", newline="\n")
+        after = self._extract()
+
+        self.assertEqual(self._stale_slugs(after), set(),
+                         "a blank line plus a trailing comment flagged a tag as stale")
+
+    def test_stale_tag_flags_a_real_body_change_across_two_extractions(self):
+        self._extract()
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        after = self._extract()
+
+        self.assertEqual(self._stale_slugs(after), {"widget-spin"},
+                         "a real body change (WIDTH -> WIDTH * 2) under a live tag "
+                         "was not flagged")
+
+    def test_stale_tag_does_not_flag_an_unrelated_anchor(self):
+        """Only the mutated slug's body changed; the other anchor in the same
+        file must stay silent, or the flag is not attributing the change to
+        the right tag."""
+        self._extract()
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        after = self._extract()
+
+        self.assertNotIn("holder-hold", self._stale_slugs(after))
+
+
+class StaleAnchorRenderReportTests(unittest.TestCase):
+    """Gate g6's close criterion: the flag lands in the run report the
+    reviewer already reads -- `render_report.json`, the same artifact the
+    duplicate-id check already surfaces through (`IdsJsonlTests`). Two full
+    `build`s into the SAME `--artifacts`/`--out` pair, mirroring that class's
+    own before/after pattern."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_anchor_repo(self.repo)
+        self.artifacts = self.repo / ".code-map"
+        self.out = self.repo / "map"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _build(self):
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = cli.main(["build", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts),
+                             "--out", str(self.out)])
+        self.assertEqual(code, 0, buffer.getvalue())
+        report = json.loads((self.artifacts / "render_report.json").read_text(encoding="utf-8"))
+        return report, buffer.getvalue()
+
+    def test_stale_tag_render_report_does_not_flag_a_reformat(self):
+        self._build()
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace(
+                "    return WIDTH\n",
+                "\n    return WIDTH  # trailing comment\n"),
+            encoding="utf-8", newline="\n")
+        report, out = self._build()
+
+        self.assertEqual(report.get("stale_tags"), [])
+        self.assertNotIn("stale tag", out)
+
+    def test_stale_tag_render_report_flags_a_real_body_change(self):
+        self._build()
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        report, out = self._build()
+
+        self.assertEqual(report.get("stale_tags"), ["widget-spin"])
+        self.assertIn("widget-spin", out)
+        self.assertIn("stale tag", out)
+
+    def test_stale_tag_render_report_does_not_fail_the_build(self):
+        """Advisory, not blocking: unlike a duplicate id (unambiguous data
+        corruption), a stale tag might still be true -- a human has to look.
+        Failing the build on it would be the twitchy tripwire the ruling
+        this gate inherits (`gb`) warns against."""
+        self._build()
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = cli.main(["build", "--root", str(self.repo),
+                             "--artifacts", str(self.artifacts),
+                             "--out", str(self.out)])
+
+        self.assertEqual(code, 0, buffer.getvalue())
+
+    def test_stale_tag_render_report_carries_no_timing_field(self):
+        self._build()
+
+        (self.repo / "pkg" / "anchors.py").write_text(
+            _ANCHOR_SOURCE.replace("    return WIDTH\n", "    return WIDTH * 2\n"),
+            encoding="utf-8", newline="\n")
+        report, _ = self._build()
+
+        self.assertEqual(report.get("stale_tags"), ["widget-spin"],
+                         "input precondition: the report must actually carry a flag, "
+                         "or scanning its keys for a timing field proves nothing")
+        for key in report:
+            with self.subTest(key=key):
+                self.assertNotRegex(key, r"time|duration|elapsed|timestamp",
+                                    "the run report grew a timing field")
+
+
 _SUBPKG_SOURCE = '''"""A module living inside a real subpackage."""
 
 
@@ -3322,6 +3498,83 @@ class ChurnRatioFalsifierTests(unittest.TestCase):
             f"MUTANT SURVIVED: a corpus-wide count leaking into every module's INDEX.md "
             f"produced churn ratio {ratio:.2f} ({map_diff}/{source_diff}), which did not "
             "cross the ceiling")
+
+
+class SpanHashUnitTests(unittest.TestCase):
+    """`span_hash` is the atomic primitive gate g6 builds staleness detection
+    on: a normalised hash of an entity's own AST subtree, immune to
+    reformatting by construction, because `ast.dump` never encodes source
+    text, whitespace, or comments -- and the leading docstring statement is
+    stripped before dumping, because prose describing behavior is not the
+    behavior (the same reasoning that excludes comments).
+
+    Standalone, no pipeline: parses source directly and calls span_hash on
+    the resulting FunctionDef node. Red for the simplest possible reason --
+    the function does not exist yet -- before any wiring into extract.py's
+    Extractor or run() happens."""
+
+    @staticmethod
+    def _func_node(source):
+        return ast.parse(source).body[0]
+
+    def test_stale_tag_hash_is_unchanged_by_pure_reformatting(self):
+        original = (
+            "def widget(x):\n"
+            "    \"\"\"Doc.\"\"\"\n"
+            "    total = x + 1\n"
+            "    return total\n"
+        )
+        reformatted = (
+            "def widget(x):\n"
+            "    \"\"\"Doc.\"\"\"\n"
+            "\n"
+            "    total = x + 1  # trailing comment\n"
+            "\n"
+            "    return total\n"
+        )
+        self.assertNotEqual(original, reformatted,
+                            "input precondition: the two sources must actually differ, "
+                            "or an unchanged hash proves nothing")
+
+        h1 = extract.span_hash(self._func_node(original))
+        h2 = extract.span_hash(self._func_node(reformatted))
+
+        self.assertEqual(h1, h2, "a blank line plus a trailing comment changed the hash")
+
+    def test_stale_tag_hash_is_unchanged_by_a_docstring_only_edit(self):
+        original = (
+            "def widget(x):\n"
+            "    \"\"\"Original doc.\"\"\"\n"
+            "    return x + 1\n"
+        )
+        redocumented = (
+            "def widget(x):\n"
+            "    \"\"\"Rewritten doc that says something else entirely.\"\"\"\n"
+            "    return x + 1\n"
+        )
+
+        h1 = extract.span_hash(self._func_node(original))
+        h2 = extract.span_hash(self._func_node(redocumented))
+
+        self.assertEqual(h1, h2, "a docstring-only edit changed the hash")
+
+    def test_stale_tag_hash_changes_on_a_real_body_change(self):
+        original = (
+            "def widget(x):\n"
+            "    \"\"\"Doc.\"\"\"\n"
+            "    return x + 1\n"
+        )
+        mutated = (
+            "def widget(x):\n"
+            "    \"\"\"Doc.\"\"\"\n"
+            "    return x + 2\n"
+        )
+
+        h1 = extract.span_hash(self._func_node(original))
+        h2 = extract.span_hash(self._func_node(mutated))
+
+        self.assertNotEqual(h1, h2,
+                            "a genuine behavior change (1 -> 2) left the hash unchanged")
 
 
 if __name__ == "__main__":

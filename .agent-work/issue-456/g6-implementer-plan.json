@@ -1,0 +1,370 @@
+{
+  "work_id": "issue-456-g6-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-span-hash",
+    "m2-persist-and-diff",
+    "m3-render-report",
+    "m4-verify-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), the handoff at .agent-work/issue-456/crew-handoffs/g6-implement.md in full, gate-spec.json's g6/g7 entries, and DESIGN_SPEC.md's staleness + comment-grammar sections. Resolve BEFORE designing: what is a 'tag' today (extract.py's ANCHOR/anchored mechanism vs g7's unbuilt comment-tag vocabulary), and confirm which report is 'the run report the reviewer already reads' (render_report.json, per the duplicate-id precedent already in render.py). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + gate-spec + design spec read; tag surface and run-report identity resolved and stated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context",
+            "why_ref": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-span-hash": {
+      "id": "m1-span-hash",
+      "title": "span_hash(node): a normalised, reformat-immune AST hash -- the atomic primitive, tested standalone before wiring",
+      "imperative": "In scripts/code_map/extract.py add span_hash(node): ast.dump(node, annotate_fields=False) with the leading docstring Expr stripped (mutate node.body, dump, restore in a finally) so comment-and-prose-only edits don't count, then sha1-truncate. RED: write a standalone unit test (name containing 'stale_tag') that parses two source variants of the same function differing only in indentation/line-wrap/blank-lines/comments and asserts span_hash is EQUAL, plus a variant with a real body change (different return value or added statement) and asserts span_hash DIFFERS -- observe it fail (function does not exist yet), attest c1. GREEN: implement span_hash, make the test pass, attest c2 by running it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: standalone span_hash test written and observed failing (function absent) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "span_hash implemented; reformat-immunity and real-change-sensitivity both proven by the standalone test",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-span-hash-2"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "do not touch is_test_module/SPLIT_LEGEND/entity_symbol_join/thresholds.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-span-hash-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-span-hash",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-span-hash-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-persist-and-diff": {
+      "id": "m2-persist-and-diff",
+      "title": "Persist span_hash on each anchored statement at extraction; on a second extraction of the same --artifacts dir, diff old vs new by slug and emit stale-anchor statements",
+      "imperative": "Wire span_hash into Extractor.anchor(): emit d={'span_hash': h} on every 'anchored' statement (the only authored-identity/tag-analog surface that exists pre-g7 -- comment tags land in g7 and will reuse the same [slug] allocator, so this is the correct hook point, stated as a decision, not assumed). In extract.run(), before overwriting statements.jsonl, read the PREVIOUS file's anchored statements (if any) into old_hashes[slug]=span_hash; after extracting, compare against new_hashes[slug]=(sym,hash) and append one 'stale-anchor' statement per slug present in both with a differing hash (bootstraps to nothing flagged when no previous store exists). RED: a test (name containing 'stale_tag') that runs extract twice on the same fixture+artifacts dir -- once unchanged/reformatted (expect NO stale-anchor row), once with a real body mutation on an anchored function (expect a stale-anchor row for that slug) -- observe it fail before the diff exists, attest c1. GREEN: implement, make it pass, attest c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "span_hash exists and is tested standalone",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "span_hash exists and passes standalone unit tests (m1-span-hash complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: two-extraction diff test written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "stale-anchor statements emitted correctly on rebuild; reformat does not emit one, real body change does",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-persist-and-diff-2"
+        }
+      ],
+      "constraints": [
+        "do not weaken entity_symbol_join's two independent derivations",
+        "unknown statement predicates must not silently fall into render.py's edges/uses_lines catch-all -- verified in m3, but do not let extract.py itself regress any existing test"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-persist-and-diff-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-persist-and-diff",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-persist-and-diff-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-render-report": {
+      "id": "m3-render-report",
+      "title": "Surface stale-anchor statements in render_report.json (the run report) and as printed FAIL lines, without breaking the exit code (advisory, not build-breaking)",
+      "imperative": "In render.py's load_stores(), intercept p=='stale-anchor' explicitly (never let it fall into the edges/uses_lines catch-all -- add the branch right after the 'anchored' branch, same pattern) into a module-level stale_tags list (cleared in load_stores' reset loop). In render.run(), print one 'FAIL stale tag [slug]: ...' line per entry (same shape as the existing duplicate-id print) naming what a human should do (review the tag against the changed code; update or remove it), add report['stale_tags'] = [...ids...], and do NOT change the return code on stale tags alone (advisory -- unlike a duplicate id, a stale tag is not necessarily wrong, so failing the build on it would be exactly the twitchy tripwire the gb ruling warns against; state this reasoning in the code comment). RED: full-pipeline test(s) (names containing 'stale_tag', reusing/extending _make_anchor_repo the way IdsJsonlTests builds twice into the same --artifacts dir) -- build once, mutate ONLY a reformat (assert render_report.json['stale_tags'] empty, no FAIL line), build again with a real body mutation on an anchored function (assert the slug appears in render_report.json['stale_tags'] and in stdout) -- observe failing first, attest c1. GREEN: implement, make it pass, attest c2. Also assert render_report.json still carries no timing field (existing determinism constraint) and run the full determinism check unaffected.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "stale-anchor statements are emitted by extract.py",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "stale-anchor statements are emitted by extract.py (m2 complete, 8/8 stale_tag green)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: full-pipeline reformat-immune + real-change-flagged tests written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "stale tags surface in render_report.json and stdout; reformat proven silent, real change proven flagged; report stays timing-free",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-render-report-2"
+        }
+      ],
+      "constraints": [
+        "run report carries no timings",
+        "page headers stay path + ', N lines', no ':<line>'",
+        "do not touch SPLIT_LEGEND/is_test_module"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-render-report-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-render-report",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-render-report-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-verify-close": {
+      "id": "m4-verify-close",
+      "title": "Full suite green, closing selector before/after with counts+exit codes, fresh build+check 7/7, write IMPLEMENTER_RESULT",
+      "imperative": "Run `python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no` and record its count/exit code (expect >0 collected, exit 0) -- compare against the baseline 0-collected/exit-5 state named in the handoff. Run the FULL suite (`python -m pytest tests/ -q --color=no`, run_in_background, poll for completion) and confirm 0 failed against the baseline (1793 passed, 2 skipped, 672 subtests at commit 5d8e9804 -- expect the same plus new stale_tag tests). Run a fresh `python -m scripts.code_map build --root .` then `python -m scripts.code_map check --root .` and confirm 7/7 exit 0. Write .agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md per the IMPLEMENTER_RESULT template, including the named blind spot (docstring/comment-only edits invisible to the hash; local-variable renames DO trip it) and the one-line human action. Attest c1, advance c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "stale-tag detection lands in the run report",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "stale-tag detection lands end-to-end: extract.py persists+diffs, render.py surfaces in render_report.json + stdout (m3 complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "selector + full-suite counts and exit codes recorded, before and after",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "fresh build+check 7/7 exit 0; IMPLEMENTER_RESULT.md written",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-verify-close-2"
+        }
+      ],
+      "constraints": [
+        "full suite must be green (critic F6)",
+        "do not git add -A"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-verify-close-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-verify-close",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-verify-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 5,
+  "engine_session": {
+    "session_id": "g6-impl-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T19:17:27.070670+00:00",
+    "last_heartbeat": "2026-08-08T19:35:22.484675+00:00",
+    "claimed_by": "g6-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T19:35:32.593622+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "g6 hashes/persists span_hash on the anchored-slug statements (the only pre-g7 tag-analog surface); g7's comment-tag vocabulary reuses the same [slug] allocator so this hook survives. Run report = render_report.json (duplicate-id precedent already lives there).",
+      "mechanical": false,
+      "ts": "2026-08-08T19:18:24.893590+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-span-hash",
+      "why": "span_hash implemented via ast.dump(node, annotate_fields=False) with leading docstring stripped; reformat/docstring-only edits proven invisible, real body change proven visible. Named blind spot: local renames DO trip it (accepted, not a naive-hash regression).",
+      "mechanical": false,
+      "ts": "2026-08-08T19:20:36.287175+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-persist-and-diff",
+      "why": "span_hash persisted on every anchored statement (d.span_hash); extract.run() diffs old-vs-new by slug across two extractions into the same --artifacts dir, appending stale-anchor rows; bootstrap (no prior store) flags nothing; reformat-only proven silent, real body change proven flagged and attributed to the right slug only. 8/8 stale_tag green, 109/109 full test_code_map.py green.",
+      "mechanical": false,
+      "ts": "2026-08-08T19:23:41.811791+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-render-report",
+      "why": "render.py's load_stores intercepts stale-anchor into module-level stale_tags list (cleared each load); run() adds report['stale_tags'] and prints advisory FAIL lines naming the human action; return code unaffected by stale tags alone (duplicate-id stays the only build-failing defect). 12/12 stale_tag green incl. timing-free-report check; 113/113 full test_code_map.py green.",
+      "mechanical": false,
+      "ts": "2026-08-08T19:26:30.580584+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-verify-close",
+      "why": "closing selector: before 0 collected/exit 5 (verified against HEAD via git show), after 12 collected/12 passed/exit 0. Full suite: 1805 passed/2 skipped/683 subtests/0 failed/exit 0 (baseline 1793/2/672 + exactly the 12 new tests + 11 new subtests). Fresh build+check on real repo: 7/7 exit 0, stale_tags=[] (repo has 0 anchors today, correct). IMPLEMENTER_RESULT.md written.",
+      "mechanical": false,
+      "ts": "2026-08-08T19:35:22.484646+00:00"
+    }
+  ]
+}

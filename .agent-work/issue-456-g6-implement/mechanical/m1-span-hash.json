@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-span-hash",
+  "mechanical": {
+    "run": "issue-456-g6-implement",
+    "project": "constellation-skills",
+    "role": "g6-implementer",
+    "refusals": 3,
+    "spine-step": "m1-span-hash",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g6-implement-m1-span-hash@535b4215a2d2084c084692945fca566235cdac19",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g6-implement",
+    "generated_at": "2026-08-08T19:18:37Z"
+  }
+}

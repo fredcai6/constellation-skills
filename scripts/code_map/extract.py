@@ -156,6 +156,41 @@ def anchors_in(src):
     return out
 
 
+def span_hash(node):
+    """A normalised hash of an entity's own AST subtree (gate g6, stale-tag
+    detection): immune to reformatting -- indentation, line wraps, blank
+    lines -- and to comments, by construction, because `ast.dump` never
+    encodes source text, whitespace, or position (`include_attributes`
+    defaults to False). The leading docstring statement, when present, is
+    excluded too: prose describing behavior is not the behavior, the same
+    reasoning that already excludes comments.
+
+    NAMED BLIND SPOT, stated rather than hidden: this hash is NOT immune to
+    renaming a local variable inside the span -- a rename changes the AST
+    (`Name.id`) and trips the flag, even though the naive raw-text hash this
+    replaces would ALSO have tripped on it. Treated as an accepted cost, not
+    a defect: a Constraint/Rationale's prose can name a specific variable, so
+    a rename is a real candidate for staleness review, not pure noise -- at
+    the cost of occasionally flagging a rename that has no bearing on the
+    tag's claim. What genuinely stays invisible: anything confined to the
+    docstring body, or to a comment anywhere inside the span."""
+    body = getattr(node, "body", None)
+    trimmed = body
+    if (body and isinstance(body[0], ast.Expr)
+            and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)):
+        trimmed = body[1:]
+    if trimmed is body:
+        dumped = ast.dump(node, annotate_fields=False)
+    else:
+        node.body = trimmed
+        try:
+            dumped = ast.dump(node, annotate_fields=False)
+        finally:
+            node.body = body
+    return hashlib.sha1(dumped.encode("utf-8")).hexdigest()[:16]
+
+
 def doc_body_of(node):
     """A docstring past its summary line, or None.
 
@@ -372,6 +407,10 @@ class Extractor(ast.NodeVisitor):
         self.tree = tree
         self.src = src            # the file's own text, for facts `ast` drops
         self.anchors = anchors_in(src)   # 1-based line -> authored slug
+        # slug -> (owning symbol, span_hash) -- gate g6, collected as anchors
+        # are emitted and read back by run() to diff against the PREVIOUS
+        # extraction's own copy of this dict.
+        self.anchor_hashes = {}
         self.out = []
         self.scope = Scope("module")
         self.encl = [self.mod + ":"]     # enclosing transformer stack
@@ -656,15 +695,26 @@ class Extractor(ast.NodeVisitor):
         """Emit the authored id minted directly above `node`, if there is one.
 
         A decorated definition is anchored above its FIRST decorator as well as
-        above its `def`, because that is where a reader writes the comment."""
+        above its `def`, because that is where a reader writes the comment.
+
+        Gate g6: an anchor is the only authored-identity surface that exists
+        pre-g7 (the real comment-tag vocabulary -- Assumption:/Constraint:/
+        etc. -- is g7's build and reuses this SAME `[slug]` allocator), so
+        this is where a future tag's span gets hashed and persisted. `d.end`
+        already names this node's span in the `contains` statement `g3`
+        emits (`described()`); `span_hash(node)` hashes that same subtree
+        directly rather than re-deriving it from source-text positions."""
         lines = [node.lineno]
         if getattr(node, "decorator_list", None):
             lines.insert(0, node.decorator_list[0].lineno)
         for line in lines:
             slug = self.anchors.get(line)
             if slug:
-                self.emit(sym, "anchored", slug, store_line(node.lineno),
-                          node.col_offset, "literal")
+                h = span_hash(node)
+                ln, col = store_line(node.lineno), node.col_offset
+                self.emit(sym, "anchored", slug, ln, col, "literal",
+                          d={"span_hash": h})
+                self.anchor_hashes[slug] = (sym, h, self.rel.replace("\\", "/"), ln, col)
                 return
 
     def described(self, node, decorators):
@@ -984,6 +1034,23 @@ def run(root, artifacts):
     failed = []
     nrows = 0
     outp = os.path.join(artifacts, STATEMENTS_NAME)
+
+    # Stale-tag detection (gate g6): read what the PREVIOUS extraction into
+    # this same `--artifacts` dir said about every anchor's span, before this
+    # run overwrites it. Absent on a fresh checkout -- nothing to compare
+    # against, so nothing is flagged, which is the correct bootstrap
+    # behaviour rather than a false positive on every anchor in a new repo.
+    old_hashes = {}
+    if os.path.exists(outp):
+        with open(outp, encoding="utf-8") as f:
+            for line in f:
+                st = json.loads(line)
+                if st["p"] == "anchored":
+                    sh = (st.get("d") or {}).get("span_hash")
+                    if sh is not None:
+                        old_hashes[st["o"]] = sh
+
+    new_hashes = {}   # slug -> (sym, hash, file, line, col)
     with open(outp, "w", encoding="utf-8", newline="\n") as f:
         for rel in files:
             p = os.path.join(ROOT, rel)
@@ -1005,11 +1072,32 @@ def run(root, artifacts):
             for r in rows:
                 f.write(json.dumps(r) + "\n")
             nrows += len(rows)
+            new_hashes.update(ex.anchor_hashes)
+
+        # A slug present in BOTH runs is, by construction, the same "tag" --
+        # today an anchor carries no text of its own besides the slug it was
+        # minted with, so matching by slug already IS the "tag text did not
+        # change" half of the gate's rule. Any hash delta on a matched slug
+        # is exactly the flag this gate defines. A slug that is new, or that
+        # disappeared, is a different event (minted / orphaned) and is not
+        # this gate's concern -- see DESIGN_SPEC's Tombstones section.
+        stale = sorted(slug for slug, meta in new_hashes.items()
+                       if slug in old_hashes and old_hashes[slug] != meta[1])
+        for slug in stale:
+            sym, h, sfile, sline, scol = new_hashes[slug]
+            row = {"s": sym, "p": "stale-anchor", "o": slug,
+                   "q": {"file": sfile, "line": sline, "col": scol},
+                   "ref": "derived", "hash": h, "res": "literal",
+                   "d": {"old_hash": old_hashes[slug], "new_hash": h}}
+            f.write(json.dumps(row) + "\n")
+            nrows += 1
+
     print("statements: %d over %d files (%d failures)" % (nrows, len(files), len(failed)))
     for r in failed:
         print("  FAILED:", r)
     with open(os.path.join(artifacts, REPORT_NAME), "w", encoding="utf-8") as f:
         json.dump({"files": len(files), "statements": nrows,
                    "modules_indexed": len(TABLES),
-                   "failures": [list(x) for x in failed]}, f, indent=1)
+                   "failures": [list(x) for x in failed],
+                   "stale_tags": stale}, f, indent=1)
     return 0

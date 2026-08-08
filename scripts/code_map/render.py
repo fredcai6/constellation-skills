@@ -65,6 +65,7 @@ children = collections.defaultdict(list)     # parent symbol -> [(line, child sy
 members_of = collections.defaultdict(list)   # module -> [store symbol]
 page_file = {}                               # store symbol -> page filename
 ids = collections.defaultdict(list)          # authored slug -> [store symbol]
+stale_tags = []                              # gate g6: [{"id","s","old_hash","new_hash"}]
 MODULES = []
 BY_PKG = collections.defaultdict(list)
 
@@ -137,7 +138,8 @@ def load_stores(artifacts):
     Safe to call repeatedly: it resets state first."""
     artifacts = pathlib.Path(artifacts)
     for d in (docs, params, inherits, edges, inbound, imports_out, imported_by,
-              children, members_of, page_file, BY_PKG, entities, modules, ids):
+              children, members_of, page_file, BY_PKG, entities, modules, ids,
+              stale_tags):
         d.clear()
     MODULES.clear()
 
@@ -164,6 +166,16 @@ def load_stores(artifacts):
                 continue
             if p == "anchored":
                 ids[o].append(s)
+                continue
+            if p == "stale-anchor":
+                # Gate g6: must be intercepted explicitly, same as "anchored"
+                # above -- an unhandled predicate falls through to the
+                # `edges`/`inbound` catch-all below and would render as a
+                # bogus "stale-anchor cross-module" bullet on some entity's
+                # page instead of surfacing as the staleness flag it is.
+                d = st["d"]
+                stale_tags.append({"id": o, "s": s,
+                                   "old_hash": d["old_hash"], "new_hash": d["new_hash"]})
                 continue
             if p == "declares":
                 d = st["d"]
@@ -688,6 +700,10 @@ def run(root, artifacts, out):
         "ids": len(ids),
         "median_entity_page_lines": sizes[len(sizes) // 2][0] if sizes else 0,
         "largest_5": [[n, k] for n, k in sizes[:5]],
+        # Gate g6: slugs whose enclosing entity span changed since the
+        # PREVIOUS build while the tag's own identity (its slug) did not --
+        # see extract.py's span_hash/run() for what changed and what did not.
+        "stale_tags": [t["id"] for t in stale_tags],
     }
     print(json.dumps(report, indent=1))
     for slug in duplicates:
@@ -696,8 +712,19 @@ def run(root, artifacts, out):
         # whichever definition happened to win.
         print("FAIL duplicate id [%s] claimed by: %s"
               % (slug, ", ".join(sorted(ids[slug]))))
+    for t in stale_tags:
+        # ADVISORY, not a build failure (deliberately -- see the return code
+        # below): a duplicate id is unambiguous data corruption, but a stale
+        # tag might still be true. What a human does when this fires: open
+        # the tag at `t['s']` and re-read it against the current code; update
+        # or remove it if it no longer holds.
+        print("FAIL stale tag [%s]: anchor body changed, tag text did not -- "
+              "review %s and update or remove the tag" % (t["id"], t["s"]))
     artifacts = os.fspath(artifacts)
     os.makedirs(artifacts, exist_ok=True)
     with open(os.path.join(artifacts, REPORT_NAME), "w", encoding="utf-8") as f:
         json.dump(report, f, indent=1)
+    # Stale tags do NOT fail the build: unlike a duplicate id, they are not
+    # unambiguous corruption, so failing the build on one would be exactly
+    # the twitchy tripwire that trains people to ignore it (gb's ruling).
     return 1 if duplicates else 0
