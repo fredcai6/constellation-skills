@@ -342,14 +342,15 @@
           "statement": "the CLI runs extract -> render end to end on this repo and the discovery layer enumerates exactly the mappable corpus with .agent-work/ excluded, asserted by a test that fails if the exclusion is removed; the bundling question is resolved on the record, not deferred",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'discovery or cli' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'discovery or cli' -q"
           },
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g0-integrate-3"
         },
         {
           "id": "c2",
@@ -361,17 +362,63 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g0-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g0-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "artifact": ".agent-work/issue-456/crew-handoffs/g0-approve-RESULT.md",
+            "crew": "constellation/issue-456/g0/reviewer/attempt-3",
+            "crew_verification": "run_crew.py --verify-result -> 'fresh (completed)'. This is the first g0 crew to verify cleanly through the tool; tc22/tc25 blocked verification of the two before it.",
+            "why_this_pass_existed": "Both prior g0 reviews returned BLOCK, so no APPROVE artifact existed, and the B3 fix was the Commander's own docstring edit that no reviewer had ever seen. Attesting around postcondition c2 would have closed the gate whose entire subject is checks that cannot fail with a check that could not fail. This pass was dispatched to close that gap honestly.",
+            "b3_judged": "Honest clause by clause; no false sentence. The reviewer ran ALL THREE of the docstring's GREEN-mutation claims rather than the one asked for: delete every second entity page -> GREEN 17 passed; never write a module INDEX.md -> GREEN 17 passed; entity pages written flat into map/ -> GREEN 17 passed. Its RED claim (restore the per-write counter) -> RED, '5 != 4'. Its invariant claim reproduced on a fresh build: 3648 - 1 - 112 = 3535 against entity_pages 3536, differing by exactly the lost Verdict page.",
+            "attack_with_unchosen_mutations": "Seven mutations no author chose, all RED: rglob('*') substituted for rglob('*.md') on the page count (so the method guard has teeth beyond its own probe); is_mappable weakened while discover_corpus behaviour held constant (so that test is not a B3-shaped mirror of the implementation); partial-prefix exclusion (4 failures, including the rendered-tree one); over-declaring 'hooks' as non-installable; flattening a relative import in __main__.py. NO FOURTH CANNOT-FAIL SIBLING FOUND.",
+            "commander_independent_check": "Not taken on trust. I ran a mutation of MY OWN choosing, present on no crew's list and the literal wording of postcondition c1: EXCLUDED_PREFIXES = ('.agent-work/',) -> (), removing the exclusion outright. Result: 4 failed, exit 1. Restored byte-identical (sha256 bed4ccf35900e0e8 before and after), baseline back to 17 passed, git status clean on scripts/ and tests/. The exclusion is genuinely guarded.",
+            "bundling_resolved": "Genuinely resolved, option (b), quoted by the reviewer from install_constellation.py:123-137 and g0-implement-RESULT-pass2.md:200-204, with four guards it falsified in two directions. Not a deferral wearing a resolution's clothes -- which the handoff named as an automatic BLOCK.",
+            "numbers": "Full suite 1709 passed / 2 skipped / 0 failed; pytest tests/test_code_map.py -k 'discovery or cli' -> 14 passed. Both reproduced by the Commander in a cleared environment before the dispatch and matched by the reviewer exactly.",
+            "hygiene": "Tree clean on scripts/, tests/, .gitignore; nothing staged; the 3,635-page map/ tree still untracked, as gs requires.",
+            "reviewer_self_disclosure": "Its first harness stored originals per-edit rather than per-file and left discovery.py half-restored after the one two-site mutation. It discarded the three contaminated results, restored from git, fixed the harness and re-ran them clean. Disclosed unprompted in the artifact -- the correct behaviour, and the same class of error the Commander made and disclosed earlier at this gate.",
+            "out_of_scope_filed": "tc26 (a page count still cannot notice zero-byte pages -- weakens only the field the B3 docstring already forbids trusting, and g1's invariant subsumes it, so not a blocker); tc4 re-measured and still false (the 'two blunt hits' docstring reports three on a fresh tree); tc27 (g0-close-RESULT.md was never written -- the substance lives in commit 853be2bc's message, because the Commander did that edit by hand after the dispatch slot proved unusable, per tc25); tc28 (the engine journal records the advance past g0-review and the attest on g0-integrate about eight minutes BEFORE this handoff existed -- accurate, and the Commander's own bookkeeping ordering).",
+            "commander_note_on_tc28": "tc28 is a fair catch against me and I am recording it rather than explaining it away. The advance past g0-review was legitimate -- that item's own postconditions were met. But attesting g0-integrate.p1 before this pass was dispatched means the journal reads as though the gate's precondition was satisfied by reviews that had both returned BLOCK. The ordering was mine, it is now on the record, and the remaining ten gates should attest a gate's preconditions only after the artifact that satisfies them exists."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g0-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'discovery or cli' -q",
+            "exit": 4,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g0-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'discovery or cli' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-implement": {
@@ -486,7 +533,7 @@
           "statement": "every check in this gate FAILS under a deliberate mutation of the property it guards, with a nonzero exit, demonstrated in the evidence; a double build is byte-identical; no check in this gate depends on a corpus count or a page's rendered shape",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'determinism or invariant' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'determinism or invariant' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -628,7 +675,7 @@
           "statement": "D2 HAS TWO ARMS and both must close (found by the plan panel, verified: reference/d2_arms.txt). ARM 1 -- closure inside a method, 31 occurrences here, 4 collisions: each of the 4 named collisions resolves to a distinct symbol that CARRIES THE METHOD NAME, asserted on the SYMBOL STRING not the collision count, red-then-green. ARM 2 -- class defined inside a function, which visit_ClassDef emits as mod:Name as if module-level because it has NO enclosing-chain branch at all: ZERO occurrences on this corpus, so it cannot go red here at any threshold and a PURPOSE-BUILT FIXTURE is the only route, exactly like BOM. OVER-QUALIFICATION GUARD: the 75 naive mod.name clashes are correctly distinct today, so sibling-class setUp must keep mod:Class.setUp and gain no spurious segment -- their disappearance is the alarm, not the goal, because a fix re-keying by file position would zero the collision count while corrupting 1,776 method symbols. AND count and module list agree on every page with the semantics stated. NOT SUFFICIENT: closing on '4 -> 0' ships arm 2 unwritten.",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'symbol_identity or referenced_by' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'symbol_identity or referenced_by' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -771,7 +818,7 @@
           "statement": "one schema carries all six fields; the supplement stage is GONE, not deprecated; the line base is declared in the schema and asserted by a test that fails if the base flips; ids.jsonl carries no position, exercised by minting two anchors and renaming one; and the now-dead supplement entry is REMOVED from .gitignore (critic F12)",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'schema or line_base or ids_jsonl' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'schema or line_base or ids_jsonl' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -914,7 +961,7 @@
           "statement": "any module reachable from the top index in <= 2 page loads and no index page over a bounded line count, asserted by a GRAPH WALK that follows links rather than trusting layout. STATE PLAINLY IN THE GATE RESULT that this gate's motivating falsifier CANNOT FIRE on this corpus: the measurement was 1,233 lines over 1,223 modules, but this repo has 103 modules in three top-level directories, so a flat top index is roughly 115 lines and no size threshold would distinguish before from after. A threshold that would have passed before the change is worthless and must NOT be proposed. What ships is a reachability regression guard; the routing claim itself stays unfalsified here and is recorded as such so a later reader does not mistake a green gate for a validated routing surface. Found independently by two panel candidates.",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'top_index' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'top_index' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -1054,7 +1101,7 @@
           "statement": "production and test callers are distinguished on every page; no page shows a bare 'referenced by: none' where test callers exist; test pages still render, asserted by a test that fails if they stop",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'caller_split' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'caller_split' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -1200,7 +1247,7 @@
           "statement": "each threshold is committed, is expressed as a ratio or run-time invariant, and FAILS under a deliberate violation; the rename case is measured for the first time and its number recorded; no threshold in the repo is an absolute count",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'baseline or churn or recall or ascii' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'baseline or churn or recall or ascii' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -1342,7 +1389,7 @@
           "statement": "a tag whose anchor body changed while its text did not is flagged in the run report, proven by a fixture that mutates a body and leaves the tag text alone; the run report still carries no timings",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'stale_tag' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'stale_tag' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -1483,7 +1530,7 @@
           "statement": "tags extract and render; the cull test is applied and its VERDICT IS RECORDED AS AN ARTIFACT at a named path the reviewer checks -- process alone is not a close criterion (critic F5)",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'comment_tags' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'comment_tags' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -1622,7 +1669,7 @@
           "statement": "a BOM fixture exists and its test goes RED without the fix; D3 renders a wrapped docstring correctly, asserted by a test",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'bom or docstring' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'bom or docstring' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -1769,7 +1816,7 @@
           "statement": "the four skills files carry exactly the 9-line diff from d102c05 and no exploration scratch rides with them; the full suite including the skills-vocab and installer tests is green; the committed map tree matches a fresh build, asserted by a rebuild-and-diff; and the map entry point named in a handoff resolves to a file that exists",
           "check": {
             "kind": "command",
-            "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'map_tree_freshness' -q"
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'map_tree_freshness' -q"
           },
           "override_policy": {
             "allowed": true,
@@ -1803,7 +1850,13 @@
     }
   },
   "consolidation": null,
-  "triage_candidates": [],
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "g0-integrate",
+      "statement": "tc26: the render report's page count still cannot notice a zero-byte page -- rglob('*.md') counts a file that was created and never written. Raised by the g0 closing reviewer (A5). NOT a blocker at g0: it weakens only the one field the B3 docstring now explicitly forbids trusting, and g1's structural invariant subsumes it. Goes to g1 with tc17."
+    }
+  ],
   "blockers": [],
   "why_trail": [
     {
@@ -1826,6 +1879,33 @@
       "why": "g0-review CLOSED. Two reviewer passes, three findings, all three closed and independently verified by the Commander. B1 (page headers carried a source line number that D1 already proves wrong): Tommy ruled 'strip the line numbers' -- 0 of 3535 entity-page headers now carry a .py line number, all 3535 kept the path and ', N lines'. B2 (the render report's 'pages' counted write_text calls, so the silently-lost page was invisible): now counts the tree. B3 (raised by the re-review: the B2 fix RELOCATED the tautology rather than removing it -- a count of the tree is tautologically true of that tree, proved by three mutations the test's author did not choose, N4/N5/N8, all GREEN): closed by rewriting the docstring at tests/test_code_map.py:127 to state honestly that the test guards the counting METHOD only and does NOT detect a lost page. STANDING LESSON for the remaining ten gates: reproducing the falsifier a crew designed only proves that crew's probe works; a cannot-fail check must be attacked with a mutation its author did NOT choose. NOT DONE HERE, BY RULING: the falsifiable check already exists in the artifact and nothing asserts it -- pages minus 1 minus modules = 3535 vs entity_pages = 3536, contradicting itself by exactly the lost Verdict/verdict page. It goes to g1 with tc17, because asserting it today ships a RED test (the page really is lost and g2 owns the rename). tc24 corrects tc18: the root is 'sizes', which feeds three fields, and counting the tree again is NOT the fix. Suite 1709 passed / 2 skipped / 0 failed, reproduced by the Commander in a cleared environment after the final edit. Evidence e-g0-review-2 through e-g0-review-7.",
       "mechanical": false,
       "ts": "2026-08-08T00:06:31.270722+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g0-integrate",
+      "why": "g0 CLOSED -- the code map now runs behind a real entrypoint. Package + CLI run extract -> render end to end on this repo; discovery enumerates exactly the mappable corpus with .agent-work/ excluded; the bundling question is RESOLVED on the record (option (b), install_constellation.py:123-137, four guards falsified in two directions), not deferred. Three findings across two BLOCK reviews, all closed: B1 line numbers stripped from page headers per Tommy's ruling (0 of 3535 headers carry a position, all 3535 keep path + ', N lines'); B2 the report's page count no longer counts write calls; B3 the docstring at tests/test_code_map.py:127 no longer claims a tree-derived count can be wrong. A THIRD closing review returned APPROVE (e-g0-integrate-1, crew attempt-3, verified 'fresh (completed)' -- the first g0 crew to verify cleanly through the tool). It attacked with SEVEN mutations no author chose, all RED, and found no fourth cannot-fail sibling. I did not take it on trust: I ran a mutation of my own choosing and on no crew's list -- EXCLUDED_PREFIXES emptied -- and got 4 failed, exit 1, restored byte-identical (sha256 bed4ccf35900e0e8 both sides), baseline back to 17 passed. FOUND AND FIXED AT THIS GATE, AFFECTING ALL 11: c1 was authored as two commands joined by the prose word 'AND' and so could only ever fail through the engine's POSIX shell. Repaired in all 11 gates via amend/retext-check -- ' && ' plus env -u FORCE_COLOR -u PYTHONIOENCODING on each half per tc3/tc7 -- and filed as tc29. The check that just passed is therefore the FIRST time a gate's c1 actually executed. STANDING LESSON for the remaining ten gates: reproducing a falsifier its author designed proves only that probe works; attack with a mutation the author did NOT choose. NOT DONE HERE BY RULING: the pages-minus-1-minus-modules vs entity_pages invariant (3535 vs 3536, the lost Verdict/verdict page) is real and goes to g1 with tc17 -- asserting it today ships RED, because g2 owns the rename. tc24 corrects tc18 (root is 'sizes', feeding three fields; counting the tree again is NOT the fix). New: tc26 zero-byte pages, tc27 no IMPLEMENTER_RESULT when the Commander does the fix itself, tc28 preconditions attested before the artifact satisfying them existed (a fair catch against me), tc29 the unrunnable check.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:42:39.970954+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-08T00:35:33.991281+00:00",
+      "reason": "REPAIR OF AN UNRUNNABLE CHECK, ALL 11 GATES. Every gate's c1 postcondition was authored as two shell commands joined by the prose word 'AND'. The engine runs command checks verbatim through a POSIX shell (checklist_engine.py:748), so the literal text fails with 'ERROR: file or directory not found: AND' no matter whether the tests pass. Measured, not inferred: 11 of 11 integrate gates carry it, and I reproduced the failure. A check that can only ever be RED carries exactly as little information as one that can only ever be GREEN, and it would have blocked every remaining gate on a typo. Two corrections per gate, intent unchanged: (1) '  AND  ' -> ' && ' so both commands actually run and either one failing fails the check; (2) each half prefixed with 'env -u FORCE_COLOR -u PYTHONIOENCODING', because those two variables are exported in this environment and are the confirmed cause of tc3/tc7 -- FORCE_COLOR=3 defeats a FAILED-line regex in tests/test_mutation_floor.py:255 and injects ~10 failures that are environmental, not regressions. CI has neither variable, so this makes the local check agree with CI rather than weakening it. Verified by running the repaired shape through the same bash the engine uses: chained form exit 0, color codes gone. This is strictly stronger than what it replaces -- the old text ran nothing. Not a scope change and no close criterion is relaxed; retext-check also resets each condition's satisfied/waived state, so nothing is grandfathered through.",
+      "authority": "commander",
+      "ops": [
+        "retext-check g0-integrate.c1",
+        "retext-check g1-integrate.c1",
+        "retext-check g2-integrate.c1",
+        "retext-check g3-integrate.c1",
+        "retext-check g4-integrate.c1",
+        "retext-check g5-integrate.c1",
+        "retext-check gb-integrate.c1",
+        "retext-check g6-integrate.c1",
+        "retext-check g7-integrate.c1",
+        "retext-check g8-integrate.c1",
+        "retext-check gs-integrate.c1"
+      ]
     }
   ]
 }

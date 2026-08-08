@@ -835,6 +835,26 @@
       "id": "tc25",
       "from": "execute",
       "statement": "tc25 The crew registry became UNDISPATCHABLE for a gate/role, and no documented recovery cleared it. Trying to dispatch the g0 closing implementer: 'run_crew.py --dispatch external' REFUSED with 'refusing duplicate crew: an active attempt already holds g0/implementer@. (status running)', naming attempt-1 -- a crew that had already completed and returned its artifact. Ran the refusal message's own prescribed recovery, 'run_crew.py --abandon <id>': it reported 'abandoned' and the very next dispatch refused identically. Ran it a SECOND time, it again reported 'abandoned', and the dispatch refused identically a third time. Direct inspection of crew-runs.json shows why: slot reuse (tc22) has produced FOUR entries keyed to the same attempt-1 id, of which abandon-by-id resolves one per call while the duplicate check reads a different one, so the two operations can never converge. Meanwhile recover_crews.py reports '0 unresolved' throughout, i.e. the tool doctrine requires before every dispatch says the slot is clear while the dispatcher says it is occupied (tc23). CONSEQUENCE THIS RUN: I could not dispatch the crew, so I made the change myself and disclosed it -- see the ruling on e-g0-review-7. This is now a HARD blocker, not a papercut: a commander that must dispatch an implementer to this gate/role has no working route, and the failure presents as a policy refusal rather than a defect. Fix direction is tc22's -- never reuse a terminal slot -- plus making abandon idempotent over ALL entries sharing an id, and having the duplicate check and recover_crews share one disposition function."
+    },
+    {
+      "id": "tc26",
+      "from": "execute",
+      "statement": "tc26 The render report's page count still cannot notice a zero-byte page -- rglob('*.md') counts a file that was created and never written. Raised by the g0 closing reviewer (its finding A5). NOT a blocker at g0: it weakens only the one field the B3 docstring now explicitly forbids trusting, and g1's structural invariant subsumes it. Route to g1 alongside tc17."
+    },
+    {
+      "id": "tc27",
+      "from": "execute",
+      "statement": "tc27 A gate produced a fix with NO IMPLEMENTER_RESULT artifact. crew-handoffs/g0-close.md was authored but g0-close-RESULT.md was never written, because the dispatch slot was undispatchable (tc25) and the Commander made the docstring edit by hand. The substance survives only in commit 853be2bc's message. The doctrine assumes every fix arrives with a result artifact; when the Commander does the work itself there is no defined place for one. Decide whether a Commander-authored fix should write its own IMPLEMENTER_RESULT."
+    },
+    {
+      "id": "tc28",
+      "from": "execute",
+      "statement": "tc28 CAUGHT AGAINST THE COMMANDER, and accurate. The engine journal records the advance past g0-review and the attest on g0-integrate precondition p1 roughly eight minutes BEFORE the handoff for the pass that satisfies it existed. The advance itself was legitimate -- g0-review's own postconditions were met -- but attesting 'REVIEW_RESULT received' while both reviews on record read BLOCK makes the journal say the precondition was satisfied by refusals. Rule for the remaining ten gates: attest a gate's preconditions only after the artifact that satisfies them exists. Consider an engine guard, since nothing in the tool prevented it."
+    },
+    {
+      "id": "tc29",
+      "from": "execute",
+      "statement": "tc29 A CHECK THAT COULD ONLY EVER FAIL SHIPPED IN THE PLAN, IN ALL 11 GATES. Every gate's c1 postcondition was authored as two shell commands joined by the prose word 'AND'. The engine runs command checks verbatim through a POSIX shell, so the text always died with 'file or directory not found: AND' regardless of the tests. This is the mirror image of the defect shape g0 and g1 exist to hunt: a check that cannot go green is as informationless as one that cannot go red, and nothing between planning and g0-integrate caught it -- gen_execute.py did not validate that a command check parses, and the plan review did not run one. Repaired under amend authority commander (' AND ' -> ' && ', plus env -u FORCE_COLOR -u PYTHONIOENCODING on each half, per tc3/tc7). CANDIDATE: have the engine, or gen_execute.py, refuse to accept a command-kind check whose text does not parse as a shell command -- or at minimum dry-run each command check once at plan time."
     }
   ],
   "blockers": [],
@@ -843,7 +863,7 @@
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T00:06:00.304714+00:00",
+    "last_heartbeat": "2026-08-08T00:35:47.621650+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

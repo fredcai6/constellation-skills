@@ -141,7 +141,7 @@
     "gate": "g0",
     "role": "reviewer",
     "attempt": 3,
-    "status": "running",
+    "status": "completed",
     "session_name": "constellation/issue-456/g0/reviewer/attempt-3",
     "backend": "external",
     "pid": null,
@@ -151,10 +151,12 @@
     "stdout": ".agent-work/issue-456/crew-runs/g0-reviewer-attempt-3.stdout.txt",
     "stderr": ".agent-work/issue-456/crew-runs/g0-reviewer-attempt-3.stderr.txt",
     "started_at": "2026-08-08T00:14:47.054259+00:00",
-    "last_heartbeat": "2026-08-08T00:14:47.054259+00:00",
-    "completed_at": null,
+    "last_heartbeat": "2026-08-08T00:30:22.265948+00:00",
+    "completed_at": "2026-08-08T00:30:22.265948+00:00",
     "abandoned": false,
     "dispatch": "external",
-    "model": "opus"
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]
