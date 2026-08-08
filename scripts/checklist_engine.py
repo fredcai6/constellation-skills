@@ -1608,6 +1608,13 @@ def state(cl: dict) -> dict:
             # before this fix. render_human() does the shape-handling.
             "constraints": t.get("constraints") or [],
             "anchors": t.get("anchors"),
+            # Issue #433: `directives` is the third field with the same
+            # defect -- populated on 8 corpus gates (including the shipped
+            # commander spine's `execute`) and never projected, so a gate's
+            # standing instruction never reached the agent it binds. Same
+            # pure passthrough as `anchors`; render_human() handles the two
+            # live shapes via _render_directive_lines().
+            "directives": t.get("directives"),
         }
     waived_postconditions: list[str] = []
     consolidation_pending = False
@@ -1664,6 +1671,59 @@ def _render_anchor_lines(anchors) -> list[str]:
     return []
 
 
+def _directive_leaf(value) -> str:
+    """Spell one `directives` leaf for display. A string renders BARE -- these
+    leaves are template paths, output paths and field names an agent pastes
+    straight out of `current`, so JSON's surrounding quotes would be noise. A
+    list joins its leaves with `", "`. Every other scalar takes JSON spelling,
+    so a Python `False` prints as `false` and what the agent reads matches the
+    JSON the gate actually carries (`auto_file_discrepancies: false` on the
+    shipped commander spine)."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return ", ".join(_directive_leaf(v) for v in value)
+    return json.dumps(value)
+
+
+def _render_directive_lines(directives) -> list[str]:
+    """Format the `directives` field for display (issue #433). Two shapes
+    appear in the live corpus, verified against a tree-wide inventory of this
+    worktree (2955 gates scanned, 8 populated `directives` blocks):
+
+    - a dict of name -> contract dict -- the shape ALL 8 populated corpus
+      gates carry, e.g. the shipped skills/commander/templates/
+      COMMANDER_SPINE.template.json `execute` gate's `replan_input`. The name
+      gets its own line and each contract field an indented line under it.
+    - a flat [str] -- the shape docs/CHECKLIST_SCHEMA.md declares and the
+      `add` amend op accepts unvalidated. One indented line per ITEM: the
+      branch is total, so a non-string item takes its `_directive_leaf`
+      spelling rather than being dropped. Filtering the branch to strings would
+      silently swallow a populated directive the agent is meant to read, which
+      is the very defect this issue closes -- and `_render_anchor_lines` does
+      not filter its own list branch either.
+
+    A dict value that is not itself a dict renders as one leaf line beside its
+    name rather than an empty header. Unrecognized shapes render nothing
+    rather than guessing at a format the corpus doesn't actually use -- the
+    same rule _render_anchor_lines states. Deliberately NOT routed through
+    the anchors normalizer: the two fields' shapes genuinely differ
+    (decision:own-helper-not-anchors-helper)."""
+    if isinstance(directives, dict):
+        lines: list[str] = []
+        for name, contract in directives.items():
+            if isinstance(contract, dict):
+                lines.append(f"  {name}:")
+                lines.extend(f"    {field}: {_directive_leaf(value)}"
+                             for field, value in contract.items())
+            else:
+                lines.append(f"  {name}: {_directive_leaf(contract)}")
+        return lines
+    if isinstance(directives, list):
+        return [f"  {_directive_leaf(item)}" for item in directives]
+    return []
+
+
 def render_human(view: dict) -> str:
     """Human adapter: format a StateView as the text agents read from
     `current`. Pure presentation — every fact comes from `view`; this function
@@ -1674,7 +1734,8 @@ def render_human(view: dict) -> str:
     unrelated `require_session` lease test, corrected by issue #420); the
     conditions block, `n/m met` summary, `constraints:`/`anchors:` blocks (issue
     #420 defect 2 — emitted only when populated, so an empty/absent field adds
-    no output) and `next:` hint are appended AFTER it. The why/refresh suffix
+    no output), the `directives:` block (issue #433, same emitted-only-when-
+    populated rule) and `next:` hint are appended AFTER it. The why/refresh suffix
     (`_why_suffix`, composed — not replaced — into `view["why_text"]` by
     `state()`) rides last, same relative order as before this change; the Trip
     `CONTEXT` advisory is a `dispatch()`-level suffix outside `current()`
@@ -1710,6 +1771,10 @@ def render_human(view: dict) -> str:
     if anchor_lines:
         lines.append("anchors:")
         lines.extend(anchor_lines)
+    directive_lines = _render_directive_lines(active.get("directives"))
+    if directive_lines:
+        lines.append("directives:")
+        lines.extend(directive_lines)
     if active.get("next_verbs"):
         lines.append("next: " + " | ".join(active["next_verbs"]))
     body = "\n".join(lines)

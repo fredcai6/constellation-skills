@@ -3955,16 +3955,219 @@ class RenderAnchorsAndConstraints(unittest.TestCase):
         self.assertEqual(E.current(cl), "ACTIVE g1 [pending] — do g1\nnext: start g1")
 
 
+class RenderDirectives(unittest.TestCase):
+    """Issue #433: `directives` is the third populated Task field `state()`
+    never read, so `current()` dropped it exactly the way it dropped
+    `anchors`/`constraints` before #420. A tree-wide inventory of this
+    worktree (2955 gates) found 8 populated `directives` blocks, every one a
+    dict of name -> contract dict; `docs/CHECKLIST_SCHEMA.md` separately
+    declares the field as `[string] | null` and the `add` amend op accepts
+    that flat shape unvalidated, so BOTH shapes must render. `current` is
+    documented as a COMPLETE briefing (INV-1,
+    docs/CHECKLIST_ENGINE_DESIGN.md); a directive the agent never sees is a
+    silently unenforced instruction."""
+
+    SPINE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
+
+    # The golden below is written over the ACTUAL SHIPPED spine, not a
+    # fixture shaped like it: the claim under test is
+    # `claim:a-populated-directives-block-appears-in-current` for a gate that
+    # really ships, so a hand-built fixture could not prove it.
+    def _shipped_spine_with_execute_active(self):
+        cl = json.loads(self.SPINE.read_text(encoding="utf-8"))
+        for iid in cl["items"]:
+            if iid == "execute":
+                break
+            cl["tasks"][iid]["status"] = "complete"
+        self.assertEqual(E.active_id(cl), "execute")
+        return cl
+
+    def test_shipped_commander_spine_execute_gate_renders_its_directives(self):
+        cl = self._shipped_spine_with_execute_active()
+        t = cl["tasks"]["execute"]
+        self.assertTrue(
+            t.get("directives"),
+            "fixture drift: the shipped COMMANDER_SPINE `execute` gate no "
+            "longer carries a populated `directives` block, so this golden "
+            "is no longer proving anything -- re-run the corpus inventory",
+        )
+        out = E.current(cl)
+
+        # INV-1's frozen first line: byte-identical to `ACTIVE {id} [{status}]
+        # — {imperative}`, unchanged by this issue (GoldenOutputBriefing pins
+        # the same format across every shipped template).
+        self.assertEqual(out.splitlines()[0],
+                          f"ACTIVE execute [pending] — {t['imperative']}")
+
+        self.assertIn(
+            "\ndirectives:\n"
+            "  replan_input:\n"
+            "    template: ../constellation-replan/templates/REPLAN_INPUT.template.json\n"
+            "    output: .agent-work/<work-id>/REPLAN_INPUT.json\n"
+            "    evidence_fields: completed_outcomes, wave_evidence, discrepancies\n"
+            "    classifications: blocks_current_wave_exit, invalidates_forecast_or_decomposition, later_only, evidence_only, drop\n"
+            "    auto_file_discrepancies: false\n"
+            "    check: verify_iterative_role_artifacts.py commander\n",
+            out,
+        )
+        # Placement: after the conditions body, before the `next:` hint --
+        # the same slot `anchors:` occupies.
+        self.assertEqual(out.count("directives:"), 1, out)
+        self.assertLess(out.index("directives:"), out.index("\nnext: "), out)
+
+    def test_nested_contract_dict_shape_renders_indented_leaves(self):
+        # Shape (a), the one all 8 populated corpus gates carry, isolated
+        # from the shipped template so the format itself is pinned: a list
+        # leaf joins with ", " and a non-string scalar takes JSON spelling
+        # (Python False -> `false`), so what prints reads back as the JSON
+        # the gate actually carries.
+        t = gate("g1", "pending")
+        t["directives"] = {"replan_input": {
+            "template": "../constellation-replan/templates/REPLAN_INPUT.template.json",
+            "evidence_fields": ["completed_outcomes", "wave_evidence"],
+            "auto_file_discrepancies": False,
+        }}
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "directives:\n"
+            "  replan_input:\n"
+            "    template: ../constellation-replan/templates/REPLAN_INPUT.template.json\n"
+            "    evidence_fields: completed_outcomes, wave_evidence\n"
+            "    auto_file_discrepancies: false\n"
+            "next: start g1"
+        ))
+
+    def test_flat_list_of_strings_shape_renders_one_line_each(self):
+        # Shape (b), the one docs/CHECKLIST_SCHEMA.md declares and the `add`
+        # amend op accepts unvalidated. Narrowing the renderer to dicts would
+        # silently reinstate the #433 defect for this shape.
+        t = gate("g1", "pending")
+        t["directives"] = ["file REPLAN_INPUT.json before advancing",
+                            "discrepancies are evidence, never auto-filed issues"]
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "directives:\n"
+            "  file REPLAN_INPUT.json before advancing\n"
+            "  discrepancies are evidence, never auto-filed issues\n"
+            "next: start g1"
+        ))
+
+    def test_flat_list_with_a_non_string_item_renders_every_item(self):
+        # g1 review carry-over: the list branch must be TOTAL, the way
+        # _render_anchor_lines' list branch is. Filtering it to
+        # `isinstance(item, str)` silently DROPPED a non-string item -- a
+        # populated value the briefing never shows, which is the #433 defect
+        # class reproduced inside the #433 fix, and it contradicted the
+        # helper's own stated rule. Non-string items take the JSON spelling
+        # _directive_leaf documents, so `False` prints as `false`.
+        t = gate("g1", "pending")
+        t["directives"] = ["file REPLAN_INPUT.json before advancing", 17, False]
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "directives:\n"
+            "  file REPLAN_INPUT.json before advancing\n"
+            "  17\n"
+            "  false\n"
+            "next: start g1"
+        ))
+
+    def test_absent_or_empty_directives_add_no_output(self):
+        # The #420 rule, held: an absent or empty field adds NOTHING -- no
+        # bare `directives:` header, no blank line. gate() already sets
+        # `directives: None`, the corpus default on 2947 of the 2955 gates
+        # inventoried.
+        baseline = "ACTIVE g1 [pending] — do g1\nnext: start g1"
+        self.assertEqual(E.current(gated(g1=gate("g1", "pending"))), baseline)
+        for empty in (None, {}, [], ""):
+            with self.subTest(directives=empty):
+                t = gate("g1", "pending")
+                t["directives"] = empty
+                self.assertEqual(E.current(gated(g1=t)), baseline)
+        t = gate("g1", "pending")
+        del t["directives"]  # key absent entirely, not merely null
+        self.assertEqual(E.current(gated(g1=t)), baseline)
+
+    def test_unrecognized_directives_shape_renders_nothing(self):
+        # Same discipline _render_anchor_lines states: a shape the corpus
+        # does not actually use renders nothing rather than guessing.
+        t = gate("g1", "pending")
+        t["directives"] = 17
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), "ACTIVE g1 [pending] — do g1\nnext: start g1")
+
+    def test_directives_render_after_anchors_and_before_next(self):
+        t = gate("g1", "pending")
+        t["constraints"] = ["CONSTRAINT_TEXT"]
+        t["anchors"] = {"structural": ["ANCHOR_TEXT"]}
+        t["directives"] = ["DIRECTIVE_TEXT"]
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "constraints:\n"
+            "  CONSTRAINT_TEXT\n"
+            "anchors:\n"
+            "  structural: ANCHOR_TEXT\n"
+            "directives:\n"
+            "  DIRECTIVE_TEXT\n"
+            "next: start g1"
+        ))
+
+    def test_state_passes_directives_through_without_re_running_checks(self):
+        # INV-2: state() is a pure projection. The passthrough must not
+        # touch a `command` check -- if it did, this gate's deliberately
+        # process-spawning postcondition would run on a read-only `current`.
+        t = gate("g1", "in-progress", command=FAIL_COMMAND, why_exempt=False)
+        t["directives"] = {"replan_input": {"output": "x.json"}}
+        cl = gated(g1=t)
+        with mock.patch.object(E.subprocess, "run",
+                                side_effect=AssertionError("state() ran a command check")):
+            view = E.state(cl)
+        self.assertEqual(view["active"]["directives"],
+                          {"replan_input": {"output": "x.json"}})
+
+
 class TaskFieldCompleteness(unittest.TestCase):
-    """Issue #420, defect 3: a real enumeration of the fields a Task may
-    carry (docs/CHECKLIST_SCHEMA.md's Task table, plus `anchors` -- documented
-    only in commander-core.md prose, not the schema table) asserting every
-    POPULATED field's content appears somewhere in current()'s rendered
-    output for a fixture that carries every field. Built as a loop over the
-    fixture's own keys minus a documented, justified exclusion set -- NOT a
-    hardcoded check of only anchors/constraints by name -- so a genuinely new
-    field added to Task later and forgotten in render_human() fails this test
-    by default, exactly the way anchors/constraints failed before this fix."""
+    """Issue #420 defect 3, made falsifiable by #433: a real enumeration of the
+    fields a Task may carry (docs/CHECKLIST_SCHEMA.md's Task table, plus
+    `anchors` -- documented only in commander-core.md prose, not the schema
+    table) asserting every POPULATED field's content appears somewhere in
+    current()'s rendered output for a fixture that carries every field. Built as
+    a loop over the fixture's own keys minus a documented, justified exclusion
+    set -- NOT a hardcoded check of only anchors/constraints by name -- so a
+    genuinely new field added to Task later and forgotten in render_human()
+    fails this test by default, exactly the way anchors/constraints failed
+    before #420's fix.
+
+    Three properties are what make this loop CAPABLE OF FAILING. #420's version
+    had none of them and so reported green in the defective world:
+
+      - `_leaf_texts` is TOTAL. The old `_flatten` returned [] for the nested
+        contract-dict shape every populated corpus `directives` block carries,
+        so the inner loop body never ran and the property asserted nothing
+        about the field while reporting green.
+      - the loop keeps a PER-FIELD ledger and asserts it EQUALS the set of
+        populated non-excluded fields. A single `checked_any` flag for the whole
+        loop let any field cover for any other, so a field the extractor read no
+        text out of still passed.
+      - the fixture's key set is asserted to be a SUPERSET of the engine's own
+        canonical Task builder `_build_amend_task`. The loop runs over the
+        FIXTURE's keys, so a field added to the engine's Task shape and
+        forgotten here would be absent from the loop, absent from the ledger's
+        expected set, and green -- the identical forgetting failure this class
+        exists to catch.
+
+    RESIDUAL LIMIT, stated rather than implied: the superset assertion closes
+    the hole for fields the ENGINE introduces. A field introduced only by a
+    template -- carried in a shipped checklist JSON but built by neither
+    `_build_amend_task` nor `append()` -- is still invisible to this property
+    and needs a human to add it to the fixture.
+
+    `test_the_property_fails_when_a_populated_field_is_unrendered` below is the
+    in-suite proof that the assertion path can actually go red: a property only
+    ever observed passing is indistinguishable from one that cannot fail."""
 
     # Fields intentionally excluded from the generic content-presence loop,
     # each for a stated reason -- not because checking them is inconvenient:
@@ -3989,41 +4192,51 @@ class TaskFieldCompleteness(unittest.TestCase):
     #                          prose.
     #   title              -- a short label, historically never part of the
     #                          briefing (redundant with `imperative`).
-    #   directives         -- KNOWN GAP, same unrendered-defect class as
-    #                          anchors/constraints (never read by state()
-    #                          either), but issue #420 caps this fix's
-    #                          authorized scope to "the two new fields":
-    #                          anchors + constraints (IMPLEMENTER_HANDOFF
-    #                          Allowed Scope). Excluded here rather than
-    #                          silently expanded into; flagged as an
-    #                          out-of-scope triage candidate in the
-    #                          IMPLEMENTER_RESULT instead.
+    # `directives` is deliberately NOT in the set below: as of #433 state()
+    # reads it and render_human() prints it, so it is ordinary rendered content
+    # and the generic loop carries it like anchors/constraints. It was excluded
+    # under #420 only because that issue capped its authorized scope to the two
+    # fields it introduced.
     _EXCLUDED_FIELDS = {
         "id", "status", "preconditions", "postconditions", "status_detail",
         "rework_count", "result", "finding", "evidence", "why_exempt",
-        "child_checklist", "context_refs", "title", "directives",
+        "child_checklist", "context_refs", "title",
     }
 
     @staticmethod
-    def _flatten(value):
-        """Best-effort text extraction for str / [str] / {category: [str]}
-        shapes -- the shapes anchors/constraints actually carry in the live
-        corpus. Anything else (list-of-dict, bool, int, None) yields []."""
-        if isinstance(value, str):
-            return [value]
-        if isinstance(value, list) and value and all(isinstance(v, str) for v in value):
-            return list(value)
-        if isinstance(value, dict):
-            out = []
-            for v in value.values():
-                if isinstance(v, list):
-                    out.extend(x for x in v if isinstance(x, str))
-                elif isinstance(v, str):
-                    out.append(v)
-            return out
-        return []
+    def _leaf_texts(value):
+        """TOTAL leaf extraction: recurse dicts and lists to any depth and
+        stringify every scalar, so EVERY populated shape yields something to
+        assert on. Returns [] only for None and for empty containers.
 
-    def test_every_populated_field_renders_for_a_fully_populated_gate(self):
+        This replaces #420's `_flatten`, which handled str / [str] /
+        {category: [str]} and returned [] for everything else -- including the
+        nested contract-dict shape all 8 populated corpus `directives` blocks
+        carry. A field the extractor reads nothing out of is a field the
+        property never checks, which is how the loop reported green while
+        asserting nothing.
+
+        Deliberately INDEPENDENT of the renderer's `_directive_leaf` /
+        `_render_directive_lines`: sharing them would let one bug render nothing
+        and assert nothing, in agreement, with both sides green. The one known
+        divergence is a bool leaf (Python `True` here vs the renderer's JSON
+        `true`); no field currently reachable by the loop carries one, and it
+        would surface as a loud red rather than a silent green."""
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value] if value else []
+        if isinstance(value, dict):
+            return [leaf for v in value.values()
+                    for leaf in TaskFieldCompleteness._leaf_texts(v)]
+        if isinstance(value, (list, tuple)):
+            return [leaf for v in value
+                    for leaf in TaskFieldCompleteness._leaf_texts(v)]
+        return [str(value)]
+
+    def _fully_populated_gate(self):
+        """One gate carrying every field the Task shape allows, each with
+        content unique enough to find in the rendered briefing."""
         t = gate("g1", "in-progress", why_exempt=False)
         # Both left OPEN (satisfied=False): render_human() only prints a
         # condition's statement while it is open (the satisfied-hiding
@@ -4035,14 +4248,23 @@ class TaskFieldCompleteness(unittest.TestCase):
                                  "check": None, "satisfied": False}]
         t["constraints"] = ["CONSTRAINT_UNIQUE_TEXT"]
         t["anchors"] = {"structural": ["ANCHOR_UNIQUE_TEXT"]}
-        t["directives"] = ["DIRECTIVE_UNIQUE_TEXT"]  # populated but excluded -- see class docstring
+        # The nested contract-dict shape -- the one all 8 populated corpus
+        # `directives` blocks carry, and the one the old `_flatten` returned []
+        # for. A flat [str] here would pass under a non-recursive extractor and
+        # so would prove nothing.
+        t["directives"] = {"replan_input": {
+            "template": "DIRECTIVE_TEMPLATE_UNIQUE_TEXT",
+            "evidence_fields": ["DIRECTIVE_FIELD_UNIQUE_TEXT"],
+        }}
         t["context_refs"] = [{"root": "repo", "path": "x", "required": True}]
         t["child_checklist"] = "some-other-work-id"
         t["evidence"] = [{"id": "e1", "type": "note", "payload": {}, "produced_by": "test", "ts": ""}]
         t["status_detail"] = {"note": "STATUS_DETAIL_UNIQUE_TEXT"}
-        cl = gated(g1=t)
-        out = E.current(cl)
+        return t
 
+    def _assert_every_populated_field_renders(self, t, out):
+        """The property itself, factored out so the negative self-test below
+        drives the REAL assertion path rather than a copy of it."""
         # Dedicated checks for the two structured, list-of-dict fields.
         self.assertIn("PRECOND_UNIQUE_TEXT", out)
         self.assertIn("POSTCOND_UNIQUE_TEXT", out)
@@ -4051,23 +4273,84 @@ class TaskFieldCompleteness(unittest.TestCase):
         # populated, non-excluded field whose content doesn't surface. A
         # future field added to Task and left unhandled by render_human()
         # lands here by default (it is not in _EXCLUDED_FIELDS) and fails.
-        checked_any = False
+        expected = set()
+        asserted = set()
         for field, value in t.items():
             if field in self._EXCLUDED_FIELDS or not value:
                 continue
-            for text in self._flatten(value):
-                checked_any = True
+            expected.add(field)
+            for text in self._leaf_texts(value):
+                asserted.add(field)
                 self.assertIn(
                     text, out,
                     f"populated field {field!r} (value {value!r}) has content "
                     f"{text!r} missing from current()'s output",
                 )
-        self.assertTrue(checked_any, "the generic loop asserted nothing -- "
-                         "the fixture or exclusion set is miscalibrated")
-        # Sanity: name the two fields this loop is specifically proving,
+        # The per-field ledger, NOT one flag for the whole loop: with a single
+        # `checked_any`, any field could cover for any other and a field the
+        # extractor read no text out of passed green.
+        self.assertEqual(
+            asserted, expected,
+            f"populated field(s) {sorted(expected - asserted)} were carried by "
+            f"the loop but asserted NOTHING -- _leaf_texts read no text out of "
+            f"them, so current()'s output was never checked against their "
+            f"content",
+        )
+
+    def test_every_populated_field_renders_for_a_fully_populated_gate(self):
+        t = self._fully_populated_gate()
+        out = E.current(gated(g1=t))
+        self._assert_every_populated_field_renders(t, out)
+        # Sanity: name the three fields this loop is specifically proving,
         # so a change to the fixture that accidentally drops them is loud.
         self.assertIn("CONSTRAINT_UNIQUE_TEXT", out)
         self.assertIn("ANCHOR_UNIQUE_TEXT", out)
+        self.assertIn("DIRECTIVE_TEMPLATE_UNIQUE_TEXT", out)
+
+    def test_fixture_carries_every_field_the_engines_task_builder_builds(self):
+        # The hole the loop above cannot see on its own: it runs over the
+        # FIXTURE's keys, so a Task field added to the engine later and
+        # forgotten here is absent from the loop, absent from the ledger's
+        # expected set, and passes green. Checked against the engine's OWN
+        # canonical Task builder rather than docs/CHECKLIST_SCHEMA.md's Task
+        # table: the table is hand-authored prose, and nothing checks it
+        # against what runs (it is currently stale on the `directives` row).
+        # _build_amend_task is asked for its keys rather than having them
+        # re-listed here, so the enumeration cannot drift from the builder.
+        built = E._build_amend_task({
+            "id": "x", "title": "t", "imperative": "i",
+            "postconditions": [{"id": "c1", "statement": "s",
+                                 "check": None, "satisfied": False}],
+        })
+        missing = set(built) - set(self._fully_populated_gate())
+        self.assertEqual(
+            missing, set(),
+            f"the engine's Task builder _build_amend_task now emits "
+            f"{sorted(missing)}, which this class's fixture does not carry, so "
+            f"the completeness loop would never see the field -- add it to "
+            f"_fully_populated_gate() with content the briefing should show, or "
+            f"to _EXCLUDED_FIELDS with a stated reason. append() mirrors the "
+            f"same shape (scripts/checklist_engine.py)",
+        )
+
+    def test_the_property_fails_when_a_populated_field_is_unrendered(self):
+        # The NEGATIVE self-test, and the durable machine proof that the
+        # assertion path above can reach a failing state. It drives
+        # _assert_every_populated_field_renders -- the same helper the positive
+        # test drives, not a copy -- against a briefing rendered WITHOUT the
+        # `directives` block, which is exactly what current() emitted before
+        # #433 while this class reported green.
+        t = self._fully_populated_gate()
+        unrendered = copy.deepcopy(t)
+        unrendered["directives"] = None
+        out = E.current(gated(g1=unrendered))
+        self.assertNotIn("DIRECTIVE_TEMPLATE_UNIQUE_TEXT", out)
+
+        # `t` still carries the populated block, so the property is being asked
+        # about a field the output does not show -- it must RAISE, and name it.
+        with self.assertRaises(AssertionError) as caught:
+            self._assert_every_populated_field_renders(t, out)
+        self.assertIn("directives", str(caught.exception))
 
 
 class Inv1CompletenessOracle(unittest.TestCase):
