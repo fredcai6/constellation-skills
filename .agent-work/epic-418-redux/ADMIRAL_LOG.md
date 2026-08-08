@@ -4469,3 +4469,34 @@ against my own spine stays mandatory and stays in the state note.
 Crew 4 is at `m5-503` with a heartbeat nine minutes old and `scripts/checklist_engine.py` +
 `tests/test_checklist_engine.py` modified — **its two owned files and nothing else**, consistent with
 the collision check. It has cleared m0 through m4 of a ten-item plan.
+
+### ERROR (mine, operational) — my own logging discipline was delaying my own merge gates. Filed as #512.
+
+Checking why the two PR checks were slow, I found **four full suite runs queued on `main`, all of them
+my own documentation commits**, sitting ahead of the check a merge was waiting on. None of the four
+could fail for any reason related to its own commit — **not one touched code.**
+
+`.github/workflows/ci.yml` triggers on every push to main and every PR with **no path filters**, so an
+`ADMIRAL_LOG.md` entry costs a ~9-minute suite run and contends with real gates. I have pushed roughly
+**twenty** such commits this wave.
+
+**The tension is real and I am not going to resolve it by logging less.** The doctrine that produces
+these commits is per-event *by design* — log the ruling **as it happens**, so the audit trail cannot be
+reconstructed after the fact. Batching them to save CI trades away the exact property the rule exists
+for. **The cost belongs on the CI config, not on the audit trail.**
+
+Filed as **#512**, with the fix and — more usefully — the **caveat that makes the obvious fix wrong
+here.** Several tests in this repo assert on the *content of documentation*: the guard crew 3 added in
+PR #511 asserts shipped handoff templates name the job-addressed delivery path, and
+`test_install_constellation.py` asserts on retired signatures in `SKILL.md` files. **In this repo a
+markdown change genuinely can break the suite**, so a blanket `**/*.md` ignore would silence a real
+guard. `.agent-work/**` and `episodes/**` are the safe pair, and they alone would have removed all four
+queued runs.
+
+Its acceptance carries the mutation test that matters: a commit touching a **shipped template's** prose
+must still run the suite and must still be able to go red — **a path filter that silences the #511
+guard is worse than the problem it fixes.**
+
+**Behaviour change now, for the rest of this run:** batch log entries where the ruling is already
+settled and push less often, without giving up per-event logging in the file itself. The log is written
+as it happens; only the push is batched.
