@@ -3085,3 +3085,39 @@ already has one specimen that arrived that way.
 Rework on its face: additive historical selector + a second rendered `TRIP HISTORY` line, live keying
 untouched per ruling 2, World H vs World D no longer byte-identical, suite **1867 passed / 2 skipped /
 exit 0**. Accepted pending the independent re-review.
+
+---
+
+## RULING | 2026-08-08T19:42:40Z | g4 rework APPROVED; closeout-silence filed as #504, deliberately not fixed here
+
+Re-review returned **APPROVE, 0 blocking findings** (24-item survey). **Both checks I named were
+verified by mutation rather than by reading**, which is the whole point of naming them:
+
+- the corrected pinned test **discriminates** — dead-coding `begin_over_line_records_historical` turns
+  it red (9 failed / 3 passed);
+- the new line was mutation-tested **at the seam** — under the same mutation the reviewer's own
+  independent two-worlds probe flipped to *"seam output identical between H and D = True"*, so **the
+  seam measurement goes red, not merely a pytest assertion**. N22 (historical selector keyed to the live
+  record — B1 exactly) is caught by both.
+
+Also: **zero change inside `begin_over_line_records`**, read from the diff, so ruling 2 held; 9 silencing
+attempts against an armed runaway, none reduced the historical count; suite **1867 / 2 skipped / 829
+subtests / real exit 0**. The reviewer chased the implementer's unexplained subtest delta to
+`test_context_manifest`'s clean-file filter reacting to a dirty tree — **by reading the test**, not by
+assuming. A number that did not have to be explained, explained anyway.
+
+**RULING on the reviewer's out-of-scope find — `_trip_advisory` returns early once no gate is active, so
+BOTH lines go silent at closeout. Filed #504. NOT fixed in this wave.**
+
+It is real and it is the same shape as B1 at a different vantage point: B1 hid the signal at the
+**seam**, this hides it at **closeout** — and closeout is arguably worse, because a seam has a live
+agent reading it while a closed run has only its record. A completed run with three over-the-line begins
+renders identically to a clean one.
+
+**Decisive reason for deferring, and it is not caution:** touching that code now **voids the approval a
+full rework cycle just earned.** A re-review is worth exactly what the diff it examined is worth.
+Secondary: which verb should own the render is an open design question, and the wave's done-condition is
+the seam observable, which now discriminates. Filed with the crew's evidence as the **first candidate
+for the follow-on**, and the Commander is directed not to carry it into g5.
+
+**Seventh specimen** of this epic's subject. It keeps being found by people looking at something else.
