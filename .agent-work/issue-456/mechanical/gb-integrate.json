@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "gb-integrate",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "spine-step": "gb-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-gb-integrate@54bdf2a041b9645861c6b91fe232277a4f3e18f5",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T18:59:12Z"
+  }
+}

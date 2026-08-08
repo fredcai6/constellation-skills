@@ -1702,7 +1702,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-gb-implement-1",
+          "attested": {
+            "evidence": "e-gb-implement-1",
+            "note": "IMPLEMENTER_RESULT returned with no unresolved blockers, evidence e-gb-implement-1. Return status complete; stop conditions were four context-governor HARD trips, each handled at a documented seam rather than left open. All four threshold families committed, none dropped and none widened to force a measurement to pass. Commander-verified independently rather than taken on trust: suite 1793 passed 2 skipped 672 subtests 0 failed, which is baseline 1781 plus exactly the 12 new test methods; closing selector on tests/test_code_map.py 13 passed exit 0; fresh build then check 7/7 exit 0. The crew left the work uncommitted with scripts/code_map/thresholds.py untracked, so the Commander committed it at 3a9b4495 using explicit paths only, with 0 tracked map files. The crew also corrected a Commander error, the seventh this run: my handoff claimed the closing selector collected 17 when it collects 1, because my scan ran selectors against the whole tests/ directory rather than the single file the gate command targets."
+          }
         }
       ],
       "constraints": [
@@ -1735,11 +1740,33 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-gb-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md",
+            "blockers": "none",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-gb-implement-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "gb-implement",
+            "why_ref": "w-19"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "gb-review": {
@@ -1751,7 +1778,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated as e-gb-implement-1; gb-implement is complete and its build is committed at 3a9b4495. Commander-verified independently: suite 1793 passed 2 skipped 672 subtests 0 failed, closing selector 13 passed exit 0, fresh build then check 7/7 exit 0."
         }
       ],
       "postconditions": [
@@ -1762,7 +1790,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-gb-review-1",
+          "attested": {
+            "evidence": "e-gb-review-1",
+            "note": "REVIEW_RESULT returned, evidence e-gb-review-1, verdict APPROVE revised from an initial BLOCK. The review attacked rather than reproduced, as instructed. On the central question -- whether the loose ceilings can ever fire -- it built its OWN falsifier rather than reusing the implementer's: it disabled docstring emission only in extract.Extractor._func, a realistic single-code-path bug rather than a global break, rebuilt the real repo through the mutated package, and got holes/entities 3537/3793 = 0.933, crossing the 0.90 ceiling. So the ceiling fires on a plausible partial regression, not only on a maximal catastrophe. On churn it ran three synthetic rename shapes (reordering, non-reordering, short-to-much-longer) which all landed at an identical 1.545x, confirming that reordering and length changes never split one call-site mention into more than one diff line, and it independently re-measured a real 80-call-site PRODUCTION symbol (scripts.checklist_engine:EngineError) via an isolated worktree at 0.5x, deliberately different in kind from the implementer's test-symbol measurement.\n\nIts BLOCK was correct and narrow: CHURN_RATIO_CEILING_RENAME carried no WHEN THIS FIRES action line, against this gate's explicit constraint that every committed threshold must state one. My own earlier grep had shown four such lines against five thresholds and I did not notice the gap. Because the fix was a single documentation block with no logic change and the reviewer had already specified what it must say, dispatching a fresh remediation crew was disproportionate, so I made the edit myself and handed it straight back to the same reviewer rather than self-grading it. It confirmed the wording is actionable and distinct from the local-edit ceiling's symptom, confirmed the diff is purely additive with zero logic change and the file still pure ASCII and parsing, confirmed no regression (suite identical at 1793, build then check 7/7, selector 13 exit 0), and -- asked whether its original scan had been exhaustive or had merely found the first instance -- mechanically re-verified all 6 top-level constants: 5 are checked thresholds and all 5 now carry an action line 1:1.\n\nAsked to pin down RECALL_FLOOR_DERIVATION rather than leave it a soft suggestion, it ran the grep and reported 5 hits: 1 definition, 0 consumers in scripts/ or tests/, 1 auto-generated INDEX.md catalog entry, 3 its own artifacts. Genuinely dead. It then explicitly declined to escalate the severity: the load-bearing derivation the handoff cared about, why writes has no independent oracle, IS stated and IS what a human reads, in RECALL_FLOORS's own docstring two lines above. The defect is duplication with silent-drift risk, not a missing or dishonest derivation. Filed as a candidate on that basis, neither softened nor inflated."
+          }
         }
       ],
       "constraints": [],
@@ -1771,11 +1804,33 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-gb-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-456/crew-handoffs/gb-review-RESULT.md",
+            "gate": "gb"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-gb-review-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "gb-review",
+            "why_ref": "w-20"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "gb-integrate": {
@@ -1787,7 +1842,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated as e-gb-implement-1; gb-implement is complete and its build is committed at 3a9b4495. Commander-verified independently: suite 1793 passed 2 skipped 672 subtests 0 failed, closing selector 13 passed exit 0, fresh build then check 7/7 exit 0."
         }
       ],
       "postconditions": [
@@ -1803,7 +1859,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-gb-integrate-3"
         },
         {
           "id": "c2",
@@ -1815,17 +1872,55 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-gb-integrate-1",
+          "attested": {
+            "evidence": "e-gb-integrate-1",
+            "note": "REVIEW_RESULT returned, evidence e-gb-review-1, verdict APPROVE revised from an initial BLOCK. The review attacked rather than reproduced, as instructed. On the central question -- whether the loose ceilings can ever fire -- it built its OWN falsifier rather than reusing the implementer's: it disabled docstring emission only in extract.Extractor._func, a realistic single-code-path bug rather than a global break, rebuilt the real repo through the mutated package, and got holes/entities 3537/3793 = 0.933, crossing the 0.90 ceiling. So the ceiling fires on a plausible partial regression, not only on a maximal catastrophe. On churn it ran three synthetic rename shapes (reordering, non-reordering, short-to-much-longer) which all landed at an identical 1.545x, confirming that reordering and length changes never split one call-site mention into more than one diff line, and it independently re-measured a real 80-call-site PRODUCTION symbol (scripts.checklist_engine:EngineError) via an isolated worktree at 0.5x, deliberately different in kind from the implementer's test-symbol measurement.\n\nIts BLOCK was correct and narrow: CHURN_RATIO_CEILING_RENAME carried no WHEN THIS FIRES action line, against this gate's explicit constraint that every committed threshold must state one. My own earlier grep had shown four such lines against five thresholds and I did not notice the gap. Because the fix was a single documentation block with no logic change and the reviewer had already specified what it must say, dispatching a fresh remediation crew was disproportionate, so I made the edit myself and handed it straight back to the same reviewer rather than self-grading it. It confirmed the wording is actionable and distinct from the local-edit ceiling's symptom, confirmed the diff is purely additive with zero logic change and the file still pure ASCII and parsing, confirmed no regression (suite identical at 1793, build then check 7/7, selector 13 exit 0), and -- asked whether its original scan had been exhaustive or had merely found the first instance -- mechanically re-verified all 6 top-level constants: 5 are checked thresholds and all 5 now carry an action line 1:1.\n\nAsked to pin down RECALL_FLOOR_DERIVATION rather than leave it a soft suggestion, it ran the grep and reported 5 hits: 1 definition, 0 consumers in scripts/ or tests/, 1 auto-generated INDEX.md catalog entry, 3 its own artifacts. Genuinely dead. It then explicitly declined to escalate the severity: the load-bearing derivation the handoff cared about, why writes has no independent oracle, IS stated and IS what a human reads, in RECALL_FLOORS's own docstring two lines above. The defect is duplication with silent-drift risk, not a missing or dishonest derivation. Filed as a candidate on that basis, neither softened nor inflated."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-gb-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-456/crew-handoffs/gb-review-RESULT.md",
+            "gate": "gb"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-gb-integrate-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "gb-integrate",
+            "why_ref": "w-21"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-gb-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'baseline or churn or recall or ascii' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g6-implement": {
@@ -2424,6 +2519,11 @@
       "id": "tc5",
       "from": "g5-integrate",
       "statement": "tc48 (re-filed into execute.json from the g5 re-review's own survey, where it is that survey's tc1 -- do not double-count): the remediation's pinning test guards one literal string, not the class of defect. Its wording half is assertNotIn(\"top-level\", legend). The re-reviewer mutation-proved the gap by rewording SPLIT_LEGEND to four DIFFERENT top-level-only overclaims that avoid that exact substring -- \"at the front of the module path\", \"as the first segment\", \"root-level\", \"outermost\" -- and all four survived undetected, mutant green. Correctly graded NOT a blocker: the test's own docstring is honestly scoped to guarding a reversion of that specific wording and does not overclaim its coverage, and its behavioural half (a nested tests package still classifies as a test module in both hand-independent copies) is a full general pin on the real code path. The durable lesson generalizes past this test and joins tc45: pinning a printed legend to a predicate by asserting the ABSENCE of one wrong phrase is a pin against the last mistake, not against the failure mode. The robust form is to derive the legend's prose from the predicate's own literal values so the two cannot drift, or to assert a property of the predicate that the legend's claim implies. Worth doing when the legend-pinning pattern is generalized."
+    },
+    {
+      "id": "tc6",
+      "from": "gb-integrate",
+      "statement": "tc49 (re-filed into execute.json from the gb review's own survey, where it is that survey's tc1 -- do not double-count): thresholds.RECALL_FLOOR_DERIVATION is dead. Grep across scripts/, tests/ and all .py/.md files returns 5 hits: 1 its own definition, 0 consumers anywhere in scripts/ or tests/, 1 the code map's own auto-generated INDEX.md catalog entry (which catalogs every symbol whether used or not, so not a functional reader), and 3 the review's own artifacts. Genuinely zero consumers, confirmed by grep rather than asserted. The severity was deliberately NOT escalated and the distinction is the useful part: this is not the missing-derivation defect the gb handoff warned about, because the load-bearing derivation -- why the writes predicate has no independent oracle and is therefore derived the same hand-labelled way as calls and reads -- IS stated, and is stated where a human actually reads it, in RECALL_FLOORS's own docstring two lines above, which RECALL_FLOORS's own WHEN THIS FIRES line points an investigator toward. RECALL_FLOOR_DERIVATION is a near-verbatim unconsumed restatement of that same docstring. So the real defect is duplication with silent-drift risk: nothing keeps the two copies in sync and they can diverge unnoticed, which is the same shape as tc45 and tc48 (a stated rule drifting from the applied rule) one level up in the stack. ACTION: either delete the constant, or give it a real consumer so drift becomes visible -- the reviewer's own suggestion is to have RecallFloorTests' failure message quote it, which converts dead prose into a thing that must stay true."
     }
   ],
   "blockers": [],
@@ -2560,6 +2660,27 @@
       "why": "g5 closes on an APPROVE after one BLOCK and one remediation. The capability shipped: every entity page's single inbound line became two attributed lines, production callers separated from test callers, with a TEST_NOTE on test-defined pages so that zero callers reads as the normal expected state rather than a finding. Test pages are rendered, not deleted.\n\nThe BLOCK was correct and the remediation closed it: SPLIT_LEGEND, printed on every page, claimed the split keyed on a top-level tests package while is_test_module matched a tests segment anywhere on the dotted path. I ruled fix the legend and keep the predicate, because a nested pkg/tests/ subpackage is a real common layout and \"anywhere on the path\" is the more defensible reading of pytest's published convention; it was also the smaller diff and reclassified zero entities, so every measured number survived. A pinning test now guards both directions of drift.\n\nThree independent measurements agreed exactly on the corrected split: genuinely unused production code is 88, not the naive 2428/2429 headline, because 96.4% of that bucket is test-defined entities whose own pages say zero callers is normal. That conflation was confined to the evidence layer and never escaped into anything shipped -- verified by reading top_index and module_index in full and grepping scripts/ for the bucket names.\n\nTwo independence properties survived the gate most likely to break them: checks.py still re-declares the refs-line grammar and is_test_module by hand rather than importing from render.py, and that hand copy is provably load-bearing -- diverging only it makes two independent checks go red. Zero entities were reclassified, proved by building the pre-remediation tree in a throwaway worktree and diffing the exact page-filename sets.\n\nClosing at: modules 111, entities 3753, pages 3865, check 7/7 exit 0, suite 1781 passed 2 skipped 672 subtests 0 failed, 0 of 3865 page headers carrying a line position. One residual weakness carried to triage, not blocking: the pinning test's wording half pins one literal string rather than the overclaim class.",
       "mechanical": false,
       "ts": "2026-08-08T17:25:33.589045+00:00"
+    },
+    {
+      "id": "w-20",
+      "gate": "gb-implement",
+      "why": "gb's build lands the numbers this run has been missing. Every check built so far could go red; none had a committed value to go red against. Four families are now committed in scripts/code_map/thresholds.py, each expressed as a ratio or a run-time invariant rather than an absolute count, because this run demonstrably grows the corpus it measures -- g5's one added test method moved entities 3752 to 3753 and pages 3864 to 3865, and g5's own crew was bitten by hardcoding counts.\n\nThe gate's headline is the first-ever measurement of churn under a widely-referenced-symbol rename, which the design signed off as accepted-untested. It held at 1.02x against a 3.0 ceiling, essentially flat. The reason is structural rather than lucky: a pure identifier rename changes one line per call site on both sides of the ratio, so the diff-lines ratio stays near 1x however many callers exist, even though 217 of 3865 pages changed. That is a direct vindication of measuring churn in diff lines rather than diff pages -- measured in pages, the honest finding would have been that the rename blew the ceiling, and it would have been the wrong finding, an artifact of the unit rather than a regression.\n\nThe template-ASCII threshold avoided the trap the gate task named: it AST-scans render.py's own literal string nodes rather than the rendered pages, so it is structurally blind to the 386 pre-existing non-ASCII pages that reproduce source docstring prose verbatim. The explicitly rejected substring-match-against-docstring-fragments approach did not sneak back in.\n\nAdvancing on the build only. The open question this gate must still answer is whether the loose ceilings are useful or merely safe: 0.90 against a measured 0.673, and 3.0 against 1.27x and 1.02x. A threshold no realistic regression can reach is the check-that-cannot-fail problem wearing a number, and this run has been bitten by both halves of that lesson already. That call belongs to the review, which is dispatched and told to attack looseness hardest and to build its own mutations rather than reproduce the implementer's.",
+      "mechanical": false,
+      "ts": "2026-08-08T18:17:59.583623+00:00"
+    },
+    {
+      "id": "w-21",
+      "gate": "gb-review",
+      "why": "REVIEW_RESULT returned, evidence e-gb-review-1, verdict APPROVE revised from an initial BLOCK. The review attacked rather than reproduced, as instructed. On the central question -- whether the loose ceilings can ever fire -- it built its OWN falsifier rather than reusing the implementer's: it disabled docstring emission only in extract.Extractor._func, a realistic single-code-path bug rather than a global break, rebuilt the real repo through the mutated package, and got holes/entities 3537/3793 = 0.933, crossing the 0.90 ceiling. So the ceiling fires on a plausible partial regression, not only on a maximal catastrophe. On churn it ran three synthetic rename shapes (reordering, non-reordering, short-to-much-longer) which all landed at an identical 1.545x, confirming that reordering and length changes never split one call-site mention into more than one diff line, and it independently re-measured a real 80-call-site PRODUCTION symbol (scripts.checklist_engine:EngineError) via an isolated worktree at 0.5x, deliberately different in kind from the implementer's test-symbol measurement.\n\nIts BLOCK was correct and narrow: CHURN_RATIO_CEILING_RENAME carried no WHEN THIS FIRES action line, against this gate's explicit constraint that every committed threshold must state one. My own earlier grep had shown four such lines against five thresholds and I did not notice the gap. Because the fix was a single documentation block with no logic change and the reviewer had already specified what it must say, dispatching a fresh remediation crew was disproportionate, so I made the edit myself and handed it straight back to the same reviewer rather than self-grading it. It confirmed the wording is actionable and distinct from the local-edit ceiling's symptom, confirmed the diff is purely additive with zero logic change and the file still pure ASCII and parsing, confirmed no regression (suite identical at 1793, build then check 7/7, selector 13 exit 0), and -- asked whether its original scan had been exhaustive or had merely found the first instance -- mechanically re-verified all 6 top-level constants: 5 are checked thresholds and all 5 now carry an action line 1:1.\n\nAsked to pin down RECALL_FLOOR_DERIVATION rather than leave it a soft suggestion, it ran the grep and reported 5 hits: 1 definition, 0 consumers in scripts/ or tests/, 1 auto-generated INDEX.md catalog entry, 3 its own artifacts. Genuinely dead. It then explicitly declined to escalate the severity: the load-bearing derivation the handoff cared about, why writes has no independent oracle, IS stated and IS what a human reads, in RECALL_FLOORS's own docstring two lines above. The defect is duplication with silent-drift risk, not a missing or dishonest derivation. Filed as a candidate on that basis, neither softened nor inflated.",
+      "mechanical": false,
+      "ts": "2026-08-08T18:58:54.202375+00:00"
+    },
+    {
+      "id": "w-22",
+      "gate": "gb-integrate",
+      "why": "gb closes on an APPROVE, revised from a correct BLOCK. This run's checks could always go red; from here they have committed values to go red against. Four threshold families now live in scripts/code_map/thresholds.py, every one a ratio or run-time invariant rather than an absolute count, and every one carrying its own one-line statement of what a human should open when it fires -- which is the human's ruling made mechanical rather than aspirational.\n\nThe gate answered the question it was created to answer. Churn under a widely-referenced-symbol rename had been signed off at design confirm as accepted-untested; it is now measured at 1.02x against a 3.0 ceiling and it held, for a structural reason rather than by luck. A pure identifier rename changes one line per call site on both sides of the ratio, so the diff-lines ratio stays near 1x however many callers exist, even though 217 of 3865 pages change. Measured in pages instead of lines, the honest finding would have been that the rename blew the ceiling, and it would have been wrong -- an artifact of the unit, not a regression. The reviewer independently re-measured a real 80-call-site production symbol at 0.5x and ran three synthetic rename shapes that all landed identically at 1.545x, so the 1:1 relationship survives reordering and length changes.\n\nThe looseness question I set the review is answered in the affirmative: the reviewer built its own realistic partial regression, disabling docstring emission on one code path rather than globally, and drove the hole ratio to 0.933 past the 0.90 ceiling. A generous ceiling that still fires on a plausible bug is a sharp tripwire, not a decorative one.\n\nThe BLOCK was narrow and correct: one of the five thresholds carried no action line, against this gate's explicit constraint. My own grep had shown four lines against five thresholds and I missed the gap. I fixed the wording myself because a one-line documentation change did not justify a fresh crew, then handed it straight back to the same reviewer rather than grading my own work; it confirmed the wording is actionable, confirmed the diff purely additive with no regression, and on being asked whether its scan had been exhaustive re-verified all five thresholds carry an action line 1:1.\n\nClosing at: suite 1793 passed 2 skipped 672 subtests 0 failed, closing selector 13 passed exit 0, fresh build then check 7/7 exit 0. One candidate carried to triage: a dead unconsumed constant that duplicates a live docstring, filed as duplication with silent-drift risk rather than as a missing derivation, because the derivation a human actually reads is stated.",
+      "mechanical": false,
+      "ts": "2026-08-08T19:05:51.222627+00:00"
     }
   ],
   "amendments": [

@@ -1,0 +1,199 @@
+{
+  "work_id": "issue-456-gb-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-recheck"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the gb-review handoff, gb-implement-RESULT.md, gate-spec.json's gb entry, thresholds.py, and the new test classes in tests/test_code_map.py.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All four threshold families named in gate gb (hole ratio, template-ASCII, recall floor including writes, churn ratio on both local-edit and rename) are committed in scripts/code_map/thresholds.py, each expressed as a ratio or invariant (never an absolute count), each with a mutation-proof falsifier test. The rename case (never measured before this gate, signed off accepted-untested at design confirm) was measured for the first time at 1.02x. Independently reproduced by this review: full suite 1793 passed/2 skipped/672 subtests/0 failed (exit 0); closing selector 13 passed; fresh build+check 7/7; and an INDEPENDENT rename of a different, production, ~80-call-site symbol (checklist_engine.EngineError) via isolated git worktree measured 0.5x, corroborating the 1.02x finding on different code.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff bd932921..3a9b4495 touches exactly scripts/code_map/thresholds.py (new, 104 lines) and tests/test_code_map.py (+608), plus the crew's own workbench context/mechanical/handoff files. No change to render.py, checks.py, is_test_module, SPLIT_LEGEND, the collision fixtures, entity_symbol_join, page_location_matches_content, or page headers -- every specific exclusion in the handoff's do-not-touch list is respected. git ls-tree -r HEAD -- map/ returns 0: no map/ page files were committed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Built and ran my own falsifiers, independent of the implementer's, for every family. (1) HOLE_RATIO_CEILING=0.90 vs measured 0.673: disabled docstring emission only in extract.Extractor._func -- the SHARED code path for visit_FunctionDef AND visit_AsyncFunctionDef (both = _func), which covers plain functions AND methods but not visit_ClassDef's separate docstring emission. This is a realistic, scoped single-function-path bug, not a contrived global break. Rebuilt the real repo through the mutated package: holes/entities = 3537/3793 = 0.933, crossing 0.90. The ceiling fires on a plausible partial regression, not only on a maximal catastrophe. (2) CHURN ceilings=3.0 vs measured 1.27x/1.02x: ran 3 independent synthetic variants on a NEW 2-callee-per-caller fixture (reorder-inducing rename, non-reordering rename, short-to-much-longer-name rename) -- all three landed at the SAME 1.545 ratio, confirming render.tally()'s comma-joined single line means neither sort-position changes nor length changes split one call-site mention into multiple diff lines. Also ran an INDEPENDENT real-corpus rename via isolated git worktree (checklist_engine.EngineError -> EngineFault, an 80-call-site PRODUCTION symbol, not the implementer's test symbol), restricted to the mappable corpus via discovery.discover_corpus: 174 map diff lines / 348 source diff lines = 0.5x. Both real-corpus renames (implementer's 212-caller test symbol at 1.02x, mine at 80-caller production symbol at 0.5x) and my worst synthetic case (1.545x) stay well under 3.0 -- no realistic rename shape tested here approaches the ceiling. (3) RECALL_FLOORS: confirmed by reading RecallFloorTests.setUpClass that it builds and measures ONLY the synthetic _make_recall_fixture_repo, never ROOT -- the floor cannot fire against ordinary live-corpus change. The writes-recall-derivation-honesty claim is independently corroborated: DESIGN_SPEC.md line 247 (critic TS7) records 'the SCIP oracle is blind to writes' as the reason for the accepted hand-labeled-sample fix, and extract.py's own module docstring has stated 'stdlib only... No SCIP' since g0 -- so 'no automated oracle backs ANY predicate' is a verifiable fact, not just an assertion. (4) TEMPLATE_ASCII_INVARIANT: ran two of my own mutations distinct from the implementer's -- (a) non-ASCII spliced into TEST_NOTE (not the implementer's REFS_LEGEND target): caught. (b) non-ASCII spliced into module_index's own FUNCTION DOCSTRING: correctly NOT flagged, proving the docstring-exclusion branch is real, not vacuous -- a gap in the implementer's own falsifier suite, which never exercises this branch with real non-ASCII docstring text (their second falsifier test only proves f-string INTERPOLATION is excluded, a different and automatic AST property). Confirmed baseline render.py currently authors zero non-ASCII template literals, which combined with the 386 existing non-ASCII pages proves by construction those 386 pages' non-ASCII text cannot originate from render.py's own literals. (5) Reproduced independently: full suite 1793 passed/2 skipped/672 subtests/0 failed exit 0 (385.97s); closing selector -k 'baseline or churn or recall or ascii' on tests/test_code_map.py: 13 passed exit 0; fresh build+check: 7/7 exit 0. One gap found and routed to r4: CHURN_RATIO_CEILING_RENAME's own docstring block never states its own WHEN THIS FIRES action line (only CHURN_RATIO_CEILING_LOCAL_EDIT does), against the gate's explicit constraint that every threshold state one.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "gate-spec.json's gb constraints require: no absolute-count thresholds (PASS -- all four families are ratios or an invariant); the FULL suite green at the boundary (PASS -- independently reproduced 1793p/2s/672 subtests/0f); and Tommy's ruling that every threshold committed here must state, in one line, what a human should DO when it fires ('a tripwire with no action is noise'). Three of the four families comply: HOLE_RATIO_CEILING, CHURN_RATIO_CEILING_LOCAL_EDIT, RECALL_FLOORS and TEMPLATE_ASCII_INVARIANT each carry an explicit 'WHEN THIS FIRES:' line. CHURN_RATIO_CEILING_RENAME does not -- its docstring block (thresholds.py lines 47-59) documents the measurement and the structural 1-line-per-call-site reasoning but never states an action distinct from (or referring back to) CHURN_RATIO_CEILING_LOCAL_EDIT's. A reader can infer the same numeric ceiling implies a related diagnostic, but the rename failure mode is not the same as the local-edit one (LOCAL_EDIT's stated action -- 'look for a page that changed without its entity changing, a rendering instability' -- describes a different symptom than a rename-driven blowup would show), so the inference is not safe to leave implicit. This is a narrow, cheap-to-fix gap against an explicit, named gate constraint, not a threshold-design defect: the ceiling itself is well-supported (see r3-evidence).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No divergence from recorded architecture. This gate resolves, on the record, the one open decision DESIGN_SPEC's confidence_flags carried into gb ('churn under a widely-referenced-symbol rename was human-signed as accepted-untested at confirm') -- now measured at 1.02x (and independently corroborated by this review at 0.5x on a different symbol), held under ceiling, and the finding is recorded both in thresholds.py's own docstring and gb-implement-RESULT.md rather than a new decision file, matching how gate-spec.json's gb 'close' criterion frames it. No new structural, capability, or constraint claim beyond what gate-spec.json already scoped for gb.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record>, then record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python \"C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py\" \"C:/Programs/constellation-skills/.claude/worktrees/issue-456/.agent-work/issue-456/gb-review/fowler-pass.json\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass complete: 12 smells assessed, verify_fowler_pass.py exits 0 (smells=12, flagged=[speculative-generality], overridden=[duplicated-code]). speculative-generality: RECALL_FLOOR_DERIVATION is dead data, never consumed -- flagged as triage candidate tc1, not a blocker. duplicated-code: the tempfile+build setup idiom in HoleRatioBaselineTests/RecallFloorTests/ChurnRatioTests matches ~15 pre-existing TestCase classes' own established convention in this file -- overridden per global-crew.md's 'match the surrounding code's conventions' rule. All other 10 smells absent. Record: .agent-work/issue-456/gb-review/fowler-pass.json",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python \"C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py\" \"C:/Programs/constellation-skills/.claude/worktrees/issue-456/.agent-work/issue-456/gb-review/fowler-pass.json\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-recheck": {
+      "id": "r7-recheck",
+      "title": "Re-verify Commander's direct fix to CHURN_RATIO_CEILING_RENAME",
+      "imperative": "Commander added a WHEN THIS FIRES line to CHURN_RATIO_CEILING_RENAME directly (not via a remediation crew) to close the r4-quality blocker. Independently verify: (1) the added line is actionable and distinct from the local-edit ceiling's symptom; (2) the diff is purely additive (no logic change); (3) full suite + fresh build/check still pass; (4) the missing-action-line scan across all thresholds was exhaustive. Record pass/fail with a finding; this is NOT a self-grade since Commander authored the fix.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "(1) Actionability -- my independent read, not agreement: the added line names a distinct symptom (map diff lines exceed call-site count -- explicitly contrasted with LOCAL_EDIT's rendering-instability symptom) and two concrete things to open: the renamed symbol's own caller-list line (check in-place edit vs rewrap/re-sort) and a page-path collision with an existing symbol name. Both are grounded in the actual mechanism (render.tally()'s single comma-joined line, and the page-path collision surface this review already probed) -- this is comparably concrete to the other three WHEN THIS FIRES lines, not investigate-this noise. Satisfies the constraint. (2) git diff 3a9b4495 -- scripts/code_map/thresholds.py: purely additive, 8 new comment lines inserted before CHURN_RATIO_CEILING_RENAME = 3.0, zero logic change, zero other file touched (confirmed by git status: only thresholds.py plus Commander's own execute.json tracking dirty). File is pure ASCII (str.isascii() True) and ast.parse succeeds. (3) Full suite independently reproduced post-fix: 1793 passed, 2 skipped, 672 subtests passed, exit 0, 386.24s -- identical counts to the pre-fix baseline, confirming a documentation-only change caused no regression. Fresh build then check (run in that order, post-fix): build exit 0 (3793 entities, matches pre-fix); check 7/7 all ok (no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, page-location-matches-content, inbound-attribution, deterministic-rebuild). Closing selector: 13 passed, exit 0. (4) Exhaustive re-scan, mechanically verified via grep correlating every 'WHEN THIS FIRES' occurrence against every top-level constant definition in thresholds.py: 6 top-level constants total. 5 are actual thresholds a test checks against (HOLE_RATIO_CEILING, CHURN_RATIO_CEILING_LOCAL_EDIT, CHURN_RATIO_CEILING_RENAME, RECALL_FLOORS, TEMPLATE_ASCII_INVARIANT) -- all 5 now immediately preceded by their own WHEN THIS FIRES line, 1:1. The 6th, RECALL_FLOOR_DERIVATION, is not itself a checked threshold (no test asserts against it), so it is correctly outside this constraint's scope -- my original pass was exhaustive against all checked thresholds, not partial. RECALL_FLOOR_DERIVATION grep (scripts/, tests/, all .py/.md, excluding __pycache__): 5 total hits repo-wide -- 1 is its own definition (thresholds.py:90), 0 are consumers in scripts/ or tests/, 1 is the code_map's own auto-generated INDEX.md page cataloging the symbol (not a functional reader -- the map catalogs every symbol whether used or not), 3 are this review's own artifacts. Genuinely dead: zero consumers. Precision for the record, per Commander's request to file this accurately rather than softly: this is NOT the same defect class as an unstated derivation. The load-bearing derivation the handoff cared about (why writes has no SCIP-independent oracle) IS stated, and IS what a human reads -- it lives in RECALL_FLOORS's own docstring comment two lines above (lines 72-79), which RECALL_FLOORS's WHEN THIS FIRES line points an investigator toward. RECALL_FLOOR_DERIVATION is a near-verbatim, unconsumed restatement of that same docstring (compared side by side: both say hand-labeled fixture, no automated oracle, writes derived the same way as calls/reads, stated rather than left implicit). The defect is duplication with silent-drift risk (nothing keeps the two copies in sync, so they could diverge unnoticed), not a missing or dishonest derivation. Remains triage candidate tc1, filed with this precision.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r4-quality: gate-spec.json's gb constraints require: no absolute-count thresholds (PASS -- all four families are ratios or an invariant); the FULL suite green at the boundary (PASS -- independently reproduced 1793p/2s/672 subtests/0f); and Tommy's ruling that every threshold committed here must state, in one line, what a human should DO when it fires ('a tripwire with no action is noise'). Three of the four families comply: HOLE_RATIO_CEILING, CHURN_RATIO_CEILING_LOCAL_EDIT, RECALL_FLOORS and TEMPLATE_ASCII_INVARIANT each carry an explicit 'WHEN THIS FIRES:' line. CHURN_RATIO_CEILING_RENAME does not -- its docstring block (thresholds.py lines 47-59) documents the measurement and the structural 1-line-per-call-site reasoning but never states an action distinct from (or referring back to) CHURN_RATIO_CEILING_LOCAL_EDIT's. A reader can infer the same numeric ceiling implies a related diagnostic, but the rename failure mode is not the same as the local-edit one (LOCAL_EDIT's stated action -- 'look for a page that changed without its entity changing, a rendering instability' -- describes a different symptom than a rename-driven blowup would show), so the inference is not safe to leave implicit. This is a narrow, cheap-to-fix gap against an explicit, named gate constraint, not a threshold-design defect: the ceiling itself is well-supported (see r3-evidence)."
+    ],
+    "summary": "Commander's direct, documentation-only fix to CHURN_RATIO_CEILING_RENAME (one added WHEN THIS FIRES block, zero logic change) closes the sole r4-quality blocker. Independently re-verified (r7-recheck, not a self-grade): the added action line is actionable and distinct from the local-edit ceiling's symptom; the diff is purely additive and the file remains pure ASCII and parses; full suite (1793 passed/2 skipped/672 subtests/0 failed, exit 0) and fresh build-then-check (7/7, exit 0) both reproduce clean post-fix; and the missing-action-line scan was exhaustive -- all 5 checked threshold constants now carry their own action line. Triage candidate tc1 (dead RECALL_FLOOR_DERIVATION constant, 0 consumers confirmed by grep) remains open, filed precisely as duplication-with-drift-risk rather than an unstated-derivation defect, since the load-bearing derivation is stated in RECALL_FLOORS's own docstring.",
+    "override_reason": "r4-quality's recorded fail (CHURN_RATIO_CEILING_RENAME missing its own WHEN THIS FIRES action line) was fixed directly by Commander and independently re-verified in r7-recheck (not a self-grade): the fix is a purely additive, 8-line documentation block with zero logic change; the added line is actionable and distinct from the local-edit ceiling's symptom by my own independent read; full suite and fresh build-then-check both reproduce clean post-fix; and the exhaustive re-scan confirms all 5 checked threshold constants now carry an action line. The r4-quality fail is retained in the record for audit but no longer bars this change."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r3-evidence",
+      "statement": "thresholds.RECALL_FLOOR_DERIVATION (scripts/code_map/thresholds.py lines 82-87) is dead: a string constant restating what RECALL_FLOORS's own docstring already says, never read by any test/check/doc (grep across scripts/ and tests/ finds only its own definition). Delete it or wire a consumer (e.g. have RecallFloorTests' failure message quote it) -- out of scope for this review to fix."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "gb-review-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T18:54:35.410754+00:00",
+    "last_heartbeat": "2026-08-08T18:55:55.769793+00:00",
+    "claimed_by": "gb-reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T18:56:06.362340+00:00"
+  }
+}

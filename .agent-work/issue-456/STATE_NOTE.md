@@ -4,17 +4,62 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: `gb-review` — **DISPATCHED** 2026-08-08
-- **PID**: crew `constellation/issue-456/gb/reviewer/attempt-1`, Agent name
-  `gb-reviewer`, model `sonnet`. Recover with `SendMessage` to that name
-  (externally dispatched — nudge in place, never relaunch).
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/gb-review-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: **`g6`** — next gate, NOT yet started
+- **PID**: none in flight. All crews resolved (23 crews, 0 unresolved).
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md`
 
-## `gb` BUILD LANDED and is Commander-verified — commit `3a9b4495`
+## `gb` IS CLOSED — `gb-integrate -> complete` on an APPROVE
 
-`gb-implement.p1` attested; the build is done and pushed. **Still open:**
-`gb-implement` needs its `c1` (artifact `IMPLEMENTER_RESULT`, no unresolved
-blockers) attested + advanced, then `gb-review`, then `gb-integrate`.
+**CLOSED: `g0` `g1` `g2` `g3` `g4` `g5` `gb`.** Seven of eleven. Remaining:
+**`g6` `g7` `g8` `gs`**, then `reconcile → triage → review → feedback → archive`.
+**Release the lease LAST.**
+
+### `g6` starts here — its closing selector collects ZERO today, BY DESIGN
+
+`g6-integrate`'s `c1` selects `-k 'stale_tag'` on **`tests/test_code_map.py`**,
+which collects **0**. That is a **specification**, not a `tc47` defect: `g6` must
+CREATE a test whose name contains `stale_tag`. **Say this in the handoff** — at
+`g5` the plan waited on `caller_split` while the crew wrote
+`ProductionTestCallerSplitTests`, and the mismatch was invisible until close.
+Same for `g7` (`comment_tags`) and `gs` (`map_tree_freshness`). `g8`'s
+`bom or docstring` already collects **3**.
+
+### How `gb` closed — the process point worth keeping
+
+The reviewer returned a correct, narrow **BLOCK**: one of five thresholds
+(`CHURN_RATIO_CEILING_RENAME`) carried no `WHEN THIS FIRES` action line, against
+this gate's explicit constraint. **My own grep had shown four lines against five
+thresholds and I missed it.** Because the fix was a single documentation block
+with no logic change, and the reviewer had already specified its content, a fresh
+remediation crew was disproportionate — **so I wrote it and handed it straight
+back to the SAME reviewer rather than self-grading.** It confirmed the wording is
+actionable and distinct from the local-edit symptom, confirmed the diff purely
+additive with no regression, and — asked directly whether its scan had been
+exhaustive or had merely found the first instance — mechanically re-verified that
+all **5 of 5** checked thresholds now carry an action line 1:1. **Use this shape
+again for one-line constraint gaps: Commander fixes, original reviewer verifies.**
+
+### What `gb` committed — `scripts/code_map/thresholds.py` (new)
+
+`HOLE_RATIO_CEILING` **0.90**; `CHURN_RATIO_CEILING_LOCAL_EDIT` and `..._RENAME`
+both **3.0**; `RECALL_FLOORS` **1.0** for `calls`/`reads`/`writes`;
+`TEMPLATE_ASCII_INVARIANT`. All ratios or invariants, never counts. All five carry
+an action line.
+
+**The looseness question is ANSWERED — do not re-litigate it.** The reviewer built
+its own realistic partial regression (disabled docstring emission on ONE code
+path, `extract.Extractor._func`, not globally), rebuilt the real repo through it,
+and drove the hole ratio to **0.933**, past the 0.90 ceiling. A generous ceiling
+that still fires on a plausible bug is a sharp tripwire, not a decorative one.
+
+**Rename churn — resolved, first measurement ever.** 1.02x (implementer, 212-caller
+test symbol) and **0.5x** (reviewer, real 80-call-site PRODUCTION symbol
+`scripts.checklist_engine:EngineError`, isolated worktree). Three synthetic rename
+shapes — reordering, non-reordering, short-to-much-longer — all landed identically
+at **1.545x**, so reordering and length changes never split one call-site mention
+into more than one diff line. **Measure churn in diff LINES, never diff PAGES:**
+the rename touched 217 of 3865 pages, so measured in pages the honest finding
+would have been "blew the ceiling" — and it would have been wrong.
 
 Four families committed in the NEW `scripts/code_map/thresholds.py`, each a ratio
 or run-time invariant, each with its own one-line "what to do when this fires":

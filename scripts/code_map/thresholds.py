@@ -59,6 +59,14 @@ CHURN_RATIO_CEILING_LOCAL_EDIT = 3.0
 #: alarming in isolation. See the churn tests' own module docstring
 #: (`ChurnRatioTests` in tests/test_code_map.py) for the small-scale
 #: version of this same finding, reproduced on every suite run.
+#:
+#: WHEN THIS FIRES: the one-line-per-call-site relationship above has broken,
+#: so a rename is producing MORE map diff lines than the call sites it
+#: touches -- a different symptom from the local-edit ceiling's rendering
+#: instability. Open the renamed symbol's own caller-list line first and check
+#: it was edited in place rather than rewrapped or re-sorted wholesale; then
+#: check whether the NEW name collides with an existing symbol's page path,
+#: which turns edits into whole-page creations and deletions.
 CHURN_RATIO_CEILING_RENAME = 3.0
 
 #: Edge recall (matched / hand-labeled-true) per predicate, on a small
