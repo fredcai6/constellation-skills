@@ -527,3 +527,25 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   Non-zero exit went to stderr while the comment posted anyway, so every success signal said success.
   Carried as a triage candidate for closeout; the fix is to extend the existing `-F <file>` rule to
   cover issue comments, not just PR bodies.
+
+- `2026-08-08` — `RULING` (closeout substep executed early, delegated: repo hygiene): **harvest before
+  sweep, done — and it was not a formality.** Four files in the predecessor run's stale worktrees
+  exist **nowhere in the git object store**, and `git worktree remove` would have destroyed them:
+  `RETURN.md` from `b-420` (10 KB), `d-422` (10 KB) and `g-425` (7.5 KB), plus **`h-447`'s 261 KB
+  `AGENT_FEEDBACK.md`**. Collected to `.agent-work/harvest-418-redux/`, verified byte-identical with
+  `cmp`.
+  **How they were identified, and why filename survey would have been wrong.** I did not judge by
+  name or by `git status` alone. For each candidate: `h=$(git hash-object <file>); git cat-file -e
+  "$h"` — a non-zero exit means that exact content exists in no commit, on no branch, anywhere.
+  That check **spared one file**: `h-447/.agent-work/LESSONS.md` looked identical in kind to its
+  sibling and is **already in git**, so it was deliberately not copied. Five candidates by name, four
+  genuinely at risk. The name-based survey would have been a check that cannot fail — it returns
+  "at risk" for saved and unsaved content alike.
+  **The one worth pausing on:** `h-447` is the workstream that *retired* `AGENT_FEEDBACK.md`. Its own
+  run wrote a 261 KB retrospective into the very file it was deleting — worktree-local, untracked,
+  under the epic lease that makes `durable_root()` return the worktree rather than the main checkout.
+  The retirement landed; its own record came within one `git worktree remove` of not existing.
+  **Disposition deliberately NOT settled.** These are pre-retirement formats and `episodes/` is the
+  store now. Whether they convert to episodes or are dropped with a reason is the lessons audit's
+  call at closeout. Collecting is reversible; deciding is not, and the sweep was the only clock.
+  **Nothing swept.** `governor-264` is untouched and flagged DO NOT SWEEP.
