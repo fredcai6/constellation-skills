@@ -966,3 +966,4 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
   six reviewed files across both commits, found **zero difference** (the extra commit is `.agent-work`
   bookkeeping), and said so rather than quietly ignoring it.
   Reviewer worktree harvested — **36 more files that existed nowhere in git** — and swept.
+- TRANSITION | boundary=w3-to-w4 | decision=replan | verified
