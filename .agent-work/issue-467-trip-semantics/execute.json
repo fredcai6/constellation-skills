@@ -915,7 +915,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Attested by commander-w4-467-g. IMPLEMENTER_RESULT received and verified fresh, not merely present: run_crew.py --verify-result on constellation/issue-467-trip-semantics/g4-implement/implementer/attempt-1 returns 'fresh (completed)', the artifact is at crew-handoffs/g4-implementer-result.md (409 lines), and it is attached to g4-implement as evidence e-g4-implement-1. No unresolved blockers; three items declared for adjudication and carried into the reviewer handoff as claims A1, A3 and A5 to attack."
         }
       ],
       "postconditions": [
@@ -926,7 +927,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1"
         }
       ],
       "constraints": [],
@@ -935,11 +937,40 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g4-reviewer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g4-review/reviewer/attempt-1",
+            "verdict": "BLOCK",
+            "blocking_findings": "1",
+            "verified": "run_crew.py --verify-result -> fresh (completed)",
+            "commander_reproduced": "I ran the reviewer's own probe (g4-review/probe_clearing.py) in my own shell and reproduced B1 exactly: after a refused begin the selector reads 1, after a released begin 2, and after the SAME agent closes that gate it reads 0 with the rendered line gone. Across a 3-gate runaway with 3 over-the-line begins on disk, the rendered line peaked at 2 and was ABSENT at the seam -- identical to a compliant agent that closed and stopped."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-review-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g4-review",
+            "why_ref": "w-12",
+            "fill": "0.169769",
+            "hard": "0.15",
+            "model": "claude-opus-5",
+            "note": "commander-w4-467-g tripped while closing g4-review. SECOND live #431 on this run: the installed/main engine driving the spine is PRE-#467 and refused the advance that CARRIES the handoff -- the exact defect this branch fixes. Released the engine's own prescribed way with the CONCRETE why_ref w-12 read from the raw why_trail, never the literal <why-id> placeholder. g4-review is CLOSED with a BLOCK verdict recorded and reproduced by me. The g4 REWORK is new work and I am NOT starting it over the line."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-integrate": {
@@ -1278,6 +1309,31 @@
       "id": "tc8",
       "from": "g4-implement",
       "statement": "git status and git diff disagree about a renormalized file in this CRLF checkout, and a test silently loses coverage because of it. A tracked file rewritten with LF is 'git diff --quiet'-clean but ' M' to 'git status --porcelain'; test_context_manifest's clean-file filter uses status, so a committed byte-identical file read as dirty, that target was silently DROPPED, and the file's subtest count shrank by one WITH NO ASSERTION FAILING. Same defect class as the gate itself -- a check that quietly covers less than it claims. Fix offered: compare blob OIDs, and assert HOW MANY targets survived the filter."
+    },
+    {
+      "id": "tc9",
+      "from": "g4-review",
+      "statement": "The engine accepts ANY --authority string on amend/waive, so 'human ratification' is a convention nothing enforces -- an agent can self-authorize by typing a string. Surfaced when the g4 implementer honestly declared using --authority 'implementer, self-caught'."
+    },
+    {
+      "id": "tc10",
+      "from": "g4-review",
+      "statement": "N15 and N16 have a single point of coverage (one shared test)."
+    },
+    {
+      "id": "tc11",
+      "from": "g4-review",
+      "statement": "A mutation that makes the module RAISE is a crash, not a kill; the g4 log's N17 is one and its 23-failure radius is crash noise (honest behavioural total: 1). A rule that a mutation must leave the module importable would have caught it. Applies to every mutation log on this epic."
+    },
+    {
+      "id": "tc12",
+      "from": "g4-review",
+      "statement": "The Trip section now assembles the same band judgment (fill, hard, model, gate) BY HAND at three sites and passes it as seven loose parameters. Trip-section consolidation candidate (value object); deliberately not done in g4 because it would touch what g2/g3 shipped."
+    },
+    {
+      "id": "tc13",
+      "from": "g4-review",
+      "statement": "'outcome' is a bare string whose two legal values live in three places that must agree by convention; a named constant would make N10's defect shape structurally impossible rather than test-caught."
     }
   ],
   "blockers": [],
@@ -1365,14 +1421,21 @@
       "why": "g4-implement CLOSED. Shipped in 20240f44 + f74ef422 on parent 9997c32d: trip_ledger (optional top-level, append-only via setdefault, written ONLY inside _trip_hard_gate, recording both begin-refused and begin-released), begin_over_line_records (pure selector keyed to the live why-record, emptiness IS the predicate), the EXISTING _trip_advisory HARD branch extended in both sub-branches with one computation, and docs/CHECKLIST_SCHEMA.md carrying the shape, the predicate and the scoped limit. I VERIFIED THE TWO HEADLINE NUMBERS IN MY OWN SHELL rather than on report: frozen closeout selector 25 passed / 384 deselected / 13 subtests, exit 0, against exit 5 at the parent -- and 384 deselected matches the parent's deselect count exactly, so all 25 are genuinely new; full suite 1858 passed / 2 skipped / 821 subtests, exit 0, zero FAILED lines, against my measured parent baseline 1833/2/808, so the delta is +25 passed +13 subtests and is exactly the selector's own collection. 19 mutations, all 19 killed by their named test, no equivalent mutants declared -- the g4 reviewer re-runs EVERY one of them, not a sample. THREE ITEMS DECLARED BY THE IMPLEMENTER, none blocking, all carried forward: (1) a NINTH entry field why_ref, which REVERSES critic-panel finding 14 -- the handoff granted 'entry field encoding' to the implementer, the field is load-bearing (mutation N7 turns 12 tests red without it), and keying by why_ref is already the established idiom on this exact code path at :1575, but it reverses a triaged critic disposition so I am floating it to the Admiral rather than absorbing it; (2) the implementer shipped SIX checks-that-cannot-fail in its OWN plan for this gate (pytest piped into tail, so the exit status was tail's), caught and measured and fixed them itself via amend, and wrote them up as specimen 4 of CHECK_THAT_CANNOT_FAIL.md -- the required Admiral-condition artifact landed at 219 lines and is the most valuable thing in this gate; (3) one declared TDD deviation, m2's RED obtained by dead-coding the selector rather than by its absence. Also declared: it drove its own plan with the INSTALLED implementer engine deliberately, so its provenance never ran through a binary it mutated nineteen times. Two triage candidates flagged: tc7 a lint for the pipe-into-tail class of unfailable check, tc8 a git status/git diff renormalization disagreement that makes test_context_manifest silently drop a target with no assertion failing. NEXT: g4-review on Opus, the adversarial-review carve-out -- it must construct each defective spine ITSELF and re-run every mutation.",
       "mechanical": false,
       "ts": "2026-08-08T17:08:12.963561+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g4-review",
+      "why": "g4-review CLOSED with verdict BLOCK, 1 blocking finding, and the BLOCK IS RIGHT -- I reproduced it in my own shell with the reviewer's own probe rather than accepting it on the report. B1: the close the HARD band ORDERS the agent to make is guaranteed to clear the compliance signal, and the shipped line says the opposite. Three shipped mechanisms compose: at/over hard 'advance --mechanical' is refused so the only legal close is 'advance --why'; that appends a new why-record; and begin_over_line_records matches only entries keyed to the LIVE why-record. The mandated close therefore supersedes every ledger entry at once. Measured at gauge 0.20 / hard 0.15: selector reads 1 after a refused begin, 2 after a released begin, 0 after the same agent closes that gate. Across a 3-gate runaway with 3 over-the-line begins on disk the rendered line peaked at 2 and was ABSENT AT THE SEAM -- byte-identical to a compliant agent that closed and stopped. Green in both worlds, at exactly the place the next reader looks. The engine's own line ends 'Closing this gate does not clear the record'; I closed that gate and it vanished. Their own test test_compliance_line_is_absent_once_the_recorded_begin_is_superseded runs byte-for-byte the OFFENDER's path and labels it 'a fresh agent' in a comment, so it PINS THE DEFECT AS INTENDED. That is close criterion 5 failing on the one limit deciding whether the observable survives to the seam. EVERYTHING ELSE HELD: 17/17 defect shapes constructed by the reviewer itself and all 17 discriminate; 19/19 mutations re-run and killed, tree clean after every revert; write-site claim and its ast method independently verified; every evidence number reproduced. Reviewer rulings on the claims I set: A1 KEEP why_ref but REJECT the offered evidence (N7's 12-test radius is coupling, not load-bearingness; the real argument is that the supersede rule cannot be replayed from the trail); A2 all four single-test mutations are specificity not triviality; A3 the TDD deviation STRENGTHENS the guarantee; A5 the amend record is honest. FIX SPACE for the rework, narrow and cheap, and the reviewer explicitly does NOT ask the keying to change since criterion (b) is correctly implemented: correct the false sentence, declare this limit as plainly as the other three, and render a HISTORICAL read alongside the live one -- every entry is already on disk, so no new state is needed. Five new triage candidates from the survey (amend/waive --authority accepts any string so 'human ratification' is enforced by nothing; N15/N16 share one point of coverage; a crashing mutation is not a kill; the Trip section now assembles the band judgment by hand at three sites; 'outcome' is a bare string whose two legal values live in three places). TWO FAIR CORRECTIONS AGAINST MY OWN HANDOFF, both to carry: the shape count is 12 numbered rows not 11, and my trap-6 engine byte-size (156060) matches nothing on disk (161503 CRLF, 158377 as a blob) so it cannot confirm you have the right file -- use 'git rev-parse HEAD:scripts/checklist_engine.py', which also gives g5 the checkable hash pin it needs. I AM TRIPPED AND STOPPING HERE: fill 0.169769 >= hard 0.15, my own fresh reading. This is the SECOND live #431 on this run -- the pre-#467 engine driving the spine refused the advance that CARRIES the handoff, and I released it the engine's own way with the concrete why_ref w-12. NEXT: g4 rework -- dispatch a rework implementer against the fix space above, then an independent re-review. Do NOT start it over the line.",
+      "mechanical": false,
+      "ts": "2026-08-08T17:51:08.308277+00:00"
     }
   ],
-  "refusals": 7,
+  "refusals": 8,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
     "status": "active",
     "claimed_at": "2026-08-08T15:37:23.500685+00:00",
-    "last_heartbeat": "2026-08-08T17:08:12.963571+00:00",
+    "last_heartbeat": "2026-08-08T17:51:31.757826+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

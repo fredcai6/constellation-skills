@@ -1,0 +1,10 @@
+{
+  "N11": {
+    "named": "test_compliance_signal_is_empty_in_the_healthy_world_and_names_the_begin_in_the_defective_one",
+    "named_test_red": true,
+    "total_failed": 11,
+    "reverted_clean": true,
+    "summary": "11 failed, 400 passed, 118 subtests passed in 20.01s",
+    "crashed": false
+  }
+}
