@@ -17,6 +17,13 @@
 > stale by construction). **Wait for the idle notification, STOP the predecessor, then dispatch.** In
 > that order. Rule 7 below; it is the only rule that has ever actually caught anything.
 >
+> **RULE 7 WAS AMENDED 2026-08-08.** A Commander **cannot** stop the crew it dispatched — dispatch runs
+> through the Admiral's session and `TaskStop` refuses with "owned by main session." So for a
+> **Commander**, the idle determination IS: result written + registry `completed` + `--verify-result`
+> fresh + disk unchanged. Ask the Admiral for the stop, keep working, dispatch anyway after ~10 min of
+> silence and log it. For the **Admiral**, unchanged. The rule was written by the one tier that can obey
+> it, for a tier that cannot. **Do not let a ritual outlive its hazard.**
+>
 > **4. Then read the NINE rules.** They are the ones I broke *after writing them down*.
 >
 > **What this run is:** epic #418 wave 4, one Commander on **#467** (A2, trip semantics), worktree
