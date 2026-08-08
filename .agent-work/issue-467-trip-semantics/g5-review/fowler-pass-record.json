@@ -1,0 +1,20 @@
+{
+  "work_id": "g5-review-467",
+  "diff_ref": "New measurement scripts added by commit 27ae8563 (gate g5-acceptance, no scripts/ or tests/ change): .agent-work/issue-467-trip-semantics/acceptance/verify_round_trip.py, build_acceptance_spine.py, probe_close_side.py, probe_dc4_neighbour.py; .agent-work/acceptance-467/check_gate.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, references/global-crew.md (implementation discipline: minimal change, no speculative abstraction)",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "verify_round_trip.py's verify() (lines 59-202, ~140 lines) runs all nine V1-V9 assertions inline in one function. Each block is well-commented and self-contained, so intent does not blur, but splitting V1-V9 into named helpers would read better if/when this script is promoted to scripts/ (already a triage candidate in the handoff). Non-blocking observation, not a defect in this gate's own scope.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "check_gate.py's HEAD/TAIL/NONCE_RE line-shape check on roundtrip.md (lines 14-16, 31-46) and verify_round_trip.py's V7 assertion (lines 176-186, NONCE_LINE regex) independently re-implement the identical structural rule for the same file with separately-authored, driftable logic -- if the deliverable's shape rule ever changes, the gate's own postcondition (check_gate.py) and the verifier's claim (verify_round_trip.py V7) could silently diverge. Separately, probe_close_side.py and probe_dc4_neighbour.py duplicate a near-identical subprocess `run()` helper and a near-identical `gate()` dict-builder (also echoed in build_acceptance_spine.py's own `gate()`); this second instance is judged below under override, not flagged twice.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "(spine, journal, doc) travel together through _load/verify/self_test/main in verify_round_trip.py, but this is the script's natural three-file input shape, not an accumulation of unrelated parameters -- not worth a parameter object for a single-purpose, non-reused script.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "verify_round_trip.py's inline comments explain WHY each V1-V9 check exists and what it guards against; they document intent rather than substituting for unclear naming or structure.", "override": null},
+    {"smell": "speculative-generality", "verdict": "overridden", "finding": "", "override": {"repo_standard": "references/global-crew.md 'Implementation discipline': 'Make the minimal change that satisfies the handoff; no speculative abstraction.'", "reason": "probe_close_side.py and probe_dc4_neighbour.py duplicate a small subprocess run() wrapper and a gate() dict-builder (also present in build_acceptance_spine.py) rather than sharing one helper module. Extracting a shared module for two-to-three disposable, single-use acceptance-measurement scripts that are not promoted to scripts/ and have no other callers is exactly the premature generalization the standard warns against -- each script stays independently readable without an extra indirection layer for a shared abstraction with no second real consumer."}}
+  ],
+  "rail_exception": null
+}

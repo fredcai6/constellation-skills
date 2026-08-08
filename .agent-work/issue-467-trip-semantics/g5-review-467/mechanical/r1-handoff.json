@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "g5-review-467",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g5-review-467-r1-handoff@f189fdc7b076cdfcf8047832611f08b83a9fc817",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g5-review-467",
+    "generated_at": "2026-08-08T20:43:05Z"
+  }
+}

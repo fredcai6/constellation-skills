@@ -1233,7 +1233,8 @@
           "id": "p1",
           "statement": "ACCEPTANCE.md and the verifier exist",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -1244,7 +1245,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-2"
         }
       ],
       "constraints": [],
@@ -1253,7 +1255,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1264,6 +1266,21 @@
           "payload": {
             "seam": "g5-review",
             "why_ref": "w-15"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-review-2",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g5-reviewer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g5-review/reviewer/attempt-1",
+            "verdict": "APPROVE",
+            "blocking_findings": "0",
+            "model": "sonnet",
+            "verified": "run_crew.py --verify-result -> fresh (completed); tree carries no change under scripts/ or tests/",
+            "commander_spot_check": "I did not take the APPROVE on the report. Re-ran the verifier myself: REAL exit 0, 9/9. Confirmed both reported gaps in source rather than on the reviewer word -- V1 compares session ids with bare string equality (first_closer == last_closer, no normalisation) and V8 is bare substring containment (nonce not in rec.get(why)), so a case- or whitespace-varied id and an incidental-noise nonce both sail through. Both are real; both are correctly non-blocking, because the actual ids are distinct random hex and the nonce transfer is independently established by direct counts outside V8. The reviewer broke the inputs ITSELF (11 attacks beyond the shipped nine) and re-checked that the predecessor fix to the check-that-cannot-fail holds, which is what this dispatch existed to obtain."
           },
           "produced_by": "engine",
           "ts": ""
@@ -1280,7 +1297,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "postconditions": [
@@ -1296,7 +1314,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-3"
         },
         {
           "id": "c2",
@@ -1308,17 +1327,57 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g5-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-467-trip-semantics/crew-handoffs/g5-reviewer-result.md",
+            "crew_id": "constellation/issue-467-trip-semantics/g5-review/reviewer/attempt-1",
+            "verdict": "APPROVE",
+            "blocking_findings": "0",
+            "model": "sonnet",
+            "verified": "run_crew.py --verify-result -> fresh (completed)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests > .agent-work/issue-467-trip-semantics/evidence/g5j-suite.txt 2>&1; echo REAL_EXIT=$?",
+            "exit": "0",
+            "result": "1867 passed, 2 skipped, 829 subtests passed in 465.41s",
+            "shell": "posix",
+            "note": "My own run at HEAD 6bc971e5, output REDIRECTED TO A FILE and the exit code read from the pytest process itself -- never through a pipe. Matches the g4 number and the g5-acceptance number exactly, and matches the reviewer independent run. Transcript at evidence/g5j-suite.txt."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g5-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3b-glossary": {
@@ -1497,6 +1556,21 @@
       "id": "tc21",
       "from": "g5-acceptance",
       "statement": "The gauge WRITER hook is silent for some dispatched agents and live for others, with no skip record to say why. Measured on the #467 acceptance spine: agent A (acc-89f734) produced NO gauge write across its whole window -- the file still held the commander's plant, and .gauge-skip carried no reason -- while agent B (acc-7f3d1b) produced live readings on the dispatched-agent path (identity_resolution_ms present, fill 0.0359 then 0.038176). Same harness, same worktree, same spine, minutes apart. This matters because the governor's whole input is that write: a silent writer means an agent runs ungoverned and CANNOT TELL, since an absent reading is fail-safe (no advisory, no refusal). The skip-on-uncertainty contract says silence is acceptable -- but it also promises a skip record, and there was none, so the failure is currently undiagnosable from the artifacts. Candidate: make the writer's silence self-reporting (always leave a skip record naming the reason) and investigate the A/B asymmetry."
+    },
+    {
+      "id": "tc22",
+      "from": "g5-review",
+      "statement": "From the g5 review, found by the reviewer breaking the acceptance verifier itself (its tc2). VERIFIER HARDENING, two checks that are weaker than they read. V1 decides the two agents are distinct with bare string equality on the session ids (first_closer == last_closer), with no normalisation or shape validation, so an id that differs only in case or trailing whitespace still reads as two distinct agents. V8 decides the nonce crossed the seam with bare substring containment (nonce not in the why text), so a why-record carrying those six hex characters as incidental noise satisfies it. Neither is masked behind an earlier assertion -- the reviewer confirmed each sails through all nine -- and neither changes this run verdict, because the real ids are distinct random hex and the nonce transfer is independently established by direct counts. Fix if the verifier is ever promoted to scripts/ or reused: normalise and shape-check the ids, and anchor V8 to a pattern rather than a substring."
+    },
+    {
+      "id": "tc23",
+      "from": "g5-review",
+      "statement": "From the g5 review Fowler pass (its tc3). check_gate.py and verify_round_trip.py V7 independently re-implement the SAME shape rule for roundtrip.md with separately authored, driftable regexes. One source of truth if either script is ever promoted. Filed as duplicated-code, non-blocking, disposable scripts."
+    },
+    {
+      "id": "tc24",
+      "from": "g5-review",
+      "statement": "DOC GAP found by the g5 reviewer. The engine journal hash chain commits only to event metadata (seq, ts, session_id, verb, task, evidence_ids, prev_hash) and NOT to file content, so the journal alone cannot prove a gate imperative was unedited between two agents. The reviewer had to read _journal_hash to learn this, and it is directly load-bearing for any cold-start-purity argument. Worth one line in docs/CHECKLIST_SCHEMA.md or the engine reference. SEPARATELY: record/flag-candidate pass --finding and --statement through a POSIX shell, so backticks and a bare dollar-question-mark inside a finding string are shell-evaluated before the engine sees them."
     }
   ],
   "blockers": [],
@@ -1605,19 +1679,32 @@
       "why": "g5-acceptance CLOSED. THE ROUND TRIP CLOSED -- DC5 is done, not partial, and it is the gate this issue exists for. Two dispatched Sonnet agents on a SEPARATE acceptance spine (.agent-work/acceptance-467/spine.json, never this run's spine): A=acc-89f734 worked a1, was REFUSED at `start a2` (trip_ledger tl-2, begin-refused), filed the refresh-request the refusal printed, released, stopped; B=acc-7f3d1b was dispatched COLD and closed a2. The journal proves no overlap: A last acted 20:08:25, B first acted 20:11:11. HOW I MADE THE TRIP FIRE ON A REAL READING INSTEAD OF A BIG PLANT: both gates declare context_headroom_tokens=149000, so the per-gate hard line is 1000/1e6 = 0.001 and any reading is over it -- that is the shipped #467 override doing exactly its job, and it is VERIFIED IN FORCE, not assumed: at fill 0.05 (BELOW the shipped 0.15) the engine renders the HARD band, which is impossible without the override, and every ledger entry records hard:0.001. Gate a1 carries a PRE-ATTACHED refresh-request (e-a1-1) or agent A could not have begun the first gate at all -- that is the real relaunch shape, not a contrivance; it is what I am on this run. THE LOAD-BEARING TRICK, and why this is a round trip rather than two agents doing adjacent chores: a1's imperative made A invent a six-hex nonce and forbade writing it to disk; a2's imperative required item 6 to BE that nonce. The only place it existed was A's why-record. B wrote \"6. NONCE: 4b3dc4\" and A's w-1 says \"The nonce is 4b3dc4.\" I verified the containment MYSELF rather than on A's word: the nonce count is 0 in A's log (A caught the engine echoing its own DIGEST back into that log and redacted it), 0 in roundtrip.md before B ran (the a1 postcondition asserts exactly four lines, and it passed), and 2 in spine.json's why_trail, which is the engine's own legitimate transport. B'S VERBATIM PROMPT WAS THE `current` OUTPUT AND NOTHING ELSE -- 3754 bytes, sha256 3da641137aa5b7c67bf59c35c6991911a05adb3958458bbbf8f505a98d92f80f, captured to .agent-work/acceptance-467/PROMPT-B.txt BEFORE dispatch and spliced byte-identically into ACCEPTANCE.md (equality asserted in code, not by eye). A got the same discipline (PROMPT-A.txt, 2901 bytes) though only B required it. The spine's gate imperatives were authored ONCE before A ran and never edited after; build_acceptance_spine.py REFUSES to run twice, so authored-once is enforced rather than promised. THE VERIFIER IS AT THE PLAN-DECLARED PATH .agent-work/issue-467-trip-semantics/acceptance/verify_round_trip.py -- I moved my artifact to match the plan rather than edit the done-condition, because changing a done-condition is the Admiral's. It passes 9/9, and --self-test PROVES it discriminates: nine mutations of the real inputs, each one a distinct way the round trip could be faked, ALL NINE REJECTED. That self-test caught a defect IN MY OWN VERIFIER: the \"override not in force\" mutation was being caught by an earlier fill>=hard assertion, so the override assertion was never independently exercised -- a check that only ever fires behind another check is a check that cannot fail -- so I added an isolated ninth mutation to close it. THE RED NO LONGER REPRODUCES: repro_431.py --all exits 1, \"NOT reproduced\", and it is not an absence argument -- the script asserts the engine printed CONTEXT 30% (>= hard) and that g2's postconditions were ALL met BEFORE it attempts the advance, which then completes at exit 0. #431 VERIFIED DISSOLVED, NOT CLOSED (closing is the Admiral's): the RED cannot reproduce it; the standing pin test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest sits at tests/test_checklist_engine.py:3514 and asserts _refresh_requests_anywhere == [] on BOTH sides so the guard cannot silently lift; and my close-side probe shows all three moves at ONE reading of 0.05 -- `start` REFUSED, `advance --mechanical` REFUSED, `advance --why` exit 0 with the digest freshened (evidence/g5-close-side.txt, exit 0). ADMIRAL CONDITIONS ALL DISCHARGED, IN ACCEPTANCE.md SECTION 5: (a) DC2 is reported DONE-BY-DIFFERENT-MEANS with the reasoning inline -- the shipped engine draws the line BETWEEN VERBS (TRIP_HARD_GUARDED_VERBS = {start, reopen}; `advance` is never governor-refused) and not between two modes of `advance`, so #467's literal text describes a distinction the engine does not have; the outcome DC2 wanted is delivered, the named mechanism is not. (b) #467's Evidence section OVER-STATED \"the RED leaves no residue\" -- stated plainly as a finding, not buried in a passing test -- and the standing pin at :3514 is named as the correction. (c) THE ANTI-VACUITY CHECK lives at execute.json gate g4-integrate postcondition c2, and I DEMONSTRATED IT FIRES: `pytest -k` on a pattern that collects nothing gives REAL EXIT 5 (\"418 deselected\"), while the real pattern gives exit 0 with 34 passed. CARRY THIS WARNING INTO THE DOCTRINE ROUTING: my first attempt piped pytest to `tail`, so the shell reported TAIL's exit code and I read EXIT=0 on the very command that exits 5. Any invocation that pipes pytest anywhere before its status is read converts a firing anti-vacuity check into a silent one. I CORRECTED A CONFIDENCE FLAG ON THIS GATE: it claims the gauge writer is unwired so every reading in this acceptance is planted. The writer IS wired -- PostToolUse \"*\" in constellation-skills/.claude/settings.local.json, untracked -- and it fires; I proved it live rather than by reading the file (my own gauge went 0.155212 -> 0.058956 with identity_resolution_ms after I claimed the lease). On the acceptance spine the picture is MIXED and ACCEPTANCE.md section 0 says so exactly: A's two entries were judged against my plant (the writer was silent for A, with NO skip record to say why), while B's release was judged against B's OWN LIVE reading (tl-3 fill 0.0359; the gauge afterwards 0.038176 with identity_resolution_ms). Naming which of the two I observed, as the constraint demands: the GOVERNOR was never silent -- it fired at all six recorded events; the WRITER was silent, for agent A only. Filed as tc21. PER-DONE-CONDITION ACCOUNTING: DC1 done; DC2 done-by-different-means; DC3 done; DC4 done (evidence/g5-dc4-neighbour.txt, exit 0 -- at one and the same reading of 0.05 the gate carrying the override tripped, its neighbour without one started fine, and the ledger names only the overridden gate); DC5 done; DC6 PARTIAL -- both rendered lines were observed live in B's own prompt (TRIP LEDGER 1, TRIP HISTORY 2) and the historical line survives the close the HARD band mandates, but tc19/#504 stands: once no active gate remains, _trip_advisory returns early on the `gate is None` path and BOTH lines go silent at closeout, which is B1's shape at the vantage point an auditor actually occupies. tc19 is DEFERRED BY RULING and I did NOT carry it into g5. Full suite at cc4aed99, my own run: 1867 passed, 2 skipped, 829 subtests, REAL exit 0 -- matches the g4 number. Tree still clean; everything I produced lives under .agent-work/, which is ignored. I AM TRIPPED AND STOPPING HERE: fill 0.201541 >= hard 0.15, my own live harness-written reading (identity_resolution_ms present), refresh-request filed against w-14. FOURTH live #431 on this run -- main's pre-#467 engine BLOCKS the advance that CARRIES the handoff until a refresh-request exists, which is precisely the defect this branch deletes. NEXT: g5-review, then g5-integrate. What a successor needs. ONE: drive the spine with MAIN's engine at C:/Programs/constellation-skills/scripts/checklist_engine.py. The acceptance work is DONE, so the branch-engine exception no longer applies; if you re-derive the engine hash for the record, use `git rev-parse HEAD:scripts/checklist_engine.py` at the moment you use it and never copy a number forward from any document. TWO: g5-review IS a real crew dispatch -- fill templates/REVIEWER_HANDOFF.template.md, run recover_crews.py issue-467-trip-semantics FIRST, dispatch through run_crew.py --dispatch external plus --verify-result, crew on SONNET. The reviewer's job is whether the round trip HAPPENED, not whether ACCEPTANCE.md says it did: point it at PROMPT-B.txt (it must confirm the prompt carries no re-briefing), at `verify_round_trip.py --self-test` (it must break the inputs ITSELF rather than trust my self-test), and at the per-DC accounting. THREE: agents A and B were NOT dispatched through run_crew.py, and that was deliberate -- they are measurement instruments for a gate carrying an explicit crew waiver, not Implementer/Reviewer crews, and bolting a result-artifact contract onto B would have created another surface for re-briefing the very agent whose prompt had to stay pure. Provenance lives in PROMPT-A/B.txt, the two agent logs, and the journal instead. TELL the reviewer this rather than letting it discover an absence and read it as a lapse. FOUR: do NOT reword a verdict to fit the gate -- APPROVE or BLOCK, and anything else floats to the Admiral. FIVE: g5-integrate needs a green suite and an APPROVE; my green suite above is at this same HEAD with the tree unchanged, so the unchanged-tree shortcut applies if nothing moves.",
       "mechanical": false,
       "ts": "2026-08-08T20:26:10.182568+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g5-review",
+      "why": "g5-review CLOSED, verdict APPROVE, blocking_findings 0, reviewer on Sonnet via run_crew.py external dispatch, result verified fresh and completed. The reviewer did the one thing this dispatch existed for: it broke the acceptance verifier ITSELF rather than trusting the predecessor --self-test, running 11 attacks beyond the shipped nine, and it re-checked that the predecessors fix to the check-that-cannot-fail actually holds (the isolated override mutation exercises the override assertion on its own). It found two real gaps and classed them non-blocking correctly: V1 compares session ids with bare string equality so a case- or whitespace-varied id reads as distinct, and V8 is bare substring containment so an incidental-noise nonce satisfies it. I confirmed BOTH in source myself rather than on the report, and re-ran the verifier: REAL exit 0, 9 of 9. They do not move the verdict because the real ids are distinct random hex and the nonce transfer is established by direct counts outside V8. Filed as tc22. Independently reproduced by the reviewer, not accepted from ACCEPTANCE.md: PROMPT-B sha256 and byte count match; the a1/a2 imperatives match build_acceptance_spine.py source constants verbatim and NO engine verb writes the imperative field, which closes the re-briefing hole harder than the journal can (the journal hash chain covers event metadata, not file content -- filed as tc24); no A/B overlap read from the raw journal; nonce counts by two independent methods; full suite 1867 passed 2 skipped 829 subtests REAL exit 0; RED non-repro, close-side probe, DC4 neighbour probe and the anti-vacuity check all re-run; issues 431 and 504 both confirmed OPEN. DC2 done-by-different-means and DC6 partial were both confirmed against checklist_engine.py source; the reviewer judged DC6 partial NOT understated. The reviewer reverted its own RED scratch residue; the tree carries no change under scripts/ or tests/. Also filed tc23. NEXT: g5-integrate -- I still owe my OWN full-suite run with the real exit code, read without a pipe.",
+      "mechanical": false,
+      "ts": "2026-08-08T21:07:53.219284+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g5-integrate",
+      "why": "g5-integrate CLOSED on a green suite and an APPROVE. 17 of 17. Verdict APPROVE, blocking_findings 0, from the Sonnet reviewer dispatched through run_crew.py external, result verified fresh and completed, and I confirmed its two findings in source myself rather than on the report. MY OWN FULL SUITE, at HEAD 6bc971e5: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, output redirected to evidence/g5j-suite.txt and the exit code read from the pytest process, NEVER through a pipe -- 1867 passed, 2 skipped, 829 subtests, REAL exit 0 in 465s. That is the same number as g4-integrate, as g5-acceptance, and as the reviewer independent run. What is NOT rounded up: DC6 stays PARTIAL. Both trip lines were observed live in agent B own prompt and the historical line survives the close the HARD band mandates, but at closeout _trip_advisory returns early on the gate-is-None path and both lines go silent -- tc19, issue 504, deferred by Admiral ruling and NOT carried into g5. The reviewer judged that partial not understated. DC2 stays done-by-different-means: the shipped engine draws the line between VERBS (start and reopen guarded, advance never governor-refused), not between two modes of advance, so 467 literal DC2 text describes a distinction the engine does not have; the outcome is delivered, the named mechanism is not. Issue 431 is VERIFIED DISSOLVED and confirmed still OPEN on GitHub -- closing it is the Admiral. Issue 504 likewise open. Three new triage candidates from this gate: tc22 verifier hardening (V1 bare string equality on session ids, V8 bare substring containment on the nonce -- both real, both non-blocking, both mine to hand up rather than fix), tc23 duplicated roundtrip.md shape rule across check_gate.py and verify_round_trip.py V7, tc24 the journal hash chain covers event metadata and NOT file content so it cannot alone prove an imperative was unedited, plus the shell-evaluation hazard in --finding and --statement text. HANDING BACK TO THE ADMIRAL. The wave is at its boundary: PR and merge are the Admiral, and I am opening no work beyond it. Worktree C:/Programs/constellation-skills-wt/epic418-a2-467, branch epic-418/a2-467-trip-semantics, nothing under scripts/ or tests/ touched by g5 -- everything this gate produced is under .agent-work/, which is TRACKED in this repository and therefore still needs committing.",
+      "mechanical": false,
+      "ts": "2026-08-08T21:23:51.843883+00:00"
     }
   ],
   "refusals": 10,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "released",
-    "claimed_at": "2026-08-08T19:55:21.028042+00:00",
-    "last_heartbeat": "2026-08-08T20:26:35.192699+00:00",
+    "status": "active",
+    "claimed_at": "2026-08-08T20:38:11.885377+00:00",
+    "last_heartbeat": "2026-08-08T21:23:51.843912+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-08T20:26:50.744834+00:00"
+    "takeover_reason": null
   },
   "amendments": [
     {

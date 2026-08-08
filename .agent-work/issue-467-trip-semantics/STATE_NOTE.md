@@ -1,69 +1,89 @@
 # Crash-resume state note — issue-467-trip-semantics
 
-**Written by `commander-w4-467-i` at `g5-acceptance`. Replaces `commander-w4-467-g`'s note
-wholesale — that note described the g4 rework, which is DONE and APPROVED.**
+**Written by `commander-w4-467-j` at the wave boundary. Replaces `commander-w4-467-i`'s note
+wholesale — that note described `g5-acceptance`, which is DONE and now REVIEWED and INTEGRATED.**
 
 ## Where the run is
 
-- **step:** spine `execute` (in-progress) · `execute.json` gate **`g5-acceptance` — `complete`.**
-  **15/17 complete.** Remaining 2: **`g5-review`** (ACTIVE, pending) and `g5-integrate`.
-- **I TRIPPED AND STOPPED at 0.201541 >= hard 0.15**, my own live harness-written reading. I closed
-  `g5-acceptance` carrying the full handoff (`w-15` — read it, it is the brief), filed the
-  refresh-request `e-g5-review-1` against `g5-review` keyed to `w-15`, and released both leases.
-  **This is a clean seam, not an interruption. Fourth live #431 on this run.**
-- **next command:** `python C:/Programs/constellation-skills/scripts/checklist_engine.py --file
-  .agent-work/issue-467-trip-semantics/execute.json current` — its `DIGEST:` is the whole handoff.
+- **step:** spine `execute` · **`17/17` complete. `DONE: no open items.`**
+  `g5-review` complete (verdict **APPROVE**, `blocking_findings: 0`); `g5-integrate` complete on a
+  green suite and that APPROVE.
+- **The issue is finished at the Commander tier. The wave is HANDED BACK to the Admiral**, who owns
+  the PR and the merge. No work was opened beyond the wave.
+- **next command for anyone cold-starting:**
+  `python C:/Programs/constellation-skills/scripts/checklist_engine.py --file
+  .agent-work/issue-467-trip-semantics/execute.json current` — its `DIGEST:` is the handback.
 - **slug:** issue-467-trip-semantics · branch `epic-418/a2-467-trip-semantics` · worktree
-  `C:/Programs/constellation-skills-wt/epic418-a2-467` · HEAD `cc4aed99`, tree clean at start.
-- **engine leases:** RELEASED. Previously claimed by me on both `spine.json` and `execute.json` with
-  `--session-id session_01TTKPTbD6nnMt7jFWw9GtjX` (no `--force`; every agent in this harness
-  session shares that id, so `claim` takes the idempotent-resume path). **Verify against the raw
-  JSON, not against this line.**
-- **pid:** none — foreground. Agents A and B are synchronous Agent-tool subagents.
-- **suite baseline at `cc4aed99`, my own run:** `1867 passed, 2 skipped, 829 subtests, exit 0`
-  (`/tmp/g5_suite_baseline.txt`). Matches the g4 number.
+  `C:/Programs/constellation-skills-wt/epic418-a2-467`.
+- **engine lease:** released at the end of this session. Claimed during the run with
+  `--session-id session_01TTKPTbD6nnMt7jFWw9GtjX` (no `--force`; every agent in this harness session
+  shares that id, so `claim` takes the idempotent-resume path). **Verify against the raw JSON, not
+  against this line.**
+- **suite, my own run at HEAD `6bc971e5`:** `1867 passed, 2 skipped, 829 subtests, REAL exit 0` in
+  465s (`evidence/g5j-suite.txt`). Redirected to a file with the exit code read from the pytest
+  process — never through a pipe. Same number as `g4-integrate`, `g5-acceptance`, and the g5
+  reviewer's independent run.
+- **`.agent-work/` is TRACKED in this repository, not ignored.** (`commander-w4-467-i`'s closing
+  digest `w-15` says otherwise; the why-trail is append-only so it cannot be edited. `ACCEPTANCE.md`
+  §8 carries the same correction.) Nothing under `scripts/` or `tests/` was touched by `g5`; the
+  engine blob is unchanged at the value `git rev-parse HEAD:scripts/checklist_engine.py` returns.
 
-## CORRECTION to my closing digest `w-15` — read this if you are cold-starting
+## What `g5-review` established
 
-`w-15` says "everything I produced lives under `.agent-work/`, which is ignored". **That is wrong:
-`.agent-work/` is TRACKED here** (`git check-ignore` exits 1). I caught it right after the close and
-committed everything at **`27ae8563`**; `git status --porcelain` is empty there. No file under
-`scripts/` or `tests/` was touched — the engine blob is unchanged at
-`c281cb68eaac65d1169dd6737a6a322728df98eb`. ACCEPTANCE.md section 8 carries the same correction.
+The reviewer ran on **Sonnet**, dispatched through `run_crew.py --dispatch external` as
+`constellation/issue-467-trip-semantics/g5-review/reviewer/attempt-1`, result verified
+**fresh (completed)**. Handoff and result are in `crew-handoffs/g5-reviewer-*.md`.
 
-## The acceptance round trip — what I built and where it is
+It did the thing the dispatch existed for: it **broke the acceptance verifier's inputs itself**
+rather than trusting the predecessor's `--self-test` — 11 attacks beyond the shipped nine — and
+re-checked that the predecessor's fix to its own check-that-cannot-fail holds. It also independently
+reproduced the round trip rather than reading `ACCEPTANCE.md`: the `PROMPT-B.txt` hash and byte
+count; the `a1`/`a2` imperatives matching `build_acceptance_spine.py`'s source constants verbatim
+with **no engine verb writing the `imperative` field** (which closes the re-briefing hole harder
+than the journal can); no A/B overlap from the raw journal; the nonce counts by two independent
+methods; the RED non-reproduction, the close-side probe, the DC4 neighbour probe and the anti-vacuity
+check all re-run; and #431 and #504 both confirmed **open** on GitHub.
 
-Separate spine (NOT this run's spine), authored once and **never edited after agent A was
-dispatched**, because editing it between A and B would smuggle a briefing to B:
+Two real, **non-blocking** gaps it found in the verifier, which I confirmed in source myself rather
+than on its word (filed as **tc22**):
+- `V1` decides the agents are distinct with bare string equality on session ids, so a case- or
+  whitespace-varied id would read as distinct.
+- `V8` decides the nonce crossed the seam with bare substring containment, so incidental noise would
+  satisfy it.
+Neither moves the verdict: the real ids are distinct random hex and the nonce transfer is
+independently established by direct counts outside `V8`.
 
-- `.agent-work/acceptance-467/spine.json` — 2 gates `a1`, `a2`.
-- `.agent-work/acceptance-467/check_gate.py` — the gates' `command` postcondition, strict about
-  exact file content.
-- `.agent-work/issue-467-trip-semantics/build_acceptance_spine.py` — the authoring script; it
-  REFUSES to run twice.
-- `.agent-work/acceptance-467/gauge.json` — planted fallback reading; the harness gauge writer
-  overwrites it with each acting agent's own live fill once that agent claims the lease.
+## What is NOT rounded up
 
-**The trip is engineered to fire on a LIVE reading, not on a plant.** Both gates declare
-`context_headroom_tokens: 149000`, so the per-gate hard line is `1_000/1_000_000 = 0.001` and any
-real reading is at/over hard. Verified in force: at a planted fill of **0.05** — well BELOW the
-shipped 0.15 default — `current` renders the HARD band. That is impossible without the override.
+- **DC6 is PARTIAL and stays partial.** Both trip lines were observed live in agent B's own prompt
+  and the historical line survives the close the HARD band mandates — but at closeout
+  `_trip_advisory` returns early on the `gate is None` path and both lines go silent. That is
+  `tc19` / **#504**, deferred by Admiral ruling and deliberately not carried into `g5`. The reviewer
+  judged the partial **not understated**.
+- **DC2 is done-by-different-means**, never done-as-written. The shipped engine draws the line
+  between **verbs** (`start`/`reopen` guarded, `advance` never governor-refused), not between two
+  modes of `advance`. Outcome delivered; the literal mechanism is not the one that shipped.
+- **#431 is verified dissolved, NOT closed.** Closing it is the Admiral's. Same for #504.
 
-`a1` carries a **pre-attached refresh-request** (`e-a1-1`, seam=a1) so agent A can `start a1` at
-all; without it the begin-work guard refuses the first gate and nothing can run. That is the real
-relaunch shape, not a contrivance: a fresh agent starting the gate a refresh was requested for is
-exactly what I am on this run.
+## Triage candidates from this gate
 
-## The one rule that voids the measurement
+`tc22` verifier hardening (V1/V8 above) · `tc23` `check_gate.py` and `verify_round_trip.py` V7
+re-implement the same `roundtrip.md` shape rule with separate driftable regexes · `tc24` the engine
+journal's hash chain covers **event metadata, not file content**, so it cannot alone prove an
+imperative was unedited between two agents — worth a line in the engine reference — and separately,
+`record`/`flag-candidate` pass `--finding`/`--statement` through a POSIX shell, so backticks and a
+bare `$?` in finding text get shell-evaluated before the engine sees them.
 
-**Agent B's dispatch prompt must contain NOTHING but the `current` output.** No summary, no
-pointer, no help. `g5-review` reads B's actual prompt. If you are resuming me and B has not been
-dispatched yet, re-derive `current` and paste it alone.
+## Rulings that still hold
 
-## Ordering ruling I am holding
-
-Drive the RUN spine with MAIN's engine (`C:/Programs/constellation-skills/scripts/checklist_engine.py`).
-`g5-acceptance` is the deliberate exception and exercises the **branch** engine
-(`scripts/checklist_engine.py` inside the worktree), pinned by
-`git rev-parse HEAD:scripts/checklist_engine.py` **re-derived at the moment of use** — never
-copied forward from any document, including this one.
+1. Drive the RUN spine with **MAIN's engine**
+   (`C:/Programs/constellation-skills/scripts/checklist_engine.py`). `g5-acceptance` was the
+   deliberate exception and exercised the branch engine.
+2. Pin the engine by `git rev-parse HEAD:scripts/checklist_engine.py`, **re-derived at the moment of
+   use** — never copied forward from any document, including this one.
+3. **Never pipe pytest before reading its exit status.** A piped `$?` is the pipe's, and this run
+   produced a false green that way once already.
+4. The acceptance verifier **stays** at
+   `.agent-work/issue-467-trip-semantics/acceptance/verify_round_trip.py`. Promotion to `scripts/` is
+   an open follow-on question, ruled out of this gate.
+5. **Never let a second Commander into this worktree.**

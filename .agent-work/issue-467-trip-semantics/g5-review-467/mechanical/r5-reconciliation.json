@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r5-reconciliation",
+  "mechanical": {
+    "run": "g5-review-467",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r5-reconciliation",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g5-review-467-r5-reconciliation@a72bea5ca8ec8c6ff6ac73239f8b1eaebca7a92f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g5-review-467",
+    "generated_at": "2026-08-08T21:02:17Z"
+  }
+}
