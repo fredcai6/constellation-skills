@@ -1,0 +1,51 @@
+archive.c2b — the CHECK is broken, not the world
+
+c2b requires "an open PR exists for this branch". That is TRUE: PR #483,
+https://github.com/fredcai6/constellation-skills/pull/483, state OPEN, head
+epic-418/b-433-render-directives.
+
+The check command was frozen at plan time with an unsubstituted placeholder:
+
+    gh pr list --head <branch> --state open --json number --jq 'length > 0'
+
+`<branch>` is a literal. The command therefore asks GitHub for PRs whose head
+branch is named "<branch>", of which there are none, and returns false for every
+possible state of the world -- including the healthy one. It is a check that
+cannot pass.
+
+PROVEN BOTH WAYS, same command, same shell, one substitution apart:
+
+    $ gh pr list --head '<branch>' --state open --json number --jq 'length > 0'
+    false
+
+    $ gh pr list --head epic-418/b-433-render-directives --state open --json number --jq 'length > 0'
+    true
+
+Corroborating:
+
+    $ gh pr view 483 --json mergeable,state -q '"mergeable=" + .mergeable + " state=" + .state'
+    mergeable=CONFLICTING state=OPEN
+
+    $ git push
+    24d668c7..c552c4a6  epic-418/b-433-render-directives -> epic-418/b-433-render-directives
+    PUSH_EXIT=0
+
+(CONFLICTING is expected and documented: the branch's base 73b4517 was orphaned
+by the Admiral's squash-merge. LO-433 says open the PR anyway and hand the
+replant up. It does not bear on whether the PR is OPEN, which is what c2b asks.)
+
+WHY WAIVED RATHER THAN CORRECTED: the correct fix is to substitute the real
+branch into the check, and that was attempted first --
+`amend --delta ... rescope archive.postconditions` -- and REFUSED by the engine:
+"only a pending gate can be rescoped (is 'in-progress')". The engine's own
+recovery text for that refusal is to escalate. No verb reaches a pending status
+from here, so the check text cannot be corrected in place on this run.
+
+This waiver accepts NO risk on the condition's intent: the reachability the
+condition exists to guarantee is present and verified above. It accepts only
+that the condition's text stays wrong in this one archived spine.
+
+CARRIED UP: the placeholder is in the spine TEMPLATE, so every run instantiated
+from it inherits a c2b that cannot pass. That is a defect in the shipped
+template, not in this run, and it is filed rather than fixed here because the
+template is outside this issue's authorized scope.
