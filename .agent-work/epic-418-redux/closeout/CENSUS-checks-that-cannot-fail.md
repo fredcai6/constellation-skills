@@ -1,0 +1,113 @@
+# Census — "a check that cannot fail", and its mirror
+
+**The single most valuable thing epic #418 produced.** Not the code. This.
+
+A **check that cannot fail** emits a signal that is *identical* in the healthy world and the defective
+world. It is not a broken check — a broken check is loud. It is a check that reports success, or
+reports nothing, in every possible state of the world it was written to discriminate.
+
+Its **mirror** is a **check that cannot pass**: red regardless. That one is worse in practice, because
+red invites a resolution — a waiver, or an edit to the *verdict* rather than the code.
+
+This document is the census. It is deliberately a list of **specimens with evidence**, not a taxonomy,
+because the epic's own experience is that the pattern is recognised from examples and missed from
+definitions.
+
+---
+
+## Why it is a base rate, not a collection of anecdotes
+
+Three independent facts, each measured rather than argued:
+
+1. **Density.** Eleven specimens surfaced in wave 4 alone, by five different actors — *all of whom
+   knew the wave was about this defect*.
+2. **Blindness is positional, not personal.** The same defect recurred at three tiers inside one
+   issue (the first DC6 observable, g4's B1, g5's V1/V8). **Each was caught by an independent cold
+   reader and none by its author.**
+3. **Countermeasures are not immune — they may be worse.** Twice this epic a fixture built
+   *specifically* to prevent a class of error reproduced that exact error. Authoring the fix is not
+   protection; the author is the one reader who cannot approach it cold.
+
+The conclusion is not "people are careless." It is that **a composite claim needs a reader holding
+both halves at once, and an author never is.**
+
+---
+
+## The specimens
+
+### A. In verification and provisioning machinery
+
+The heaviest concentration, and not a coincidence: **machinery that reports on other things is rarely
+reported on by anything.**
+
+| # | Specimen | The identical signal |
+|---|---|---|
+| 1 | **The installer's interpreter probe** (#313) | `resolve_interpreter()` proves an interpreter *starts and runs a script*. The interpreter that cannot run the suite also starts and also runs scripts. |
+| 2 | **`py` vs `python`, measured live** (#313) | `py` passes every probe anyone reaches for — starts, `--help` exits 0, runs *every* stdlib script in this repo, drove this entire epic — and **cannot run the suite**. Worse: `py -m pytest` exits **nonzero**, so the failure reads as *the suite is red*. Caught only because a **known-green** tree came back red. |
+| 3 | **The wave-launch gate's skills-root guard** (#501, #468) | `_installed_skills_root()` asserts "you are running from an installed skill" via `name.startswith("constellation-")` — and **the repository is named `constellation-skills`**. The predicate matches the one directory it exists to reject. |
+| 4 | **The journal's missing instrument identity** (#502) | The journal is hash-chained to make forgery expensive and records verb, task, session, hashes — **never the engine build that executed the verb**, with four divergent builds live. A stale engine leaves the same journal as a current one. |
+| 5 | **`--authority` on `amend`/`waive`** (#503) | Validated only as non-empty. Any string ratifies. "Human ratification" is enforced by nothing. |
+| 6 | **The launch-order binding** (§50) | Worktree exists ✓, branch exists ✓, order exists ✓ — **nothing checked that the crew could read the order at the address its prompt gave.** Three green lights, identical in the working world and the broken one. |
+| 7 | **Harvest over a retired filename** (#508) | Harvest-before-sweep reports *"nothing to collect"* identically whether the worktree is empty or the doctrine is looking for a name that #447 retired. Sits in the step whose whole job is to stop a run's learning being dropped. |
+
+### B. Inside the fixes for the defect itself
+
+| # | Specimen | The identical signal |
+|---|---|---|
+| 8 | **The trip ledger erased by its own mandated close** (#467 g4) | Measured at 0.20 fill: **1** after a refused begin, **2** after a released begin, **0 the moment the agent complies.** A three-gate runaway peaked at 2 and was **absent at the seam — byte-identical to an agent that behaved perfectly.** |
+| 9 | **A passing test certifying the bug** (#467 g4) | The test ran the offender's path byte-for-byte while calling it "a fresh agent." Green, and asserting the defect. |
+| 10 | **The acceptance verifier's own self-test** (#467 g5) | The instrument built to make the done-condition falsifiable contained one that could not fail. |
+| 11 | **The trip ledger at closeout** (#504) | Once no gate is active, a completed runaway renders identically to a clean run. Deliberately **not fixed in-wave** — the fix would have voided the review the rework had just earned. This is what keeps DC6 **partial**. |
+
+### C. Countermeasures that reproduced their own target
+
+| # | Specimen | The identical signal |
+|---|---|---|
+| 12 | **The pre-staged boundary skeleton** | Built specifically to prevent replan shape refusals. Used `id`/`issue_ids`/`intent` where the contract wants `objective`/`issues`/`exit_criteria` — **caused a shape refusal.** |
+| 13 | **`harvest_probe.sh` v1** (§51) | Written to remove specimen 7. Tested `[ -f CONSTELLATION_FEEDBACK.md ]` on a **tracked** file, so PRESENT was true for every worktree ever created. Caught only because seven worktrees returned byte-identical findings, including one provisioned forty minutes earlier. |
+
+### D. The mirror — checks that cannot PASS
+
+| # | Specimen | Why red regardless |
+|---|---|---|
+| 14 | **`execute.c3` at a finishing run** (#506) | Demands a launch authorization at a boundary that correctly exits `stop`. **The gate cannot be closed by a run that finishes.** Its two available resolutions were a waiver and *changing the verdict* — the second being falsification. |
+| 15 | **`archive.c2b`'s `<branch>` placeholder** (#439, #484) | Never substituted. And it does not fail the way the issues claim: the engine runs check text through `sh -c`, where unquoted `<` is **input redirection** — `sh: line 1: branch: No such file or directory`. **`gh` is never invoked at all.** |
+| 16 | **`archive.c2b` accepts only an OPEN PR** (#446) | A merged PR — the *strongest* evidence the work landed — fails the gate. A well-run epic is forced to `--force` on its success path. |
+| 17 | **An integrate gate matching `verdict == APPROVE`** (#371) | The gate matched `APPROVE` while the handoff at that seam prescribed `ACCEPT / ACCEPT WITH FINDINGS / REJECT`. **Two vocabularies** — unsatisfiable, and it pushes the Commander toward fabricating a verdict. |
+
+### E. The two that invert — where the *fix* crosses the line
+
+The sharpest finding of the epic, because both are cases where an obviously-correct repair moves the
+defect rather than removing it.
+
+| # | Specimen | What inverts |
+|---|---|---|
+| 18 | **#484's own suggested fix** | Substituting the branch while keeping `--jq 'length > 0'` converts a check that **cannot pass** into one that **cannot fail** — because the engine's verdict is **returncode-only**, and that command prints `false` and **exits 0**. Verified: `gh pr list --head 'no-such-branch-xyz-418' ... ` → `false`, `REAL_EXIT=0`. The suggestion appears verbatim in the issue that coined "a check that cannot pass" for this repo. |
+| 19 | **#501's boundary-freshness variant** | The stateless design — refuse unless `NEXT_WAVE.boundary_id` is the last verified `TRANSITION` in the log — was killed against this epic's own live artifacts: run early, the new boundary is not logged yet, so the stale boundary **is** the last entry. **Green in exactly the world it was written to catch.** Deferred with a falsification rather than skipped. |
+
+---
+
+## What actually finds them
+
+Nothing on this list was found by inspection. Every single one was found by one of four things:
+
+1. **Running it against a case that should make it fail.** The cheapest such case is usually already
+   lying around — for the harvest probe it was "a worktree created minutes ago with nothing in it."
+2. **A known-good baseline coming back wrong.** Specimen 2 was invisible until a tree that *had* to
+   be green reported red.
+3. **Output that is too uniform.** Identical findings across inputs that should differ.
+4. **An independent cold reader.** Consistently, across three tiers and both waves.
+
+**Therefore:** a countermeasure is not done when it is written and reads correctly. It is done when it
+has been **observed refusing something real**. That sentence is already the project's `good_enough`
+standard — *"a guard is observed refusing something real, not reasoned about"* — and this census is
+the argument for why it is load-bearing rather than pedantic.
+
+---
+
+## What this census is not
+
+It is **not** a claim that every check here is worth fixing, nor that the pattern is rare enough to
+enumerate exhaustively. Nineteen specimens in one epic by actors *looking for them* is a lower bound,
+not a total. The honest reading is that this is a **base rate in verification code**, and the useful
+response is a habit — run it against a failing case — rather than a list to work through.

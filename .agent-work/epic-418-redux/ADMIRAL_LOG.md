@@ -3919,3 +3919,32 @@ own making — the review arrived after the reviewed party stood down — and it
 The finding is a judgement call about whether an archived *measurement* may be edited, not a defect,
 so it is **not blocking**. Holding briefly to see whether the crew resumes and answers; if it does not,
 I will decide and record the reason rather than let a PR sit on an unanswered question.
+
+### Closeout artifact written: the check-that-cannot-fail census
+
+`closeout/CENSUS-checks-that-cannot-fail.md` — **19 specimens with evidence**, grouped by where they
+live rather than by taxonomy, because this epic's own experience is that the pattern is recognised
+from examples and missed from definitions.
+
+The three claims it rests on, each measured rather than argued:
+
+- **Density** — 11 specimens in wave 4 alone, by five actors **who all knew the wave was about this
+  defect**.
+- **Blindness is positional, not personal** — the same defect at three tiers inside one issue, each
+  caught by an independent cold reader and **none by its author**.
+- **Countermeasures are not immune and may be worse** — two fixtures built specifically to prevent a
+  class of error reproduced that exact error.
+
+**Two specimens are the sharpest thing the epic found**, and both are cases where the obviously-correct
+*repair* moves the defect instead of removing it: #484's own suggested fix converts a check that
+cannot pass into one that cannot fail (returncode-only verdict; the command prints `false` and exits
+0), and #501's freshness variant is green in exactly the world it was written to catch.
+
+The census closes on what actually found them — **nothing was found by inspection.** Four things
+found all nineteen: running it against a case that should make it fail, a known-good baseline coming
+back wrong, output that is too uniform across inputs that should differ, and an independent cold
+reader. That is the argument for why the project's existing `good_enough` line — *"a guard is observed
+refusing something real, not reasoned about"* — is load-bearing rather than pedantic.
+
+**It states its own limit.** Nineteen found by people looking for them is a lower bound, not a total,
+and the useful response is a habit rather than a list to work through.
