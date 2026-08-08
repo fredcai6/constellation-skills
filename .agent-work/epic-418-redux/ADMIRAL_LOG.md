@@ -2920,3 +2920,34 @@ critics before any code was written. Its claim — four instances, four artifact
 whom knew the issue was about that defect, is a **base rate, not an anecdote** — is corroborated from
 my side by #313/#501/#502 today. Recorded in `closeout/RETROSPECTIVE_SOURCE.md` §49, **not** in the
 crew's artifact, which stays theirs.
+
+## RULING | 2026-08-08T17:27:14Z | pre-cleared the remaining verdict gates; corrected my own #371 comment
+
+Read every artifact-match gate ahead of g4-review landing, so I am not evaluating them for the first
+time under a verdict.
+
+| gate | match | risk |
+|---|---|---|
+| g1-integrate c3 | `{verdict_class: ACCEPTED, blocking_findings: 0}` | amended 11:17, satisfied |
+| g2/g3-integrate c3 | `{verdict: APPROVE}` | satisfied |
+| **g4-integrate c3** | `{verdict: APPROVE}` | **pending — SAFE** |
+| **g5-integrate c2** | `{verdict: APPROVE}` | **pending — SAFE** |
+
+**Pre-ruling: no wedge is coming.** `constellation-commander/templates/REVIEWER_HANDOFF.template.md`
+prescribes exactly `APPROVE or BLOCK` — two values, no third sanctioned option — so there is nothing
+for #371's disjunction gap to bite on at g4 or g5. **If a reviewer nevertheless returns a third string,
+the Commander does NOT reword the verdict to fit the gate.** It amends or blocks and floats to me.
+Rewording is the failure #371 describes and it is worse than a stalled gate.
+
+**Correction, posted to #371.** My earlier comment there called the g1 c3 case a gate rejecting a
+sanctioned *variant*. The amendment record says otherwise: the gate matched `APPROVE` while the handoff
+frozen at that same seam prescribed `ACCEPT / ACCEPT WITH FINDINGS / REJECT`. **Two vocabularies, so no
+legitimate return value could ever satisfy it** — a check that cannot **PASS**, the mirror the crew's
+`CHECK_THAT_CANNOT_FAIL.md` names. Worse in one respect: a red check under time pressure invites a
+waiver rather than a fix.
+
+**Also checked and it is fine:** g5-acceptance c1 runs the Commander's own `verify_round_trip.py`, which
+looks like a check it could make pass by writing it leniently. It is not, because **g5-review's
+imperative requires breaking the verifier's inputs and confirming it fails.** The check and the
+mutation-test of the check sit in different gates reviewed by different agents. That is the right shape
+and I am not flagging it.
