@@ -4,13 +4,64 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: `g6-implement` — **DISPATCHED** 2026-08-08
-- **PID**: crew `constellation/issue-456/g6/implementer/attempt-1`, Agent name
-  `g6-implementer`, model `sonnet`. Recover with `SendMessage` to that name
-  (externally dispatched — nudge in place, never relaunch).
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md`
-- `g6-implement.p1` already **attested**; handoff at
-  `.agent-work/issue-456/crew-handoffs/g6-implement.md`.
+- **step**: `execute` (in-progress) · **slug**: **`g6-review`** — NOT yet dispatched
+- **PID**: none in flight. `recover_crews.py` → 24 crews, **0 unresolved**.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g6-review-RESULT.md`
+
+## NEXT ACTION, ready to fire
+
+**`g6`'s BUILD is done, Commander-verified and pushed at `cb99a901`.** Still open:
+`g6-implement`'s `c1` (attest + advance), then **write and dispatch the `g6`
+review handoff**, then `g6-integrate`. Then `g7`, `g8`, `gs`.
+
+`g6-implement.p1` is already **attested**. Implement handoff:
+`.agent-work/issue-456/crew-handoffs/g6-implement.md`.
+
+## `g6` BUILD — what landed, and what the reviewer should attack
+
+Mechanism: `extract.span_hash(node)` hashes an entity's own **AST subtree** via
+`ast.dump(node, annotate_fields=False)` with the leading docstring excluded.
+`ast.dump` never encodes source text, whitespace or position, so the hash is
+immune to reindentation, line-wrapping and blank lines **BY CONSTRUCTION** — not
+by a hand-defended normalisation. `extract.run()` reads the PREVIOUS
+`statements.jsonl` before overwriting it, diffs span hashes by slug, and emits a
+`stale-anchor` statement per changed slug. `render.load_stores()` intercepts it,
+surfaces `report["stale_tags"]` in `render_report.json` — **the run report the
+reviewer already reads** — and prints an advisory line naming the human action
+**without failing the build**.
+
+**Commander-verified:** suite **1805 passed / 2 skipped / 683 subtests / 0
+failed** (baseline 1793 + 12 methods, 672 + 11 subtests); closing selector
+`-k 'stale_tag'` now **12 passing** where it collected **0 by design**; fresh
+`build` then `check` **7/7 exit 0**, `deterministic-rebuild` still `ok`.
+
+**Built against a FIXTURE** (`_make_anchor_repo`/`_ANCHOR_SOURCE`), because the
+real tag surface does not exist yet — `g7` is the comment-tags gate and comes
+after. That was explicitly permitted and is stated, not hidden. **`g7` must wire
+the real tag-text surface into this mechanism** — carry that forward.
+
+**The crew's own named blind spot** (state it to the reviewer; do not let the
+reviewer "discover" it as though it were concealed): changes confined to a
+docstring or to a comment are **invisible by design**; and a bare **local-variable
+rename DOES trip the flag**. The crew **overruled my handoff** on that second
+point — I had listed an unrelated local rename as twitchiness; it argued a tag's
+prose can name a specific variable, so a rename is a legitimate staleness
+candidate, at the cost of occasional false positives. Defensible; accepted.
+
+**Best review targets:** (1) is the slug-match really the "text did not change"
+half of the rule, or does it beg the question? (2) does the advisory-only
+behaviour mean the flag can be ignored forever — and is that right? (3) attack the
+reformatting immunity with mutations the crew did NOT choose. (4) confirm the new
+report field cannot perturb `deterministic-rebuild`.
+
+## Record correction (do not propagate the error)
+
+`cb99a901`'s message says the crew "again left its work uncommitted". **That is
+false.** The crew committed at **`55b95314`** while I was mid-verification, so my
+`git add` picked up only the run log. Same pattern as `g5`, where I made the same
+wrong call in a handoff and had to correct it. **Check `git log` immediately
+before asserting a crew did not commit** — these crews commit late, not never.
+The `gb` crew genuinely did not commit; `g5`'s and `g6`'s did.
 
 **`g6` = staleness detection.** Hash each tag's enclosing entity span at
 extraction; on rebuild flag any tag whose anchor body changed while its text did
