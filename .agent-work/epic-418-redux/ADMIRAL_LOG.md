@@ -363,3 +363,32 @@ Logged chronologically above, not here — see the `2026-08-07` entries for #470
 ## Closeout
 
 - _pending_
+
+- `2026-08-08` — `RULING` (correction of my own checkpoint report): **#470's independent review did
+  land, after the merge, and both reviewers approved.** I told Tommy the review never landed. True
+  at the time; superseded now. Two reviewers returned `APPROVE`, each having re-derived the result
+  by running it rather than reading it — glob resolution executed, corrupted-fixture controls
+  confirmed to raise `SpecVerificationError`, full suite re-run in an isolated worktree pinned to
+  the PR's exact commit (one reviewer caught that its own first run was invalidated when another
+  agent switched HEAD mid-run in the shared checkout, and redid it — the kind of self-catch that
+  makes the verdict worth more than the merge it arrived after). **Neither posted to the forge**:
+  `gh pr view 470 --json reviews` and `--json comments` are both empty, so these verdicts exist only
+  as session messages and would be invisible to anyone reading the PR. Worth its own fix; not filed
+  (delegated class, contract expired). **Both independently flagged the same non-blocking gap** —
+  `matches[0]` at `tests/test_verify_spec_confirmed.py:252` silently picks the alphabetically-first
+  match with no signal a second existed. One match exists today, so the test is not vacuous. Left
+  unfixed: it is a change to main under an expired contract. One line.
+
+- `2026-08-08` — `RULING` (evidence-only): **one defect family accounted for three of this wave's
+  findings**, discovered independently in three subsystems by three different agents — (a) #433,
+  where the naive fix would have been a check that cannot fail; (b) the engine lease, which
+  indicates liveness in neither direction; (c) `matches[0]`, which cannot signal ambiguity. The
+  shared shape: a signal whose value is identical in the healthy and the defective world. This is
+  what #418 is fundamentally about, and it is a candidate organizing theme for wave 3 rather than a
+  ruling I can make — wave composition is delegated, but the contract granting it has expired.
+
+- `2026-08-08` — `RULING`: **#460's 22 doctrine candidates verified present in main**, at
+  `.agent-work/r418-460/crew-handoffs/g2-implement-result.md` § "Evidence 4" (60KB, harvested).
+  I swept that worktree, so I checked rather than assumed: they survived because #487's merge
+  carried them in — the same mechanism that stranded the fossil lease preserved the deliverable.
+  The mission's hard boundary held: nothing in `docs/agents/*`, no file created to park them in.
