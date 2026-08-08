@@ -297,3 +297,31 @@ can be read to grant. They go to him at the wave-4 checkpoint.
 **#493-#498** are already filed, so the live question is whether to *keep* them, not whether to
 open them. That is acceptance-time, and the closeout audit is the machinery that produces the
 evidence for it. Noted: **#494 is already CLOSED**, so it is five, not six.
+
+---
+
+# Addendum R3 — model tier (2026-08-08)
+
+Tommy, mid-wave-4:
+
+> *"we should be using sonnet for implementers except in special cases, btw. caught another session
+> where we've been going a little hard"*
+
+**Standing: implementer crews dispatch on SONNET.** Opus only for a **named** reason stated in the
+dispatch — a genuine design choice the plan left open, engine-semantics work where being subtly wrong
+is invisible, or adversarial review whose job is to attack a claim rather than build to a spec.
+*"This gate feels important"* is not a reason.
+
+**This was already doctrine and I was not following it.** The Admiral skill says *"Pick model tier
+per issue complexity — least-powerful model that works, escalating only when complexity, ambiguity,
+or risk demands it."* I dispatched five Opus Commanders and Opus reviewers without once applying it.
+Another rule that never fired because nothing gated it — the run's most repeated failure, this time
+costing money rather than correctness.
+
+**Not retroactive.** g1 and `g2-implement` stand. Forward-looking only; nothing is re-run to satisfy
+it.
+
+**Honest note on the Commanders themselves:** #467 is engine-semantics work with a live design space,
+which is a defensible Opus case — but I never made that case, I just defaulted. Future waves state
+the tier and the reason in the launch order's Budget slot, which is the field that exists for exactly
+this and which I left doing no work.

@@ -73,6 +73,10 @@
 >    is `APPROVE`/`BLOCK` in `REVIEWER_HANDOFF.template.md` and the check matched it exactly.
 >    One `grep` of the template would have settled it, and I had run exactly that check on a
 >    different template an hour earlier. The CREW retracted it; I did not catch it.)*
+> 9. **Dispatch implementers on SONNET.** Opus needs a NAMED reason in the dispatch text —
+>    open design choice, engine semantics where wrong is invisible, or adversarial review.
+>    *(Tommy, wave 4: "we've been going a little hard." The Admiral skill already said
+>    least-powerful-that-works; I dispatched five Opus Commanders without once applying it.)*
 
 
 **WAVE 4 RUNNING: one Commander on #467 (A2, trip semantics). Never dispatch a second into this worktree.**
