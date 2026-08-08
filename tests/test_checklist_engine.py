@@ -3241,6 +3241,18 @@ def _refresh_requests_anywhere(cl):
             if isinstance(ev, dict) and ev.get("type") == "refresh-request"]
 
 
+def _without_trip_ledger(cl):
+    """#467: a refused BEGIN now makes exactly ONE state change — `_trip_hard_gate`
+    appends a `trip_ledger` entry recording the attempt before it raises. Every other
+    no-mutation property the guards below assert (no status flip, no manifest, no
+    liveness stamp, no evidence) still holds exactly as it did, so those guards
+    compare with the ledger lifted out — and each one asserts the ledger's OWN
+    expected growth separately, so lifting it out cannot hide a regression."""
+    out = copy.deepcopy(cl)
+    out.pop("trip_ledger", None)
+    return out
+
+
 class TripTwoBandGatePolicy(unittest.TestCase):
     """#182 Module 3 — the Trip two-band gate policy. Thresholds are model-keyed
     via #181's `thresholds_for`; NUMBERS are deferred to first-run calibration, so
@@ -3338,7 +3350,10 @@ class TripTwoBandGatePolicy(unittest.TestCase):
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(self.cl, _start_ns("g2"), base_dir=Path("."))
-        self.assertEqual(self.cl, before)
+        self.assertEqual(_without_trip_ledger(self.cl), _without_trip_ledger(before))
+        # ...and the one mutation a refusal DOES make (#467): the recorded begin.
+        self.assertEqual([e["id"] for e in self.cl["trip_ledger"]], ["tl-1"])
+        self.assertEqual(self.cl["trip_ledger"][0]["outcome"], "begin-refused")
 
     def test_hard_advisory_on_current_points_at_attach(self):
         # On the read-only `current`, the HARD band still escalates to the exact
@@ -3436,7 +3451,9 @@ class RefreshRequestIdentity(unittest.TestCase):
             with self.assertRaises(E.EngineError):
                 E.dispatch(cl, ns, base_dir=Path("."))
         self.assertEqual(cl["tasks"]["g3"]["status"], "pending")  # unmutated
-        self.assertEqual(cl, before)
+        self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
+        self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])  # #467
+        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-refused")
         # a FRESH request keyed to the current digest (w-2) releases HARD
         E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-2"})
         with mock.patch.object(E, "_read_gauge", return_value=_reading(hard)):
@@ -3539,7 +3556,12 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
                 with self.assertRaises(E.EngineError) as ctx:
                     E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
             self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
-            self.assertEqual(cl, before)  # refused BEFORE any mutation or liveness stamp
+            # refused BEFORE any gate mutation or liveness stamp; the ONE state change
+            # a refusal now makes is the #467 ledger entry, asserted on its own.
+            self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
+            self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])
+            self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-refused")
+            self.assertEqual(cl["trip_ledger"][0]["verb"], "start")
             self.assertIn("attach g2 --type refresh-request", str(ctx.exception))
 
     def test_trip_begin_reopen_refused_at_hard_without_refresh(self):
@@ -3549,7 +3571,9 @@ class TripHardGuardsBeginNotClose(unittest.TestCase):
             with self.assertRaises(E.EngineError) as ctx:
                 E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
         self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
-        self.assertEqual(cl, before)
+        self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
+        self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])  # #467
+        self.assertEqual(cl["trip_ledger"][0]["verb"], "reopen")
         self.assertIn("attach g1 --type refresh-request", str(ctx.exception))
 
     def test_trip_begin_start_released_by_a_matching_refresh_request(self):
@@ -5412,3 +5436,659 @@ class TestGlobToRegex(unittest.TestCase):
         self.assertIsNotNone(re.match(regex, "a/b"))
         self.assertIsNone(re.match(regex, "ab"))    # separator is required
         self.assertIsNone(re.match(regex, "aXb"))   # not interchangeable with any char
+
+
+class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
+    """#467 (a) — the engine-only, append-only trip ledger.
+
+    The discriminating question this epic is about is NOT "did a handoff artifact
+    appear before the next advance" (`advance` already refuses a non-exempt gate
+    with no `--why`, so that is true in BOTH worlds and discriminates nothing). It
+    is: **did anyone BEGIN work while over the line?** Every test below is a
+    two-world pair — the defective spine AND its healthy counterpart — and names
+    the field that differs. A test that only asserted the defective side could not
+    fail.
+
+    Names match the frozen `g4-integrate` closeout selector (`ledger`).
+    """
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        self.soft, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+        self.under_hard = max(self.hard - 0.001, 0.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _g2_pending_after_g1(self):
+        """g1 closed with a real understanding (-> w-1); g2 pending, so `start g2`
+        is a genuine BEGIN-work move and the live why-record is w-1."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    def _ledger(self, cl):
+        return cl.get("trip_ledger")
+
+    # --- shape 1: an over-the-line BEGIN that was REFUSED -------------------- #
+    def test_ledger_begin_refused_is_recorded_and_the_healthy_world_records_nothing(self):
+        """DEFECTIVE: the agent is told to wrap up, closes g1 — and then begins g2
+        anyway. HEALTHY: same spine, same gauge, the agent closes g1 and STOPS.
+        Differing field: `trip_ledger` (absent vs one `begin-refused` entry)."""
+        # healthy world — told to wrap up, wrapped up, stopped.
+        healthy = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(healthy, _advance_ns("g1", why="wrapping up at g1"),
+                             base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+        self.assertIsNone(self._ledger(healthy))          # <-- the differing field
+
+        # defective world — same close, then a BEGIN over the line.
+        defective = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(defective, _advance_ns("g1", why="wrapping up at g1"), base_dir=Path("."))
+            with self.assertRaises(E.EngineError):
+                E.dispatch(defective, _start_ns("g2"), base_dir=Path("."))
+        led = self._ledger(defective)                     # <-- the differing field
+        self.assertIsInstance(led, list)
+        self.assertEqual(len(led), 1)
+        self.assertEqual(led[0]["outcome"], "begin-refused")
+        self.assertEqual(led[0]["gate"], "g2")
+        self.assertEqual(led[0]["verb"], "start")
+        # the refusal still stands: the ledger records the attempt, it does not permit it
+        self.assertEqual(defective["tasks"]["g2"]["status"], "pending")
+
+    # --- shape 2: an over-the-line BEGIN that was RELEASED ------------------- #
+    def test_ledger_begin_released_is_recorded_when_the_same_verb_runs_over_the_line(self):
+        """Both worlds run the IDENTICAL command on the IDENTICAL spine and both
+        succeed — g2 goes `in-progress` either way. The ONLY difference is which
+        side of the hard line the gauge reads. Differing field: `trip_ledger`
+        (absent below the line vs one `begin-released` entry over it)."""
+        def _run(fill):
+            cl = self._g2_pending_after_g1()
+            E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+                msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+            self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+            return cl
+
+        healthy = _run(self.under_hard)
+        self.assertIsNone(self._ledger(healthy))          # <-- the differing field
+
+        defective = _run(self.over_hard)
+        led = self._ledger(defective)                     # <-- the differing field
+        self.assertIsInstance(led, list)
+        self.assertEqual(len(led), 1)
+        self.assertEqual(led[0]["outcome"], "begin-released")
+        self.assertEqual(led[0]["gate"], "g2")
+        self.assertEqual(led[0]["verb"], "start")
+
+    # --- the entry's own shape ---------------------------------------------- #
+    def test_ledger_entry_carries_every_field_including_the_live_why_ref(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        entry = cl["trip_ledger"][0]
+        self.assertEqual(
+            set(entry),
+            {"id", "gate", "verb", "outcome", "fill", "hard", "model", "why_ref", "ts"})
+        self.assertEqual(entry["id"], "tl-1")
+        self.assertEqual(entry["model"], self.MODEL)
+        self.assertEqual(entry["why_ref"], "w-1")
+        self.assertAlmostEqual(entry["fill"], self.over_hard, places=4)
+        self.assertAlmostEqual(entry["hard"], self.hard, places=4)
+        # `ts` is a real engine timestamp, not a placeholder string
+        self.assertTrue(datetime.fromisoformat(entry["ts"]))
+
+    def test_ledger_records_the_per_gate_hard_line_not_a_global_constant(self):
+        """POSITIVE CONTROL for the `hard` field. Asserting `hard == self.hard`
+        above would still pass against a writer that stored one frozen number, so
+        this asserts the recorded `hard` MOVES with the begun gate's own headroom
+        reserve — the per-gate line the agent was actually judged against."""
+        cl = self._g2_pending_after_g1()
+        cl["tasks"]["g2"]["context_headroom_tokens"] = 30_000
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        entry = cl["trip_ledger"][0]
+        _, tightened = E._gauge_reader.thresholds_for(self.MODEL, 30_000)
+        self.assertAlmostEqual(entry["hard"], tightened, places=4)
+        self.assertNotAlmostEqual(entry["hard"], self.hard, places=4)
+
+    # --- append-only --------------------------------------------------------- #
+    def test_ledger_is_append_only_across_repeated_begins(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            first = copy.deepcopy(cl["trip_ledger"][0])
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+            E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+            E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        led = cl["trip_ledger"]
+        self.assertEqual(len(led), 3)  # the count this guard looped over
+        self.assertEqual([e["id"] for e in led], ["tl-1", "tl-2", "tl-3"])
+        self.assertEqual([e["verb"] for e in led], ["start", "reopen", "start"])
+        self.assertEqual([e["outcome"] for e in led],
+                         ["begin-refused", "begin-refused", "begin-released"])
+        self.assertEqual(led[0], first)  # the earliest entry was never mutated
+
+    # --- end to end through the CLI ------------------------------------------ #
+    def _write_gauge(self, d, fill, observed_at):
+        (Path(d) / "gauge.json").write_text(json.dumps({
+            "schema_version": 1, "fill_fraction": fill,
+            "model": self.MODEL, "observed_at": observed_at,
+        }), encoding="utf-8")
+
+    def _cli_spine(self, d):
+        f = Path(d) / "spine.json"
+        E.save(f, self._three_gates())
+        # close g1 with a real understanding BEFORE any gauge exists -> w-1
+        self.assertEqual(E.main(["--file", str(f), "advance", "g1", "--why", "u1"]), 0)
+        return f
+
+    def test_ledger_begin_refused_survives_the_raise_through_the_cli(self):
+        """`main()` persists on the EngineError path for any verb that is not
+        `current` and not `--dry-run`, which is what makes a `begin-refused` entry
+        durable even though the verb raised. Proved end to end, from the file on
+        disk — not by calling the function directly.
+
+        Two worlds, same command: a FRESH over-hard gauge vs a STALE one (which the
+        reader discards, so the band is inactive). Differing field: `trip_ledger`
+        on the reloaded file."""
+        import contextlib, io
+        with tempfile.TemporaryDirectory() as d:
+            f = self._cli_spine(d)
+            stale = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+            self._write_gauge(d, min(self.hard + 0.05, 1.0), stale)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)  # healthy
+            healthy = E.load(f)
+            self.assertIsNone(healthy.get("trip_ledger"))   # <-- the differing field
+
+        with tempfile.TemporaryDirectory() as d:
+            f = self._cli_spine(d)
+            self._write_gauge(d, min(self.hard + 0.05, 1.0),
+                              datetime.now(timezone.utc).isoformat())
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rc = E.main(["--file", str(f), "start", "g2"])
+            self.assertEqual(rc, 1)
+            self.assertIn("REFUSED:", err.getvalue())
+            defective = E.load(f)
+            led = defective.get("trip_ledger")             # <-- the differing field
+            self.assertIsInstance(led, list)
+            self.assertEqual(len(led), 1)
+            self.assertEqual(led[0]["outcome"], "begin-refused")
+            self.assertEqual(led[0]["gate"], "g2")
+            self.assertEqual(led[0]["verb"], "start")
+            self.assertEqual(led[0]["why_ref"], "w-1")
+            self.assertEqual(defective["tasks"]["g2"]["status"], "pending")
+
+    def test_ledger_begin_released_is_recorded_through_the_cli(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = self._cli_spine(d)
+            self._write_gauge(d, min(self.hard + 0.05, 1.0),
+                              datetime.now(timezone.utc).isoformat())
+            self.assertEqual(
+                E.main(["--file", str(f), "attach", "g2", "--type", "refresh-request",
+                        "--field", "seam=g2", "--field", "why_ref=w-1"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)
+            cl = E.load(f)
+            self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+            led = cl.get("trip_ledger")
+            self.assertIsInstance(led, list)
+            self.assertEqual(len(led), 1)
+            self.assertEqual(led[0]["outcome"], "begin-released")
+            self.assertEqual(led[0]["gate"], "g2")
+
+
+class TripLedgerComplianceSignal(unittest.TestCase):
+    """#467 (b) — the compliance signal: a PURE selector over the stored ledger,
+    keyed to the LIVE understanding. Its emptiness is the predicate.
+
+    Every test is a two-world pair. The sharpest of them holds the ledger BYTE
+    IDENTICAL across both worlds and moves only which understanding is live, so the
+    thing under test is the keying and nothing else.
+
+    Names match the frozen `g4-integrate` closeout selector (`compliance`)."""
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        _, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _tripped_at_g2(self):
+        """A spine carrying exactly one `begin-refused` entry written under w-1."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(len(cl["trip_ledger"]), 1)
+        self.assertEqual(cl["trip_ledger"][0]["why_ref"], "w-1")
+        return cl
+
+    def test_compliance_signal_is_empty_in_the_healthy_world_and_names_the_begin_in_the_defective_one(self):
+        healthy = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(healthy, _advance_ns("g1", why="wrapping up and stopping"),
+                       base_dir=Path("."))
+        self.assertEqual(E.begin_over_line_records(healthy), [])   # <-- differing value
+
+        defective = self._tripped_at_g2()
+        records = E.begin_over_line_records(defective)             # <-- differing value
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["outcome"], "begin-refused")
+        self.assertEqual(records[0]["gate"], "g2")
+
+    def test_compliance_signal_reads_the_live_understanding_not_a_superseded_one(self):
+        """The two worlds here hold an IDENTICAL ledger — same single entry, same
+        `why_ref`. The ONLY difference is whether that entry's understanding is
+        still the live one. Differing value: the selector's length (1 vs 0)."""
+        defective = self._tripped_at_g2()
+        ledger_snapshot = copy.deepcopy(defective["trip_ledger"])
+        self.assertEqual(len(E.begin_over_line_records(defective)), 1)
+
+        # the understanding moves on: a fresh agent closes g2 with its OWN why (w-2)
+        superseded = copy.deepcopy(defective)
+        E.attach(superseded, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.start(superseded, "g2")
+        E.advance(superseded, "g2", why="u2 — a fresh agent's understanding")
+        self.assertEqual(E._latest_why_record(superseded)["id"], "w-2")
+
+        # the ledger is untouched: the mark is retained, it just stops being current
+        self.assertEqual(superseded["trip_ledger"], ledger_snapshot)
+        self.assertEqual(E.begin_over_line_records(superseded), [])  # <-- differing value
+
+    def test_compliance_signal_goes_quiet_when_a_reopen_freshens_the_digest(self):
+        """The other supersede path: `reopen` appends a reopen-marker, so
+        `_latest_why_record` skips past the understanding the entry was written
+        under. Positive control first, so the quiet half means something."""
+        cl = self._tripped_at_g2()
+        self.assertEqual(len(E.begin_over_line_records(cl)), 1)     # positive control
+        before = copy.deepcopy(cl["trip_ledger"])
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+        self.assertIsNone(E._latest_why_record(cl))
+        self.assertEqual(cl["trip_ledger"], before)  # entry retained, never edited
+        self.assertEqual(E.begin_over_line_records(cl), [])         # <-- differing value
+
+    def test_compliance_signal_counts_both_begin_outcomes_and_nothing_else(self):
+        """The outcome filter, two-world on the SAME entry: `begin-refused` and
+        `begin-released` are the non-compliance record; any other outcome value a
+        future writer might add is not silently counted as one."""
+        cl = self._tripped_at_g2()
+        entry = cl["trip_ledger"][0]
+        for outcome in ("begin-refused", "begin-released"):
+            with self.subTest(outcome=outcome):
+                entry["outcome"] = outcome
+                self.assertEqual(len(E.begin_over_line_records(cl)), 1)
+        for outcome in ("advance-noted", "", None):
+            with self.subTest(outcome=outcome):
+                entry["outcome"] = outcome
+                self.assertEqual(E.begin_over_line_records(cl), [])
+
+    def test_compliance_selector_is_pure_and_reads_stored_state_only(self):
+        """Purity is load-bearing: the selector is called from the read-only
+        `current` path, where a probe would be a side effect. Asserted three ways —
+        no state change, no gauge read, no subprocess."""
+        cl = self._tripped_at_g2()
+        before = copy.deepcopy(cl)
+        with mock.patch.object(E, "_read_gauge",
+                               side_effect=AssertionError("the selector must not read the gauge")), \
+             mock.patch.object(E.subprocess, "run",
+                               side_effect=AssertionError("the selector must not run a subprocess")):
+            records = E.begin_over_line_records(cl)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(cl, before)  # no side effects
+
+    def test_compliance_signal_is_empty_on_a_spine_that_never_carried_a_ledger(self):
+        """Backward compatibility at the read side: a legacy spine with no
+        `trip_ledger` key is not a crash and not a claim — it is an empty record."""
+        cl = self._three_gates()
+        self.assertNotIn("trip_ledger", cl)
+        self.assertEqual(E.begin_over_line_records(cl), [])
+
+
+class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
+    """#467 (c) — the signal is surfaced by EXTENDING the existing `_trip_advisory`
+    HARD branch, not by a second render computing the same fact.
+
+    Every assertion is an EQUALITY against the whole advisory string, so the healthy
+    world is pinned byte-for-byte to what shipped and the defective world differs by
+    exactly the added line. A `assertIn`-only test here would pass against an
+    advisory that had silently changed everything else.
+
+    Names match the frozen `g4-integrate` closeout selector (`compliance`)."""
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        _, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _g2_pending_after_g1(self):
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    def _refuse_start(self, cl, iid="g2"):
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns(iid), base_dir=Path("."))
+
+    def _advisory(self, cl):
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            return E._trip_advisory(cl, Path("."))
+
+    # --- the exact strings, so both worlds are pinned ----------------------- #
+    def _expected_hard(self, gate, wid):
+        return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
+                f"You have taken this as far as this context can carry it — now close THIS "
+                f"gate carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
+                f"request a refresh, and stop. A fresh agent picks up from your DIGEST; do "
+                f"not begin work at another gate. Request the refresh with: attach {gate} "
+                f"--type refresh-request --field seam={gate} --field why_ref={wid}")
+
+    def _expected_hard_already_requested(self, gate):
+        return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, "
+                f"and the refresh for {gate} is already requested. Close THIS gate carrying "
+                f"your handoff (`advance {gate} --why \"<understanding>\"`) and stop. A fresh "
+                f"agent picks up from your DIGEST; do not begin work at another gate.")
+
+    def _expected_note(self, n, verb, gate, outcome):
+        return (f"\nTRIP LEDGER: {n} begin(s) at/over the hard line are on the record "
+                f"under this understanding (latest: {verb} {gate} -> {outcome}). "
+                f"Closing this gate does not clear the record.")
+
+    # --- shape 4: the rendered signal ---------------------------------------- #
+    def test_compliance_line_appears_on_the_hard_advisory_only_in_the_defective_world(self):
+        healthy = self._g2_pending_after_g1()
+        self.assertEqual(self._advisory(healthy), self._expected_hard("g2", "w-1"))
+
+        defective = self._g2_pending_after_g1()
+        self._refuse_start(defective)
+        self.assertEqual(
+            self._advisory(defective),
+            self._expected_hard("g2", "w-1")
+            + self._expected_note(1, "start", "g2", "begin-refused"))
+
+    def test_compliance_line_also_rides_the_already_requested_hard_advisory(self):
+        """The HARD branch has TWO sub-branches. Extending only the one an agent
+        without a pending request sees would leave the released case — the worse
+        one, where work actually proceeded over the line — silent."""
+        healthy = self._g2_pending_after_g1()
+        E.attach(healthy, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        self.assertEqual(self._advisory(healthy),
+                         self._expected_hard_already_requested("g2"))
+
+        defective = self._g2_pending_after_g1()
+        E.attach(defective, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(defective, _start_ns("g2"), base_dir=Path("."))  # released
+        self.assertEqual(defective["trip_ledger"][0]["outcome"], "begin-released")
+        self.assertEqual(
+            self._advisory(defective),
+            self._expected_hard_already_requested("g2")
+            + self._expected_note(1, "start", "g2", "begin-released"))
+
+    def test_compliance_line_names_the_count_and_the_latest_begin(self):
+        """The count is real, not a hardcoded 1, and the named begin is the LATEST
+        one — asserted against a spine carrying three entries of two kinds."""
+        cl = self._g2_pending_after_g1()
+        self._refuse_start(cl, "g2")
+        self._refuse_start(cl, "g2")
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(len(cl["trip_ledger"]), 3)  # the count this guard looped over
+        out = self._advisory(cl)
+        self.assertEqual(
+            out,
+            self._expected_hard_already_requested("g2")
+            + self._expected_note(3, "start", "g2", "begin-released"))
+        self.assertNotIn("1 begin(s)", out)
+
+    def test_compliance_line_is_absent_once_the_recorded_begin_is_superseded(self):
+        """The keying reaches the RENDER, not just the selector: the same retained
+        entry stops being reported once the understanding moves on. Differing field:
+        the advisory string (with vs without the TRIP LEDGER line)."""
+        cl = self._g2_pending_after_g1()
+        self._refuse_start(cl, "g2")
+        self.assertEqual(len(cl["trip_ledger"]), 1)  # positive control: it is there
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.start(cl, "g2")
+        E.advance(cl, "g2", why="u2 — a fresh agent's understanding")
+        self.assertEqual(len(cl["trip_ledger"]), 1)  # retained, not deleted
+        self.assertEqual(self._advisory(cl), self._expected_hard("g3", "w-2"))
+
+    def test_compliance_line_reaches_the_agent_through_current_at_the_cli_boundary(self):
+        healthy = self._g2_pending_after_g1()
+        defective = self._g2_pending_after_g1()
+        self._refuse_start(defective)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            healthy_out = E.dispatch(healthy, types.SimpleNamespace(verb="current"),
+                                     base_dir=Path("."))
+            defective_out = E.dispatch(defective, types.SimpleNamespace(verb="current"),
+                                       base_dir=Path("."))
+        self.assertNotIn("TRIP LEDGER", healthy_out)     # <-- the differing field
+        self.assertIn("TRIP LEDGER", defective_out)
+        self.assertTrue(defective_out.endswith(
+            self._expected_note(1, "start", "g2", "begin-refused")), defective_out)
+
+    def test_compliance_line_never_appears_below_the_hard_band(self):
+        """The signal is a HARD-band escalation. Below the line the advisory is the
+        SOFT text (or nothing) and says nothing about the ledger — a spine can carry
+        a stale mark without every `current` re-litigating it."""
+        soft, _ = E._gauge_reader.thresholds_for(self.MODEL)
+        cl = self._g2_pending_after_g1()
+        self._refuse_start(cl)
+        self.assertEqual(len(cl["trip_ledger"]), 1)  # the mark is present either way
+        for fill in (max(soft - 0.01, 0.0), (soft + self.hard) / 2):
+            with self.subTest(fill=fill):
+                with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+                    self.assertNotIn("TRIP LEDGER", E._trip_advisory(cl, Path(".")))
+
+
+class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
+    """#467 — the four properties that decide whether the signal is trustworthy
+    rather than merely present: the fail-safe on a missing reading, engine-written-
+    only, backward compatibility, and surveys.
+
+    The fail-safe is the one most easily got wrong. A signal that reads SILENCE as
+    "clean" is the same defect class as a check that cannot fail: it produces the
+    compliant-looking answer in a world where nothing was observed at all. So the
+    rule asserted here is stronger than "no entry" — it is **no entry AND no
+    claim**.
+
+    Names match the frozen `g4-integrate` closeout selector."""
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        _, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _g2_pending_after_g1(self):
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    # --- fail-safe ----------------------------------------------------------- #
+    def test_ledger_a_none_reading_writes_no_entry_and_makes_no_compliance_claim(self):
+        """Silence must read as NEITHER compliant NOR non-compliant. Both halves are
+        asserted, and the positive control at the end is what stops the whole test
+        from being satisfied by a dead mechanism."""
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d)  # empty: no gauge, no sidecars, so the advisory is silent
+            cl = self._g2_pending_after_g1()
+            with mock.patch.object(E, "_read_gauge", return_value=None):
+                msg = E.dispatch(cl, _start_ns("g2"), base_dir=base)
+                advisory = E._trip_advisory(cl, base)
+            self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+            self.assertNotIn("trip_ledger", cl)         # half 1: no entry
+            self.assertEqual(advisory, "")              # half 2: no claim either way
+            self.assertEqual(E.begin_over_line_records(cl), [])
+
+            # A spine that ALREADY carries a live mark, now read with NO gauge: the
+            # engine must not report non-compliance it cannot currently observe...
+            marked = self._g2_pending_after_g1()
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+                with self.assertRaises(E.EngineError):
+                    E.dispatch(marked, _start_ns("g2"), base_dir=base)
+            self.assertEqual(len(marked["trip_ledger"]), 1)
+            with mock.patch.object(E, "_read_gauge", return_value=None):
+                self.assertEqual(E._trip_advisory(marked, base), "")   # no claim
+            # POSITIVE CONTROL: the SAME spine, read WITH a gauge over the line, does
+            # report it. Without this line every assertion above would still pass
+            # against an advisory that had been dead-coded to "".
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+                self.assertIn("TRIP LEDGER", E._trip_advisory(marked, base))
+
+    # --- engine-written only -------------------------------------------------- #
+    def test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb(self):
+        """The exhaustive proof, read off the engine's own call graph rather than a
+        hand-maintained list of verbs.
+
+        Three facts, each asserted mechanically: (1) exactly two functions in the
+        engine name the `trip_ledger` key at all — one writes it, one reads it;
+        (2) the writer's only caller is `_trip_hard_gate`; (3) `_trip_hard_gate`'s
+        only caller is `dispatch`, and `_run_verb` — the function every CLI verb is
+        dispatched through — reaches neither. So no verb can create, edit, or delete
+        an entry."""
+        import ast
+        tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
+        funcs = {n.name: n for n in ast.walk(tree)
+                 if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+        self.assertGreater(len(funcs), 50, "the call-graph scan looked at nothing")
+
+        def names_the_key(node):
+            return any(isinstance(c, ast.Constant) and c.value == "trip_ledger"
+                       for c in ast.walk(node))
+
+        def calls_within(node):
+            return {c.func.id for c in ast.walk(node)
+                    if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)}
+
+        def callers_of(name):
+            return sorted(f for f, node in funcs.items() if name in calls_within(node))
+
+        self.assertEqual(sorted(f for f, n in funcs.items() if names_the_key(n)),
+                         ["_append_trip_entry", "begin_over_line_records"])
+        self.assertEqual(callers_of("_append_trip_entry"), ["_trip_hard_gate"])
+        self.assertEqual(callers_of("_trip_hard_gate"), ["dispatch"])
+        self.assertEqual(callers_of("begin_over_line_records"), ["_trip_advisory"])
+        run_verb_calls = calls_within(funcs["_run_verb"])
+        for unreachable in ("_append_trip_entry", "_trip_hard_gate"):
+            self.assertNotIn(unreachable, run_verb_calls)
+
+    def _write_gauge(self, d, fill, observed_at):
+        (Path(d) / "gauge.json").write_text(json.dumps({
+            "schema_version": 1, "fill_fraction": fill,
+            "model": self.MODEL, "observed_at": observed_at,
+        }), encoding="utf-8")
+
+    def test_ledger_only_the_begin_verbs_write_an_entry_over_the_line(self):
+        """The behavioural twin of the call-graph proof: with a REAL gauge parked
+        over the hard line, six non-begin verbs are driven through `main()` and none
+        of them leaves a mark. The seventh — a begin verb — does. Without that last
+        step the whole test would pass against a ledger that never wrote anything."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._three_gates())
+            self._write_gauge(d, self.over_hard, datetime.now(timezone.utc).isoformat())
+            non_begin = [
+                ["current"],
+                ["attach", "g1", "--type", "command-output", "--field", "cmd=x"],
+                ["flag-candidate", "--from", "g1", "--statement", "a candidate"],
+                ["advance", "g1", "--why", "u1"],
+                ["block", "g2", "--blocker", "b", "--next", "n"],
+                ["resume", "g2", "--reason", "unblocked"],
+            ]
+            for argv in non_begin:
+                with self.subTest(verb=argv[0]):
+                    self.assertEqual(E.main(["--file", str(f)] + argv), 0, argv)
+                    self.assertNotIn("trip_ledger", E.load(f))
+            self.assertEqual(len(non_begin), 6)  # the count this guard looped over
+
+            import contextlib, io
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
+            led = E.load(f)["trip_ledger"]
+            self.assertEqual(len(led), 1)
+            self.assertEqual(led[0]["verb"], "start")
+
+    # --- backward compatibility ---------------------------------------------- #
+    def test_ledger_a_spine_with_no_ledger_key_drives_unchanged(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._three_gates())
+            self.assertNotIn("trip_ledger", E.load(f))
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1", "--why", "u1"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "advance", "g2", "--why", "u2"]), 0)
+            cl = E.load(f)
+            self.assertNotIn("trip_ledger", cl)  # the key is never created for nothing
+            self.assertEqual(cl["tasks"]["g2"]["status"], "complete")
+
+    def test_ledger_an_existing_ledger_is_extended_never_replaced(self):
+        """`setdefault`, not assignment: entries already on the spine survive a new
+        trip, and the new entry's id continues the existing sequence."""
+        cl = self._g2_pending_after_g1()
+        cl["trip_ledger"] = [{"id": "tl-1", "gate": "g0", "verb": "start",
+                              "outcome": "begin-refused", "fill": 0.99, "hard": 0.9,
+                              "model": self.MODEL, "why_ref": "w-1", "ts": "2026-01-01T00:00:00Z"}]
+        prior = copy.deepcopy(cl["trip_ledger"][0])
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(len(cl["trip_ledger"]), 2)
+        self.assertEqual(cl["trip_ledger"][0], prior)   # untouched
+        self.assertEqual(cl["trip_ledger"][1]["id"], "tl-2")
+
+    # --- surveys -------------------------------------------------------------- #
+    def test_ledger_a_survey_never_writes_an_entry(self):
+        """`_trip_hard_band_reading` returns None for a survey, so the band is
+        inactive there and there is nothing to record. Paired with a gated positive
+        control on the same reading, so the silence means something."""
+        sv = survey(v1=survey_item("v1", "pending"))
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(sv, _start_ns("v1"), base_dir=Path("."))
+            self.assertTrue(msg.endswith("v1 -> in-progress"), msg)
+            self.assertNotIn("trip_ledger", sv)
+            # positive control: the same reading DOES record on a gated checklist
+            cl = self._g2_pending_after_g1()
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            self.assertEqual(len(cl["trip_ledger"]), 1)

@@ -42,6 +42,7 @@ Reject HTN's offline stance (expand the whole network to primitives before execu
   "blockers": [],                   // stuck items, bubbled to the parent agent
   "amendments": [],                 // audit log of `amend` deltas: gated, plus a survey's retext-check (see Amend delta)
   "why_trail": [],                  // optional, append-only: the running-understanding trail (see Why-capture)
+  "trip_ledger": [],                // optional, append-only: BEGINs judged at/over the hard line (see Trip ledger)
   "refusals": 0,                    // optional: checklist-scoped refusal tally, ARMED by `claim` (see below)
   "engine_session": null            // optional: actor-authority lease over this checklist's STATE (see below)
 }
@@ -355,7 +356,105 @@ Part of the Context Governor (epic-#178, Module 3). At each **gate boundary** th
 
 **HARD means "wrap up", never "you are unsafe".** The HARD advisory is worded as a **changed instruction** — close this gate carrying your handoff, request a refresh, and stop — and deliberately carries no alarm language; an agent that reads an alarm looks for a way past it instead of doing the one thing it is being asked to do.
 
-Both bands are **gated-only** (empty for surveys) and ride the **CLI boundary** in `dispatch` — SOFT is a suffix on `current`'s output; HARD is a pre-verb guard on `start`/`reopen` plus a `require_why` flag `dispatch` passes into `advance` — so the verb functions stay **pure** (their return values are unchanged, so existing exact-equality tests keep passing, and a direct non-`dispatch` call to `advance` is unaffected because `require_why` defaults to `False`). A refusal is raised **before** the liveness stamp, so it never refreshes the lease and never mutates state. The mid-gate runaway is a deliberately accepted limit: there is **no mid-gate check**. (A rollout-ordering caveat about enabling the HARD band lives as a code comment, not in this schema.)
+Both bands are **gated-only** (empty for surveys) and ride the **CLI boundary** in `dispatch` — SOFT is a suffix on `current`'s output; HARD is a pre-verb guard on `start`/`reopen` plus a `require_why` flag `dispatch` passes into `advance` — so the verb functions stay **pure** (their return values are unchanged, so existing exact-equality tests keep passing, and a direct non-`dispatch` call to `advance` is unaffected because `require_why` defaults to `False`). A refusal is raised **before** the liveness stamp, so it never refreshes the lease and never changes the gate's status. Since #467 it does make **exactly one** state change: it appends the `trip_ledger` entry recording the attempt (next section). The mid-gate runaway is a deliberately accepted limit: there is **no mid-gate check**. (A rollout-ordering caveat about enabling the HARD band lives as a code comment, not in this schema.)
+
+### The trip ledger — the engine's own record of BEGINs over the hard line (`trip_ledger`)
+
+The Trip bands above tell an agent to wrap up. Nothing until #467 recorded whether it **did**. The
+question that matters is not "did a handoff artifact appear before the next advance" — `advance`
+already refuses a non-exempt gate that carries no `--why`, so that is true in the healthy world and
+in the defective one alike, and it therefore discriminates nothing. The question that separates the
+two worlds is: **did anyone BEGIN work while over the line?**
+
+The `trip_ledger` is the optional top-level, **append-only** list that answers it. One entry is
+appended every time the HARD band is evaluated at a **mutating** chokepoint and found tripped —
+that is, inside `_trip_hard_gate`, which guards `start` and `reopen`.
+
+```json
+"trip_ledger": [
+  {"id": "tl-1", "gate": "g2", "verb": "start", "outcome": "begin-refused",
+   "fill": 0.95, "hard": 0.9, "model": "claude-opus-4-8",
+   "why_ref": "w-1", "ts": "2026-08-08T12:00:00+00:00"}
+]
+```
+
+| field | meaning |
+|---|---|
+| `id` | positional, `tl-<n>`, assigned at append |
+| `gate` | the gate whose BEGIN was judged |
+| `verb` | the begin verb that was run (`start` or `reopen`) |
+| `outcome` | `begin-refused` or `begin-released` — see below |
+| `fill` | the gauge's fill fraction at the moment of the trip |
+| `hard` | the hard line the agent was judged against, **after** that gate's own `context_headroom_tokens` reserve — so the recorded pair is the same pair the agent was shown |
+| `model` | the model the reading was taken on |
+| `why_ref` | the live why-record id at the moment of the trip; this is what keys the entry to an understanding |
+| `ts` | engine timestamp |
+
+Exactly two outcomes, because both are **begin** outcomes:
+
+- **`begin-refused`** — no keyed `refresh-request` was pending, so the verb **raised**. The entry
+  still survives: `main()` persists state on the `EngineError` path for any verb that is not
+  `current` and not `--dry-run`.
+- **`begin-released`** — a keyed `refresh-request` **was** pending, so the guard released and the
+  verb **proceeded while still over the line**. This is the worse of the two: work actually began.
+
+**Scoped honesty about `begin-released`.** The entry records the decision **at the guard**, which is
+where the band is evaluated — before the verb runs. If the verb then raises for an unrelated reason
+(unmet preconditions, say), the ledger still shows `begin-released`. It is a faithful record of what
+the governor did, not a claim about what the verb returned.
+
+**Two places evaluate the same band and deliberately do NOT write here.** `_trip_advisory` is
+reached from `current`, and `main()` does not save on `current`, so a write there would be silently
+discarded — and would be a lie in a read-only verb. The close side (`advance`'s `require_why`) is a
+**close**, not a begin; neither outcome value fits it, and closing the gate you are inside is not the
+offence.
+
+#### The compliance signal — `begin_over_line_records(cl)`
+
+A **pure** selector over stored state: every ledger entry whose `why_ref` is the id of the **live**
+why-record. Its **emptiness is the predicate**. It reads `trip_ledger` and `_latest_why_record` and
+nothing else — no subprocess, no gauge read, no clock — so it is safe on the read-only `current`
+path.
+
+Keying it to the live understanding is what stops a historical mark from reading as present-tense
+non-compliance. When the understanding moves on — a fresh agent records its own `why`, or a `reopen`
+appends a reopen-marker that makes the old one stale — the entry is **retained and never edited**, it
+simply stops matching.
+
+It is surfaced by **extending the existing HARD branch** of `_trip_advisory`, in both of that
+branch's sub-branches, as one added line naming the count and the latest begin. There is exactly one
+computation of this fact in the engine; nothing else renders it.
+
+**In the healthy world there is no ledger at all.** The agent that was told to wrap up closed its
+gate and stopped, so no begin verb ever ran, so nothing was ever appended. That is the whole value of
+the signal: it differs between the two worlds.
+
+**Fail-safe: an empty result is not a claim of compliance.** A missing, stale, or clock-skewed gauge
+collapses to no reading, and then `_trip_hard_gate` returns before writing anything **and** the
+advisory says nothing about the ledger. Silence reads as *neither compliant nor non-compliant*. A
+signal that read silence as "clean" would be the same defect class as a check that cannot fail.
+
+**Backward compatible.** The list is created lazily on first write (`setdefault`, the `why_trail`
+idiom), so a spine with no `trip_ledger` drives unchanged and never acquires the key for nothing. An
+existing ledger is extended, never replaced.
+
+**Engine-written only.** No CLI verb creates, edits, or deletes an entry. The only writer is
+`_append_trip_entry`; its only caller is `_trip_hard_gate`; and `_trip_hard_gate`'s only caller is
+`dispatch`, which runs it **before** `_run_verb` — the function every verb is dispatched through.
+Entries are append-only: no code path mutates or removes one.
+
+#### The limit — what this cannot observe
+
+The engine **cannot** observe an agent that is told to wrap up and simply **stops without running another verb**.
+`main()` does not save on `current`, which is where the band is evaluated read-only, and there is no
+mid-gate check. That case is visible to the invoker only as a stale `DIGEST` at the seam.
+
+Two consequences worth stating plainly rather than leaving fuzzy:
+
+- The ledger records **begins**, not **work**. An agent that keeps working inside the gate it is
+  already in, over the line, without running any verb, leaves no mark.
+- An empty ledger therefore means "no recorded begin over the line under this understanding" — never
+  "this run was compliant".
 
 ## Engine verbs ↔ schema
 
@@ -366,7 +465,7 @@ Both bands are **gated-only** (empty for surveys) and ride the **CLI boundary** 
 | `heartbeat --session-id <id>` | both | refresh the active lease's `last_heartbeat` (owner only) |
 | `release --session-id <id> [--force --reason …]` | both | close the lease (`status: released`); owner only unless forced |
 | `criteria <id>` | gated | emit `postconditions` + implied evidence types |
-| `start <id>` | both | engine checks any `command`/`artifact` preconditions; agent asserts qualitative ones; `→ in-progress`. **Refused at/over the Trip HARD threshold** without a matching `refresh-request` — `start` BEGINS work (see *Trip*) |
+| `start <id>` | both | engine checks any `command`/`artifact` preconditions; agent asserts qualitative ones; `→ in-progress`. **Refused at/over the Trip HARD threshold** without a matching `refresh-request` — `start` BEGINS work (see *Trip*). Either way, at/over hard the engine appends one `trip_ledger` entry recording the attempt (see *Trip ledger*) |
 | `advance <id> [--why "…" \| --mechanical] --evidence …` | gated | check all `postconditions`; then, for a **non-exempt** gate, require a running `--why` **or** an explicit `--mechanical` marker (silence **fails closed**) and append a `why_trail` record; `→ complete` (see *Why-capture*). **Never refused by Trip HARD** — closing the gate you are in is the handoff — but at/over hard `--mechanical` is refused and `why_exempt` is suspended, so the close must carry a real `--why` (see *Trip*) |
 | `record <id> --result pass\|fail [--finding …]` | survey | record the check outcome; `→ complete`; `--result fail` never blocks. `--result pass` REFUSES if the item carries an unmet `command`-kind postcondition (checked via the same `_check_condition` `advance` uses) — `null`/`artifact`-kind postconditions on a survey item are not evaluated here (#422/#328) |
 | `append <id> …` | survey | add an item from context |
@@ -374,7 +473,7 @@ Both bands are **gated-only** (empty for surveys) and ride the **CLI boundary** 
 | `skip <id> --reason …` | both | `→ skipped` (OBE; state op) |
 | `block <id> …` | both | `→ blocked`; append to `blockers` (bubble to parent) |
 | `resume <id> --reason … [--note]` | both | move a **resolved `block`** forward: restore the gate to the `pending`/`in-progress` status it held **before** it was blocked (recorded by `block` as `status_detail.prior_status`). Refuses a gate that is not `blocked`, an empty `--reason`, and a block with **no restorable prior** (a reopen rework-cap escalation, or a legacy block predating `resume`) — those need `reopen`/`skip`/a human decision, not `resume`. On success pops `prior_status`, records `resume_reason`/`resume_note` in `status_detail`, and drops the gate from the top-level `blockers` list. |
-| `reopen <id> --reason …` | gated | **Refused at/over the Trip HARD threshold** without a matching `refresh-request` — `reopen` BEGINS work (see *Trip*). `complete → in-progress`; `rework_count++`; escalate at cap; resets the gate's postconditions (clears any `waived`/`attested` markers) and **cascades**: every downstream `complete`/`in-progress` gate resets to `pending` (pre- and postconditions cleared, `status_detail.superseded_by_reopen` stamped); `skipped`/`blocked` downstream gates are left untouched. Evidence on the target and each cascaded gate is marked `superseded` — **retained**, but inert for satisfaction, so the reopened work needs fresh evidence |
+| `reopen <id> --reason …` | gated | **Refused at/over the Trip HARD threshold** without a matching `refresh-request` — `reopen` BEGINS work (see *Trip*). Either way, at/over hard the engine appends one `trip_ledger` entry recording the attempt (see *Trip ledger*). `complete → in-progress`; `rework_count++`; escalate at cap; resets the gate's postconditions (clears any `waived`/`attested` markers) and **cascades**: every downstream `complete`/`in-progress` gate resets to `pending` (pre- and postconditions cleared, `status_detail.superseded_by_reopen` stamped); `skipped`/`blocked` downstream gates are left untouched. Evidence on the target and each cascaded gate is marked `superseded` — **retained**, but inert for satisfaction, so the reopened work needs fresh evidence |
 | `amend --delta <file> --reason … --authority …` | gated (survey: `retext-check` only) | intentional mid-run re-plan: apply a validated delta of `add`/`drop`/`rescope`/`retext-check` ops; all but `retext-check` touch **PENDING gates only**, `retext-check` also corrects a **pending-or-in-progress** gate's check text; on a **survey** only a `retext-check`-only delta is accepted (`add`/`drop`/`rescope` refused as a conservative choice); **all-or-nothing** (an invalid op leaves the checklist unmutated); appends an audit entry to `amendments`. Needs `--reason` + `--authority` (human ratification), like `waive` (see *Amend delta*) |
 | `attest <id> --cond <id> [--which preconditions\|postconditions] [--evidence <eid>]` | both | satisfy a `check: null` condition by manual attestation; OR satisfy an `artifact` postcondition **by reference** to an already-attached artifact `<eid>` (verified: exists + `evidence_type` + `match`) — avoids re-attaching the same artifact to a sibling gate. `--which` selects the condition list (default `preconditions`); the other list is searched as a fallback when the id is not found in the selected one. **Invariant: a task's precondition and postcondition ids must be disjoint** (convention `p*`/`c*`; every shipped template complies). The fallback resolves by first match, so a cond id duplicated across both lists would be silently resolved from the `--which` list — keep the lists disjoint rather than relying on `--which` to disambiguate. Refuses `command`/`git-change-policy` checks. |
 | `waive <id> --cond <id> [--which postconditions] --authority … --reason … [--force]` | both | human override: satisfy a condition **by waiver**; refused unless its `override_policy.allowed` (or `--force`); records a `waiver` evidence record + a durable `waived` marker |

@@ -1492,6 +1492,20 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # the gate-only match, preserving all existing behavior.
         rec = _latest_why_record(cl)
         wid = rec["id"] if rec else None
+        # #467 (the trip ledger): the ONE render of the compliance fact. The engine
+        # already wrote the ledger at `_trip_hard_gate`; this reads it back through
+        # the single pure selector and appends one line to whichever HARD sub-branch
+        # is returned below. There is deliberately no second computation of this fact
+        # anywhere — an over-the-line begin is reported here or not at all.
+        ledger_note = ""
+        records = begin_over_line_records(cl)
+        if records:
+            last = records[-1]
+            ledger_note = (
+                f"\nTRIP LEDGER: {len(records)} begin(s) at/over the hard line are on "
+                f"the record under this understanding (latest: {last.get('verb') or '?'} "
+                f"{last.get('gate')} -> {last.get('outcome')}). Closing this gate does "
+                f"not clear the record.")
         # #467: HARD has always meant "wrap up", never "you are unsafe" — but the old
         # wording ("`advance` is BLOCKED", "lost to a runaway") read as an alarm about
         # a mechanism failing, and an agent that reads an alarm looks for a way past it
@@ -1503,13 +1517,13 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
                     f"the refresh for {gate} is already requested. Close THIS gate "
                     f"carrying your handoff (`advance {gate} --why \"<understanding>\"`) "
                     f"and stop. A fresh agent picks up from your DIGEST; do not begin "
-                    f"work at another gate.")
+                    f"work at another gate.") + ledger_note
         return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed. You have "
                 f"taken this as far as this context can carry it — now close THIS gate "
                 f"carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
                 f"request a refresh, and stop. A fresh agent picks up from your DIGEST; "
                 f"do not begin work at another gate. Request the refresh with: "
-                f"{_refresh_attach_hint(gate, wid)}")
+                f"{_refresh_attach_hint(gate, wid)}") + ledger_note
     if fill >= soft:
         return (f"\nCONTEXT {fill:.0%} (>= soft): you've used most of your context. "
                 f"Unless you're basically done, hand off here at {gate} rather than "
@@ -1546,7 +1560,69 @@ def _trip_hard_band_reading(cl: dict, base_dir: Path | None, gate: str | None = 
     return reading
 
 
-def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
+def _append_trip_entry(cl: dict, gate: str, verb: str | None, outcome: str,
+                       reading, hard: float, why_ref: str | None) -> str:
+    """Append one entry to the top-level append-only `trip_ledger` and return its
+    id. ENGINE-WRITTEN ONLY: the sole caller is `_trip_hard_gate`, which is reached
+    from the `dispatch` chokepoint BEFORE `_run_verb`, so no CLI verb can create,
+    edit, or delete an entry.
+
+    Same idiom as `_append_why`: `setdefault` creates the ledger on first write (so
+    a spine without one drives unchanged), the id is positional, and a prior entry
+    is NEVER mutated or removed.
+
+    `why_ref` is the live why-record id at the moment of the trip. It is what lets
+    the compliance selector (`begin_over_line_records`) key on the CURRENT
+    understanding, so a mark left under a superseded understanding stops reading as
+    present-tense non-compliance without any entry being edited."""
+    ledger = cl.setdefault("trip_ledger", [])
+    tid = f"tl-{len(ledger) + 1}"
+    ledger.append({
+        "id": tid, "gate": gate, "verb": verb, "outcome": outcome,
+        "fill": round(float(reading.fill_fraction), 4), "hard": round(float(hard), 4),
+        "model": reading.model, "why_ref": why_ref, "ts": _now(),
+    })
+    return tid
+
+
+def begin_over_line_records(cl: dict) -> list[dict]:
+    """PURE selector over stored state: every `trip_ledger` entry recording a BEGIN
+    at/over the hard line **under the live understanding**. Its emptiness IS the
+    compliance predicate — an empty list means the engine holds no record of anyone
+    beginning work over the line under the understanding now in force; a non-empty
+    list IS the non-compliance signal.
+
+    Pure by construction: it reads `trip_ledger` and `_latest_why_record` and
+    nothing else — no subprocess, no gauge read, no clock — so it is safe to call
+    from the read-only `current` path.
+
+    Keyed to the live understanding: an entry matches only when its `why_ref` is the
+    id of the CURRENT why-record. A `reopen` freshens the digest by APPENDING a
+    reopen-marker, so an older entry's understanding stops being live and its mark
+    stops reading as current non-compliance — the entry itself is never touched.
+    (A spine with no `why_trail` has a live id of None, and entries written under
+    that same silence carry None too, so they still match.)
+
+    An EMPTY list is NOT a claim of compliance. It means "no recorded begin over the
+    line under this understanding". The engine cannot see an agent that was told to
+    wrap up and simply stopped without running another verb — see the scoped limit
+    in `docs/CHECKLIST_SCHEMA.md`."""
+    rec = _latest_why_record(cl)
+    live = rec["id"] if rec else None
+    out: list[dict] = []
+    for e in cl.get("trip_ledger", []) or []:
+        if not isinstance(e, dict):
+            continue
+        if e.get("outcome") not in ("begin-refused", "begin-released"):
+            continue
+        if e.get("why_ref") != live:
+            continue
+        out.append(e)
+    return out
+
+
+def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None,
+                    verb: str | None = None) -> None:
     """Trip HARD backstop at the verbs that BEGIN work at a gate — `start` (opens a
     pending gate) and `reopen` (drives a complete gate back to in-progress and
     cascades downstream). REFUSE to begin when the gauge reads `fill >= hard` and no
@@ -1557,14 +1633,28 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
     do is BEGIN work it cannot finish. No-op for surveys, a missing/stale reading
     (None), or below `hard` — HARD never forces on an absent reading. Called BEFORE
     the verb runs, so a refusal leaves the gate's status exactly as it was and never
-    refreshes the lease."""
+    refreshes the lease.
+
+    #467 (the trip ledger): this is the ONLY mutating chokepoint at which the HARD
+    band is evaluated for a BEGIN, so it is the only place an over-the-line begin
+    can be recorded. Both outcomes are recorded here — `begin-refused` (no keyed
+    request pending, so the verb raises; `main()` persists on the EngineError path,
+    which is what makes the entry durable) and `begin-released` (a keyed request was
+    pending, so the verb proceeds while still over the line). The entry is the ONE
+    state change a refusal now makes; the gate's own status is still untouched."""
     if not iid:
         return
     # #467: judged against the reserve declared by the gate being BEGUN — an
     # expensive gate's "I need this much room" is a statement about entering IT.
     reading = _trip_hard_band_reading(cl, base_dir, iid)
     if reading is None:
-        return
+        return  # fail-safe: no reading -> no refusal, no ledger entry, no claim
+    # The line the agent is being judged against, recorded alongside the fill so a
+    # later reader can see BOTH numbers without re-deriving either. Same resolver,
+    # same gate, same reading as `_trip_hard_band_reading` used a line above, so the
+    # two cannot disagree.
+    _, hard = _gauge_reader.thresholds_for(
+        reading.model, _gate_headroom_tokens(cl, iid))
     # Identity-aware release (#190): the pending refresh-request must be keyed to the
     # CURRENT understanding (`_latest_why_record`), so a distinct new trip on a
     # still-open gate cannot be waved through on a stale request's coattails. A None
@@ -1573,7 +1663,12 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
     rec = _latest_why_record(cl)
     wid = rec["id"] if rec else None
     if has_pending_refresh_request(cl, iid, why_ref=wid):
-        return  # the agent already requested a refresh; the backstop is satisfied
+        # The backstop is satisfied and the verb proceeds — but it proceeds WHILE
+        # STILL OVER THE LINE, which is exactly the event #467 exists to make
+        # observable. Recorded, then released.
+        _append_trip_entry(cl, iid, verb, "begin-released", reading, hard, wid)
+        return
+    _append_trip_entry(cl, iid, verb, "begin-refused", reading, hard, wid)
     raise EngineError(
         f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit, so "
         f"this is not the moment to BEGIN work here — finish and close the gate you are "
@@ -2819,7 +2914,7 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         # verb runs so a refusal never mutates state and never stamps liveness. No-op
         # on a missing reading.
         if v in TRIP_HARD_GUARDED_VERBS:
-            _trip_hard_gate(cl, getattr(args, "id", None), base_dir)
+            _trip_hard_gate(cl, getattr(args, "id", None), base_dir, verb=v)
         # Run the verb FIRST: a refused verb raises here (before the liveness stamp),
         # so it never refreshes the lease even though main() persists on the error
         # path. Only a verb that returns successfully reaches the stamp below.

@@ -1,0 +1,545 @@
+{
+  "work_id": "g4-implement-trip-ledger-467",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-ledger-writer",
+    "m2-predicate",
+    "m3-advisory",
+    "m4-guards",
+    "m5-schema-doc",
+    "m6-mutations",
+    "m7-cannot-fail",
+    "m8-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited crew doctrine (references/global-crew.md, references/global-everyone.md), the project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md) if present, the g4 implementer handoff, and the Trip section of scripts/checklist_engine.py at the parent commit. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + engine Trip section read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "read global-crew/global-everyone, CREW_CONTEXT.md, CHECKLIST_SCHEMA.md Trip+why-capture sections, the g4 handoff in full, and the engine Trip section at 9997c32d; handoff carries task, intent, scope, exclusions, evidence, test mode, stop conditions, return format"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-ledger-writer": {
+      "id": "m1-ledger-writer",
+      "title": "Engine-only append-only trip ledger at the begin chokepoint",
+      "imperative": "TDD. Write the RED tests first: both outcomes (begin-refused, begin-released) recorded at _trip_hard_gate with all fields, append-only, each paired with its healthy counterpart that records NOTHING, plus the begin-refused-survives-the-raise proof driven through main(). Observe them failing. Then add the ledger writer and wire it into _trip_hard_gate's two branches.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the new ledger tests written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed: 7 failed, 384 deselected \u2014 every failure KeyError/None on the absent trip_ledger key"
+        },
+        {
+          "id": "c2",
+          "statement": "TDD green: ledger tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-ledger-writer-1"
+        }
+      ],
+      "constraints": [
+        "engine-written only; append-only; the two outcome values are settled",
+        "every defect shape needs its healthy counterpart and a named differing field"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-ledger-writer-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-predicate": {
+      "id": "m2-predicate",
+      "title": "Pure compliance predicate keyed to the live understanding",
+      "imperative": "TDD. RED first: a stale entry under a superseded understanding must NOT read as current non-compliance, while the same entry under the live understanding must. Then add the pure predicate over the stored ledger (no subprocess, no gauge read, no clock).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the ledger writer is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the predicate tests written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed, with a declared deviation: I authored begin_over_line_records in the SAME edit as the m1 writer, so its absence could not produce the red. I dead-coded the selector to 'return []' and ran: 6 failed, 2 passed, 391 deselected. Then removed the stub (grep for 'TEMP RED' exits 1) and re-ran: 6 passed, 5 subtests passed. The one test that stayed green under the stub is the legacy-spine backward-compat guard, which is negative by design and is paired with positive controls elsewhere."
+        },
+        {
+          "id": "c2",
+          "statement": "TDD green: compliance predicate tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'compliance'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-predicate-1"
+        }
+      ],
+      "constraints": [
+        "pure: stored state only",
+        "keyed to the live understanding"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-predicate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'compliance'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-advisory": {
+      "id": "m3-advisory",
+      "title": "Surface the signal by extending the existing _trip_advisory HARD branch",
+      "imperative": "TDD. RED first: the HARD advisory in the defective world carries the compliance line and in the healthy world is byte-identical to the shipped string. Then extend the EXISTING HARD branch (both sub-branches). Prove by grep there is exactly one computation of the fact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the predicate is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the advisory two-world tests written and observed failing (manual attest)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed before the change: 4 failed, 2 passed, 397 deselected (the 2 that passed are the two ABSENCE guards, negative by design and paired with positive controls in the same class). After the change: 19 passed on the frozen selector."
+        },
+        {
+          "id": "c2",
+          "statement": "TDD green: ledger + compliance tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-advisory-1"
+        },
+        {
+          "id": "c3",
+          "statement": "exactly one render: the grep shows one definition and one call site of the predicate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "grep -rn begin_over_line_records --include=*.py scripts/ = 3 lines: ONE definition (1588), ONE call site (1501, inside _trip_advisory's HARD branch), ONE docstring cross-reference (1575). grep -rn 'TRIP LEDGER' scripts/ | wc -l = 1. grep -rn trip_ledger scripts/ shows the key touched at exactly two code lines: setdefault (1578, the only write) and cl.get (1613, the only read). No second computation, no mutate, no delete."
+        }
+      ],
+      "constraints": [
+        "extend, do not duplicate"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-advisory-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-guards": {
+      "id": "m4-guards",
+      "title": "Fail-safe, engine-only, backward compatibility, and existing-test reconciliation",
+      "imperative": "Add the None-reading fail-safe guard (no entry AND no compliance claim), the engine-only guard (no CLI verb writes an entry; state the verb count looped over), the backward-compatibility guard, and the survey guard. Reconcile the four existing tests that assert a refused begin mutates nothing at all. Whole engine suite green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the advisory is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the whole engine test file is green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-guards-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the full suite is green against the stated baseline",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-guards-2"
+        }
+      ],
+      "constraints": [
+        "a None reading reads as neither compliant nor non-compliant"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-guards-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-guards-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-schema-doc": {
+      "id": "m5-schema-doc",
+      "title": "Document the ledger, the predicate, and the scoped limit",
+      "imperative": "Update docs/CHECKLIST_SCHEMA.md with the ledger's shape, the predicate, and the limit the engine cannot observe, stated plainly and without overclaim.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the implementation is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete, full suite green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the schema doc names trip_ledger, both outcomes, the predicate, and the stop-without-another-verb limit",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && grep -q 'trip_ledger' docs/CHECKLIST_SCHEMA.md && grep -q 'begin-released' docs/CHECKLIST_SCHEMA.md && grep -q 'begin-refused' docs/CHECKLIST_SCHEMA.md && grep -q 'stops without running another verb' docs/CHECKLIST_SCHEMA.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-schema-doc-2"
+        }
+      ],
+      "constraints": [
+        "do not claim coverage the engine does not have"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-schema-doc-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && grep -q 'trip_ledger' docs/CHECKLIST_SCHEMA.md && grep -q 'begin-released' docs/CHECKLIST_SCHEMA.md && grep -q 'begin-refused' docs/CHECKLIST_SCHEMA.md && grep -q 'stops without running another verb' docs/CHECKLIST_SCHEMA.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-schema-doc-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && grep -q 'trip_ledger' docs/CHECKLIST_SCHEMA.md && grep -q 'begin-released' docs/CHECKLIST_SCHEMA.md && grep -q 'begin-refused' docs/CHECKLIST_SCHEMA.md && grep -q 'stops without running another verb' docs/CHECKLIST_SCHEMA.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-mutations": {
+      "id": "m6-mutations",
+      "title": "Commit, then mutation-test every guard shipped",
+      "imperative": "Commit the implementation. Then, one at a time, apply each mutation to scripts/checklist_engine.py, run the named test, record (branch broken, named test that failed, TOTAL failure count), and revert with git checkout -- scripts/checklist_engine.py, confirming the file is clean before the next. Write .agent-work/issue-467-trip-semantics/g4-mutation-log.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the suite is green and the implementation is committed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the mutation log exists and every mutation turned its named test red",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/g4-mutation-log.md && grep -c 'RED' .agent-work/issue-467-trip-semantics/g4-mutation-log.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the engine file is clean after the last revert",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && git diff --quiet -- scripts/checklist_engine.py && echo clean"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "revert confirmed between mutations"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m7-cannot-fail": {
+      "id": "m7-cannot-fail",
+      "title": "Write CHECK_THAT_CANNOT_FAIL.md as a first-class artifact",
+      "imperative": "Read CRITIC_TRIAGE.md, g2-mutation-log.md, g3-mutation-log.md and STATE_NOTE.md, then write .agent-work/issue-467-trip-semantics/CHECK_THAT_CANNOT_FAIL.md: the shape of the defect, why it is invisible from the inside, what actually caught it, and what a reader should do differently. Write what the evidence says; flag disagreement with the framing if the evidence reads differently.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the mutation evidence exists to draw on",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the artifact exists and covers the four required sections",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/CHECK_THAT_CANNOT_FAIL.md && grep -c '^## ' .agent-work/issue-467-trip-semantics/CHECK_THAT_CANNOT_FAIL.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "first-class artifact, not compressed to a line"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m8-closeout": {
+      "id": "m8-closeout",
+      "title": "Wiring grep, evidence, and the implementer result",
+      "imperative": "Run the wiring grep and state the external call-site count. Re-run the three verification commands. Write the two-world table, the write-site proof, and the declared limits into .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md. Commit the artifacts and deliver the result to the Commander.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all deliverables exist",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the frozen closeout selector collects and passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'ledger or compliance or trip_log'"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the result file exists with the two-world table and the write-site proof",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-a2-467 && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md && grep -q 'two-world' .agent-work/issue-467-trip-semantics/crew-handoffs/g4-implementer-result.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "state counts mechanically, never by eye"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g4-impl-467",
+    "status": "active",
+    "claimed_at": "2026-08-08T15:56:57.710213+00:00",
+    "last_heartbeat": "2026-08-08T16:29:21.873728+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Baseline loaded. The single mutating chokepoint where HARD is evaluated for a BEGIN is _trip_hard_gate; main() persists on the EngineError path for non-current verbs, which is what makes a begin-refused entry durable. Four existing tests assert a refused begin leaves the spine byte-identical and will need the ledger key excluded from that comparison.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:57:40.393172+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-ledger-writer",
+      "why": "Ledger writer shipped at the single mutating chokepoint. _append_trip_entry (setdefault, tl-N ids, never mutates a prior entry) is called from _trip_hard_gate's two branches: begin-released before the release return, begin-refused before the raise. dispatch now passes verb=v. Entry carries the eight named fields plus why_ref (the live why-record id), which is what lets the predicate key on the current understanding. Seven ledger tests green, each a two-world pair.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:02:43.497469+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-predicate",
+      "why": "begin_over_line_records is the compliance signal: a pure selector over stored trip_ledger entries whose why_ref equals the live why-record id. Emptiness is the predicate, and emptiness is explicitly NOT a claim of compliance. The sharpest test holds the ledger byte-identical across both worlds and moves only which understanding is live.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:04:44.015347+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-advisory",
+      "why": "The HARD branch of _trip_advisory now computes the compliance fact ONCE, before its two sub-branches, and appends the same TRIP LEDGER line to both. Both sub-branches matter: the already-requested one is the RELEASED case, where work actually proceeded over the line. Healthy-world strings are pinned by equality, so the added line is the only difference.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:07:13.365212+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-guards",
+      "why": "Fail-safe, engine-only, backward compatibility and survey guards shipped; the four pre-existing no-mutation guards reconciled to compare with the ledger lifted out AND assert the ledger's own growth. Full suite 1858 passed / 2 skipped / 820 subtests against the 9997c32d baseline of 1833 / 2 / 808: +25 passed is exactly my 25 new tests; the subtest delta is +12 not +13 because test_context_manifest's clean-file sweep excludes scripts/checklist_engine.py while it is uncommitted. That subtest returns once the change is committed.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:28:23.003816+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-schema-doc",
+      "why": "CHECKLIST_SCHEMA.md now documents the trip_ledger (storage-model line, field table, both outcomes, the begin-released honesty note, the two deliberate non-write-sites), the pure selector and its keying to the live understanding, the fail-safe that an empty result is not a claim of compliance, backward compatibility, engine-written-only, and the limit verbatim. I also corrected a line the change falsified: the Trip section said a HARD refusal 'never mutates state', which is no longer true. The gate refused once because the limit sentence wrapped across two lines and its own grep check could not match -- fixed by unwrapping, not by weakening the check.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:29:21.873693+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-08T16:02:29.942969+00:00",
+      "reason": "six command postconditions I authored piped pytest into tail, so the shell exit status was tail's and the check passed on a failing run AND on an empty collection (proved: piped exit 0, bare exit 5 on a no-match selector). That is a check that cannot fail, in the plan for the gate about checks that cannot fail. Dropping the pipe restores the real exit code.",
+      "authority": "implementer, self-caught; Commander notified in the same turn",
+      "ops": [
+        "retext-check m1-ledger-writer.c2",
+        "retext-check m2-predicate.c2",
+        "retext-check m3-advisory.c2",
+        "retext-check m4-guards.c1",
+        "retext-check m4-guards.c2",
+        "retext-check m8-closeout.c1"
+      ]
+    }
+  ]
+}
