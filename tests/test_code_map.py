@@ -1977,5 +1977,45 @@ class StatementSchemaFactsTests(unittest.TestCase):
                       window["d"]["doc_body"])
 
 
+class OneSchemaCoverageTests(unittest.TestCase):
+    """Gate g3, `tc34`: the second AST pass descended `node.body` and nothing
+    else, so a definition inside a `with`, `if`, `try` or `for` block was not an
+    entity at all -- no page, no caller list, invisible in every count the map
+    published. The map did not say it was missing; it did not know.
+
+    The statement extractor never had that blind spot: it is an
+    `ast.NodeVisitor`, so it descends into a block statement and reaches the
+    definition inside. Folding the six facts into the statement schema and
+    removing the second pass therefore closes `tc34` by construction, and this
+    is the test that says so rather than assuming it."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_schema_repo(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["build", "--root", str(self.repo)]), 0)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_schema_merge_gives_a_page_to_a_definition_inside_a_with_block(self):
+        page = self.repo / "map" / "pkg.shape" / "inside_a_with_block.md"
+
+        self.assertTrue(
+            page.exists(),
+            "a definition inside a `with` block has no page: the map is not "
+            "missing it, it does not know about it\n"
+            + "\n".join(sorted(p.name for p in (self.repo / "map" / "pkg.shape")
+                               .iterdir())))
+        self.assertIn("Defined inside a `with`", page.read_text(encoding="utf-8"))
+
+    def test_schema_merge_lists_the_with_block_definition_on_its_module_index(self):
+        """A page nothing links to is a page nobody finds."""
+        index = (self.repo / "map" / "pkg.shape" / "INDEX.md").read_text(encoding="utf-8")
+
+        self.assertIn("[inside_a_with_block](inside_a_with_block.md)", index)
+
+
 if __name__ == "__main__":
     unittest.main()
