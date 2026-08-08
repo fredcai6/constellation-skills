@@ -1930,6 +1930,52 @@ class StatementSchemaFactsTests(unittest.TestCase):
                          ["property"])
         self.assertEqual(self._facts("pkg.shape:spin_up")["d"]["decorators"], [])
 
+    def _declared(self, symbol):
+        rows = [st for st in self.statements
+                if st["p"] == "declares" and st["o"] == symbol]
+        if len(rows) != 1:
+            raise HarnessError(
+                f"HARNESS ERROR: {symbol} has {len(rows)} declaration statements, "
+                f"expected exactly 1")
+        return rows[0]
+
+    def test_schema_carries_the_value_of_a_module_constant(self):
+        """The store recorded only that a name was written, never what it was
+        written to -- so `WIDTH: int = 7` reached the map as the word `WIDTH`."""
+        self.assertEqual(self._declared("pkg.shape:WIDTH")["d"],
+                         {"annotation": "int", "value": "7",
+                          "form": "annotated-assign"})
+        self.assertEqual(self._declared("pkg.shape:NAME")["d"],
+                         {"annotation": None, "value": "'gadget'", "form": "assign"})
+
+    def test_schema_carries_a_class_field_including_an_annotation_only_one(self):
+        """An annotation-only field had NO statement of any kind: a dataclass
+        field or a ClassVar declaration was invisible to the store."""
+        self.assertEqual(self._declared("pkg.shape:Gadget.slots")["d"],
+                         {"annotation": "int", "value": "3",
+                          "form": "annotated-assign"})
+        self.assertEqual(self._declared("pkg.shape:Gadget.label")["d"],
+                         {"annotation": "str", "value": None,
+                          "form": "annotation-only"})
+
+    def test_schema_declares_a_value_without_making_it_an_entity(self):
+        """A constant is a fact about its owner, not a page.
+
+        Page accounting is one page per module index, per entity and one top
+        index; a constant that arrived as an entity would demand a page and the
+        count would go red."""
+        self.assertNotIn("pkg.shape:WIDTH",
+                         [st["o"] for st in self.statements if st["p"] == "contains"])
+
+    def test_schema_window_carries_the_module_facts(self):
+        window = [st for st in self.statements
+                  if st["p"] == "extraction-window" and st["q"]["file"] == "pkg/shape.py"][0]
+
+        self.assertEqual(window["d"]["loc"], len(_SCHEMA_SOURCE.splitlines()))
+        self.assertEqual(window["d"]["all"], ["Gadget", "spin_up"])
+        self.assertIn("This second paragraph is the docstring BODY",
+                      window["d"]["doc_body"])
+
 
 if __name__ == "__main__":
     unittest.main()
