@@ -233,12 +233,28 @@ def _binding_key(data: dict):
 
 
 def resolve_gauge_path(project_dir: Path, binding_key):
-    """`.agent-work/<work_id>/gauge.json` for EVERY spine this BINDING KEY is
-    currently bound to (#202: one key can hold N distinct spine bindings at
-    once) -- a list of Path, possibly empty. Each candidate is individually
-    checked against `_is_contained`; a candidate that fails the fence is
-    dropped rather than failing the whole call, so one bad entry never blinds
-    the write for the key's other, legitimate bindings.
+    """`.agent-work/<work_id>/gauge.json` for EVERY DISTINCT gauge path this
+    BINDING KEY is currently bound to (#202: one key can hold N distinct spine
+    bindings at once) -- a list of Path, possibly empty. Each candidate is
+    individually checked against `_is_contained`; a candidate that fails the
+    fence is dropped rather than failing the whole call, so one bad entry
+    never blinds the write for the key's other, legitimate bindings.
+
+    DEDUPED by resolved gauge path, not counted by binding (#488). Two
+    bindings are two spine FILES, not necessarily two work areas: an Admiral's
+    own spine and the `latitude` survey its spine step requires it to drive
+    both live in one work directory (`spine.json` + `latitude-interrogation.json`
+    under the same `.agent-work/<work_id>/`) and resolve to the identical
+    gauge.json. The caller below treats 2+ candidates as ambiguous and skips
+    the write entirely -- correct when two candidates might belong to two
+    different agents sharing a session_id (#261's real protection), vacuous
+    when they are the same file: there is no whose-reading-is-it question when
+    either answer writes to one place. Measured live: this undeduped version
+    left an Admiral's own governor dark for an entire wave (#488). Order is
+    preserved (first-seen wins) so behaviour stays deterministic across calls
+    with the same binding contents; genuinely different gauge paths still
+    yield 2+ candidates here, so the caller's ambiguous-binding skip still
+    fires for that case exactly as before.
 
     The key is `_binding_key(payload)`, NOT the bare `session_id` (#419):
     Agent-tool subagents share their parent's session_id, so a session-keyed
@@ -260,7 +276,7 @@ def resolve_gauge_path(project_dir: Path, binding_key):
             if not spine_path:
                 continue
             candidate = Path(spine_path).parent / "gauge.json"
-            if _is_contained(candidate):
+            if _is_contained(candidate) and candidate not in candidates:
                 candidates.append(candidate)
         return candidates
     except Exception:

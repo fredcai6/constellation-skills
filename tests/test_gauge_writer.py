@@ -338,6 +338,83 @@ def test_multiple_bindings_skips_and_leaves_existing_gauge_files_untouched(proj)
     assert (work_b / "gauge.json").read_text(encoding="utf-8") == prior_b  # byte-identical
 
 
+# --- #488: dedup by DISTINCT gauge path, not by binding count ---------------
+#
+# #261's ambiguous-binding skip (tests above) exists to prevent misattribution
+# when two genuinely different top-level agents share one session_id and the
+# hook cannot tell whose usage record is the latest one. That reasoning does
+# not apply when both bindings resolve to the SAME gauge.json: there is no
+# whose-reading-is-it question when either answer writes to one place. Before
+# this fix, resolve_gauge_path appended one candidate PER BINDING with no
+# dedup, so the live Admiral shape below (a spine plus the latitude survey it
+# is required to drive, both in one work area -- measured live on session
+# db1a42c1 in .agent-work/.spine-rail-binding.json) tripped the 2+-candidates
+# skip and left that Admiral's context governor dark for the rest of its run.
+
+
+def test_resolve_gauge_path_dedups_two_bindings_resolving_to_one_path(proj):
+    """Two DIFFERENT spine filenames in the SAME work directory -- the Admiral
+    shape (spine.json + latitude-interrogation.json, both parented under
+    .agent-work/epic-418-redux/) -- must collapse to exactly ONE candidate,
+    not two. This is the direct regression test for #488's dedup."""
+    work = proj / ".agent-work" / "epic-418-redux"
+    work.mkdir(parents=True)
+    _bind(proj, "s1", work / "spine.json")
+    _bind(proj, "s1", work / "latitude-interrogation.json")
+
+    paths = gw.resolve_gauge_path(proj, "s1")
+    assert paths == [work / "gauge.json"]
+
+
+def test_admiral_shape_two_spines_one_work_dir_produces_a_reading_not_a_skip(proj):
+    """End-to-end version of the test above, through handle_post_tool_use: the
+    Admiral shape must produce a REAL gauge.json reading, not an
+    ambiguous-binding gauge-skip.json. This is the positive direction of
+    #488's acceptance criteria."""
+    work = proj / ".agent-work" / "epic-418-redux"
+    work.mkdir(parents=True)
+    (work / "spine.json").write_text("{}", encoding="utf-8")
+    (work / "latitude-interrogation.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work / "spine.json")
+    _bind(proj, "s1", work / "latitude-interrogation.json")
+
+    out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert out == {}
+
+    gauge_path = work / "gauge.json"
+    assert gauge_path.exists(), "same-path binding pair must produce a reading, not a skip"
+    record = json.loads(gauge_path.read_text(encoding="utf-8"))
+    assert record["model"] == EXPECTED_MODEL
+    assert record["fill_fraction"] == pytest.approx(EXPECTED_FILL)
+    assert not (work / gw.SKIP_FILENAME).exists()
+
+
+def test_admiral_shape_negative_direction_genuinely_different_paths_still_skip(proj):
+    """The negative direction of #488's acceptance criteria, using the same
+    Admiral-shaped bindings but in GENUINELY DIFFERENT work directories: #261's
+    protection must not weaken. (test_multiple_bindings_skips_writes_neither_spine
+    above already proves this against the pre-fix code too; this one names it
+    explicitly as the #488 counterpart to the same-path tests above.)"""
+    work_a = proj / ".agent-work" / "epic-418-redux"
+    work_b = proj / ".agent-work" / "epic-418-redux-latitude-elsewhere"
+    work_a.mkdir(parents=True)
+    work_b.mkdir(parents=True)
+    (work_a / "spine.json").write_text("{}", encoding="utf-8")
+    (work_b / "latitude-interrogation.json").write_text("{}", encoding="utf-8")
+    _bind(proj, "s1", work_a / "spine.json")
+    _bind(proj, "s1", work_b / "latitude-interrogation.json")
+
+    paths = gw.resolve_gauge_path(proj, "s1")
+    assert set(paths) == {work_a / "gauge.json", work_b / "gauge.json"}
+
+    out = gw.handle_post_tool_use(_hook_data("s1", _FIXTURE), proj)
+    assert out == {}
+    assert not (work_a / "gauge.json").exists()
+    assert not (work_b / "gauge.json").exists()
+    assert (work_a / gw.SKIP_FILENAME).exists()
+    assert (work_b / gw.SKIP_FILENAME).exists()
+
+
 def test_single_binding_still_writes_normally(proj):
     """No-regression check: exactly ONE bound spine must still write the real
     record -- skip-on-multiple must not become skip-on-any."""

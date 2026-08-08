@@ -1,0 +1,256 @@
+{
+  "work_id": "w3c-488-489",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-488-dedup",
+    "m2-489-multi-match",
+    "m3-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (this skill's references/global-crew.md, references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus LO-488-489.md in full and the checklist-engine reference. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + LO-488-489.md loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read LO-488-489.md in full, global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md. Handoff complete: task (issues 488+489), intent (fix the same defect-family check-that-cannot-fail), scope (2 named files), exclusions (checklist_engine.py fenced to 465, test_episode_negative_control.py fenced to 461, no binding-key shape change), required evidence (before/after pasted, real test exit codes), test mode (TDD, build defective world first), stop conditions, return shape -- all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-488-dedup": {
+      "id": "m1-488-dedup",
+      "title": "#488: resolve_gauge_path dedups by distinct gauge path, not binding count",
+      "imperative": "Build the defective world first and paste the observed wrong behaviour: two bindings under one session_id whose spine paths sit in the SAME work directory (mirrors the live Admiral shape -- epic-418-redux/spine.json + epic-418-redux/latitude-interrogation.json, both resolving to epic-418-redux/gauge.json). Add tests to tests/test_gauge_writer.py proving (a) today's resolve_gauge_path returns 2 candidates for that same-directory pair -- ambiguous-binding skip fires and NO reading is written even though both bindings point at one file -- and (b) genuinely different work directories (existing test_multiple_bindings_skips_writes_neither_spine already covers this) still skip. Attest c1 with the pasted before-state (the same-path case incorrectly skipping). Then fix scripts/hooks/gauge_writer_hook.py:resolve_gauge_path to dedup candidates by distinct Path (order-preserving; do not touch the 2+-candidates check in handle_post_tool_use, do not touch scripts/checklist_engine.py -- fenced to #465). Re-run to observe the same-path case now producing a real gauge.json reading, and the different-path case still skipping (c2). Do not weaken #261: a fix that merely stops skipping in all cases is a regression.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: context loaded, handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new tests in tests/test_gauge_writer.py for the same-work-dir two-binding case, observed FAILING (i.e. demonstrating the current bug: ambiguous-binding skip fires / no reading) against pre-fix gauge_writer_hook.py -- manual attest, check MUST be null, before-state pasted into the plan why_trail",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "BEFORE-STATE observed against pre-fix gauge_writer_hook.py: test_resolve_gauge_path_dedups_two_bindings_resolving_to_one_path and test_admiral_shape_two_spines_one_work_dir_produces_a_reading_not_a_skip both FAIL (2 failed, 1 passed) -- resolve_gauge_path returns 2 candidates for the same-work-dir Admiral shape (spine.json + latitude-interrogation.json under .agent-work/epic-418-redux/), so handle_post_tool_use treats it as ambiguous and writes NO gauge.json. test_admiral_shape_negative_direction_genuinely_different_paths_still_skip already PASSES pre-fix, confirming the negative direction is untouched by the coming fix. Exact command: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_gauge_writer.py -k dedups_two_bindings or admiral_shape -> 2 failed, 1 passed, 67 deselected."
+        },
+        {
+          "id": "c2",
+          "statement": "resolve_gauge_path dedups by distinct gauge path; same-path two bindings now produce a reading, genuinely-different-path two bindings still skip; targeted tests pass",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_gauge_writer.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-488-dedup-1"
+        }
+      ],
+      "constraints": [
+        "own only scripts/hooks/gauge_writer_hook.py and tests/test_gauge_writer.py",
+        "do not edit scripts/checklist_engine.py (fenced to #465)",
+        "do not change the gauge binding key's shape -- stop and float if the fix appears to need that",
+        "keep genuinely-different gauge paths skipping (#261)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-488-dedup-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_gauge_writer.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-489-multi-match": {
+      "id": "m2-489-multi-match",
+      "title": "#489: REVISED_SPEC.md fixture glob fails loudly on 2+ matches, naming them",
+      "imperative": "Build the defective world first and paste the observed wrong behaviour: using a tmp_path with two synthetic */spec-revision/REVISED_SPEC.md files (never touching the real .agent-work/epic-418-redux tree), demonstrate that the CURRENT inline `matches[0]` logic in tests/test_verify_spec_confirmed.py's ConfirmPhaseRegressionOnALiveSpec._fixture silently returns the alphabetically-first file's content with no signal a second match existed. Attest c1 with that before-state pasted. Then refactor: extract a small module-level helper (e.g. _resolve_revised_spec_matches(agent_work_root)) that returns the sorted match list and raises an AssertionError naming every match when there are 2+; zero matches still returns an empty list unchanged (the existing skipTest behaviour in _fixture is preserved for that case). Add unit tests against tmp_path fixtures covering: zero matches, exactly one match, and two matches (assert the raised message names both files). Confirm the real fixture (today, one match) still passes via the existing live-regression tests unaffected. Satisfy c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded (m0-context complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: before-state observed -- the current matches[0] logic against a synthetic tmp_path two-file fixture silently picks the first and drops the second -- manual attest, check MUST be null, before-state pasted into the plan why_trail",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "BEFORE-STATE observed: an ad hoc repro (module-scope python snippet using the exact pre-fix logic -- sorted glob + matches[0]) against a synthetic tmp .agent-work/ with two REVISED_SPEC.md fixtures (epic-alpha, epic-beta) returned SPEC A's content silently, dropping SPEC B with no error and no signal a second match existed. Output: matches found: [epic-alpha..., epic-beta...]; current code silently returns matches[0] content: 'SPEC A - the WRONG one under test'; second match epic-beta...REVISED_SPEC.md is silently dropped -- no signal, no error."
+        },
+        {
+          "id": "c2",
+          "statement": "multi-match now fails loudly naming every match; zero-match behaviour unchanged; targeted tests pass",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_verify_spec_confirmed.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-489-multi-match-1"
+        }
+      ],
+      "constraints": [
+        "own only tests/test_verify_spec_confirmed.py",
+        "do not mutate the live .agent-work/epic-418-redux/spec-revision tree -- use tmp_path fixtures only",
+        "do not touch scripts/verify_spec_confirmed.py itself unless the defect turns out to live there (it does not per the launch order -- the glob lives in the test file)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-489-multi-match-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_verify_spec_confirmed.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-verify": {
+      "id": "m3-verify",
+      "title": "Full suite, PR(s), and result artifact",
+      "imperative": "Run the full test command and capture the real exit code. Write .agent-work/epic-418-redux/notes-488-489.md with the before/after evidence for both missions. Open one PR (both fixes, non-overlapping files, cheaper as one crew per the order) against origin/main from this branch, server-side merge. Write the IMPLEMENTER_RESULT artifact. Attest c1 once the PR is open and the full suite is green (or a real, explained non-green baseline delta only).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-488-dedup and m2-489-multi-match complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-488-dedup and m2-489-multi-match both complete; full evidence pasted."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite run with real exit code captured; PR opened; notes + result artifact written",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-verify-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-verify-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-verify",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "impl-w3c-488-489-b",
+    "status": "released",
+    "claimed_at": "2026-08-08T05:13:00.156306+00:00",
+    "last_heartbeat": "2026-08-08T05:32:53.964237+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": "impl-w3c-488-489",
+    "takeover_reason": "continuation after predecessor governor trip",
+    "released_at": "2026-08-08T05:33:07.569257+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Both missions are one-line guard hardenings against the same defect family (a check that cannot fail in the healthy-only world). #488: resolve_gauge_path in scripts/hooks/gauge_writer_hook.py:257-264 appends one candidate per binding with no dedup, so two bindings resolving to one gauge path (the live Admiral db1a42c1 shape: epic-418-redux/spine.json + latitude-interrogation.json, both parent .agent-work/epic-418-redux/) trip the caller's 2+-candidates ambiguous-binding skip even though there is no misattribution risk when both point at the same file. Fix: dedup candidates by distinct Path in resolve_gauge_path; keep the different-path case skipping (do not touch handle_post_tool_use's len>1 check or checklist_engine.py, fenced to #465). #489: tests/test_verify_spec_confirmed.py:252 takes matches[0] from a glob with no signal a 2nd match existed -- fix by extracting a helper that raises naming every match on 2+, using tmp_path fixtures only (never mutating the live .agent-work/epic-418-redux tree). Both: build the defective world, observe current code wrong, paste it, then fix, then observe right.",
+      "mechanical": false,
+      "ts": "2026-08-08T04:59:56.165983+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-488-dedup",
+      "why": "Fixed resolve_gauge_path to dedup candidates by distinct Path (order-preserving, first-seen wins). Same-work-dir Admiral shape (spine.json + latitude-interrogation.json) now resolves to exactly one candidate -> a real gauge.json reading via handle_post_tool_use. Genuinely different work dirs still yield 2 distinct candidates -> ambiguous-binding skip fires exactly as before (#261 unweakened). No change to handle_post_tool_use's len>1 check, checklist_engine.py, or the binding key shape.",
+      "mechanical": false,
+      "ts": "2026-08-08T05:01:41.655080+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-489-multi-match",
+      "why": "Extracted _resolve_revised_spec_matches(agent_work_root) in tests/test_verify_spec_confirmed.py: returns the sorted match list unchanged on 0 or 1, raises AssertionError naming every match on 2+. _fixture now delegates to it, preserving the skipTest-on-zero behaviour. Added tests for zero/one/two/three-match cases (tmp_path fixtures only, never touching the real .agent-work/epic-418-redux tree). All 26 tests pass, including the 2 pre-existing live-regression tests against the real one-match fixture -- unaffected.",
+      "mechanical": false,
+      "ts": "2026-08-08T05:03:10.463762+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-verify",
+      "why": "Continuation session ran the full suite with a captured real exit code (1789 passed, 2 skipped, 683 subtests, exit 0 via echo EXIT_CODE=$? -- not a pipe), fast-forwarded the branch to origin/main (it had zero commits of its own), committed both fixes plus notes/plan artifacts, pushed epic-418/w3c-488-489, opened PR #491 with -F against the pr-body.md file (verified 37-line body posted intact, no truncation), and wrote IMPLEMENTER_RESULT.md with before/after evidence for both missions and the isolation proof.",
+      "mechanical": false,
+      "ts": "2026-08-08T05:32:53.964208+00:00"
+    }
+  ]
+}

@@ -2,6 +2,8 @@ import importlib.util
 import unittest
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -12,6 +14,26 @@ def load():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _resolve_revised_spec_matches(agent_work_root: Path):
+    """Sorted `*/spec-revision/REVISED_SPEC.md` matches under `agent_work_root`
+    -- #489. Zero matches is returned unchanged (the caller decides how to
+    skip); 2+ matches raises rather than silently picking one, naming every
+    match found. Before this existed, the inline `matches[0]` this replaced
+    would pick the alphabetically-first file with no signal a second match
+    existed -- a verification test quietly checking the wrong spec and
+    reporting nothing (measured: two synthetic fixtures under one temp
+    `.agent-work/`, `matches[0]` silently returned the first file's content
+    and dropped the second)."""
+    matches = sorted(agent_work_root.glob("*/spec-revision/REVISED_SPEC.md"))
+    if len(matches) > 1:
+        names = "\n  ".join(str(m) for m in matches)
+        raise AssertionError(
+            "multiple REVISED_SPEC.md fixtures found under {root} -- refusing "
+            "to pick one; found:\n  {names}".format(root=agent_work_root, names=names)
+        )
+    return matches
 
 
 FULL_TABLE = """
@@ -249,7 +271,7 @@ class ConfirmPhaseRegressionOnALiveSpec(unittest.TestCase):
         self.m = load()
 
     def _fixture(self):
-        matches = sorted((ROOT / ".agent-work").glob("*/spec-revision/REVISED_SPEC.md"))
+        matches = _resolve_revised_spec_matches(ROOT / ".agent-work")
         if not matches:
             self.skipTest("no epic REVISED_SPEC.md under .agent-work/*/spec-revision/")
         return matches[0].read_text(encoding="utf-8")
@@ -261,6 +283,74 @@ class ConfirmPhaseRegressionOnALiveSpec(unittest.TestCase):
         # A spec good enough to confirm is good enough to review; before the fix
         # this held only because the marker had already been removed at confirm.
         self.m.verify_spec_confirmed(self._fixture(), "review")  # no raise
+
+
+# --- #489: the fixture glob must not silently pick a match when 2+ exist ----
+#
+# The glob was introduced in PR #470 to fix a hardcoded fixture path that broke
+# the moment the run it pointed at was archived. The glob itself is right; what
+# was wrong is trading a loud failure for a quiet wrong answer: `matches[0]`
+# alphabetically picks a file with no signal a second one existed. These tests
+# build synthetic fixtures under a throwaway tmp_path -- never the real
+# .agent-work/epic-418-redux tree -- so they exercise the same glob shape
+# without touching live work-area state.
+
+def _write_revised_spec(root: Path, epic_name: str, content: str = "spec\n"):
+    d = root / epic_name / "spec-revision"
+    d.mkdir(parents=True)
+    (d / "REVISED_SPEC.md").write_text(content, encoding="utf-8")
+    return d / "REVISED_SPEC.md"
+
+
+def test_resolve_revised_spec_matches_empty_when_none(tmp_path):
+    agent_work = tmp_path / ".agent-work"
+    agent_work.mkdir()
+    assert _resolve_revised_spec_matches(agent_work) == []
+
+
+def test_resolve_revised_spec_matches_returns_the_sole_match(tmp_path):
+    agent_work = tmp_path / ".agent-work"
+    agent_work.mkdir()
+    only = _write_revised_spec(agent_work, "epic-only", "the one spec\n")
+    assert _resolve_revised_spec_matches(agent_work) == [only]
+
+
+def test_resolve_revised_spec_matches_raises_and_names_every_match(tmp_path):
+    """The defective-world regression test for #489: before the fix, this same
+    setup fed straight into `matches[0]` and silently returned 'SPEC A' while
+    dropping 'SPEC B' with no error -- see the module-scope repro this
+    docstring is paraphrasing (LO-488-489.md, Mission B). After the fix, 2+
+    matches must raise, and the message must name every match, not just say
+    'ambiguous'."""
+    agent_work = tmp_path / ".agent-work"
+    agent_work.mkdir()
+    first = _write_revised_spec(agent_work, "epic-alpha", "SPEC A - the wrong one\n")
+    second = _write_revised_spec(agent_work, "epic-beta", "SPEC B - the real one\n")
+
+    with pytest.raises(AssertionError) as excinfo:
+        _resolve_revised_spec_matches(agent_work)
+
+    message = str(excinfo.value)
+    assert str(first) in message
+    assert str(second) in message
+
+
+def test_resolve_revised_spec_matches_names_all_three_on_a_third_match(tmp_path):
+    """Not just 'more than one flagged' -- every match is named, so a third
+    epic work area doesn't get silently folded into a two-name message."""
+    agent_work = tmp_path / ".agent-work"
+    agent_work.mkdir()
+    paths = [
+        _write_revised_spec(agent_work, name, name)
+        for name in ("epic-a", "epic-b", "epic-c")
+    ]
+
+    with pytest.raises(AssertionError) as excinfo:
+        _resolve_revised_spec_matches(agent_work)
+
+    message = str(excinfo.value)
+    for p in paths:
+        assert str(p) in message
 
 
 if __name__ == "__main__":
