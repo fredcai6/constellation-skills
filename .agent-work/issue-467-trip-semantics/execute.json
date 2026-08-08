@@ -953,12 +953,13 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T10:47:17.826204+00:00",
     "last_heartbeat": "2026-08-08T11:06:54.198214+00:00",
     "claimed_by": "commander-w4-467-c",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T11:15:06.835597+00:00"
   }
 }
