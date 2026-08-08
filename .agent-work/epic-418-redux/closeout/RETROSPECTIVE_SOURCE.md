@@ -400,3 +400,59 @@ reader who holds both halves at once**, and an author never does.
 **Concrete delta, cheap:** commit launch orders **before** cutting worktrees, or cut worktrees from
 the commit containing them; and have the dispatch step assert the order is readable **at the address
 the prompt gives**, not that the file was written somewhere.
+
+---
+
+## §51 — The author of a countermeasure cannot read it cold (two instances, one epic)
+
+**Pattern, not anecdote. Twice this epic a fixture built specifically to prevent a class of error
+reproduced that exact error, and in both cases the author was the one who could not see it.**
+
+| # | The fixture | Built to prevent | What it did |
+|---|---|---|---|
+| 1 | The pre-staged boundary skeleton | shape refusals from the replan contract | used `id`/`issue_ids`/`intent` where the contract wants `objective`/`issues`/`exit_criteria` — **caused a shape refusal** |
+| 2 | `closeout/harvest_probe.sh` v1 | a harvest step whose "nothing to collect" is indistinguishable from "wrong filename" | tested `[ -f CONSTELLATION_FEEDBACK.md ]` on a **tracked** file, so PRESENT was true for every worktree ever created — **a check that cannot fail** |
+
+**Neither was caught by re-reading the fixture.** Instance 1 surfaced when the verifier refused.
+Instance 2 surfaced because the *output* looked wrong — seven worktrees returning byte-identical
+findings, including one provisioned forty minutes earlier that could not possibly have produced an
+export. In both cases the signal came from **running it against reality**, never from inspection.
+
+**The generalization.** The reason to build a countermeasure is that you have just understood a defect
+class. That understanding is exactly what makes you unable to read your own countermeasure cold: you
+see what it is *for*, and the whole failure mode of this defect class is that intent and effect come
+apart silently. **Authoring the fix does not confer immunity to the fix's own defect — it may be an
+active risk factor**, because the author is the only reader who cannot approach it fresh.
+
+This is the same conclusion §50 reached from a different direction (a composite invariant needs a
+reader holding both halves, and an author never is), and it is corroborated by the wave-4 finding that
+the same defect recurred at three tiers with **each instance caught by an independent cold reader and
+none by its author**. Three independent routes to one claim.
+
+**What follows from it, concretely:** a countermeasure is not done when it is written and reads
+correctly. It is done when it has been **run against a case that should make it fail** — and the
+cheapest such case is usually one already lying around. For the harvest probe that was "a worktree
+created minutes ago with no work in it"; the probe passed it, which is what exposed the defect.
+
+---
+
+## §52 — Quiet is not dead: the rule held, and acting on disk would have been wrong
+
+`impl-w5-engine` wrote **nothing** for roughly thirty minutes — no work area, no `gauge.json`, a clean
+`git status` — while all four sibling crews had produced all three within minutes.
+
+Every disk-level signal pointed at a dead agent. The standing rule says the authoritative channel is
+the **harness idle notification**, and none had arrived, so the Admiral **asked rather than acted**:
+one message requesting a line of proof-of-life, explicitly saying a float costs the Admiral nothing
+and that re-cutting nine issues now beats a soft pass later. No stop, no relaunch, no second Commander
+into that worktree.
+
+**It was reading.** Nine issue bodies fetched through `gh` write nothing to disk. It is now driving
+`execute` with a live spine, like its siblings.
+
+**Worth recording because the counterfactual is expensive and invisible.** Relaunching on the disk
+inference would have destroyed thirty minutes of loaded context, and the resulting run would have
+looked *fine* — a successor would have re-read the same nine issues and finished, with nothing
+anywhere recording that a healthy agent had been killed. **The cost of violating this rule leaves no
+trace**, which is precisely why the rule has to be positional rather than judgemental: ask first, and
+let the authoritative channel be authoritative.

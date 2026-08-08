@@ -3649,3 +3649,17 @@ the observation is fully consistent with a crew doing exactly what it was told f
 **Action: asked it for one line of proof-of-life**, and told it explicitly that a float costs me
 nothing and that I would rather re-cut the assignment now than take a soft pass on nine issues. **No
 stop, no relaunch, no second Commander into that worktree.**
+
+### Liveness resolved — crew 4 was reading, and the disk inference would have been wrong
+
+`impl-w5-engine` is now `ACTIVE execute [in-progress]` with a live spine and local changes. The
+thirty minutes of total silence were nine issue bodies fetched through `gh`, which writes nothing.
+
+**All five crews confirmed driving:** gates `execute`, addressing `execute`, engine `execute`, docs
+`execute`, readiness `context`. No PRs yet.
+
+**The rule earned its keep.** Every disk signal said dead; the authoritative channel — no idle
+notification — said running, and the authoritative channel was right. Recorded in
+`RETROSPECTIVE_SOURCE.md` §52 with the point that matters: **the cost of getting this wrong leaves no
+trace.** A relaunch would have destroyed thirty minutes of loaded context and the successor's run
+would have looked completely normal, with nothing anywhere recording that a healthy agent was killed.
