@@ -252,17 +252,41 @@ def uses_lines(key, mod):
     return L
 
 
+#: What the inbound count counted, said on the page itself.
+#:
+#: A count without a definition is the defect: the page said 5, a reader's grep
+#: said 7, and neither number told him which one was answering his question.
+#: The wording tracks `load_stores`, which counts `calls` and `reads` and
+#: nothing else -- `checks.py` declares this same sentence independently and
+#: `RefsAccountingTests` pins it to that predicate test, so widening one
+#: without the other goes red.
+REFS_LEGEND = ("counted: calls and reads that resolved to this symbol. "
+               "not counted: its own definition, imports, inheritance, "
+               "attribute writes, docstring mentions, unresolved references.")
+
+
 def refs_line(key, mod):
+    """The page's inbound line, plus the legend that says what it counted.
+
+    The site total and the module total have always included the page's own
+    module while the parenthesized list named only the others, so a reader could
+    not attribute the difference. The `+ N in this module` clause closes that
+    without naming the own module in the list -- the list stays the OTHER
+    modules, which is the convention `refs_line_self_consistent` holds every
+    page to."""
     callers = inbound.get(alias[key])
     if not callers:
-        return ["referenced by: none found", ""]
+        return ["referenced by: none found", REFS_LEGEND, ""]
     n = sum(callers.values())
     ext = sorted(m for m in callers if m != mod)
     if ext:
         s = f"referenced by: {n} sites in {len(callers)} modules (" + ", ".join(ext) + ")"
+        own = callers.get(mod, 0)
+        if own:
+            s += f" + {own} in this module"
     else:
         s = f"referenced by: {n} sites, this module only"
-    return [s, ""]
+    return [s, REFS_LEGEND, ""]
 
 
 def entity_page(key, mod):

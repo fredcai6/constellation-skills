@@ -203,13 +203,23 @@ class StoreScan:
 REFS_PREFIX = "referenced by: "
 REFS_NONE = "none found"
 REFS_SELF_ONLY = re.compile(r"^(\d+) sites, this module only$")
-REFS_MODULES = re.compile(r"^(\d+) sites in (\d+) modules \((.*)\)$")
+REFS_MODULES = re.compile(
+    r"^(\d+) sites in (\d+) modules \(([^)]*)\)(?: \+ (\d+) in this module)?$")
 
-#: sites: total inbound edges. modules: how many distinct modules they came
-#: from. named: the modules the line actually spells out -- the renderer omits
-#: the page's own module from that list, so `named` can be one short of
-#: `modules` by design.
-Refs = collections.namedtuple("Refs", "sites modules named")
+#: Declared here, not imported from the renderer, for the same reason
+#: `REFS_PREFIX` is: a check that reads its expected text out of the code under
+#: test can only ever agree with it. The renderer spells this sentence too, and
+#: the two must match byte for byte.
+REFS_LEGEND = ("counted: calls and reads that resolved to this symbol. "
+               "not counted: its own definition, imports, inheritance, "
+               "attribute writes, docstring mentions, unresolved references.")
+
+#: sites: total inbound edges, the page's own module included. modules: how many
+#: distinct modules they came from. named: the modules the line spells out --
+#: the renderer omits the page's own module from that list. own: how many of
+#: `sites` the line attributes to the page's own module, which is what lets a
+#: reader account for the unnamed one instead of guessing.
+Refs = collections.namedtuple("Refs", "sites modules named own")
 
 
 def parse_refs(line):
@@ -217,14 +227,16 @@ def parse_refs(line):
     forms this map writes."""
     body = line[len(REFS_PREFIX):].strip()
     if body == REFS_NONE:
-        return Refs(0, 0, ())
+        return Refs(0, 0, (), 0)
     match = REFS_SELF_ONLY.match(body)
     if match:
-        return Refs(int(match.group(1)), 1, ())
+        # every site is in the page's own module, and the line says so
+        return Refs(int(match.group(1)), 1, (), int(match.group(1)))
     match = REFS_MODULES.match(body)
     if match:
         named = tuple(n.strip() for n in match.group(3).split(",") if n.strip())
-        return Refs(int(match.group(1)), int(match.group(2)), named)
+        return Refs(int(match.group(1)), int(match.group(2)), named,
+                    int(match.group(4) or 0))
     return None
 
 
@@ -332,10 +344,22 @@ def refs_line_self_consistent(m):
 
     The rules are the arithmetic the line is required to satisfy whatever the
     numbers are: you cannot name a module twice, you cannot name more modules
-    than you counted, at most ONE counted module may go unnamed (the page's own,
-    which the renderer leaves out because the count already implies it), you
+    than you counted, the counted modules you do not name must be EXACTLY the
+    one the line accounts for with `+ N in this module` -- one when it does,
+    none when it does not -- you cannot attribute more sites to your own module
+    than you counted, the sites left over must cover the modules you named, you
     cannot draw N sites from more than N modules, and zero sites and zero
     modules must arrive together.
+
+    The unnamed-module rule used to be `at most one`, which let a page count a
+    module it neither named nor accounted for. It is now exact in both
+    directions, so the reader can attribute every counted site from the line
+    alone. Every failure the old rule caught it still catches.
+
+    An inbound line must also be followed by the legend stating what the count
+    counted. A number a reader cannot interpret is the defect `g2` closed: the
+    page said 5, his grep said 7, and nothing told him which question either was
+    answering.
 
     What it does NOT prove: that the numbers are RIGHT. A line can be perfectly
     self-consistent and completely wrong -- that is `inbound_attribution`'s
@@ -345,7 +369,13 @@ def refs_line_self_consistent(m):
         where = m.rel(page)
         title = m.title_key(page) or ""
         own = title.split(":", 1)[0] if ":" in title else title
-        for line in refs_lines(m.text(page)):
+        lines = m.text(page).splitlines()
+        for i, line in enumerate(lines):
+            if not line.startswith(REFS_PREFIX):
+                continue
+            if lines[i + 1:i + 2] != [REFS_LEGEND]:
+                failures.append(f"{where}: the inbound line is not followed by the "
+                                f"legend saying what the count counted")
             stated = parse_refs(line)
             if stated is None:
                 failures.append(f"{where}: cannot read the inbound line: {line!r}")
@@ -357,10 +387,20 @@ def refs_line_self_consistent(m):
             if gap < 0:
                 failures.append(f"{where}: names {len(named)} modules but counts only "
                                 f"{stated.modules}")
-            elif gap > 1:
+            elif stated.own and gap != 1:
+                failures.append(f"{where}: attributes {stated.own} sites to its own "
+                                f"module, so exactly one counted module -- its own -- "
+                                f"must go unnamed, but {gap} of {stated.modules} are")
+            elif not stated.own and gap != 0:
                 failures.append(f"{where}: counts {stated.modules} modules and names "
-                                f"{len(named)}; at most one -- the page's own -- may go "
-                                f"unnamed")
+                                f"{len(named)}; a line that attributes no sites to its "
+                                f"own module must name every module it counts")
+            if stated.own > stated.sites:
+                failures.append(f"{where}: attributes {stated.own} sites to its own "
+                                f"module out of {stated.sites} counted")
+            elif stated.sites - stated.own < len(named):
+                failures.append(f"{where}: {stated.sites - stated.own} sites are left "
+                                f"for the {len(named)} modules it names")
             if stated.sites < stated.modules:
                 failures.append(f"{where}: {stated.sites} sites cannot come from "
                                 f"{stated.modules} modules")
@@ -414,11 +454,12 @@ def entity_symbol_join(m):
 def inbound_attribution(m):
     """Every page's caller set must match an independent full scan of the store.
 
-    Three facts per page, all compared against the second scan rather than
+    Four facts per page, all compared against the second scan rather than
     against the renderer: how many inbound sites, how many distinct modules
-    they came from, and which modules those are (less the page's own, which the
-    renderer leaves out of the list because the count already says `this
-    module`).
+    they came from, which modules those are (less the page's own, which the
+    renderer accounts for with `+ N in this module` rather than naming), and how
+    many sites that own-module clause claims. The fourth is what keeps the
+    clause from being a number nobody checks.
 
     This is the check that notices a map that lies about who uses what -- the
     single thing an agent reads the map FOR."""
@@ -448,6 +489,9 @@ def inbound_attribution(m):
         if tuple(sorted(stated.named)) != expected_named:
             failures.append(f"{where}: page names {list(stated.named)} as callers, "
                             f"the store has {list(expected_named)}")
+        if stated.own != truth.get(own_module, 0):
+            failures.append(f"{where}: page attributes {stated.own} sites to its own "
+                            f"module, the store has {truth.get(own_module, 0)}")
     return failures
 
 

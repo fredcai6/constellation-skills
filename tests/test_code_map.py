@@ -798,6 +798,23 @@ class RefsLineSelfConsistencyTests(unittest.TestCase):
         self.assertTrue(any("INDEX.md" in f for f in failures), failures)
 
 
+#: Re-introduce defect (b) exactly: keep counting the own module's sites in the
+#: totals, stop saying so. The page reads `5 sites in 2 modules (pkg.far)` again
+#: and the reader is back to guessing where the other two went.
+OWN_SITES_UNACCOUNTED_MUTATION = (
+    ('            s += f" + {own} in this module"\n',
+     '            s += ""\n'),
+)
+
+#: Publish the number and drop the sentence that says what it counted. Every
+#: total is still right; a reader whose grep disagrees still cannot tell which
+#: question either number answered.
+LEGEND_DROPPED_MUTATION = (
+    ('    return [s, REFS_LEGEND, ""]\n',
+     '    return [s, ""]\n'),
+)
+
+
 class RefsAccountingTests(unittest.TestCase):
     """Gate g2, defect (b): the count and the list must reconcile, and the page
     must say what the count counted.
@@ -915,6 +932,40 @@ class RefsAccountingTests(unittest.TestCase):
         for excluded in ("definition", "import", "inherit", "write", "docstring",
                          "unresolved"):
             self.assertIn(excluded, checks.REFS_LEGEND)
+
+    def test_check_goes_red_when_the_own_module_sites_stop_being_accounted_for(self):
+        """The strengthened rule must be able to fail on the defect it replaced.
+
+        `refs_line_self_consistent` used to allow at most ONE counted module to
+        go unnamed, so the pre-fix line passed it. If the new rule cannot kill
+        this mutant, the strengthening bought nothing."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        host = mutated_package(tmp.name, "render.py", OWN_SITES_UNACCOUNTED_MUTATION)
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: a page counting sites it does not "
+                            f"account for passed `check`\n{proc.stdout}")
+        self.assertIn("FAIL refs-line-self-consistent", proc.stdout)
+        self.assertIn("must name every module it counts", proc.stdout)
+
+    def test_check_goes_red_when_the_legend_is_dropped(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        host = mutated_package(tmp.name, "render.py", LEGEND_DROPPED_MUTATION)
+        self.assertEqual(run_code_map(host, "build", "--root", str(self.repo)).returncode, 0)
+
+        proc = run_code_map(host, "check", "--root", str(self.repo))
+
+        self.assertNotEqual(proc.returncode, 0,
+                            "MUTANT SURVIVED: a page publishing an inbound count "
+                            f"with nothing saying what it counted passed `check`"
+                            f"\n{proc.stdout}")
+        self.assertIn("FAIL refs-line-self-consistent", proc.stdout)
+        self.assertIn("legend", proc.stdout)
 
 
 #: The supplement's entity line is one half of the (file, line) join that welds
