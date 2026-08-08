@@ -1853,5 +1853,83 @@ class StatementSchemaLineBaseTests(unittest.TestCase):
             physical_line_of(_SCHEMA_SOURCE, "class Gadget:"))
 
 
+class StatementSchemaFactsTests(unittest.TestCase):
+    """Gate g3: ONE schema carries every fact the map renders.
+
+    Six facts used to require a second AST pass over the same source, because
+    the statement vocabulary could not say them: kind, signature, span,
+    docstring body, values and decorators. Each was a MEASURED gap, and the
+    second pass was a whole pipeline stage kept alive to fill them. They now
+    ride the one statement that already names the thing.
+
+    Read from the store on disk, never through the renderer: the subject is
+    what the schema SAYS, and the renderer would only report what it managed to
+    read."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.repo = Path(self._tmp.name)
+        _make_schema_repo(self.repo)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["extract", "--root", str(self.repo)]), 0)
+        self.statements = statements_of(self.repo / ".code-map")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _facts(self, symbol):
+        """The described facts of one definition, from its own statement."""
+        rows = [st for st in self.statements
+                if st["p"] == "contains" and st["o"] == symbol]
+        if len(rows) != 1:
+            raise HarnessError(
+                f"HARNESS ERROR: {symbol} has {len(rows)} definition statements, "
+                f"expected exactly 1")
+        return rows[0]
+
+    def test_schema_carries_the_kind_of_every_definition(self):
+        for symbol, kind in (("pkg.shape:Gadget", "class"),
+                             ("pkg.shape:Gadget.size", "property"),
+                             ("pkg.shape:spin_up", "async function"),
+                             ("pkg.shape:inside_a_with_block", "function")):
+            with self.subTest(symbol=symbol):
+                self.assertEqual(self._facts(symbol)["d"]["kind"], kind)
+
+    def test_schema_carries_the_rendered_signature(self):
+        """Annotations, the keyword-only marker, a default and the return type --
+        the whole point of the field is that a reader does not open the file."""
+        self.assertEqual(self._facts("pkg.shape:spin_up")["d"]["signature"],
+                         "(gadget: Gadget, *, times: int = 2) -> int")
+        self.assertIsNone(self._facts("pkg.shape:Gadget")["d"]["signature"],
+                          "a class has no call signature and must not invent one")
+
+    def test_schema_carries_the_span_and_it_agrees_with_the_source_text(self):
+        """The span's last line is checked against the file, not against the
+        store: an end line that agrees only with its own start line is not a
+        span, it is arithmetic."""
+        base = {st["d"]["line_base"] for st in self.statements
+                if st["p"] == "extraction-window"}.pop()
+        definition = self._facts("pkg.shape:spin_up")
+
+        self.assertEqual(definition["d"]["end"] + (1 - base),
+                         physical_line_of(_SCHEMA_SOURCE, "    return times"))
+        self.assertEqual(definition["d"]["end"] - definition["q"]["line"] + 1, 7)
+
+    def test_schema_carries_the_docstring_body_past_the_summary_line(self):
+        """The store kept only the summary, so the Args section -- the reason a
+        reader wanted the docstring at all -- was reachable only in the file."""
+        body = self._facts("pkg.shape:spin_up")["d"]["doc_body"]
+
+        self.assertIn("Args:", body)
+        self.assertIn("times: how many turns to take.", body)
+        self.assertNotIn("Spin the gadget up.", body,
+                         "the body is what comes AFTER the summary line")
+
+    def test_schema_carries_the_decorators(self):
+        self.assertEqual(self._facts("pkg.shape:Gadget.size")["d"]["decorators"],
+                         ["property"])
+        self.assertEqual(self._facts("pkg.shape:spin_up")["d"]["decorators"], [])
+
+
 if __name__ == "__main__":
     unittest.main()
