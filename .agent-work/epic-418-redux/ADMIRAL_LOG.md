@@ -3531,3 +3531,28 @@ no `--mark`, no `--confirm`.** Issue filing stays human-gated and nothing was mu
 
 Result archived at `.agent-work/debt-sweeps/2026-08-08-epic-418-closeout.md`. **This is a real null,
 not a skipped step** — the cross-project loop has nothing outstanding to carry into this closeout.
+
+### Closeout input, taken early: the Admiral's own episodes
+
+Three episodes written for `epic-418-redux` while wave 5 runs — the Admiral-tier observations no
+crew can write, because each spans issues no single crew saw.
+
+| id | Observation |
+|---|---|
+| `epic-418-redux-001` | The `execute` gate cannot be closed by a run that finishes. Three refusals walked down to the one that cannot be fixed without changing the boundary's verdict. Records that **neither shortcut was taken** — blocked and bubbled instead, then re-derived as a new boundary rather than by editing an exited `stop`. |
+| `epic-418-redux-002` | Five dispatch prompts named a launch-order path that resolved to nothing. Worktree, branch and order each passed their own check; **the binding between them was asserted by nobody.** |
+| `epic-418-redux-003` | **All nine** installed bundles were pre-merge at dispatch. Nothing in the dispatch path reports drift, and a run that skipped the measurement would have looked identical until a crew tripped. |
+
+Written through `apply_episode_delta.py` — **the only write path into `episodes/`** — dry-run first,
+then applied. `verify_episode_captured.py epic-418-redux` **exit 0**, 3 recorded of 60 scanned.
+
+**`verify_episode_observations.py --strict` exit 0, and none of the three is flagged.** That matters
+because of #460: the store's own records had drifted into reading as *prescriptions* — ~24 of 32
+canon workarounds were instructions rather than observations. These three are written as records of
+what was seen, including the `proposed-remedy` entries, which state what was observed to help rather
+than what a future agent should do.
+
+**Two argument-name corrections, mine, logged because the log is where errors go:**
+`verify_episode_captured.py` takes the work-id **positionally**, not as `--work-id`; and
+`verify_episode_observations.py` takes **no file arguments**, it scans the store. Both were exit-2
+usage refusals, both re-run correctly.
