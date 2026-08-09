@@ -68,8 +68,9 @@
 > **NOTHING MERGES UNDER A LIVE CREW.** A PR being green is not the same as a crew being done.
 > **#509's review finding is RESOLVED** — it had dropped a row from a fenced block that is verbatim
 > command output; crew 5 restored the row and moved the correction into the surrounding note, and found
-> a better justification than mine (that file commits to reproducibility in its own §0). It is now held
-> only because `m3` is still pending and the rework is **on disk, unpushed**.
+> a better justification than mine (that file commits to reproducibility in its own §0). **The rework is
+> pushed and verified** — the `_shared` row is byte-present on both main and the branch. It is held for
+> exactly one reason: `m3-artifact-and-pr` is still `pending` and the lease is still active.
 >
 > **BOTH review findings this wave were resolved by the crew improving on the instruction, not by
 > arguing.** #509's rework beat my reasoning; #511's crew built a real doctrine guard when I had only
