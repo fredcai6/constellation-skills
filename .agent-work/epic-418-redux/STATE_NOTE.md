@@ -54,17 +54,25 @@
 > **CREW 1 IS NOW `commander-w5-gates-b`.** The first instance tripped at `plan` on a HARD reading,
 > wrote its refresh-request, committed `eff00abf` and stood down — working as designed, not a failure.
 >
-> **LIVE POSITION @ 00:15Z 2026-08-09 — 2 MERGED, 0 PRs open, 3 crews running.**
+> **LIVE POSITION @ 00:43Z 2026-08-09 — 2 MERGED, 1 PR open, 2 crews running.**
 >
 > | crew | state |
 > |---|---|
-> | 1 gates | **relaunched as `-c`** at `execute`/`g1-implement`. `plan` complete, lease was released cleanly. |
-> | 2 readiness | running as `-b`, in `execute` on its own g1. **Its gauge never fires — see #452.** |
-> | 3 addressing | **MERGED** — PR #511 `39fb542a`. #507, #370 closed. #413 open, correctly. |
-> | 4 engine | **relaunched as `-c`**, resuming at `m5-503`. m0-m4 done with real red-before-green each. |
-> | 5 docs | **MERGED** — PR #509 `4bde569e`. #496 closed by merge, **#411 closed by hand**. |
+> | 1 gates | **on its 3rd instance, `-d`.** g1-implement CLOSED (`c63c2bb0`, fix B for #501+#468). Now in g1-review with a **synchronous** crew dispatch — see the liveness table, it will look dead. |
+> | 2 readiness | **DONE.** Lease released, work area archived to a tracked path (83 files). **PR #513 open.** `execute.c2` WAIVED on my authority, all four conditions verified in the record. |
+> | 3 addressing | **MERGED** — #511 `39fb542a`. #507, #370 closed. #413 open, correctly. |
+> | 4 engine | running as `-c`, at **m10-wrapup**, its final item, in a full-suite run. |
+> | 5 docs | **MERGED** — #509 `4bde569e`. #496 by merge, **#411 by hand.** |
 >
-> **Wave-5 score: 4 of 21 issues closed** (#507 #370 #496 #411).
+> **Wave-5 score: 4 of 21 closed** (#507 #370 #496 #411).
+>
+> **#513 IS NOT MERGEABLE YET even though `gh pr checks` may say pass.** Its head is `3c4da612`; the
+> only green run is on `dbd787b9`, **two commits superseded**. **Gate on the check for the commit you
+> are merging**, never on "a run passed" — a green attached to a superseded commit is a check that
+> cannot fail.
+>
+> **CREW 1 REMAINING: g2, g3, g4 — #506, #439+#484, #446. Three of six issues untouched.** It is the
+> long pole and the one whose merge triggers the close sequence.
 >
 > **`Closes #A, #B` CLOSES ONLY #A.** GitHub honours the first issue in a comma-list; each number needs
 > its own keyword. #509's body said `Closes #496, #411.` and left #411 open. **Verify issue state on the
