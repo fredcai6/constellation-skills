@@ -6357,3 +6357,28 @@ This is record correction on issues this wave closed, not a closeout substep. **
 
 **All crews are idle and accounted for:** `commander-w5-gates-e/-f/-g` and `impl-477-gauge` all
 reported idle, their work merged. No agent is running.
+
+### Correction to my own log: I said "corrected the bodies" and had not. Now I have.
+
+`781304c3`'s entry was headed *"correct the bodies of #439/#484/#446"*. I had posted correction
+**comments**; the bodies were untouched and still taught the wrong mechanism. A reviewer measured
+`gh issue view 446 --json body`, saw the uncorrected text, and concluded the corrections never
+landed at all — wrong, but only because `gh issue view` renders the body and not the comments. It
+had no way to know that from my wording.
+
+**Two defects in one, and the second is mine.** The reviewer's was an inferred claim presented as
+measured — it measured the body and drew a conclusion about the correction. Mine was a log entry
+that named an action I did not take, which is what made its inference reasonable.
+
+Per Tommy's ruling — *"we should just keep the body correct. and corrections can be noted with the
+old thing in comments, otherwise we slowly grow a mix of errors"* — inverted: each body is now the
+corrected account, and each original is preserved verbatim in a comment
+(`5231298922`, `5231301704`, `5231304366`). All three remain CLOSED; verified individually.
+
+**The correction found a third error nobody had caught.** Both #439 and #484 published a repro that
+**quoted** the placeholder — `gh pr list --head "<branch>"` and `--head '<branch>'` — while the
+shipped text has no quotes. Quoted, `gh` runs and returns empty/false. Unquoted, `<` is input
+redirection and `gh` never starts. **Both issues measured a different command than the one that
+shipped**, and reached the right verdict by a mechanism that was not the real one. That is the
+sharpest specimen this epic has produced for why `type: measured` must carry *what was run* — both
+were honestly labelled as measured, and both measured the wrong thing.
