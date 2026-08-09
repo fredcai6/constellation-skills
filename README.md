@@ -139,6 +139,20 @@ Refresh an existing install:
 python scripts/install_constellation.py --agent codex --scope user --force
 ```
 
+Check whether a project is set up to run Constellation, without installing anything:
+
+```powershell
+python scripts/install_constellation.py --agent claude --scope project --project C:\path\to\repo --check-readiness
+```
+
+Four separately testable items, each reporting `READY`/`NOT READY` with its own named reason, and a
+nonzero exit if any fails: **engine** (pytest actually runs under this interpreter), **skills**
+(a `CORPUS.json` marker and the expected bundles at the target root), **hooks** (Context Governor
+`WIRED`, and at `--scope project` the backing `settings.json` must be git-tracked — a gitignored
+`settings.local.json` can be wired and still never ship), and **work area** (a `.git` entry, file or
+directory). Report-only: it never repairs anything and never writes `settings.json`, so it refuses
+to be combined with `--wire-hooks` or `--baseline-only`.
+
 Rules:
 
 - `--agent` is required and must be `codex`, `claude`, `cursor`, `gemini`, or `all`.

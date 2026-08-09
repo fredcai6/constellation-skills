@@ -1,0 +1,173 @@
+{
+  "work_id": "epic-418-redux-cartographer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "context",
+    "packets",
+    "index-overlays",
+    "map-compliance"
+  ],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load map and context",
+      "imperative": "Read inherited global doctrine, the project deltas (docs/agents/ORCHESTRATOR_CONTEXT.md, GLOSSARY.md), and the current map (index + touched packets). Establish the epic's net change by command against fork point ea854471. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "context and current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded map-model.md, docs/agents/{ORCHESTRATOR_CONTEXT,CREW_CONTEXT,GLOSSARY}.md, docs/CONSTELLATION_OVERVIEW.md, docs/CHECKLIST_SCHEMA.md, README.md. MAP STATUS MEASURED: docs/architecture/ does not exist and never has -- 'git log --all --oneline -- docs/architecture' returns empty; git ls-files matches only skills/cartographer templates and .agent-work archives. Net change: git diff --stat ea854471..HEAD excluding .agent-work = 35 files, 4505+/82-; 21 episodes, 5 tests, 9 source/doc."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "packets": {
+      "id": "packets",
+      "title": "Reconcile node packets",
+      "imperative": "Reconcile each touched node record against the code with evidence; update wording, status/confidence, dependencies, and rationale.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "current map loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Satisfied by measurement of an ABSENCE, stated so no later reader mistakes it for a load. There is no docs/architecture/ map in this repo and there never has been; 'git log --all --oneline -- docs/architecture' is empty. The durable structural record actually loaded is docs/CONSTELLATION_OVERVIEW.md (Relationship Contract + Truth layers), docs/agents/{ORCHESTRATOR_CONTEXT,CREW_CONTEXT,GLOSSARY}.md, docs/CHECKLIST_SCHEMA.md, and README.md 'Repo layout vs installed layout' -- the same surface epic-298's reconcile treated as the record."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "touched records reflect current code",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Two current-truth mismatches found and reconciled in place, both caused by this epic's net change. (1) docs/CONSTELLATION_OVERVIEW.md:52 claimed Triage produces 'bounded future work with evidence and acceptance criteria'; ff1f39c9 dropped acceptance/impact/scope/non-goals from the issue body and f586a0a9 replaced them with observations carrying conditions/type/rev. Verified against skills/triage/templates/TRIAGE_RECOMMENDATION.template.md headings (Observations, Desired behavior, Possible fix, Open questions, Recommended priority -- no Acceptance). Row rewritten. (2) --check-readiness (#458, +260 lines in install_constellation.py) shipped with zero README coverage; added, and the added text VERIFIED by running the command: 'python scripts/install_constellation.py --agent claude --scope project --project . --check-readiness' printed four named per-item verdicts and exited 1. Checked and found clean: docs/CHECKLIST_SCHEMA.md already carries the trip ledger (l.361) and directives rendering (l.124,139); docs/agents/CREW_CONTEXT.md already carries the checklist_engine save() CRLF exception; POSITIONING.md and REMOVABILITY_LEDGER.md unaffected."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "index-overlays": {
+      "id": "index-overlays",
+      "title": "Update index and overlays",
+      "imperative": "Update the index and overlays to match the reconciled records. Rule on tc4: does the source -> installed bundle -> instantiated work area seam earn a structural node or capability anchor?",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "index and overlays consistent with records; tc4 ruled and recorded either way",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tc4 RULED: the seam earns a durable anchor, but NOT a docs/architecture node. Anchored as a named section in docs/CONSTELLATION_OVERVIEW.md ('The install and instantiation chain: one source, three live copies') carrying the layer chain, the constraint, three measured instances (#501, #439/#446/#484, the Admiral's own pre-fix spine.json waiver), and the verification pointer to ComposedShippedArtifactTests. Earns an anchor on Inclusion Rule 'rule preservation' + 'trust'. Refused a docs/architecture node for three independent reasons: (1) no graph exists to add to -- a one-node map is ceremony; (2) #456 is in flight and owns where map surface lives, so hand-building a competing tree pre-empts it; (3) the seam is invisible to a derived AST map anyway -- hop one is a file copy, hop two is text substitution, neither is a reference edge -- so #456 landing does not retire this anchor. Not promoted to capability: it is a constraint on structure, not something the system does. Intended future node shape recorded in the reconcile artifact so the id need not be re-derived. Index/overlay ceremony: N/A, none exists."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "map-compliance": {
+      "id": "map-compliance",
+      "title": "Verify map compliance",
+      "imperative": "Verify map compliance. Record unresolved structural questions; flag future work as triage candidates.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map compliant; open structural questions recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Map compliance N/A by absence, stated rather than passed silently: there is no docs/architecture map, so there are no duplicate ids, missing parents, stale node refs, disallowed kinds or unanchored overlays to validate. Recorded as an open structural question, not a clean bill. Two triage candidates flagged (tc1 copy-vs-source verification; tc2 route to #528 as evidence). One live blocker surfaced for the Admiral and recorded in ARCHITECTURE_RECONCILE.md: STATE_NOTE closeout step 2 dispatches 'constellation-lessons-auditor', which exists in neither skills/ nor the installed root nor any project skills dir -- this epic retired it at 77e428dc (#447, wave 4). No source file changed, so no suite run applies; the one behavioral claim added to README was verified by running the documented command (exit 1, four named per-item verdicts)."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "map-compliance",
+      "statement": "No check compares an installed or instantiated copy against its source. install_constellation.py writes hop one (bundle) and init_work_area.py writes hop two (spine.json); nothing verifies either afterwards. Measured three times in epic 418: #501, #439/#446/#484, and the Admiral's own spine.json instantiated pre-fix and waived. Current truth is recorded in docs/CONSTELLATION_OVERVIEW.md 'The install and instantiation chain'; remediation is future work. The fix is NOT obvious -- what a running agent holding a stale copy should do (re-instantiate, refuse, warn) is a real design question, and this epic's own no-mid-wave-re-install ruling is evidence the answer is not 'always refresh'."
+    },
+    {
+      "id": "tc2",
+      "from": "map-compliance",
+      "statement": "ROUTE TO #528 AS EVIDENCE, NOT A NEW ISSUE. #528 asks whether markdown templates belong in the derived map and as what. Architecture answer from this reconcile: the architecturally significant property of a shipped template is not its extension and not its content schema -- it is that it is copied and then instantiated, so each has up to three live copies at different ages. That property is invisible to a *.json glob (528's own finding) AND invisible to an AST-derived map (neither hop is a reference edge). So extending the sweeps from .json to .md widens the wrong axis, and #456's map will not close it either. The verification #528 reaches for is a copy-vs-source comparison -- the sibling candidate tc1 -- which applies identically to both extensions. Draft comment text is in .agent-work/epic-418-redux/ARCHITECTURE_RECONCILE.md; NOT posted, this run leaves edits in the tree."
+    }
+  ],
+  "blockers": [],
+  "refusals": 5,
+  "engine_session": {
+    "session_id": "cartographer-418",
+    "status": "released",
+    "claimed_at": "2026-08-09T12:01:02.554630+00:00",
+    "last_heartbeat": "2026-08-09T12:07:58.792410+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T12:08:06.576734+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "context",
+      "why": "This repo ships the Cartographer but has never run one on itself: docs/architecture/ has no history at all. So the reconcile has no map to diff against, and the architecture record of record is docs/CONSTELLATION_OVERVIEW.md plus docs/agents/*, which is what epic-298's reconcile also used. That reframes tc4 from 'add a node' to 'there is no graph to add it to', and makes the ruling turn on where durable structural truth actually lives here.",
+      "mechanical": false,
+      "ts": "2026-08-09T12:02:15.696132+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "packets",
+      "why": "The net change is 9 source/doc files; only two of them moved a claim the durable record makes. The engine and crew-context changes had already been reconciled by the waves that made them, which is why the reconcile finds little -- worth saying, because a near-empty reconcile reads like a skipped one otherwise.",
+      "mechanical": false,
+      "ts": "2026-08-09T12:04:02.195982+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "index-overlays",
+      "why": "The float asked for a map id and the honest answer is that there is no map. Ruling on where the record belongs mattered more than ruling on the seam, because putting it in a new docs/architecture tree would have collided with #456 while adding no coverage the derived map can ever give.",
+      "mechanical": false,
+      "ts": "2026-08-09T12:07:17.718268+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "map-compliance",
+      "why": "Compliance here is a statement about an absent map, and an absence reported as a pass is the failure mode this corpus keeps finding in its own checks -- so it is recorded as an open structural question instead. The candidates carry the real remediation.",
+      "mechanical": false,
+      "ts": "2026-08-09T12:07:58.792395+00:00"
+    }
+  ]
+}

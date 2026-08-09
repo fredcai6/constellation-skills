@@ -284,7 +284,8 @@
           "id": "c3",
           "statement": "architecture reconciled for the epic's net change",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Cartographer reconcile complete, recorded at .agent-work/epic-418-redux/ARCHITECTURE_RECONCILE.md (230 lines) with its engine record at closeout/cartographer/plan.json (context, packets, index-overlays, map-compliance all complete). Net change reconciled against fork point ea854471: three stale claims found and corrected, one unmapped seam anchored, two candidates routed, no drift left open. tc4 RULED: the template -> top-level-script -> installed-bundle seam earns a durable anchor but NOT a docs/architecture/ node -- recorded as a named section in docs/CONSTELLATION_OVERVIEW.md ('The install and instantiation chain: one source, three live copies') carrying the layer chain, the governing rule, three measured violations (#501, #439/#446/#484, and this Admiral's own pre-fix spine.json), and the ComposedShippedArtifactTests pointer. Reasons against a node: there is no graph to add to, #456 is in flight and owns where map surface lives, and the seam is invisible to an AST-derived map anyway because neither hop is a reference edge -- so the anchor and #456 do not overlap and #456 landing does not retire it. TC-A (nothing compares a copy against its source) recorded as future work with the design question named. TC-B routed to #528 as evidence rather than filed as a near-duplicate; posted as comment 5231448291."
         },
         {
           "id": "c4",
@@ -338,7 +339,7 @@
     "session_id": "admiral-epic-418-redux",
     "status": "active",
     "claimed_at": "2026-08-09T11:55:32.466503+00:00",
-    "last_heartbeat": "2026-08-09T12:07:59.974351+00:00",
+    "last_heartbeat": "2026-08-09T12:13:58.071460+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

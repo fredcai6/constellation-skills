@@ -4,9 +4,9 @@
 
 Contract: `.agent-work/<epic-id>/LATITUDE_CONTRACT.md` · Plan: `<wave plan — issues per wave, checkpoints>`
 
-The run's audit trail and the lessons audit's primary input. Append entries **as they
-happen** — an unlogged ruling didn't happen. Own errors in the open: an ADMIRAL ERROR
-entry that names the mistake and the fix is a closeout asset, not a liability.
+The run's audit trail, and the raw material the closeout episodes are written from. Append
+entries **as they happen** — an unlogged ruling didn't happen. Own errors in the open: an
+ADMIRAL ERROR entry that names the mistake and the fix is a closeout asset, not a liability.
 
 Entry grammar (one line of date + tag, then the substance):
 
@@ -14,7 +14,7 @@ Entry grammar (one line of date + tag, then the substance):
 - `WAVE` — a wave launched: commanders, issues, worktrees, key launch-order terms (pre-rulings, fences, budgets).
 - `INCIDENT` — a commander/crew death, stall, collision, or environmental kill: what died, autopsy, recovery action.
 - `MERGE` — a PR merged: checks gated on exit code, diff verified in-fence, merge style and why.
-- `ADMIRAL ERROR` — a mistake you own: what happened, cost, immediate fix, lesson candidate.
+- `ADMIRAL ERROR` — a mistake you own: what happened, cost, immediate fix, and what an episode would record about it.
 - `CHECKPOINT` — a contract checkpoint reached: what was presented, what the human decided.
 - `ESCALATION` — a surfaced or out-of-taxonomy decision sent to the human, and the answer.
 
@@ -28,4 +28,4 @@ Entry grammar (one line of date + tag, then the substance):
 
 ## Closeout
 
-- `<lessons audit dispositions, reconcile status, hygiene sweep, summary acceptance>`
+- `<episodes captured, reconcile status, harvest + hygiene sweep, summary acceptance>`

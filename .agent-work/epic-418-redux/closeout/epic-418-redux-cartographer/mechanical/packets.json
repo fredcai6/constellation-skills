@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "packets",
+  "mechanical": {
+    "run": "epic-418-redux-cartographer",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 5,
+    "spine-step": "packets",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-redux-cartographer-packets@69907358d4317d7dd3651a30616d120178e26c7c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-redux-cartographer",
+    "generated_at": "2026-08-09T12:02:25Z"
+  }
+}

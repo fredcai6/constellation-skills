@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Scope questions were re-derived from `git diff` and `git diff --numstat` rather than `git status`, and file-identity questions from `diff --strip-trailing-cr` rather than bare `diff`. At closeout this distinguished three real uncommitted engine-state changes in epic418-w5-docs, which were archived, from two phantom modifications, which were not.
+- statement: Questions about scope were re-derived from `git diff` and `git diff --numstat` rather than from `git status`, and questions about file identity from `diff --strip-trailing-cr` rather than from bare `diff`. At closeout that distinction separated three real uncommitted engine-state changes in epic418-w5-docs, which were archived, from two phantom modifications, which were not.
+- history: restated — Reworded only. The original opened with the word 'Scope', which the episode-observation guard reads as a sentence-initial imperative and flagged as an instruction to a future agent (tests/test_episode_observations.py::RealStoreTests). The sentence was a description of what this run did, not a rule, so the wording changed and the claim did not. — original statement was: Scope questions were re-derived from `git diff` and `git diff --numstat` rather than `git status`, and file-identity questions from `diff --strip-trailing-cr` rather than bare `diff`. At closeout this distinguished three real uncommitted engine-state changes in epic418-w5-docs, which were archived, from two phantom modifications, which were not.
 
 ## Diagnosis (optional)
 
