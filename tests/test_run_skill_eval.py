@@ -1251,27 +1251,46 @@ def test_per_run_isolation_one_run_exception_does_not_sink_the_loop(tmp_path):
 # subprocess mid-measurement and prove the death left resumable/adjudicable state.
 # --------------------------------------------------------------------------- #
 def _write_hang_cmd(dir_path: Path) -> Path:
-    """A `.cmd` shim whose subject sleeps 600s, so a runner that spawns it as its
-    `--command` launcher blocks in launch_agent's poll loop (poll() stays None) until
-    something kills it — the empirically-verified hang primitive for this Windows box.
-    Popen(shell=False) spawns it; taskkill /T reaps the cmd.exe + `py` grandchild."""
-    hang = dir_path / "hang.cmd"
-    hang.write_text("@echo off\r\npy -c \"import time; time.sleep(600)\"\r\n", encoding="utf-8")
+    """A hang-primitive subject whose process sleeps 600s, so a runner that spawns
+    it as its `--command` launcher blocks in launch_agent's poll loop (poll() stays
+    None) until something kills it. Platform-native, each branch spawned directly
+    via `Popen(shell=False)` (no shell interpreter in between) and reaped by
+    `run_skill_eval._tree_kill`, which already branches on os.name the same way:
+    - Windows: a `.cmd` shim (`py -c ...`) — the empirically-verified hang
+      primitive for a Windows box; `taskkill /T` reaps the cmd.exe + `py`
+      grandchild.
+    - POSIX: a shebang'd shell script (`exec <this interpreter> -c ...`), marked
+      executable, so `Popen(shell=False)` can exec it directly (a `.cmd` batch
+      file has no exec bit, no shebang, and is not a valid ELF/PE on this
+      platform — it cannot be spawned this way at all); `_tree_kill`'s non-Windows
+      branch (`proc.kill()`) reaps it.
+    """
+    if os.name == "nt":
+        hang = dir_path / "hang.cmd"
+        hang.write_text("@echo off\r\npy -c \"import time; time.sleep(600)\"\r\n", encoding="utf-8")
+        return hang
+    hang = dir_path / "hang.sh"
+    hang.write_text(
+        f"#!/bin/sh\nexec {sys.executable} -c 'import time; time.sleep(600)'\n",
+        encoding="utf-8",
+    )
+    os.chmod(hang, 0o755)
     return hang
 
 
 def _confirm_hang_primitive(hang_cmd: Path) -> None:
-    """Handoff stop-condition guard: independently re-confirm the `.cmd` subject
-    spawns AND hangs under `Popen(shell=False)` here before relying on it. If it does
-    not, fail loudly — do NOT silently switch to a POSIX mechanism. Self-contained
-    try/finally so this probe can never leak its own process."""
+    """Handoff stop-condition guard: independently re-confirm the hang-primitive
+    subject spawns AND hangs under `Popen(shell=False)` here before relying on it.
+    If it does not, fail loudly — do NOT silently swap in a different mechanism
+    mid-test to paper over a broken primitive. Self-contained try/finally so this
+    probe can never leak its own process."""
     p = subprocess.Popen([str(hang_cmd)], stdin=subprocess.DEVNULL,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         time.sleep(0.5)
         assert p.poll() is None, (
-            ".cmd hang subject did not stay alive under Popen(shell=False) — STOP "
-            "(do not switch to a POSIX kill mechanism)")
+            "hang-primitive subject did not stay alive under Popen(shell=False) — "
+            "STOP (do not silently swap in a different kill mechanism)")
     finally:
         rse._tree_kill(p)
         try:

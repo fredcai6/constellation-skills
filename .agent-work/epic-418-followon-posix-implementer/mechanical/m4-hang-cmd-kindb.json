@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-hang-cmd-kindb",
+  "mechanical": {
+    "run": "epic-418-followon-posix-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m4-hang-cmd-kindb",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon-posix-implementer-m4-hang-cmd-kindb@4ce777cb6cf5d58a36ce802f0490ec369aa2a824",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon-posix-implementer",
+    "generated_at": "2026-08-09T16:16:52Z"
+  }
+}

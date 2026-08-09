@@ -1292,12 +1292,24 @@ class InterpreterProbeTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmp:
             target_root = Path(tmp) / "skills"
+            # os.name can't be safely faked around a FULL install_skills() call --
+            # pathlib.Path()'s class selection reads live os.name, so a bare
+            # Path(...) re-wrap anywhere downstream (write_corpus_marker ->
+            # compute_corpus_id) silently becomes a WindowsPath instance that then
+            # raises NotImplementedError on the next path-join on a real POSIX
+            # host (see _install_commander_spine's comment above). Narrow the mock
+            # to just the resolution call -- the same pattern
+            # test_resolve_interpreter_falls_back_to_os_default_on_total_failure
+            # already uses -- then thread the resolved value in explicitly so
+            # install_skills does not re-probe and never touches os.name itself.
             with mock.patch.object(installer.subprocess, "run", side_effect=fake_run_failure):
                 with mock.patch.object(installer.os, "name", "nt"):
-                    installer.install_skills(
-                        [skill], target_root, dry_run=False, force=False,
-                        full_set=False, restart_message="", out=lambda _msg: None,
-                    )
+                    resolution = installer.resolve_interpreter()
+            installer.install_skills(
+                [skill], target_root, dry_run=False, force=False,
+                full_set=False, restart_message="", out=lambda _msg: None,
+                interpreter=resolution,
+            )
             sidecar = json.loads(
                 (target_root / skill.install_name / "interpreter.json").read_text(encoding="utf-8")
             )

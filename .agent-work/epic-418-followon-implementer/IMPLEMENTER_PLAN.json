@@ -1,0 +1,484 @@
+{
+  "work_id": "epic-418-followon-posix-implementer",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-freshness-kinda",
+    "m2-interp-probe-kindb",
+    "m3-normcase-kindb",
+    "m4-hang-cmd-kindb",
+    "m5-fullsuite-blastradius",
+    "m6-notes-artifact",
+    "m7-commit-pr"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), then docs/agents/CREW_CONTEXT.md and GLOSSARY.md. Verify the Admiral launch-order handoff is complete (task, intent, scope, exclusions, evidence, test mode, stop conditions, return format). Read .agent-work/epic-418-followon/STATE_NOTE.md and LATITUDE_CONTRACT.md in the main repo for cross-agent context (concurrent f-424 MCP agent). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + STATE_NOTE loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-freshness-kinda": {
+      "id": "m1-freshness-kinda",
+      "title": "Kind A: fix check_skill_freshness.py interpreter-guess mirror bug",
+      "imperative": "Root cause (confirmed by investigation): scripts/check_skill_freshness.py's _normalized_hash() reverses the installer's `python <` -> `<interpreter> <` rewrite by GUESSING the interpreter via a local os.name-based _platform_interpreter() mirror, instead of reading the actual per-skill interpreter.json sidecar install_constellation.py writes. On this POSIX host the real host probe resolves 'py' (order py/python3/python, all three resolve via the fixed pyfix-venv), but the freshness guess hardcodes 'python3' for os.name != 'nt' -- producing a false upstream-changed/project-customized read on an untouched template. Fix: add a helper that reads skills_root/<skill>/interpreter.json for the actual resolved interpreter, falling back to _platform_interpreter() only when the sidecar is absent; use it in _normalized_hash instead of the direct _platform_interpreter() call. This is shipped-code POSIX defect fixing (do NOT touch the three assertions in tests/test_feedback_tooling.py::FreshnessPathTokenTests or tests/test_install_constellation.py::TemplateBaselineTests -- they are correct). Do not change install_constellation.py's INTERPRETER_CANDIDATES order.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the three Kind-A tests pass: FreshnessPathTokenTests (both) + TemplateBaselineTests::test_seeded_working_copy_reads_up_to_date_against_baseline",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_feedback_tooling.py::FreshnessPathTokenTests tests/test_install_constellation.py::TemplateBaselineTests::test_seeded_working_copy_reads_up_to_date_against_baseline"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-freshness-kinda-1"
+        }
+      ],
+      "constraints": [
+        "do not weaken assertions",
+        "do not delete tests",
+        "do not change interpreter candidate order",
+        "no sudo"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-freshness-kinda-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_feedback_tooling.py::FreshnessPathTokenTests tests/test_install_constellation.py::TemplateBaselineTests::test_seeded_working_copy_reads_up_to_date_against_baseline",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-interp-probe-kindb": {
+      "id": "m2-interp-probe-kindb",
+      "title": "Kind B: platform-aware InterpreterProbeTests sidecar test",
+      "imperative": "tests/test_install_constellation.py::InterpreterProbeTests::test_sidecar_records_resolved_via_for_probe_success_and_fallback fails on Linux with NotImplementedError: cannot instantiate 'WindowsPath' -- because the fallback half of the test wraps the FULL install_skills() call (which internally calls write_corpus_marker -> compute_corpus_id, which does a bare Path(skills_dir) re-wrap) inside mock.patch.object(installer.os, 'name', 'nt'). Path()'s class-selection reads os.name at call time, so the re-wrap silently becomes a WindowsPath instance; the next path-join on it invokes WindowsPath.__new__ directly, which raises for real on a POSIX host. This exact hazard is ALREADY documented 20 lines above in the same file (_install_commander_spine's comment: 'os.name can't be safely faked around a full install because pathlib refuses to build a foreign path flavor'). Fix by following that established local convention: narrow the os.name mock to wrap ONLY the resolve_interpreter() call (matching test_resolve_interpreter_falls_back_to_os_default_on_total_failure's pattern), then pass the resulting InterpreterResolution explicitly via install_skills(..., interpreter=resolution) so install_skills does not re-probe and the corpus-marker path never runs under spoofed os.name. Keep asserting the same Windows-fallback semantics (resolved_via=='os-default-fallback', interpreter=='py') -- do not weaken to something platform-generic.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "InterpreterProbeTests class passes in full",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_install_constellation.py::InterpreterProbeTests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-interp-probe-kindb-1"
+        }
+      ],
+      "constraints": [
+        "do not weaken assertions",
+        "do not delete tests",
+        "do not change interpreter candidate order",
+        "no sudo"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-interp-probe-kindb-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_install_constellation.py::InterpreterProbeTests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-normcase-kindb": {
+      "id": "m3-normcase-kindb",
+      "title": "Kind B: platform-gate test_same_path_windows_normcase_sep_equivalence",
+      "imperative": "tests/test_spine_rail.py::test_same_path_windows_normcase_sep_equivalence asserts sr._same_path('C:\\\\Foo','c:/foo') is True, relying on ntpath's normcase (lowercases + folds backslash/forward-slash). On POSIX, os.path.normcase is identity and backslash is not a separator, so posixpath correctly treats these as two DIFFERENT strings -- the shipped _same_path (scripts/hooks/spine_rail.py:313, wraps os.path.normcase+normpath) is doing the platform-correct thing on both platforms; the test just hardcodes Windows-only folding as if it were universal. Fix: skip the Windows assertion on non-Windows via pytest.mark.skipif(sys.platform != 'win32', reason=...) (sys already imported in this file), and ADD a companion test asserting the platform-correct POSIX behaviour (is False, i.e. no spurious relaxation on POSIX either) skipped on win32. Do not delete the Windows test or weaken its assertion -- it must keep asserting True under skipif so Windows behaviour is still proven when the suite runs there.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "same_path tests pass on this POSIX host, Windows assertion preserved under skipif",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_rail.py -k same_path -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-normcase-kindb-1"
+        }
+      ],
+      "constraints": [
+        "do not weaken assertions",
+        "do not delete tests",
+        "Windows behaviour must keep working",
+        "no sudo"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-normcase-kindb-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_spine_rail.py -k same_path -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-hang-cmd-kindb": {
+      "id": "m4-hang-cmd-kindb",
+      "title": "Kind B: POSIX-native hang primitive for test_real_runner_process_death",
+      "imperative": "tests/test_run_skill_eval.py::test_real_runner_process_death_leaves_resumable_state fails with PermissionError on hang.cmd: _write_hang_cmd() (tests/test_run_skill_eval.py ~line 1253) always writes a Windows .cmd batch file and spawns it via Popen(shell=False), which cannot execute on Linux (no exec bit, no shebang, not a PE). The production code under test, run_skill_eval._tree_kill (scripts/run_skill_eval.py:621), is ALREADY portable -- it branches on os.name and falls back to proc.kill() on non-Windows (comment: 'kept so the module is portable'), so no change is needed there. Fix _write_hang_cmd to branch on os.name: keep the existing .cmd/py-c shim on Windows verbatim, and on POSIX write a shebang'd shell script (#!/bin/sh invoking sys.executable -c 'import time; time.sleep(600)'), chmod it executable (os.chmod, no new import needed), and return that path instead. Generalize _confirm_hang_primitive's docstring/messages away from the literal '.cmd' where they'd now be inaccurate on POSIX, without changing its behavior (still fail loudly, never silently switch mechanisms mid-test). Do not touch run_skill_eval.py's _tree_kill or any other shipped code -- this is a test-fixture-only fix.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the real-process-death test passes on POSIX via a real killed subprocess",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_run_skill_eval.py::test_real_runner_process_death_leaves_resumable_state"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-hang-cmd-kindb-1"
+        }
+      ],
+      "constraints": [
+        "do not weaken assertions",
+        "do not delete tests",
+        "Windows behaviour must keep working",
+        "do not touch run_skill_eval.py production code unless justified",
+        "no sudo"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-hang-cmd-kindb-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_run_skill_eval.py::test_real_runner_process_death_leaves_resumable_state",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-fullsuite-blastradius": {
+      "id": "m5-fullsuite-blastradius",
+      "title": "Enumerate blast radius and run the full suite",
+      "imperative": "By command (never memory): grep every caller of check_skill_freshness._normalized_hash / _platform_interpreter and every reader of the four touched test files to confirm nothing outside the owned fence (scripts/install_constellation.py, its freshness/path-token reach, and the four named test files) needed a change. Confirm install_constellation.py's INTERPRETER_CANDIDATES order is untouched (git diff). Confirm no files under the concurrent f-424 agent's ownership (new MCP files, .mcp.json) were touched. Attest c1. Then run the FULL suite and require 0 failed for c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all four fixes green individually",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all four fixes green individually"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "blast radius enumerated by command; candidate order + f-424 ownership fences verified untouched",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Blast radius enumerated by command: grep for _normalized_hash/_platform_interpreter/_resolved_interpreter callers -> only scripts/check_skill_freshness.py (self) and an archived red-repro copy under .agent-work/archive/...; no live caller elsewhere. Grepped readers of the 4 touched test files and check_skill_freshness.py: functional (non-archive, non-agent-work) hits are scripts/check_corpus_freshness.py and tests/test_feedback_tooling.py (docstring/load-by-name only, no API surface touched) and scripts/hooks/gauge_writer_hook.py + tests/test_gauge_writer.py (reference a DIFFERENT module, scripts/hooks/spine_rail.py, not tests/test_spine_rail.py -- name collision only, confirmed by context). git diff shows scripts/install_constellation.py has ZERO changes (not in git status modified list); INTERPRETER_CANDIDATES = (\"py\", \"python3\", \"python\") in the live file at line 369, order unchanged from HEAD. No .mcp.json exists in this worktree and git status shows only the 4 known files modified plus two untracked .agent-work plan dirs (job-local context-governor state, not MCP/f-424 surface). No files under f-424's ownership (new MCP files, .mcp.json) were touched."
+        },
+        {
+          "id": "c2",
+          "statement": "full suite: 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests 2>&1 | tee /tmp/claude-1000/-home-tommy-projects-constellation-skills/86708414-f5d3-40d3-8c9a-2f96d1ccdc14/scratchpad/fullsuite-after.txt | tail -20 && grep -q ' 0 failed' /tmp/claude-1000/-home-tommy-projects-constellation-skills/86708414-f5d3-40d3-8c9a-2f96d1ccdc14/scratchpad/fullsuite-after.txt || (grep -qE '[0-9]+ passed' /tmp/claude-1000/-home-tommy-projects-constellation-skills/86708414-f5d3-40d3-8c9a-2f96d1ccdc14/scratchpad/fullsuite-after.txt && ! grep -q 'failed' /tmp/claude-1000/-home-tommy-projects-constellation-skills/86708414-f5d3-40d3-8c9a-2f96d1ccdc14/scratchpad/fullsuite-after.txt)"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-fullsuite-blastradius-2"
+        }
+      ],
+      "constraints": [
+        "measured negative acceptable if a residual failure cannot be fixed inside the fences -- report it, do not force it green"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-fullsuite-blastradius-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-fullsuite-blastradius",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-fullsuite-blastradius-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/posix-green && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests 2>&1 | tee /tmp/claude-1000/-home-tommy-projects-constellation-skills/86708414-f5d3-40d3-8c9a-2f96d1ccdc14/scratchpad/fullsuite-after.txt | tail -20 && grep -q ' 0 failed' /tmp/claude-1000/-home-tommy-projects-constellation-skills/86708414-f5d3-40d3-8c9a-2f96d1ccdc14/scratchpad/fullsuite-after.txt || (grep -qE '[0-9]+ passed' /tmp/claude-1000/-home-tommy-projects-constellation-skills/86708414-f5d3-40d3-8c9a-2f96d1ccdc14/scratchpad/fullsuite-after.txt && ! grep -q 'failed' /tmp/claude-1000/-home-tommy-projects-constellation-skills/86708414-f5d3-40d3-8c9a-2f96d1ccdc14/scratchpad/fullsuite-after.txt)",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-notes-artifact": {
+      "id": "m6-notes-artifact",
+      "title": "Write notes-posix.md evidence file",
+      "imperative": "Write /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md (main repo path, exact filename -- never 'findings-*.md') containing, for each of the six failures: failure mode, Kind A/B classification, the fix, before-failing and after-passing test output. Include the full-suite tail. Include the one-line-per-Kind-B-fix statement of Windows behaviour preserved. Include the interpreter-candidate-order finding (reported, not changed) and any other out-of-fence finds, named not fixed.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite verified",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full suite verified green: 2139 passed, 1 skipped, 1061 subtests passed, 0 failed (see m5.c2 engine-run evidence)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "notes-posix.md exists at the exact required path with required sections",
+          "check": {
+            "kind": "command",
+            "command": "test -f /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md && grep -q 'Kind A' /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md && grep -q 'Kind B' /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-notes-artifact-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-notes-artifact-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md && grep -q 'Kind A' /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md && grep -q 'Kind B' /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-commit-pr": {
+      "id": "m7-commit-pr",
+      "title": "Commit on epic-418/posix-suite-green and open PR against main",
+      "imperative": "Commit the four fixes on the worktree's branch epic-418/posix-suite-green. Open a PR against main with gh pr create -F <bodyfile> summarizing Kind A vs Kind B treatment and evidence. Attest c1 once committed; c2 verifies a PR exists for the branch.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "notes artifact written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "notes-posix.md written at /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md (m6 complete)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "commit created on epic-418/posix-suite-green",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "PR opened for the branch",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/posix-green && gh pr list --head epic-418/posix-suite-green --json number --jq '.[0].number' | grep -qE '^[0-9]+$'"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "never push --force",
+        "never skip hooks"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 7,
+  "engine_session": {
+    "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
+    "status": "active",
+    "claimed_at": "2026-08-09T16:21:44.462040+00:00",
+    "last_heartbeat": "2026-08-09T16:35:03.325915+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": "2fb330a4-dba9-409d-9005-a1342ed2cb19",
+    "takeover_reason": "Prior session 2fb330a4 died at HARD context band mid-refresh-request; fresh implementer taking over per engine recovery path to close m5-fullsuite-blastradius"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete: task/intent/scope/exclusions/evidence/test-mode/stop-conditions/return format all present. Read STATE_NOTE.md + LATITUDE_CONTRACT.md: confirms my session (Sonnet implementer) owns posix-green worktree, notes-posix.md deliverable, PR on epic-418/posix-suite-green; interpreter permafix is machine-local/out-of-scope (decision:py-fix-is-machine-local); concurrent f-424 agent owns MCP files + .mcp.json, confirmed disjoint from my fence.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:14:44.929745+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-freshness-kinda",
+      "why": "Root cause confirmed and fixed: added _resolved_interpreter() in scripts/check_skill_freshness.py that reads the per-skill interpreter.json sidecar install_constellation.py writes, falling back to the os.name guess only when absent; _normalized_hash now calls it instead of guessing directly. All three Kind-A tests green (3 passed).",
+      "mechanical": false,
+      "ts": "2026-08-09T16:15:33.978385+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-interp-probe-kindb",
+      "why": "Narrowed the os.name='nt' mock to wrap only resolve_interpreter(), then threaded the resolved InterpreterResolution into install_skills(interpreter=...) so the full install (and its corpus-marker Path() re-wrap) never runs under spoofed os.name. Same Windows-fallback assertions kept (resolved_via=='os-default-fallback', interpreter=='py'). InterpreterProbeTests: 7 passed.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:16:12.077037+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-normcase-kindb",
+      "why": "Platform-gated the Windows-only assertion with skipif(sys.platform != 'win32') (assertion unchanged, still proves Windows semantics when run there) and added a companion test asserting the platform-correct POSIX semantics (False -- normcase/backslash folding does not apply). tests/test_spine_rail.py -k same_path: 3 passed, 1 skipped (the Windows-only test, correctly, on this Linux host).",
+      "mechanical": false,
+      "ts": "2026-08-09T16:16:46.817871+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-hang-cmd-kindb",
+      "why": "_write_hang_cmd now branches on os.name: unchanged .cmd/py-c shim on Windows, a chmod'd shebang shell script (exec sys.executable -c ...) on POSIX, both spawned via Popen(shell=False) with no shell interpreter between. run_skill_eval._tree_kill needed no change -- its non-Windows branch (proc.kill()) already existed. test_real_runner_process_death_leaves_resumable_state: 1 passed, killing a real subprocess.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:17:28.549454+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-fullsuite-blastradius",
+      "why": "Blast radius enumerated (c1 attested with grep evidence: no live caller of _normalized_hash/_platform_interpreter/_resolved_interpreter outside check_skill_freshness.py; install_constellation.py untouched, INTERPRETER_CANDIDATES order intact; no f-424/.mcp.json files touched). Full suite run: first pass surfaced 1 non-baseline failure (map/INDEX.md staleness from our own in-fence edits adding entities); fixed via project's own code_map rebuild (python3 -m scripts.code_map build --root .); re-run for c2 evidence below.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:31:38.159262+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-notes-artifact",
+      "why": "Wrote /home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-posix.md with per-failure Kind A/B classification, fix description, before-failing/after-passing output for all six failures, full-suite tail (2139 passed, 1 skipped, 0 failed), Windows-behaviour-preserved lines per Kind-B fix, the INTERPRETER_CANDIDATES finding (reported not changed), and no other out-of-fence finds.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:34:51.070671+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m5-fullsuite-blastradius",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.154,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-09T16:17:36.756650+00:00"
+    }
+  ]
+}

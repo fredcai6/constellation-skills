@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-freshness-kinda",
+  "files": [],
+  "repo_rev": {
+    "commit": "a1eab1f1cdf179a1c141d8d60df283d77f83bccd"
+  },
+  "run": {
+    "work_id": "epic-418-followon-posix-implementer",
+    "generated_at": "2026-08-09T16:14:59Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/posix-green",
+      "repo": "/home/tommy/projects/constellation-skills-wt/posix-green",
+      "durable": "/home/tommy/projects/constellation-skills-wt/posix-green"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/posix-green"
+    }
+  }
+}
