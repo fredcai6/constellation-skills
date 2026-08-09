@@ -5755,3 +5755,60 @@ than rediscover, and pre-identified where it might have fooled itself."*
 have fooled me* is cheap to write and, per the reviewer, is what made pass 2 fast. Routing to the
 lessons audit as a `REVIEWER_HANDOFF.template.md` delta candidate — the crew that wrote it discovered
 it, so it belongs in the template, not in this log.
+
+### My own close-sequence verification step was a check that cannot fail. Found by running it early.
+
+While crew 1 worked g4 I pre-ran the close sequence's step 3 — *"`git hash-object` the installed
+verifier against the repo blob"* — rather than meeting it for the first time under end-of-run
+pressure. It does not work, in two separate ways.
+
+**It named the wrong file, and the wrong file is one that can never disagree.** Measured:
+
+| file | main | crew 1 branch | installed |
+|---|---|---|---|
+| `skills/replan/scripts/verify_replan.py` | `614b2b2c` | `614b2b2c` | `614b2b2c` |
+| `scripts/verify_iterative_role_artifacts.py` | `dabb48ff` | **`fc1b50f9`** | `dabb48ff` ×3 |
+
+**`verify_replan.py` is byte-identical everywhere and this wave never touches it.** Hashing it would
+have reported a match before the merge, after the merge, and after a reinstall that silently did
+nothing at all. **Identical signal in the healthy world and the broken one** — the census's own
+definition, sitting in my close plan, written by me, in the run whose thesis this is. Twenty-fifth
+specimen of the epic and the second I have authored.
+
+It did not even survive being typed: the first command exited **128** —
+`path 'scripts/verify_replan.py' does not exist in 'HEAD'` — because the file lives under
+`skills/replan/scripts/`. **The step was never runnable as written**, so the plan contained a check
+that could not run, guarding a property that could not fail. At close time, that resolves into either
+a fabricated "verified" or a scramble.
+
+**Three further facts the pre-run bought**, all measured rather than assumed:
+
+1. **There are three installed copies** of `verify_iterative_role_artifacts.py` — `constellation-admiral`,
+   `constellation-commander`, `constellation-explorer`. Checking one is a partial reinstall away from a
+   false green. All three must be checked.
+2. **The correct assertion is a transition, not an equality**: all three must go `dabb48ff` →
+   `fc1b50f9`, re-deriving the target blob *after* the merge rather than assuming it. **A hash that
+   was already correct before the step proves nothing about the step** — which is the general form of
+   the mistake above, and the sentence I should have written the first time.
+3. **Both of crew 1's production fixes ride in that one file.** `57048457` carries #506 (+45/−7 there,
+   +187 test lines); the `_is_skills_root` / `_is_installed_bundle` rework carries #501/#468 including
+   specimen 23's `exclude` repair. Net `143/22`.
+
+**Merge safety, also measured now rather than at the merge:**
+`git merge-tree --write-tree main epic-418/w5-bookend-gates` exits **0 — clean**, fork point
+`ea854471`. Of the files crew 1 changed, only `docs/agents/CREW_CONTEXT.md` has moved on main since
+the fork (1 commit), and git resolves it.
+
+**And a false alarm I nearly raised on myself.**
+`git diff --numstat main..epic-418/w5-bookend-gates` reports `0/260` for
+`scripts/install_constellation.py`, `0/356` and `0/256` for two test files, and `0/70` for eleven
+`episodes/active/*` files. My first read was that crew 1 had deleted them. **They are main's own
+merged wave-5 PRs, which crew 1's branch predates** — the two-dot diff reports them as removed
+because of its direction. Nothing is being deleted. This is the same shape as the earlier alarm over
+crew 2's "vanished" work area, where the answer was in the log subject line: **an absence measured
+from the wrong end of a comparison reads as destruction.** Second occurrence in this run, both mine,
+both caught before I acted — but the correct habit is to establish the direction of a diff *before*
+reading a deletion into it, not after.
+
+The state note's close sequence is corrected in place, including the numstat trap, so a successor
+inherits the fix rather than the plan that contained the defect.

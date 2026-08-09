@@ -170,9 +170,47 @@
 >
 > 1. merge crew 1's PR
 > 2. **RE-INSTALL** (`python scripts/install_constellation.py --agent claude --scope user --force`)
-> 3. **verify the installed verifier actually carries the fix** — `git hash-object` the installed file
+> 3. **verify the installed verifier actually carries the fix** — `git hash-object` the installed files
 >    against the repo blob, do **not** trust the installer's own report
 > 4. only then build the `w5-to-close` packet and expect c3 to pass on a `stop` exit
+>
+> ### Step 3, corrected 2026-08-09 — the version written above was a check that cannot fail
+>
+> **The file is `scripts/verify_iterative_role_artifacts.py`, NOT `verify_replan.py`.** Measured
+> before writing this down:
+>
+> | file | main | crew 1 branch | installed |
+> |---|---|---|---|
+> | `skills/replan/scripts/verify_replan.py` | `614b2b2c` | `614b2b2c` | `614b2b2c` |
+> | `scripts/verify_iterative_role_artifacts.py` | `dabb48ff` | **`fc1b50f9`** | `dabb48ff` ×3 |
+>
+> **`verify_replan.py` is byte-identical in all three places and this wave never touches it** — hashing
+> it would have returned "match" before the merge, after the merge, and after a reinstall that silently
+> did nothing. **Green in every world, exactly the defect the census is about**, and it was sitting in
+> my own close plan. Found by running the comparison early instead of at close time; the first attempt
+> exited 128, `path 'scripts/verify_replan.py' does not exist in 'HEAD'`, because the file lives under
+> `skills/replan/scripts/`.
+>
+> **There are THREE installed copies** of `verify_iterative_role_artifacts.py` — under
+> `constellation-admiral`, `constellation-commander` and `constellation-explorer`. **Check all three.**
+> One copy checked is a partial reinstall away from a false green.
+>
+> **The real assertion is a transition, not an equality:** all three must go `dabb48ff` → `fc1b50f9`
+> (or whatever blob the merge commit carries — re-derive it with
+> `git rev-parse HEAD:scripts/verify_iterative_role_artifacts.py` **after** merging, never assume).
+> A hash that was already correct before the step proves nothing about the step.
+>
+> **Both fixes ride in that one file:** `57048457` is #506 (+45/−7 there, +187 tests) and the
+> `_is_skills_root` / `_is_installed_bundle` rework is #501/#468 including specimen 23's `exclude`
+> repair. Net `143/22`.
+>
+> **Merge safety, measured 2026-08-09:** `git merge-tree --write-tree main epic-418/w5-bookend-gates`
+> exits **0 — clean**, fork point `ea854471`. No file crew 1 changed has moved on main since the fork
+> except `docs/agents/CREW_CONTEXT.md` (1 commit), which git resolves. **Do not be alarmed by
+> `git diff --numstat main..epic-418/w5-bookend-gates` showing `0/260` for
+> `scripts/install_constellation.py` and `0/70` for the `episodes/active/*` files** — those are
+> *main's* merged wave-5 PRs that crew 1's branch predates, read as "removed" by direction of the
+> two-dot diff. Nothing is being deleted.
 >
 > **Skip step 2 and c3 still fails with the OLD logic, on a tree that already contains the fix.** That
 > is the corpus-drift trap (#344) and it already bit this run once: at wave-5 launch, **all nine**
