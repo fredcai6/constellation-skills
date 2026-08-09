@@ -261,5 +261,101 @@ new structural surface.
   `checklist-engine.md`) distinguishing MCP server-connection approval from ordinary tool-call
   permission would have saved the two extra probe variants I ran to separate them.
 
+## Re-review (corrected basis)
+
+Commander adjudicated the original BLOCK, reproduced my finding independently, and corrected
+`MISSION_FRAME.md`'s "Decision anchors and decision pressure" section. Two asks: (1) confirm the
+correction accurately states what I measured, (2) judge the surviving justification — does
+per-agent `SPINE_FILE`/`SPINE_SESSION` binding actually require per-dispatch config generation.
+No implementation code changed; `git diff a2ce8669..HEAD` for the reviewed files is unchanged from
+the original pass.
+
+### 1. Does the MISSION_FRAME correction accurately state what I measured?
+
+Yes, and it does not soften the falsification. Read the corrected "Decision anchors and decision
+pressure" section in full. Point by point against my own result:
+- "What survives" (live session doesn't hot-reload, `claude mcp list` shows Pending approval) — I
+  did not re-test this half myself (it wasn't disputed and wasn't what the handoff asked me to
+  re-verify); the correction does not claim I verified it, only that it reproduces, which is
+  accurate framing.
+- "What was false" and the headless `--allowedTools`-no-`--mcp-config` reproduction — matches my
+  measurement exactly, including the "server launched, start-marker written, reviewer reproduced
+  it twice against server-side artifacts" framing.
+- The two-gates diagnosis (MCP approval vs. ordinary tool permission) — matches the mechanism I
+  demonstrated (with vs. without `--allowedTools`).
+- Regrade `settled/measured` → falsified — correct application of this repo's own `@grade`
+  doctrine (a contradicting measurement revises `settled/measured`; it does not need Commander's
+  own authority to unsettle, since re-measurement is exactly what that grade permits).
+
+I confirm the correction is accurate and plainly stated, not softened.
+
+### 2. Does per-agent identity actually require per-dispatch config generation?
+
+**No — Commander is missing something, and that keeps this a BLOCK.**
+
+I tested it. Claude Code's MCP config format documents `${VAR}` environment-variable expansion
+("Environment Variable Expansion" — sourced from the *calling process's* environment at launch
+time, not baked into the file). I built an isolated scratch project (not touching the reviewed
+`.mcp.json`) with a project-scope `.mcp.json` whose `env` block used `"SPINE_FILE": "${SPINE_FILE}"`
+and `"SPINE_SESSION": "${SPINE_SESSION}"` instead of literal values, and two scratch spines with
+distinct imperative markers:
+
+```
+$ SPINE_FILE=.../spine-a/spine.json SPINE_SESSION="sess1#agentA" \
+    claude -p "Call mcp tool envprobe__spine_status..." --allowedTools "mcp__envprobe__spine_status"
+ACTIVE g1 [pending] — IDENTITY-MARKER-A
+
+$ SPINE_FILE=.../spine-b/spine.json SPINE_SESSION="sess1#agentB" \
+    claude -p "Call mcp tool envprobe__spine_status..." --allowedTools "mcp__envprobe__spine_status"
+ACTIVE g1 [pending] — IDENTITY-MARKER-B
+```
+
+Same directory, same committed `.mcp.json`, no `--mcp-config`, no `--strict-mcp-config`, no
+generated file — two separate headless invocations, differing only in the calling shell's
+environment, correctly got two different spine identities. This directly answers your question:
+a single project-scope `.mcp.json` **can** serve different spines/sessions per agent, if each
+dispatcher sets `SPINE_FILE`/`SPINE_SESSION` in the child process's own environment before
+invoking `claude -p`, and the committed `.mcp.json` uses `${VAR}` placeholders instead of literal
+values (the one currently committed uses literals, which is why it currently can't — but that is
+a one-line fix to `.mcp.json`, not a reason to generate a whole config file per dispatch).
+
+This is not a corner case relative to how this repo actually dispatches crew: I checked
+`crew-runs.json` for this very gate — `"dispatch": "external"`, `"backend": "external"` — meaning
+each crew member (implementer, reviewer, …) already runs as a **separate OS process**, exactly the
+shape my probe validated. `${VAR}` expansion is per-process, so concurrent external dispatches each
+get their own server instance correctly, with no race.
+
+**The one case where this would NOT work**, and where DC2's "parent and subagent" language would
+be right: an in-session Task-tool-dispatched subagent that shares its parent's *already-launched*
+MCP server connection (established once at session start) rather than spawning as its own OS
+process. That subagent inherits the parent's fixed env — no per-subagent env-var trick can reach
+it, and only a fresh, separately-configured process (or a genuinely regenerated file) could give it
+a different identity. Whether F's door is meant to serve that shape too, in addition to the
+external-process crew dispatch this repo actually uses, is the fact Commander needs to pin down
+before regrading again — I did not find evidence in this diff or in `crew-runs.json` that it is.
+
+**Verdict on the surviving justification:** unproven as stated. The corrected `MISSION_FRAME.md`
+asserts a single shared `.mcp.json` "cannot" give a parent and subagent different spines and
+"cannot" key identity per agent — both are stated too strongly given `${VAR}` expansion is a
+documented, working feature I directly confirmed against a project-scope file. `gen_mcp_config.py`
+may still be worth keeping (a generated-file audit trail is a real, if softer, engineering
+convenience over ambient env vars, and it may be the right answer for the Task-tool-subagent case
+above) — but that is a different, narrower argument than "a shared file cannot do this," and it
+has not been made yet.
+
+## Result (re-review)
+`BLOCK`
+
+The five protected-intent items, the verbatim-imperative negative control, the 13+5=18 verb
+coverage enumeration, and the 6-failed/2157-passed suite state all stand as originally reviewed —
+not revisited here per Commander's request. The delivery-path decision — now on its corrected,
+second basis — still does not hold: a documented, empirically-confirmed alternative
+(`${VAR}` expansion on the existing committed `.mcp.json`, no generated file, no `--mcp-config`)
+achieves per-agent identity for exactly the dispatch shape (`"dispatch": "external"`) this repo
+actually uses. Commander should either (a) test and rule out the `${VAR}`-expansion path against
+the real Task-tool-subagent case, if that is a shape this door must also serve, and regrade with
+that evidence, or (b) simplify to the `${VAR}`-expansion approach and drop per-dispatch file
+generation entirely.
+
 ## Return status
 `complete`

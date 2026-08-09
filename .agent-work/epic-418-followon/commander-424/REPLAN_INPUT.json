@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 418 follow-on — workstream F, MCP front door",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Cleave problem-solving from spine-management. Agents lose context to operating the engine; the door moves that cost behind a typed interface. The token delta is a constraint that must not go the wrong way, not the thing being bought."
+    },
+    "definition_of_done": [
+      "A second front door on the checklist engine exists, wrapping the engine's own dispatch, with the CLI door intact.",
+      "F's six done-conditions each carry a verdict backed by evidence, a measured negative counting as a complete verdict."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No engine logic duplicated; gate imperatives verbatim through tool results; settings.json untouched at any scope.",
+      "sufficient_evidence": "Behaviour proved by running, with every control demonstrated able to fail.",
+      "appetite": "One bounded issue, wave 1 of a three-wave epic; deliberate first round, no gold-plating."
+    },
+    "hard_constraints": [
+      "settings.json is never written at any scope; project-scope .mcp.json only.",
+      "The CLI door stays; every uncovered verb keeps a documented CLI fallback.",
+      "Engine bugs #439/#446/#427/#443 are held constant across both measurement arms.",
+      "Files fenced to the concurrent posix-green agent are not edited."
+    ],
+    "fixed_decisions": [
+      "MCP is the current vehicle, not the destination; the seven-over-eighteen tool split is a placeholder.",
+      "Each agent gets its own server instance keyed session_id#agentId.",
+      "DC5 is counted from the call record, never the engine's refusals counter.",
+      "DC4 is a property over every gate carrying an imperative, not a sampled gate.",
+      "DC3 requires a positive control before a no-identity result counts as failing closed."
+    ],
+    "current_wave": {
+      "objective": "Build the door and produce a verdict on each of F's six done-conditions.",
+      "exit_criteria": [
+        "The door exists, serves, and duplicates no engine logic.",
+        "Each done-condition is marked done / done-by-different-means / partial / not-met with the evidence that decides it."
+      ],
+      "issues": [
+        {
+          "id": "424",
+          "title": "Workstream F — MCP front door on the checklist engine",
+          "desired_outcome": "A typed tool surface over the engine's dispatch, with acceptance evidence for DC1-DC6.",
+          "useful_now": "It is the epic's least-proven piece, deliberately moved first so it fails early if it fails.",
+          "appetite": "One bounded issue",
+          "acceptance_or_falsification_evidence": "DC1-DC6 verdicts; a measured negative on DC5 is a complete deliverable under the honest-null clause.",
+          "implementation_latitude": "Tool grouping, argument shapes, delivery mechanism, call-record capture, tracer protocol and n, which prototype code is lifted.",
+          "hard_constraints_no_gos": [
+            "No settings.json write at any scope.",
+            "No engine logic duplicated.",
+            "No engine-bug fixes between arms."
+          ],
+          "local_unknowns": [
+            "Behaviour against a real spine with delegation and rework is untested; exc-9 used a four-gate toy."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/mcp_spine_server.py",
+            "scripts/gen_mcp_config.py",
+            "map/INDEX.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Workstream C — relocate instruction text to the gate that needs it",
+        "why_likely": "F makes C's job smaller: once call mechanics live in typed tool arguments, what remains in an imperative is pure 'what to do at this gate'.",
+        "entry_conditions": ["F's verb surface is settled"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the door reduces spine-management cost attributably, rather than moving the cost to the far side of the interface.",
+        "affects": "F's acceptance measure, DC5",
+        "settle_by": "The two-arm tracer at gate g4",
+        "current_evidence": "Not yet measured on this branch; exc-9's numbers are stale (pre-B channel, pre-A2 verb semantics) and were explicitly ruled non-reusable.",
+        "next_probe": "Run both arms with one counting unit identical across arms, order-controlled, counting far-side recovery events too."
+      },
+      {
+        "unknown": "Whether the seven-tool grouping holds up on a real role spine with delegation and rework.",
+        "affects": "Whether the uncovered five (skip, reopen, append, amend, flag-candidate) were the right five to leave at the CLI.",
+        "settle_by": "DC1's cold-agent run on a real role spine",
+        "current_evidence": "A throwaway spine was driven to DONE through the tools alone, exercising all seven including waive and attach.",
+        "next_probe": "Drive a real role spine, not a toy."
+      }
+    ],
+    "parked_possibilities": [
+      "Replacing MCP with a different kind of tool call, which Tommy expects later.",
+      "Trimming rich tool descriptions, accepted for now without a control arm."
+    ]
+  },
+  "completed_outcomes": [
+    "The .mcp.json delivery branch point was probed, answered, and then FALSIFIED at review — the corrected finding is that a plain project-scope .mcp.json does serve a cold headless agent when --allowedTools is passed.",
+    "The door shipped: 7 tools over 13 of 18 engine verbs, wrapping checklist_engine.main(), with an empty diff against the engine itself.",
+    "Per-dispatch config generation shipped, rejustified on identity/separation grounds rather than delivery necessity.",
+    "A code-map staleness regression was caught by re-running the suite rather than trusting the crew's report, and fixed."
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The MCP door wraps the engine rather than reimplementing it.",
+      "expected": "No change to the engine, and every tool routing through main(argv).",
+      "observed": "git diff against scripts/checklist_engine.py is empty; every tool routes through run_engine() -> checklist_engine.main().",
+      "source": "git diff and independent reviewer inspection"
+    },
+    {
+      "claim": "Gate imperatives ride tool results verbatim.",
+      "expected": "Byte-identical text CLI vs MCP, with a control that can fail.",
+      "observed": "Byte-identical for the sampled gate; the reviewer mutated as_result() to append a trailing space, watched the check go red, and reverted cleanly.",
+      "source": "tests plus a demonstrated-failing negative control"
+    },
+    {
+      "claim": "The door is up and serving — DC3's prerequisite positive control.",
+      "expected": "A live tool call returning genuine engine output.",
+      "observed": "A throwaway spine driven to DONE through the seven tools alone; a real headless dispatch round-tripped an unguessable nonce through a generated config.",
+      "source": "server-side artifacts (call-record growth, start marker), not the model transcript"
+    },
+    {
+      "claim": "The suite's pinned red set did not grow.",
+      "expected": "6 failed.",
+      "observed": "7 failed initially — map/INDEX.md went stale from the new scripts; after rebuilding, 6 failed / 2157 passed / 1061 subtests.",
+      "source": "full pytest run, re-derived by the commander rather than trusted from the crew"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The commander's .mcp.json delivery finding was falsified at g1-review: a plain project-scope .mcp.json DOES serve a cold headless agent when --allowedTools is passed. The original probe omitted --allowedTools from that arm, measuring the per-tool permission gate and attributing the result to MCP 'Pending approval' — two different gates.",
+      "classification": "evidence_only",
+      "affects": "The recorded justification for gen_mcp_config.py, not the build itself.",
+      "evidence": "Reviewer reproduced it twice against server-side artifacts; the commander then reproduced it independently in a fresh project directory with no prior approval state.",
+      "reason": "The deliverable is unchanged — per-dispatch generation is still required for DC2 (different spines per agent) and DC3 (per-agent identity keying), which one shared config cannot provide. Only the reason recorded for it changed, so this is evidence rather than a wave-exit blocker."
+    },
+    {
+      "id": "D1",
+      "signal": "map_orient.py reports DEGRADED-NO-MAP on this repo although a machine-generated code map exists at map/INDEX.md with an enforcing freshness test. The tool probes only docs/architecture/* and a README/AGENTS/CLAUDE/docs fallback; map/ is in neither list.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Any run in this repo that plans map-first — it plans as if map-blind and hash-pins doctrine files as substitutes for a structural map that exists.",
+      "evidence": "map_orient returned DEGRADED-NO-MAP with anchor_count 0; adding two scripts turned tests/test_code_map.py red against map/INDEX.md (55 modules, 1047 entities). Independently flagged by the g1 reviewer.",
+      "reason": "This misdirects the map-first discipline the spine gates at the context step, so it is a planning-truth defect rather than a local one. Named, not fixed — filed as a triage candidate."
+    },
+    {
+      "id": "D2",
+      "signal": "The engine refuses to start a gate that is not the active one, so two independent gates cannot be driven in parallel even when neither depends on the other.",
+      "classification": "later_only",
+      "affects": "Wall-clock cost of any multi-gate plan whose gates are genuinely independent.",
+      "evidence": "g2-implement refused with 'is not the active gate; start g1-review first' although g2's only precondition (the door exists and serves) was already satisfied and attested.",
+      "reason": "Strict ordering is a deliberate mechanism and relaxing it is a design question well outside this issue. Recorded as a forecast-level observation for the epic to weigh."
+    },
+    {
+      "id": "D3",
+      "signal": "attest is refused on an engine-checked (command-kind) condition, but the projection renders engine-checked and attestable conditions in the same shape, so the agent cannot tell them apart before calling.",
+      "classification": "evidence_only",
+      "affects": "The DC5 fumble population — this is exactly the class a typed interface can absorb.",
+      "evidence": "Observed live in this run's own init gate: two attest calls refused, costing a round-trip. The knowledge exists in EXECUTE_PLAN.template.json's gN-integrate imperative but not in the spine template's early gates, where it is first needed.",
+      "reason": "Recorded as measurement input for DC5 rather than filed, since it is precisely what the door is being measured against."
+    },
+    {
+      "id": "D4",
+      "signal": "The prediction inherited from #424's body that A2 would ship two flavours of advance.",
+      "classification": "drop",
+      "affects": "Nothing — the verb surface was typed from the engine as it actually is.",
+      "evidence": "TRIP_HARD_GUARDED_VERBS = {start, reopen}; docs/agents/GLOSSARY.md already states HARD refuses the verbs that begin work at a gate, never advance.",
+      "reason": "Falsified before any code was written; the governing launch order pre-empted it explicitly."
+    }
+  ],
+  "open_current_wave_issue_ids": ["424"],
+  "unlaunched_items": [
+    {"id": "C-relocation", "kind": "forecast"},
+    {"id": "dc5-attribution", "kind": "uncertainty"},
+    {"id": "grouping-on-a-real-spine", "kind": "uncertainty"},
+    {"id": "post-mcp-tool-call-shape", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/mcp_spine_server.py",
+      "scripts/gen_mcp_config.py",
+      "tests/test_mcp_spine_server.py",
+      "map/INDEX.md"
+    ],
+    "map_status": "map_orient reports DEGRADED-NO-MAP, but that is a tool defect: a current, enforced code map exists at map/INDEX.md and was rebuilt during this run."
+  }
+}
