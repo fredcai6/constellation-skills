@@ -4825,3 +4825,22 @@ load-bearing rather than stylistic. A cold successor could take this over.
 resourcing question that belongs to Tommy, not a technical one I should quietly absorb — so I am
 surfacing it in the report rather than deciding it. **No action taken, nothing paused, no crew
 disturbed.** The work continues either way; what changes is whether the handoff is planned or forced.
+
+### Carried item verified as PRESENT, but deliberately not judged yet
+
+Crew 1 routed me one thing it could not fix: after its fix A, `ADMIRAL_SPINE.template.json` will still
+describe `repair` as an enforced exit. Located all three sites rather than taking it on report:
+
+- **line 34** (execute imperative) — *"requires a unique advance|repair|replan|stop exit, enforces repair safety"*
+- **line 42** (postcondition c3) — *"...G2-verified, **repair-safe**, and rendered before launch"*
+- **line 45** (`directives.wave_transition`) — `"decisions": [advance, repair, replan, stop]`, `"repair_holds_forecast": true`
+
+**All three confirmed present. Whether any is WRONG is not yet knowable, and I am not going to guess.**
+If fix A only adds a `stop` branch to c3, repair enforcement stands untouched and there is no
+inconsistency at all — crew 1 wrote this as a *note to me*, not as a defect claim, and treating it as a
+defect before the fix exists would be exactly the error I made earlier tonight when I handed a crew a
+finding I had asserted rather than measured.
+
+**Closeout check, with its own verification rather than a reminder to think about it:** after crew 1's
+PR merges, re-read those three sites against what fix A actually does. File only if the prose asserts
+something the code no longer does.
