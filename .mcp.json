@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "spine": {
+      "command": "python3",
+      "args": ["scripts/mcp_spine_server.py"],
+      "env": {
+        "SPINE_FILE": ".agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/interactive-demo/spine.json",
+        "SPINE_ENGINE": "scripts/checklist_engine.py",
+        "SPINE_SESSION": ""
+      }
+    }
+  }
+}

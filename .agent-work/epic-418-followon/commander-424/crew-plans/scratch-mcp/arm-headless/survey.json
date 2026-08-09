@@ -1,0 +1,48 @@
+{
+  "work_id": "scratch-mcp-survey-424",
+  "type": "survey",
+  "config": {
+    "rework_cap": 99
+  },
+  "items": [
+    "r1",
+    "r2"
+  ],
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "tasks": {
+    "r1": {
+      "id": "r1",
+      "title": "check one",
+      "imperative": "Check one thing.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2": {
+      "id": "r2",
+      "title": "check two",
+      "imperative": "Check another thing.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  }
+}

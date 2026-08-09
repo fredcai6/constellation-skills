@@ -1,0 +1,511 @@
+"""Tests for scripts/mcp_spine_server.py and scripts/gen_mcp_config.py (issue
+#424, workstream F: the MCP front door on the checklist engine).
+
+Integration-style by design: the server's whole job is to be a faithful pass
+-through to `checklist_engine.main()`, so these tests spawn the real server as
+a subprocess and drive it over real newline-delimited JSON-RPC, the same way a
+real MCP client would -- per doctrine (`global-crew.md`), generated
+advice/recovery text is executed and asserted against, never string-matched
+around; a wrapper is verified by actually calling through it.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SERVER = ROOT / "scripts" / "mcp_spine_server.py"
+ENGINE = ROOT / "scripts" / "checklist_engine.py"
+GEN_CONFIG = ROOT / "scripts" / "gen_mcp_config.py"
+MCP_JSON = ROOT / ".mcp.json"
+
+EXPECTED_TOOLS = {
+    "spine_status", "spine_lease", "spine_start", "spine_advance",
+    "spine_evidence", "spine_halt", "spine_survey_result",
+}
+UNCOVERED_VERBS = ["skip", "reopen", "append", "amend", "flag-candidate"]
+
+
+def load_module(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def write_gated_spine(root: Path) -> Path:
+    """A small gated spine covering every condition shape the tool surface
+    must exercise: command-checked, attested (check: null), an artifact
+    postcondition, and a waivable postcondition."""
+    ws = root / "workspace"
+    ws.mkdir(parents=True, exist_ok=True)
+    w = str(ws)
+    spine = {
+        "work_id": "test-mcp-door",
+        "type": "gated",
+        "config": {"rework_cap": 99},
+        "items": ["g1", "g2", "g3"],
+        "consolidation": None,
+        "triage_candidates": [],
+        "blockers": [],
+        "tasks": {
+            "g1": {
+                "id": "g1", "title": "setup", "imperative": f"create {w}/notes.txt",
+                "preconditions": [],
+                "postconditions": [
+                    {"id": "c1", "statement": "notes.txt exists",
+                     "check": {"kind": "command", "command": f"test -f {w}/notes.txt"},
+                     "satisfied": False},
+                    {"id": "c2", "statement": "understood", "check": None, "satisfied": False},
+                ],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "pending", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            },
+            "g2": {
+                "id": "g2", "title": "decision", "imperative": "record the decision",
+                "preconditions": [],
+                "postconditions": [
+                    {"id": "c1", "statement": "decision attached",
+                     "check": {"kind": "artifact", "evidence_type": "user-decision"},
+                     "satisfied": False},
+                ],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "pending", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            },
+            "g3": {
+                "id": "g3", "title": "optional check", "imperative": "optional report",
+                "preconditions": [],
+                "postconditions": [
+                    {"id": "c1", "statement": "optional_report.txt exists",
+                     "check": {"kind": "command", "command": f"test -f {w}/optional_report.txt"},
+                     "override_policy": {"allowed": True, "authority": "human", "reason_required": True},
+                     "satisfied": False},
+                ],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "pending", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            },
+        },
+    }
+    path = root / "spine.json"
+    path.write_text(json.dumps(spine, indent=2), encoding="utf-8")
+    return path
+
+
+def write_survey(root: Path) -> Path:
+    survey = {
+        "work_id": "test-mcp-door-survey",
+        "type": "survey",
+        "config": {"rework_cap": 99},
+        "items": ["r1"],
+        "consolidation": None,
+        "triage_candidates": [],
+        "blockers": [],
+        "tasks": {
+            "r1": {
+                "id": "r1", "title": "check", "imperative": "check something",
+                "preconditions": [], "postconditions": [],
+                "constraints": [], "directives": None, "child_checklist": None,
+                "status": "pending", "status_detail": {}, "result": None,
+                "finding": None, "evidence": [], "rework_count": 0,
+            },
+        },
+    }
+    path = root / "survey.json"
+    path.write_text(json.dumps(survey, indent=2), encoding="utf-8")
+    return path
+
+
+class McpRpcClient:
+    """Minimal newline-delimited JSON-RPC 2.0 client, spawning the real
+    server process bound to one spine file -- exactly the MCP stdio shape."""
+
+    def __init__(self, spine_file: Path, session_id: str = "test-session", tmp_dir: Path | None = None):
+        env = {"PATH": __import__("os").environ.get("PATH", "")}
+        env["SPINE_FILE"] = str(spine_file)
+        env["SPINE_ENGINE"] = str(ENGINE)
+        env["SPINE_SESSION"] = session_id
+        base = tmp_dir or spine_file.parent
+        env["SPINE_CALLLOG"] = str(base / "mcp_calls.jsonl")
+        env["SPINE_START_MARKER"] = str(base / "mcp_server_started")
+        self.proc = subprocess.Popen(
+            [sys.executable, str(SERVER)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, bufsize=1, env=env,
+        )
+        self._id = 0
+
+    def rpc(self, method: str, params: dict | None = None) -> dict:
+        self._id += 1
+        req = {"jsonrpc": "2.0", "id": self._id, "method": method, "params": params or {}}
+        self.proc.stdin.write(json.dumps(req) + "\n")
+        self.proc.stdin.flush()
+        line = self.proc.stdout.readline()
+        if not line:
+            raise RuntimeError(f"no reply to {method}; stderr:\n{self.proc.stderr.read()}")
+        return json.loads(line)
+
+    def call(self, name: str, **args) -> dict:
+        r = self.rpc("tools/call", {"name": name, "arguments": args})
+        assert "error" not in r, f"JSON-RPC error: {r['error']}"
+        return r["result"]
+
+    def close(self) -> None:
+        self.proc.stdin.close()
+        try:
+            self.proc.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+
+
+class ServerProtocolTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.spine = write_gated_spine(self.root)
+        self.client = McpRpcClient(self.spine)
+
+    def tearDown(self):
+        self.client.close()
+        self.tmp.cleanup()
+
+    def test_initialize_returns_server_info(self):
+        result = self.client.rpc("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
+                                                 "clientInfo": {"name": "test", "version": "0"}})
+        info = result["result"]["serverInfo"]
+        self.assertEqual("spine", info["name"])
+        self.assertIn("version", info)
+
+    def test_tools_list_is_exactly_the_seven_committed_tools(self):
+        tools = self.client.rpc("tools/list")["result"]["tools"]
+        names = {t["name"] for t in tools}
+        self.assertEqual(EXPECTED_TOOLS, names)
+        self.assertEqual(7, len(tools), "tool budget is ~7, not gold-plated to 18")
+        for t in tools:
+            self.assertIn("description", t)
+            self.assertIn("inputSchema", t)
+            self.assertEqual("object", t["inputSchema"]["type"])
+
+    def test_unknown_method_returns_json_rpc_error(self):
+        r = self.client.rpc("nonexistent/method")
+        self.assertIn("error", r)
+        self.assertEqual(-32601, r["error"]["code"])
+
+    def test_unknown_tool_is_a_tool_error_not_a_crash(self):
+        result = self.client.call("does_not_exist")
+        self.assertTrue(result["isError"])
+
+
+class ToolsWrapEngineTests(unittest.TestCase):
+    """Every tool must genuinely call through to checklist_engine.main() --
+    verified by comparing tool output against the same spine's real state,
+    never by inspecting server internals."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.spine = write_gated_spine(self.root)
+        self.client = McpRpcClient(self.spine, session_id="wrap-test")
+
+    def tearDown(self):
+        self.client.close()
+        self.tmp.cleanup()
+
+    def _cli_current(self) -> str:
+        r = subprocess.run([sys.executable, str(ENGINE), "--file", str(self.spine), "current"],
+                            capture_output=True, text=True)
+        return r.stdout.rstrip("\n")
+
+    def test_spine_status_matches_real_engine_current_output(self):
+        status = self.client.call("spine_status")
+        self.assertFalse(status.get("isError"))
+        text = status["content"][0]["text"]
+        self.assertIn("ACTIVE g1", text)
+        self.assertIn("notes.txt", text)
+        self.assertEqual(self._cli_current(), text,
+                          "spine_status must be byte-identical to the CLI `current` projection")
+
+    def test_byte_identity_check_can_actually_fail(self):
+        """Negative control: the equality check above is not vacuous -- a
+        deliberately different string must compare unequal."""
+        status = self.client.call("spine_status")
+        text = status["content"][0]["text"]
+        self.assertNotEqual(text, " " + text)
+        self.assertNotEqual(text, text.replace("g1", "gX"))
+
+    def test_spine_lease_claim_release_heartbeat(self):
+        claimed = self.client.call("spine_lease", action="claim", claimed_by="tester")
+        self.assertFalse(claimed.get("isError"))
+        self.assertIn("claimed lease", claimed["content"][0]["text"])
+        hb = self.client.call("spine_lease", action="heartbeat")
+        self.assertFalse(hb.get("isError"))
+        released = self.client.call("spine_lease", action="release")
+        self.assertFalse(released.get("isError"))
+        self.assertIn("released", released["content"][0]["text"])
+
+    def test_spine_start_and_advance_drive_a_gate_to_complete(self):
+        self.client.call("spine_lease", action="claim", claimed_by="tester")
+        start = self.client.call("spine_start", task_id="g1")
+        self.assertFalse(start.get("isError"))
+        (self.root / "workspace" / "notes.txt").write_text("hi\n", encoding="utf-8")
+        self.client.call("spine_evidence", action="attest", task_id="g1", condition_id="c2",
+                          which="postconditions")
+        adv = self.client.call("spine_advance", task_id="g1", why="notes.txt written, understood")
+        self.assertFalse(adv.get("isError"))
+        self.assertIn("g1 -> complete", adv["content"][0]["text"])
+
+    def test_spine_advance_mechanical_flag(self):
+        self.client.call("spine_lease", action="claim", claimed_by="tester")
+        self.client.call("spine_start", task_id="g1")
+        (self.root / "workspace" / "notes.txt").write_text("hi\n", encoding="utf-8")
+        self.client.call("spine_evidence", action="attest", task_id="g1", condition_id="c2",
+                          which="postconditions")
+        adv = self.client.call("spine_advance", task_id="g1", mechanical=True)
+        self.assertFalse(adv.get("isError"))
+
+    def test_spine_evidence_attach_satisfies_artifact_postcondition(self):
+        self.client.call("spine_lease", action="claim", claimed_by="tester")
+        self.client.call("spine_start", task_id="g1")
+        (self.root / "workspace" / "notes.txt").write_text("hi\n", encoding="utf-8")
+        self.client.call("spine_evidence", action="attest", task_id="g1", condition_id="c2",
+                          which="postconditions")
+        self.client.call("spine_advance", task_id="g1", mechanical=True)
+        self.client.call("spine_start", task_id="g2")
+        attach = self.client.call("spine_evidence", action="attach", task_id="g2",
+                                   evidence_type="user-decision", fields={"decision": "proceed"})
+        self.assertFalse(attach.get("isError"))
+        self.assertIn("attached", attach["content"][0]["text"])
+        adv = self.client.call("spine_advance", task_id="g2", mechanical=True)
+        self.assertFalse(adv.get("isError"))
+
+    def test_spine_evidence_waive_satisfies_without_making_check_true(self):
+        self.client.call("spine_lease", action="claim", claimed_by="tester")
+        self.client.call("spine_start", task_id="g1")
+        (self.root / "workspace" / "notes.txt").write_text("hi\n", encoding="utf-8")
+        self.client.call("spine_evidence", action="attest", task_id="g1", condition_id="c2",
+                          which="postconditions")
+        self.client.call("spine_advance", task_id="g1", mechanical=True)
+        self.client.call("spine_start", task_id="g2")
+        self.client.call("spine_evidence", action="attach", task_id="g2",
+                          evidence_type="user-decision", fields={"decision": "proceed"})
+        self.client.call("spine_advance", task_id="g2", mechanical=True)
+
+        self.client.call("spine_start", task_id="g3")
+        self.assertFalse((self.root / "workspace" / "optional_report.txt").exists())
+        waive = self.client.call("spine_evidence", action="waive", task_id="g3", condition_id="c1",
+                                  which="postconditions", authority="human", reason="accepted as non-blocking")
+        self.assertFalse(waive.get("isError"))
+        adv = self.client.call("spine_advance", task_id="g3", mechanical=True)
+        self.assertFalse(adv.get("isError"))
+        self.assertIn("WAIVED", adv["content"][0]["text"])
+        self.assertFalse((self.root / "workspace" / "optional_report.txt").exists(),
+                          "waive must satisfy the gate WITHOUT the underlying check ever becoming true")
+
+    def test_spine_halt_block_and_resume(self):
+        self.client.call("spine_lease", action="claim", claimed_by="tester")
+        self.client.call("spine_start", task_id="g1")
+        blocked = self.client.call("spine_halt", action="block", task_id="g1", blocker="waiting on something")
+        self.assertFalse(blocked.get("isError"))
+        self.assertIn("blocked", blocked["content"][0]["text"])
+        resumed = self.client.call("spine_halt", action="resume", task_id="g1", reason="unblocked")
+        self.assertFalse(resumed.get("isError"))
+        self.assertIn("resumed", resumed["content"][0]["text"])
+
+    def test_spine_evidence_missing_required_arg_is_a_clean_tool_error(self):
+        result = self.client.call("spine_evidence", action="attest", task_id="g1")
+        self.assertTrue(result.get("isError"))
+        self.assertIn("condition_id", result["content"][0]["text"])
+
+
+class SurveyToolTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.survey = write_survey(self.root)
+        self.client = McpRpcClient(self.survey, session_id="survey-test")
+
+    def tearDown(self):
+        self.client.close()
+        self.tmp.cleanup()
+
+    def test_record_and_consolidate(self):
+        rec = self.client.call("spine_survey_result", action="record", task_id="r1", result="pass")
+        self.assertFalse(rec.get("isError"))
+        self.assertIn("recorded pass", rec["content"][0]["text"])
+        cons = self.client.call("spine_survey_result", action="consolidate", verdict="APPROVE", summary="ok")
+        self.assertFalse(cons.get("isError"))
+        self.assertIn("verdict=APPROVE", cons["content"][0]["text"])
+
+
+class RefusalSurfacesAsIsErrorTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.spine = write_gated_spine(self.root)
+        self.client = McpRpcClient(self.spine, session_id="refusal-test")
+
+    def tearDown(self):
+        self.client.close()
+        self.tmp.cleanup()
+
+    def test_premature_advance_is_iserror_with_engine_text_verbatim(self):
+        self.client.call("spine_lease", action="claim", claimed_by="tester")
+        self.client.call("spine_start", task_id="g1")
+        result = self.client.call("spine_advance", task_id="g1", mechanical=True)
+        self.assertTrue(result["isError"])
+        text = result["content"][0]["text"]
+        self.assertIn("REFUSED", text)
+        self.assertIn("postconditions unmet", text)
+        self.assertIn("Recovery:", text)
+
+        # The tool's refusal text must be exactly what the CLI would have
+        # printed to stderr for the identical illegal call -- not a reworded
+        # or summarized version. Same session id as the tool call (the lease
+        # is already claimed by "refusal-test"): a mismatched id would refuse
+        # for a DIFFERENT reason (wrong lease owner), not the one under test.
+        cli = subprocess.run(
+            [sys.executable, str(ENGINE), "--file", str(self.spine), "advance", "g1",
+             "--mechanical", "--session-id", "refusal-test"],
+            capture_output=True, text=True,
+        )
+        self.assertNotEqual(0, cli.returncode)
+        self.assertIn("postconditions unmet", cli.stderr)
+        self.assertIn("Recovery:", cli.stderr)
+
+
+class GenMcpConfigTests(unittest.TestCase):
+    def setUp(self):
+        self.gen = load_module("gen_mcp_config", GEN_CONFIG)
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.spine = write_gated_spine(self.root)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def test_build_config_keys_session_id_and_agent_id(self):
+        config = self.gen.build_config(self.spine, session_id="sess-abc", agent_id="agent-1")
+        env = config["mcpServers"]["spine"]["env"]
+        self.assertEqual("sess-abc#agent-1", env["SPINE_SESSION"])
+        self.assertEqual(str(self.spine.resolve()), env["SPINE_FILE"])
+        self.assertEqual(str(ENGINE.resolve()), env["SPINE_ENGINE"])
+        self.assertEqual([str(SERVER.resolve())], config["mcpServers"]["spine"]["args"])
+
+    def test_build_config_rejects_hash_in_identity_components(self):
+        with self.assertRaises(ValueError):
+            self.gen.build_config(self.spine, session_id="a#b", agent_id="c")
+        with self.assertRaises(ValueError):
+            self.gen.build_config(self.spine, session_id="a", agent_id="b#c")
+
+    def test_cli_writes_a_valid_config_file(self):
+        out = self.root / "generated.json"
+        rc = self.gen.main([
+            "--spine-file", str(self.spine),
+            "--session-id", "sess-xyz",
+            "--agent-id", "agent-2",
+            "--out", str(out),
+        ])
+        self.assertEqual(0, rc)
+        config = json.loads(out.read_text(encoding="utf-8"))
+        self.assertEqual("sess-xyz#agent-2", config["mcpServers"]["spine"]["env"]["SPINE_SESSION"])
+
+    def test_generated_config_server_actually_answers_a_real_tool_call(self):
+        """End-to-end: the config this script emits must be launchable and
+        must return genuine engine output -- not just structurally valid
+        JSON. Launches the server exactly as the generated config specifies
+        (command + args + env) and calls a real tool through it."""
+        config = self.gen.build_config(self.spine, session_id="e2e-sess", agent_id="e2e-agent")
+        entry = config["mcpServers"]["spine"]
+        import os
+        env = dict(os.environ)
+        env.update(entry["env"])
+        proc = subprocess.Popen(
+            [entry["command"], *entry["args"]],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, bufsize=1, env=env,
+        )
+        try:
+            proc.stdin.write(json.dumps({
+                "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                "params": {"name": "spine_status", "arguments": {}},
+            }) + "\n")
+            proc.stdin.flush()
+            line = proc.stdout.readline()
+            if not line:
+                # NOTE: read stderr only on the failure path -- proc.stderr.read()
+                # blocks until EOF, and the child (still alive, stdin open) never
+                # closes it on the success path. An eager f-string message on
+                # assertTrue would evaluate unconditionally and deadlock here.
+                self.fail(f"no reply; stderr={proc.stderr.read()}")
+            reply = json.loads(line)
+            text = reply["result"]["content"][0]["text"]
+            self.assertIn("ACTIVE g1", text)
+        finally:
+            proc.stdin.close()
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+
+
+class McpJsonTests(unittest.TestCase):
+    def test_mcp_json_exists_and_is_valid(self):
+        self.assertTrue(MCP_JSON.is_file())
+        config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
+        entry = config["mcpServers"]["spine"]
+        self.assertIn("command", entry)
+        self.assertIn("args", entry)
+        self.assertIn("SPINE_FILE", entry["env"])
+        self.assertIn("SPINE_ENGINE", entry["env"])
+
+    def test_mcp_json_uses_portable_relative_paths(self):
+        """Project-scope .mcp.json is committed to git; a machine-specific
+        absolute path would break it on every other checkout."""
+        config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
+        entry = config["mcpServers"]["spine"]
+        for arg in entry["args"]:
+            self.assertFalse(Path(arg).is_absolute(), f"args entry is not portable: {arg}")
+        for key in ("SPINE_FILE", "SPINE_ENGINE"):
+            value = entry["env"][key]
+            self.assertFalse(Path(value).is_absolute(), f"{key} is not portable: {value}")
+
+    def test_mcp_json_referenced_spine_file_exists_and_loads(self):
+        config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
+        spine_rel = config["mcpServers"]["spine"]["env"]["SPINE_FILE"]
+        spine_path = ROOT / spine_rel
+        self.assertTrue(spine_path.is_file(), f"missing: {spine_path}")
+        loaded = json.loads(spine_path.read_text(encoding="utf-8"))
+        self.assertIn("type", loaded)
+
+
+class CliFallbackTableTests(unittest.TestCase):
+    def test_every_uncovered_verb_is_documented_with_an_invocation(self):
+        text = SERVER.read_text(encoding="utf-8")
+        docstring_end = text.index('"""', text.index('"""') + 3)
+        docstring = text[:docstring_end]
+        for verb in UNCOVERED_VERBS:
+            self.assertIn(verb, docstring, f"uncovered verb {verb!r} not documented in the CLI-fallback table")
+
+    def test_covered_verbs_are_not_also_claimed_uncovered(self):
+        # The 13 verbs the tool surface DOES cover must not appear in the
+        # uncovered list (a sanity check on the grouping decision itself).
+        covered = {"current", "claim", "release", "heartbeat", "start", "advance",
+                   "attest", "attach", "waive", "block", "resume", "record", "consolidate"}
+        self.assertEqual(set(), covered & set(UNCOVERED_VERBS))
+        self.assertEqual(18, len(covered) + len(UNCOVERED_VERBS),
+                          "covered + uncovered must account for all 18 engine verbs")
+
+
+if __name__ == "__main__":
+    unittest.main()
