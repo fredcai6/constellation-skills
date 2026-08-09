@@ -646,9 +646,29 @@ def test_same_path_fail_safe_returns_true_on_bad_input():
     assert sr._same_path("x", 123) is True
 
 
+@pytest.mark.skipif(
+    sys.platform != "win32",
+    reason="ntpath's normcase (lowercase + backslash/forward-slash folding) only applies on Windows",
+)
 def test_same_path_windows_normcase_sep_equivalence():
     # (f) case + separator normalize to equal -> no spurious relaxation.
     assert sr._same_path("C:\\Foo", "c:/foo") is True
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="posixpath's normcase is identity and backslash is not a separator -- "
+    "covered by the Windows-only case above instead",
+)
+def test_same_path_posix_case_and_backslash_are_significant():
+    # (f-posix) On POSIX, os.path.normcase does not fold case and os.path.normpath
+    # does not treat backslash as a separator (it is a plain, case-significant
+    # filename character) -- so these really are two DIFFERENT path strings, and
+    # _same_path is right to say so. Collapsing them here would be exactly the
+    # spurious relaxation the fail-safe design (see _same_path's docstring)
+    # exists to prevent: it would treat a POSIX file literally named "C:\Foo" as
+    # the same path as directory "foo" under "c:", which they are not.
+    assert sr._same_path("C:\\Foo", "c:/foo") is False
 
 
 def test_same_path_distinct_paths_differ():

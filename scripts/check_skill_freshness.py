@@ -40,9 +40,39 @@ class FreshnessError(Exception):
 
 def _platform_interpreter() -> str:
     """Mirror of install_constellation._platform_interpreter: `py` on Windows,
-    `python3` elsewhere. Kept here so freshness normalization reverses the same
-    interpreter rewrite the installer applies to installed copies."""
+    `python3` elsewhere. This is the TOTAL-FAILURE fallback only -- used when no
+    per-skill sidecar is available to read the interpreter the installer actually
+    stamped (see `_resolved_interpreter`). Kept here so freshness normalization can
+    still degrade gracefully rather than raising when a skill was never installed."""
     return "py" if os.name == "nt" else "python3"
+
+
+def _resolved_interpreter(skill: str, skills_root: Path) -> str:
+    """The interpreter actually stamped into `skill`'s installed copy.
+
+    install_constellation.py's `resolve_interpreter()` PROBES the host (real
+    `<candidate> --version` subprocess calls, in order `py`, `python3`, `python`)
+    and only falls back to the os.name guess (`_platform_interpreter`) when every
+    candidate fails to invoke. The probed result is recorded per-skill in
+    `interpreter.json` (a sidecar `rewrite_installed_skill_paths` writes next to
+    the installed skill). Re-deriving the interpreter via the os.name guess alone
+    -- instead of reading what was actually probed -- is wrong whenever the two
+    diverge: e.g. a POSIX host where `py` genuinely resolves (a venv shim, an
+    alias) probes to `py`, but the guess hardcodes `python3`, so a freshly seeded,
+    unedited template compares "py <" against a normalized "python3 <" and reads
+    as a phantom edit. Falls back to `_platform_interpreter()`'s guess only when
+    the sidecar is missing (skill never installed / already removed) so hashing
+    degrades gracefully instead of raising."""
+    sidecar = skills_root / skill / "interpreter.json"
+    if sidecar.is_file():
+        try:
+            data = json.loads(sidecar.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            data = {}
+        interpreter = data.get("interpreter")
+        if interpreter:
+            return interpreter
+    return _platform_interpreter()
 
 
 def _hash(path: Path) -> str:
@@ -64,15 +94,16 @@ def _normalized_hash(path: Path, skill: str, skills_root: Path) -> str:
     the resolved (absolute) form neutralizes the token-vs-absolute difference
     while leaving genuine edits visible. Tokenless templates hash unchanged.
 
-    The installer also rewrites the `python <` interpreter prefix to the platform
-    interpreter (`py`/`python3`); the token-form baseline/working-copy keep `python
-    <`. Apply the same interpreter rewrite here FIRST (before the `<…-skill-dir>`
-    token consumes the trailing `<`) so that rewrite, too, reads as no edit.
+    The installer also rewrites the `python <` interpreter prefix to the ACTUAL
+    resolved interpreter (probed live, `py`/`python3`/`python`, not merely the
+    os.name guess); the token-form baseline/working-copy keep `python <`. Apply
+    the same interpreter rewrite here FIRST (before the `<…-skill-dir>` token
+    consumes the trailing `<`) so that rewrite, too, reads as no edit.
     """
     text = path.read_text(encoding="utf-8")
     installed = (skills_root / skill).as_posix()
     short = skill.removeprefix("constellation-")
-    text = text.replace("python <", f"{_platform_interpreter()} <")
+    text = text.replace("python <", f"{_resolved_interpreter(skill, skills_root)} <")
     text = text.replace("<skill-dir>", installed)
     text = text.replace(f"<{short}-skill-dir>", installed)
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
