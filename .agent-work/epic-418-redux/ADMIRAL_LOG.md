@@ -5548,3 +5548,67 @@ Speak only when a gate moves, a verdict lands, a PR opens, or something needs ad
 foreground (the tool kills it). **The only available shape is a poll loop in the orchestrator's own
 context** — which is also the tier whose context is most expensive and least protected, since the
 governor never fires on it.
+
+### g3-review returns BLOCK — and the finding is this epic's thesis one level up. Census specimen 24.
+
+Crew 1's g3 reviewer blocked `ff43e883` (#439 + #484) on **one narrow, in-scope finding**, with
+everything else independently confirmed: all four gate confirmations PASS, the four-state matrix
+reproduced on **three independent harnesses** (implementer's, reviewer's own, and four live-`gh`
+branches — all three agreeing), scope clean, template restored byte-identically (sha256 equal before
+and after), 396 passed / 501 subtests with the delta derived from the diff rather than accepted.
+
+**The block:** the `gh` stub's docstring — **shipped in the diff** — promises it "refuses everything
+else, so the check text cannot drift into a shape this stub silently accepts." It does not. Its argv
+loop whitelists nothing, so **four unmodelled flags (`--limit`, `--repo`, `--author`, `--search`) are
+silently answered** while the three modelled drift dimensions correctly refuse. If `archive.c2b` ever
+grew `--repo someone/else`, the suite would stay green while real `gh` queried the wrong repository.
+
+**This is the wave's own failure mode reappearing inside the harness built to prevent it** — written
+by an agent whose assigned task was removing that defect class, on the wave dedicated to it, in a repo
+that had already catalogued 23 instances. **Recorded as census specimen 24, and it is the strongest
+entry in the census**: it establishes that the defect is not a knowledge problem.
+
+**I am not intervening.** The repair is a few lines in a test file this gate already owns, the
+reviewer scoped it precisely, and crew 1 has the turn. My ruling from #506 stands: **a reviewer that
+blocks a nearly-perfect diff on a falsified claim is doing the job.** The reviewer even wrote out why
+it rejected the easier path — "I considered recording it as an observation and approving" — and named
+the deciding factor as the claim being false **in shipped code, where the next reader will trust it**,
+not merely in a report. That is the correct line, and it is the fourth time in this epic an actor
+declined an easy green.
+
+**Two corrections the reviewer made to my own crew's handoff, both right:**
+
+- The handoff said the commit range "should show only the two" files. It does not — the range contains
+  two intermediate commits adding `.agent-work` artifacts, and **`.agent-work` is tracked in this
+  repo**, contrary to the handoff's "correctly absent from the tracked diff." A reviewer following the
+  handoff literally would have raised a false alarm. Scope is clean at the commit under review.
+- The handoff predicted a 500-subtest total; the true figure is **501**, because a subtest that had
+  dropped the spine template from its clean set returns once the change is committed. The reviewer
+  derived +6 tests / +13 subtests from the diff and cross-checked against the file at HEAD rather than
+  accepting the account.
+
+**Routed, not filed as new:** the reviewer's observation 3 (`references/windows.md` §4 tells agents to
+prefer `py`, which has no pytest here) is **already #313**. Commented the wave-5 corroboration there
+instead of opening a duplicate — including the two things that sharpen it: the spine's own command
+postconditions already invoke `python`, so gate and hand verification ran on different interpreters
+all epic; and the correction that actually worked was the **positive form**
+(`cmd > file 2>&1; echo REAL_EXIT=$?`), not the prohibition. Linked **#373** as the same
+interpreter-identity defect in another harness. **Issue count unchanged — this is the routing the
+close is supposed to do, and it is worth more than a new number.**
+
+Observations 1 (no lint for prose-shaped tokens or shell safety in shipped spine commands) and 2 (the
+doctrine test file now hosts three unrelated subjects) are triage candidates for after the wave; the
+reviewer explicitly declined to move the file now because the gate's `-k` close criteria are pinned to
+it. Correct call — a rename mid-gate would break the gate's own selectors.
+
+**Liveness note, measured here:** during the g3 review, `last-engine-verb` sat unchanged at 02:30 for
+**twenty minutes** while the crew was demonstrably alive — dirty-file count climbed 19→20→21 and the
+RESULT landed at 02:46. The journal proxy is blind to a Commander waiting on a synchronous dispatch;
+only the worktree-write signal caught it. **No single liveness signal suffices**, which is now
+observed rather than argued.
+
+**Own error, logged:** my first attempt to write this entry and specimen 24 died on a shell parse
+error (`unexpected EOF while looking for matching quote`) in a two-heredoc command. Nothing was
+written — I verified the files were unchanged rather than assuming the failure was clean, then wrote
+both blocks via files instead. **A failed multi-part write must be checked for a partial effect, not
+assumed atomic.**

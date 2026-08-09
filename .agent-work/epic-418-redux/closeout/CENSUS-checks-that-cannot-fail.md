@@ -178,3 +178,68 @@ the argument for why it is load-bearing rather than pedantic.
 It is **not** a claim that every check here is worth fixing, nor that the pattern is rare enough to
 enumerate exhaustively. Twenty-three specimens in one epic by actors *looking for them* is a lower bound, not a total. The honest reading is that this is a **base rate in verification code**, and the useful
 response is a habit — run it against a failing case — rather than a list to work through.
+
+---
+
+## Specimen 24 — the `gh` stub built to prove a check is honest, which silently answers any flag it doesn't model
+
+**Found by:** crew 1's g3 reviewer, wave 5, reviewing `ff43e883` (#439 + #484).
+**Group:** H — countermeasures that reproduce the defect they target. Third occurrence in this run.
+
+The g3 change fixes `archive.c2b`, a closeout reachability check that was **always red** — its
+`--head <branch>` contained an unquoted `<`, which bash reads as **input redirection**, so it tried
+to open a file named `branch` and **`gh` was never invoked in any of the four PR states.** The
+shipped description — "the criterion accepts only an OPEN PR" — was never a true account of shipped
+behaviour.
+
+The fix ships with a `gh` stub whose **own docstring, in the diff**, promises: "Models only what the
+shipped check calls and refuses everything else, so the check text cannot drift into a shape this
+stub silently accepts." The implementer's report repeats it: "Anything outside the modelled subset
+refuses loudly."
+
+**Both are false.** The stub's argv loop whitelists nothing — `opts[flag] = value` for every `--flag`
+pair — so an unmodelled flag is dropped and the stub answers from the fixture anyway. The reviewer
+drove the stub directly and measured the split:
+
+| shape | result |
+|---|---|
+| `--json number,state`, `test()` jq, `--state draft`, `!=` jq | **refuses (exit 3)** — the three modelled drift dimensions |
+| `--limit`, `--repo someone/else`, `--author`, `--search` | **silently answered (exit 0)** — the fourth dimension, added flags |
+
+The refusal test covers `--json` fields, `--state` values and `--jq` shapes — **and not added flags,
+which is exactly where the parser is loosest.**
+
+**The exploit, in the reviewer's words:** if `archive.c2b` later grew `--repo someone/else`, the stub
+would ignore it and the whole four-state matrix would stay green **while real `gh` queried the wrong
+repository.** A green suite over a check that no longer measures this repo's reachability.
+
+### Why this specimen matters more than the other 23
+
+Every earlier specimen is a check that cannot fail. **This one is a check that cannot fail inside the
+harness built to prove that a check can fail** — written by an agent whose entire assigned task was
+removing that defect class, on the wave dedicated to it, in a repo that had by then catalogued 23
+instances of it.
+
+That is the strongest available evidence for this census's thesis: **the defect is not a knowledge
+problem.** The implementer knew the pattern, was hunting it, wrote a correct six-leg mutation test
+that catches five real regressions — and left open the one surface it had asserted, in shipped code,
+was closed.
+
+The **asymmetry of the discovery** is the transferable part. The reviewer did not find this by reading
+the stub; it found it by **driving `GH_STUB_SOURCE` directly out of the test module with shapes the
+stub was never handed.** The same reviewer read the stub closely enough to run a Fowler pass on it and
+flagged `speculative-generality` on the three modelled-but-unexercised branches — and recorded that
+the flag "sharpened the review: unused modelled branches are precisely where the stub answers instead
+of refusing." Reading got it to the neighborhood; **only execution against an unmodelled input
+produced the verdict.**
+
+Consistent with specimens 8, 15 and 19 and with this run's two other Group-H entries (the pre-staged
+fixture that reproduced its own shape error; `harvest_probe.sh` v1, which tested a tracked file and
+reported PRESENT for every worktree ever created): **in all five, re-reading the countermeasure never
+surfaced the defect, and running it against a case that should have made it fail always did.** The
+author's understanding of the defect is what makes the countermeasure unreadable cold.
+
+**Disposition:** repaired inside the gate that owns it — whitelist the four flags the check actually
+uses and refuse the rest; add an added-flag case to the refusal test; delete the three unexercised
+branches. No production code touched. **The reviewer judged and did not fix**, which is why the
+falsified claim is recorded here rather than quietly corrected.
