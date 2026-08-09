@@ -313,7 +313,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-closeout-1"
         }
       ],
       "constraints": [
@@ -322,7 +323,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -347,13 +348,14 @@
   "refusals": 1,
   "engine_session": {
     "session_id": "g1-impl-424-1786294452",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T16:54:12.841989+00:00",
-    "last_heartbeat": "2026-08-09T17:26:55.244303+00:00",
+    "last_heartbeat": "2026-08-09T17:27:37.824832+00:00",
     "claimed_by": "g1-implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T17:27:43.671772+00:00"
   },
   "why_trail": [
     {
@@ -397,6 +399,13 @@
       "why": "tests/test_mcp_spine_server.py written: 24 tests covering protocol shape (initialize/tools-list exactly 7 tools), every tool genuinely wrapping the engine (verified against real fixture spines, not mocks), refusal->isError with engine text verbatim (cross-checked against the identical CLI call, same session id), byte-identity of spine_status vs CLI current (plus a negative control proving the check can fail), waive satisfying without the underlying check ever becoming true, gen_mcp_config.py's session_id#agentId keying, its generated config launching a real server that answers a real tool call, and .mcp.json's portability + CLI-fallback table completeness. Found and fixed a real bug while writing these: an eager f-string assert message (self.assertTrue(line, f'...{proc.stderr.read()}')) evaluated proc.stderr.read() UNCONDITIONALLY even on the success path, deadlocking because the child's stderr pipe never hit EOF while still running -- confirmed via faulthandler.dump_traceback_later pinpointing the exact blocked line, fixed by moving the stderr read inside an explicit 'if not line' branch. Also fixed a session-id mismatch in the refusal-comparison test. Full suite already run and attested at c2: 6 failed (exactly the pinned red set, unchanged) / 2157 passed / 1061 subtests.",
       "mechanical": false,
       "ts": "2026-08-09T17:24:03.728564+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-closeout",
+      "why": "Blast radius enumerated by command: git diff --stat -- scripts/checklist_engine.py is empty (engine never touched); git grep confirmed no existing file references the new modules except the Commander's own execute.json (expected) and two unrelated archive files. execute.json's own modification predates this session (confirmed against the session's opening git status) and was never touched by me. IMPLEMENTER_RESULT written to crew-handoffs/g1-implementer-result.md covering all 7 close criteria with commands+output, the tool-grouping decision and reasoning, Map Impact, triage candidates (duplicated epic-418-followon path tree, the attest-refusal-shape fumble, and the eager-assert-message footgun), and Workflow Feedback. Work committed to epic-418/f-424-mcp-door at 71c03f99 (59 files, 3980 insertions, only new files -- nothing existing modified).",
+      "mechanical": false,
+      "ts": "2026-08-09T17:27:37.824823+00:00"
     }
   ]
 }
