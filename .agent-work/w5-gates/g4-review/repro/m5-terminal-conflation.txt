@@ -1,0 +1,41 @@
+[31mF[0m[31m                                                                        [100%][0m
+================================== FAILURES ===================================
+[31m[1m_ ComposedShippedArtifactTests.test_compose_terminal_transition_closes_prelaunch_from_the_installed_bundle _[0m
+
+self = <test_iterative_planning_doctrine.ComposedShippedArtifactTests testMethod=test_compose_terminal_transition_closes_prelaunch_from_the_installed_bundle>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_compose_terminal_transition_closes_prelaunch_from_the_installed_bundle[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+    [90m    [39;49;00m[33m"""The stop relaxation, run through the bundle a user installs.[39;49;00m
+    [33m[39;49;00m
+    [33m    Composition: the packet is the live epic's own terminal transition, the[39;49;00m
+    [33m    script is the copy the installer wrote, resolution is structural with an[39;49;00m
+    [33m    empty `HOME` and no `--skills-root`, and the replan verifier it loads is[39;49;00m
+    [33m    the installed one -- so this leg fails if EITHER the stop relaxation or[39;49;00m
+    [33m    the location guard regresses. The second leg is the relaxation's width: a[39;49;00m
+    [33m    `repair` naming no launch must still be refused, or "a stop may leave[39;49;00m
+    [33m    launch_id null" has quietly become "anything may."[39;49;00m
+    [33m[39;49;00m
+    [33m    NO-OP CONDITIONS. (1) If the live fixture were not really an applicable[39;49;00m
+    [33m    stop the golden leg would be measuring an advance -- asserted before the[39;49;00m
+    [33m    run. (2) If the run refused early, no Markdown is written at all, so the[39;49;00m
+    [33m    golden leg asserts the exact rendered CONTENT of both files rather than a[39;49;00m
+    [33m    zero exit; a short-circuit cannot produce it. (3) The refusal leg would[39;49;00m
+    [33m    be a no-op if the packet were rejected upstream at G2 instead of at the[39;49;00m
+    [33m    authorization clause -- so it asserts the refusal's exact reason, and[39;49;00m
+    [33m    that neither Markdown file appeared.[39;49;00m
+    [33m    """[39;49;00m[90m[39;49;00m
+        result = load_json(LIVE_STOP_TRANSITION / [33m"[39;49;00m[33mREPLAN_RESULT.json[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        [96mself[39;49;00m.assertEqual([33m"[39;49;00m[33mstop[39;49;00m[33m"[39;49;00m, result[[33m"[39;49;00m[33mdecision[39;49;00m[33m"[39;49;00m], [33m"[39;49;00m[33mthe live fixture must really be a stop[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        [96mself[39;49;00m.assertIs([94mTrue[39;49;00m, result[[33m"[39;49;00m[33mapplicable[39;49;00m[33m"[39;49;00m], [33m"[39;49;00m[33mthe live fixture must be an applicable stop[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        transition = [96mself[39;49;00m.seed_boundary([90m[39;49;00m
+            [33m"[39;49;00m[33mwave-1[39;49;00m[33m"[39;49;00m, [94mNone[39;49;00m, LIVE_STOP_TRANSITION / [33m"[39;49;00m[33mREPLAN_INPUT.json[39;49;00m[33m"[39;49;00m, result, [33m"[39;49;00m[33mstop[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+        )[90m[39;49;00m
+    [90m[39;49;00m
+        closed = [96mself[39;49;00m.run_bundled_verifier([96mself[39;49;00m.bundle_script, [33m"[39;49;00m[33madmiral-prelaunch[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+>       [96mself[39;49;00m.assertEqual([94m0[39;49;00m, closed.returncode, [33mf[39;49;00m[33m"[39;49;00m[33ma verified stop must close prelaunch: [39;49;00m[33m{[39;49;00mclosed.stderr[33m}[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+[1m[31mE       AssertionError: 0 != 1 : a verified stop must close prelaunch: REFUSED: only advance or replan may authorize NEXT_WAVE[0m
+
+[1m[31mtests\test_iterative_planning_doctrine.py[0m:1804: AssertionError
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m tests/test_iterative_planning_doctrine.py::[1mComposedShippedArtifactTests::test_compose_terminal_transition_closes_prelaunch_from_the_installed_bundle[0m - AssertionError: 0 != 1 : a verified stop must close prelaunch: REFUSED: onl...
+[31m[31m[1m1 failed[0m, [33m35 deselected[0m[31m in 0.45s[0m[0m

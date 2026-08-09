@@ -208,5 +208,29 @@
     "abandoned": true,
     "dispatch": "external",
     "model": "opus"
+  },
+  {
+    "crew_id": "constellation/w5-gates/g4/reviewer/attempt-2",
+    "work_id": "w5-gates",
+    "gate": "g4",
+    "role": "reviewer",
+    "attempt": 2,
+    "status": "completed",
+    "session_name": "constellation/w5-gates/g4/reviewer/attempt-2",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+    "handoff": ".agent-work/w5-gates/crew-handoffs/g4-review-HANDOFF.md",
+    "result": ".agent-work/w5-gates/crew-handoffs/g4-review-RESULT.md",
+    "stdout": ".agent-work/w5-gates/crew-runs/g4-reviewer-attempt-2.stdout.txt",
+    "stderr": ".agent-work/w5-gates/crew-runs/g4-reviewer-attempt-2.stderr.txt",
+    "started_at": "2026-08-09T03:57:58.514105+00:00",
+    "last_heartbeat": "2026-08-09T04:24:12.591701+00:00",
+    "completed_at": "2026-08-09T04:24:12.591701+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

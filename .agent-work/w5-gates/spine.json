@@ -357,7 +357,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All four gates in execute.json are CLOSED with integrated evidence, and the engine reports DONE: no open items. Each gate ran implement -> review -> integrate with an independent reviewer and a mutation floor: the fix is reverted and the targeted test must go red. Two gates BLOCKED and were repaired before approval -- g2 on a mutation leg whose mutated field was legitimately empty, g3 on a stub that answered unmodelled flags instead of refusing -- which is the gate mechanism working, not a setback. g4 approved on its first pass with all six broken inputs reproduced by the reviewer itself. Every integrate gate's command conditions were engine-checked, not self-attested. The four gate lease/journal entries are the proof, not this note."
         },
         {
           "id": "c2",
@@ -366,7 +367,8 @@
             "kind": "command",
             "command": "python scripts/verify_iterative_role_artifacts.py commander --work-id w5-gates"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-3"
         }
       ],
       "constraints": [],
@@ -393,7 +395,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -418,6 +420,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_iterative_role_artifacts.py commander --work-id w5-gates",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -431,7 +444,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute is complete: all four gates closed with integrated evidence, execute.json reports DONE with no open items, and the spine's execute step advanced with its G2 packet verified at exit 0."
         }
       ],
       "postconditions": [
@@ -439,13 +453,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REASONED NO-OP, recorded as compliant per this step's own instruction for a run with no packet map. Orientation was DEGRADED-NO-MAP throughout: this is the constellation skill-SOURCE repo and it carries no docs/architecture map, no overlays, and no decision anchors, so there is no map for the change to be folded into. I checked the structural record directly rather than asserting the no-op. The four hash-pinned substitutes this run's frame was cut from are README.md, docs/CHECKLIST_SCHEMA.md, docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. Searched all docs and skills prose for statements of the behavior the three fixes changed. CHECKLIST_SCHEMA.md is untouched -- no condition kind, evidence shape or waiver semantic changed. README's \"Repo layout vs. installed layout\" section describes the constellation-<name>/ NAMING convention, which remains true and was never the detection rule; fix B changed how a running process DECIDES a directory is an installed bundle (structure, not name), which no doc ever stated. archive.c2b and --state open appear in no doc. So the change touched neither schema nor design doc, and nothing in the structural record is now false.\n\nOne improvement is deliberately NOT made here and is filed instead as triage candidate tc14: README section \"Repo layout vs. installed layout\" is exactly where a reader learns that installed bundles are named constellation-*, and that is precisely the inference that produced #501 and #468. A sentence saying the name is a convention and not the test would be genuinely useful. I did not add it, because this diff is already reviewed and APPROVED with a scope of tests/test_iterative_planning_doctrine.py only; editing README now would slip an unreviewed production file into an approved change, which is the scope violation the reviewer was told to flag."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -461,7 +476,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete: recorded as a reasoned no-op with the structural record searched rather than assumed, and the one useful README change filed as tc14 instead of edited into an approved diff."
         }
       ],
       "postconditions": [
@@ -469,7 +485,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All 14 candidates (tc1-tc14) are routed to exactly one disposition -- recommend-and-defer -- and each has an issue-ready recommendation at .agent-work/w5-gates/TRIAGE_RECOMMENDATIONS.md carrying what, importance, evidence, acceptance criteria, out-of-scope and the deferral reason. None left unrouted. Three are called out for Admiral adjudication (tc9 both issues suggest a fix that creates a check that cannot fail; tc10 the Admiral spine template still calls repair an enforced exit; tc6 repair remains unverifiable, the #506 defect class closed for stop only). Four are named as cheap fixes for a later wave (tc1, tc2, tc7, tc14). Seven are recorded evidence with no action proposed."
         },
         {
           "id": "c2",
@@ -478,17 +495,39 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "FLOAT to the Admiral -- issue filing deferred, nothing filed",
+            "cite": "LAUNCH_ORDER:Inherited Latitude",
+            "authority_found": "The epic-418-redux LATITUDE_CONTRACT classes 'Issue filing / commenting' as DELEGATED at the decision level, but lists the TOOL 'gh issue create' as PRE-CLEAR -- 'grounded: #145, and the gh issue create gap has now recurred four times'. Class-level delegation with no cleared tool is not filing authority.",
+            "why_float": "Filing anyway would improvise an authorization the run does not hold, and the triage skill's own rule is that recommend-and-defer IS the recorded form of 'ask'. This is the FIFTH recurrence of the gh issue create gap and is itself worth an Admiral ruling.",
+            "disposition": "All 14 candidates routed as recommend-and-defer. None filed, none fixed now.",
+            "why_no_fix_now": "Several clear the fix-now ladder on their merits -- tc1 is a genuinely one-line test -- but all are blocked by something external to the ladder: this branch's diff is already reviewed and APPROVED at a scope of tests/test_iterative_planning_doctrine.py only. Adding a production file after approval would slip an unreviewed change into an approved diff, which is the quiet scope-widening this epic exists to catch.",
+            "recommendation_to_admiral": "Tommy has said he would rather not clutter the tracker and that genuinely cheap things should just get done, which argues against filing 14 issues. Suggested split: fold tc1, tc2, tc7, tc14 into a later wave as cheap fixes; FILE tc6, tc9, tc10 because they are real defects that will otherwise be rediscovered; let the rest ride as recorded evidence.",
+            "artifact": ".agent-work/w5-gates/TRIAGE_RECOMMENDATIONS.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -500,7 +539,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete: 14 candidates routed, none filed, filing floated to the Admiral with the authority split stated, recommendations issue-ready at .agent-work/w5-gates/TRIAGE_RECOMMENDATIONS.md."
         }
       ],
       "postconditions": [
@@ -511,7 +551,12 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
@@ -521,7 +566,36 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "mode": "delegated -- no reachable human; the Admiral ratifies at the epic return boundary",
+            "gates_closed": "Four, each implement -> review -> integrate with an independent reviewer and a mutation floor (the fix is reverted and the targeted test must go red). TWO GATES BLOCKED AND WERE REPAIRED before approval: g2 on a mutation leg whose mutated field was legitimately empty, g3 on a stub that answered unmodelled flags instead of refusing. Both are stronger for it; a block with proof is the gate mechanism working. g4 approved on its first pass.",
+            "changes_implemented": "Three fixes closing six issues. A (#506): a stop transition at the Admiral boundary is verified rather than refused, with the relaxation scoped so repair cannot inherit it. B (#501, #468): installed-bundle identity is decided STRUCTURALLY, not by the constellation- name prefix -- the old guard passed from the source repo and refused in every Commander worktree, and neither answer was about whether an installed corpus is reachable. C (#439, #484, #446): archive.c2b's <branch> placeholder is resolved at instantiation and the query asks whether a PR carries this work rather than whether an OPEN one exists.",
+            "explicitly_not_done": "The replacement command BOTH #439 and #484 suggest was refused with a measurement: gh pr list --head <branch> --state open --json number --jq 'length > 0' exits 0 on all four PR states, so adopting it would have turned a check that cannot pass into a check that cannot fail. The exit code carries the verdict instead.",
+            "architecture_reconciled": "Reasoned no-op, recorded as compliant per the step's own instruction for a run with no packet map. Orientation was DEGRADED-NO-MAP throughout. I searched the four hash-pinned substitutes and all docs/skills prose rather than asserting the no-op: nothing in the structural record is now false. The README documents the constellation-<name>/ NAMING convention, which remains true and was never the detection rule.",
+            "triage": "14 candidates, all routed as recommend-and-defer, none filed. Filing floated to the Admiral because the latitude contract delegates issue filing as a class but leaves gh issue create at PRE-CLEAR -- the fifth recurrence of that gap. Recommendations at .agent-work/w5-gates/TRIAGE_RECOMMENDATIONS.md.",
+            "evidence": "Full suite 1891 passed / 2 skipped / 872 subtests, exit 0, 473.71s -- measured three times independently (reviewer, Commander, engine gate check). Collect 1893 vs fork point 1869: +24 passed, +43 subtests, 0 removed, skips unchanged. Coupled suite 399 passed / 506 subtests exit 0. The run's own closure check exits 0 from this worktree, which is finding 2 -- present in NEITHER issue -- discharged live.",
+            "strongest_result": "Reverting _is_installed_bundle to the name test makes the REAL installed bundle return exit 0 for a constellation--named directory containing no SKILL.md. #501 reproduced against the artifact a user installs, not a repo-side fixture. Its second polarity is the sharper half: the constellation-skills checkout went red FOR THE WRONG REASON, proving the reason-assertion is load-bearing where an exit-code-only leg would have passed.",
+            "for_admiral_adjudication": "1) gh issue create authority, fifth recurrence. 2) tc9 -- annotate #439/#484 so their defective suggested fix is not copied forward. 3) tc10 -- the Admiral spine template still calls repair an enforced exit, deliberately not edited to avoid a cross-crew merge hazard. 4) D4/#477 -- the gauge-inheritance loop consumed real crew launches in this wave while looking exactly like correct doctrine."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-review-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "review",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -655,17 +729,17 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 5,
+  "refusals": 7,
   "engine_session": {
-    "session_id": "commander-w5-gates-c-refresh2",
+    "session_id": "commander-w5-gates-f-20260808",
     "status": "released",
-    "claimed_at": "2026-08-09T00:13:34.563144+00:00",
-    "last_heartbeat": "2026-08-09T00:14:08.460707+00:00",
+    "claimed_at": "2026-08-09T04:43:03.724616+00:00",
+    "last_heartbeat": "2026-08-09T04:50:30.650073+00:00",
     "claimed_by": "agent",
     "worktree": ".",
-    "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-09T00:38:46.485034+00:00"
+    "previous_session_id": "commander-w5-gates-c-refresh2",
+    "takeover_reason": "execute.json is DONE with all four gates closed and released; resuming the spine to drive reconcile through archive",
+    "released_at": "2026-08-09T04:50:30.997842+00:00"
   },
   "why_trail": [
     {
@@ -695,6 +769,27 @@
       "why": "Frame cut from the four hash-pinned substitutes (map is ABSENT, not stale) and verified FRAME-OK. Alternatives panel of 3 (smallest-diff 1 gate / most-testable 5 / best-seam 3) converged to a named hybrid: best-seam's three concept gates + most-testable's falsifying-input requirement welded into every close + its composition gate as a fourth, guard first. Cold critic panel of 2 returned BLOCK + APPROVE-WITH-FINDINGS; both measured that g1 and g3 could close with zero work done. Remedied by per-gate -k selectors keyed to a stated test naming contract (zero match exits 5 -- I re-measured all six at 5 myself), mutation floors on all three fixes, a 44s coupled-suite condition per gate boundary instead of the 947s full suite, explicit --skills-root on the run's own closure check, and a generalized float rule for any non-owned red. Two of my own claims were measured false and corrected: g2's precondition was never a technical dependency, and the g1 evidence anchor had the main-checkout failure polarity backwards.",
       "mechanical": false,
       "ts": "2026-08-08T23:54:06.301518+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "Execute is complete: all four gates closed with integrated evidence and execute.json reports DONE with no open items. Two gates blocked and were repaired before approval, which is the gate mechanism working. I extended REPLAN_INPUT.json with g4's six wave-evidence claims and three new discrepancies, all classified evidence_only, and filed NONE of them as issues per the directive. My first schema attempt was REFUSED by the G2 verifier for a missing required 'source' field on the new wave_evidence rows -- I added the sources and re-ran to exit 0, so the packet is verified rather than assumed. The three new discrepancies are worth the Admiral's attention: D2, the g4 implementer tripped before writing its result and correctly refused to attest what it had not run, which turned the Commander into a transcriber; D3, that transcription carried a false premise about how many production paths differ from the fork point, caught by the reviewer and corrected in place -- a measurement surviving a handoff with its baseline silently swapped, which is the very failure mode this epic exists to catch; and D4, issue #477's gauge-inheritance loop, which consumed real crew launches in this wave while looking exactly like correct doctrine. Next: reconcile, triage, review, feedback, archive, then the PR.",
+      "mechanical": false,
+      "ts": "2026-08-09T04:45:10.846101+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Reconcile is a reasoned no-op and it is recorded as compliant, which this step's own instruction blesses for a run with no packet map. I verified the no-op rather than asserting it: orientation was DEGRADED-NO-MAP throughout, and I searched the four hash-pinned substitutes plus all docs and skills prose for the behaviors the three fixes changed. Nothing in the structural record is now false. CHECKLIST_SCHEMA.md is untouched because no condition kind, evidence shape or waiver semantic changed. The README describes the constellation-<name>/ NAMING convention, which is still true and was never the detection rule -- fix B changed how a process DECIDES a directory is an installed bundle, structurally rather than nominally, and no doc ever stated that rule. One useful README sentence is deliberately deferred to triage as tc14 rather than written now: the diff is already reviewed and APPROVED at a scope of the test file only, and adding an unreviewed production file to an approved change is the exact scope violation the reviewer was instructed to flag.",
+      "mechanical": false,
+      "ts": "2026-08-09T04:46:26.582569+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Triage routed all 14 candidates as recommend-and-defer and filed nothing. The authority is genuinely split and I did not paper over it: the latitude contract DELEGATES issue filing as a decision class but lists the tool gh issue create as PRE-CLEAR, and class delegation with no cleared tool is not filing authority -- so filing would improvise an authorization this run does not hold. That is the fifth recurrence of this exact gap and I have floated it to the Admiral as worth a ruling rather than absorbing it silently a fifth time. No candidate was fixed now either, and the reason is not the ladder -- tc1 is a genuinely one-line test that clears all four rungs -- but that this branch's diff is already reviewed and APPROVED at a scope of the test file only, so any further production edit would slip an unreviewed change into an approved diff. Cheap stops being free once a reviewer has signed. Recommendations are issue-ready at .agent-work/w5-gates/TRIAGE_RECOMMENDATIONS.md with a suggested split, because filing 14 issues would cut against Tommy's stated preference not to clutter the tracker.",
+      "mechanical": false,
+      "ts": "2026-08-09T04:48:26.416635+00:00"
     }
   ],
   "trip_ledger": [
@@ -708,6 +803,17 @@
       "model": "claude-opus-5",
       "why_ref": "w-3",
       "ts": "2026-08-08T23:07:27.923992+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1501,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-09T04:49:02.305295+00:00"
     }
   ]
 }

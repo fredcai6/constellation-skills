@@ -1010,7 +1010,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-2",
+          "attested": {
+            "evidence": "e-g4-review-2",
+            "note": null
+          }
         }
       ],
       "constraints": [],
@@ -1019,7 +1024,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1031,6 +1036,30 @@
             "seam": "g4-review",
             "why_ref": "w-11",
             "note": "Tripped HARD at 15% trying to START g4-review. The gate is fully prepared and needs no re-derivation: g4-implement is CLOSED at commit 764a2728, p1 is attested, and the REVIEWER_HANDOFF is written in full at .agent-work/w5-gates/crew-handoffs/g4-review-HANDOFF.md. I registered a reviewer crew and then ABANDONED it without dispatching, so the successor registers a fresh attempt-2 with no duplicate-guard conflict -- no reviewer is running. The successor's first act is to dispatch the reviewer against that handoff, then drive g4-review and g4-integrate. All four of g4-integrate's inputs are already measured by me: full suite is the only command I have not run myself."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-review-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w5-gates/crew-handoffs/g4-review-RESULT.md",
+            "crew": "constellation/w5-gates/g4/reviewer/attempt-2",
+            "survey": ".agent-work/w5-gates/g4-review/review.json - 19 checks, 19 pass, 0 fail, consolidated APPROVE, lease released last.",
+            "non_tautology": "All SIX broken inputs reproduced by the reviewer itself, built at byte level with the mutation asserted applied IN BYTES before any red was believed, restored from saved bytes, verified with read_bytes() plus git status after every probe. Claimed assertions matched exactly: m1 {} != {'archive.c2b': ['<branch>']}; m2 and m6 0 == 0; m4 and m5 0 != 1; m3 two SUBFAILED.",
+            "decoy": "The #501 decoy holds live against the REAL installed bundle. Reverting _is_installed_bundle to the name test makes a constellation--named directory with no SKILL.md return exit 0 inside the real skills root: AssertionError 0 == 0 : name-only-decoy-inside-a-real-skills-root is not an installed bundle. The second polarity landed in the same run - the constellation-skills-named checkout went red FOR THE WRONG REASON, which is itself the proof the reason-assertion is load-bearing: a leg asserting only a nonzero exit would have passed there.",
+            "fixture_is_real": "Proven by mutation rather than by reading - mutating repo sources changed the behavior of the INSTALLED bundle, and the m4 refusal prints the empty-home skills root among its roots, so the developer's real skills root demonstrably cannot leak in.",
+            "no_cross_crew_dependency": "Confirmed, and the merge hazard was tested directly: the only sibling change to an out-of-bounds file (260 lines in install_constellation.py) is already in main, where CORPUS_MARKER and the installer API the fixture calls are unchanged.",
+            "selector_hygiene": "Re-derived BY IDENTITY, not merely by count - all six load-bearing selectors match their pre-g4 numbers and no matched node ID belongs to the new class. -k compose_stop collects ZERO and exits 5, so the g2-collision rename is complete.",
+            "g3_harness_intact": "The shared-shim refactor did not weaken g3: MODELLED_FLAGS and both stub sources sit above the first hunk; only the two write_text call sites moved.",
+            "delta_rederived": "+24 reconciles on BOTH sides. The reviewer cut a throwaway worktree at aa2038d9 and measured 1867 itself. The 12 g1 / 3 g2 / 6 g3 / 3 g4 split (0 removed) was derived by AST-counting test methods per class at each gate commit; that method validates because its count at 764a2728 is 36, exactly pytest's 1+35.",
+            "measurements": "compose_spine exit 0, 1 passed (not skipped), 35 deselected. compose_verifier exit 0, 1 test / 3 subtests. compose_terminal exit 0, 1 passed. Coupled suite exit 0, 399 passed / 506 subtests, 60.5s. Full suite at HEAD exit 0, 1891 passed / 2 skipped / 872 subtests, 474s. Full suite at aa2038d9 exit 0, 1867 passed / 2 skipped / 829 subtests, 484s. Closure check exit 0, iterative role artifact ok: commander (w5-gates). All three composition tests report passed not skipped - checked explicitly because the class carries a skipUnless.",
+            "commander_action": "The reviewer's one non-blocking correction is DISCHARGED. g4-implement-RESULT.md claimed only tests/test_iterative_planning_doctrine.py differs from aa2038d9 outside .agent-work/. The Commander re-derived with git diff --numstat aa2038d9 764a2728 -- . ':(exclude).agent-work/**' and found THREE production paths (verify_iterative_role_artifacts.py, COMMANDER_SPINE.template.json, the doctrine test file). The sentence was true against the g4 baseline 84d1e998, not against the wave fork point. Corrected in place with the provenance marked; the +24 conclusion is unaffected because only the test file carries tests.",
+            "fowler": "Rail cleared, exit 0: 2 flagged (long-parameter-list, divergent-change), 4 overridden with logged standards. Nothing blocking.",
+            "triage_candidates": "tc1 repo-copy init_work_area.py in the composition fixture; tc2 mirrored CORPUS_MARKER with no equality test; tc3 the doctrine test file as a divergent-change file; tc4 a Cartographer note for the unmapped template/script/bundle seam.",
+            "tree_state": "Left as found - production paths show a CLEAN git status, both CRLF stat artifacts untouched and unstaged, probe worktree removed and pruned."
           },
           "produced_by": "engine",
           "ts": ""
@@ -1047,7 +1076,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g4",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received at .agent-work/w5-gates/crew-handoffs/g4-review-RESULT.md, verdict APPROVE on line 1, attached as e-g4-review-2 and g4-review is closed. Crew constellation/w5-gates/g4/reviewer/attempt-2 verified fresh+completed in the run_crew registry. The reviewer's survey at .agent-work/w5-gates/g4-review/review.json is 19 checks / 19 pass / 0 fail with the lease released last. Its single non-blocking finding -- the implementer's result named one production path differing from the fork point where three do -- is already discharged: I re-derived with git diff --numstat aa2038d9 764a2728 -- . ':(exclude).agent-work/**' and corrected the sentence in place with provenance marked."
         }
       ],
       "postconditions": [
@@ -1063,7 +1093,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-2"
         },
         {
           "id": "c2",
@@ -1077,7 +1108,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-3"
         },
         {
           "id": "c3",
@@ -1089,17 +1121,57 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-integrate-1",
+          "attested": {
+            "evidence": "e-g4-integrate-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w5-gates/crew-handoffs/g4-review-RESULT.md",
+            "crew": "constellation/w5-gates/g4/reviewer/attempt-2",
+            "note": "APPROVE on line 1 of the RESULT. Survey .agent-work/w5-gates/g4-review/review.json is 19 checks / 19 pass / 0 fail, consolidated APPROVE, lease released last. Registry verified fresh+completed via run_crew.py --verify-result. Both required confirmations returned affirmative: the composition tests are non-tautological (all six broken inputs reproduced by the reviewer itself, mutations asserted applied in BYTES before any red was believed) and no owned fix depends on another crew's file (tested directly against main, where the only sibling out-of-bounds change already sits). One non-blocking finding, discharged by the Commander before this attestation."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_iterative_role_artifacts.py commander --work-id w5-gates --skills-root C:/Users/fredc/.claude/skills",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -1139,6 +1211,41 @@
       "id": "tc7",
       "from": "g2-integrate",
       "statement": "render_replan_markdown contains a redundant internal verify_replan_result call, already run by the caller. It makes the render unfalsifiable by packet data -- which is why the render leg of the stop mutation test needed code degradation rather than a data mutation to discriminate. (g2 reviewer)"
+    },
+    {
+      "id": "tc8",
+      "from": "g4-integrate",
+      "statement": "RECOMMEND-AND-DEFER (#501 boundary-freshness sub-ask, deferred WITH a falsification rather than a shrug). The stateless variant -- refuse unless NEXT_WAVE.boundary_id is the last verified TRANSITION in ADMIRAL_LOG.md -- is GREEN IN EXACTLY THE WORLD IT WAS WRITTEN TO CATCH: run early, the new boundary is not logged yet, so the stale boundary IS the last entry. Staleness is a mismatch with the CALLER'S INTENT and the caller's intent lives in no artifact, so #501's other variant (caller passes the expected boundary_id) is the only sound one -- and it is inert unless ADMIRAL_SPINE.template.json passes it, which this run does not own. #501's stated Acceptance is met without it. Falsification recorded at notes-1.md item 3."
+    },
+    {
+      "id": "tc9",
+      "from": "g4-integrate",
+      "statement": "FINDING 1 (this run's own, in neither issue): the archive fix BOTH #439 and #484 suggest would convert a check that cannot PASS into a check that cannot FAIL. Measured: gh pr list --head 'no-such-branch-xyz' --state open --json number --jq 'length > 0' prints false and EXITS 0, so a branch with no PR at all sails through. #484's suggested replacement command carries this defect verbatim. This run did not adopt either suggested fix; it made exit code carry the verdict instead, and g3 proved the -gt 0 / -ge 0 mutation goes red. Route so the suggestion is not copied into another issue later."
+    },
+    {
+      "id": "tc10",
+      "from": "g4-integrate",
+      "statement": "NOT OWNED, NOT CHANGED BY THIS RUN: after fix A, skills/admiral/templates/ADMIRAL_SPINE.template.json's execute prose AND its directives block both still describe repair as an ENFORCED EXIT. The stop branch was corrected for #506 but the Admiral-side template narrative was not, so the shipped Admiral template now disagrees with the verified engine behavior. Out of this run's ownership scope (it is not one of the four owned files); flagged rather than edited so no cross-crew merge hazard is introduced."
+    },
+    {
+      "id": "tc11",
+      "from": "g4-review",
+      "statement": "REVIEWER tc1: the composition fixture invokes the REPO copy of scripts/init_work_area.py rather than the installed bundle's copy for one leg. The gate still composes real artifacts everywhere it claims to, but this one seam is a repo-side path and is worth closing so the composition claim is uniformly end-to-end. (g4 reviewer)"
+    },
+    {
+      "id": "tc12",
+      "from": "g4-review",
+      "statement": "REVIEWER tc3: tests/test_iterative_planning_doctrine.py is now a Fowler DIVERGENT-CHANGE file -- it grew to roughly 1385 lines across g1-g4 and four unrelated concerns (guard, stop, archive, composition) all edit it for different reasons. Flagged by the Fowler pass (exit 0, non-blocking, overridden with a logged standard). Candidate for splitting per concern. (g4 reviewer)"
+    },
+    {
+      "id": "tc13",
+      "from": "g4-review",
+      "statement": "REVIEWER tc4: CARTOGRAPHER note -- this run executed at orientation DEGRADED-NO-MAP, and the seam it exercises (how skill templates, top-level scripts and the INSTALLED bundle relate) is asserted by no map. That absence is precisely why this gate had to establish composition by running real artifacts end to end instead of trusting structure. Worth a map entry so the next run can anchor by id rather than by path. (g4 reviewer)"
+    },
+    {
+      "id": "tc14",
+      "from": "reconcile",
+      "statement": "README section 'Repo layout vs. installed layout' is where a reader learns installed bundles are named constellation-<name>/, and that inference is exactly what produced #501 and #468 -- a process asking 'is this an installed corpus' by asking 'is it named constellation-*'. Add a sentence saying the prefix is an installation CONVENTION and not the test, and that a process must decide structurally (own SKILL.md plus a parent CORPUS.json). Deliberately not done inside this run: the diff is already reviewed and APPROVED at a scope of tests/test_iterative_planning_doctrine.py only, so editing README now would slip an unreviewed production file into an approved change."
     }
   ],
   "blockers": [],
@@ -1219,6 +1326,20 @@
       "why": "IMPLEMENTER_RESULT is COMPLETE with no unresolved blockers. Three composition tests land, each shown RED on a stated broken input actually run, each with its no-op conditions named and guarded. The gate introduced no behavior: the only production diff is the test file, and the three other owned files are zero-line diffs with every mutation restored. The strongest evidence in the wave is here -- reverting the guard to a name test makes the decoy leg return exit 0 against the REAL installed bundle, which is 501 reproduced live rather than in a repo-side fixture. I verified the parts a trip could have corrupted: no reserved selector moved by a single test, so nothing added here can satisfy an earlier gate's floor, and the run's own closure check now exits 0 from this worktree, which is finding 2 discharged live. The implementer tripped before writing its result and correctly refused to attest what it had not run; I ran the one remaining command and transcribed the report with provenance marked in the file.",
       "mechanical": false,
       "ts": "2026-08-09T03:48:18.484026+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g4-review",
+      "why": "g4-review APPROVE. The reviewer reproduced all six broken inputs itself at byte level, asserting each mutation applied IN BYTES before believing any red and restoring via read_bytes plus git status -- so no probe certified a no-op. The decoy is confirmed live: reverting _is_installed_bundle to the name test makes the REAL installed bundle return exit 0 on a constellation--named directory with no SKILL.md, which is #501 reproduced against the artifact a user installs. Its second polarity is the sharper half -- the constellation-skills checkout went red FOR THE WRONG REASON, proving the reason-assertion is load-bearing where an exit-code-only leg would have passed. The fixture is real by mutation, not by reading: repo-source mutations moved the installed bundle's behavior and the refusal names the empty-home skills root, so the developer's machine cannot leak in. Selector hygiene re-derived by node IDENTITY not just count, all six at their pre-g4 values, and compose_stop collects zero at exit 5 so the g2 rename is complete. The +24 delta reconciles on both sides: the reviewer cut its own worktree at aa2038d9 and measured 1867. One non-blocking finding, discharged by me: the implementer's result claimed a single production path differs from the fork point; three do, and I corrected the sentence in place after re-deriving with git diff --numstat. Four triage candidates carried to closeout. Next: g4-integrate, then archive and PR.",
+      "mechanical": false,
+      "ts": "2026-08-09T04:26:03.949687+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g4-integrate",
+      "why": "g4-integrate closed on an APPROVE. I ran both verification commands myself, as the imperative requires, and the engine then re-ran both as gate checks -- so each is measured twice, independently. Full suite: 1891 passed, 2 skipped, 872 subtests, exit 0, 473.71s, run bare and redirected with the exit code echoed separately, never piped. That matches the reviewer's independent measurement exactly. Collect is 1893 against a fork point of 1869, so +24 passed and +43 subtests with skips unchanged at 2 and 0 tests removed; attribution 12 guard / 3 stop / 6 archive / 3 composition, re-derived by the reviewer from its own worktree cut at aa2038d9 rather than accepted from the implementer. c2 -- the run's own closure check -- exits 0 with the explicit --skills-root, which is finding 2 discharged against the live run rather than against machine state: before fix B this command could not pass from a Commander worktree at all, because a worktree directory is not named constellation-*. No waiver was needed anywhere, so nothing floats to the Admiral on that count. Before advancing I routed all three deferred findings to triage as tc8-tc10 (boundary freshness as recommend-and-defer carrying the falsification; finding 1, that both issues' suggested archive fix would create a check that cannot fail; and the Admiral spine template's stale repair prose, which this run does not own and did not edit), plus the reviewer's three new candidates as tc11-tc13. The reviewer's fourth duplicated tc1 and was deliberately not re-filed. Next: reconcile, triage, review, feedback, archive, then the PR.",
+      "mechanical": false,
+      "ts": "2026-08-09T04:42:46.470838+00:00"
     }
   ],
   "trip_ledger": [
@@ -1256,15 +1377,16 @@
       "ts": "2026-08-09T03:49:57.635995+00:00"
     }
   ],
-  "refusals": 11,
+  "refusals": 15,
   "engine_session": {
-    "session_id": "commander-w5-gates-e-20260808b",
-    "status": "active",
-    "claimed_at": "2026-08-09T03:52:26.966584+00:00",
-    "last_heartbeat": "2026-08-09T03:53:11.863916+00:00",
-    "claimed_by": "commander-w5-gates-e",
-    "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+    "session_id": "commander-w5-gates-f-20260808",
+    "status": "released",
+    "claimed_at": "2026-08-09T04:46:14.832613+00:00",
+    "last_heartbeat": "2026-08-09T04:46:15.174916+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T04:46:15.489104+00:00"
   }
 }

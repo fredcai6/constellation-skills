@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-stop-compose",
+  "mechanical": {
+    "run": "w5-gates-g4-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m3-stop-compose",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-g4-implement-m3-stop-compose@83018ebf703420a581fe42f68fc3f107572bb6ee",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates-g4-implement",
+    "generated_at": "2026-08-09T03:28:16Z"
+  }
+}

@@ -1,0 +1,6 @@
+m1-spine-branch-token: exit=1 applied=True fragment=True restored_bytes=True post_status=''
+m2-spine-exit-verdict: exit=1 applied=True fragment=True restored_bytes=True post_status=''
+m3-verifier-name-test: exit=1 applied=True fragment=True restored_bytes=True post_status=''
+m4-verifier-ignores-skills-root: exit=1 applied=True fragment=True restored_bytes=True post_status=''
+m5-terminal-conflation: exit=1 applied=True fragment=True restored_bytes=True post_status=''
+m6-terminal-relaxation-widened: exit=1 applied=True fragment=True restored_bytes=True post_status=''

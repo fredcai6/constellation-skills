@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-stop-compose",
+  "files": [],
+  "repo_rev": {
+    "commit": "45f9e480f335b5b0d1fdab2e63721694bfe17c5d"
+  },
+  "run": {
+    "work_id": "w5-gates-g4-implement",
+    "generated_at": "2026-08-09T03:28:15Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-w5-gates"
+    }
+  }
+}

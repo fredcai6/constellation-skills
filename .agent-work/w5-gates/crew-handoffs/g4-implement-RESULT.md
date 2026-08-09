@@ -111,8 +111,15 @@ caught. This is the right kind of note — it says what the test does not prove.
   +3 subtests, all this gate's.
 - **Full suite: 1891 passed, 2 skipped, exit 0**, 497s — well inside the 16-minute budget. Run bare,
   redirected to a file, never piped.
-- **Delta +24 against the 1867 base, accounted test by test.** Only
-  `tests/test_iterative_planning_doctrine.py` differs from `aa2038d9` outside `.agent-work/`.
+- **Delta +24 against the 1867 base, accounted test by test.** Three production paths differ from
+  `aa2038d9` outside `.agent-work/` — `scripts/verify_iterative_role_artifacts.py`,
+  `skills/commander/templates/COMMANDER_SPINE.template.json` and
+  `tests/test_iterative_planning_doctrine.py` — but only the last carries tests, so the whole +24 is
+  accounted for there. (Corrected by the Commander at g4-review. The original sentence claimed a
+  single differing path, which holds against the g4 baseline `84d1e998` but not against the wave
+  fork point `aa2038d9`. Found by the g4 reviewer; re-derived by the Commander with
+  `git diff --numstat aa2038d9 764a2728 -- . ':(exclude).agent-work/**'`. The delta conclusion is
+  unaffected.)
   Collection on that file: **12 at base, 36 now, 0 removed.** Attribution: 12 guard (g1 — 4
   `GuardLocationStructureTests` + 8 `GuardRuntimeTests`), 3 stop (g2), 6 archive (g3), 3 composition
   (g4). 1867 + 24 = 1891 exactly; skips unchanged at 2. **Worth flagging: 1867 is the pre-wave

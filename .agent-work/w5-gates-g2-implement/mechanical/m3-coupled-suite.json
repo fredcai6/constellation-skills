@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-coupled-suite",
+  "mechanical": {
+    "run": "w5-gates-g2-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m3-coupled-suite",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-g2-implement-m3-coupled-suite@b662669b8e27954b03f08f4c71ab4d7fa8c16eef",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates-g2-implement",
+    "generated_at": "2026-08-09T01:21:36Z"
+  }
+}
