@@ -4,11 +4,18 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`g8` — 5th pass, TEST-ONLY, in flight**
-- **PID**: crew `constellation/issue-456/g8/implementer/attempt-5` running. All others closed.
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g8-remediate-4-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: **`g8-review` — 4th reviewer pass, VERDICT-ONLY, in flight**
+- **PID**: crew `constellation/issue-456/g8/reviewer/attempt-4` running. All others closed.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g8-rereview-4-RESULT.md`
+- **handoff**: `.agent-work/issue-456/crew-handoffs/g8-rereview-4.md`
 
-## 🟢 RESUME HERE — `g8` build+tests DONE and Commander-verified. Needs re-review.
+## 🟢 RESUME HERE — `g8` build+tests DONE and Commander-verified. Re-review dispatched.
+
+**Engine bookkeeping for `g8-implement` is now DONE** (attested p1+c1 via
+`e-g8-implement-1`, advanced). `g8-review` is `in-progress` with `p1` attested.
+Owed on the reviewer's return: `attach` a `review-result`, attest `c1`,
+`advance`; then `g8-integrate` (`c1` command re-run by `advance`; `c2` needs
+verdict **APPROVE**). Then gate `gs`.
 
 **Do not touch `scripts/code_map/`.** Three reviews confirmed the production fix
 at `1f2b57ab` by direct execution. The hollow-test defect is now **fixed** at
@@ -22,21 +29,18 @@ previously left all 11 green. Revert byte-clean; selector back to **11 passed,
 4 subtests**. No `if len(summary) == 160:` remains; 3 unconditional
 `assertEqual(len(summary), 160)` in its place.
 
-**NEXT: dispatch the g8 re-review** (`SendMessage` to the existing `g8-reviewer`,
-context intact, after registering `g8/reviewer/attempt-4`). Ask it to re-run its
-own two mutations — the remediation-2 revert AND the surgical overflow-drop —
-since those are the two it used to prove the tests hollow, and it should confirm
-both now bite. Then close the gate.
+**Re-review dispatched** as a fresh reviewer (the attempt-3 agent had already
+returned, so its context was not resumable). The brief asks it to re-run its
+**own** two mutations — the remediation-2 revert AND the surgical overflow-drop
+— since those are the two it used to prove the tests hollow, and to confirm both
+now bite. My truncation-removal mutation is stated in the brief as already
+measured, so the pass is not spent reproducing a falsifier I chose.
 
 **Rule this cost five passes to learn: branch on the SHAPE (fixed, known when
 the case is written), never on the MEASURED output (the thing under test).**
 
-**Engine bookkeeping still owed for g8** (same trap I hit on g7 — the work ran
-ahead of the record): `g8-implement` is still `pending`. Attest `p1`, `start`,
-`attach` an `implementer-result`, attest `c1`, `advance`; then `g8-review`
-(evidence type `review-result`), then `g8-integrate` (`c1` command re-run by
-`advance`; `c2` needs verdict **APPROVE**). Closing selector `-k 'bom or
-docstring'` → **11** now, gate baseline was **4**.
+Closing selector `-k 'bom or docstring'` → **11 passed, 4 subtests** now; gate
+baseline was **4**.
 
 **Verified at this boundary:** suite **1838 passed, 2 skipped, 701 subtests,
 0 failed**; fresh `build` then `check` **7/7 exit 0**. Invariant holds

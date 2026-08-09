@@ -2447,7 +2447,8 @@
           "id": "p1",
           "statement": "g7",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g7 is closed and advanced: cull verdict recorded as collapse-to-Rationale with the alias shipped, tag staleness rewired so tags are watched independently of anchors, three independent disable points each turning the negative tests red with byte-clean reverts, and the full suite green at that boundary. The engine advanced past g7-integrate on a reviewer APPROVE from the same reviewer that issued the BLOCK. Nothing in g7 is left open that g8 depends on: g8 touches the BOM read path and the docstring summary/body split, both downstream of and disjoint from the comment-tag grammar work."
         }
       ],
       "postconditions": [
@@ -2458,7 +2459,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g8-implement-1",
+          "attested": {
+            "evidence": "e-g8-implement-1",
+            "note": "IMPLEMENTER_RESULT returned with no unresolved blockers, on the fifth pass. Both defects are built. (1) The BOM read path: a purpose-built fixture is the only way this check can go red here, because this repo has zero BOM files, and the fixture is real bytes on disk rather than a synthesized string. (2) The docstring summary/body split.\n\nFour of the five passes were mine to own, not the crew's. My brief passed the phrase \"D3: the wrapped-docstring render split\" through unresolved; D3 is named at DESIGN_SPEC.md:203 and ISSUE_456.md:37 and defined nowhere, which I confirmed by reading both. The cheap-tier crew flagged it as underspecified and was right. I then defined it empirically and defined it wrong: my fix made the whole docstring the summary for the dominant no-blank-line shape, 132 real docstrings, truncated at 160 with the body dropped entirely -- destroying content the original bug merely mis-split. The reviewer caught it by testing against real pages rather than fixtures. I then scoped the repair to that one branch and left the identical hole in the blank-line branch, 54 more real docstrings; the reviewer caught that too. Both branches now route the post-160 overflow into the body.\n\nThe fifth pass was not a code fix at all. The code had been correct since the third. The reviewer proved the tests hollow: an invariant assertion sat behind `if len(summary) == 160`, a branch on the measured output, so the very case it was written to protect skipped its own check while a comment above it claimed the assertion was unconditional. Removing `paragraph = paragraph[:160]` from production left all eleven selector tests green. That is the fifth distinct instance on this run of a check that cannot fail, and the first where the defect lived in the evidence rather than the mechanism.\n\nVerified by me, not taken from the crew's report. The gate was half-fixed on submission -- the crew added the overflow assertion but left the conditional gate standing -- which I found by reading the test source before its report arrived. After the repair: `if len(summary) == 160` appears zero times; three unconditional assertEqual(len(summary), 160) stand in its place. The same truncation-removal mutation now takes FOUR tests red, including both previously-hollow ones, with a byte-clean revert confirmed by git diff --quiet rather than by porcelain, which false-negatives under this repo's autocrlf. Suite 1838 passed, 2 skipped, 701 subtests, 0 failed; selector 11 passed, 4 subtests against a gate baseline of 4; fresh build then check 7/7 exit 0.\n\nRule carried out of this gate for feedback: branch on the SHAPE, which is fixed and known when the case is written, never on the MEASURED output, which is the thing under test."
+          }
         }
       ],
       "constraints": [
@@ -2484,11 +2490,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g8-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g8-remediate-4-RESULT.md",
+            "blockers": "none",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g8-review": {
@@ -2500,7 +2518,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received for this gate: .agent-work/issue-456/crew-handoffs/g8-remediate-4-RESULT.md, attached as e-g8-implement-1, no unresolved blockers. The work under review is the cumulative g8 change through commit 8ad32efb (crew) on 18dc643e, plus the earlier remediation commits in the same gate. Both defects are present in the tree and the tests that guard them have been shown to fail under mutation."
         }
       ],
       "postconditions": [
@@ -2520,7 +2539,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -3010,6 +3029,13 @@
       "why": "Closing g7. The command postcondition is satisfied by this advance, which re-runs the full suite and the comment_tags selector rather than taking my word, and the reviewer verdict is APPROVE from the same reviewer that issued the BLOCK.\n\nThis gate carried the last real design call on the run and it did not close on the first attempt, correctly. The cull test returned collapse and the verdict stands; what was wrong was what collapse was taken to mean. Retiring Assumption and Constraint silently converts four of the six real authored tags in existence into inert prose, with no error, no warning, and no visibility to the detector meant to catch tags going wrong. The spec's own survival law -- a tag survives when a tool visibly consumes it -- is not neutral between retire and alias once applied to text that already exists, and the sharpest evidence was self-inflicted: the cull broke this gate's own worked example mid-build. Aliasing satisfies the same test at a fraction of the cost, and the render path stays exactly as branch-free as the cull test proved it.\n\nVerifying the review's third finding turned it into the largest defect in the gate. It had been scored as a phrasing correction. Reading the code showed the staleness mechanism never watched tags at all: the diff read only anchored statements, span_hash was persisted only on the anchor path, and the join test's fixture carried both an anchor and a tag so the flag fired off the anchor. Zero anchors exist in the only real corpus, so no real tag would ever have been watched -- critic IF4/TS8's problem untouched in the corpus it was raised to protect, proven by a test passing for the wrong reason. That is the third variation on this run of a check that could not fail, and the third time reading the code rather than the report was what found it.\n\nBoth are fixed and the mechanism is attacked from three independent disable points, none reproducing another: the crew broke emission, I broke the comparison so that emission still runs while every tag looks permanently new, and the re-reviewer broke persistence. Three red every time, no survivor, byte-clean reverts. The alias round trip was inspected in raw bytes rather than through assertions, confirming the pre-alias word appears nowhere in the statements store, the rendered page, or either report -- normalization happens exactly once, at emission.\n\nNumbers at close, all re-run by me: suite 1831 passed 2 skipped 697 subtests 0 failed; comment_tags 24 against a designed baseline of zero collected; stale_tag 19 from 15; fresh build then check 7/7 exit 0. g6's anchor path confirmed purely additive.\n\nFour limitations ship named rather than smoothed over, all filed for triage. A symbol rename defeats tag staleness while anchor staleness survives it, a necessary consequence of keying tags on symbol plus text, and its failure direction is silence. The dispatch-on-kind pin test, which is the load-bearing evidence for the cull verdict, still misses getattr dispatch and a locally-renamed-variable lookup. See tags render as literal text rather than links. And the cull test itself, while honest and non-circular, was low-information: a KEEP outcome was never realistically reachable from a flat render surface, so the decision was really settled by author-convergence data rather than by render necessity. That last one is about how design tests get specified, not about this gate, and it is the one I would most want read at feedback.",
       "mechanical": false,
       "ts": "2026-08-09T00:12:29.481264+00:00"
+    },
+    {
+      "id": "w-29",
+      "gate": "g8-implement",
+      "why": "Both defects are built and the tests that guard them can now fail. The BOM path is exercised by a fixture of real bytes, which is the only way that check can go red in a repo with zero BOM files. The docstring split routes post-160 overflow into the body in both shapes, no-blank-line and blank-line, covering all 186 real docstrings that were mis-split or truncated.\n\nThe gate took five passes and the last one changed no production code. The reviewer proved the invariant tests hollow: the assertion sat behind a branch on the measured output, so removing the truncation from production left all eleven selector tests green. That is fixed, and I verified the fix by mutation rather than by reading the diff -- the same truncation removal now takes four tests red, both formerly-hollow ones among them, revert byte-clean under git diff --quiet.\n\nFour of the five passes trace to my briefs, not to the crew: I passed an undefined term through, then defined it wrong in a way that destroyed content, then scoped the repair to one of two identical branches. Recorded in the c1 attestation and routed to feedback.\n\nAdvancing on numbers I re-ran myself: suite 1838 passed / 2 skipped / 701 subtests / 0 failed, selector 11 passed / 4 subtests, fresh build then check 7/7 exit 0, tree clean.",
+      "mechanical": false,
+      "ts": "2026-08-09T02:42:13.215693+00:00"
     }
   ],
   "amendments": [
