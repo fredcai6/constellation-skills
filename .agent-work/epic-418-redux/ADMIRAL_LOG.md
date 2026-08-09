@@ -5893,3 +5893,68 @@ tool call and re-read, do not file a refresh-request against a reading you did n
 biting again, live, in the same hour.** Four crews were relaunched into that loop earlier in this
 wave. The fix is in flight on `epic-418/w5-gauge-477`; until it lands, a warning in the launch order
 is the entire defence, and it only works because I happened to be the one writing the order.
+
+### g4-review APPROVE — the last gate of the last crew of the epic. No blockers, and it looked hard for one.
+
+19 checks, 19 pass. **All six broken inputs reproduced by the reviewer itself**, at byte level, with a
+discipline worth copying: the literal asserted **unique** before mutating, the mutation asserted
+**present on disk in bytes** before any red was believed, restore from saved original bytes, and the
+restore verified with `read_bytes()` **and** `git status` — never `read_text()`. That last detail is
+the CRLF trap that nearly fooled the g3 reviewer, now standard practice one gate later.
+
+**The decoy row is the sharpest evidence in the wave.** Under a name-only revert of the guard, the
+decoy leg returns exit **0** from the **real installed bundle** — a `constellation-`-named directory
+carrying no `SKILL.md`, sitting in the real skills root beside genuine bundles. **#501 reproduced live
+against the artifact a user installs**, not against a repo-side fixture. The opposite polarity landed
+in the same run and **went red for the wrong reason**, which the reviewer caught and said so.
+
+### Its delta derivation independently reproduces mine, from a different direction
+
+It refused to take the base count on trust, cut its own throwaway detached worktree at `aa2038d9`, ran
+the full suite there, and removed the worktree afterwards — **the same move I made an hour earlier at
+`ea854471` without either of us knowing about the other.** Two independent measurements:
+
+| | mine | reviewer's |
+|---|---|---|
+| base | `ea854471` → **1869 collected** | `aa2038d9` → **1867 passed + 2 skipped** |
+| crew 1 tree | **1893 collected** | `764a2728` → **1891 passed + 2 skipped** |
+
+`1867 + 2 = 1869` and `1891 + 2 = 1893`. **Identical, derived independently.** My collect ran while
+g4's tests were already written but uncommitted — `--collect-only` reads the working tree, not HEAD —
+which is why a mid-g4 count matches a post-g4 one rather than being three short. Worth knowing before
+anyone treats that as a discrepancy.
+
+**Its attribution goes further than mine did:** an AST count of `test_*` methods per class at every
+commit in the range — base 12, g1 +12, g2 +3, g3 +6, g4 +3 = **36**, cross-validated against pytest's
+own `1 selected + 35 deselected`. **Zero removed**; every pre-existing class holds or grows.
+
+**So the post-merge prediction is now pinned from two sources: `1898 + 24 = 1922` collected — 1920
+passed, 2 skipped.** Anything else means something was lost in the merge.
+
+### One correction it demanded, and it is right
+
+The implementer's RESULT says *"Only `tests/test_iterative_planning_doctrine.py` differs from
+`aa2038d9` outside `.agent-work/`."* **False** — three paths differ (`verify_iterative_role_artifacts.py`
+143/22, `COMMANDER_SPINE.template.json` 1/1, the test file 1370/2). The two extras are the wave's own
+g1–g3 fixes, already reviewed at their gates, neither changing a collected test, **so the +24 stands
+and nothing is hidden.**
+
+The reviewer's reason for raising it anyway is the part I want kept: *"it is exactly the kind of
+premise a later reader would use to skip checking whether other files changed."* **A false premise
+that supports a true conclusion is still load-bearing for the next reader** — and this document
+carries a provenance note saying parts of it were transcribed by the Commander after the implementer
+tripped, which is precisely when a transcription-level error is most likely and least visible.
+Non-blocking; correct the sentence.
+
+### Four floats, none blocking
+
+`tc1` the last repo-side script inside a composition test; `tc2` a mirrored `CORPUS_MARKER` literal
+with no test asserting the two copies agree; `tc3` the doctrine file is now ~1838 lines / eight
+classes / four reasons to change; `tc4` the template → top-level-script → installed-bundle seam has no
+map id, and the only record that the three wave-5 fixes compose across it lives inside one test class.
+**`tc4` goes to the Cartographer at closeout** — that is durable architecture context, not a tidy-up.
+
+**No-op analysis:** *"This run has been BLOCKed twice for checks that could not fail. I looked for a
+third and did not find one."* A stated, bounded negative from a reviewer that had every incentive to
+find a third and said plainly that it did not. **That is what an honest null looks like**, and it is
+worth more here than a fifth finding would have been.
