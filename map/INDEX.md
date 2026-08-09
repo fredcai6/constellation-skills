@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 55 modules, 1047 entities
+scripts: 55 modules, 1048 entities
 skills: 1 modules, 18 entities
-tests: 61 modules, 3504 entities
+tests: 61 modules, 3505 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 61 modules, 3504 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (55 modules, 1047 entities)
+## scripts (55 modules, 1048 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -51,7 +51,7 @@ tests: 61 modules, 3504 entities
 - [scripts.apply_episode_delta](scripts.apply_episode_delta/INDEX.md) (53 entities, 25 holes): Deterministically apply structured episode-delta operations to the episode store.
 - [scripts.build_architecture_map](scripts.build_architecture_map/INDEX.md) (16 entities, 15 holes): HOLE: no docstring
 - [scripts.check_corpus_freshness](scripts.check_corpus_freshness/INDEX.md) (11 entities, 7 holes): Report whether an installed constellation corpus is current with upstream main.
-- [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (9 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
+- [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
 - [scripts.checklist_engine](scripts.checklist_engine/INDEX.md) (106 entities, 25 holes): Workbench checklist engine: work one gated/survey plan through its gates.
 - [scripts.collect_feedback](scripts.collect_feedback/INDEX.md) (38 entities, 15 holes): Sweep consuming projects' CONSTELLATION_FEEDBACK.md exports into one report.
 - [scripts.context_manifest](scripts.context_manifest/INDEX.md) (14 entities): Deterministic projection substrate: what was made available to an agent, and at which revision.
@@ -99,7 +99,7 @@ tests: 61 modules, 3504 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (61 modules, 3504 entities)
+## tests (61 modules, 3505 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -154,7 +154,7 @@ tests: 61 modules, 3504 entities
 - [tests.test_retirement_guard](tests.test_retirement_guard/INDEX.md) (22 entities, 3 holes): Red-proofs for `scripts/verify_retirement.py` — the #403 retirement guard.
 - [tests.test_run_skill_eval](tests.test_run_skill_eval/INDEX.md) (121 entities, 106 holes): Agent-free unit layer for scripts/run_skill_eval.py (#106, gate g2).
 - [tests.test_spine_provenance_check](tests.test_spine_provenance_check/INDEX.md) (34 entities, 32 holes): Provenance hardening for the eval `spine_completed` process check (issue #127).
-- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (134 entities, 69 holes): Unit tests for scripts/hooks/spine_rail.py.
+- [tests.test_spine_rail](tests.test_spine_rail/INDEX.md) (135 entities, 70 holes): Unit tests for scripts/hooks/spine_rail.py.
 - [tests.test_state_note](tests.test_state_note/INDEX.md) (15 entities, 15 holes): HOLE: no docstring
 - [tests.test_verify_coverage_ledger](tests.test_verify_coverage_ledger/INDEX.md) (12 entities, 12 holes): HOLE: no docstring
 - [tests.test_verify_cycles](tests.test_verify_cycles/INDEX.md) (11 entities, 11 holes): HOLE: no docstring
