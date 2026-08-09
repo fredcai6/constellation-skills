@@ -5214,3 +5214,26 @@ with **decoys**: a `constellation-decoy/` directory with **no `SKILL.md`** sitti
 `CORPUS.json`-marked root was **rejected**. **A name-shaped impostor refused by a structural test** —
 exactly what fix B was supposed to buy, checked adversarially rather than assumed. Crew 1 is now at
 `g1-integrate`, one of four gates down.
+
+### Crew 4 COMPLETE — and #514 is held by my own merge-order ruling, not by any doubt
+
+`DONE: no open items.` CI green on `1bcc88bd`, scope exactly its two owned files, seven closes and two
+floats now machine-actionable.
+
+**Held because I ruled earlier that crew 4 merges LAST among the code PRs**, and crew 1 still has three
+gates. Its diff changes `scripts/checklist_engine.py` — **the engine driving my own live spine**, mid-
+`execute`, with an active lease and a hash-chained journal. Merging it first would mean verifying crew
+1's later merge against an engine that had already changed underneath me, **with no known-good
+reference left to compare against.**
+
+**This is the ruling costing me something, which is the test of whether it was a real rule.** The
+tempting move is to bank a finished, green PR now and re-derive the ordering argument later. The
+ordering argument does not get better by being deferred; it gets unfalsifiable. Held, and the crew told
+plainly that it is queue position rather than quality.
+
+**Told it what it earned, specifically.** Its self-caught regression — breaking a test in a file it
+does not own, finding it **before push** by running the full suite, **narrowing the fix rather than
+loosening the test**, adding a red-before-green reproduction, and reporting it under its own heading —
+is the best single item in this wave's returns. **A crew that had quietly widened an assertion would
+have produced an identical diff and passed review.** The entire difference is in what it chose to make
+visible, unprompted, on a Sonnet implementer's second instance.
