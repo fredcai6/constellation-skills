@@ -4983,3 +4983,39 @@ not carry a minute of doubt from my mistake.
 ask-then-act rule is four-for-four and I am not weakening it. What failed here was *what I asked* —
 an alarmed question built on an unchecked premise, when a one-line derivation would have turned it
 into no question at all.
+
+### VERIFIED — crew 2's `execute.c2` waive met all four conditions, checked against the record
+
+Crew 2 is **DONE**: `DONE: no open items. WAIVED: ['execute.c2']`, lease released, four commits.
+I read the waive record out of the archived spine rather than accepting the summary:
+
+| condition I set | what the record says |
+|---|---|
+| authority names me **and cites the defect** | `Admiral epic-418-redux -- #501/#468, guard refuses from any worktree` |
+| reason carries the installed-verifier command **verbatim with output** | full command path and result, quoted |
+| **nothing may say c2 passed** | its **first sentence** is *"c2 was NOT verified by its own literal command -- it was waived."* |
+| stays evidence-only, no new issue | held |
+
+**It also did something I did not ask for and should have:** it wrote the two-independent-derivations
+point **into the waive reason itself** — *"confirmed independently by re-deriving the same root cause
+crew 1 already reported... without having seen crew 1's report: two independent derivations of one
+system property, not one crew's theory."* The corroboration now travels with the record instead of
+living only in my log.
+
+### A THIRD independent derivation — crew 2 also hit crew 1's `<branch>` defect
+
+Separately, on its own authority (correctly — a template-instantiation fix inside its own latitude),
+it **amended `c2b`**:
+
+> c2b's check command was instantiated from `COMMANDER_SPINE.template.json` with the `<branch>`
+> placeholder never substituted... the literal text `gh pr list --head <branch> ...` **can never match a
+> real branch and would refuse every run** regardless of whether a PR is actually open.
+
+**That is #439/#484 — crew 1's fix C — hit independently by a third crew, from a fourth angle.** It
+verified the real command manually before retexting (`-> true`, PR #513 open) rather than assuming.
+
+So in one wave: **crew 1 predicted the guard would break every Commander worktree; crew 2 hit it. Crew
+1 found `archive.c2b` can never pass; crew 2 hit that too.** Both of crew 1's headline findings have
+now been independently reproduced by a crew that had not seen its report. **That is no longer a
+finding — it is a measured property of the system**, and it is the strongest evidence this wave has
+produced for why those two fixes are worth shipping.
