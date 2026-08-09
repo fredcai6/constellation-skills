@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 55 modules, 1048 entities
+scripts: 54 modules, 1045 entities
 skills: 1 modules, 18 entities
-tests: 62 modules, 3540 entities
+tests: 62 modules, 3534 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 62 modules, 3540 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (55 modules, 1048 entities)
+## scripts (54 modules, 1045 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -60,7 +60,6 @@ tests: 62 modules, 3540 entities
 - [scripts.episode_capture](scripts.episode_capture/INDEX.md) (15 entities): Assembly seam: the context manifest as a **byproduct of starting a step**.
 - [scripts.file_issue_set](scripts.file_issue_set/INDEX.md) (44 entities, 41 holes): File only the runnable current wave from a verified initial issue set.
 - [scripts.gauge_reader](scripts.gauge_reader/INDEX.md) (11 entities): Gauge reader -- fail-safe read of the context-fullness gauge file.
-- [scripts.gen_mcp_config](scripts.gen_mcp_config/INDEX.md) (3 entities, 2 holes): Generate a per-dispatch MCP config for one agent (issue #424, workstream F).
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
 - [scripts.install_constellation](scripts.install_constellation/INDEX.md) (62 entities, 25 holes): HOLE: no docstring
@@ -99,7 +98,7 @@ tests: 62 modules, 3540 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (62 modules, 3540 entities)
+## tests (62 modules, 3534 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -144,7 +143,7 @@ tests: 62 modules, 3540 entities
 - [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
 - [tests.test_map_orient](tests.test_map_orient/INDEX.md) (120 entities, 87 holes): The falsification floor for scripts/map_orient.py.
 - [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (35 entities, 17 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
-- [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (50 entities, 43 holes): Tests for scripts/mcp_spine_server.py and scripts/gen_mcp_config.py (issue #424, workstream F: the MCP front door on the checklist engine).
+- [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (44 entities, 37 holes): Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP front door on the checklist engine).
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
 - [tests.test_next_verbs_record_gate_comment](tests.test_next_verbs_record_gate_comment/INDEX.md) (16 entities, 12 holes): Issue #437: `_next_verbs()`'s comments must not restate a premise #422/#328 killed.

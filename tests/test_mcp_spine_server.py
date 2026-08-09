@@ -1,5 +1,13 @@
-"""Tests for scripts/mcp_spine_server.py and scripts/gen_mcp_config.py (issue
-#424, workstream F: the MCP front door on the checklist engine).
+"""Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP
+front door on the checklist engine).
+
+Per-dispatch identity is delivered by the committed project-scope `.mcp.json`
+`${VAR}` expansion from the caller's environment, not by generating a config
+file per dispatch -- the per-dispatch generation path was removed, measured
+redundant against the committed `${VAR}` path (see the g1 rework handoff and
+MISSION_FRAME.md). `McpJsonVarExpansionLaunchTests` below is the env-seam
+coverage that used to live against the generator, carried onto the mechanism
+that actually ships.
 
 Integration-style by design: the server's whole job is to be a faithful pass
 -through to `checklist_engine.main()`, so these tests spawn the real server as
@@ -11,8 +19,8 @@ around; a wrapper is verified by actually calling through it.
 
 from __future__ import annotations
 
-import importlib.util
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -24,7 +32,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "scripts" / "mcp_spine_server.py"
 ENGINE = ROOT / "scripts" / "checklist_engine.py"
-GEN_CONFIG = ROOT / "scripts" / "gen_mcp_config.py"
 MCP_JSON = ROOT / ".mcp.json"
 
 EXPECTED_TOOLS = {
@@ -32,15 +39,6 @@ EXPECTED_TOOLS = {
     "spine_evidence", "spine_halt", "spine_survey_result",
 }
 UNCOVERED_VERBS = ["skip", "reopen", "append", "amend", "flag-candidate"]
-
-
-def load_module(name: str, path: Path):
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    assert spec.loader is not None
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
 
 
 def write_gated_spine(root: Path) -> Path:
@@ -385,81 +383,6 @@ class RefusalSurfacesAsIsErrorTests(unittest.TestCase):
         self.assertIn("Recovery:", cli.stderr)
 
 
-class GenMcpConfigTests(unittest.TestCase):
-    def setUp(self):
-        self.gen = load_module("gen_mcp_config", GEN_CONFIG)
-        self.tmp = tempfile.TemporaryDirectory()
-        self.root = Path(self.tmp.name)
-        self.spine = write_gated_spine(self.root)
-
-    def tearDown(self):
-        self.tmp.cleanup()
-
-    def test_build_config_keys_session_id_and_agent_id(self):
-        config = self.gen.build_config(self.spine, session_id="sess-abc", agent_id="agent-1")
-        env = config["mcpServers"]["spine"]["env"]
-        self.assertEqual("sess-abc#agent-1", env["SPINE_SESSION"])
-        self.assertEqual(str(self.spine.resolve()), env["SPINE_FILE"])
-        self.assertEqual(str(ENGINE.resolve()), env["SPINE_ENGINE"])
-        self.assertEqual([str(SERVER.resolve())], config["mcpServers"]["spine"]["args"])
-
-    def test_build_config_rejects_hash_in_identity_components(self):
-        with self.assertRaises(ValueError):
-            self.gen.build_config(self.spine, session_id="a#b", agent_id="c")
-        with self.assertRaises(ValueError):
-            self.gen.build_config(self.spine, session_id="a", agent_id="b#c")
-
-    def test_cli_writes_a_valid_config_file(self):
-        out = self.root / "generated.json"
-        rc = self.gen.main([
-            "--spine-file", str(self.spine),
-            "--session-id", "sess-xyz",
-            "--agent-id", "agent-2",
-            "--out", str(out),
-        ])
-        self.assertEqual(0, rc)
-        config = json.loads(out.read_text(encoding="utf-8"))
-        self.assertEqual("sess-xyz#agent-2", config["mcpServers"]["spine"]["env"]["SPINE_SESSION"])
-
-    def test_generated_config_server_actually_answers_a_real_tool_call(self):
-        """End-to-end: the config this script emits must be launchable and
-        must return genuine engine output -- not just structurally valid
-        JSON. Launches the server exactly as the generated config specifies
-        (command + args + env) and calls a real tool through it."""
-        config = self.gen.build_config(self.spine, session_id="e2e-sess", agent_id="e2e-agent")
-        entry = config["mcpServers"]["spine"]
-        import os
-        env = dict(os.environ)
-        env.update(entry["env"])
-        proc = subprocess.Popen(
-            [entry["command"], *entry["args"]],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, bufsize=1, env=env,
-        )
-        try:
-            proc.stdin.write(json.dumps({
-                "jsonrpc": "2.0", "id": 1, "method": "tools/call",
-                "params": {"name": "spine_status", "arguments": {}},
-            }) + "\n")
-            proc.stdin.flush()
-            line = proc.stdout.readline()
-            if not line:
-                # NOTE: read stderr only on the failure path -- proc.stderr.read()
-                # blocks until EOF, and the child (still alive, stdin open) never
-                # closes it on the success path. An eager f-string message on
-                # assertTrue would evaluate unconditionally and deadlock here.
-                self.fail(f"no reply; stderr={proc.stderr.read()}")
-            reply = json.loads(line)
-            text = reply["result"]["content"][0]["text"]
-            self.assertIn("ACTIVE g1", text)
-        finally:
-            proc.stdin.close()
-            try:
-                proc.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-
-
 class McpJsonTests(unittest.TestCase):
     def test_mcp_json_exists_and_is_valid(self):
         self.assertTrue(MCP_JSON.is_file())
@@ -504,6 +427,88 @@ class McpJsonTests(unittest.TestCase):
         self.assertTrue(spine_path.is_file(), f"missing default spine: {spine_path}")
         loaded = json.loads(spine_path.read_text(encoding="utf-8"))
         self.assertIn("type", loaded)
+
+
+class McpJsonVarExpansionLaunchTests(unittest.TestCase):
+    """End-to-end replacement for the old generated-config test: per-dispatch
+    identity now ships via the committed `.mcp.json` plus `${VAR}` expansion
+    from the caller's environment (M1, g1 rework handoff), not a generated
+    file. Launches the server EXACTLY as `.mcp.json` specifies (its own
+    `command` + `args`, resolved relative to the repo root the way a real
+    `claude -p` dispatch resolves them) with SPINE_FILE/SPINE_ENGINE/
+    SPINE_SESSION set directly in the caller's environment -- the shell
+    `${VAR:-default}` expansion applied by hand, since Python does not
+    perform it, matching what a real dispatching shell does before exec'ing
+    the command. Also carries over the one substantive assertion the old
+    `GenMcpConfigTests` made about the server itself (not about the deleted
+    generator): SPINE_SESSION is composed by the CALLER as `session_id#
+    agent_id` and the server treats the whole string as opaque -- no
+    parsing, no validation -- so it must reach the engine, '#' and all,
+    verbatim."""
+
+    def test_var_expansion_path_launches_a_real_server_and_answers_a_tool_call(self):
+        config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
+        entry = config["mcpServers"]["spine"]
+        tmp = tempfile.TemporaryDirectory()
+        try:
+            root = Path(tmp.name)
+            spine = write_gated_spine(root)
+            env = dict(os.environ)
+            # The caller-set overrides ${SPINE_FILE:-...} / ${SPINE_SESSION:-...}
+            # expand to -- exactly the seam a real dispatch uses. The
+            # 'session_id#agent_id' composition is a caller-side convention;
+            # nothing in this repo composes or validates it anymore.
+            env["SPINE_FILE"] = str(spine)
+            env["SPINE_ENGINE"] = str(ENGINE)
+            env["SPINE_SESSION"] = "varexp-sess#varexp-agent"
+            env["SPINE_CALLLOG"] = str(root / "mcp_calls.jsonl")
+            env["SPINE_START_MARKER"] = str(root / "mcp_server_started")
+            proc = subprocess.Popen(
+                [entry["command"], *entry["args"]],
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                text=True, bufsize=1, env=env, cwd=str(ROOT),
+            )
+            try:
+                proc.stdin.write(json.dumps({
+                    "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                    "params": {"name": "spine_lease",
+                               "arguments": {"action": "claim", "claimed_by": "varexp-tester"}},
+                }) + "\n")
+                proc.stdin.flush()
+                claim_line = proc.stdout.readline()
+                if not claim_line:
+                    # NOTE: read stderr only on the failure path -- proc.stderr.read()
+                    # blocks until EOF, and the child (still alive, stdin open) never
+                    # closes it on the success path. An eager f-string message on a
+                    # eager assertion would evaluate unconditionally and deadlock here.
+                    self.fail(f"no reply to claim; stderr={proc.stderr.read()}")
+                claim_reply = json.loads(claim_line)
+                self.assertFalse(claim_reply["result"]["isError"], claim_reply)
+
+                proc.stdin.write(json.dumps({
+                    "jsonrpc": "2.0", "id": 2, "method": "tools/call",
+                    "params": {"name": "spine_status", "arguments": {}},
+                }) + "\n")
+                proc.stdin.flush()
+                status_line = proc.stdout.readline()
+                if not status_line:
+                    self.fail(f"no reply to status; stderr={proc.stderr.read()}")
+                status_reply = json.loads(status_line)
+                text = status_reply["result"]["content"][0]["text"]
+                self.assertIn("ACTIVE g1", text)
+                self.assertIn(
+                    "LEASE active: varexp-sess#varexp-agent (by varexp-tester", text,
+                    "SPINE_SESSION must reach the engine verbatim, opaque '#' and all -- "
+                    "the server does no parsing/validation of the caller-composed identity",
+                )
+            finally:
+                proc.stdin.close()
+                try:
+                    proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+        finally:
+            tmp.cleanup()
 
 
 class CliFallbackTableTests(unittest.TestCase):

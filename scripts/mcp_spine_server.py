@@ -20,8 +20,9 @@ identity mid-conversation):
                    convention -- see checklist-engine.md "Dogfooding on the
                    skill-source repo")
   SPINE_SESSION -- the --session-id every mutating verb needs once a lease
-                   exists; keyed session_id#agentId by the caller
-                   (gen_mcp_config.py composes this key; the server just uses
+                   exists; keyed session_id#agentId by the caller's own
+                   environment (the committed .mcp.json's ${VAR} expansion
+                   is what sets it on a real dispatch; the server just uses
                    whatever string it is handed)
 
 --------------------------------------------------------------------------- #

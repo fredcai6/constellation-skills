@@ -46,7 +46,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "scripts" / "mcp_spine_server.py"
 ENGINE = ROOT / "scripts" / "checklist_engine.py"
-GEN_CONFIG = ROOT / "scripts" / "gen_mcp_config.py"
 
 # Env vars mcp_spine_server.py reads at import time -- the whole identity seam.
 SPINE_ENV_KEYS = ("SPINE_FILE", "SPINE_ENGINE", "SPINE_SESSION", "SPINE_CALLLOG", "SPINE_START_MARKER")
@@ -84,9 +83,9 @@ def write_marked_spine(root: Path, marker: str, work_id: str) -> Path:
 
 class ServerInstance:
     """One real mcp_spine_server.py subprocess, bound to its identity purely
-    through the environment -- the same seam gen_mcp_config.py's generated
-    `--mcp-config` env block binds. Not a mock: real subprocess, real
-    newline-delimited JSON-RPC 2.0 over stdio.
+    through the environment -- the same seam the committed `.mcp.json`'s
+    `${VAR}` expansion binds from the caller's own environment. Not a mock:
+    real subprocess, real newline-delimited JSON-RPC 2.0 over stdio.
 
     `base_env`, when given, REPLACES the inherited environment outright
     (mirrors `subprocess.Popen(env=...)` semantics exactly) -- used by the
@@ -490,7 +489,8 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
     would be launched -- inheriting whatever environment its caller already
     has, no explicit `--mcp-config` of its own -- can end up reading a
     PARENT's already-claimed lease/gate through THIS repo's actual delivery
-    mechanism (`gen_mcp_config.py`'s per-dispatch, env-scoped config).
+    mechanism (env vars set by the caller, the same seam the committed
+    `.mcp.json`'s `${VAR}` expansion feeds).
 
     Explicitly OUT of scope for this class (do not conflate, per the
     handoff): whether Claude Code's own Task-tool harness internally reuses
@@ -499,6 +499,13 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
     product-internal mechanism with no observation point reachable from a
     subprocess-level test; the honest scope boundary is recorded in the
     IMPLEMENTER_RESULT's DC3 verdict, not silently smoothed over here.
+
+    The "parent" below is launched directly from the environment seam --
+    SPINE_FILE/SPINE_ENGINE/SPINE_SESSION set in the env passed to Popen,
+    with SPINE_SESSION composed by this test as `session_id#agent_id` --
+    exactly what the committed `.mcp.json`'s `${VAR}` expansion delivers to
+    a real dispatch, and exactly what every other class in this file already
+    does. There is no per-dispatch config file involved.
 
     Also explicitly NOT this: the separate CLI/engine-lease observation that
     two different callers can pass the identical free-text `--session-id`
@@ -510,28 +517,18 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
 
-        # A "parent": claims a lease via the repo's OWN generation path
-        # (gen_mcp_config.py), exactly like a real per-dispatch launch.
+        # A "parent": launched directly from the environment seam -- the
+        # SPINE_SESSION composed as `session_id#agent_id` right here, the
+        # same caller-side convention `.mcp.json`'s `${VAR}` expansion
+        # delivers on a real dispatch. No per-dispatch config file involved.
         self.parent_spine = write_marked_spine(self.root / "parent", "PARENT-MARK", "parent-work")
-        cfg_out = self.root / "parent-config.json"
-        gen = subprocess.run(
-            [sys.executable, str(GEN_CONFIG),
-             "--spine-file", str(self.parent_spine),
-             "--session-id", "parent-session",
-             "--agent-id", "parent-agent",
-             "--engine", str(ENGINE),
-             "--out", str(cfg_out)],
-            capture_output=True, text=True, cwd=str(ROOT),
-        )
-        self.assertEqual(0, gen.returncode, f"gen_mcp_config.py failed: {gen.stderr}")
-        self.parent_entry = json.loads(cfg_out.read_text(encoding="utf-8"))["mcpServers"]["spine"]
 
         # Snapshot the CALLING test process's own environment BEFORE
         # launching the parent, so the first test can prove launching it
         # changed nothing here.
         self._env_before = dict(os.environ)
 
-        self.parent = ServerInstance(None, None, self.root / "parent", base_env=dict(self.parent_entry["env"]))
+        self.parent = ServerInstance(self.parent_spine, "parent-session#parent-agent", self.root / "parent")
         claimed = self.parent.call("spine_lease", action="claim", claimed_by="parent-agent")
         self.assertIsNotNone(claimed)
         self.assertFalse(claimed.get("isError"))
@@ -544,8 +541,9 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def test_launching_the_parent_never_touches_the_calling_processs_own_environ(self):
-        """The repo's actual delivery mechanism (gen_mcp_config.py's env
-        block, passed as an explicit `env=` to Popen) never mutates the
+        """The repo's actual delivery mechanism (an explicit `env=` block
+        passed to Popen, the same shape the committed `.mcp.json`'s `${VAR}`
+        expansion produces from the caller's environment) never mutates the
         CALLING process's own os.environ -- verified here, not assumed, so
         the next test's premise (a sibling process launched with no explicit
         override inherits a clean environment) rests on a measured fact."""
@@ -590,9 +588,9 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
         leaking_env = dict(os.environ)
         for k in SPINE_ENV_KEYS:
             leaking_env.pop(k, None)
-        leaking_env["SPINE_FILE"] = self.parent_entry["env"]["SPINE_FILE"]
-        leaking_env["SPINE_ENGINE"] = self.parent_entry["env"]["SPINE_ENGINE"]
-        leaking_env["SPINE_SESSION"] = self.parent_entry["env"]["SPINE_SESSION"]
+        leaking_env["SPINE_FILE"] = self.parent.env["SPINE_FILE"]
+        leaking_env["SPINE_ENGINE"] = self.parent.env["SPINE_ENGINE"]
+        leaking_env["SPINE_SESSION"] = self.parent.env["SPINE_SESSION"]
         leak_dir = self.root / "leak"
         leak_dir.mkdir(exist_ok=True)
         leaking_env["SPINE_CALLLOG"] = str(leak_dir / "mcp_calls.jsonl")
