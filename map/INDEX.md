@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 52 modules, 1025 entities
 skills: 1 modules, 18 entities
-tests: 58 modules, 3377 entities
+tests: 58 modules, 3378 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -96,7 +96,7 @@ tests: 58 modules, 3377 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (58 modules, 3377 entities)
+## tests (58 modules, 3378 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -108,7 +108,7 @@ tests: 58 modules, 3377 entities
 - [tests.test_check_corpus_freshness](tests.test_check_corpus_freshness/INDEX.md) (15 entities, 14 holes): HOLE: no docstring
 - [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (612 entities, 481 holes): HOLE: no docstring
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
-- [tests.test_code_map](tests.test_code_map/INDEX.md) (347 entities, 190 holes): Tests for scripts/code_map/ — the derived code map (issue #456, gate g0).
+- [tests.test_code_map](tests.test_code_map/INDEX.md) (348 entities, 191 holes): Tests for scripts/code_map/ — the derived code map (issue #456, gate g0).
 - [tests.test_context_declaration_lint](tests.test_context_declaration_lint/INDEX.md) (22 entities, 18 holes): Tests for `scripts/verify_context_declaration.py` -- the mechanical lint pinning every declared `context_refs` path against the step's own imperative prose.
 - [tests.test_context_determinism](tests.test_context_determinism/INDEX.md) (25 entities, 21 holes): The acceptance test for issue #300: the projection manifest's *content* is identical across environments.
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.

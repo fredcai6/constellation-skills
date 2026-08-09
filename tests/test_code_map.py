@@ -4618,6 +4618,18 @@ class BOMParsingTests(unittest.TestCase):
     that a BOM file can be extracted without error.
     """
 
+    def setUp(self):
+        # `extract.ROOT` is a module GLOBAL that whichever build ran last leaves
+        # set, and `mod_of` derives a module name from it with os.path.relpath.
+        # Leaving it alone made this test depend on test ORDER, and CI proved it
+        # the expensive way: the runner keeps the checkout on D: and temp dirs on
+        # C:, so an earlier test's temp root made relpath raise
+        # "path is on mount 'D:', start on mount 'C:'". It cannot reproduce on a
+        # single-drive machine, which is exactly why it reached CI green locally.
+        self._saved_root = extract.ROOT
+        extract.ROOT = str(ROOT)
+        self.addCleanup(lambda: setattr(extract, "ROOT", self._saved_root))
+
     def test_bom_file_can_be_extracted(self):
         """A file with UTF-8 BOM should be extractable via the build_table function.
 
