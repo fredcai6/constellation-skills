@@ -4558,3 +4558,29 @@ the installer's report. That single re-install picks up #511's files too.
 after finding drift is to fix the drift. With live crews, fixing it is the more damaging move — and the
 reason I can say that with any confidence is that I filed the exact failure mode eight hours ago and
 would otherwise have walked into it from the other side.
+
+### Pre-decision, made before it is needed — how #509 merges if crew 5 never closes `m3`
+
+`m3-artifact-and-pr` is `in-progress` with `next: advance m3 --why`, heartbeat eight minutes old.
+Crew 5 is **one verb** from done and everything else is finished: rework pushed, `_shared` row verified
+byte-present on both sides, **CI green**.
+
+**Deciding this now rather than at the moment it bites**, because a rule invented under time pressure
+is the one that bends:
+
+- **If crew 5 closes `m3` and releases:** merge normally. Preferred, and what I expect.
+- **If crew 5 goes idle without closing it:** **merge on artifact adjudication.** The orchestrator
+  doctrine is explicit that an idle agent with complete artifacts is *done*, not stalled — verify from
+  the artifact set (branch, commit, PR, files) and accept the work, **never block on a dropped verdict.**
+  Every element of that set is already verified here by my own commands, not by its report.
+- **What I will NOT do either way: drive its spine for it.** The lease is its own and the engine owns
+  that file. An Admiral closing a crew's gate to unblock its own merge is writing a verdict it did not
+  earn into a record its gates read — the same act as flipping a boundary decision, one tier down.
+
+**So the outstanding item is bookkeeping in the crew's own spine, not doubt about the work.** The merge
+does not wait on certainty; it waits on courtesy, and there is a bound on the courtesy.
+
+**Three crews (1, 4, 5) quiet for 4-15 minutes; all three show pytest caches written 23:43-23:52**, so
+that reads as post-suite composition rather than a stall — and **no idle notification has arrived**,
+which is the authoritative channel and the one I have been wrong to second-guess twice today. Crew 2 is
+running hot at ~47 writes per four minutes.
