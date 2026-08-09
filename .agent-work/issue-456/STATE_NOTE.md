@@ -4,9 +4,57 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`g8-review`** — build done+verified, review NOT yet dispatched
-- **PID**: none in flight. All g6/g7/g8 crews closed via `--verify-result`.
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g8-review-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: **`g8` — 5th pass, TEST-ONLY, in flight**
+- **PID**: crew `constellation/issue-456/g8/implementer/attempt-5` running. All others closed.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g8-remediate-4-RESULT.md`
+
+## 🔴 RESUME HERE — `g8` on its 5th pass. Production code is CORRECT.
+
+**Do not touch `scripts/code_map/`.** Three reviews confirmed the production fix
+at `1f2b57ab` by direct execution. The open defect is **hollow tests**.
+
+**The one thing left:** `tests/test_code_map.py:4577` still reads
+`if len(summary) == 160:` — gating the meaningful assertions behind the very
+condition they exist to assert. Its own comment says "assert unconditionally"
+and the code does the opposite. Under a mutation that stops truncation,
+`len(summary)` is 245, the gate is False, both assertions skip, and only
+`assertGreater(len(reconstructed), 0)` runs — passes always. Crew added the
+overflow-text assertion (fix 2, landed at `18dc643e`) but left the gate.
+**Rule to apply: branch on the SHAPE (fixed, known when the case is written),
+never on the MEASURED output (the thing under test).**
+Acceptance: revert truncation → the invariant test must go RED.
+
+**Engine bookkeeping still owed for g8** (same trap I hit on g7 — the work ran
+ahead of the record): `g8-implement` is still `pending`. Attest `p1`, `start`,
+`attach` an `implementer-result`, attest `c1`, `advance`; then `g8-review`
+(evidence type `review-result`), then `g8-integrate` (`c1` command re-run by
+`advance`; `c2` needs verdict **APPROVE**). Closing selector `-k 'bom or
+docstring'` → **11** now, gate baseline was **4**.
+
+**Verified at this boundary:** suite **1838 passed, 2 skipped, 701 subtests,
+0 failed**; fresh `build` then `check` **7/7 exit 0**. Invariant holds
+character-exact across shapes neither I nor the crew hand-picked (reviewer
+checked exact-159/160/161, multi-byte em-dash straddling the cut, CRLF,
+whitespace-only, all-blank, leading blank, huge body): **zero content loss**.
+
+### Why g8 took five passes — the run's main lesson
+Passes 1–3 were **Commander specification errors**: each brief named the CASE,
+so each fix was correct for that case and left the same defect elsewhere.
+D3 was **never defined** in any reference material; I defined it empirically,
+then scoped the fix to one branch of two. Every round was caught by a reviewer
+testing against the **real corpus** while fixtures stayed green.
+Pass 4 flipped shape: code right, **proof hollow**. Pass 5 is the same again.
+**Carry: state the INVARIANT, not the case; test it against real data.**
+
+### Also owed at close
+`tc15` shared-tmp collisions between crews. `tc16` specify-the-invariant lesson.
+`tc17` my own four-shape check used word-splitting (reviewer found that throws
+false positives on no-whitespace strings and redid it character-exact — my
+conclusion held, my method was weaker than I stated); plus the engine note that
+a second `consolidate` needs `--override-reason` ONLY for APPROVE-while-failing,
+not for BLOCK — undocumented asymmetry.
+
+## SUPERSEDED — earlier g8 history
 
 ## 🟢 RESUME HERE — `g7` CLOSED (9/11). `g8` built+verified, needs review.
 
