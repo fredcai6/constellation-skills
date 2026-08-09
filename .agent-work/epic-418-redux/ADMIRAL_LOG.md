@@ -4766,3 +4766,38 @@ note with what each signal is blind to.
 **One item routed to me, not fixable by them:** after crew 1's fix A, `ADMIRAL_SPINE.template.json`'s
 execute prose **and** its `directives.decisions` block will still describe `repair` as an enforced exit.
 Not their file. Mine to carry into closeout.
+
+### RULING — routed the `Closes #A, #B` finding to #354 rather than filing a new issue
+
+The finding is real and it is a **new failure mode**, not a repeat: #354 records PRs whose bodies
+carried **no** closing keyword. #509's body **carried one and named both issues** — `Closes #496, #411.`
+— and closed only the first. GitHub honours only the leading issue in a comma-list.
+
+**That variant is worse than the one #354 already documents**, and I said so there: the artifact that
+would prompt a check **is present and looks right.** Nobody re-reads a PR body that already says
+`Closes`. #301 and #309 were visibly missing something; this one was visibly fine.
+
+Also measured and posted: **no template, handoff, or doctrine file in this repo mentions closing
+keywords at all** —
+
+```
+grep -rn "Closes #\|Fixes #\|closing keyword" skills/ docs/ --include="*.md"   -> no matches
+```
+
+So a crew writing the comma form is following no instruction and violating none.
+
+**RULING: comment on #354, do not file a new issue.** Tommy's standing direction for this wave is to
+bring the count **down**; a third instance of a defect that already has an open issue belongs on that
+issue as evidence, not as a new row. The backlog does not need another entry — **#354 needed a
+measurement, and now it has three.**
+
+**And I named why the obvious fix is insufficient**, since that is the part a future implementer will
+otherwise redo: a doctrine line is the same remedy that already failed for #301 and #309, where the
+rule existed informally and simply was not applied. The checkable version is a **post-merge
+reconciliation** — every issue a merged PR references must be either closed or explicitly declared
+not-to-be-closed. **PR #509 would fail that check; PR #511 would pass it while correctly leaving #413
+open**, because #511 references #413 deliberately without a keyword and says why. Telling those two
+apart is the whole difficulty, and nothing today can.
+
+**Crews 1 and 4 relaunches both confirmed driving** — journals at 00:15, one minute apart. Crew 2 in
+`execute`. Prelaunch re-verified exit 0 after the state-note refresh.
