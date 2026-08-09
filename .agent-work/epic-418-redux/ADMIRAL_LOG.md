@@ -4699,3 +4699,70 @@ and written down.
 
 **Crew 5 is working:** journal mtime 00:05, five minutes ago. Crews 1 and 4 remain quiet on the engine
 channel at 15 and 23 minutes; both have been asked and neither has been acted on.
+
+## MERGE 2 of wave 5 — PR #509 (crew 5): #496 + #411
+
+**MERGED at `4bde569e`, verified on the forge.** Gated on the check **for the head commit** (`8f3a6f54`),
+not on "a run passed" — crew 5 had pushed a rework on top of an already-green commit, so a stale green
+was available and would have proved nothing.
+
+### `Closes #496, #411.` closed only #496 — caught by verifying, not by assuming
+
+**GitHub honours only the first issue in a comma-list; each number needs its own keyword.** #496
+auto-closed; **#411 stayed open.** The only reason this was caught is the standing rule to verify issue
+state on the forge after every merge rather than trusting the merge to have done it. A run that skipped
+that check would have left a completed issue open and no signal anywhere.
+
+**Closed #411 by hand with the verification recorded**, including the part the crew was right to leave
+undone: the **propagation half is explicitly NOT fixed**, and its own artifact says so —
+*"Nothing here stops the mistake recurring... the propagation path #411 names is closed only if the
+command itself excludes `_`-prefixed directories."* Closed against the issue's **stated** target (the
+snapshot's miscategorisation at `fc1685a`) with the residual named where the next reader meets it, and
+noted that fixing the generator is a new issue against the command, not this one.
+
+### The rework was the right call and the crew found the better argument
+
+First attempt **deleted** the `_shared` row. Reverted in review: that row sits in a fenced block that is
+verbatim output of a command printed directly above it, and — the crew's finding, not mine — **the file
+commits to reproducibility in its own §0.** I argued from principle; it cited the document's own
+promise. Row restored verbatim, correction moved into the note, propagation gap answered honestly.
+
+**Wave 5: 4 of 21 issues closed** (#507, #370, #496, #411). Two PRs merged, zero rework cycles wasted.
+
+### Two crews stood down cleanly and were relaunched
+
+**Crew 1** finished `plan` — all six postconditions — and tripped at the `execute` seam on a reading it
+**verified was its own**: 17.5% at 23:55:54, and it corroborated that by noting its first `current`
+read **18%** before any tool call (the predecessor's) and its own read came in **lower**. *"A fresh
+agent replacing a larger reading with a smaller one is exactly the shape you would expect."* It
+released the lease so the successor claims without `--force`.
+
+**Its plan step earned its keep, measurably.** A cold critic panel returned **BLOCK**: **g1 and g3 could
+each have closed with zero work done.** One critic replaced the guard with an unconditionally-permissive
+version and the closing command still exited 0. Remedy: every gate now closes on a `-k` selector keyed
+to a test-naming contract in its own imperative — zero match exits 5, so a gate whose tests were never
+written **fails closed**. It re-measured all six selectors itself at exit 5 rather than taking the
+critic's word. **In a wave about checks that cannot fail, it had authored two and caught them before
+they shipped.**
+
+It also corrected **two of its own predecessor's claims** by measurement, including one where its
+evidence anchor had the failure polarity backwards and would have misled the reviewer.
+
+**Crew 4** completed m0-m4, each with a real red-before-green, then hit a genuine HARD trip at
+`start m5-503` — and **re-verified it with a fresh tool call** (16% → 17%, moving the right way) rather
+than assuming, precisely because I had warned it about inherited readings. Relaunched both.
+
+### Crew 1 corrected my monitoring, and it is right
+
+> the gauge is not a liveness signal here... it did not move for my last turn's five git commands...
+> Inferring "last tool call" from that timestamp will keep telling you an agent is idle when it is
+> working — and, worse in the other direction, would tell you an agent is alive at the moment it dies
+> mid-gate. If you want a real one, the spine journal's last entry moves on every engine verb.
+
+**Independently the same conclusion I reached from crew 2's frozen gauge, arrived at from the other
+end.** Two agents, two routes, one answer: **journal mtime, never the gauge.** That is now in the state
+note with what each signal is blind to.
+
+**One item routed to me, not fixable by them:** after crew 1's fix A, `ADMIRAL_SPINE.template.json`'s
+execute prose **and** its `directives.decisions` block will still describe `repair` as an enforced exit.
+Not their file. Mine to carry into closeout.
