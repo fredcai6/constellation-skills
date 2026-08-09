@@ -1,0 +1,179 @@
+{
+  "work_id": "issue-458-readiness",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All four close criteria met: four independently-callable, independently-tested check functions (check_engine_runnable via sys.executable distinguishes interpreter-missing/pytest-missing/working; check_work_area_present checks .git dir-or-file; check_skills_installed checks CORPUS.json + expected skill folders; check_hooks_shippable + is_git_tracked distinguishes project git-tracked vs user WIRED-only). CLI (--check-readiness) reports and refuses nonzero with named reasons, exits 0 only when all ready, never writes settings.json (verified by code read and reproduced test). Reproduced 25/25 readiness tests and 132/132 full-file tests passing.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff touches exactly scripts/install_constellation.py and tests/test_install_constellation.py (git diff --name-only confirmed). checklist_engine.py and test_checklist_engine.py, the specific exclusions, do not appear anywhere in the diff. No docs/agents/* or README.md edits despite the implementer noting a README gap -- correctly logged as out_of_scope_observations rather than acted on.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reproduced independently, not restated from the implementer's claim: 'python -m pytest tests/test_install_constellation.py -k readiness -q' -> 25 passed, 107 deselected (deselected count differs from implementer's 1869 only because implementer ran against tests/ whole-directory, not the single file the handoff's Required Evidence names; same 25 passed either way). 'python -m pytest tests/test_install_constellation.py -q' -> 132 passed, 380 subtests passed. git check-ignore on both files exits 1 (tracked). Mutation-tested the load-bearing discrimination case myself: patched a fresh load_installer() module instance's check_engine_runnable to always report ready=True, re-ran test_check_engine_runnable_not_ready_when_pytest_missing against that mutated instance, and it FAILED (AssertionError: True is not false) -- the test can genuinely catch a regression, not a check that cannot fail. Read (not just grepped) every new function; settings.json is written at exactly one place in the whole file (wire_hooks(), line ~912), reached only from args.wire_hooks branches in main(), and the --check-readiness branch returns before reaching that code and explicitly raises InstallError if --wire-hooks or --baseline-only is combined with it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CREW_CONTEXT.md rules honored: uses sys.executable / python, never a bare 'py'/'python' string. No file writes in the new code (read-only checks), so the UTF-8/newline-on-write rule is N/A. Beyond the unit tests, ran the CLI itself end-to-end against a genuinely fresh, never-installed target (git-init'd empty temp dir as project, never-installed temp dest) -- it printed named per-item NOT READY reasons for skills/hooks and exited 1, and separately READY for a real .git-bearing project -- real evidence the refusal is not just a synthetic-test artifact (Map Anchors' Pre-Ruling 3 concern: nothing in the code path looks like it could fail to refuse on a real fresh clone; I did not run the actual g1-integrate fresh-clone check, that remains its job). Pre-Ruling 2 (settings.json never touched) verified by code read: the only settings_path.write_text call in the file lives inside wire_hooks(), unreachable from the --check-readiness branch, which explicitly rejects --wire-hooks/--baseline-only combinations before any check runs.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture reconciliation needed: additive-only change inside the existing install_constellation.py script (Pre-Ruling 4: no new script), reuses existing symbols (AGENT_TARGETS, resolve_target_roots, CORPUS_MARKER, detect_hook_wiring/describe_hook_wiring, settings_path_for_target_root) rather than re-deriving them. Repo is DEGRADED-NO-MAP per handoff so there is no structural map to diverge from. One real out-of-scope gap flagged as triage candidate tc1: README.md's Install section documents --wire-hooks/--baseline-only but not the new --check-readiness flag; correctly left untouched since README.md was not in this gate's Allowed Scope.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/issue-458-readiness/g1-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass complete (templates/FOWLER_PASS.template.json record at .agent-work/issue-458-readiness/g1-review/fowler-pass.json): 12/12 baseline smells rendered, 0 flagged, 2 overridden with logged repo-standard reasons (long-parameter-list against install_skills' own 8-keyword-arg convention at line 1164; divergent-change against handoff Pre-Ruling 4's explicit no-new-script ruling), 10 absent. verify_fowler_pass.py exits 0.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/issue-458-readiness/g1-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "Readiness-check mode on scripts/install_constellation.py verified independently: four separately-callable, separately-tested check functions (engine via sys.executable distinguishing interpreter-missing/pytest-missing/working; work-area via .git dir-or-file; skills via CORPUS.json + expected-skill-folder membership; hooks via detect_hook_wiring reuse plus git-ls-files tracked-ness at project scope only), combined by a thin CLI layer that reports and refuses nonzero with a named per-item reason, exits 0 only when every targeted agent is fully ready. Read every new function (not just grepped): settings.json is written at exactly one place in the whole file, inside wire_hooks(), unreachable from the --check-readiness branch, which explicitly rejects --wire-hooks/--baseline-only combinations up front. Reproduced 25/25 readiness tests and 132/132 full-file tests myself (not restated from the implementer). Mutation-tested the load-bearing pytest-missing-vs-interpreter-missing discrimination case myself against a deliberately-broken always-ready stand-in and confirmed the test actually fails -- it is not a check that cannot fail. Ran the CLI end to end against a real never-installed target and a real git-init'd project directory outside the test suite, and it refused / passed exactly as claimed. Diff touches exactly the two allowed files; checklist_engine.py/test_checklist_engine.py (specific exclusions) are absent. Fowler pass: 12/12 baseline smells rendered, 0 flagged, 2 overridden with logged repo-standard reasons, verify_fowler_pass.py exits 0. One real but explicitly out-of-scope gap flagged as a triage candidate: README.md's Install section does not yet mention --check-readiness."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "README.md documents --wire-hooks and --baseline-only in its Install section but not the new --check-readiness flag; the implementer correctly declined to add it (README.md wasn't in this gate's Allowed Scope) and logged it as an out-of-scope observation. Real gap, not a blocker: a future doc pass should add a one-line README mention of --check-readiness."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g1-review-458-sess1",
+    "status": "released",
+    "claimed_at": "2026-08-09T00:08:41.123170+00:00",
+    "last_heartbeat": "2026-08-09T00:15:08.443943+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T00:15:16.914341+00:00"
+  }
+}

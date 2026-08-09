@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -926,6 +927,240 @@ def wire_hooks(
         )
 
 
+# --------------------------------------------------------------------------- #
+# readiness check (#458) -- report-only: never repairs, never writes settings.json
+# --------------------------------------------------------------------------- #
+# "Is this project set up to run Constellation" answered as four separately
+# testable checks, never a single opaque verdict. Each returns a ReadinessCheck
+# so a failing item always carries a NAMED reason -- a check that can only ever
+# report ready is the exact defect this exists to catch.
+
+
+@dataclass(frozen=True)
+class ReadinessCheck:
+    """One readiness item's verdict. `reason` is always populated -- on a pass
+    it names what was actually verified, not just 'ok', so a reader can tell a
+    real determination from a check that never ran."""
+
+    ready: bool
+    reason: str
+
+
+def check_engine_runnable(*, python: str = sys.executable, timeout: float = 10.0) -> ReadinessCheck:
+    """Readiness item 1: engine present and runnable (environment-scoped).
+
+    Actually imports and runs pytest under `python` (default `sys.executable`
+    specifically -- never a bare `python`/`py` shell-out, which is a DIFFERENT
+    interpreter than the one this process is running under and can silently
+    diverge from it). Distinguishes three outcomes: the interpreter itself
+    cannot be launched; the interpreter launches but pytest is not importable
+    (`py` on a real box exits nonzero with 'No module named pytest' and reads
+    exactly like a red suite if only a launch is checked); both present and
+    working."""
+    try:
+        result = subprocess.run(
+            [python, "-m", "pytest", "--version"],
+            capture_output=True, text=True, timeout=timeout,
+        )
+    except FileNotFoundError:
+        return ReadinessCheck(False, f"interpreter not found: {python}")
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return ReadinessCheck(False, f"interpreter at {python} did not run: {exc}")
+
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "").strip()
+        if "no module named pytest" in detail.lower():
+            return ReadinessCheck(False, f"pytest not installed for {python}: {detail}")
+        return ReadinessCheck(False, f"pytest failed to run under {python}: {detail[:200] or 'no output'}")
+
+    return ReadinessCheck(True, f"pytest runnable under {python} ({(result.stdout or '').strip()})")
+
+
+def check_work_area_present(project_root: Path) -> ReadinessCheck:
+    """Readiness item 4: work area present (tree-scoped).
+
+    README.md's own Baseline Assumptions: 'a Git repo, Markdown docs, and
+    file-based workflow state'. A `.git` entry -- directory (a normal repo) or
+    file (a worktree's pointer, e.g. this very worktree) -- is the check;
+    `.agent-work/` is deliberately NOT required, since a project ready to
+    *start* using Constellation has not necessarily run it yet."""
+    git_entry = project_root / ".git"
+    if not git_entry.exists():
+        return ReadinessCheck(False, f"no .git at {project_root} -- not a Git repo")
+    return ReadinessCheck(True, f".git present at {project_root}")
+
+
+def check_skills_installed(
+    target_root: Path, *, expected_skills: Iterable[str] | None = None
+) -> ReadinessCheck:
+    """Readiness item 2: skills installed and registered (tree/target-scoped).
+
+    Ready iff `target_root` carries a `CORPUS.json` marker (the installer's own
+    provenance stamp) and at least one `constellation-*` skill folder; when
+    `expected_skills` is given (the install_name set a real --agent/--scope/
+    --skills combination would target), every named skill must be present too.
+
+    `target_root` is the SAME path `resolve_target_roots` computes for a real
+    install -- the readiness CLI mode therefore takes --agent/--scope itself
+    rather than standing scope-agnostic, since "installed" only means
+    something relative to a specific target."""
+    if not target_root.is_dir():
+        return ReadinessCheck(False, f"no skills directory at {target_root}")
+    marker = target_root / CORPUS_MARKER
+    if not marker.is_file():
+        return ReadinessCheck(
+            False, f"no {CORPUS_MARKER} at {target_root} -- skills not installed")
+    installed = {
+        path.name for path in target_root.iterdir()
+        if path.is_dir() and path.name.startswith("constellation-")
+    }
+    if not installed:
+        return ReadinessCheck(
+            False, f"{CORPUS_MARKER} present but no constellation-* skill folders under {target_root}")
+    if expected_skills is not None:
+        missing = sorted(set(expected_skills) - installed)
+        if missing:
+            return ReadinessCheck(
+                False, f"missing skill(s) at {target_root}: {', '.join(missing)}")
+    return ReadinessCheck(True, f"{len(installed)} skill(s) installed at {target_root}")
+
+
+def is_git_tracked(path: Path) -> bool:
+    """Whether `path` is tracked in the git repo that contains it, by real
+    `git ls-files` membership -- presence on disk is never enough. `cwd` is
+    the file's own parent so this resolves correctly even when the file sits
+    in a subdirectory of the repo root (the real install layout: .git at the
+    project root, settings.json one level down under .claude/). Any git
+    failure (not a repo, git missing) reads as untracked, never raises."""
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", str(path)],
+            cwd=str(path.parent), capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    return result.returncode == 0
+
+
+def check_hooks_shippable(
+    target_root: Path, *, scope: str, env: Mapping[str, str]
+) -> ReadinessCheck:
+    """Readiness item 3: hooks wired in a file that ships (environment-scoped).
+
+    Reuses `detect_hook_wiring`/`describe_hook_wiring` rather than re-deriving
+    wiring detection. Ready iff the Context Governor hook is WIRED AND, for
+    `scope == 'project'` only, the settings.json backing that verdict is
+    git-tracked (`git ls-files` membership) -- a gitignored
+    `settings.local.json` can be WIRED while the tracked `settings.json` is
+    not, which must read as NOT ready. `scope == 'user'` has no tracked/
+    untracked axis at all (`~/.claude/settings.json` is never part of a repo),
+    so WIRED alone is sufficient there -- `settings_path_for_target_root`
+    already derives the real runtime path by construction."""
+    settings_path = settings_path_for_target_root(target_root)
+    wiring = detect_hook_wiring(settings_path, env=env)
+    if wiring.state != WIRING_WIRED:
+        return ReadinessCheck(False, describe_hook_wiring(wiring))
+    if scope == "project" and not is_git_tracked(settings_path):
+        return ReadinessCheck(
+            False,
+            f"{settings_path} is WIRED but not git-tracked (git ls-files) -- an "
+            f"untracked settings file (e.g. settings.local.json) never ships with the project",
+        )
+    return ReadinessCheck(True, f"Context Governor hooks WIRED via {settings_path}")
+
+
+READINESS_ITEMS: tuple[str, ...] = ("engine", "skills", "hooks", "work_area")
+
+
+@dataclass(frozen=True)
+class ReadinessReport:
+    """One agent target's full readiness verdict: the four ReadinessChecks,
+    keyed by `READINESS_ITEMS` name. `ready` is true only when all four are."""
+
+    checks: Mapping[str, ReadinessCheck]
+
+    @property
+    def ready(self) -> bool:
+        return all(check.ready for check in self.checks.values())
+
+
+def build_readiness_report(
+    *,
+    agent: AgentTarget,
+    target_root: Path,
+    scope: str,
+    project_root: Path,
+    env: Mapping[str, str],
+    expected_skills: Iterable[str] | None = None,
+    python: str = sys.executable,
+) -> ReadinessReport:
+    """Combine all four readiness checks for one agent target.
+
+    Hooks are a Claude Code mechanism (`HOOK_CAPABLE_AGENT_NAMES`); for any
+    other agent, item 3 is reported READY with an explicit 'not applicable'
+    reason rather than silently skipped -- a check the reader cannot tell was
+    never run is the exact defect this readiness mode exists to catch."""
+    if agent.name in HOOK_CAPABLE_AGENT_NAMES:
+        hooks = check_hooks_shippable(target_root, scope=scope, env=env)
+    else:
+        hooks = ReadinessCheck(
+            True, f"not applicable: {agent.name} has no hook mechanism to check")
+    return ReadinessReport({
+        "engine": check_engine_runnable(python=python),
+        "skills": check_skills_installed(target_root, expected_skills=expected_skills),
+        "hooks": hooks,
+        "work_area": check_work_area_present(project_root),
+    })
+
+
+def describe_readiness_report(agent_name: str, report: ReadinessReport) -> str:
+    """One reportable block: a READY/NOT READY line per item plus an overall
+    verdict line, each carrying the check's own named reason."""
+    lines = [f"{agent_name}:"]
+    for name in READINESS_ITEMS:
+        check = report.checks[name]
+        verdict = "READY" if check.ready else "NOT READY"
+        lines.append(f"  - {name}: {verdict} -- {check.reason}")
+    lines.append(f"  {'READY' if report.ready else 'NOT READY'}")
+    return "\n".join(lines)
+
+
+def run_readiness_check(
+    args: argparse.Namespace,
+    *,
+    env: Mapping[str, str],
+    cwd: Path,
+    out: Callable[[str], object],
+) -> int:
+    """The `--check-readiness` entry point: answers "is this project set up to
+    run Constellation" and refuses (nonzero exit) with a named per-item reason
+    when it is not. Report-only -- never repairs, never writes settings.json
+    at any scope, under any condition."""
+    skills = select_skills(args.skills, discover_skills())
+    expected_skills = [skill.install_name for skill in skills]
+    project_root = args.project.expanduser() if args.project else cwd
+
+    # --project here names the directory readiness item 4 (work area) checks,
+    # independent of where skills install -- decoupled from `resolve_target_roots`,
+    # which (correctly, for INSTALL) refuses --project at --scope user because it
+    # has no meaning as an install location there. Readiness's own use of
+    # --project is a different question, so strip it before resolving targets.
+    target_args = args
+    if args.scope == "user" and args.project is not None:
+        target_args = argparse.Namespace(**{**vars(args), "project": None})
+    target_roots = resolve_target_roots(target_args, env, cwd)
+
+    overall_ready = True
+    for agent, target_root in target_roots:
+        report = build_readiness_report(
+            agent=agent, target_root=target_root, scope=args.scope,
+            project_root=project_root, env=env, expected_skills=expected_skills,
+        )
+        out(describe_readiness_report(agent.name, report))
+        overall_ready = overall_ready and report.ready
+    return 0 if overall_ready else 1
+
+
 def install_skills(
     skills: Sequence[Skill],
     target_root: Path,
@@ -1340,6 +1575,15 @@ def build_parser() -> argparse.ArgumentParser:
             "Requires --scope project."
         ),
     )
+    parser.add_argument(
+        "--check-readiness",
+        action="store_true",
+        help=(
+            "Report whether this project/environment is ready to run Constellation and exit "
+            "nonzero with a named reason for each failing item. Report-only: never repairs "
+            "anything and never writes settings.json at any scope."
+        ),
+    )
     return parser
 
 
@@ -1356,6 +1600,22 @@ def main(
     try:
         runtime_env = os.environ if env is None else env
         runtime_cwd = Path.cwd() if cwd is None else cwd
+
+        if args.check_readiness:
+            # Refuse EARLY, before any check runs: this mode never writes
+            # settings.json under any condition, so pairing it with a flag whose
+            # whole point is writing one is a contradiction to reject, not honor.
+            if args.wire_hooks:
+                raise InstallError(
+                    "--check-readiness cannot be combined with --wire-hooks -- "
+                    "readiness reports only and never writes settings.json"
+                )
+            if args.baseline_only:
+                raise InstallError(
+                    "--check-readiness cannot be combined with --baseline-only"
+                )
+            return run_readiness_check(args, env=runtime_env, cwd=runtime_cwd, out=out)
+
         skills = select_skills(args.skills, discover_skills())
         validate_required_scripts(skills)
         validate_required_references(skills)

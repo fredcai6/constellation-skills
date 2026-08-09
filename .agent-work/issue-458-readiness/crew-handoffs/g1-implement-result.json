@@ -1,0 +1,62 @@
+{
+  "assigned_gate": "g1 (issue-458-readiness, execute.json)",
+  "completed_slice": "Added a report-only readiness-check mode to scripts/install_constellation.py: four separately-callable, separately-testable check functions (check_engine_runnable, check_work_area_present, check_skills_installed, check_hooks_shippable + its is_git_tracked helper), combined by build_readiness_report/describe_readiness_report, and exposed as a new --check-readiness CLI flag driven by run_readiness_check. The mode answers 'is this project set up to run Constellation' and exits nonzero with a named per-item reason on any failing item; it never repairs anything and never writes settings.json at any scope, under any condition. Along the way, fixed a real bug the CLI tests caught: resolve_target_roots rejected --project at --scope user (a correct rule for INSTALL, where --project has no meaning as an install location at user scope) even though readiness's own --project (item 4, work-area) is orthogonal to the skills install target -- decoupled by stripping --project from target-root resolution only, while still using the original --project for project_root.",
+  "files_changed": [
+    "scripts/install_constellation.py",
+    "tests/test_install_constellation.py"
+  ],
+  "test_mode_satisfied": "TDD red->green for all five plan items (m1-m5): tests written first, observed failing (AttributeError: module has no attribute '<new symbol>') for m1-m4, then implemented to green. m5 deviated from strict red-first -- the CLI implementation was drafted alongside the tests rather than tests-then-code -- but the first real test run still surfaced a genuine defect (SystemExit(2): '--project is only valid with --scope project') that required a real code fix before the suite went green, so red->green still happened, just not by the by-design AttributeError route. Logged as a workflow-feedback item below.",
+  "evidence": {
+    "readiness_test_slice": {
+      "command": "python -m pytest tests/ -k readiness -q",
+      "output": "25 passed, 1869 deselected in 5.09s",
+      "result": "pass"
+    },
+    "full_test_file": {
+      "command": "python -m pytest tests/test_install_constellation.py -q",
+      "output": "132 passed, 380 subtests passed in 48.92s",
+      "result": "pass",
+      "note": "no pre-existing test in the touched file failed or changed behavior"
+    },
+    "per_gate_test_runs": [
+      {"gate": "m1-engine-check", "command": "python -m pytest tests/test_install_constellation.py -k check_engine_runnable -q", "red": "4 failed (AttributeError: no attribute 'check_engine_runnable')", "green": "4 passed"},
+      {"gate": "m2-work-area-check", "command": "python -m pytest tests/test_install_constellation.py -k check_work_area_present -q", "red": "4 failed (AttributeError: no attribute 'check_work_area_present')", "green": "4 passed"},
+      {"gate": "m3-skills-check", "command": "python -m pytest tests/test_install_constellation.py -k check_skills_installed -q", "red": "5 failed (AttributeError: no attribute 'check_skills_installed')", "green": "5 passed"},
+      {"gate": "m4-hooks-check", "command": "python -m pytest tests/test_install_constellation.py -k \"is_git_tracked or check_hooks_shippable\" -q", "red": "7 failed (AttributeError: no attribute 'is_git_tracked' / 'check_hooks_shippable')", "green": "7 passed"},
+      {"gate": "m5-report-cli", "command": "python -m pytest tests/test_install_constellation.py -k ReadinessCLITests -q", "red": "3 failed, 2 passed -- SystemExit(2): 'error: --project is only valid with --scope project' (real bug, not a missing-symbol AttributeError; see test_mode_satisfied)", "green": "5 passed"}
+    ],
+    "git_check_ignore": {
+      "command": "git check-ignore scripts/install_constellation.py tests/test_install_constellation.py",
+      "exit_code": 1,
+      "meaning": "neither edited file is gitignored -- both remain tracked-eligible"
+    },
+    "wiring_grep": {
+      "command": "grep -rn \"<symbol>\" --include=*.py scripts tests | grep -v \"^tests\" | grep -v \"def <symbol>\"",
+      "call_site_counts_outside_own_definition_and_tests": {
+        "check_engine_runnable": 1,
+        "check_work_area_present": 1,
+        "check_skills_installed": 1,
+        "is_git_tracked": 1,
+        "check_hooks_shippable": 1,
+        "build_readiness_report": 1,
+        "describe_readiness_report": 1,
+        "run_readiness_check (CLI entry point, called from main())": 1,
+        "--check-readiness (argparse flag + args.check_readiness branch in main())": 3
+      },
+      "detail": "Each new check function is called exactly once in production code, from build_readiness_report (scripts/install_constellation.py:1104-1112); build_readiness_report is called once from run_readiness_check (:1155); run_readiness_check is called once from main()'s --check-readiness branch (:1617); the --check-readiness flag is defined once in build_parser() (:1579) and read/branched on twice in main() (:1604, plus two InstallError guard messages that reference the flag by name at :1610 and :1615). All new symbols are wired into the real CLI path, not just exercised by their own tests."
+    }
+  },
+  "assumptions_used": {
+    "agent_scope_decision": "The readiness mode REQUIRES --agent/--scope (they are already required parser arguments; the mode did not add a bypass). Reason: readiness item 2 (skills installed) and item 3 (hooks shippable, whose ships-test differs by scope) are inherently target-specific -- 'installed' and 'shippable' only mean something relative to a concrete --agent/--scope target, so build_readiness_report consumes the SAME target_root resolve_target_roots computes for a real install, and check_hooks_shippable branches its ships-test on args.scope directly.",
+    "project_flag_decoupling": "--project is accepted at --scope user for --check-readiness even though resolve_target_roots rejects it there for plain installs (no meaning as an install location at user scope). Readiness's own --project names the directory item 4 (work area) checks, which is orthogonal to where skills install, so run_readiness_check strips --project from target-root resolution only when scope=='user', while still using the original --project for project_root. This is a genuine behavior difference from plain install argument validation, confined to the --check-readiness branch.",
+    "hook_capable_agents": "For a non-hook-capable agent (Codex/Cursor/Gemini), item 3 (hooks) is reported READY with an explicit 'not applicable: <agent> has no hook mechanism to check' reason, rather than silently omitted or defaulted true with no reason. Chosen so the reader can always tell a real determination from a non-check, per the handoff's Protected Intent.",
+    "exit_codes": "Exit 0 when every targeted agent is fully ready, exit 1 otherwise (no finer-grained exit-code taxonomy per item, unlike check_corpus_freshness.py's 3-way split) -- the handoff only requires 'nonzero ... named reason', which the per-item reason strings in the printed report satisfy without a second encoding in the exit code.",
+    "no_new_script": "Kept as a mode of install_constellation.py per Pre-Ruling 4 (default against a new script). It reuses AGENT_TARGETS, resolve_target_roots, CORPUS_MARKER, detect_hook_wiring/describe_hook_wiring, and settings_path_for_target_root directly -- a standalone script would need to re-import or re-derive all of these, which is a real cost, not just a preference."
+  },
+  "stop_conditions_hit": [],
+  "out_of_scope_observations": [
+    "check_corpus_freshness.py (a sibling report-only script) uses a 3-way exit code (0 current / 1 behind / 2 cannot-determine) rather than a 2-way pass/fail. The readiness check's per-item reason text already distinguishes 'genuinely not ready' from nothing in this build (there is no 'cannot determine' case among the four items -- each one resolves definitively), so a 3rd exit code was not needed here, but a future readiness item that CAN legitimately be undeterminable (mirroring detect_hook_wiring's own WIRING_UNDETERMINABLE state for an unresolvable env-token hook entry) would need one. Flagging as a design note, not acting on it -- out of this gate's scope.",
+    "--check-readiness does not currently interact with --dry-run (readiness never writes regardless, so --dry-run is accepted but has no effect in that branch). Not a defect since nothing is ever written, but worth a one-line README mention if/when this mode is documented for end users -- README.md's own Install section covers plain install and --wire-hooks/--baseline-only but was not touched here (out of the handoff's allowed scope: docs/agents/* was explicitly excluded, and README.md was not named in Allowed Scope either)."
+  ],
+  "workflow_feedback": "Handoff gaps: none material -- the four Close Criteria items, the fresh-clone caveat for items 2/4, and the --agent/--scope decision point were all actionable as written. Context rediscovered: the codebase's own sanctioned pattern for testing a subprocess boundary (mock.patch.object(installer.subprocess, 'run', side_effect=fake_run), used by the existing interpreter-probe tests) wasn't named in the handoff but was easy to find by reading tests/test_install_constellation.py's existing probe tests per the handoff's own pointer to detect_hook_wiring/describe_hook_wiring -- a one-line pointer to that existing pattern would have saved a few minutes. Instructions improvised around: for m5 (the CLI mode) I drafted the implementation and the tests together instead of strictly test-first, which meant the first real test run caught a genuine bug (resolve_target_roots's --project/--scope=user rejection colliding with readiness's own --project use) rather than the by-design 'function does not exist yet' AttributeError the plan's postcondition text expected -- the net TDD value (a real defect caught before green) held, but the letter of 'observed failing because the function does not exist yet' did not; recorded honestly in the engine's attest note rather than silently reconciled. What would have made this easier: none beyond the above -- the handoff's Required Evidence and Wiring Grep sections were precise enough to execute directly."
+}

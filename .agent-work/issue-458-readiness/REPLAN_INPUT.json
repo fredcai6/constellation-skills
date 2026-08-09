@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418, wave 5 (final wave)",
+      "spec_path": "LO-w5-c2-readiness.md",
+      "intent_and_why": "There is no way to ask 'is this project set up to run Constellation' and get a checkable answer -- the wiring that activates capabilities can live somewhere that does not ship, and the gap is found by an agent failing rather than a check refusing."
+    },
+    "definition_of_done": ["A readiness check reports and refuses with a named reason on an unready checkout; never repairs; never touches settings.json."],
+    "good_enough": {
+      "mandatory_quality": "Report, never repair; distinguish tracked-vs-untracked hook wiring; correctly discriminate interpreter-present-but-pytest-missing",
+      "sufficient_evidence": "Unit tests per check function plus one observed refusal against a genuinely fresh clone",
+      "appetite": "One bounded issue, Sonnet tier"
+    },
+    "hard_constraints": ["settings.json never touched at any scope (Pre-Ruling 2)", "must be observed refusing on a real unready checkout, not just claimed (Pre-Ruling 3)"],
+    "fixed_decisions": ["Build the CHECK, not the stronger fresh-clone-produces-a-reading fix (Pre-Ruling 1)", "Prefer a mode of install_constellation.py over a new script (Pre-Ruling 4)"],
+    "current_wave": {
+      "objective": "Wave 5 (epic #418 close-to-w5): ship the shipping half of the governor mechanism that #419/#440/#488/#467 already built",
+      "exit_criteria": ["#458's readiness check exists, is tested, and was observed refusing on a real unready checkout"],
+      "issues": [
+        {
+          "id": "458",
+          "title": "constellation-readiness: a checkable answer to 'is this project set up to run Constellation'",
+          "desired_outcome": "One command reports readiness and refuses with a named reason when not ready.",
+          "useful_now": "Every governor observation epic #418 has made so far came from configuration that does not ship; this makes that gap checkable instead of discoverable-by-failure.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "python scripts/install_constellation.py --check-readiness refuses (exit 1) with named per-item reasons on an unready checkout, and passes when all four items are ready.",
+          "implementation_latitude": "Choose the exact four-item shape and CLI flag name; preserve the report-only, no-settings.json-write boundary.",
+          "hard_constraints_no_gos": ["settings.json never touched", "never repairs"],
+          "local_unknowns": [],
+          "anchors": ["scripts/install_constellation.py"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [],
+    "uncertainty_register": [],
+    "parked_possibilities": []
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "458",
+      "outcome": "Readiness-check mode (--check-readiness) added to scripts/install_constellation.py: four independently-testable check functions (engine-runnable via sys.executable, skills-installed-and-registered, hooks-wired-in-a-file-that-ships with distinct tracked/user-scope tests, work-area-present via .git) plus a thin CLI/report layer. 25 new tests, 132/132 file passes (380 subtests), independent reviewer APPROVE with 0 findings (mutation-tested the engine-runnable discrimination, ran the CLI end-to-end).",
+      "evidence": "g1-implement-result.json, g1-review-result.json (checklist-engine consolidated review at .agent-work/issue-458-readiness/g1-review/review.json), fresh-clone-refusal evidence e-g1-integrate-1"
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The readiness check refuses with a named reason on a genuinely unready checkout (Pre-Ruling 3).",
+      "expected": "Nonzero exit, per-item NOT READY reasons naming what is missing.",
+      "observed": "Cloned constellation-skills fresh from GitHub (commit 7f4a80f9) to a scratch directory, ran `python scripts/install_constellation.py --agent claude --scope project --project <clone> --check-readiness`: exit 1, skills NOT READY (no .claude/skills at target), hooks NOT READY (Context Governor hooks UNWIRED), work_area READY (.git present), engine READY (environment-scoped -- reflects the executing agent's own interpreter, not the clone's tree, exactly as anticipated in MISSION_FRAME.md before this run).",
+      "source": "Commander-run fresh-clone test at g1-integrate; independently reproduced test suite runs (25/25 readiness, 132/132 file)"
+    },
+    {
+      "claim": "The environment-scoped items (engine, hooks) cannot be exercised by a fresh clone alone -- only tree-scoped items (skills, work_area) can.",
+      "expected": "A cold plan critic finding, folded into the plan before g1 was dispatched.",
+      "observed": "Confirmed exactly by the fresh-clone run above: skills and work_area behaved as tree-scoped predictions; engine and hooks reflected this agent's own environment, not the clone's tree.",
+      "source": "plan-alternatives.md cold-critic fold-in; confirmed empirically at g1-integrate"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The context governor's own gauge-writer hook never fired for this Commander run in this environment -- gauge.json stayed frozen at a single reading (19% fill, observed_at 23:18:53Z) for the entire multi-hour run despite dozens of tool calls, so every gate's HARD-band advisory read the same stale number rather than a live one.",
+      "classification": "evidence_only",
+      "affects": "How reliable the checklist engine's context-governor trip advisory is for a delegated Commander session in this specific runtime, independent of #458's own deliverable (which reports on installed-project readiness, not on a live agent session's own gauge liveness).",
+      "evidence": "gauge.json's observed_at never advanced across context/understand/plan/execute; each gate's start required filing a refresh-request to release the begin, exactly as the engine's own release path allows, but the underlying signal itself never refreshed.",
+      "reason": "Not filed as an issue per this run's own doctrine (auto_file_discrepancies: false) -- recorded here as evidence for whoever next reviews governor liveness, not diagnosed further; outside this gate's scope to fix or explain."
+    },
+    {
+      "id": "D1",
+      "signal": "This spine's own execute.c2 postcondition ('python scripts/verify_iterative_role_artifacts.py commander --work-id issue-458-readiness') cannot pass when dogfooding this Commander spine on the constellation-skills source repo itself: verify_iterative_role_artifacts.py's _installed_skills_root() guard refuses unless invoked from an installed constellation-* skill directory, which the repo's own worktree-vendored scripts/ never is.",
+      "classification": "evidence_only",
+      "affects": "Every Commander spine driven from this repo's own worktree, not #458's deliverable specifically -- REPLAN_INPUT.json's own content was independently confirmed correct via the installed copy of the same verifier.",
+      "evidence": "Repo-vendored command run verbatim from the worktree root: 'python scripts/verify_iterative_role_artifacts.py commander --work-id issue-458-readiness' -> 'REFUSED: role verifier must run from an installed constellation-* skill', exit 1. Installed copy run verbatim: 'python /c/Users/fredc/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id issue-458-readiness' -> 'iterative role artifact ok: commander (issue-458-readiness)', exit 0, against the identical REPLAN_INPUT.json. execute.c2 was WAIVED (FORCED) on the Admiral's authority citing this evidence, not passed.",
+      "reason": "Not filed as a new issue -- this is the same root cause crew 1 independently reported this wave against #501/#468 (a manifestation in neither issue's own body, predicted by crew 1 to also hit a Commander; it did, here, in a different worktree, on a different issue), which already owns the fix. Recorded here as a second, independent confirmation of the same system property."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": ["scripts/install_constellation.py", "README.md (DEGRADED-NO-MAP substitute)"],
+    "map_status": "No architecture map exists in this repo checkout (map_orient.py returned DEGRADED-NO-MAP; discharged with README.md as the hash-pinned substitute)."
+  }
+}
