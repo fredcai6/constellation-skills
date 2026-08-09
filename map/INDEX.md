@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 53 modules, 1038 entities
 skills: 1 modules, 18 entities
-tests: 60 modules, 3455 entities
+tests: 60 modules, 3460 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -97,7 +97,7 @@ tests: 60 modules, 3455 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (60 modules, 3455 entities)
+## tests (60 modules, 3460 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -140,7 +140,7 @@ tests: 60 modules, 3455 entities
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
 - [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
-- [tests.test_map_orient](tests.test_map_orient/INDEX.md) (120 entities, 87 holes): The falsification floor for scripts/map_orient.py.
+- [tests.test_map_orient](tests.test_map_orient/INDEX.md) (125 entities, 91 holes): The falsification floor for scripts/map_orient.py.
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
 - [tests.test_next_verbs_record_gate_comment](tests.test_next_verbs_record_gate_comment/INDEX.md) (16 entities, 12 holes): Issue #437: `_next_verbs()`'s comments must not restate a premise #422/#328 killed.
