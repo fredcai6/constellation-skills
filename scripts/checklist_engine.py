@@ -74,6 +74,15 @@ MUTATING_VERBS = {
 }
 
 
+# Verbs that BEGIN work at a gate, and are therefore the ones the Trip HARD band
+# refuses over the line (#467). `start` opens a pending gate; `reopen` drives a
+# complete gate back to in-progress and cascades downstream — both commit an agent
+# to work it may not be able to finish. `advance` is deliberately ABSENT: closing
+# the gate you are already inside IS the handoff and is never governor-refused. So
+# is `resume`, which only restores a blocked gate to the status it already held.
+TRIP_HARD_GUARDED_VERBS = {"start", "reopen"}
+
+
 # --------------------------------------------------------------------------- #
 # gauge reader binding (#181) — loaded by file path so the engine drives whether
 # it is run as a script or imported by a test via spec_from_file_location (both
@@ -166,8 +175,38 @@ def load(path: Path) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def _dominant_newline(path: Path) -> bytes:
+    """The line ending `path` already uses: CRLF only when its endings are
+    unambiguously CRLF, LF in every other case (missing file, empty file, LF file,
+    MIXED file). Mixed is deliberately not guessed at — see `save`."""
+    try:
+        raw = Path(path).read_bytes()
+    except OSError:
+        return b"\n"
+    crlf = raw.count(b"\r\n")
+    bare_lf = raw.count(b"\n") - crlf
+    return b"\r\n" if crlf and not bare_lf else b"\n"
+
+
 def save(path: Path, data: dict) -> None:
-    Path(path).write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    """Write the checklist as JSON, PRESERVING the line ending the file already
+    uses, and write BYTES so nothing translates them again.
+
+    Text mode (`newline=None`, what this used to do) rewrites every ending to the
+    platform's — CRLF on Windows, LF on POSIX. One engine verb would then rewrite a
+    whole file's endings and destroy its blame, on a file the engine only meant to
+    add one field to.
+
+    **A file that does not exist yet, or one with MIXED endings, gets LF.** Mixed is
+    not a preference the engine can read, so it normalises rather than guesses.
+    """
+    payload = (json.dumps(data, indent=2) + "\n").encode("utf-8")
+    eol = _dominant_newline(path)
+    if eol != b"\n":
+        # json.dumps escapes any literal CR as \r, so no b"\r" survives in the
+        # serialised bytes and this replace cannot produce b"\r\r\n".
+        payload = payload.replace(b"\n", eol)
+    Path(path).write_bytes(payload)
 
 
 def load_config(cl: dict, base: Path | None) -> dict:
@@ -780,6 +819,15 @@ def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
         return bool(cond.get("satisfied"))
     kind = chk.get("kind")
     if kind == "command":
+        # ISSUE #454, corner case NOT chased (deliberate): the engine's own verdict
+        # here is returncode-only, and an exit code carries no ANSI, so this site is
+        # immune to the forced-colour defect that broke the mutation floor. What is
+        # NOT immune is an author who writes a check that pipes a colour-capable
+        # tool into a text matcher (`pytest ... | grep -c passed`): under the
+        # harness's FORCE_COLOR=3 that grep runs against escape-laden text inside
+        # the shell, where this engine cannot see it. No shipped template does this,
+        # so nothing is fixed here. If check text ever starts parsing tool output,
+        # the check itself must clear FORCE_COLOR / pass --color=no.
         proc, shell_marker = _run_check_command(chk["command"])
         cond["satisfied"] = proc.returncode == 0
         eid = _new_evidence_id(t)
@@ -1169,15 +1217,29 @@ def _why_suffix(cl: dict, aid: str | None) -> str:
 #     done, hand off here at this seam." SOFT NEVER forces; the agent may decline
 #     (any reason accepted in v1 — we do not police reason quality; declining is
 #     simply choosing to `advance`, which SOFT never blocks).
-#   HARD (fill >= hard): the engine REFUSES to `advance` until a `refresh-request`
+#   HARD (fill >= hard): the engine REFUSES the verbs that BEGIN work at a gate —
+#     `start` and `reopen` (TRIP_HARD_GUARDED_VERBS) — until a `refresh-request`
 #     exists for the gate (#179's `has_pending_refresh_request`), pointing at the
-#     exact `attach` command. HARD ALWAYS forces.
+#     exact `attach` command with the concrete live why-record id. HARD ALWAYS
+#     forces. It does NOT refuse `advance` (#467): closing the gate you are already
+#     inside IS the handoff, and an agent running out of context must be able to
+#     finish and hand off the gate it is in. `resume` is not guarded either — it
+#     only restores a blocked gate to the status it already held. What HARD adds on
+#     the CLOSE side is a ban on SILENCE: at/over hard `advance --mechanical` is
+#     refused and `why_exempt` is suspended, so the digest cannot stay pre-trip
+#     while the gate closes (#431).
+#
+# HARD means WRAP UP. It has never meant "you are unsafe", and its advisory is
+# worded as a changed instruction rather than an alarm — an agent that reads an
+# alarm looks for a way past it instead of doing the thing it is being asked to do.
 #
 # CHECKS AT GATE BOUNDARIES ONLY — the mid-gate runaway is a deliberately accepted
 # limit; there is no mid-gate check. Like the doctrine rail, this policy rides the
 # CLI-boundary chokepoints in `dispatch` so the verb functions stay PURE (their
 # return values are unchanged, so existing exact-equality tests keep passing): SOFT
-# is a suffix on `current`'s dispatch output; HARD is a pre-`advance` guard.
+# is a suffix on `current`'s dispatch output; HARD is a pre-verb guard on
+# `start`/`reopen` plus the `require_why` flag `dispatch` passes into `advance`
+# (default False, so a direct non-dispatch call is unaffected).
 #
 # The agent NEVER introspects fill: the engine supplies the fill fact, the agent
 # supplies the stop-point judgment.
@@ -1212,12 +1274,129 @@ def _read_gauge(base_dir: Path | None):
     return _gauge_reader.read(path)
 
 
-def _refresh_attach_hint(gate: str) -> str:
+# --- #477: a reading has an OWNER, and only the lease can name it ------------ #
+#
+# The gauge is written per checklist DIRECTORY, so the number a fresh agent finds
+# on its first `current` was sampled by whoever drove that directory before it —
+# its predecessor after a relaunch, or the Commander whose work area its own plan
+# sits in. Measured live 2026-08-08 (epic 418): a crew read `fill_fraction
+# 0.190464, observed_at 23:18:53Z`, NINE MINUTES before that agent existed, and
+# was over the hard line on turn one having done nothing. The failure that
+# follows is a LOOP — relaunch, inherit, trip, hand off, relaunch — and every
+# cycle looks like correct doctrine being followed. It cost that epic four crew
+# relaunches in one wave.
+#
+# There is NO predicate over the bare number that separates a reading I took from
+# one you took; that is exactly why the bug exists. The record itself carries no
+# owner (adding one is the WRITER's job, and the writer is not this module's to
+# change), so the only WHO-and-WHEN fact available on the read side is the
+# engine's own lease: `engine_session.claimed_at` is the moment the session
+# currently driving this checklist took it. A sample from strictly before that
+# moment cannot be that session's, whatever number it carries.
+#
+# FAIL OPEN, deliberately and in every direction. No lease, a released lease, a
+# missing or unparseable `claimed_at`, no reading at all — every one of them
+# means "no provenance to judge", and the engine then behaves EXACTLY as it did
+# before this guard existed. A gauge subsystem that started refusing readings
+# would stop every run in the fleet; the point is to stop a FOREIGN reading being
+# obeyed, not to stop readings. Every `gauge.json` already on disk carries no
+# provenance field and keeps working untouched.
+def _lease_claimed_at(cl: dict) -> datetime | None:
+    """When the session currently driving this checklist claimed it, or None.
+
+    None means "no usable provenance anchor", and every caller must read that as
+    fail-open. Only an ACTIVE lease qualifies: a released one names nobody
+    currently driving, so it cannot say whose reading a sample is."""
+    if not isinstance(cl, dict):
+        return None
+    lease = _active_lease(cl)
+    if lease is None:
+        return None
+    raw = lease.get("claimed_at")
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    try:
+        return _parse_ts(raw)
+    except (ValueError, TypeError):
+        return None
+
+
+def _reading_predates_claim(cl: dict, reading) -> bool:
+    """True only when `reading` was sampled STRICTLY BEFORE the acting session
+    claimed this checklist — i.e. it is provably not that session's own reading.
+
+    THE SINGLE PLACE this decision is made, so the advisory an agent is SHOWN and
+    the band it is JUDGED against can never disagree about whose reading it is
+    (the same one-place rule `_trip_hard_band_reading` already keeps for the hard
+    line itself).
+
+    STRICTLY before: an equal timestamp is owned. The engine's `claimed_at` and
+    the writer's `observed_at` come from two different clocks at second-ish
+    resolution, so treating coincidence as foreign would silence real readings
+    for no gain — and the cost of that boundary going the other way is one turn
+    of silence, not a wrong number.
+
+    Returns False — fail open — for a missing reading, a missing/released lease,
+    or a `claimed_at` that will not parse. Never raises."""
+    if reading is None:
+        return False
+    claimed_at = _lease_claimed_at(cl)
+    if claimed_at is None:
+        return False
+    observed_at = getattr(reading, "observed_at", None)
+    if not isinstance(observed_at, datetime):
+        return False
+    try:
+        return observed_at < claimed_at
+    except TypeError:
+        return False
+
+
+def _gate_headroom_tokens(cl: dict, gate: str | None) -> int:
+    """The absolute-token context reserve `gate` declares for itself, or 0 (#467).
+
+    THE SINGLE READER of the override, and it reads ONE place:
+    `tasks.<gate>.context_headroom_tokens`. A gate that is known to be expensive
+    declares how much room it needs left over, and the governor holds it to that
+    -- while remaining structurally incapable of asking for LESS than the shipped
+    default (the tighten-only clamps live in `gauge_reader.thresholds_for`, the
+    module that owns the window and the caps; this function only reads a number
+    and never computes a threshold, per constraint:no-threshold-values).
+
+    NO CHECKLIST-CONFIG TIER (decision:no-config-tier): a run-wide reserve would
+    have zero users today, and a seam with one hypothetical adapter is a guess,
+    not a boundary. A value parked in `config` or at the checklist root is simply
+    not read.
+
+    Total and fail-safe, exactly like the rest of this section: no gate named, an
+    unknown gate, a missing key, a malformed value (anything that is not a plain
+    int -- `bool` is excluded even though it is an int subclass, so a stray
+    `true` cannot become a 1-token reserve), or a negative value all resolve to
+    0, which means "the shipped default", never "no governor"."""
+    if not gate:
+        return 0
+    task = (cl.get("tasks") or {}).get(gate)
+    if not isinstance(task, dict):
+        return 0
+    raw = task.get("context_headroom_tokens")
+    if not isinstance(raw, int) or isinstance(raw, bool) or raw < 0:
+        return 0
+    return raw
+
+
+def _refresh_attach_hint(gate: str, why_id: str | None = None) -> str:
     """The exact `attach` command that raises a refresh-request for `gate` — the
     remedy both bands point the agent at (payload is pointers only: seam + why_ref,
-    per #179). `<why-id>` is a placeholder the agent fills from the live DIGEST."""
+    per #179).
+
+    `why_id` is the live why-record id, and passing it is the whole point (#467):
+    the literal `<why-id>` placeholder is not a prompt an agent reliably fills in —
+    four separate runs pasted it verbatim, and `attach ... --field why_ref=<why-id>`
+    exits 0 while recording a request that matches no understanding, so the identity
+    check (#190) never releases and the agent cannot tell why. The placeholder
+    survives only as the fallback for a checklist with no live why-record to name."""
     return (f"attach {gate} --type refresh-request "
-            f"--field seam={gate} --field why_ref=<why-id>")
+            f"--field seam={gate} --field why_ref={why_id or '<why-id>'}")
 
 
 def _uncalibrated_advisory(base_dir: Path | None) -> str:
@@ -1330,6 +1509,38 @@ def _stale_record_advisory(gauge_path: Path | None) -> str:
             f"Watch your own context and hand off on judgement.")
 
 
+def _declined_reading_advisory(cl: dict, reading) -> str:
+    """Why the gauge is quiet when a perfectly good reading is sitting at this
+    path: it was sampled before the acting session got here, so it belongs to
+    somebody else (#477).
+
+    Declining SILENTLY would reproduce the exact failure this subsystem has
+    already been burned by twice — an unexplained quiet governor is how #252's
+    miscalibration and #271's ambiguous binding both survived unnoticed. So this
+    says which of the four quiet causes it is, names the session the reading is
+    being measured against, and gives the one-line remedy.
+
+    The gap is rendered against `claimed_at`, not against now: "this sample is
+    older than your claim by X" is the fact that decides ownership, and it does
+    not drift while the agent reads it. Raw facts only, explicitly NOT a
+    soft/hard verdict — the same posture as `_stale_record_advisory`, for the
+    same reason: a number shown without a judgment cannot be mistaken for one."""
+    claimed_at = _lease_claimed_at(cl)
+    if reading is None or claimed_at is None:
+        return ""
+    lease = _active_lease(cl) or {}
+    gap = _format_age(claimed_at - reading.observed_at)
+    return (f"\nCONTEXT GAUGE DECLINED: the reading at this path "
+            f"({reading.fill_fraction:.0%} on {reading.model!r}) was sampled "
+            f"{gap} BEFORE session {lease.get('session_id')!r} claimed this "
+            f"checklist, so it is NOT this session's reading — the gauge is "
+            f"written per work directory, and a fresh agent finds its "
+            f"predecessor's number there until its own first tool call lands. "
+            f"No soft/hard trip fires on a reading you did not produce. Make any "
+            f"tool call, then re-read `current` for your own number; do NOT file "
+            f"a refresh-request against this one.")
+
+
 def _no_reading_advisory(base_dir: Path | None) -> str:
     """Dispatch across every localizable "why is there no reading" cause, in
     order, returning the FIRST non-empty result — exactly one signal reaches
@@ -1369,6 +1580,13 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     if gate is None:
         return ""
     reading = _read_gauge(base_dir)
+    if _reading_predates_claim(cl, reading):
+        # #477: a real, fresh, well-formed reading that belongs to somebody else.
+        # Checked BEFORE the None branch below because it is a different question
+        # — not "why is there no reading" but "why am I not using the one that is
+        # here" — and `_reading_predates_claim` is False for a None reading, so
+        # the two branches cannot both fire.
+        return _declined_reading_advisory(cl, reading)
     if reading is None:
         # No reading is normally silent (absent/stale gauge is routine). Three
         # causes are NOT routine and must be said out loud, in priority order:
@@ -1376,7 +1594,13 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # (#271), or the gauge file's own raw facts if `read()` rejected it.
         # See _no_reading_advisory for the dispatch order and why.
         return _no_reading_advisory(base_dir)
-    soft, hard = _gauge_reader.thresholds_for(reading.model)
+    # #467: the ACTIVE gate's own headroom reserve tightens the pair this advisory
+    # is computed from — the same resolver, and so the same number, the begin-work
+    # guard is about to judge the agent against (`_trip_hard_band_reading`). The
+    # engine passes a token count and reads back fractions; it computes no
+    # threshold itself (constraint:no-threshold-values).
+    soft, hard = _gauge_reader.thresholds_for(reading.model,
+                                              _gate_headroom_tokens(cl, gate))
     fill = reading.fill_fraction
     if fill >= hard:
         # Identity-aware (#190): a NEW trip must carry its OWN fresh refresh-request
@@ -1385,11 +1609,57 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
         # the gate-only match, preserving all existing behavior.
         rec = _latest_why_record(cl)
         wid = rec["id"] if rec else None
+        # #467 (the trip ledger): the ONE render of each compliance fact. The engine
+        # already wrote the ledger at `_trip_hard_gate`; this reads it back through
+        # the two pure selectors and appends up to two lines to whichever HARD
+        # sub-branch is returned below. There is deliberately no second computation
+        # of either fact anywhere — an over-the-line begin is reported here or not
+        # at all.
+        #
+        # #467 B1 rework: the LIVE line alone is not enough. The close this HARD
+        # band mandates (`advance --why`) is guaranteed to supersede the live
+        # why-record, which empties the LIVE selector by design (close criterion
+        # (b) — its keying is correct and untouched). Left alone, that means the
+        # one required close is also the one thing guaranteed to silence the only
+        # rendered signal. The HISTORICAL line is unkeyed and cannot be silenced by
+        # any close, so it renders whenever anything is on record at all — even
+        # when the live line above it has nothing to say.
+        live_note = ""
+        historical_note = ""
+        records = begin_over_line_records(cl)
+        historical = begin_over_line_records_historical(cl)
+        if records:
+            last = records[-1]
+            live_note = (
+                f"\nTRIP LEDGER: {len(records)} begin(s) at/over the hard line are on "
+                f"the record under this understanding (latest: {last.get('verb') or '?'} "
+                f"{last.get('gate')} -> {last.get('outcome')}). Closing THIS gate "
+                f"clears this line; the line below, if present, is not.")
+        if historical:
+            hlast = historical[-1]
+            historical_note = (
+                f"\nTRIP HISTORY: {len(historical)} begin(s) at/over the hard line "
+                f"are on the record across this checklist's full history (latest: "
+                f"{hlast.get('verb') or '?'} {hlast.get('gate')} -> "
+                f"{hlast.get('outcome')}). No close clears this line.")
+        # #467: HARD has always meant "wrap up", never "you are unsafe" — but the old
+        # wording ("`advance` is BLOCKED", "lost to a runaway") read as an alarm about
+        # a mechanism failing, and an agent that reads an alarm looks for a way past it
+        # instead of doing the one thing it is being asked to do. So the HARD band
+        # states a CHANGED INSTRUCTION: close the gate you are in, request a refresh,
+        # stop. It also no longer claims `advance` is blocked, because it is not.
         if has_pending_refresh_request(cl, gate, why_ref=wid):
-            return (f"\nCONTEXT {fill:.0%} (>= hard): refresh already requested for "
-                    f"{gate} — hand off now; do not keep working.")
-        return (f"\nCONTEXT {fill:.0%} (>= hard): `advance` is BLOCKED until you "
-                f"request a refresh. Run: {_refresh_attach_hint(gate)}  — then hand off.")
+            return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed, and "
+                    f"the refresh for {gate} is already requested. Close THIS gate "
+                    f"carrying your handoff (`advance {gate} --why \"<understanding>\"`) "
+                    f"and stop. A fresh agent picks up from your DIGEST; do not begin "
+                    f"work at another gate.") + live_note + historical_note
+        return (f"\nCONTEXT {fill:.0%} (>= hard): your instruction has changed. You have "
+                f"taken this as far as this context can carry it — now close THIS gate "
+                f"carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
+                f"request a refresh, and stop. A fresh agent picks up from your DIGEST; "
+                f"do not begin work at another gate. Request the refresh with: "
+                f"{_refresh_attach_hint(gate, wid)}") + live_note + historical_note
     if fill >= soft:
         return (f"\nCONTEXT {fill:.0%} (>= soft): you've used most of your context. "
                 f"Unless you're basically done, hand off here at {gate} rather than "
@@ -1397,20 +1667,168 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     return ""
 
 
-def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
-    """Trip HARD backstop at the `advance` gate boundary: REFUSE to advance when
-    the gauge reads `fill >= hard` and no `refresh-request` is pending for the
-    gate. No-op for surveys, a missing/stale reading (None), or below `hard` — HARD
-    never forces on an absent reading. Called BEFORE `advance` mutates state, so a
-    refusal leaves the gate exactly `in-progress`."""
-    if cl.get("type") != GATED or not iid:
-        return
+def _trip_hard_band_reading(cl: dict, base_dir: Path | None, gate: str | None = None):
+    """The gauge Reading when this checklist is in the HARD band right now, else
+    None. One place decides "are we at/over hard", so the begin-work guard
+    (`_trip_hard_gate`) and the no-silent-close rule (`advance`'s `require_why`)
+    can never disagree about it. Fail-safe by construction: surveys and a
+    missing/stale reading both yield None, which every caller reads as "band
+    inactive" — HARD never forces on an absent reading.
+
+    `gate` (#467) is the gate the question is being asked ABOUT — the one being
+    begun, or the one being closed — because the hard line is now per-gate: it is
+    tightened by that gate's own `context_headroom_tokens` reserve, resolved by
+    `_gate_headroom_tokens` and applied by `gauge_reader.thresholds_for`. It
+    defaults to the ACTIVE gate, which is the gate `_trip_advisory` reports on, so
+    the number the agent is SHOWN and the number it is JUDGED against come from
+    the same resolver on the same gate and cannot diverge. A reserve can only
+    TIGHTEN (the clamps live in `thresholds_for`), so an override can never turn
+    a Reading in the hard band into a None.
+
+    #477: a reading sampled before the acting session claimed this checklist is
+    its predecessor's, and yields None here — the SAME `_reading_predates_claim`
+    the advisory consults, so what the agent is shown and what it is judged
+    against agree about ownership too, not just about the line."""
+    if cl.get("type") != GATED:
+        return None
     reading = _read_gauge(base_dir)
-    if reading is None:
-        return
-    _, hard = _gauge_reader.thresholds_for(reading.model)
+    if reading is None or _reading_predates_claim(cl, reading):
+        return None
+    _, hard = _gauge_reader.thresholds_for(
+        reading.model, _gate_headroom_tokens(cl, gate or active_id(cl)))
     if reading.fill_fraction < hard:
+        return None
+    return reading
+
+
+def _append_trip_entry(cl: dict, gate: str, verb: str | None, outcome: str,
+                       reading, hard: float, why_ref: str | None) -> str:
+    """Append one entry to the top-level append-only `trip_ledger` and return its
+    id. ENGINE-WRITTEN ONLY: the sole caller is `_trip_hard_gate`, which is reached
+    from the `dispatch` chokepoint BEFORE `_run_verb`, so no CLI verb can create,
+    edit, or delete an entry.
+
+    Same idiom as `_append_why`: `setdefault` creates the ledger on first write (so
+    a spine without one drives unchanged), the id is positional, and a prior entry
+    is NEVER mutated or removed.
+
+    `why_ref` is the live why-record id at the moment of the trip. It is what lets
+    the compliance selector (`begin_over_line_records`) key on the CURRENT
+    understanding, so a mark left under a superseded understanding stops reading as
+    present-tense non-compliance without any entry being edited."""
+    ledger = cl.setdefault("trip_ledger", [])
+    tid = f"tl-{len(ledger) + 1}"
+    ledger.append({
+        "id": tid, "gate": gate, "verb": verb, "outcome": outcome,
+        "fill": round(float(reading.fill_fraction), 4), "hard": round(float(hard), 4),
+        "model": reading.model, "why_ref": why_ref, "ts": _now(),
+    })
+    return tid
+
+
+def begin_over_line_records(cl: dict) -> list[dict]:
+    """PURE selector over stored state: every `trip_ledger` entry recording a BEGIN
+    at/over the hard line **under the live understanding**. Its emptiness IS the
+    compliance predicate — an empty list means the engine holds no record of anyone
+    beginning work over the line under the understanding now in force; a non-empty
+    list IS the non-compliance signal.
+
+    Pure by construction: it reads `trip_ledger` and `_latest_why_record` and
+    nothing else — no subprocess, no gauge read, no clock — so it is safe to call
+    from the read-only `current` path.
+
+    Keyed to the live understanding: an entry matches only when its `why_ref` is the
+    id of the CURRENT why-record. A `reopen` freshens the digest by APPENDING a
+    reopen-marker, so an older entry's understanding stops being live and its mark
+    stops reading as current non-compliance — the entry itself is never touched.
+    (A spine with no `why_trail` has a live id of None, and entries written under
+    that same silence carry None too, so they still match.)
+
+    An EMPTY list is NOT a claim of compliance. It means "no recorded begin over the
+    line under this understanding". The engine cannot see an agent that was told to
+    wrap up and simply stopped without running another verb — see the scoped limit
+    in `docs/CHECKLIST_SCHEMA.md`."""
+    rec = _latest_why_record(cl)
+    live = rec["id"] if rec else None
+    out: list[dict] = []
+    for e in cl.get("trip_ledger", []) or []:
+        if not isinstance(e, dict):
+            continue
+        if e.get("outcome") not in ("begin-refused", "begin-released"):
+            continue
+        if e.get("why_ref") != live:
+            continue
+        out.append(e)
+    return out
+
+
+def begin_over_line_records_historical(cl: dict) -> list[dict]:
+    """PURE selector, additive to `begin_over_line_records` and separate from it:
+    every `begin-refused`/`begin-released` entry in `trip_ledger`, regardless of
+    `why_ref` (#467 B1 rework).
+
+    Where the LIVE selector answers "is there an over-the-line begin under the
+    understanding now in force" -- and is therefore emptied by the very close the
+    HARD band mandates -- this answers a question that close cannot affect: "has
+    this checklist EVER recorded a begin over the line". Nothing here is keyed to
+    a why-record, so nothing here can be superseded. The entries are the same
+    entries the live selector reads; this is a second, unkeyed view onto them, not
+    a second write and not a second source of truth.
+
+    Pure by construction, same as the live selector: reads only `trip_ledger`, no
+    subprocess/gauge/clock, so it is safe to call from the read-only `current`
+    path. Never raises on a malformed ledger -- a non-list `trip_ledger` (`None`,
+    a string, a dict) degrades to nothing via `or []`, and a list holding
+    non-dict entries skips them one at a time, matching `begin_over_line_records`'s
+    own fail-safe.
+
+    Does not replace the live selector and must never be used to. The live
+    selector's keying is close criterion (b) (Admiral pre-ruling) and stays
+    exactly as it is; this selector is additive and separately rendered."""
+    out: list[dict] = []
+    for e in cl.get("trip_ledger", []) or []:
+        if not isinstance(e, dict):
+            continue
+        if e.get("outcome") not in ("begin-refused", "begin-released"):
+            continue
+        out.append(e)
+    return out
+
+
+def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None,
+                    verb: str | None = None) -> None:
+    """Trip HARD backstop at the verbs that BEGIN work at a gate — `start` (opens a
+    pending gate) and `reopen` (drives a complete gate back to in-progress and
+    cascades downstream). REFUSE to begin when the gauge reads `fill >= hard` and no
+    `refresh-request` is pending for the gate.
+
+    #467 moved this OFF `advance`. Closing the gate you are already inside IS the
+    handoff, so it is never governor-refused; what an agent over the line must not
+    do is BEGIN work it cannot finish. No-op for surveys, a missing/stale reading
+    (None), or below `hard` — HARD never forces on an absent reading. Called BEFORE
+    the verb runs, so a refusal leaves the gate's status exactly as it was and never
+    refreshes the lease.
+
+    #467 (the trip ledger): this is the ONLY mutating chokepoint at which the HARD
+    band is evaluated for a BEGIN, so it is the only place an over-the-line begin
+    can be recorded. Both outcomes are recorded here — `begin-refused` (no keyed
+    request pending, so the verb raises; `main()` persists on the EngineError path,
+    which is what makes the entry durable) and `begin-released` (a keyed request was
+    pending, so the verb proceeds while still over the line). The entry is the ONE
+    state change a refusal now makes; the gate's own status is still untouched."""
+    if not iid:
         return
+    # #467: judged against the reserve declared by the gate being BEGUN — an
+    # expensive gate's "I need this much room" is a statement about entering IT.
+    reading = _trip_hard_band_reading(cl, base_dir, iid)
+    if reading is None:
+        return  # fail-safe: no reading -> no refusal, no ledger entry, no claim
+    # The line the agent is being judged against, recorded alongside the fill so a
+    # later reader can see BOTH numbers without re-deriving either. Same resolver,
+    # same gate, same reading as `_trip_hard_band_reading` used a line above, so the
+    # two cannot disagree.
+    _, hard = _gauge_reader.thresholds_for(
+        reading.model, _gate_headroom_tokens(cl, iid))
     # Identity-aware release (#190): the pending refresh-request must be keyed to the
     # CURRENT understanding (`_latest_why_record`), so a distinct new trip on a
     # still-open gate cannot be waved through on a stale request's coattails. A None
@@ -1419,11 +1837,17 @@ def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
     rec = _latest_why_record(cl)
     wid = rec["id"] if rec else None
     if has_pending_refresh_request(cl, iid, why_ref=wid):
-        return  # the agent already requested a refresh; the backstop is satisfied
+        # The backstop is satisfied and the verb proceeds — but it proceeds WHILE
+        # STILL OVER THE LINE, which is exactly the event #467 exists to make
+        # observable. Recorded, then released.
+        _append_trip_entry(cl, iid, verb, "begin-released", reading, hard, wid)
+        return
+    _append_trip_entry(cl, iid, verb, "begin-refused", reading, hard, wid)
     raise EngineError(
-        f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit — "
-        f"advancing is blocked until you request a refresh, so work is handed off at "
-        f"a seam rather than lost to a runaway. Run: {_refresh_attach_hint(iid)}"
+        f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit, so "
+        f"this is not the moment to BEGIN work here — finish and close the gate you are "
+        f"already in, then request a refresh so a fresh agent starts this one. "
+        f"Run: {_refresh_attach_hint(iid, wid)}"
     )
 
 
@@ -1519,8 +1943,11 @@ def _next_verbs(aid: str, t: dict, kind: str) -> list[str]:
     null/artifact condition for it is resolved — see `_blocking_conditions()`.
     The gate is ASYMMETRIC: `start()` refuses on unmet PREconditions, `advance()`
     on unmet POSTconditions, so each is checked against its own list only.
-    `resume`/`record` carry no precondition/postcondition gate at all (see
-    `resume()`/`record()`), so they are never suppressed.
+    `resume` carries no precondition/postcondition gate at all (see `resume()`),
+    so it is never suppressed. `record` is NOT ungated -- since #422/#328 a
+    `record --result pass` refuses on an unmet `command`-kind postcondition (see
+    `record()`) -- yet its hint is never suppressed either, for the INV-2 reason
+    spelled out at the hint itself below.
 
     Placeholders (`<...>`) mark free text only the agent can supply; every
     other token is a real id read off THIS task."""
@@ -1550,9 +1977,20 @@ def _next_verbs(aid: str, t: dict, kind: str) -> list[str]:
         if not _blocking_conditions(preconds):
             verbs.append(f"start {aid}")
     elif kind == SURVEY:
-        # record() carries no precondition/postcondition gate at all (see
-        # record()) -- unlike advance(), it is ALWAYS legal from in-progress,
-        # so it is never suppressed by open conditions.
+        # Never suppressed -- but NOT because record() is ungated (it was when
+        # this hint was written; #422/#328 changed that). record()'s only
+        # condition gate is on `command`-kind postconditions, and only for
+        # `--result pass`. Two things make the hint legal anyway:
+        #   1. That gate is `command`-kind ONLY, which is exactly the class
+        #      _blocking_conditions() excludes -- INV-2 forbids state() probing
+        #      a command, so an [unmet] one must not suppress the hint; it may
+        #      well pass when record actually runs.
+        #   2. `--result fail` is never gated by it at all (recording an honest
+        #      failure must not be blocked by the check that is failing), so the
+        #      <pass|fail> hint always offers at least one legal move.
+        # `null`/`artifact`-kind postconditions on a survey item remain
+        # unevaluated by record() (#422/#328's declared scope), so unlike
+        # advance() there is no _blocking_conditions() test to apply here.
         verbs.append(f'record {aid} --result <pass|fail> [--finding "<text>"]')
     elif not _blocking_conditions(postconds):
         if t.get("why_exempt"):
@@ -1585,6 +2023,13 @@ def state(cl: dict) -> dict:
             # before this fix. render_human() does the shape-handling.
             "constraints": t.get("constraints") or [],
             "anchors": t.get("anchors"),
+            # Issue #433: `directives` is the third field with the same
+            # defect -- populated on 8 corpus gates (including the shipped
+            # commander spine's `execute`) and never projected, so a gate's
+            # standing instruction never reached the agent it binds. Same
+            # pure passthrough as `anchors`; render_human() handles the two
+            # live shapes via _render_directive_lines().
+            "directives": t.get("directives"),
         }
     waived_postconditions: list[str] = []
     consolidation_pending = False
@@ -1641,6 +2086,59 @@ def _render_anchor_lines(anchors) -> list[str]:
     return []
 
 
+def _directive_leaf(value) -> str:
+    """Spell one `directives` leaf for display. A string renders BARE -- these
+    leaves are template paths, output paths and field names an agent pastes
+    straight out of `current`, so JSON's surrounding quotes would be noise. A
+    list joins its leaves with `", "`. Every other scalar takes JSON spelling,
+    so a Python `False` prints as `false` and what the agent reads matches the
+    JSON the gate actually carries (`auto_file_discrepancies: false` on the
+    shipped commander spine)."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return ", ".join(_directive_leaf(v) for v in value)
+    return json.dumps(value)
+
+
+def _render_directive_lines(directives) -> list[str]:
+    """Format the `directives` field for display (issue #433). Two shapes
+    appear in the live corpus, verified against a tree-wide inventory of this
+    worktree (2955 gates scanned, 8 populated `directives` blocks):
+
+    - a dict of name -> contract dict -- the shape ALL 8 populated corpus
+      gates carry, e.g. the shipped skills/commander/templates/
+      COMMANDER_SPINE.template.json `execute` gate's `replan_input`. The name
+      gets its own line and each contract field an indented line under it.
+    - a flat [str] -- the shape docs/CHECKLIST_SCHEMA.md declares and the
+      `add` amend op accepts unvalidated. One indented line per ITEM: the
+      branch is total, so a non-string item takes its `_directive_leaf`
+      spelling rather than being dropped. Filtering the branch to strings would
+      silently swallow a populated directive the agent is meant to read, which
+      is the very defect this issue closes -- and `_render_anchor_lines` does
+      not filter its own list branch either.
+
+    A dict value that is not itself a dict renders as one leaf line beside its
+    name rather than an empty header. Unrecognized shapes render nothing
+    rather than guessing at a format the corpus doesn't actually use -- the
+    same rule _render_anchor_lines states. Deliberately NOT routed through
+    the anchors normalizer: the two fields' shapes genuinely differ
+    (decision:own-helper-not-anchors-helper)."""
+    if isinstance(directives, dict):
+        lines: list[str] = []
+        for name, contract in directives.items():
+            if isinstance(contract, dict):
+                lines.append(f"  {name}:")
+                lines.extend(f"    {field}: {_directive_leaf(value)}"
+                             for field, value in contract.items())
+            else:
+                lines.append(f"  {name}: {_directive_leaf(contract)}")
+        return lines
+    if isinstance(directives, list):
+        return [f"  {_directive_leaf(item)}" for item in directives]
+    return []
+
+
 def render_human(view: dict) -> str:
     """Human adapter: format a StateView as the text agents read from
     `current`. Pure presentation — every fact comes from `view`; this function
@@ -1651,7 +2149,8 @@ def render_human(view: dict) -> str:
     unrelated `require_session` lease test, corrected by issue #420); the
     conditions block, `n/m met` summary, `constraints:`/`anchors:` blocks (issue
     #420 defect 2 — emitted only when populated, so an empty/absent field adds
-    no output) and `next:` hint are appended AFTER it. The why/refresh suffix
+    no output), the `directives:` block (issue #433, same emitted-only-when-
+    populated rule) and `next:` hint are appended AFTER it. The why/refresh suffix
     (`_why_suffix`, composed — not replaced — into `view["why_text"]` by
     `state()`) rides last, same relative order as before this change; the Trip
     `CONTEXT` advisory is a `dispatch()`-level suffix outside `current()`
@@ -1687,6 +2186,10 @@ def render_human(view: dict) -> str:
     if anchor_lines:
         lines.append("anchors:")
         lines.extend(anchor_lines)
+    directive_lines = _render_directive_lines(active.get("directives"))
+    if directive_lines:
+        lines.append("directives:")
+        lines.extend(directive_lines)
     if active.get("next_verbs"):
         lines.append("next: " + " | ".join(active["next_verbs"]))
     body = "\n".join(lines)
@@ -1734,7 +2237,8 @@ def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
 
 
 def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | None = None,
-            why: str | None = None, mechanical: bool = False) -> str:
+            why: str | None = None, mechanical: bool = False,
+            require_why: bool = False) -> str:
     if cl["type"] != GATED:
         raise EngineError("advance is for gated checklists; use record")
     t = task(cl, iid)
@@ -1778,7 +2282,27 @@ def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | 
     # either a running --why or an explicit --mechanical marker; SILENCE FAILS CLOSED.
     # A missing `why_exempt` is treated as NOT exempt (opt-out default). The record
     # lands on the append-only why_trail; a mechanical marker never becomes the digest.
-    if not bool(t.get("why_exempt")):
+    #
+    # `require_why` (#467) is the CLI boundary telling this verb that the context
+    # gauge is at/over the HARD threshold. Closing the gate is still NOT refused —
+    # closing it is the handoff — but closing it SILENTLY is: `--mechanical` is
+    # refused and `why_exempt` is SUSPENDED, so the understanding actually lands on
+    # the why_trail. Without this a tripped agent closes with a mechanical marker,
+    # `_latest_why_record` skips it, the DIGEST stays pre-trip, and the fresh agent
+    # cold-starts from an understanding written before the work it is inheriting —
+    # #431, reproduced after its own fix. The parameter defaults to False, so every
+    # direct (non-dispatch) caller behaves exactly as before.
+    if require_why:
+        if mechanical or not (why or "").strip():
+            raise EngineError(
+                f"{iid}: context is at/over the hard limit, so this gate cannot be "
+                f"closed silently — a mechanical or why-less close records no "
+                f"understanding, and the next agent would cold-start from a digest "
+                f"written before your work. Closing the gate is NOT refused; only the "
+                f"silence is. Run: advance {iid} --why \"<understanding>\""
+            )
+        _append_why(cl, iid, why=why.strip(), mechanical=False)
+    elif not bool(t.get("why_exempt")):
         if mechanical:
             _append_why(cl, iid, why=None, mechanical=True)
         elif (why or "").strip():
@@ -2014,20 +2538,32 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None,
 _AMEND_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 
-def _build_amend_task(op: dict) -> dict:
-    """Build a full pending task from an `add` op, mirroring `append()`'s shape.
-    `preconditions`/`constraints` default to empty; `directives`/`child_checklist`
-    default to None. Deep-copied so the caller's op dict is never aliased into
-    canonical state."""
+def _new_task(
+    task_id: str,
+    title: str,
+    imperative: str,
+    preconditions: list | None = None,
+    postconditions: list | None = None,
+    constraints: list | None = None,
+    directives: dict | None = None,
+    child_checklist: str | None = None,
+) -> dict:
+    """Build a full pending task dict in the one canonical shape shared by
+    `append()` (fresh empty containers, no deepcopy -- there is nothing to
+    alias) and `_build_amend_task()` (caller deep-copies an amend op's fields
+    before passing them in, so the op dict is never aliased into canonical
+    state). This constructor does not copy its arguments; that is each call
+    site's responsibility, since only one of them needs it. A field added to
+    the task shape has exactly one place to add it: here."""
     return {
-        "id": op["id"],
-        "title": op["title"],
-        "imperative": op["imperative"],
-        "preconditions": copy.deepcopy(op.get("preconditions") or []),
-        "postconditions": copy.deepcopy(op["postconditions"]),
-        "constraints": copy.deepcopy(op.get("constraints") or []),
-        "directives": copy.deepcopy(op.get("directives")),
-        "child_checklist": op.get("child_checklist"),
+        "id": task_id,
+        "title": title,
+        "imperative": imperative,
+        "preconditions": preconditions if preconditions is not None else [],
+        "postconditions": postconditions if postconditions is not None else [],
+        "constraints": constraints if constraints is not None else [],
+        "directives": directives,
+        "child_checklist": child_checklist,
         "status": "pending",
         "status_detail": {},
         "result": None,
@@ -2035,6 +2571,23 @@ def _build_amend_task(op: dict) -> dict:
         "evidence": [],
         "rework_count": 0,
     }
+
+
+def _build_amend_task(op: dict) -> dict:
+    """Build a full pending task from an `add` op, mirroring `append()`'s shape.
+    `preconditions`/`constraints` default to empty; `directives`/`child_checklist`
+    default to None. Deep-copied so the caller's op dict is never aliased into
+    canonical state."""
+    return _new_task(
+        op["id"],
+        op["title"],
+        op["imperative"],
+        preconditions=copy.deepcopy(op.get("preconditions") or []),
+        postconditions=copy.deepcopy(op["postconditions"]),
+        constraints=copy.deepcopy(op.get("constraints") or []),
+        directives=copy.deepcopy(op.get("directives")),
+        child_checklist=op.get("child_checklist"),
+    )
 
 
 def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | None = None) -> str:
@@ -2060,9 +2613,17 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
       never marks the condition satisfied (that stays `waive`'s job) and never
       changes the check's kind.
     Requires non-empty `--reason` and `--authority` (human ratification), same as
-    `waive`."""
-    if cl.get("type") != GATED:
-        raise EngineError("amend applies to gated checklists")
+    `waive`.
+
+    On a **survey** only a delta whose ops are ALL `retext-check` is accepted: a
+    survey item's command postcondition can carry a placeholder that must be
+    resolved through the engine rather than by hand (the reviewer's `r6-fowler`
+    record path). `add`/`drop`/`rescope` stay gated-only — a CONSERVATIVE choice,
+    not a type-level impossibility; see the refusal text below."""
+    if cl.get("type") not in (GATED, SURVEY):
+        raise EngineError(
+            f"amend applies to gated and survey checklists (this one is {cl.get('type')!r})"
+        )
     if not (authority or "").strip():
         raise EngineError("amend requires a non-empty --authority")
     if not (reason or "").strip():
@@ -2070,6 +2631,24 @@ def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | N
     ops = (delta or {}).get("ops")
     if not isinstance(ops, list) or not ops:
         raise EngineError("amend delta needs a non-empty 'ops' list")
+
+    if cl.get("type") == SURVEY:
+        gated_only = sorted({
+            str(op.get("op") if isinstance(op, dict) else op)
+            for op in ops
+            if not (isinstance(op, dict) and op.get("op") == "retext-check")
+        })
+        if gated_only:
+            raise EngineError(
+                f"amend on a survey accepts a retext-check-only delta; "
+                f"{', '.join(gated_only)} refused here. This is a CONSERVATIVE "
+                "choice, not a type-level impossibility: adding, dropping or "
+                "rescoping a survey item is a coherent thing to want, and it is "
+                "refused only because nothing needs it yet. Split the "
+                "retext-check ops into "
+                "their own delta, or raise the need with the authority named in "
+                "your handoff."
+            )
 
     # Build the new state on copies; commit to cl only after every op validates.
     new_items = list(cl["items"])
@@ -2231,22 +2810,7 @@ def append(cl: dict, iid: str, title: str, imperative: str) -> str:
         raise EngineError("append only on survey checklists")
     if iid in cl.get("tasks", {}):
         raise EngineError(f"item {iid!r} already exists")
-    cl["tasks"][iid] = {
-        "id": iid,
-        "title": title,
-        "imperative": imperative,
-        "preconditions": [],
-        "postconditions": [],
-        "constraints": [],
-        "directives": None,
-        "child_checklist": None,
-        "status": "pending",
-        "status_detail": {},
-        "result": None,
-        "finding": None,
-        "evidence": [],
-        "rework_count": 0,
-    }
+    cl["tasks"][iid] = _new_task(iid, title, imperative)
     cl["items"].append(iid)
     return f"appended {iid}"
 
@@ -2529,11 +3093,16 @@ def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -
         # carry the owning --session-id. No lease -> legacy behavior (no session).
         session_id = getattr(args, "session_id", None)
         require_session(cl, v, session_id, config)
-        # Trip HARD backstop (#182): at the `advance` gate boundary, refuse when the
-        # gauge reads >= hard and no refresh-request exists yet. Checked BEFORE the
-        # verb runs so a refusal never mutates state. No-op on a missing reading.
-        if v == "advance":
-            _trip_hard_gate(cl, getattr(args, "id", None), base_dir)
+        # Trip HARD backstop (#182, re-aimed by #467): the guard hangs off the verbs
+        # that BEGIN work at a gate — `start` opens a pending gate, `reopen` drives a
+        # complete one back to in-progress — and NEVER off `advance`, which closes the
+        # gate the agent is already inside and IS the handoff. `resume` is deliberately
+        # not here: it returns a blocked gate to its pre-block status, which for an
+        # in-progress prior hands back the gate already under way. Checked BEFORE the
+        # verb runs so a refusal never mutates state and never stamps liveness. No-op
+        # on a missing reading.
+        if v in TRIP_HARD_GUARDED_VERBS:
+            _trip_hard_gate(cl, getattr(args, "id", None), base_dir, verb=v)
         # Run the verb FIRST: a refused verb raises here (before the liveness stamp),
         # so it never refreshes the lease even though main() persists on the error
         # path. Only a verb that returns successfully reaches the stamp below.
@@ -2561,9 +3130,15 @@ def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
     if v == "start":
         return start(cl, args.id, base_dir=base_dir)
     if v == "advance":
+        # #467: the HARD band never refuses this advance — closing the gate you are
+        # inside IS the handoff — but at/over hard it does refuse closing it in
+        # SILENCE. The band decision belongs to this CLI boundary, so `advance` stays
+        # a pure function of its arguments and every direct caller is unaffected.
         return advance(cl, args.id, from_child=getattr(args, "from_child", None),
                        base_dir=base_dir, why=getattr(args, "why", None),
-                       mechanical=getattr(args, "mechanical", False))
+                       mechanical=getattr(args, "mechanical", False),
+                       require_why=_trip_hard_band_reading(
+                           cl, base_dir, getattr(args, "id", None)) is not None)
     if v == "record":
         return record(cl, args.id, args.result, args.finding, base_dir=base_dir)
     if v == "consolidate":
@@ -2657,7 +3232,12 @@ def append_journal_entry(spine_path: Path, verb: str, task_id: str | None,
     """Append one hash-chained line to the spine's journal for a successful
     mutating verb. Best-effort and non-fatal: a journal write failure must never
     fail the mutation it records (the spine is already the source of truth), so any
-    OSError is swallowed."""
+    OSError is swallowed.
+
+    Byte-faithful, the append-only sibling of `save`'s #465 fix: preserve the
+    journal's OWN line ending (a text-mode append translates every written '\\n'
+    to the platform's, churning an existing file's endings one line at a time),
+    and default a journal that does not exist yet to LF."""
     jp = journal_path(spine_path)
     seq, prev = _read_journal_tail(jp)
     entry = {
@@ -2670,9 +3250,15 @@ def append_journal_entry(spine_path: Path, verb: str, task_id: str | None,
         "prev_hash": prev,
     }
     entry["hash"] = _journal_hash(entry)
+    line = (json.dumps(entry, ensure_ascii=False) + "\n").encode("utf-8")
+    eol = _dominant_newline(jp)
+    if eol != b"\n":
+        # json.dumps escapes any literal CR as \r, so no b"\r" survives in the
+        # serialised bytes and this replace cannot produce b"\r\r\n".
+        line = line.replace(b"\n", eol)
     try:
-        with jp.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        with jp.open("ab") as fh:
+            fh.write(line)
     except OSError:
         pass
 
@@ -2681,6 +3267,33 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     path = Path(args.file)
     cl = load(path)
+    # #427: arm `refusals` here, on LOAD, but ONLY for the verb that can
+    # itself be the very-first-ever attempt to claim (no `engine_session` at
+    # all, ever -- release() leaves the record in place with status
+    # "released", it never clears the key, so `is None` really does mean
+    # "never claimed"). 0 is a true reading in that case regardless of
+    # whether the counter existed when this checklist was created, so
+    # arming it here -- BEFORE dispatch() runs -- counts even a refusal from
+    # a malformed `claim` call itself. This is deliberately separate from
+    # claim()'s own `cl.setdefault("refusals", 0)` (~1030), which stays as
+    # the arming point for a checklist that HAS been claimed before: that
+    # one must not backdate a pre-counter checklist with a guessed number,
+    # and this one cannot possibly guess wrong because "never claimed" means
+    # the true count is exactly what happened since.
+    #
+    # Gated to `args.verb == "claim"` (#357 g1 review carry-over): a child
+    # gate plan is legitimately driven with `engine_session` staying None
+    # for its ENTIRE life, by design -- start/attest/advance/reopen with no
+    # lease and no `claim` call, ever (the production shape #357 names).
+    # Arming on any refusal while unclaimed, not just a `claim` refusal,
+    # gave that shape a `refusals` key it must never carry -- the negative
+    # control in tests/test_episode_negative_control.py asserts the key's
+    # ABSENCE is structural there, not "zero refusals happened". Since that
+    # checklist never issues a `claim` call at all, this verb-scoped guard
+    # leaves it untouched while still catching the malformed-claim case
+    # #427 was filed for.
+    if cl.get("engine_session") is None and args.verb == "claim":
+        cl.setdefault("refusals", 0)
     ev_before = _all_evidence_ids(cl)
     try:
         message = dispatch(cl, args, base_dir=path.parent)

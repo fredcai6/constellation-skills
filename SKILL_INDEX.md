@@ -20,10 +20,15 @@ Path: `skills/explorer/SKILL.md`
 
 Shapes a raw idea into a human-confirmed, issue-ready design upstream of any issue: exploration cycles, excursion off/on-ramps, a cold critic panel, and a hard confirmation gate before work is cut.
 
-## Constellation To-Issues
-Path: `skills/to-issues/SKILL.md`
+## Constellation To-Initial-Issues
+Path: `skills/to-initial-issues/SKILL.md`
 
-Cuts a confirmed `DESIGN_SPEC` into a dependency-ordered, wave-ready issue set an Admiral can run, once an explorer agent or a human has a confirmed spec ready to decompose into typed, edge-ordered issues.
+Cuts a confirmed `SHAPED_BRIEF` into one runnable current wave while preserving later outcomes as nonbinding forecast, uncertainty, and parked possibilities.
+
+## Constellation Replan
+Path: `skills/replan/SKILL.md`
+
+Classifies wave evidence into one strict advance, repair, replan, or stop transition while preserving launched identities and routing fixed-intent changes to typed human escalation.
 
 ## Constellation Workbench
 Path: `skills/workbench/SKILL.md`
@@ -78,12 +83,7 @@ Classifies and writes issue-ready recommendations for future work. No checklist 
 ## Constellation Admiral
 Path: `skills/admiral/SKILL.md`
 
-Runs an epic as the human's delegate: confirms a latitude contract, dispatches Commanders in waves, adjudicates and merges, and closes with lessons and architecture audits.
-
-## Constellation Lessons Auditor
-Path: `skills/lessons-auditor/SKILL.md`
-
-Fresh-context Reflector dispatched at closeout: distills scoped, grounded lesson candidates from run artifacts and routes them as nominations, never applying them itself.
+Runs an epic as the human's delegate: confirms a latitude contract, dispatches Commanders in waves, adjudicates and merges, and closes with a recorded epic retrospective and architecture audits.
 
 ## Constellation Write-a-Skill
 Path: `skills/write-a-skill/SKILL.md`

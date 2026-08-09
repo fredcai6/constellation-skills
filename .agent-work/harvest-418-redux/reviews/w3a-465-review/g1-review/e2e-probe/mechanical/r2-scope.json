@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "e2e-probe",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-e2e-probe-r2-scope@7eb69cf09d93112a5a8c06d05e0d23b027867e24",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "e2e-probe",
+    "generated_at": "2026-08-08T06:16:28Z"
+  }
+}

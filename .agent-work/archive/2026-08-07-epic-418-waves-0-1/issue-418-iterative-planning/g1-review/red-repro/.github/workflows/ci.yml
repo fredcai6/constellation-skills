@@ -1,0 +1,50 @@
+name: CI
+
+# Gate: full tests/ suite green, coverage floor on scripts/checklist_engine.py,
+# and a skip-guard that fails the build on any undocumented pytest skip (see
+# scripts/verify_skip_guard.py for why message-text-only would be spoofable).
+#
+# Windows-latest + git-bash `shell: bash` is a documented assumption of this
+# workflow (repo's POSIX-shell command-check convention), not something proven
+# by a triggered Actions run — see .agent-work/issue-229/crew-handoffs/
+# g1-implement-result.md for the local fault-injection proofs that stand in
+# for an actual CI run (PR-2b: no Actions run is triggered/waited/claimed).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest coverage
+
+      - name: Run full test suite
+        run: python -m pytest tests/ -q --junitxml=junit-report.xml
+
+      - name: Skip guard -- no undocumented skips
+        run: python scripts/verify_skip_guard.py junit-report.xml
+
+      - name: Coverage floor -- scripts/checklist_engine.py
+        run: |
+          python -m coverage run --include="*/checklist_engine.py" -m pytest tests/test_checklist_engine.py -q && python -m coverage report
+          python -m coverage report --fail-under=90

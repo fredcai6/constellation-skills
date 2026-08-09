@@ -1,0 +1,293 @@
+{
+  "work_id": "issue-418-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context-classify",
+    "m1-contract-red",
+    "m2-replan-green",
+    "m3-register-goodness",
+    "m4-closeout"
+  ],
+  "tasks": {
+    "m0-context-classify": {
+      "id": "m0-context-classify",
+      "title": "Load context and classify the skill",
+      "imperative": "Read inherited doctrine, project deltas, frozen G2 packet, G1 source contracts, write-a-skill goodness criteria and lean archetype. Verify the handoff is complete and classify replan; attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all context and contracts loaded; handoff complete; replan classified as lean",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "apply constellation-write-a-skill",
+        "no lifecycle wiring or network writes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-contract-red": {
+      "id": "m1-contract-red",
+      "title": "Encode the frozen replan contract tests",
+      "imperative": "Create tests/test_replan.py first for exact schemas, four exits, dispositions, preservation/escalation, rendering, and offline behavior; run the identical focused command and capture a causal RED on missing replanning behavior.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and lean classification complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests were written before production changes and identical focused command exited 1 on missing replanning behavior",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "TDD required",
+        "red cannot be import/path/setup failure"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-replan-green": {
+      "id": "m2-replan-green",
+      "title": "Mint strict lean replan behavior",
+      "imperative": "Scaffold from the lean archetype and minimally implement strict v1 input/result templates plus pure verifier/renderer covering all four exits, identity/disposition completeness, preservation, typed escalation, and offline Markdown.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "causal RED captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "replan contract tests pass",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_replan.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-replan-green-1"
+        }
+      ],
+      "constraints": [
+        "do not alter G1 schema",
+        "strict fail-fast contract",
+        "fixed fields require inapplicable typed escalation"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-replan-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_replan.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-register-goodness": {
+      "id": "m3-register-goodness",
+      "title": "Register and audit semantic goodness",
+      "imperative": "Register script/reference bundles and live index, update installer/write-a-skill tests, clear verify_skill_registered, inspect the lean skill against shared goodness and run public-helper wiring grep.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "strict replan behavior is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "replan registration rail passes",
+          "check": {
+            "kind": "command",
+            "command": "uv run python scripts/verify_skill_registered.py --skill replan"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-register-goodness-1"
+        },
+        {
+          "id": "c2",
+          "statement": "skill goodness, negative space, completion criteria, and public helper wiring audited",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "lean archetype",
+        "fresh independent semantic review remains G2 reviewer responsibility"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-register-goodness-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python scripts/verify_skill_registered.py --skill replan",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-closeout": {
+      "id": "m4-closeout",
+      "title": "Verify and return Gate 2",
+      "imperative": "Run the identical final focused command, compute ordinal path+byte digest after final test/edit, inspect scope/exclusions, write IMPLEMENTER_RESULT with required evidence and workflow feedback, advance, then release.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "implementation, registration, goodness, and wiring checks complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Implementation, registration rail, semantic goodness, helper wiring, and offline scope checks are complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "identical focused command passes",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_replan.py tests/test_install_constellation.py tests/test_write_a_skill.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-closeout-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT contains gate identity, causal red/green, ordinal digest/inventory, scope, map impact, and workflow feedback",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT records gate identity, tests-first causal RED and identical GREEN, exact ordinal path+byte digest inventory/helper, scope and exclusions, map impact, and workflow feedback."
+        }
+      ],
+      "constraints": [
+        "preserve unrelated changes",
+        "result local-only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_replan.py tests/test_install_constellation.py tests/test_write_a_skill.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g2-implementer-20260806",
+    "status": "released",
+    "claimed_at": "2026-08-06T17:36:17.350377+00:00",
+    "last_heartbeat": "2026-08-06T17:49:01.412713+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T17:49:19.841659+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context-classify",
+      "why": "Replan is a lean judgment-to-contract skill: the agent authors the four-way wave decision while pure code validates exact G1 nesting, disposition completeness, launched stability, and typed human escalation without ordered engine state.",
+      "mechanical": false,
+      "ts": "2026-08-06T17:36:40.981658+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-contract-red",
+      "why": "The identical focused command exits 1 with explicit missing-replanning-behavior failures for the strict verifier/templates, mint registration, and installability; 13 behavior tests skip rather than failing on import or path setup.",
+      "mechanical": false,
+      "ts": "2026-08-06T17:40:07.492449+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-replan-green",
+      "why": "The lean skill now verifies exact G1-nested packets, one-to-one classified and unlaunched dispositions, all four exits, repair holds, launched stability, five typed fixed-boundary escalations, and renders an offline transition record.",
+      "mechanical": false,
+      "ts": "2026-08-06T17:43:26.465812+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-register-goodness",
+      "why": "The minted skill follows the lean archetype with action-leading steps, explicit completion and negative space, a single invariant rail, and independent semantic review handoff; every public verifier/renderer/CLI helper has executable call sites and no network-capable imports.",
+      "mechanical": false,
+      "ts": "2026-08-06T17:44:11.512042+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-closeout",
+      "why": "The exact frozen suite passes 133 tests and 407 subtests; the final 11-path review identity is sha256:bcac2c18ac5a6d88883f6123d173b72d4f020fd457b42b4b04268674a481abd5, scope remains within G2, and the local implementer result preserves causal TDD and workflow evidence for fresh review.",
+      "mechanical": false,
+      "ts": "2026-08-06T17:49:01.412687+00:00"
+    }
+  ]
+}

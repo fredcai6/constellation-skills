@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-sentence-and-doc",
+  "mechanical": {
+    "run": "issue-467-g4-rework",
+    "project": "constellation-skills",
+    "role": "implementer:g4-rework",
+    "refusals": 3,
+    "spine-step": "m5-sentence-and-doc",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-g4-rework-m5-sentence-and-doc@b0061d294227bbe4df3e15769d4a7ad8f38cce32",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-g4-rework",
+    "generated_at": "2026-08-08T18:29:07Z"
+  }
+}

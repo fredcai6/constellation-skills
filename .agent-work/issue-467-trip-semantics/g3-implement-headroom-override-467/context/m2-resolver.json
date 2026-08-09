@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m2-resolver",
+  "files": [],
+  "repo_rev": {
+    "commit": "5a69a30b6b3cb189f2c75ee4d614c649792d99f0"
+  },
+  "run": {
+    "work_id": "g3-implement-headroom-override-467",
+    "generated_at": "2026-08-08T13:22:05Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

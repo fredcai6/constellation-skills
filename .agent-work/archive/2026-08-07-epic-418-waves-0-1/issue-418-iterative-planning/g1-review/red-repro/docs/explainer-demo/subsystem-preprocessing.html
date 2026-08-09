@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="docent-map-stamp" content="a28c107b2fe8be081ece13accf7280406c2e81e1f08c16d58ea28fa455137cd9">
+<meta name="docent-generated" content="2026-07-07">
+<title>Packet: src/preprocessing — Windowless Trajectory Estimation — F1Brainz Explainer</title>
+<style>
+:root{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}}
+:root[data-theme="light"]{
+  --bg:#fbfbfa; --fg:#1b1b1a; --muted:#5c5c58; --line:#e3e2dd; --card:#ffffff;
+  --accent:#7a4d17; --accent-soft:#f0e7db; --code-bg:#f4f2ee; --warn:#8a1f1f;
+  --warn-bg:#fbe6e6; --ok:#2f6b34; --chip:#efece6;
+}
+:root[data-theme="dark"]{
+  --bg:#16161a; --fg:#e6e5e2; --muted:#a3a29c; --line:#2c2c33; --card:#1e1e24;
+  --accent:#d9b483; --accent-soft:#2a241b; --code-bg:#23232a; --warn:#ff9d9d;
+  --warn-bg:#3a1f1f; --ok:#8fd39a; --chip:#26262d;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px 80px}
+header.site{position:sticky;top:0;z-index:5;background:var(--bg);
+  border-bottom:1px solid var(--line);backdrop-filter:saturate(1.2) blur(4px)}
+header.site .wrap{padding:12px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+header.site .brand{font-weight:700;letter-spacing:.02em}
+header.site nav{display:flex;gap:16px;flex-wrap:wrap;font-size:.92rem}
+h1{font-size:1.9rem;line-height:1.2;margin:.6em 0 .2em}
+h2{font-size:1.3rem;margin:1.8em 0 .5em;padding-bottom:.2em;border-bottom:1px solid var(--line)}
+h3{font-size:1.05rem;margin:1.4em 0 .3em}
+p{margin:.6em 0}
+code{background:var(--code-bg);padding:.12em .38em;border-radius:5px;
+  font:0.86em/1.4 "SF Mono",SFMono-Regular,Consolas,"Liberation Mono",monospace}
+pre{background:var(--code-bg);padding:14px 16px;border-radius:9px;overflow-x:auto;border:1px solid var(--line)}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--chip)}
+blockquote{margin:.8em 0;padding:.2em 1em;border-left:3px solid var(--line);color:var(--muted)}
+.lede{font-size:1.12rem;color:var(--muted);max-width:70ch}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:.4em 0 1em}
+.chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;
+  padding:2px 11px;font-size:.8rem;color:var(--muted)}
+.chip.status-current{color:var(--ok)}
+.chip.status-stale{color:var(--warn)}
+.chip.status-partial{color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:1.2em 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:15px 17px}
+.card h3{margin:.1em 0 .3em}
+.card .path{font-size:.8rem;color:var(--muted);font-family:"SF Mono",Consolas,monospace}
+.card p{font-size:.9rem;color:var(--muted);margin:.4em 0 0}
+.section-note{color:var(--muted);font-size:.92rem}
+.adj{margin:1em 0}
+.adj .row{padding:10px 0;border-bottom:1px solid var(--line)}
+.adj .src{font-weight:600}
+.adj .tgt{display:inline-block;background:var(--chip);border-radius:6px;padding:1px 8px;margin:2px 4px 2px 0;font-size:.85rem}
+.decision{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 20px;margin:1.1em 0}
+.decision .meta{font-size:.82rem;color:var(--muted);margin:.2em 0 .6em}
+details{margin:.6em 0}
+summary{cursor:pointer;color:var(--accent);font-size:.9rem}
+.badge{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:13px 17px;margin:1.4em 0;font-size:.88rem}
+.badge .dig{font-family:"SF Mono",Consolas,monospace;font-size:.82rem;word-break:break-all;color:var(--muted)}
+.badge .age{color:var(--muted)}
+.stale-banner{display:none;background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn);
+  border-radius:10px;padding:12px 16px;margin:1em 0;font-weight:600}
+.stale-banner.show{display:block}
+.theme-toggle{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);
+  border-radius:8px;padding:3px 10px;cursor:pointer;font-size:.85rem}
+footer.site{border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;margin-top:40px}
+footer.site .wrap{padding:20px}
+</style>
+</head>
+<body>
+<header class="site"><div class="wrap">
+  <span class="brand">F1Brainz Explainer</span>
+  <nav><a href="index.html">Overview</a><a href="boundaries.html">Boundaries &amp; Dependencies</a><a href="decisions.html">Decisions</a></nav>
+  <button id="theme-toggle" class="theme-toggle" type="button">light / dark</button>
+</div></header>
+<main class="wrap">
+<div id="stale-banner" class="stale-banner"></div>
+
+<p class="section-note"><a href="index.html">← Overview</a></p>
+<h1>Packet: src/preprocessing — Windowless Trajectory Estimation</h1>
+<div class="chips"><span class="chip status-current">status: current</span><span class="chip">level: container</span><span class="chip">src/preprocessing/</span><span class="chip">confidence: high</span><span class="chip">struct:preprocessing</span></div>
+
+
+<h2>Detail <span class="section-note">(from the Cartographer packet)</span></h2>
+<hr />
+<h2>Responsibility</h2>
+<p>Windowless full-stint trajectory estimation for physics inputs. Owns a single
+capability: a Matern-7/2 SDE Kalman-RTS smoother (order=4, per-axis
+<code>[pos, vel, acc, jerk]</code>, white noise on jerk so acceleration is smooth and
+differentiable) that reconstructs a car's full-stint trajectory
+(position + velocity + acceleration) with honest posterior covariance and a
+per-class trust profile. It does NOT persist that output itself — see
+&quot;Current consumer reality&quot; below for where persistence now actually lives.</p>
+<p><code>src/preprocessing/</code> contains exactly <code>trajectory/</code> plus the package <code>__init__.py</code>
+(which re-exports the <code>trajectory</code> public API). There are no parallel estimation
+paths: the old windowed-estimator lineage and the separate <code>trajectory_grading/</code>
+harness are gone (issue #448); the on-disk <code>artifact.py</code> writer/reader is gone
+too (pipeline-tighten Task 10, 2026-07-06 — see below).</p>
+<p><strong>Boundary (DB-only / cache-only):</strong> the FastF1 disk cache is read in exactly one
+place — <code>trajectory/loaders.py</code>. Every other module in the package consumes data
+only through <code>loaders.py</code> or through the on-disk artifact. Season-DB truth is read
+via read-only SQLite URIs (<code>file:&lt;path&gt;?mode=ro</code>), never via <code>DatabaseManager</code>,
+so no write lock is taken against the canonical DBs. <code>preprocessing</code> imports no
+<code>src/physics/</code> symbols — it is upstream of physics, producing the trajectory the
+physics estimator consumes.</p>
+<p><strong>Current consumer reality (physics region):</strong> <code>src/physics/</code> consumes the
+trajectory estimator by importing <code>loaders</code>, <code>calibration</code>, and <code>physics_adapter</code>
+directly (e.g. <code>physics/session_fit.py</code>, <code>physics/layer2/session_braking.py</code>,
+<code>physics/ribbon.py</code>) — the live path re-runs the smoother from raw streams per
+consumer rather than reading a persisted trajectory back. As of #503,
+<code>loaders.py</code> is again the <strong>sole FastF1-cache reader for the whole physics
+region</strong>: <code>physics/session_fit.py</code> routes its cache fallback through
+<code>loaders.load_session(weather=True, offline=True)</code> and reads the durable
+telemetry store (<code>src/data/telemetry_store.py</code>) DB-first (#494), importing no
+<code>fastf1</code> of its own. <strong>Pipeline-tighten Task 10 (2026-07-06) resolved the
+artifact-boundary question the #448/#449 design left open — but from the
+PHYSICS side, not this one:</strong> the on-disk <code>trajectory/artifact.py</code> this
+package used to own is <strong>deleted</strong> (zero live consumers at deletion time; its
+schema is documented, retired, in <code>docs/report_schemas/trajectory_trust_profile.md</code>);
+the persisted-trajectory boundary is now <code>processed_telemetry</code>
+(<code>src/data/schema.sql</code>), and the writer that activates it —
+<code>ideal_lap/pvat_writer.write_lap_pvat</code> — lives in <code>src/physics/</code>, not here,
+specifically because writing to <code>DatabaseManager</code> requires an import this
+package must never make (see the &quot;Boundary (DB-only/cache-only)&quot; note above,
+and <code>pvat_writer.py</code>'s own docstring). The producer
+is real and exercised (<code>layer2/session_race.load_race_stints</code>'s opt-in
+<code>pvat_db</code> hook, driven by <code>scripts/export_pvat.py</code>), but nothing yet reads
+<code>processed_telemetry</code> back — the re-smoothing-per-consumer status quo is
+unchanged for now. (Recorded as an Open Question in <code>packets/physics.md</code>.)</p>
+<p><strong>Physics-region isolation:</strong> imports no evo-region packages (<code>evo_predictor</code>,
+<code>latent_power</code>, <code>compound_prior</code>). Enforced by <code>constraint:physics_region_no_evo_import</code>.</p>
+<hr />
+<h2>Key Modules</h2>
+<p><code>src/preprocessing/trajectory/</code> — the only subpackage. Self-contained; its
+<code>__init__.py</code> does not import from <code>src/preprocessing/__init__.py</code>.</p>
+<p><strong><code>dynamics.py</code></strong>
+Matern-5/2 LTI-SDE per axis: continuous drift/noise matrices and stationary
+covariance (<code>matern52_sde</code>), <code>discretize</code> to per-step transition + process noise,
+the 6-state block builder (<code>_block6</code>), and the analytic dense-GP kernel (<code>_m52</code>)
+for oracle/calibration use. Binding physical constants: <code>SIG_SPD = 0.49</code> m/s
+(speed-sensor noise std-dev), <code>NOMINAL_OFFSET = 0.09</code> s (nominal inter-stream
+time offset). No FastF1 imports.</p>
+<p><strong><code>smoother.py</code></strong>
+The estimator core. <code>StintSmoother</code> runs one windowless Kalman-RTS pass over a
+full stint in O(N) — 8-state <code>[X, Ẋ, Ẍ, J_X, Y, Ẏ, Ÿ, J_Y]</code> (order=4
+default, Matern-7/2) with position and speed updates. The order=3 (Matern-5/2)
+path is retained for the E4-nesting validation and as the legacy model. <code>NSStintSmoother</code>
+is the non-stationary extension with a state-dependent per-step jerk process
+variance. Utilities: <code>build_roughness</code>, <code>driver_series</code>, <code>banded_gap</code>. The
+posterior-query accessors (<code>pos_at</code>/<code>vel_at</code>/<code>acc_at</code>/covariance/<code>nis_series</code>)
+live in <code>_smoother_query.py</code> as <code>_StintSmootherQueryMixin</code>, mixed into
+<code>StintSmoother</code> (split out for the file-size simplification limits, issue #302).</p>
+<p><strong>#498 additions (both default-off; byte-identical when disabled):</strong></p>
+<ul>
+<li><strong>Student-t jerk process prior (<code>nu_proc</code>)</strong> — when set, the per-step jerk
+increment smoothness penalty is down-weighted by an IRLS weight
+<code>w_i = (nu_proc+p)/(nu_proc+delta_i)</code> where <code>delta_i</code> is the standardized
+squared jerk increment. A large jerk (brake slam) inflates the predict-step Q
+so the braking knee un-rounds. Requires <code>order&gt;=4</code>; the dataclass <code>Qs_nominal</code>
+channel plus <code>_proc_weights</code> / <code>_w_proc</code> carry the per-step local Q scaling.
+<code>nu_proc=None</code> → Gaussian, exact back-compat.</li>
+<li><strong><code>kind=3</code> acceleration pseudo-observation channel</strong> — <code>AccelObs</code> dataclass
+carries parallel <code>(t, ex, ey, a, sigma)</code> arrays (the un-biased, physics-derived
+acceleration along the <code>(ex, ey)</code> unit direction). Passed to <code>StintSmoother.fit</code>
+via <code>accel_obs</code> param; merged into the sorted timeline as kind=3 rows that
+project the acceleration state onto the direction and do a soft 1-row Kalman
+update. <code>accel_obs=None</code> or empty (len 0) → no kind=3 rows, byte-identical to
+Gaussian path.</li>
+</ul>
+<p>Known bias — <code>decision:smoother_rounds_braking_knee</code> (<code>docs/architecture/decisions/</code>):
+the Gaussian-smoothness prior flattens acceleration while preserving speed, and
+rounds the braking <em>speed knee</em> hard enough that the braking peak cannot be
+recovered downstream from the smoothed trajectory. The #498 estimator-side fix
+(Student-t jerk prior + <code>kind=3</code> acceleration anchor) un-rounds the knee on
+Spa 2023 Q VER (blind Gaussian −34.93 → Student-t alone −38.10 → +kind=3
+−37.41 vs raw −38.84); regime-dependent benefit noted — see the decision anchor
+for current scope and open cross-circuit calibration work.</p>
+<p><strong><code>calibration.py</code></strong>
+Automatic, target-driven hyperparameter calibration — no hand-tuned gates.
+<code>fit_stint_hp</code> (PRODUCTION) fits the smoother HP to a chi²-target via
+<code>scipy.optimize.least_squares</code>; <code>heldout_chi2_full</code> is the full-stint held-out
+honesty readout; <code>session_offset</code> co-estimates ONE global inter-stream time offset
+per session; <code>interleaved</code> builds the held-out index split. Loop geometry helpers
+(<code>fit_line</code>, <code>time_residuals</code>, <code>line_distance</code>, <code>crossing_from_smoother</code>,
+<code>local_kappa_v2</code>, <code>resid_stats</code>) support sector-crossing residual scoring.
+<code>calibration.py</code> is now a thin re-export shim (issue #302); the implementation
+lives in four siblings — <code>_hp_search.py</code> (grid search / chi² objective /
+<code>fit_stint_hp</code>), <code>_smoother_fit.py</code> (anisotropic + non-stationary HP fitting),
+<code>_session_offset.py</code> (<code>session_offset</code>), and <code>_loop_geometry.py</code> (E5 loop
+line-fit geometry) — with the full public + test-patched private surface
+re-exported so existing <code>from …calibration import …</code> call sites are unchanged.</p>
+<p><strong><code>loaders.py</code></strong>
+The ONLY cache reader in the package — and, since #503, the single FastF1-cache
+seam for the whole physics region (the sole module allowed to import <code>fastf1</code> or
+touch the FastF1 cache). Read-only DB truth (<code>find_session_id</code>,
+<code>load_sector_truth</code>, <code>load_all_drivers_sector_truth</code>, <code>stint_span</code>, <code>db_lap_times</code>
+via <code>file:...?mode=ro</code>) plus offline raw per-driver streams (<code>enable_cache</code>,
+<code>load_session</code>, <code>load_session_offline</code>, <code>driver_streams</code>, <code>RawSessionStreams</code>).
+<code>load_session</code> takes <code>weather</code>/<code>offline</code> keywords so
+<code>physics/session_fit.load_quali_session</code> loads weather-bearing quali sessions
+through it (cache fallback) instead of importing <code>fastf1</code> itself.
+Binding units: X/Y raw decimetres → metres (×0.1), speed km/h → m/s (÷3.6).
+Decimetre convention verified: Spa 2023 Q VER raw arc 69415 dm × 0.1 = 6941.6 m vs FastF1
+Distance 6949.5 m (ratio 9.99 ≈ 10, issue #446/#447).
+Salvaged from the retired <code>trajectory_grading/{db_truth_loader,offline_loader}.py</code>.</p>
+<p><strong><code>grading.py</code></strong>
+<code>compute_trust_profile</code> — REPLACES the old pass/fail gates with a structured,
+per-observation-class TRUST PROFILE: per-stream held-out chi² (pos, spd), a NIS
+summary (mean/std/p90), and sector-crossing residual stats at calibrated loops.
+Returns a structured dict and issues no verdict — the caller decides. No FastF1
+imports.</p>
+<p><strong><code>hp_store.py</code></strong> (pipeline-tighten Task 14) — persistent cache of per-session
+smoother HP calibration. <code>HPStore(db_path=DEFAULT_HP_STORE_PATH)</code> is a small,
+standalone keyed SQLite store (plain <code>sqlite3</code>, no <code>DatabaseManager</code> — its own
+new db, not one of the season DBs the rest of this package reads read-only),
+keyed on <code>(year, gp, session_type, driver, order, calibration_scheme_tag)</code>.
+<code>scheme_tag(order, windows)</code> folds the Matern order and the flying-window-union
+flag (whether <code>windows</code> was non-empty) plus a <code>_SCHEME_VERSION</code> prefix into one
+tag, so a change to either dimension of &quot;how this HP was calibrated&quot; misses the
+old row (a cache miss) rather than returning a stale fit under a reused key. An
+OPT-IN seam: <code>calibration.calibrate_session_hp</code> gains <code>hp_store=None, session_key=None</code> — a cache hit returns the stored <code>SmootherHP</code> without
+re-running the chi²-target search; a miss runs the search then <code>put()</code>s the
+result. Either omitted is byte-identical to pre-Task-14. <code>get()</code> restores
+<code>chi2_pos</code> from <code>NULL</code> back to <code>NaN</code> (SQLite's <code>sqlite3_bind_double</code> rejects
+<code>NaN</code>, silently binding it as <code>NULL</code> on write). Idempotent on the natural key
+(<code>INSERT OR REPLACE</code>). Wired opt-in from both <code>physics/session_fit.py</code>'s
+<code>_calibrate_hp_for_driver</code> and <code>physics/layer2/session_race.py</code>'s
+<code>_calibrate_driver_hp</code> — production wiring into a real batch caller (this
+task's scope was the cache seam itself) is a follow-on.</p>
+<p><strong>Removed (pipeline-tighten Task 10, 2026-07-06):</strong> <code>artifact.py</code> — the on-disk
+trajectory-product writer/reader (<code>write_artifact</code>, <code>read_artifact</code>,
+<code>build_artifact_from_smoother</code>, schema version 1) — deleted; zero live
+consumers confirmed at deletion (the single-store mandate: <code>processed_telemetry</code>,
+written by <code>src/physics/ideal_lap/pvat_writer.py</code>, is now the one persisted-
+trajectory boundary; see &quot;Current consumer reality&quot; above). The schema it wrote
+is documented, now retired, in <code>docs/report_schemas/trajectory_trust_profile.md</code>.</p>
+<p><strong><code>physics_adapter.py</code></strong>
+Bridge from a fitted windowless <code>StintSmoother</code> to the physics engine's
+<code>processed_telemetry</code> DataFrame contract (<code>smoother_to_processed_telemetry</code>).
+Maps the smoother's 6-state <code>[X, Ẋ, Ẍ, Y, Ẏ, Ÿ]</code> (and its 6×6 posterior
+covariance) into the physics engine's 9-vector <code>[px,py,pz,vx,vy,vz,ax,ay,az]</code>
+state with the 45 upper-triangle <code>cov_i_j</code> elements <code>SegmentClassifier</code> reads
+(z rows/cols zero — the 2D smoother has no out-of-plane motion). Imported by
+<code>src/physics/</code> (<code>session_fit.py</code>, <code>layer2/session_*</code>), making it the typed seam
+between the trajectory estimator and the force layer.</p>
+<hr />
+<h2>Capability</h2>
+<p><strong>Windowless full-stint trajectory estimation.</strong> Given raw FastF1 streams for a
+driver-session, produce a smoothed full-stint trajectory (position + velocity +
+acceleration), an honest posterior covariance, and a trust profile — in-memory,
+for direct physics consumption (<code>physics_adapter.py</code>) or, when a physics caller
+opts in, persistence to <code>processed_telemetry</code> via <code>src.physics.ideal_lap. pvat_writer</code> (this package writes no artifact of its own; see &quot;Current consumer
+reality&quot; above). Automatic chi²-target HP calibration with sector-loop offset
+co-estimation generalizes across drivers without per-driver tuning, optionally
+cached per-session via <code>hp_store.py</code>.</p>
+<p><strong>Validated:</strong> 2022 Spain R, pooled held-out median 22.77 ms (gate ≤ 50 ms),
+automatic calibration generalizing across 20 drivers (issue #448).</p>
+<hr />
+<h2>Report schema contract</h2>
+<p><code>docs/report_schemas/trajectory_trust_profile.md</code> (schema v1) is the durable
+field reference for the trust profile <code>grading.py</code>'s <code>compute_trust_profile</code>
+returns. <strong>Partially retired (pipeline-tighten Task 10, 2026-07-06):</strong> the
+document's artifact-schema half (Top-Level Schema, Hyperparameters, Stint
+sections) described the now-deleted <code>artifact.py</code>'s on-disk JSON format — that
+producer no longer exists, so those sections describe a dead format. The
+Trust Profile section remains an accurate reference for <code>compute_trust_profile</code>'s
+return shape, though that function itself has exactly one caller in the repo
+today (its own unit test — see the Open Questions / D9 spur note in
+<code>packets/physics.md</code>). Update this doc's status atomically on any future
+retire-or-wire decision for <code>grading.py</code>.</p>
+<hr />
+<h2>Removed in #448 (productionization)</h2>
+<p>The following are deleted — do not expect them on disk and do not re-add them:</p>
+<ul>
+<li>Windowed-estimator lineage: <code>windowed_estimator.py</code>, <code>windowed_config.py</code>,
+<code>windowed_solver/</code>, <code>trajectory_models.py</code>, <code>consensus_stitcher.py</code>.</li>
+<li>Orphaned utils: <code>coordinate_transform.py</code>, <code>curvature.py</code>, <code>spline_basis.py</code>,
+<code>measurement_models.py</code>, <code>loess_bootstrap.py</code>, <code>robust_reweighter.py</code>,
+<code>irls_reweighter.py</code>.</li>
+<li>The <code>trajectory_grading/</code> subpackage (#446 Phase 0a harness); its DB-truth and
+offline loaders were salvaged into <code>trajectory/loaders.py</code>, and its pass/fail
+gates were superseded by the <code>grading.py</code> trust profile.</li>
+<li>Retired docs: <code>docs/physics/windowed_estimator.md</code>,
+<code>docs/report_schemas/trajectory_grading_report.md</code> (v1.0).</li>
+</ul>
+<h2>Removed in pipeline-tighten Task 10 (2026-07-06)</h2>
+<ul>
+<li><code>artifact.py</code> — the on-disk trajectory-product writer/reader (<code>write_artifact</code>,
+<code>read_artifact</code>, <code>build_artifact_from_smoother</code>, schema version 1). Zero live
+consumers confirmed at deletion. Superseded by <code>processed_telemetry</code>
+(<code>src/data/schema.sql</code>) + <code>src/physics/ideal_lap/pvat_writer.py</code> as the one
+persisted-trajectory boundary — see &quot;Current consumer reality&quot; above.</li>
+</ul>
+<hr />
+<h2>Key References</h2>
+<ul>
+<li><code>docs/report_schemas/trajectory_trust_profile.md</code> — trust-profile schema (v1;
+artifact-schema half retired with <code>artifact.py</code>, see &quot;Removed in
+pipeline-tighten Task 10&quot; above)</li>
+<li><code>docs/physics/measurement_model.md</code> — Phase 0b durable physics contract:
+measurement model for the two raw FastF1 streams + GO/NO-GO decision brief
+(issue #447)</li>
+<li><code>docs/physics/overview.md</code> — physics model design and parameterization</li>
+<li><code>docs/superpowers/specs/2026-06-10-physics-state-space-direction-design.md</code> —
+physics-primary direction spec governing this region</li>
+</ul>
+
+
+</main>
+<footer class="site"><div class="wrap">
+  Generated by <code>constellation-docent</code> from Cartographer map truth
+  (<code>docs/architecture/</code>). Read-only over the map. The embedded stamp records
+  <em>which map this site was built from</em>; the live gate is
+  <code>docent_freshness.py check</code>.
+</div></footer>
+<script>
+(function(){
+  var GEN="2026-07-07";
+  var banner=document.getElementById("stale-banner");
+  var params=location.search.toLowerCase();
+  var forced=/[?&]stale(=1|=true)?(&|$)/.test(params);
+  var days=Math.floor((Date.now()-Date.parse(GEN))/86400000);
+  var ageEl=document.getElementById("gen-age");
+  if(ageEl){ageEl.textContent="generated "+(isNaN(days)?"":days+" day"+(days===1?"":"s")+" ago")+" ("+GEN+")";}
+  if(forced){
+    banner.textContent="STALE: this explainer was flagged out of date against the current map. Regenerate it with the docent skill.";
+    banner.className="stale-banner show";
+  } else if(days>=30){
+    banner.textContent="This site was generated "+days+" days ago and may be stale. Verify with docent_freshness.py check before trusting it.";
+    banner.className="stale-banner show";
+  }
+  var t=document.getElementById("theme-toggle");
+  if(t){t.addEventListener("click",function(){
+    var cur=document.documentElement.getAttribute("data-theme");
+    var next=cur==="dark"?"light":(cur==="light"?"dark":(matchMedia("(prefers-color-scheme:dark)").matches?"light":"dark"));
+    document.documentElement.setAttribute("data-theme",next);
+  });}
+})();
+</script>
+</body>
+</html>

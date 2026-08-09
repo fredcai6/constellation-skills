@@ -1,0 +1,86 @@
+{
+  "work_id": "issue-467-trip-semantics",
+  "diff_ref": "g1-implement's only artifact: .agent-work/issue-467-trip-semantics/red-repro/repro_431.py (507 lines, committed in 62f564c7). scripts/ and tests/ are byte-identical to main, so there is no other code to smell-test.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, C:/Users/fredc/.claude/skills/constellation-reviewer/references/global-everyone.md, plus #467's decision:red-leaves-no-residue and constraint:no-absence-is-evidence as recorded in the g1 implementer handoff's Map Anchors",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "face_a() is 90 lines (259-348) and carries two distinct experiments: steps 1-4 are the tripped run, step 5 is the counterfactual control. The control is the single thing the g1 review question turns on, and it cannot be run on its own -- there is no --control mode and no face_a_counterfactual(). I had to write my own probe to run a control variant (gauge present but below hard). Extracting step 5 into its own function, invoked by face_a and separately addressable, would cost nothing and make the control independently reproducible. Not speculative abstraction: the block already exists verbatim.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The only class is ReproFailed, a 2-line exception subclass.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "The prove-the-reading-was-read block (plant_gauge -> current -> context_hard_line -> check) appears three times: assert_gauge_read (444-451), face_a (268-276), face_b (385-388).",
+      "override": {
+        "repo_standard": "constraint:no-absence-is-evidence, recorded in the g1 implementer handoff's Map Anchors and sourced to #467: assert a reading exists before any claim about trip behaviour.",
+        "reason": "Each face must prove its OWN reading was read, in its own run, or a silent governor in that face is indistinguishable from headroom. Extracting the assertion into one shared helper would couple the three proofs and let one face's read stand in for another's -- exactly the check-that-cannot-fail this gate exists to prevent. The shared MECHANISM is already extracted (plant_gauge, context_hard_line); only the per-face assertion is repeated, which is the part that must not be shared."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "digest_of / context_hard_line / why_ref_from_current operate on engine output strings, which is deliberate: the design point is that assertions run against the engine's own text rather than a paraphrase. No function reaches into another object's data in preference to its own.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No repeated field group travels together. (spine, session) recurs but is two values with independent lifetimes.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "fill_fraction is a bare float and the gauge record is an inline dict in plant_gauge rather than a typed record.",
+      "override": {
+        "repo_standard": "global-everyone.md 'One canonical path; no speculative abstraction', plus #467's decision:red-leaves-no-residue (the repro is disposable and is never promoted to a regression test).",
+        "reason": "The gauge record's typed form already exists on the read side as gauge_reader.Reading; the repro deliberately plants a RAW dict so it exercises the shipped reader's own validation rather than a type that would pre-satisfy it. A wrapper type here would make the plant agree with the reader by construction, weakening the very thing Q1 asks. Disposability subordinates the rest."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Widest signature is drive_to_mid_g2(spine, session, satisfy_g2_c1) at three; engine() uses *args plus one keyword flag.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "Single self-contained file; no change to it forces edits elsewhere, and it adds no callable symbol to the shipped codebase.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The file has one reason to change (what #431 must be shown to be) and is deleted rather than maintained.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "flagged",
+      "finding": "Line 57: WORKTREE = HERE.parents[2] derives the engine under test by positional index, and line 58 builds ENGINE from it. The gate's entire claim is 'this is the UNMODIFIED HEAD engine'; if the script is ever relocated by one directory, that claim silently points at a different tree. Low severity and partly mitigated -- main() prints 'engine under test (UNMODIFIED HEAD): {ENGINE}' into the transcript, so a reader can see where it actually pointed -- but the resolution is unasserted. A one-line check that ENGINE.exists() and that its path ends in the expected worktree would close it.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "why_ref_from_current() (lines 228-232) is defined and never called -- confirmed by grep, its only occurrence in the file is its own def. It parses the why-record id out of a REFRESH REQUESTED line, which is a route the script abandoned in favour of _live_why_id() reading the spine JSON directly. Dead code in a 507-line disposable artifact is minor, but it is misleading in a specific way that matters here: its presence suggests the why-record id IS reachable from engine output, and my PROBE 4 shows it is not reachable at the moment the agent needs it (no w-N appears in `current` or in the refusal before the attach). Delete it, or the next reader will conclude the result's own triage candidate 2 is already solved.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "The comments are the opposite pattern. The module docstring states what the repro proves AND what it deliberately does not; _read_trail_text's and _live_why_id's docstrings disclose a doctrine deviation rather than paper over unclear code; plant_gauge's docstring explains why the file location is non-negotiable. These are disclosures the handoff asked for, not compensation for unreadable code.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

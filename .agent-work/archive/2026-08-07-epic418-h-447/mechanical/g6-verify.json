@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g6-verify",
+  "mechanical": {
+    "run": "epic418-h-447",
+    "project": "constellation-skills",
+    "role": "cmdr-447-episodes-retirement",
+    "spine-step": "g6-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-g6-verify@e6d98404cd3a06b3d6d0cb3229702f5315e6426d",
+    "artifact-ref": []
+  },
+  "refused": [
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T19:31:33Z"
+  }
+}

@@ -37,7 +37,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Charter | `docs/agents/CREW_CONTEXT.md` | Crew | project DELTAS over inherited global-crew doctrine: implementation/review rules usable inside a handoff |
 | Charter | `docs/agents/GLOSSARY.md` | all roles | shared terms only; no workflow state |
 | Charter | `docs/agents/AGENT_GUIDE.md` + root `AGENTS.md`/`CLAUDE.md` pointers | all agents (Constellation or external) | single repo-orientation guide: layout, documentation map, conventions; the shared middle of the two contexts, not how to approach the job |
-| Commander | `.agent-work/AGENT_FEEDBACK.md` | future Charter refresh, maintainers | unified run retrospective appended before archive; persists across work-ids; workflow-improvement signal, not project truth |
+| Commander, Admiral | `episodes/active/` via `scripts/apply_episode_delta.py` | future Charter refresh, maintainers | one episode per distinct thing that happened, written at closeout through the store's only write path; a record of what happened, never a rule to follow |
 | Workbench | `templates/DEFAULT.template.json` | any role | generic gated controller for ad-hoc work; not durable truth |
 | Role skills | role-specific checklist templates | owning role, Workbench | execution controller when role ships one; Workbench creates/archives files but does not own semantics |
 | Workbench | closeout/archive rules | Commander, Cartographer | artifact hygiene; roles execute package movement at closeout |
@@ -51,7 +51,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Commander, Cartographer, Scout, Implementer, Reviewer, Curator | Triage candidate | Triage | future work package, not current-scope expansion |
 | Triage | issue-ready recommendation | user / issue tracker | bounded future work with evidence and acceptance criteria |
 | Curator | `CURATOR_REPORT` + `--json` record | human, Triage | periodic corpus-health pass: mechanical measurement (`curate_corpus.py`, flags-never-gates), in-place mechanical mends reviewed by git diff; design decisions routed to Triage, never silently applied |
-| Explorer | `.agent-work/explore-<topic>/DESIGN_SPEC.md` (confirmed) or shaped-design issue | to-issues / Commander, human | hard gate: `verify_spec_confirmed.py` must pass before work is cut; an `UNCONFIRMED — DO NOT CUT` shaped-design issue is never cut |
+| Explorer | confirmed shaped brief or shaped-design issue | to-initial-issues / Commander, human | hard gate: the strict shaped-brief confirmation must pass before a current wave is cut; an unconfirmed design is never cut |
 | Explorer | `EXCURSION_BRIEF` | Prototyper, research agents, design-it-twice panels | one named question per excursion; prototype section fields identical to `PROTOTYPE_HANDOFF` |
 | Anyone (human, Commander, Explorer) | `PROTOTYPE_HANDOFF` | Prototyper | one named question, branch, host conventions, location, stop conditions |
 | Prototyper | `PROTOTYPE_RESULT` | dispatcher | scoped answer: what was tested AND what was NOT tested; mandatory disposition (deleted / absorbed / parked-with-owner / captured-to-worktree) |

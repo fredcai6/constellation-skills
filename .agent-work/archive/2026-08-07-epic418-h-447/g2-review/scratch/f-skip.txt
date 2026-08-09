@@ -1,0 +1,1 @@
+REFUSED: the Fowler pass skipped baseline smell(s) ['feature-envy'] — every smell must carry a verdict (visit-every-item). Skipping the whole pass needs a reviewer-cosigned rail_exception (reviewer_cosign + log); a self-asserted skip never passes.

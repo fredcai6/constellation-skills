@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "files": [],
+  "repo_rev": {
+    "commit": "f4ab5ace8a3ce4bf28f330a1f3aec172af6205a1"
+  },
+  "run": {
+    "work_id": "issue-440-binding-cwd",
+    "generated_at": "2026-08-07T16:19:13Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-a2-440"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-440"
+    }
+  }
+}

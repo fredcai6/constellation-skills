@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "files": [
+    {
+      "path": "crew-runs.json",
+      "sha256": "27b518333aab3501a17f413f2fbd78f4dbbbf817e44befeb0146e3977d87d606"
+    },
+    {
+      "path": "critic-intent-fit.md",
+      "sha256": "ea47ad8301f7da7a7f865e158f04cbfecf7c3e2e38cae32bcc30235fe13fdce1"
+    },
+    {
+      "path": "critic-simplicity.md",
+      "sha256": "41880e9d24a8d40c699b4c98a16dc4da0de2669837a96f3747b097b2a25bb203"
+    },
+    {
+      "path": "critic-testability.md",
+      "sha256": "241916954b09b96a42dc9003caf48ee454003f159c8fd8bf71b79fece3902f7e"
+    },
+    {
+      "path": "cycle-1.json",
+      "sha256": "4e70f0d6066597908bd084aa9ad76f314611d74ca5ec370ab8a71f71c5b131bc"
+    },
+    {
+      "path": "cycle-2.json",
+      "sha256": "16c4b3d049a478412fcb761e9c5e50a5543fb8a376dd4288a97cb5d63ba14b4b"
+    },
+    {
+      "path": "DESIGN_SPEC.md",
+      "sha256": "b2ef1b2a51268b2ee806541f625d7fd8c52b28179239ed7291308a140d2e9ddb"
+    },
+    {
+      "path": "dit-gauge-A-minimal.md",
+      "sha256": "8504d7dd2d1fd81e9c0546bf9f44de46505d66c74123ba4a6f4ee51c1e02186b"
+    },
+    {
+      "path": "dit-gauge-B-ports.md",
+      "sha256": "88ae02b2312854c931c3c63c058323a61c31b47dbe1a916f060c558f8804028e"
+    },
+    {
+      "path": "dit-gauge-C-flex.md",
+      "sha256": "0f6f28de49199476eb1e844505097e637a328ad0eedeb923eca45e12878805c3"
+    },
+    {
+      "path": "dit-gauge-PREP.md",
+      "sha256": "c00cc6855884a76c7f80b2ae37c04489324bc1a40375790eda818001c3c9f264"
+    },
+    {
+      "path": "dit-refresh-A-caller.md",
+      "sha256": "e8a9c2bd1906b3ba66381930151bfef6c3cf0fe3078cc54be8597a9dd6815d7b"
+    },
+    {
+      "path": "dit-refresh-B-minimal.md",
+      "sha256": "b22a226da298738acb16607037b30a203521bd39980713790b8a5ca2decf38a0"
+    },
+    {
+      "path": "dit-refresh-PREP.md",
+      "sha256": "8b08d1bc359cc31695905aa46c2a0e89cc5bb1ca9b2ddf1fad3a39f3d82a375f"
+    },
+    {
+      "path": "dit-why-A-minimal.md",
+      "sha256": "8c992c748149028c86ea20a671786f3a9b1a9cca883d9703c146d6b08f44571c"
+    },
+    {
+      "path": "dit-why-B-caller.md",
+      "sha256": "1c2355316e57fe35d531ad2213d7afebcf018c712b95b06e5865ff57b0d86e1c"
+    },
+    {
+      "path": "dit-why-C-ports.md",
+      "sha256": "cf2871e558ff86a262f6cdf98ff6fd463588a54e3527b44982a50899e6e2326f"
+    },
+    {
+      "path": "excursion-x1-handoff.md",
+      "sha256": "38394983375fda5935e9d017bbb2aa836edc7033b7429e1be5d21423a9760f63"
+    },
+    {
+      "path": "excursion-x1-result.md",
+      "sha256": "3f9561356646543afdaf9f4ff6a6b137ed15e99ca685e728baf8146f22783e5a"
+    },
+    {
+      "path": "excursion-x2-handoff.md",
+      "sha256": "b5620776ef87655b4402f913abdefb026ffeab39d569dc25a14b3005b9047ffe"
+    },
+    {
+      "path": "excursion-x2-result.md",
+      "sha256": "a476f6c2137fb9d19ee81140910ce6722f77babfcebc237213cc5c514ee196d0"
+    },
+    {
+      "path": "excursion-x3-handoff.md",
+      "sha256": "21e012da9b834347475da38b44dc97ea15b1d75a59ff657715bfc54b235375b6"
+    },
+    {
+      "path": "excursion-x3-result.md",
+      "sha256": "de2562660911271f98e4caefe17fdaac0b826abbd12d719067013530daf35bed"
+    },
+    {
+      "path": "file_receipt.json",
+      "sha256": "6a0fe19d3ceade165d87878ac02164765a2ebf87bdff843b60d5f8c581ae9be7"
+    },
+    {
+      "path": "IDEAS_BOARD.md",
+      "sha256": "ff03a6d569652b5df4534ab86874b90925762cd0ea03e1f2921b53c8c633fb19"
+    },
+    {
+      "path": "ISSUE_SET.json",
+      "sha256": "17bb5086744f23956146cdff02b9cccf02116595be9ce93727a5fa12b002f1f6"
+    },
+    {
+      "path": "spine.json",
+      "sha256": "a4985a97f5ea5b004a66b824037406c4b6b67546a0162abd1b44a57711a1af7f"
+    },
+    {
+      "path": "spine.json.journal",
+      "sha256": "99f0440c5645ee5223247bb85edb55f2a31068400986c4dbf5ed6aef8a013add"
+    }
+  ]
+}

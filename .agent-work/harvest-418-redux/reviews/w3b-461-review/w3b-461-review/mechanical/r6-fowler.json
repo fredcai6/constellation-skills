@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "mechanical": {
+    "run": "w3b-461-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r6-fowler",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3b-461-review-r6-fowler@8637c3b6773b3dcfb25d1188bc00da8aa997a27b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3b-461-review",
+    "generated_at": "2026-08-08T05:27:32Z"
+  }
+}

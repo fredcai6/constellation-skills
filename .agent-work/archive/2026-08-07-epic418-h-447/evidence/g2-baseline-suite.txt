@@ -1,0 +1,538 @@
+[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [  4%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [  8%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 11%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 15%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 19%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 23%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 32%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 36%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 40%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 48%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33ms[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 52%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 56%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 60%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 68%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 72%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 75%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m [ 78%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[31mF[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31m [ 81%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33mx[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31m [ 86%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31m [ 90%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31m [ 94%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[33ms[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31m [ 98%]
+[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31m                                                    [100%][0m
+================================== FAILURES ===================================
+[31m[1m______ MutationFloor.test_10_mutation_provenance_line_dropped_is_killed _______[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_10_mutation_provenance_line_dropped_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_10_mutation_provenance_line_dropped_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m9[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:323: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: the provenance line dropped from the report: non-zero exit with no FAILED test node.[0m
+[1m[31mE   DED-NO-MAP\nreceipt: .agent-work/w/map-orientation.json\norientation contract SATISFIED\nproblems: 0\n'[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:1094: AssertionError[0m
+[1m[31mE   [31m[1m_ SubstituteProvenanceIsReported.test_an_agent_declared_substitute_is_REPORTED_as_unverified _[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.SubstituteProvenanceIsReported testMethod=test_an_agent_declared_substitute_is_REPORTED_as_unverified>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_an_agent_declared_substitute_is_REPORTED_as_unverified[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           proc = [96mself[39;49;00m.degraded_with([90m[39;49;00m[0m
+[1m[31mE               {[33m"[39;49;00m[33mdocs/notes/whatever.md[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mmy notes[39;49;00m[33m\n[39;49;00m[33m"[39;49;00m}, [33m"[39;49;00m[33mdocs/notes/whatever.md[39;49;00m[33m"[39;49;00m[90m[39;49;00m[0m
+[1m[31mE           )[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertIn(mo.LABEL_AGENT_DECLARED, proc.stdout)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .agent-work/w/map-orientation.json\norientation contract SATISFIED\nproblems: 0\n'[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:1074: AssertionError[0m
+[1m[31mE   [31m[1m_ SubstituteProvenanceIsReported.test_an_unrecognised_source_value_reports_as_agent_declared _[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.SubstituteProvenanceIsReported testMethod=test_an_unrecognised_source_value_reports_as_agent_declared>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_an_unrecognised_source_value_reports_as_agent_declared[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           repo = RepoFixture([96mself[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           degraded_receipt([90m[39;49;00m[0m
+[1m[31mE               repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m,[90m[39;49;00m[0m
+[1m[31mE               substitutes=[{[33m"[39;49;00m[33mpath[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mREADME.md[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mcontent_hash[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33ma[39;49;00m[33m"[39;49;00m * [94m64[39;49;00m, [33m"[39;49;00m[33msource[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mtrust-me[39;49;00m[33m"[39;49;00m}],[90m[39;49;00m[0m
+[1m[31mE           )[90m[39;49;00m[0m
+[1m[31mE           proc = verify(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertIn(mo.LABEL_AGENT_DECLARED, proc.stdout)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .agent-work/w/map-orientation.json\norientation contract SATISFIED\nproblems: 0\n'[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:1104: AssertionError[0m
+[1m[31mE   [36m[1m=========================== short test summary info ===========================[0m[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteProvenanceIsReported::test_BOTH_labels_appear_in_one_real_report[0m - AssertionError: 'known-fallback' not found in 'DEGRADED-NO-MAP\nreceipt: .a...[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteProvenanceIsReported::test_a_present_known_fallback_is_REPORTED_as_known_fallback[0m - AssertionError: 'README.md' not found in 'DEGRADED-NO-MAP\nreceipt: .agent-...[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteProvenanceIsReported::test_a_receipt_with_no_source_key_reports_as_agent_declared[0m - AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .a...[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteProvenanceIsReported::test_an_agent_declared_substitute_is_REPORTED_as_unverified[0m - AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .a...[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteProvenanceIsReported::test_an_unrecognised_source_value_reports_as_agent_declared[0m - AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .a...[0m
+[1m[31mE   [31m[31m[1m5 failed[0m, [32m82 passed[0m, [32m39 subtests passed[0m[31m in 13.57s[0m[0m[0m
+[31m[1m_____________ MutationFloor.test_1_mutation_all_to_any_is_killed ______________[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_1_mutation_all_to_any_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_1_mutation_all_to_any_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m0[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:292: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: degraded-completeness `all` -> `any`: non-zero exit with no FAILED test node.[0m
+[1m[31mE   test_map_orient.py::[1mPartialFillMatrix::test_missing_escalation_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_missing_substitutes_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_missing_unmapped_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['none', 'src/engine internals were never read'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['src/engine internals were never read', 'n/a'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['none', 'n/a'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['src/engine internals were never read', '', 'src/engine internals were never read'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_unpinned_substitute_poisons_a_multi_element_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(dropped='substitutes')[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_the_completeness_predicate_requires_all_three[0m - AssertionError: True is not false[0m
+[1m[31mE   [31mSUBFAILED(dropped='unmapped')[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_the_completeness_predicate_requires_all_three[0m - AssertionError: True is not false[0m
+[1m[31mE   [31mSUBFAILED(dropped='escalation')[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_the_completeness_predicate_requires_all_three[0m - AssertionError: True is not false[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_unhashed_substitute_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_nonexistent_substitute_path_refuses[0m - AssertionError: 0 == 0 : DEGRADED-NO-MAP[0m
+[1m[31mE   [31mSUBFAILED(content_hash='unreadable')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='n/a')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash=None)[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_the_refusal_names_the_offending_substitute[0m - AssertionError: 'THIS_FILE_DOES_NOT_EXIST' not found in ''[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 18 check(s)[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteLabels::test_the_label_never_upgrades_the_pin[0m - AssertionError: 0 == 0 : DEGRADED-NO-MAP[0m
+[1m[31mE   [31m[31m[1m32 failed[0m, [32m77 passed[0m, [32m17 subtests passed[0m[31m in 13.32s[0m[0m[0m
+[31m[1m_____ MutationFloor.test_2_mutation_unresolvable_root_collapse_is_killed ______[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_2_mutation_unresolvable_root_collapse_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_2_mutation_unresolvable_root_collapse_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m1[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:295: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: UNRESOLVABLE-ROOT collapsed into DEGRADED-NO-MAP, exiting 0: non-zero exit with no FAILED test node.[0m
+[1m[31mE   [1mPartialFillMatrix::test_filler_substitute_path_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(filler='none')[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_filler_unmapped_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(filler='n/a')[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_filler_unmapped_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(filler='')[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_filler_unmapped_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_missing_escalation_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_missing_substitutes_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_missing_unmapped_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['none', 'src/engine internals were never read'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['src/engine internals were never read', 'n/a'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['none', 'n/a'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['src/engine internals were never read', '', 'src/engine internals were never read'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_unpinned_substitute_poisons_a_multi_element_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_unhashed_substitute_is_refused[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_nonexistent_substitute_path_refuses[0m - AssertionError: 0 == 0 : DEGRADED-NO-MAP[0m
+[1m[31mE   [31mSUBFAILED(content_hash='unreadable')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='n/a')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash=None)[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_the_refusal_names_the_offending_substitute[0m - AssertionError: 'THIS_FILE_DOES_NOT_EXIST' not found in ''[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 6 check(s)[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteLabels::test_the_label_never_upgrades_the_pin[0m - AssertionError: 0 == 0 : DEGRADED-NO-MAP[0m
+[1m[31mE   [31m[31m[1m32 failed[0m, [32m74 passed[0m, [32m20 subtests passed[0m[31m in 13.08s[0m[0m[0m
+[31m[1m_ MutationFloor.test_3_mutation_existence_instead_of_citable_content_is_killed _[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_3_mutation_existence_instead_of_citable_content_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_3_mutation_existence_instead_of_citable_content_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m2[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:298: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: citable-content requirement weakened to mere existence: non-zero exit with no FAILED test node.[0m
+[1m[31mE   d[39;49;00m[33m"[39;49;00m,[90m[39;49;00m[0m
+[1m[31mE               SHIPPED_INDEX_TEMPLATE.read_text(encoding=[33m"[39;49;00m[33mutf-8[39;49;00m[33m"[39;49;00m),[90m[39;49;00m[0m
+[1m[31mE           )[90m[39;49;00m[0m
+[1m[31mE           proc = orient(repo.root)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertTrue(verdict(proc).startswith([33m"[39;49;00m[33mDEGRADED-[39;49;00m[33m"[39;49;00m), proc.stdout)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: False is not true : RESOLVED[0m[0m
+[1m[31mE   [1m[31mE       root: C:/Users/fredc/AppData/Local/Temp/tmpgnf8h2m4[0m[0m
+[1m[31mE   [1m[31mE       root proof: positive: .git entry present at root[0m[0m
+[1m[31mE   [1m[31mE       entrypoint: docs/architecture/index.md[0m[0m
+[1m[31mE   [1m[31mE       anchor_count: 0[0m[0m
+[1m[31mE   [1m[31mE       candidates tried:[0m[0m
+[1m[31mE   [1m[31mE         [1] generated-map: docs/architecture/generated/map.json -> absent (absent)[0m[0m
+[1m[31mE   [1m[31mE         [2] index: docs/architecture/index.md -> hit (content but no citable anchor id (unfilled template?))[0m[0m
+[1m[31mE   [1m[31mE         [3] packets-dir: docs/architecture -> hit (0 packet(s), none non-empty)[0m[0m
+[1m[31mE   [1m[31mE       receipt: .agent-work/w/map-orientation.json[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:248: AssertionError[0m
+[1m[31mE   [31m[1m__________________ ContractShape.test_self_test_floor_passes __________________[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.ContractShape testMethod=test_self_test_floor_passes>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_self_test_floor_passes[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           proc = run_cli([33m"[39;49;00m[33m--self-test[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertEqual(proc.returncode, [94m0[39;49;00m, proc.stdout + proc.stderr)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 13 != 0 : self-test FAILED: 5 check(s)[0m[0m
+[1m[31mE   [1m[31mE         - existing-but-uncitable is not a hit[0m[0m
+[1m[31mE   [1m[31mE         - uncitable-with-content is unparseable[0m[0m
+[1m[31mE   [1m[31mE         - existing-without-content is empty[0m[0m
+[1m[31mE   [1m[31mE         - empty -> DEGRADED-EMPTY-MAP[0m[0m
+[1m[31mE   [1m[31mE         - content-without-anchors -> DEGRADED-UNPARSEABLE[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:623: AssertionError[0m
+[1m[31mE   [36m[1m=========================== short test summary info ===========================[0m[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mDegradedReasons::test_broken_generated_map_is_unparseable_not_resolved[0m - AssertionError: 'RESOLVED' != 'DEGRADED-UNPARSEABLE'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mDegradedReasons::test_content_without_a_citable_anchor_is_unparseable[0m - AssertionError: 'RESOLVED' != 'DEGRADED-UNPARSEABLE'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mDegradedReasons::test_empty_index_is_empty_map_not_no_map[0m - AssertionError: 'RESOLVED' != 'DEGRADED-EMPTY-MAP'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mDegradedReasons::test_generated_map_without_nodes_does_not_resolve[0m - AssertionError: 'RESOLVED' == 'RESOLVED'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mDegradedReasons::test_packets_that_are_all_blank_do_not_resolve[0m - AssertionError: 'RESOLVED' != 'DEGRADED-EMPTY-MAP'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mDegradedReasons::test_scaffolded_map_dir_with_no_content_is_empty_map[0m - AssertionError: 'RESOLVED' != 'DEGRADED-EMPTY-MAP'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mCitableContent::test_an_existing_but_empty_index_is_never_resolved[0m - AssertionError: 'RESOLVED' == 'RESOLVED'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mCitableContent::test_placeholder_ids_are_not_citable[0m - AssertionError: 'RESOLVED' != 'DEGRADED-UNPARSEABLE'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mCitableContent::test_the_shipped_index_template_itself_does_not_resolve[0m - AssertionError: False is not true : RESOLVED[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 5 check(s)[0m
+[1m[31mE   [31m[31m[1m10 failed[0m, [32m77 passed[0m, [32m39 subtests passed[0m[31m in 12.97s[0m[0m[0m
+[31m[1m_____ MutationFloor.test_4_mutation_unmapped_not_any_to_not_all_is_killed _____[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_4_mutation_unmapped_not_any_to_not_all_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_4_mutation_unmapped_not_any_to_not_all_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+    [90m    [39;49;00m[33m"""Regression: this one SURVIVED the first shipped floor."""[39;49;00m[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m3[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:302: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: unmapped filler check `not any` -> `not all`: non-zero exit with no FAILED test node.[0m
+[1m[31mE   w[39;49;00m[33m"[39;49;00m).returncode, [94m10[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE               AssertionError: 0 != 10[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:406: AssertionError[0m
+[1m[31mE   [31m[1m_ PartialFillMatrix.test_one_filler_poisons_a_multi_element_unmapped_list (unmapped=['src/engine internals were never read', '', 'src/engine internals were never read']) _[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.PartialFillMatrix testMethod=test_one_filler_poisons_a_multi_element_unmapped_list>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_one_filler_poisons_a_multi_element_unmapped_list[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE       [90m    [39;49;00m[33m"""MULTI-element on purpose.[39;49;00m[0m
+[1m[31mE       [33m[39;49;00m[0m
+[1m[31mE       [33m    A single-element list cannot tell `not any(is_filler)` from[39;49;00m[0m
+[1m[31mE       [33m    `not all(is_filler)` -- they agree on lists of length 1. A floor built[39;49;00m[0m
+[1m[31mE       [33m    only from single-element cases therefore lets a mutation between them[39;49;00m[0m
+[1m[31mE       [33m    SURVIVE, which is exactly what happened before this test existed.[39;49;00m[0m
+[1m[31mE       [33m    """[39;49;00m[90m[39;49;00m[0m
+[1m[31mE           repo = RepoFixture([96mself[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           real = [33m"[39;49;00m[33msrc/engine internals were never read[39;49;00m[33m"[39;49;00m[90m[39;49;00m[0m
+[1m[31mE           [94mfor[39;49;00m entries [95min[39;49;00m ([[33m"[39;49;00m[33mnone[39;49;00m[33m"[39;49;00m, real], [real, [33m"[39;49;00m[33mn/a[39;49;00m[33m"[39;49;00m], [[33m"[39;49;00m[33mnone[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mn/a[39;49;00m[33m"[39;49;00m], [real, [33m"[39;49;00m[33m"[39;49;00m, real]):[90m[39;49;00m[0m
+[1m[31mE               [94mwith[39;49;00m [96mself[39;49;00m.subTest(unmapped=entries):[90m[39;49;00m[0m
+[1m[31mE                   degraded_receipt(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m, unmapped=entries)[90m[39;49;00m[0m
+[1m[31mE   >               [96mself[39;49;00m.assertEqual(verify(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m).returncode, [94m10[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE               AssertionError: 0 != 10[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:406: AssertionError[0m
+[1m[31mE   [31m[1m__________________ ContractShape.test_self_test_floor_passes __________________[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.ContractShape testMethod=test_self_test_floor_passes>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_self_test_floor_passes[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           proc = run_cli([33m"[39;49;00m[33m--self-test[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertEqual(proc.returncode, [94m0[39;49;00m, proc.stdout + proc.stderr)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 13 != 0 : self-test FAILED: 2 check(s)[0m[0m
+[1m[31mE   [1m[31mE         - unmapped ['none', real] refuses (one filler poisons the list)[0m[0m
+[1m[31mE   [1m[31mE         - unmapped [real, 'n/a'] refuses[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:623: AssertionError[0m
+[1m[31mE   [36m[1m=========================== short test summary info ===========================[0m[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['none', 'src/engine internals were never read'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['src/engine internals were never read', 'n/a'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(unmapped=['src/engine internals were never read', '', 'src/engine internals were never read'])[0m tests/test_map_orient.py::[1mPartialFillMatrix::test_one_filler_poisons_a_multi_element_unmapped_list[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 2 check(s)[0m
+[1m[31mE   [31m[31m[1m4 failed[0m, [32m86 passed[0m, [32m36 subtests passed[0m[31m in 13.26s[0m[0m[0m
+[31m[1m___ MutationFloor.test_5_mutation_sentinel_accepted_as_a_hash_pin_is_killed ___[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_5_mutation_sentinel_accepted_as_a_hash_pin_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_5_mutation_sentinel_accepted_as_a_hash_pin_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+    [90m    [39;49;00m[33m"""Regression: the B1 blocker, pinned so it cannot come back."""[39;49;00m[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m4[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:306: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: an unreadable substitute accepted as a hash pin: non-zero exit with no FAILED test node.[0m
+[1m[31mE   ZZZZZZZZZZZZ') _[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.UnreadableSubstitute testMethod=test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           repo = RepoFixture([96mself[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           [94mfor[39;49;00m bad [95min[39;49;00m ([33m"[39;49;00m[33munreadable[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mn/a[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33m"[39;49;00m, [94mNone[39;49;00m, [33m"[39;49;00m[33ma[39;49;00m[33m"[39;49;00m * [94m63[39;49;00m, [33m"[39;49;00m[33mZ[39;49;00m[33m"[39;49;00m * [94m64[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE               [94mwith[39;49;00m [96mself[39;49;00m.subTest(content_hash=bad):[90m[39;49;00m[0m
+[1m[31mE                   degraded_receipt([90m[39;49;00m[0m
+[1m[31mE                       repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m,[90m[39;49;00m[0m
+[1m[31mE                       substitutes=[{[33m"[39;49;00m[33mpath[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mREADME.md[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mcontent_hash[39;49;00m[33m"[39;49;00m: bad}],[90m[39;49;00m[0m
+[1m[31mE                   )[90m[39;49;00m[0m
+[1m[31mE   >               [96mself[39;49;00m.assertEqual(verify(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m).returncode, [94m10[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE               AssertionError: 0 != 10[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:519: AssertionError[0m
+[1m[31mE   [31m[1m__________________ ContractShape.test_self_test_floor_passes __________________[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.ContractShape testMethod=test_self_test_floor_passes>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_self_test_floor_passes[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           proc = run_cli([33m"[39;49;00m[33m--self-test[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertEqual(proc.returncode, [94m0[39;49;00m, proc.stdout + proc.stderr)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 13 != 0 : self-test FAILED: 5 check(s)[0m[0m
+[1m[31mE   [1m[31mE         - substitute pinned with 'unreadable' refuses[0m[0m
+[1m[31mE   [1m[31mE         - substitute pinned with 'n/a' refuses[0m[0m
+[1m[31mE   [1m[31mE         - substitute pinned with 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' refuses[0m[0m
+[1m[31mE   [1m[31mE         - substitute pinned with 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz' refuses[0m[0m
+[1m[31mE   [1m[31mE         - is_content_hash rejects a sentinel[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:623: AssertionError[0m
+[1m[31mE   [36m[1m=========================== short test summary info ===========================[0m[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_hash_pin_must_be_a_real_sha256[0m - AssertionError: True is not false[0m
+[1m[31mE   [31mSUBFAILED(content_hash='unreadable')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='n/a')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mSUBFAILED(content_hash='ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ')[0m tests/test_map_orient.py::[1mUnreadableSubstitute::test_a_sentinel_content_hash_in_a_handwritten_receipt_refuses[0m - AssertionError: 0 != 10[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 5 check(s)[0m
+[1m[31mE   [31m[31m[1m6 failed[0m, [32m85 passed[0m, [32m35 subtests passed[0m[31m in 13.15s[0m[0m[0m
+[31m[1m___ MutationFloor.test_6_mutation_absent_frame_credited_as_a_pass_is_killed ___[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_6_mutation_absent_frame_credited_as_a_pass_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_6_mutation_absent_frame_credited_as_a_pass_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+    [90m    [39;49;00m[33m"""THE vacuous pass -- the one mutation this gate exists to pin."""[39;49;00m[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m5[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:310: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: an ABSENT mission frame credited as a pass: non-zero exit with no FAILED test node.[0m
+[1m[31mE   \n[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           orient(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33m--substitute[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mREADME.md[39;49;00m[33m"[39;49;00m,[90m[39;49;00m[0m
+[1m[31mE                  [33m"[39;49;00m[33m--unmapped[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33meverything structural[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33m--escalation[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mask commander[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           proc = verify_frame(repo.root)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertNotEqual(proc.returncode, [94m0[39;49;00m, proc.stdout + proc.stderr)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 0 == 0 : FRAME-OK[0m[0m
+[1m[31mE   [1m[31mE       frame: .agent-work/w/MISSION_FRAME.md[0m[0m
+[1m[31mE   [1m[31mE       orientation: DEGRADED-NO-MAP[0m[0m
+[1m[31mE   [1m[31mE       frame citations resolve -- contract SATISFIED[0m[0m
+[1m[31mE   [1m[31mE       problems: 1[0m[0m
+[1m[31mE   [1m[31mE         - no mission frame: .agent-work/<work-id>/MISSION_FRAME.md is absent or empty. An absent frame REFUSES -- it never vacuously passes.[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:748: AssertionError[0m
+[1m[31mE   [31m[1m_____ AbsentFrameRefuses.test_an_absent_frame_refuses_on_a_resolved_repo ______[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.AbsentFrameRefuses testMethod=test_an_absent_frame_refuses_on_a_resolved_repo>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_an_absent_frame_refuses_on_a_resolved_repo[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           repo = resolved_repo([96mself[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           proc = verify_frame(repo.root)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertNotEqual(proc.returncode, [94m0[39;49;00m, proc.stdout + proc.stderr)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 0 == 0 : FRAME-OK[0m[0m
+[1m[31mE   [1m[31mE       frame: .agent-work/w/MISSION_FRAME.md[0m[0m
+[1m[31mE   [1m[31mE       orientation: RESOLVED[0m[0m
+[1m[31mE   [1m[31mE       frame citations resolve -- contract SATISFIED[0m[0m
+[1m[31mE   [1m[31mE       problems: 1[0m[0m
+[1m[31mE   [1m[31mE         - no mission frame: .agent-work/<work-id>/MISSION_FRAME.md is absent or empty. An absent frame REFUSES -- it never vacuously passes.[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:738: AssertionError[0m
+[1m[31mE   [31m[1m_____ AbsentFrameRefuses.test_an_empty_frame_file_is_the_same_as_no_frame _____[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.AbsentFrameRefuses testMethod=test_an_empty_frame_file_is_the_same_as_no_frame>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_an_empty_frame_file_is_the_same_as_no_frame[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           repo = resolved_repo([96mself[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           frame(repo.root, [33m"[39;49;00m[33m   [39;49;00m[33m\n[39;49;00m[33m\n[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertEqual(verdict(verify_frame(repo.root)), [33m"[39;49;00m[33mFRAME-MISSING[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 'FRAME-OK' != 'FRAME-MISSING'[0m[0m
+[1m[31mE   [1m[31mE       - FRAME-OK[0m[0m
+[1m[31mE   [1m[31mE       + FRAME-MISSING[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:754: AssertionError[0m
+[1m[31mE   [36m[1m=========================== short test summary info ===========================[0m[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 7 check(s)[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mAbsentFrameRefuses::test_an_absent_frame_refuses_on_a_degraded_repo_too[0m - AssertionError: 0 == 0 : FRAME-OK[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mAbsentFrameRefuses::test_an_absent_frame_refuses_on_a_resolved_repo[0m - AssertionError: 0 == 0 : FRAME-OK[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mAbsentFrameRefuses::test_an_empty_frame_file_is_the_same_as_no_frame[0m - AssertionError: 'FRAME-OK' != 'FRAME-MISSING'[0m
+[1m[31mE   [31m[31m[1m4 failed[0m, [32m83 passed[0m, [32m39 subtests passed[0m[31m in 12.94s[0m[0m[0m
+[31m[1m_ MutationFloor.test_7_mutation_undeclared_substitute_refusal_disabled_is_killed _[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_7_mutation_undeclared_substitute_refusal_disabled_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_7_mutation_undeclared_substitute_refusal_disabled_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m6[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:313: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: the undeclared-substitute refusal disabled: non-zero exit with no FAILED test node.[0m
+[1m[31mE   [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31mF[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31mF[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m.[0m[31m                   [100%][0m[0m
+[1m[31mE   ================================== FAILURES ===================================[0m
+[1m[31mE   [31m[1m__________________ ContractShape.test_self_test_floor_passes __________________[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.ContractShape testMethod=test_self_test_floor_passes>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_self_test_floor_passes[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           proc = run_cli([33m"[39;49;00m[33m--self-test[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertEqual(proc.returncode, [94m0[39;49;00m, proc.stdout + proc.stderr)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 13 != 0 : self-test FAILED: 1 check(s)[0m[0m
+[1m[31mE   [1m[31mE         - that refusal names the undeclared path[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:623: AssertionError[0m
+[1m[31mE   [31m[1m_ VerifyFrameDegraded.test_a_degraded_frame_citing_an_UNDECLARED_fallback_refuses _[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.VerifyFrameDegraded testMethod=test_a_degraded_frame_citing_an_UNDECLARED_fallback_refuses>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_a_degraded_frame_citing_an_UNDECLARED_fallback_refuses[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE       [90m    [39;49;00m[33m"""The point of pinning: the frame is compared against a COMMITTED[39;49;00m[0m
+[1m[31mE       [33m    prior declaration, not a same-breath assertion by the same agent."""[39;49;00m[90m[39;49;00m[0m
+[1m[31mE           repo = [96mself[39;49;00m.degraded_repo([33m"[39;49;00m[33mCLAUDE.md[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           frame(repo.root, UUNDECLARED_FALLBACK_FRAME)[90m[39;49;00m[0m
+[1m[31mE           proc = verify_frame(repo.root)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertNotEqual(proc.returncode, [94m0[39;49;00m, proc.stdout + proc.stderr)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 0 == 0 : FRAME-OK[0m[0m
+[1m[31mE   [1m[31mE       frame: .agent-work/w/MISSION_FRAME.md[0m[0m
+[1m[31mE   [1m[31mE       orientation: DEGRADED-NO-MAP[0m[0m
+[1m[31mE   [1m[31mE       frame citations resolve -- contract SATISFIED[0m[0m
+[1m[31mE   [1m[31mE       problems: 0[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:1021: AssertionError[0m
+[1m[31mE   [36m[1m=========================== short test summary info ===========================[0m[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 1 check(s)[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mVerifyFrameDegraded::test_a_degraded_frame_citing_an_UNDECLARED_fallback_refuses[0m - AssertionError: 0 == 0 : FRAME-OK[0m
+[1m[31mE   [31m[31m[1m2 failed[0m, [32m85 passed[0m, [32m39 subtests passed[0m[31m in 13.41s[0m[0m[0m
+[31m[1m_ MutationFloor.test_8_mutation_known_fallback_label_on_membership_alone_is_killed _[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_8_mutation_known_fallback_label_on_membership_alone_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_8_mutation_known_fallback_label_on_membership_alone_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m7[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:316: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: the known-fallback label granted on set membership alone: non-zero exit with no FAILED test node.[0m
+[1m[31mE   ============[0m
+[1m[31mE   [31m[1m__________________ ContractShape.test_self_test_floor_passes __________________[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.ContractShape testMethod=test_self_test_floor_passes>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_self_test_floor_passes[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           proc = run_cli([33m"[39;49;00m[33m--self-test[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertEqual(proc.returncode, [94m0[39;49;00m, proc.stdout + proc.stderr)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 13 != 0 : self-test FAILED: 1 check(s)[0m[0m
+[1m[31mE   [1m[31mE         - an ABSENT known fallback is NOT labelled verified[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:623: AssertionError[0m
+[1m[31mE   [31m[1m_ SubstituteLabels.test_a_declared_but_ABSENT_known_fallback_is_not_labelled_verified _[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.SubstituteLabels testMethod=test_a_declared_but_ABSENT_known_fallback_is_not_labelled_verified>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_a_declared_but_ABSENT_known_fallback_is_not_labelled_verified[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE       [90m    [39;49;00m[33m"""Set membership alone must not earn the verified label -- that would[39;49;00m[0m
+[1m[31mE       [33m    be the self-attestation this labelling exists to separate out."""[39;49;00m[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertEqual([96mself[39;49;00m._label({}, [33m"[39;49;00m[33mREADME.md[39;49;00m[33m"[39;49;00m), mo.LABEL_AGENT_DECLARED)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 'known-fallback' != 'agent-declared'[0m[0m
+[1m[31mE   [1m[31mE       - known-fallback[0m[0m
+[1m[31mE   [1m[31mE       + agent-declared[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:973: AssertionError[0m
+[1m[31mE   [31m[1m___________ SubstituteLabels.test_the_label_never_upgrades_the_pin ____________[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.SubstituteLabels testMethod=test_the_label_never_upgrades_the_pin>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_the_label_never_upgrades_the_pin[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE       [90m    [39;49;00m[33m"""A label is a provenance note, not a discharge: an absent substitute[39;49;00m[0m
+[1m[31mE       [33m    still refuses, whatever it is called."""[39;49;00m[90m[39;49;00m[0m
+[1m[31mE           repo = RepoFixture([96mself[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           orient(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33m--substitute[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mREADME.md[39;49;00m[33m"[39;49;00m,[90m[39;49;00m[0m
+[1m[31mE                  [33m"[39;49;00m[33m--unmapped[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mstructure[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33m--escalation[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mcommander[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           entry = receipt_of(repo.root)[[33m"[39;49;00m[33msubstitutes[39;49;00m[33m"[39;49;00m][[94m0[39;49;00m][90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertEqual(entry[[33m"[39;49;00m[33msource[39;49;00m[33m"[39;49;00m], mo.LABEL_AGENT_DECLARED)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 'known-fallback' != 'agent-declared'[0m[0m
+[1m[31mE   [1m[31mE       - known-fallback[0m[0m
+[1m[31mE   [1m[31mE       + agent-declared[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:988: AssertionError[0m
+[1m[31mE   [36m[1m=========================== short test summary info ===========================[0m[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 1 check(s)[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteLabels::test_a_declared_but_ABSENT_known_fallback_is_not_labelled_verified[0m - AssertionError: 'known-fallback' != 'agent-declared'[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteLabels::test_the_label_never_upgrades_the_pin[0m - AssertionError: 'known-fallback' != 'agent-declared'[0m
+[1m[31mE   [31m[31m[1m3 failed[0m, [32m84 passed[0m, [32m39 subtests passed[0m[31m in 13.69s[0m[0m[0m
+[31m[1m_ MutationFloor.test_9_mutation_every_substitute_reported_as_verified_is_killed _[0m
+
+self = <test_mutation_floor.MutationFloor testMethod=test_9_mutation_every_substitute_reported_as_verified_is_killed>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_9_mutation_every_substitute_reported_as_verified_is_killed[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+    [90m    [39;49;00m[33m"""g2 review BLOCK regression: the label must stay READ, not just written."""[39;49;00m[90m[39;49;00m
+>       [96mself[39;49;00m._assert_mutation_is_killed(MUTATIONS[[94m8[39;49;00m])[90m[39;49;00m
+
+[1m[31mtests\test_mutation_floor.py[0m:320: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[1m[31mtests\test_mutation_floor.py[0m:392: in _assert_mutation_is_killed
+    [0m[96mself[39;49;00m.assertTrue([90m[39;49;00m
+[1m[31mE   AssertionError: [] is not true : HARNESS ERROR: every substitute reported as known-fallback: non-zero exit with no FAILED test node.[0m
+[1m[31mE   [31mE         - a bogus label reads as unverified[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:623: AssertionError[0m
+[1m[31mE   [31m[1m_ SubstituteProvenanceIsReported.test_a_receipt_with_no_source_key_reports_as_agent_declared _[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.SubstituteProvenanceIsReported testMethod=test_a_receipt_with_no_source_key_reports_as_agent_declared>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_a_receipt_with_no_source_key_reports_as_agent_declared[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE       [90m    [39;49;00m[33m"""Forward compatibility in the CONSERVATIVE direction: a receipt from[39;49;00m[0m
+[1m[31mE       [33m    before the label existed must never be UPGRADED by omission."""[39;49;00m[90m[39;49;00m[0m
+[1m[31mE           repo = RepoFixture([96mself[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           repo.file([33m"[39;49;00m[33mREADME.md[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mdoctrine[39;49;00m[33m\n[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           degraded_receipt(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m)  [90m# COMPLETE_RECORD carries no `source`[39;49;00m[90m[39;49;00m[0m
+[1m[31mE           proc = verify(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertIn(mo.LABEL_AGENT_DECLARED, proc.stdout)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .agent-work/w/map-orientation.json\norientation contract SATISFIED\nproblems: 0\nsubstitute: README.md [known-fallback] -- found in the fixed fallback set and present on disk\n'[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:1094: AssertionError[0m
+[1m[31mE   [31m[1m_ SubstituteProvenanceIsReported.test_an_unrecognised_source_value_reports_as_agent_declared _[0m[0m
+[1m[31mE   [0m
+[1m[31mE   self = <test_map_orient.SubstituteProvenanceIsReported testMethod=test_an_unrecognised_source_value_reports_as_agent_declared>[0m
+[1m[31mE   [0m
+[1m[31mE       [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_an_unrecognised_source_value_reports_as_agent_declared[39;49;00m([96mself[39;49;00m):[90m[39;49;00m[0m
+[1m[31mE           repo = RepoFixture([96mself[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE           degraded_receipt([90m[39;49;00m[0m
+[1m[31mE               repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m,[90m[39;49;00m[0m
+[1m[31mE               substitutes=[{[33m"[39;49;00m[33mpath[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mREADME.md[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mcontent_hash[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33ma[39;49;00m[33m"[39;49;00m * [94m64[39;49;00m, [33m"[39;49;00m[33msource[39;49;00m[33m"[39;49;00m: [33m"[39;49;00m[33mtrust-me[39;49;00m[33m"[39;49;00m}],[90m[39;49;00m[0m
+[1m[31mE           )[90m[39;49;00m[0m
+[1m[31mE           proc = verify(repo.root, [33m"[39;49;00m[33mw[39;49;00m[33m"[39;49;00m)[90m[39;49;00m[0m
+[1m[31mE   >       [96mself[39;49;00m.assertIn(mo.LABEL_AGENT_DECLARED, proc.stdout)[90m[39;49;00m[0m
+[1m[31mE   [1m[31mE       AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .agent-work/w/map-orientation.json\norientation contract SATISFIED\nproblems: 0\nsubstitute: README.md [known-fallback] -- found in the fixed fallback set and present on disk\n'[0m[0m
+[1m[31mE   [0m
+[1m[31mE   [1m[31mtests\test_map_orient.py[0m:1104: AssertionError[0m
+[1m[31mE   [36m[1m=========================== short test summary info ===========================[0m[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mContractShape::test_self_test_floor_passes[0m - AssertionError: 13 != 0 : self-test FAILED: 2 check(s)[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteProvenanceIsReported::test_a_receipt_with_no_source_key_reports_as_agent_declared[0m - AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .a...[0m
+[1m[31mE   [31mFAILED[0m tests/test_map_orient.py::[1mSubstituteProvenanceIsReported::test_an_unrecognised_source_value_reports_as_agent_declared[0m - AssertionError: 'agent-declared' not found in 'DEGRADED-NO-MAP\nreceipt: .a...[0m
+[1m[31mE   [31m[31m[1m3 failed[0m, [32m84 passed[0m, [32m39 subtests passed[0m[31m in 13.72s[0m[0m[0m
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_10_mutation_provenance_line_dropped_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: the provenance line dropped...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_1_mutation_all_to_any_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: degraded-completeness `all`...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_2_mutation_unresolvable_root_collapse_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: UNRESOLVABLE-ROOT collapsed...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_3_mutation_existence_instead_of_citable_content_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: citable-content requirement...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_4_mutation_unmapped_not_any_to_not_all_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: unmapped filler check `not ...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_5_mutation_sentinel_accepted_as_a_hash_pin_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: an unreadable substitute ac...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_6_mutation_absent_frame_credited_as_a_pass_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: an ABSENT mission frame cre...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_7_mutation_undeclared_substitute_refusal_disabled_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: the undeclared-substitute r...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_8_mutation_known_fallback_label_on_membership_alone_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: the known-fallback label gr...
+[31mFAILED[0m tests/test_mutation_floor.py::[1mMutationFloor::test_9_mutation_every_substitute_reported_as_verified_is_killed[0m - AssertionError: [] is not true : HARNESS ERROR: every substitute reported a...
+[31m[31m[1m10 failed[0m, [32m1690 passed[0m, [33m2 skipped[0m, [33m1 xfailed[0m, [32m550 subtests passed[0m[31m in 300.87s (0:05:00)[0m[0m

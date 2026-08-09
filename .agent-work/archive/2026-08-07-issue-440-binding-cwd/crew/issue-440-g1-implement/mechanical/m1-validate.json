@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-validate",
+  "mechanical": {
+    "run": "issue-440-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-validate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-g1-implement-m1-validate@88bbabb0757555a17cec988397f77f66b0318753",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-g1-implement",
+    "generated_at": "2026-08-06T08:42:06Z"
+  }
+}

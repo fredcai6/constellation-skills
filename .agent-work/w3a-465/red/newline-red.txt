@@ -1,0 +1,29 @@
+F.                                                                       [100%]
+================================== FAILURES ===================================
+_____________________ test_save_preserves_lf_line_endings _____________________
+
+tmp_path = WindowsPath('C:/Users/fredc/AppData/Local/Temp/pytest-of-fredc/pytest-5425/test_save_preserves_lf_line_en0')
+
+    def test_save_preserves_lf_line_endings(tmp_path: Path):
+        """An LF file stays LF after a save. On WINDOWS this is the discriminating
+        case: the old text-mode `write_text` emitted the platform ending, so it
+        rewrote every `\\n` to `\\r\\n` and churned the whole file.
+    
+        Also pins the two documented LF defaults: a file that does not exist yet, and
+        a file with MIXED endings, both get LF.
+        """
+        target = tmp_path / "lf.json"
+        write_with_endings(target, b"\n")
+        assert line_ending_counts(target.read_bytes())[0] == 0, "fixture was not born LF"
+    
+        E.save(target, {"work_id": "t", "type": "survey", "items": ["r1"], "tasks": {}})
+    
+        crlf, lf = line_ending_counts(target.read_bytes())
+>       assert crlf == 0, f"save() churned an LF file to CRLF ({crlf} CRLF endings written)"
+E       AssertionError: save() churned an LF file to CRLF (8 CRLF endings written)
+E       assert 8 == 0
+
+tests\test_engine_survey_retext_and_newlines.py:114: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_engine_survey_retext_and_newlines.py::test_save_preserves_lf_line_endings
+1 failed, 1 passed in 0.46s

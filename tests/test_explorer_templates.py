@@ -87,8 +87,29 @@ class DesignSpecTemplateCrossCheck(unittest.TestCase):
         self.assertIn("UNCONFIRMED", str(ctx.exception))
 
     def test_shipped_draft_refused_review_phase(self):
+        # Still refused -- but on the EMPTY DISPOSITION CELL, which is review's
+        # actual job, not on the marker. Before #428 this asserted "UNCONFIRMED",
+        # which is what made `--phase review` unpassable: the shipped template
+        # carries the marker deliberately and it only comes off at confirm, so
+        # every conformant draft hit the marker refusal first and no amount of
+        # critic triage could ever turn review green.
         with self.assertRaises(self.m.SpecVerificationError) as ctx:
             self.m.verify_spec_confirmed(self.tpl, "review")
+        self.assertIn("Disposition", str(ctx.exception))
+
+    def test_shipped_draft_passes_review_once_table_filled_marker_still_on(self):
+        # #428, the payoff: this is the REAL explorer sequence -- critic findings
+        # triaged, marker deliberately still standing (it comes off at confirm).
+        # Review must go green here or the explorer's review gate can never close.
+        text = _fill_table(self.tpl)
+        self.assertIsNotNone(self.m._unconfirmed_marker_hit(text), "fixture lost the marker")
+        self.m.verify_spec_confirmed(text, "review")  # no raise
+
+    def test_shipped_draft_with_table_filled_still_refused_at_confirm(self):
+        # The other direction: relaxing review must not leak into confirm. The
+        # marker still refuses the cut.
+        with self.assertRaises(self.m.SpecVerificationError) as ctx:
+            self.m.verify_spec_confirmed(_fill_table(self.tpl), "confirm")
         self.assertIn("UNCONFIRMED", str(ctx.exception))
 
     def test_draft_review_fails_when_table_incomplete(self):

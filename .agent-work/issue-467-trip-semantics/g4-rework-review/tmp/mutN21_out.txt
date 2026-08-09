@@ -1,0 +1,34 @@
+.F                                                                       [100%]
+================================== FAILURES ===================================
+_ TripLedgerComplianceOnTheHardAdvisory.test_compliance_line_also_rides_the_already_requested_hard_advisory _
+
+self = <test_checklist_engine.TripLedgerComplianceOnTheHardAdvisory testMethod=test_compliance_line_also_rides_the_already_requested_hard_advisory>
+
+    def test_compliance_line_also_rides_the_already_requested_hard_advisory(self):
+        """The HARD branch has TWO sub-branches. Extending only the one an agent
+        without a pending request sees would leave the released case — the worse
+        one, where work actually proceeded over the line — silent."""
+        healthy = self._g2_pending_after_g1()
+        E.attach(healthy, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        self.assertEqual(self._advisory(healthy),
+                         self._expected_hard_already_requested("g2"))
+    
+        defective = self._g2_pending_after_g1()
+        E.attach(defective, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(defective, _start_ns("g2"), base_dir=Path("."))  # released
+        self.assertEqual(defective["trip_ledger"][0]["outcome"], "begin-released")
+>       self.assertEqual(
+            self._advisory(defective),
+            self._expected_hard_already_requested("g2")
+            + self._expected_note(1, "start", "g2", "begin-released"))
+E       AssertionError: '\nCO[453 chars] not.' != '\nCO[453 chars] not.\nTRIP HISTORY: 1 begin(s) at/over the ha[124 chars]ine.'
+E         
+E         CONTEXT 20% (>= hard): your instruction has changed, and the refresh for g2 is already requested. Close THIS gate carrying your handoff (`advance g2 --why "<understanding>"`) and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate.
+E         TRIP LEDGER: 1 begin(s) at/over the hard line are on the record under this understanding (latest: start g2 -> begin-released). Closing THIS gate clears this line; the line below, if present, is not.
+E       + TRIP HISTORY: 1 begin(s) at/over the hard line are on the record across this checklist's full history (latest: start g2 -> begin-released). No close clears this line.
+
+tests\test_checklist_engine.py:5974: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::TripLedgerComplianceOnTheHardAdvisory::test_compliance_line_also_rides_the_already_requested_hard_advisory
+1 failed, 1 passed, 416 deselected in 0.77s

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-close",
+  "mechanical": {
+    "run": "issue-440-g2-acceptance",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m5-close",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-g2-acceptance-m5-close@11b254143ddf0f000805cff63c15ccbc0de91bbc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-g2-acceptance",
+    "generated_at": "2026-08-07T14:50:49Z"
+  }
+}

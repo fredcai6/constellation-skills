@@ -57,7 +57,7 @@ Drive the gated spine (`templates/COMMANDER_SPINE.template.json`) through the en
 | reconcile | subagent — load `constellation-cartographer` |
 | triage | this context — load `constellation-triage`; each candidate routes to `fixed-now`, `filed`, or `recommend-and-defer` — fix-now use follows a latitude decision class |
 | review | this context — summarize run, get principal acceptance |
-| feedback | this context — append the run retrospective to `.agent-work/AGENT_FEEDBACK.md`; distill lesson delta ops and apply via `scripts/apply_lessons_delta.py` (never edit `LESSONS.md` directly) |
+| feedback | this context — reflect on the run, then record what happened as episodes and apply them via `scripts/apply_episode_delta.py` (the only write path; never hand-edit under `episodes/`), proved by `scripts/verify_episode_captured.py` |
 | archive | this context — commit, push, move work area |
 
 **Shaped-design intake (`understand`).** An ask citing a shaped-design spec/issue is verified confirmed — `verify_spec_confirmed.py` passes or the CONFIRMED marker is visible — before any work is cut; a shaped-design issue bearing the loud `UNCONFIRMED — DO NOT CUT` header is never cut into work.
@@ -89,6 +89,25 @@ Closeout checks (the `gN-integrate` tests-pass command, etc.) are engine **postc
 Pick subagent model tier from gate complexity, scope, ambiguity, and risk. Wait for each subagent to return before advancing. Do not abandon, duplicate, or re-dispatch a task still in progress.
 
 **Crew dispatch mechanics** — the `run_crew.py` wrapper, the CLI-vs-Agent-tool backends, and crew recovery — live in `references/crew-dispatch.md`. Read it before dispatching a crew.
+
+### Return execution evidence for replanning
+
+Execution discrepancies are evidence before they are issues. As gates close,
+record completed outcomes, observed-vs-expected `wave_evidence`, and each
+discrepancy in the exact sibling
+`../constellation-replan/templates/REPLAN_INPUT.template.json` fields and write
+the packet to `.agent-work/<work-id>/REPLAN_INPUT.json`. Classify every signal
+as `blocks_current_wave_exit`, `invalidates_forecast_or_decomposition`,
+`later_only`, `evidence_only`, or `drop`; include its evidence and reason.
+Preserve the current-wave identity partition and describe unlaunched items, but
+do not file a discrepancy automatically. Return the verified packet to the
+Admiral. Issue creation, when a disposition warrants it, remains behind the
+normal authority, triage, independent-review, and tracker-port gates.
+
+The execute gate runs
+`python <commander-skill-dir>/scripts/verify_iterative_role_artifacts.py commander --work-id <work-id>`.
+Missing or malformed run packets refuse execute completion; prose or an unrelated
+checked-in fixture cannot satisfy this command postcondition.
 
 ## Repo (default; Charter overrides)
 
@@ -125,7 +144,7 @@ The map is context, not authority over code, and not a tax on trivial work. For 
 
 Before the plan-approved checkpoint the plan step runs two principal-governed rigor mechanisms, both **bias-to-yes** with any skip surfaced as a named untaken road: **plan-alternatives** — parallel gate-plan candidates under distinct constraints converging to one recommendation, per the shared design-it-twice standard in `references/global-orchestrator.md` and the `references/design-it-twice-brief.md` contract; and a **cold plan critic** — an adversarial read of the candidate plan and mission frame by a critic with no authoring context, panel scaled by weight as a surfaced choice, findings triaged by your principal, per the shared critical-spec-review standard. Both point at doctrine — the rules live there, not here.
 
-Any background subagent you dispatch — plan-alternative authors, critics, or crews — must be told **in its spawn prompt** to deliver its result via `SendMessage` before ending its turn. A teammate without that line routinely ends on a bare idle notification with its report undelivered, costing a nudge round-trip each; teammates carrying it mostly deliver unprompted.
+Any background subagent you dispatch — plan-alternative authors, critics, or crews — is instructed **in its spawn prompt** to write its result to the job/gate-addressed path (a crew gate's is `.agent-work/<work-id>/crew-handoffs/<gate>-<role>-result.md`; a reasoning-gate or plan/critic dispatch names the equivalent stable artifact path) **before ending its turn** — that write is the delivery. It is already required (`run_crew.py`'s `--result` contract) and it is what actually survives a dispatcher relaunch, because the path is stable across every relaunch while an agent instance name is not: a handoff naming a live successor instance can no longer resolve to it once the Commander relaunches again, and lookup then lands on the retired origin of the lineage rather than the current head (#507) — a harness-level quirk, noted here, not fixed by this doctrine. Tell it to also `SendMessage` on completion, but **as a best-effort, non-load-bearing courtesy ping**, never the thing you wait on: the instance that receives it may no longer be live (relaunch), and a spawned subagent has no addressable name to its own children at all (#413), so the ping can fail to arrive even when the result is complete. A missing ping is not a missing result — a resumed or relaunched Commander checks the result artifact / `recover_crews.py`'s classification (`references/crew-dispatch.md`) before assuming a crew must be (re)dispatched, rather than treating dispatcher-side silence as non-delivery.
 
 Low-confidence, stale, partial, or disputed map areas **alter the plan** — never trust them silently. Flag the area in the frame and either plan a scout/verification step into `execute.json` or surface it to your principal as a decision; do not author gates that assume an unverified map.
 

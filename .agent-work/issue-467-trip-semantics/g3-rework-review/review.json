@@ -1,0 +1,286 @@
+{
+  "work_id": "issue-467-trip-semantics-g3-rework-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "c1-mutation-kill",
+    "c2-nonvacuous",
+    "c3-public-verbs",
+    "c4-no-source-change",
+    "c5-log-honesty",
+    "c6-suites",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded: global-crew.md + global-everyone.md (bundled), docs/agents/CREW_CONTEXT.md (python-not-py, LF writes, never hand-edit checklists, 'a check that cannot fail is indistinguishable from one that passed' + assert-the-mutation-applied), the g3 rework handoff, the first g3 reviewer result (B-1 + criterion-8 section), and the full rework diff (git diff -- tests .agent-work/.../g3-mutation-log.md). Scope confirmed narrow: the eight passing criteria from review 1 are closed and not re-derived.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The rework delivers exactly the two things B-1's rework note asked for: (1) one new test reaching the divergent state through public verbs and asserting advance g2 is refused without --why, (2) the M15 log entry corrected from EQUIVALENT to KILLED with a visible correction note. Nothing else was attempted. The implementer's result declares no source change and git status corroborates: only tests/test_checklist_engine.py and .agent-work/.../g3-mutation-log.md are modified outside engine-driven .agent-work state.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope violation. git diff --stat -- scripts is EMPTY, so block()'s missing status guard and TERMINAL={'complete','skipped'} are untouched -- the explicitly excluded 'fix' was not made, which is correct since the new test depends on that very state. Modified tracked files: tests/test_checklist_engine.py (+38, one method appended inside the existing GateHeadroomOverrideTripTests class, no existing test altered) and .agent-work/.../g3-mutation-log.md (M15 entry + Summary). The other modified/untracked .agent-work paths (execute.json, its journal, crew-runs.json, crew-plans/, context/, mechanical/, handoffs, the implementer's g3-rework-headroom-override-467/ plan scratch) are Commander/implementer engine driving, not review target. The eight closed criteria and the other fifteen mutations were not re-opened.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Present and reproducible. Every number the implementer pasted, I re-derived: named test GREEN on shipped (1 passed, 383 deselected), RED under M15 (1 failed, 383 deselected, 'EngineError not raised' at tests/test_checklist_engine.py:3988), scripts diff empty pre and post, and both closeout suites at 572/535 and 21/413/125. No contradiction with the Commander's own shell either -- its CLI reproduction (shipped REFUSES advance g2 --mechanical, mutant prints g2 -> complete) is reproduced by my probe P2/P5 at the library level. NB-2 (non-blocking): the corrected M15 entry's TOTAL line reads '1 failed, 383 deselected (frozen headroom or override selector)', which mislabels its own provenance twice. The log's declared frozen selector (its Method section) is the file pair with NO -k, and every other entry reports against it as 'N failed, M passed'; 383 deselected actually comes from -k <the named test> over test_checklist_engine.py alone, and the 'headroom or override' selector deselects 413, not 383 (measured). The failure count itself is correct, and the true number under the log's own selector is 1 failed / 433 passed -- which I measured and which is strictly MORE favourable to the entry, so this is a sloppy provenance label, not a flattering one. Non-blocking, but it is the one entry in this log being corrected for a false claim, so the number under it should match the log's stated method.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Meets the inherited rules that bear on this change. (a) CREW_CONTEXT Verification Discipline -- 'a check that cannot fail is indistinguishable from one that passed': satisfied twice over, the test was written red-first under the mutation and I re-ran that red myself; and 'if you mutate, assert the mutation actually applied' -- the implementer restored from a pre-mutation copy and re-checked git diff, I asserted mine by printing the git diff hunk and comparing sha256 before/after. (b) Python invocation: python, not py, throughout. (c) Record stores never hand-edited: the test builds an in-memory fixture and drives it through E.dispatch verbs, and the implementer drove its own plan through the engine (crew-plans/g3-rework-implementer-plan.json + journal). (d) Minimal change, no speculative abstraction: one method, no helper invented for a single call site, no source touched. (e) Matches surrounding conventions: reuses the class's RESERVE/MODEL/FILL literals and _gauge() helper, follows the file's docstring-states-why style, and avoids the fixture trap (patches _read_gauge rather than hand-writing observed_at). (f) Fail-visibly: the test asserts a visible refusal message, not a silent state.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Nothing new for Commander to reconcile from this rework. No source change, so no behaviour or capability change and no architecture-graph impact -- the implementer's Map Impact equivalent ('Behavior changed: No') matches the diff exactly. The one pre-existing divergence this test leans on, block() accepting a complete gate with no status guard and blocked not being in TERMINAL, is already filed by the first review as NB-5 and is correctly left untouched. The first review's own reconciliation item (docs/CHECKLIST_SCHEMA.md under-describing the Task object by context_headroom_tokens) is unaffected by this rework and still belongs to the run's reconcile gate. No new triage candidate is created by the rework; two minor observations are returned in the result as non-blocking.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/issue-467-trip-semantics/g3-rework-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/issue-467-trip-semantics/g3-rework-review/fowler-pass.json; rail exits 0 (smells=12, flagged=[], overridden=['message-chains','comments-as-deodorant']). Ten absent, two overridden with logged standards: message-chains subordinated to docs/CHECKLIST_SCHEMA.md (the subscript path IS the schema and the engine itself addresses it that way), comments-as-deodorant subordinated to CREW_CONTEXT's Verification Discipline (the 18 lines of prose record why the fixture is shaped as it is -- block() has no status guard, blocked is not in TERMINAL, the fill must rise only after g2 is started because start is TRIP_HARD_GUARDED and advance is not -- which is exactly the reasoning the falsified M15 declaration lacked). Nothing flagged: duplicated-code was checked rather than assumed (verb='block' appears exactly once in the file) and long-method measured (about 20 executable lines, linear, comparable to siblings).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/issue-467-trip-semantics/g3-rework-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "c1-mutation-kill": {
+      "id": "c1-mutation-kill",
+      "title": "CC1: apply M15 myself, observe RED, revert clean",
+      "imperative": "Apply the M15 mutation at scripts/checklist_engine.py:2857-2858 (drop the getattr(args,'id',None) third argument), run the new named test, observe RED with my own eyes; then revert and confirm `git diff --stat -- scripts` is empty. Do not accept the implementer's pasted output. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reproduced with my own hands, not taken on report. Pre: sha256[:16]=ccbc247e0de0dcaa, git diff --stat -- scripts empty, named test GREEN (1 passed, 383 deselected). Applied M15 by byte-replace at :2857-2858 (dropped getattr(args,'id',None)); asserted it applied via git diff showing exactly '- cl, base_dir, getattr(args, \"id\", None)) is not None)' / '+ cl, base_dir) is not None)'; post-mutation sha e595ac0da257e23e. RED: 1 failed, 383 deselected, failing at 'with self.assertRaises(E.EngineError) as ctx:' -> 'AssertionError: EngineError not raised' (tests/test_checklist_engine.py:3988) -- i.e. it failed AFTER the divergence assertions (g1 blocked, active_id==g1) had already passed, which is the strongest possible failure site: the only thing the mutation changed is the refusal. Narrowness: full frozen pair under the mutation = 1 failed, 433 passed, 155 subtests -- exactly one test, the named one. Reverted via git checkout; post-revert sha256[:16]=ccbc247e0de0dcaa (byte-identical to pre), git diff --stat -- scripts EMPTY, git status --porcelain -- scripts EMPTY, named test GREEN again.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c2-nonvacuous": {
+      "id": "c2-nonvacuous",
+      "title": "CC2: the test is not vacuous",
+      "imperative": "Attack the new test for vacuity: does it assert the REFUSAL (not merely no-crash); is the gauge reading live inside the assertion window; would it still pass if the fixture never reached active_id != gate-being-closed? Probe by perturbing the fixture in a scratch copy. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Not vacuous, attacked six ways with an independent probe (.agent-work/.../g3-rework-review/antivacuity_probe.py, imports the shipped engine + the test module's own helpers, touches nothing). P2: in the fixture's state at fill=0.12 the two readings the mutation chooses between genuinely DIFFER -- _trip_hard_band_reading(cl,'.','g2') returns a Reading (require_why) while _trip_hard_band_reading(cl,'.') returns None. That is the discriminator, live. P3 (the decisive counterfactual): the SAME fixture WITHOUT the block leaves active_id==g2, both readings return a Reading, and advance is refused under shipped AND under the mutant -- so a no-divergence fixture would kill nothing; the block step is load-bearing, and the test does not merely rely on it, it ASSERTS it (assertEqual(E.active_id(cl),'g1')), which converts future silent vacuity (e.g. if block() ever gains a status guard) into a red test rather than a quiet pass. P4: the gauge reading is live inside the assertion window -- identical fixture and verb closes cleanly at fill=0.00 ('g2 -> complete') and refuses at 0.12 and 0.99. P5: the refusal is specifically the no-silent-close rule ('cannot be closed silently'), and the same close WITH --why SUCCEEDS -- so the assertion is about the silence, not about a gate that cannot close at all. P6: the same public-verb sequence with NO override on g2 CLOSES at the same 12% fill, so the refusal is attributable to the override, not to the blocked-g1 shape. The test asserts the refusal itself (assertRaises + assertIn 'cannot be closed silently' + g2 still 'in-progress'), not merely that nothing crashed. NB-1 (non-blocking): the test carries no in-test positive control of the P5/P6 kind; the mutation kill and the explicit active_id assertion carry that load instead.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c3-public-verbs": {
+      "id": "c3-public-verbs",
+      "title": "CC3: divergent state reached through PUBLIC verbs",
+      "imperative": "Confirm the fixture reaches active_id != gate-being-closed through public engine verbs (start/advance/start/block/advance) and not by hand-mutating checklist JSON into an engine-unreachable shape. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reached through public verbs only, confirmed by re-driving the sequence myself (probe P1): gated() builds an ordinary two-gate checklist, then dispatch start g1 / advance g1 / start g2 / block g1 -- every step through E.dispatch, the same CLI boundary the engine exposes; the block call is a types.SimpleNamespace matching _run_verb's block branch (id/blocker/authority/next_action), which is what argparse produces, not a hand-shaped dict. The only direct JSON write is cl['tasks']['g2']['context_headroom_tokens']=50000, which is the authored override this issue ships and is exactly how the pre-existing tests in this class declare it -- not a status or ordering forced by hand. Resulting statuses {'g1':'blocked','g2':'in-progress'} with active_id=='g1' are produced by the engine, not written. So the kill is not hollow: the state the original EQUIVALENT declaration called an 'unreachable fixture' is reachable, and the manufactured-fixture defence it rested on does not apply.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c4-no-source-change": {
+      "id": "c4-no-source-change",
+      "title": "CC4: no source change",
+      "imperative": "Confirm `git diff --stat -- scripts` is empty and the rework touched only tests/ and the mutation log. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff --stat -- scripts EMPTY and git status --porcelain -- scripts EMPTY, both before my mutation and after my revert; sha256[:16] of scripts/checklist_engine.py identical pre and post (ccbc247e0de0dcaa). Specifically confirmed unchanged: block() at :2116 still has NO status guard (it writes t['status']='blocked' with no check on prior status), and TERMINAL at :63 is still {'complete','skipped'} -- the two excluded 'fixes' were not made. The rework's tracked footprint is tests/test_checklist_engine.py (+38, one appended method) and .agent-work/.../g3-mutation-log.md only.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c5-log-honesty": {
+      "id": "c5-log-honesty",
+      "title": "CC5: the M15 log correction is honest",
+      "imperative": "Confirm the M15 log entry states the kill, names the test, gives the failure count, and VISIBLY records that the earlier EQUIVALENT declaration was wrong including f9925be6's commit message. A quiet rewrite is a finding. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Honest, on all four required points, and the cited facts check out against the tree. States the kill (header changed to KILLED); names the test in full; gives the failure count (1 failed); and visibly records the earlier declaration as WRONG under a labelled 'CORRECTION (g3 rework 2, reviewer finding B-1)' heading that restates the old reasoning verbatim before falsifying it, explicitly says 'That reasoning is false and the fixture is reachable, not manufactured', and names f9925be6's commit message as also wrong. Verified independently: f9925be6's message does contain '1 declared EQUIVALENT rather than faked'; block() at :2116 has no status guard; TERMINAL at :63 is {'complete','skipped'}. The Summary section was updated in the same visible way (15 killed + 1 equivalent -> 16 killed, with the correction named and M15 added to the 'mutations that matter most' list). This is a correction in place, not a quiet rewrite. NB-2 (non-blocking, see finding on the TOTAL line's selector label).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "c6-suites": {
+      "id": "c6-suites",
+      "title": "CC6: both closeout suites pass at the stated numbers",
+      "imperative": "Run both closeout suites myself and compare against the handoff's expected numbers (572 passed / 535 subtests; 21 passed / 413 deselected / 125 subtests). Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both run by me, both match the handoff exactly. Suite 1 (test_checklist_engine + test_gauge_reader + test_init_work_area + test_install_constellation): 572 passed, 535 subtests passed -- expected 572/535. Suite 2 (-k 'headroom or override' over the first two files): 21 passed, 413 deselected, 125 subtests passed -- expected 21/413/125. Also ran the mutation log's own declared frozen selector (the file pair, no -k): 434 tests, clean on shipped; under the M15 mutation 1 failed, 433 passed, 155 subtests -- i.e. the kill is narrow to exactly one test under the log's own method.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "The M15 kill is real, reproduced by hand, and the log correction is honest. I applied the mutation myself at :2857-2858, asserted it applied by diff and sha, saw the named test go RED at the assertRaises line (after its two divergence assertions had already passed), confirmed narrowness at 1 failed / 433 passed under the log's own frozen selector, then reverted to a byte-identical file with an empty scripts diff. Six probes show the test is not vacuous and not manufactured: the divergent state is built entirely through public verbs, the two readings the mutation chooses between genuinely differ there, a no-block fixture would kill nothing, the gauge is live in the assertion window, closing WITH --why succeeds, and a no-reserve g2 closes at the same fill. Both closeout suites match the handoff exactly. Zero blocking findings; two non-blocking observations returned."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r3-evidence",
+      "statement": "NB-2: the corrected M15 entry's TOTAL line reads '1 failed, 383 deselected (frozen headroom or override selector)', which mislabels its provenance twice -- the log's Method section freezes the file pair with no -k and every other entry reports 'N failed, M passed'; 383 deselected comes from -k <the named test> over test_checklist_engine.py alone, and the 'headroom or override' selector deselects 413. Measured true value under the log's own selector: 1 failed, 433 passed, 155 subtests. One-line fix in an evidence doc, non-blocking."
+    },
+    {
+      "id": "tc2",
+      "from": "r3-evidence",
+      "statement": "NB-3: tests/test_checklist_engine.py has _start_ns/_advance_ns/_reopen_ns/_resume_ns but no _block_ns, so the new test hand-rolls types.SimpleNamespace(verb='block', ...). One call site today, so not duplication and correctly not abstracted now; worth a helper the second time a test needs to dispatch block."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g3-rework-review-rev-01",
+    "status": "released",
+    "claimed_at": "2026-08-08T15:11:32.103289+00:00",
+    "last_heartbeat": "2026-08-08T15:20:57.470994+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T15:22:30.569595+00:00"
+  }
+}

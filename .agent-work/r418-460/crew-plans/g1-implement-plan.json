@@ -1,0 +1,421 @@
+{
+  "work_id": "r418-460-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-apply-path",
+    "m2-dry-run-and-else",
+    "m3-full-suite",
+    "m4-result",
+    "m5-rework1"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and verify the handoff",
+      "imperative": "Read the inherited global doctrine (references/global-crew.md, references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the g1-implement handoff in full. Verify the handoff carries task, intent, scope, exclusions, required evidence, test mode, stop conditions and return format; block if incomplete. Confirm the two dispatch sites in scripts/apply_episode_delta.py have no else branch, and capture the branch baseline suite result. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete; two else-less dispatch sites confirmed in source; branch baseline 1721 passed/4 skipped/643 subtests/exit 0 reproduced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-apply-path": {
+      "id": "m1-apply-path",
+      "title": "restate-assertion on the apply path",
+      "imperative": "Add restate-assertion to OP_KINDS, add _validate_restate_assertion (exactly id, assertion, statement, history; any other field refused; single-line enforcement on statement), add _apply_restate_assertion (replaces the one assertion's statement and appends ONE history line whose text is built inside the writer from the parsed original statement verbatim; the caller's history supplies only the reason), and register both in validate_delta and apply_delta. Touch nothing else: kind, strength, lifecycle-standing, siblings, ## Mechanical, ## Retirement. Ship tests (a) surgical, (b) original statement verbatim in history, (c) multi-line statement refused, (d) unknown assertion id refused, (e) two-op delta with an invalid second op leaves the first op's file unchanged, (g) misfiled extra field refused, plus the unknown-episode-id refusal.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "restate-assertion applies through apply_delta; cases (a)(b)(c)(d)(e)(g) and unknown-episode-id are green in tests/test_episode_store.py",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_episode_store.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-apply-path-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: scripts/apply_episode_delta.py and tests/test_episode_store.py only.",
+        "Never edit episodes/, docs/, docs/agents/, scripts/checklist_engine.py, scripts/collect_feedback.py, scripts/verify_worktree_precondition_coverage.py.",
+        "Tests write to a throwaway temp store root, never the real episodes/.",
+        "python, never py, for pytest."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-apply-path-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_episode_store.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-dry-run-and-else": {
+      "id": "m2-dry-run-and-else",
+      "title": "dry-run registration and else: raise at both dispatch sites",
+      "imperative": "Register restate-assertion in _dry_run_log's dispatch and add an else that raises EpisodeDeltaError at BOTH apply_delta's and _dry_run_log's dispatch, so an op kind registered in OP_KINDS but not at a dispatch site fails visibly instead of being silently skipped. Ship test (f) \u2014 a restate under --dry-run logs the op and writes nothing \u2014 and a non-vacuous test that both else branches raise for a kind admitted to OP_KINDS but never dispatched. Then run the handoff's wiring grep and state the count of external call sites for each new symbol.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 apply path green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "dry-run logs the restate and writes nothing; both dispatch else branches raise; episode-store tests green",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_episode_store.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-dry-run-and-else-1"
+        },
+        {
+          "id": "c2",
+          "statement": "each new symbol has at least one call site outside its own definition (wiring grep, non-zero external call sites)",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-460 && test \"$(grep -rn '_apply_restate_assertion' --include=*.py scripts | grep -cv 'def _apply_restate_assertion')\" -ge 2 && test \"$(grep -rn '_validate_restate_assertion' --include=*.py scripts | grep -cv 'def _validate_restate_assertion')\" -ge 1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-dry-run-and-else-2"
+        }
+      ],
+      "constraints": [
+        "Allowed scope: scripts/apply_episode_delta.py and tests/test_episode_store.py only.",
+        "Zero external call sites for either new function is a stop condition."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-dry-run-and-else-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_episode_store.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-dry-run-and-else-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && test \"$(grep -rn '_apply_restate_assertion' --include=*.py scripts | grep -cv 'def _apply_restate_assertion')\" -ge 2 && test \"$(grep -rn '_validate_restate_assertion' --include=*.py scripts | grep -cv 'def _validate_restate_assertion')\" -ge 1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-full-suite": {
+      "id": "m3-full-suite",
+      "title": "Full suite green against the branch baseline",
+      "imperative": "Run the handoff's exact verification command over the whole tests/ tree and capture the real exit code. Compare the counts against the branch baseline of 1721 passed, 4 skipped, 643 subtests, exit 0 \u2014 any deviation other than this slice's own added tests is a stop condition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests exits 0 with no regression against the branch baseline",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-suite-1"
+        }
+      ],
+      "constraints": [
+        "Capture the REAL exit code; never use py for pytest."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-full-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-result": {
+      "id": "m4-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write the IMPLEMENTER_RESULT to .agent-work/r418-460/crew-handoffs/g1-implement-result.md following the handoff's Return Format and the bundled template: completed slice, files changed, test mode, evidence with real exit codes, map impact, assumptions, stop conditions, out-of-scope observations, workflow feedback, return status.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete with evidence in hand",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result file exists, is non-empty, and carries the real exit codes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-460 && test -s .agent-work/r418-460/crew-handoffs/g1-implement-result.md && grep -q 'EXIT=0' .agent-work/r418-460/crew-handoffs/g1-implement-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-result-1"
+        }
+      ],
+      "constraints": [
+        "Never create a file whose basename contains 'findings'."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && test -s .agent-work/r418-460/crew-handoffs/g1-implement-result.md && grep -q 'EXIT=0' .agent-work/r418-460/crew-handoffs/g1-implement-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-rework1": {
+      "id": "m5-rework1",
+      "title": "Rework 1 \u2014 pin the allowlist, correct the history-line docstring",
+      "imperative": "Two bounded follow-ups from Commander r418-460 after g1-review returned APPROVE, both inside the existing allowed scope. (1) Add a test assertion pinning RESTATE_ALLOWED_FIELDS to its exact expected tuple, so a later widening of the allowlist \u2014 the reviewer's mutation M4, which adds an `original` key and has the applier prefer op['original'] over the parsed statement, and which currently runs GREEN at 21 passed exit 0 \u2014 cannot silently reopen the evidence-destruction risk this op exists to close. Prove the new assertion drives red under exactly that mutation, with numbers. (2) Correct the _restatement_history_line docstring: it claims the original is an unambiguous tail needing no knowledge of the reason's wording, but a reason containing the marker text yields two markers on one line. The real original survives verbatim as the LAST marker, so nothing is destroyed \u2014 state that truth in one or two sentences. Do NOT change the line format and do NOT add escaping. Then re-run the full suite and append a Rework 1 section to the existing result file; do not create a new result file and do not commit.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the allowlist-pinning assertion and the corrected docstring are in; the full suite is green with the real exit code captured",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-rework1-1"
+        },
+        {
+          "id": "c2",
+          "statement": "the new assertion is non-vacuous: the reviewer's M4 widening mutation drives the suite RED, and the source is restored byte-for-byte",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python .agent-work/r418-460/evidence/mutate_probe_m4.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-rework1-2"
+        },
+        {
+          "id": "c3",
+          "statement": "a Rework 1 section is appended to the EXISTING result file; no new result file was created",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/r418-460 && grep -q '## Rework 1' .agent-work/r418-460/crew-handoffs/g1-implement-result.md && test \"$(ls .agent-work/r418-460/crew-handoffs/ | grep -c 'implement-result')\" -eq 1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-rework1-3"
+        }
+      ],
+      "constraints": [
+        "Allowed scope unchanged: scripts/apply_episode_delta.py and tests/test_episode_store.py only.",
+        "Do not change the history-line format and do not add escaping \u2014 the Commander is not widening this gate.",
+        "Leave the duplicated dispatch chains alone; the Commander is logging that as a triage candidate.",
+        "Do not create a new result file. Do not commit."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-rework1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-rework1-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && FORCE_COLOR= NO_COLOR=1 python .agent-work/r418-460/evidence/mutate_probe_m4.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-rework1-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/r418-460 && grep -q '## Rework 1' .agent-work/r418-460/crew-handoffs/g1-implement-result.md && test \"$(ls .agent-work/r418-460/crew-handoffs/ | grep -c 'implement-result')\" -eq 1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m2-dry-run-and-else",
+      "statement": "_apply_amend_assertion and _apply_restate_assertion share an identical four-line prologue (load episode, all_assertions(), lookup, raise 'no such assertion') differing only in the op name in the error message. Two occurrences is the threshold for extracting a shared _resolve_assertion(tx, op, op_name) helper, but that would touch amend-assertion's code path, which gate g1 has no mandate over. Left alone deliberately."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "impl-460-g1",
+    "status": "released",
+    "claimed_at": "2026-08-07T23:33:34.568964+00:00",
+    "last_heartbeat": "2026-08-07T23:51:13.771861+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T23:51:33.756247+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff complete on all nine required fields. Confirmed in source: apply_delta dispatch (lines 1167-1174) and _dry_run_log dispatch (lines 1308-1315) are independent if/elif chains with NO else \u2014 an op in OP_KINDS but absent from one is silently skipped there. Branch baseline reproduced: 1721 passed, 4 skipped, 643 subtests, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:48:20.729808+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-apply-path",
+      "why": "restate-assertion applies end to end: OP_KINDS entry, RESTATE_ALLOWED_FIELDS allowlist, _validate_restate_assertion, _restatement_history_line (writer-built, takes the parsed original as an argument the delta cannot reach), _apply_restate_assertion, registered in validate_delta and apply_delta. 16 new tests cover (a)(b)(c)(d)(e)(g) plus unknown-episode-id, diagnosis targets, repeat restatement and malformed ids. Non-vacuity proven: six mutations of the shipped writer each drive RestateAssertionTests RED (evidence/mutate_probe.py), source restored byte-for-byte.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:54:19.150668+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-dry-run-and-else",
+      "why": "restate-assertion registered at BOTH dispatch sites; both now end in else: raise via _unhandled_op_kind_message. External call sites: _apply_restate_assertion 2 real (apply_delta:1249, _dry_run_log:1433; a third grep hit is a docstring mention), _validate_restate_assertion 1 (validate_delta:898), _restatement_history_line 1, _unhandled_op_kind_message 2. Non-vacuity: reproducing the exact defect (restate registered only in apply_delta) and removing each else independently each drives the suite RED \u2014 evidence/mutate_probe_dispatch.py, source restored byte-for-byte.",
+      "mechanical": false,
+      "ts": "2026-08-07T22:56:52.194008+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-full-suite",
+      "why": "Full suite green: 1742 passed, 4 skipped, 672 subtests, exit 0. Against the branch baseline of 1721/4/643/exit 0 the deltas are +21 passed and +29 subtests, all of them this slice's own RestateAssertionTests; skips unchanged at 4. No regression.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:13:27.700732+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-result",
+      "why": "IMPLEMENTER_RESULT written to .agent-work/r418-460/crew-handoffs/g1-implement-result.md with real exit codes for the pre-change baseline (1721/4/643, EXIT=0), the post-change full suite (1742/4/672, EXIT=0), the targeted file, both mutation probes and the CLI spot-check; per-letter evidence table for cases (a)-(g); wiring-grep call-site counts; one triage candidate; workflow feedback filled.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:15:57.088127+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-rework1",
+      "why": "Rework 1 done. RESTATE_ALLOWED_FIELDS pinned by three tests (tuple pin + behavioural refusal of any original-carrying field + exact-equality on the quoted original). _restatement_history_line docstring corrected to last-marker-wins; format and code unchanged, no escaping added. M4 probe: 21 passed exit 0 with the three new tests deselected (the reviewer's finding reproduced) vs 6 failed exit 1 with them in; source restored byte-for-byte. Full suite 1745 passed, 4 skipped, 677 subtests, EXIT=0 \u2014 +3/+5 against post-g1, skips unchanged. Rework 1 section appended to the existing result file.",
+      "mechanical": false,
+      "ts": "2026-08-07T23:51:13.771832+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-07T23:33:34.748651+00:00",
+      "reason": "g1-review APPROVE with two bounded follow-ups from Commander r418-460, both inside the existing allowed scope: pin RESTATE_ALLOWED_FIELDS against a later widening (reviewer mutation M4 runs green today), and correct the _restatement_history_line docstring overclaim about the marker being unambiguous.",
+      "authority": "commander-r418-460",
+      "ops": [
+        "added m5-rework1"
+      ]
+    }
+  ]
+}

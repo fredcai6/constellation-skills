@@ -1,53 +1,28 @@
 #!/usr/bin/env python
-"""Refuse a malformed cut-work issue set — the constellation-to-issues RAIL.
+"""Verify and render the strict v1 initial-cut contract.
 
-This is the single mechanically-enforced rail for the `constellation-to-issues`
-skill (DESIGN_SPEC Section A). The skill emits ONE tracker-agnostic manifest
-(the issue-set artifact); this script is the gate that manifest must clear
-before the skill may emit or file it. `file_issue_set.py` runs this first and
-refuses to file anything if it fails, so a malformed set can never reach a
-tracker.
-
-It exits NON-ZERO (and raises `IssueSetError`) on any of the four locked
-refusals, plus the structural basics a well-formed manifest needs:
-
-  1. UNCONFIRMED SPEC — re-runs the existing verify_spec_confirmed.py confirm
-     gate against the spec the manifest was cut from. "No work is cut from an
-     unconfirmed design" is enforced here, not merely asserted in prose.
-  2. NO DEPENDENCY EDGE — an issue set with zero `blocks` edges across every
-     issue is refused (a wave-ordered epic needs at least one edge to order).
-     A `blocks` target that names no known issue id is also refused (a dangling
-     edge would break the downstream topological sort).
-  3. UNTYPED ISSUE — every issue must be typed HITL or AFK; an untyped issue,
-     or one carrying any other type value, is refused.
-  4. HITL WITHOUT REASON — a HITL issue must carry a non-empty `hitl_reason`.
-
-Everything else about the cut (coverage vs spec, invented scope, whether a
-risky AFK should be HITL) is the INDEPENDENT reviewer's judgment — deliberately
-NOT gated here (DESIGN_SPEC Section A: the manifest is evidence, never a review
-gate; well-formed != well-cut). Standard library only.
+The shaped brief is the direct Explorer-to-cutter input.  The resulting
+manifest makes only ``current_wave.issues`` runnable; forecasts remain
+structurally non-actionable.
 """
 
 from __future__ import annotations
 
 import argparse
+import copy
 import json
-import os
+import re
 import sys
+from datetime import date as calendar_date
 from pathlib import Path
 
-# Resolve the sibling verify_spec_confirmed module whether this file is run as a
-# script (its dir is already sys.path[0]) or imported by a test loader (which
-# does not add scripts/ to the path). Both scripts are bundled side-by-side into
-# the installed skill's scripts/ dir, so this import holds there too.
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from verify_spec_confirmed import verify_spec_confirmed, SpecVerificationError
 
-VALID_TYPES = ("HITL", "AFK")
+VALID_TYPES = ("AFK", "HITL")
+ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class IssueSetError(Exception):
-    """Raised when the issue-set manifest is malformed — the rail's refusal."""
+    """Raised when a shaped brief or initial issue-set contract is invalid."""
 
 
 def _require(condition: bool, message: str) -> None:
@@ -55,111 +30,282 @@ def _require(condition: bool, message: str) -> None:
         raise IssueSetError(message)
 
 
+def _object(value: object, path: str, required: set[str], optional: set[str] = set()) -> dict:
+    _require(isinstance(value, dict), f"{path} must be an object")
+    assert isinstance(value, dict)
+    missing = required - value.keys()
+    unknown = value.keys() - required - optional
+    _require(not missing, f"{path} missing required field(s): {', '.join(sorted(missing))}")
+    _require(not unknown, f"{path} has unknown field(s): {', '.join(sorted(unknown))}")
+    return value
+
+
+def _string(value: object, path: str) -> str:
+    _require(isinstance(value, str) and bool(value.strip()), f"{path} must be a nonempty string")
+    assert isinstance(value, str)
+    return value
+
+
+def _strings(value: object, path: str, *, nonempty: bool = False) -> list[str]:
+    _require(isinstance(value, list), f"{path} must be an array")
+    assert isinstance(value, list)
+    _require(not nonempty or bool(value), f"{path} must be nonempty")
+    for index, entry in enumerate(value):
+        _string(entry, f"{path}[{index}]")
+    return value
+
+
+def _version(value: object, path: str) -> None:
+    _require(type(value) is int and value == 1, f"{path} must be integer 1")
+
+
+def _forecast(value: object, path: str) -> list[dict]:
+    _require(isinstance(value, list), f"{path} must be an array")
+    assert isinstance(value, list)
+    for index, entry in enumerate(value):
+        item_path = f"{path}[{index}]"
+        item = _object(entry, item_path, {"outcome", "why_likely", "entry_conditions"})
+        _string(item["outcome"], f"{item_path}.outcome")
+        _string(item["why_likely"], f"{item_path}.why_likely")
+        _strings(item["entry_conditions"], f"{item_path}.entry_conditions")
+    return value
+
+
+def _uncertainties(value: object, path: str) -> list[dict]:
+    _require(isinstance(value, list), f"{path} must be an array")
+    assert isinstance(value, list)
+    fields = {"unknown", "affects", "settle_by", "current_evidence", "next_probe"}
+    for index, entry in enumerate(value):
+        item_path = f"{path}[{index}]"
+        item = _object(entry, item_path, fields)
+        for field in fields:
+            _string(item[field], f"{item_path}.{field}")
+    return value
+
+
+def _good_enough(value: object, path: str) -> dict:
+    fields = {"mandatory_quality", "sufficient_evidence", "appetite"}
+    item = _object(value, path, fields)
+    for field in fields:
+        _string(item[field], f"{path}.{field}")
+    return item
+
+
+def verify_shaped_brief(brief: object) -> dict:
+    """Fail fast unless ``brief`` is exactly the confirmed v1 input contract."""
+    fields = {
+        "schema_version", "title", "source_path", "confirmation", "intent_and_why",
+        "definition_of_done", "good_enough", "hard_constraints", "fixed_decisions",
+        "initial_wave", "wave_forecast", "uncertainty_register", "parked_possibilities",
+        "evidence_digest",
+    }
+    brief = _object(brief, "brief", fields)
+    _version(brief["schema_version"], "brief.schema_version")
+    _string(brief["title"], "brief.title")
+    _string(brief["source_path"], "brief.source_path")
+    confirmation = _object(
+        brief["confirmation"], "brief.confirmation", {"status", "confirmed_by", "date"}
+    )
+    _require(confirmation["status"] == "CONFIRMED", "brief.confirmation.status must be CONFIRMED")
+    _string(confirmation["confirmed_by"], "brief.confirmation.confirmed_by")
+    date = _string(confirmation["date"], "brief.confirmation.date")
+    _require(bool(ISO_DATE.fullmatch(date)), "brief.confirmation.date must be an ISO date (YYYY-MM-DD)")
+    try:
+        calendar_date.fromisoformat(date)
+    except ValueError as exc:
+        raise IssueSetError("brief.confirmation.date must be a valid ISO calendar date") from exc
+    _string(brief["intent_and_why"], "brief.intent_and_why")
+    _strings(brief["definition_of_done"], "brief.definition_of_done", nonempty=True)
+    _good_enough(brief["good_enough"], "brief.good_enough")
+    _strings(brief["hard_constraints"], "brief.hard_constraints")
+    _strings(brief["fixed_decisions"], "brief.fixed_decisions")
+    wave = _object(brief["initial_wave"], "brief.initial_wave", {"objective", "exit_criteria"})
+    _string(wave["objective"], "brief.initial_wave.objective")
+    _strings(wave["exit_criteria"], "brief.initial_wave.exit_criteria", nonempty=True)
+    _forecast(brief["wave_forecast"], "brief.wave_forecast")
+    _uncertainties(brief["uncertainty_register"], "brief.uncertainty_register")
+    _strings(brief["parked_possibilities"], "brief.parked_possibilities")
+    digest = brief["evidence_digest"]
+    _require(isinstance(digest, list), "brief.evidence_digest must be an array")
+    for index, entry in enumerate(digest):
+        item_path = f"brief.evidence_digest[{index}]"
+        item = _object(entry, item_path, {"claim", "source", "conclusion"})
+        for field in ("claim", "source", "conclusion"):
+            _string(item[field], f"{item_path}.{field}")
+    return brief
+
+
+ISSUE_FIELDS = {
+    "id", "title", "desired_outcome", "useful_now", "appetite",
+    "acceptance_or_falsification_evidence", "implementation_latitude",
+    "hard_constraints_no_gos", "local_unknowns", "anchors", "type", "blocks",
+}
+
+
+def _issue(value: object, path: str) -> dict:
+    issue = _object(value, path, ISSUE_FIELDS, {"hitl_reason"})
+    for field in (
+        "id", "title", "desired_outcome", "useful_now", "appetite",
+        "acceptance_or_falsification_evidence", "implementation_latitude",
+    ):
+        _string(issue[field], f"{path}.{field}")
+    _strings(issue["hard_constraints_no_gos"], f"{path}.hard_constraints_no_gos")
+    _strings(issue["local_unknowns"], f"{path}.local_unknowns")
+    _strings(issue["anchors"], f"{path}.anchors", nonempty=True)
+    _require(issue["type"] in VALID_TYPES, f"{path}.type must be AFK or HITL")
+    _strings(issue["blocks"], f"{path}.blocks")
+    if issue["type"] == "HITL":
+        _require("hitl_reason" in issue, f"{path}.hitl_reason is required for HITL")
+        _string(issue["hitl_reason"], f"{path}.hitl_reason")
+    else:
+        _require("hitl_reason" not in issue, f"{path}.hitl_reason is only allowed for HITL")
+    return issue
+
+
+def verify_edges(issues: list[dict]) -> None:
+    ids = [issue["id"] for issue in issues]
+    _require(len(ids) == len(set(ids)), "current_wave.issues contains duplicate ids")
+    known = set(ids)
+    dependencies = {iid: set() for iid in ids}
+    for issue in issues:
+        for target in issue["blocks"]:
+            _require(target in known, f"issue {issue['id']!r}: blocks target {target!r} names no known issue")
+            dependencies[target].add(issue["id"])
+    placed: set[str] = set()
+    while len(placed) < len(ids):
+        ready = [iid for iid in ids if iid not in placed and dependencies[iid] <= placed]
+        _require(bool(ready), "dependency cycle in current_wave.issues blocks edges")
+        placed.update(ready)
+
+
 def verify_manifest_shape(manifest: object) -> dict:
-    """Structural basics of the one manifest: an epic with a title and a
-    non-empty list of issues, each with a unique id and a title."""
-    _require(isinstance(manifest, dict), "manifest is not a JSON object")
-    assert isinstance(manifest, dict)
-
-    epic = manifest.get("epic")
-    _require(isinstance(epic, dict), "manifest.epic missing or not an object")
-    assert isinstance(epic, dict)
-    _require(bool(str(epic.get("title", "")).strip()), "manifest.epic.title is missing or empty")
-
-    issues = manifest.get("issues")
-    _require(isinstance(issues, list) and len(issues) > 0, "manifest.issues missing or empty")
-    assert isinstance(issues, list)
-
-    seen: set[str] = set()
-    for idx, issue in enumerate(issues):
-        _require(isinstance(issue, dict), f"issue #{idx} is not an object")
-        iid = str(issue.get("id", "")).strip()
-        _require(bool(iid), f"issue #{idx} is missing an id")
-        _require(iid not in seen, f"duplicate issue id {iid!r}")
-        seen.add(iid)
-        _require(bool(str(issue.get("title", "")).strip()), f"issue {iid!r} is missing a title")
+    fields = {
+        "schema_version", "epic", "definition_of_done", "good_enough",
+        "hard_constraints", "fixed_decisions", "current_wave", "wave_forecast",
+        "uncertainty_register", "parked_possibilities",
+    }
+    manifest = _object(manifest, "manifest", fields)
+    _version(manifest["schema_version"], "manifest.schema_version")
+    epic = _object(manifest["epic"], "manifest.epic", {"title", "spec_path", "intent_and_why"})
+    for field in ("title", "spec_path", "intent_and_why"):
+        _string(epic[field], f"manifest.epic.{field}")
+    _strings(manifest["definition_of_done"], "manifest.definition_of_done", nonempty=True)
+    _good_enough(manifest["good_enough"], "manifest.good_enough")
+    _strings(manifest["hard_constraints"], "manifest.hard_constraints")
+    _strings(manifest["fixed_decisions"], "manifest.fixed_decisions")
+    wave = _object(manifest["current_wave"], "manifest.current_wave", {"objective", "exit_criteria", "issues"})
+    _string(wave["objective"], "manifest.current_wave.objective")
+    _strings(wave["exit_criteria"], "manifest.current_wave.exit_criteria", nonempty=True)
+    _require(isinstance(wave["issues"], list) and bool(wave["issues"]), "manifest.current_wave.issues must be a nonempty array")
+    for index, issue in enumerate(wave["issues"]):
+        _issue(issue, f"manifest.current_wave.issues[{index}]")
+    _forecast(manifest["wave_forecast"], "manifest.wave_forecast")
+    _uncertainties(manifest["uncertainty_register"], "manifest.uncertainty_register")
+    _strings(manifest["parked_possibilities"], "manifest.parked_possibilities")
+    verify_edges(wave["issues"])
     return manifest
 
 
-def verify_edges(manifest: dict) -> None:
-    """Rule 2: at least one dependency edge across the set, and every edge
-    target names a known issue id (no dangling edge)."""
-    issues = manifest["issues"]
-    ids = {str(i["id"]).strip() for i in issues}
-    total_edges = 0
-    for issue in issues:
-        blocks = issue.get("blocks", [])
-        _require(isinstance(blocks, list), f"issue {issue['id']!r}: blocks must be a list")
-        for target in blocks:
-            target = str(target).strip()
-            _require(
-                target in ids,
-                f"issue {issue['id']!r}: blocks target {target!r} names no known issue id",
-            )
-            total_edges += 1
-    _require(
-        total_edges > 0,
-        "issue set has no dependency edges (blocks); a wave-ordered epic needs at least one",
-    )
+def build_initial_manifest(brief: object, issues: object) -> dict:
+    """Add current-wave issue drafts to a confirmed brief without prose translation."""
+    brief = verify_shaped_brief(brief)
+    _require(isinstance(issues, list) and bool(issues), "issues must be a nonempty array")
+    manifest = {
+        "schema_version": 1,
+        "epic": {
+            "title": brief["title"],
+            "spec_path": brief["source_path"],
+            "intent_and_why": brief["intent_and_why"],
+        },
+        "definition_of_done": copy.deepcopy(brief["definition_of_done"]),
+        "good_enough": copy.deepcopy(brief["good_enough"]),
+        "hard_constraints": copy.deepcopy(brief["hard_constraints"]),
+        "fixed_decisions": copy.deepcopy(brief["fixed_decisions"]),
+        "current_wave": {
+            "objective": brief["initial_wave"]["objective"],
+            "exit_criteria": copy.deepcopy(brief["initial_wave"]["exit_criteria"]),
+            "issues": copy.deepcopy(issues),
+        },
+        "wave_forecast": copy.deepcopy(brief["wave_forecast"]),
+        "uncertainty_register": copy.deepcopy(brief["uncertainty_register"]),
+        "parked_possibilities": copy.deepcopy(brief["parked_possibilities"]),
+    }
+    return verify_manifest_shape(manifest)
 
 
-def verify_types(manifest: dict) -> None:
-    """Rules 3 and 4: every issue typed HITL/AFK; HITL requires a hitl_reason."""
-    for issue in manifest["issues"]:
-        iid = issue["id"]
-        itype = issue.get("type")
-        _require(
-            itype in VALID_TYPES,
-            f"issue {iid!r} is untyped or invalid: type={itype!r}, expected one of {'/'.join(VALID_TYPES)}",
-        )
-        if itype == "HITL":
-            _require(
-                bool(str(issue.get("hitl_reason", "")).strip()),
-                f"issue {iid!r} is HITL but carries no hitl_reason",
-            )
-
-
-def verify_issue_set(manifest: object, spec_text: str) -> None:
-    """Raise IssueSetError on any malformed condition; return None if the set is
-    well-formed. `spec_text` is the DESIGN_SPEC the set was cut from.
-
-    Order is deliberate: the spec-confirmation gate (rule 1) runs first — an
-    unconfirmed spec is refused before the manifest is even inspected.
-    """
-    try:
-        verify_spec_confirmed(spec_text, "confirm")
-    except SpecVerificationError as exc:
-        raise IssueSetError(f"spec is not confirmed — refusing to cut: {exc}") from exc
-
+def verify_issue_set(manifest: object, brief: object) -> None:
+    brief = verify_shaped_brief(brief)
     manifest = verify_manifest_shape(manifest)
-    verify_edges(manifest)
-    verify_types(manifest)
+    _require(manifest["epic"]["title"] == brief["title"], "manifest.epic.title must copy brief.title exactly")
+    _require(manifest["epic"]["spec_path"] == brief["source_path"], "manifest.epic.spec_path must copy brief.source_path exactly")
+    mappings = {
+        "intent_and_why": manifest["epic"]["intent_and_why"],
+        "definition_of_done": manifest["definition_of_done"],
+        "good_enough": manifest["good_enough"],
+        "hard_constraints": manifest["hard_constraints"],
+        "fixed_decisions": manifest["fixed_decisions"],
+        "wave_forecast": manifest["wave_forecast"],
+        "uncertainty_register": manifest["uncertainty_register"],
+        "parked_possibilities": manifest["parked_possibilities"],
+    }
+    for field, actual in mappings.items():
+        _require(actual == brief[field], f"manifest.{field} must preserve brief.{field} exactly")
+    _require(manifest["current_wave"]["objective"] == brief["initial_wave"]["objective"], "current_wave.objective must copy brief.initial_wave.objective")
+    _require(manifest["current_wave"]["exit_criteria"] == brief["initial_wave"]["exit_criteria"], "current_wave.exit_criteria must copy brief.initial_wave.exit_criteria")
+
+
+def _bullets(values: list[str], empty: str = "None.") -> list[str]:
+    return [f"- {value}" for value in values] or [empty]
+
+
+def render_epic_body(manifest: dict) -> str:
+    """Render current truth with exactly the eight required level-two headings."""
+    verify_manifest_shape(manifest)
+    good = manifest["good_enough"]
+    lines = [
+        "## Intent and why", manifest["epic"]["intent_and_why"], "",
+        "## Definition of done", *_bullets(manifest["definition_of_done"]), "",
+        "## Good-enough boundary and appetite",
+        f"- Mandatory quality: {good['mandatory_quality']}",
+        f"- Sufficient evidence: {good['sufficient_evidence']}",
+        f"- Appetite: {good['appetite']}", "",
+        "## Hard constraints and fixed decisions",
+        "### Hard constraints", *_bullets(manifest["hard_constraints"]),
+        "### Fixed decisions", *_bullets(manifest["fixed_decisions"]), "",
+        "## Current wave", f"Objective: {manifest['current_wave']['objective']}",
+        "### Exit criteria", *_bullets(manifest["current_wave"]["exit_criteria"]),
+        "### Runnable issues",
+    ]
+    for issue in manifest["current_wave"]["issues"]:
+        reason = f" — {issue['hitl_reason']}" if issue["type"] == "HITL" else ""
+        lines.append(f"- [ ] **[{issue['type']}]** {issue['id']}: {issue['title']}{reason}")
+    lines.extend(["", "## Wave forecast (nonbinding)"])
+    for item in manifest["wave_forecast"]:
+        lines.append(f"- **{item['outcome']}** — {item['why_likely']}")
+    if not manifest["wave_forecast"]:
+        lines.append("None.")
+    lines.extend(["", "## Active uncertainty register"])
+    for item in manifest["uncertainty_register"]:
+        lines.append(f"- **{item['unknown']}** — affects {item['affects']}; next probe: {item['next_probe']}")
+    if not manifest["uncertainty_register"]:
+        lines.append("None.")
+    lines.extend(["", "## Parked possibilities", *_bullets(manifest["parked_possibilities"]), ""])
+    return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("manifest", help="path to the issue-set manifest JSON")
-    parser.add_argument("--spec", required=True, help="path to the DESIGN_SPEC.md the set was cut from")
+    parser.add_argument("manifest", help="path to the initial issue-set manifest JSON")
+    parser.add_argument("--brief", required=True, help="path to the confirmed shaped brief JSON")
     args = parser.parse_args(argv)
-
     try:
         manifest = json.loads(Path(args.manifest).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        print(f"REFUSED: cannot read manifest: {exc}", file=sys.stderr)
-        return 1
-    try:
-        spec_text = Path(args.spec).read_text(encoding="utf-8")
-    except OSError as exc:
-        print(f"REFUSED: cannot read spec: {exc}", file=sys.stderr)
-        return 1
-
-    try:
-        verify_issue_set(manifest, spec_text)
-    except IssueSetError as exc:
+        brief = json.loads(Path(args.brief).read_text(encoding="utf-8"))
+        verify_issue_set(manifest, brief)
+    except (OSError, json.JSONDecodeError, IssueSetError) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 1
-
-    print(f"issue set ok: {args.manifest} ({len(manifest['issues'])} issues)")
+    print(f"initial issue set ok: {args.manifest} ({len(manifest['current_wave']['issues'])} current issue(s))")
     return 0
 
 

@@ -1,0 +1,4 @@
+# recursive diff: control (cbd9aee) vs treatment (HEAD), full scripts/ trees
+# command: diff -rq <control>/scripts <treatment>/scripts
+
+Files 'C:\Users\fredc\AppData\Local\Temp\acc440\arms\control\scripts/hooks/spine_rail.py' and 'C:\Users\fredc\AppData\Local\Temp\acc440\arms\treatment\scripts/hooks/spine_rail.py' differ

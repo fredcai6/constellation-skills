@@ -1,0 +1,7 @@
+...............F                                                         [100%]
+================================== FAILURES ===================================
+_____________________________ test_canon_is_clean _____________________________
+[XPASS(strict)] #447 g6 removes this marker — the tree is deliberately still dirty
+=========================== short test summary info ===========================
+FAILED tests/test_retirement_guard.py::test_canon_is_clean - [XPASS(strict)] ...
+1 failed, 15 passed in 1.20s

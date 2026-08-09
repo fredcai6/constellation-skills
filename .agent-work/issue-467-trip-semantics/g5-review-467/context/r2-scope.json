@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "files": [],
+  "repo_rev": {
+    "commit": "6bc971e579b6c34cd3af70f0e09b30a601584d51"
+  },
+  "run": {
+    "work_id": "g5-review-467",
+    "generated_at": "2026-08-08T20:59:44Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-workbench",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

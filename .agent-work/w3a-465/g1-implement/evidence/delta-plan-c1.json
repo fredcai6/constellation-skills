@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m3-reviewer-prose",
+      "cond": "c1",
+      "which": "postconditions",
+      "command": "grep -q 'amend --delta' skills/reviewer/templates/REVIEW_SURVEY.template.json && grep -qi 'instantiate' skills/reviewer/templates/REVIEW_SURVEY.template.json && grep -q 'override-reason' skills/reviewer/SKILL.md && ! grep -q 'an open fail cannot consolidate to APPROVE' skills/reviewer/SKILL.md && grep -q 'verify_fowler_pass.py' skills/reviewer/templates/REVIEW_SURVEY.template.json"
+    }
+  ]
+}

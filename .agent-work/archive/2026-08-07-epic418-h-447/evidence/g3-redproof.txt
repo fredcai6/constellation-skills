@@ -1,0 +1,59 @@
+.                                                               [100%]
+================================== FAILURES ===================================
+_ InstallConstellationTests.test_every_spine_command_names_an_installed_script (skill='commander', task='execute', cond='p2', script='verify_no_such_script.py') _
+
+self = <test_install_constellation.InstallConstellationTests testMethod=test_every_spine_command_names_an_installed_script>
+
+    def test_every_spine_command_names_an_installed_script(self):
+        # GENERAL, deliberately not per-name. A test that asserts "commander installs
+        # verify_episode_captured.py" protects the #447 rewiring and nothing after it; this
+        # asserts that NO spine command names a script its own skill does not install, which
+        # protects every future rewiring the same way. A spine that names an unshipped script
+        # fails mid-run at the gate that needed it, with the run already half-done -- catching
+        # it at install time is the whole point.
+        #
+        # Both condition lists are walked: a precondition command (execute.p2's state-note
+        # check) can strand a run exactly as a postcondition command can.
+        #
+        # Not every command names a script -- archive.c2b shells out to `gh pr list`. A
+        # command with no `.py` token is legitimately skipped; the assertion is about the
+        # ones that DO name one.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", *self.SPINE_TEMPLATES],
+                env={}, out=lambda _: None)
+            self.assertEqual(0, exit_code)
+    
+            checked = 0
+            for skill, template in self.SPINE_TEMPLATES.items():
+                skill_root = target_root / f"constellation-{skill}"
+                spine_path = skill_root / "templates" / template
+                self.assertTrue(spine_path.is_file(), spine_path)
+                spine = json.loads(spine_path.read_text(encoding="utf-8"))
+                for task_id, task in spine["tasks"].items():
+                    for which in ("preconditions", "postconditions"):
+                        for cond in task.get(which) or ():
+                            check = cond.get("check")
+                            if not isinstance(check, dict) or check.get("kind") != "command":
+                                continue
+                            for named in re.findall(r"[\w.\-]+\.py",
+                                                    check.get("command", "")):
+                                script = Path(named).name
+                                checked += 1
+                                with self.subTest(skill=skill, task=task_id,
+                                                  cond=cond["id"], script=script):
+>                                   self.assertTrue(
+                                        (skill_root / "scripts" / script).is_file(),
+                                        f"{skill} spine {task_id}.{cond['id']} runs "
+                                        f"{script}, which SKILL_SCRIPT_BUNDLES does not "
+                                        f"install into {skill_root / 'scripts'}",
+                                    )
+E                                   AssertionError: False is not true : commander spine execute.p2 runs verify_no_such_script.py, which SKILL_SCRIPT_BUNDLES does not install into C:\Users\fredc\AppData\Local\Temp\tmp5qsq0k7a\skills\constellation-commander\scripts
+
+tests\test_install_constellation.py:701: AssertionError
+=========================== short test summary info ===========================
+SUBFAILED(skill='commander', task='execute', cond='p2', script='verify_no_such_script.py') tests/test_install_constellation.py::InstallConstellationTests::test_every_spine_command_names_an_installed_script
+1 failed, 1 passed, 8 subtests passed in 0.45s

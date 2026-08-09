@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-closeout",
+  "mechanical": {
+    "run": "g3-implement-headroom-override-467",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m5-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-implement-headroom-override-467-m5-closeout@a8d24f0d00d060e5f06c975f69bd6ad15ac8969d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-implement-headroom-override-467",
+    "generated_at": "2026-08-08T13:30:05Z"
+  }
+}

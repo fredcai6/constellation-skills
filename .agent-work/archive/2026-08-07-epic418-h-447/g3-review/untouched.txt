@@ -1,0 +1,20 @@
+commander archive.c2 IDENTICAL: True
+commander archive.c2b IDENTICAL: True
+commander archive.c3 IDENTICAL: True
+commander archive.c4 IDENTICAL: True
+admiral closeout.c3 IDENTICAL: True
+admiral closeout.c4 IDENTICAL: True
+admiral closeout.c5 IDENTICAL: True
+commander: tasks differing from HEAD = ['feedback', 'archive']
+commander: top-level keys differing = []
+admiral: tasks differing from HEAD = ['closeout']
+admiral: top-level keys differing = []
+commander archive tail from "Push the branch" IDENTICAL: False
+admiral closeout steps 3/4/5 IDENTICAL: True
+commander archive: work-area move still instructed: True
+commander archive: retired trailing clause gone: True
+admiral closeout: surgical-JSON warning kept: True
+commander feedback: honest-reflection opening kept: True
+commander feedback: crew harvest kept: True
+commander feedback: 'none' reason rule kept: True
+query_episodes.py named in either spine: False

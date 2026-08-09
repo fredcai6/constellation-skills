@@ -1,0 +1,36 @@
+{
+  "ops": [
+    {
+      "op": "add",
+      "id": "m5-doc-correction",
+      "title": "Commander-authorised scope extension: correct the five gated-only doc claims",
+      "imperative": "Under the Commander's explicit ruling on tc1, correct the five enumerated sites so they describe what the engine now does: amend applies to gated checklists, and retext-check is additionally available on a survey where it is the ONLY permitted op (add/drop/rescope stay gated-only as a conservative choice). Sites: docs/CHECKLIST_SCHEMA.md ~43, ~63, ~280, ~372 and skills/workbench/references/checklist-engine.md ~62. Surgical edits only -- correct the claim, do not rewrite surrounding sections. Then re-grep to confirm no SIXTH site says gated-only, re-run the full suite for a real exit code, and append a Scope extension section to IMPLEMENTER_RESULT.md.",
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "no remaining site claims amend is gated-only; both files describe the survey retext-check allowance",
+          "check": {
+            "kind": "command",
+            "command": "! grep -rn 'gated only' docs/CHECKLIST_SCHEMA.md skills/workbench/references/checklist-engine.md | grep -i amend && ! grep -q 'amend` applies to \\*\\*gated checklists only\\*\\*' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' skills/workbench/references/checklist-engine.md"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green after the doc correction; Scope extension section appended to IMPLEMENTER_RESULT.md",
+          "check": {
+            "kind": "command",
+            "command": "grep -q 'Scope extension' .agent-work/w3a-465/g1-implement/IMPLEMENTER_RESULT.md && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Do not touch skills/interrogator/**, tests/test_episode_negative_control.py, scripts/hooks/gauge_writer_hook.py, tests/test_verify_spec_confirmed.py",
+        "Leave tc2, tc3, tc4 alone -- Commander is passing them up, not fixing them",
+        "Do not commit; do not open a PR"
+      ],
+      "why_exempt": true
+    }
+  ]
+}

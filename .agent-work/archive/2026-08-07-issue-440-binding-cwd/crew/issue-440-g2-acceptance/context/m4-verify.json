@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4-verify",
+  "files": [],
+  "repo_rev": {
+    "commit": "38214ecd8e2de17bcf6d01c7d5572b9da04e9c2e"
+  },
+  "run": {
+    "work_id": "issue-440-g2-acceptance",
+    "generated_at": "2026-08-07T14:48:22Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-a2-440"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-440"
+    }
+  }
+}

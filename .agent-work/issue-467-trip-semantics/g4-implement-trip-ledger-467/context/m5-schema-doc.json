@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m5-schema-doc",
+  "files": [],
+  "repo_rev": {
+    "commit": "9997c32d410868f8952c61c096c4dc61b9879ab5"
+  },
+  "run": {
+    "work_id": "g4-implement-trip-ledger-467",
+    "generated_at": "2026-08-08T16:28:48Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

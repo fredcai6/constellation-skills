@@ -1,0 +1,1 @@
+REFUSED: OVERRIDE-LOG: smell 'shotgun-surgery' is overridden with no override block — 'repo standard wins' is never a silent dismissal; log the standard and the reason.

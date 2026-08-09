@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4g-lean",
+  "mechanical": {
+    "run": "issue-418-iterative-planning-g2-review-2",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4g-lean",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-g2-review-2-r4g-lean@7b829cb9f54566c82c2f945188e1fb0992847d98",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning-g2-review-2",
+    "generated_at": "2026-08-06T18:13:01Z"
+  }
+}

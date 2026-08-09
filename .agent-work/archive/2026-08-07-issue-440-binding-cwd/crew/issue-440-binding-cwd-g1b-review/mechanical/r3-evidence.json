@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "issue-440-binding-cwd-g1b-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-binding-cwd-g1b-review-r3-evidence@160a1b162df8d776eed39be102d37e573f357fb2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-binding-cwd-g1b-review",
+    "generated_at": "2026-08-06T09:57:20Z"
+  }
+}

@@ -1,0 +1,240 @@
+{
+  "work_id": "issue-440-binding-cwd-g1b-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "q1",
+    "q2",
+    "q3",
+    "q4"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Context carried over from the g1 review in this same session (global-crew.md, global-everyone.md, CREW_CONTEXT.md, GLOSSARY.md all already loaded). Read the g1b IMPLEMENTER_HANDOFF.md and IMPLEMENTER_RESULT.md, the Commander's four questions, and both diffs vs 9d44aa6 (hook 57/7, tests 156/4).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The bounded guard does what was asked. Rungs 0-2 are told-truth and short-circuit; among guessed rungs 3-5 the earliest validating guess is kept, a later guess naming a DIFFERENT file returns (None,None), and two guesses naming the SAME file are agreement that keeps the earliest path_source. RED reproduced: swapped the hook back to 9d44aa6 (mutation asserted applied - TOLD_TRUTH_PATH_SOURCES grep count 0), 'python -m pytest tests/test_spine_rail.py -q' -> 4 failed, 105 passed, exit 1. The tc1 test failed for the RIGHT reason - the g1 code WROTE to the store where the new test demands byte-unchanged (assert store.read_bytes() == before -> b'{...binding...}' != b'{\"other-sid\": {}}'). GREEN: 176 passed exit 0; 102 -> 109 tests. Tree restored byte-identically (sha256 dee822b0... matched), numstat back to 57/7 + 156/4, nothing staged.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No scope drift. 'git diff --name-only 9d44aa6 -- scripts/ tests/ docs/ skills/' = exactly scripts/hooks/spine_rail.py + tests/test_spine_rail.py. binding_key/BINDING_KEY_SEP appear in the diff only as one reflowed DOCSTRING line, definitions untouched. gauge_writer_hook.py, checklist_engine.py, docs/GAUGE_WRITER_HOOK.md, tests/test_gauge_writer.py all clean under git status. resolve_recorded_release_target's definition is unchanged (its one diff hit is a docstring cross-reference). New constant TOLD_TRUTH_PATH_SOURCES is defined once and used once - wired, not dead. Live main-checkout binding store and all real .claude/settings*.json never written by this review; all probes ran in tempfile.mkdtemp trees with CLAUDE_PROJECT_DIR overridden, and the one read of the real trees was read-only.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Implementer's claims reproduced. The load-bearing new test test_post_claim_ambiguous_guessed_rungs_bind_nothing_store_byte_unchanged uses a REAL git worktree via _two_tree_ambiguity/_make_repo_with_worktree (no monkeypatch), asserts the command carries no told-truth signal, and compares store BYTES before/after - the right shape. Four of the seven new tests pass in BOTH arms (cd_target/worktree_opt/absolute-file still-win-outright, and one-worktree-root-still-binds); I read all four and each is a NON-REGRESSION guard for behaviour that had to survive the guard, not a proof of new behaviour - same correct shape as the g1 four. Three new tests plus the one revised test fail against 9d44aa6, which is the RED that matters. Note for the record: test_post_claim_two_worktree_roots_disagreeing_bind_nothing, test_post_claim_one_worktree_root_still_binds_under_the_guard and test_post_claim_guessed_rungs_naming_the_same_file_is_agreement_not_ambiguity DO monkeypatch git_worktree_roots - acceptable here because they test the ambiguity ARITHMETIC, and the real-worktree proof exists separately in two unpatched tests.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Inherited rules met: python never py; full suite not run; source and tests unmodified by me; tree restored and proven byte-identical; nothing committed; live store and settings untouched. Detail in q1-q4.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Nothing to reconcile in the architecture record. Repo is DEGRADED-NO-MAP; docs/GAUGE_WRITER_HOOK.md untouched and its staleness remains the Commander's later-gate item. Change stays inside one hook module plus its tests; no interface, key shape or cross-module contract moved. One durable behaviour note the Commander should carry into the g2 live fire: the git probe now fires on guessed-rung claims (see q4), so any timing baseline taken at g1 no longer applies.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass at crew/g1b-ambiguity/FOWLER_PASS.json; verify_fowler_pass.py exit 0. Two flagged smells (data-clumps, long-parameter-list) are both CARRIED FORWARD from g1 and unchanged by this diff - recorded for continuity, not as new rework. Two overrides logged with standards (large-class: single-file hook load contract; comments-as-deodorant: the repo's decision-anchor documentation convention). Notably the change AVOIDS two smells it could have hit: it reuses _same_path instead of open-coding a second path comparison, and it introduces a named TOLD_TRUTH_PATH_SOURCES frozenset instead of inline string comparisons.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/issue-440-binding-cwd/crew/g1b-ambiguity/REVIEW_RESULT.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "q1": {
+      "id": "q1",
+      "title": "Is tc1 actually closed?",
+      "imperative": "Answer from evidence I produced myself.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "TC1 IS CLOSED. I rebuilt my own g1 adversarial case from scratch (scratchpad/attack_g1b.py): real git init + real git worktree add, both trees holding a valid checklist at .agent-work/shared/spine.json, command carrying NO cd and NO --worktree, hook run in a FRESH SUBPROCESS, nothing monkeypatched. I seeded the store with {\"pre-existing\": {}} FIRST so 'byte-unchanged' is a real comparison and not empty-vs-empty. Result: BYTE-UNCHANGED = True, store keys = ['pre-existing'], no sidA key. Under g1 this same case bound the main checkout's copy with path_source 'payload_cwd'. Also confirmed the two supporting shapes: two disagreeing rung-4 worktree roots bind nothing, and a single validating rung-4 root still binds with path_source 'git_worktree'.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q2": {
+      "id": "q2",
+      "title": "Did the guard overshoot into a regression?",
+      "imperative": "Answer from evidence I produced myself.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "NO REGRESSION REACHES A LIVE SHAPE. I TESTED THE COMMANDER'S READING RATHER THAN ACCEPTING IT (scratchpad/reach_g1b.py, read-only over the REAL trees). Method: for every registered worktree, intersect the relative paths that hold a VALIDATING checklist in the main checkout with those in that worktree, keep only pairs that are DIFFERENT files - those are exactly the paths a relative --file claim now silences. Result: 2693 colliding relative paths across all worktrees, of which LIVE (untracked in main, i.e. a real in-flight spine) = ZERO. Every collision is a tracked, archived work area that will never be claimed again (epic-298 harvest/pre/post runs, explore-* cycles, scout-*). Checked the two live spines by name: .agent-work/epic-418/spine.json is UNTRACKED and present ONLY in the main checkout ('git ls-files --error-unmatch' errors; a per-tree existence sweep finds it only in C:/Programs/constellation-skills), and .agent-work/issue-440-binding-cwd/execute.json exists ONLY in the worktree - so neither the Admiral's claim nor this Commander's claim can be silenced. Constructed both regression shapes directly too: a main-checkout agent whose worktree holds NO checklist at that path still binds the correct main path with path_source 'payload_cwd'; the true silencing shape (both trees hold one) binds nothing, which is the deliberate trade. Told-truth rungs are NOT silenced under ambiguity - verified all three against a real two-tree collision: cd_target, worktree_opt and absolute --file each still bound the worktree spine outright. The Commander's reading holds.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q3": {
+      "id": "q3",
+      "title": "The 4 deletions - stricter or relaxed?",
+      "imperative": "Answer from evidence I produced myself.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "STRENGTHENED, not relaxed - and the count is exactly right this time. 'git diff --numstat 9d44aa6' gives tests/test_spine_rail.py = 156 insertions, 4 DELETIONS, and enumerating every '-' line confirms all 4 sit in test_git_probe_does_not_run_when_an_earlier_rung_answers: 2 docstring lines (replaced by a 9-line one) and 2 assertions. Neither assertion was loosened in FORM - both were and remain exact list-equality, no '>=', no len() bound, no deletion. 'assert calls == []' -> 'assert calls == [str(proj)]' pins BOTH an exact call count of one AND the exact argument, which is strictly more than the old assertion said about a call that occurs. The second, 'assert calls == []' -> 'assert calls == [str(proj)]  # unchanged -- rung 0 added no probe of its own', still proves rung 0 short-circuits, by asserting the list did NOT grow. I verified INDEPENDENTLY that the new assertions describe reality rather than being fitted to it: my own subprocess.run spy (q3_tail.py) shows the guessed-rung claim now spawns exactly one ['git','worktree','list','--porcelain'] and the absolute --file claim adds none. So the assertions track a real, deliberate, documented behaviour change. SEE q4 for the finding this behaviour change carries.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "q4": {
+      "id": "q4",
+      "title": "Never raises, probe bounded and off the told-truth path",
+      "imperative": "Answer from evidence I produced myself.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Never raises; probe still bounded; off the TOLD-TRUTH path but NO LONGER off the guessed path. Re-ran my 23 hostile payload shapes from the g1 review unchanged -> 23 rows, 0 failures, all returned {} with no raise. GIT_PROBE_TIMEOUT_SECONDS still 2.0; non-repo dir -> [] in 0.029s; nonexistent cwd -> [] in 0.001s; TimeoutExpired -> [], OSError -> [], MemoryError -> []. FINDING (minor, honest, already documented by the implementer): the g1 close criterion 'the git probe is off the common path' NO LONGER HOLDS in its g1 form. My subprocess spy shows a plain rung-3 claim now spawns one 'git worktree list --porcelain' where g1 spawned none - unavoidable, since a guess cannot be known unambiguous without consulting the later guesses. Told-truth rungs still never probe (rung 0 added no call even with two trees disagreeing). Cost is bounded and small: it fires only on an engine claim/release, roughly twice per run rather than once per tool call, capped at 2.0s, and degrades to [] on any failure. The module docstring and the revised test docstring both state this plainly rather than hiding it. SECOND FINDING (minor): the test is now NAMED test_git_probe_does_not_run_when_an_earlier_rung_answers but asserts the probe DOES run when an earlier GUESSED rung answers. The docstring explains; the name contradicts the assertion and should be renamed before it misleads a future reader.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. tc1 is closed, verified by rebuilding my own g1 adversarial case on a real git worktree in a fresh subprocess with a pre-seeded store: BYTE-UNCHANGED True, nothing bound, where g1 bound the main checkout. The guard did NOT overshoot into a live regression - I tested the Commander's reading rather than accepting it, sweeping every registered worktree against the main checkout: 2693 colliding relative paths, ZERO of them live/untracked; both live spines (.agent-work/epic-418/spine.json, .agent-work/issue-440-binding-cwd/execute.json) exist in exactly one tree each and cannot be silenced. Told-truth rungs all still win outright under a real two-tree collision. The 4 deletions are strengthening: all in one test, 2 docstring lines plus 2 assertions rewritten from 'calls == []' to 'calls == [str(proj)]' - still exact equality, now pinning both count and argument, and I confirmed by independent subprocess spy that they describe real behaviour. Never raises over 23 hostile shapes; probe bounded at 2.0s with TimeoutExpired/OSError/MemoryError all handled. GREEN 176 passed exit 0; RED 4 failed against 9d44aa6 for the right reason. Two minor findings, neither blocking: the git probe is no longer off the GUESSED-rung path (one bounded git call per engine claim/release, honestly documented), and the revised test's name now contradicts its assertion. Tree restored byte-identically; nothing committed."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "q4",
+      "statement": "Rename test_git_probe_does_not_run_when_an_earlier_rung_answers - since g1b it asserts the probe DOES run when an earlier GUESSED rung answers, so the name contradicts its own assertion. Cheap rename, no behaviour change."
+    },
+    {
+      "id": "tc2",
+      "from": "q2",
+      "statement": "The g1b guard's silencing reach is a function of which checklists are TRACKED under .agent-work/. Today zero live spines collide, but that is a property of current repo content, not an invariant - a future run whose work-id matches a tracked archived work area would bind nothing silently, with no signal. Consider either a diagnostic breadcrumb when the guard refuses, or excluding .agent-work/archive/ from what looks_like_checklist will accept as a candidate."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "rev-440-g1b",
+    "status": "released",
+    "claimed_at": "2026-08-06T09:51:02.960076+00:00",
+    "last_heartbeat": "2026-08-06T09:59:40.135457+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T09:59:40.844935+00:00"
+  }
+}

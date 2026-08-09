@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "70e2d779b4779e9d2981316fa30934314335c35a"
+  },
+  "run": {
+    "work_id": "issue-467-trip-semantics-g4-review",
+    "generated_at": "2026-08-08T17:12:45Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

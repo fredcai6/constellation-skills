@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-reproduce",
+  "files": [],
+  "repo_rev": {
+    "commit": "990712fa516bb5601e29b646e6889f8487b1006c"
+  },
+  "run": {
+    "work_id": "issue-418-g1-rework-1",
+    "generated_at": "2026-08-06T17:15:43Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills",
+      "repo": "C:/Programs/constellation-skills",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills"
+    }
+  }
+}

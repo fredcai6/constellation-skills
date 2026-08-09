@@ -1,0 +1,10 @@
+RED PROOF (post-rework) - print(path.read_text()) injected at the top of scan_episode()
+pytest exit: 1
+E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in "<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: issue-447-001\n\n## Mechanical\
+E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in '<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: issue-447-001\n\n## Mechanical\
+E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in '<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: issue-447-001\n\n## Mechanical\
+E   AssertionError: 'SENTINEL-DO-NOT-LEAK-9f2a' unexpectedly found in "<!-- episode-state: schema=1 id=issue-447-001 status=active -->\n\n# episode: issue-447-001\n\n## Mechanical\
+FAILED tests/test_verify_episode_captured.py::ValveTests::test_no_statement_text_reaches_stdout_or_stderr
+FAILED tests/test_verify_episode_captured.py::ValveTests::test_the_leak_assertion_can_fail
+5 failed, 1 passed, 1 subtests passed in 0.26s
+RESTORED: bytes identical to pre-mutation

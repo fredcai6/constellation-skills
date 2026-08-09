@@ -1,0 +1,1 @@
+fowler pass ok: .agent-work/epic418-h-447/g2-review/fowler-pass.json (smells=12, flagged=['message-chains'], overridden=['long-method', 'duplicated-code', 'shotgun-surgery', 'divergent-change', 'comments-as-deodorant'])

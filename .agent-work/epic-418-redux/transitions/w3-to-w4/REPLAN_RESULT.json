@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "decision": "replan",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Wave 3's exit criteria are met in full. All four issues merged and closed; main green at 1789 passed / 2 skipped / 683 subtests / exit 0 on the final merged tree. #461's narrowed assertion was proven to still catch what the control exists for rather than merely to stop failing. #465 ended with the placeholder given an affordance named in its imperative, and a CRLF round-trip test proven to have teeth by mutation in both directions. Every PR carries an independently posted forge verdict, which is the criterion wave 2 missed.",
+    "epic_done": "The epic is NOT complete. B extended is finished. A2 remains uncut, and F (#424), C (#421) and E (#423) are untouched.",
+    "good_enough": "Preserved and repeatedly load-bearing: all three reviews re-derived the crew's evidence rather than accepting it, and two of them found that a passing test proved nothing until the branch it guards was deliberately broken."
+  },
+  "discrepancy_dispositions": [
+    {
+      "id": "D1",
+      "action": "amend_forecast_or_parked",
+      "reason": "The self-approve refusal is a standing platform constraint affecting every future review, and it retro-explains wave 2's apparently missing #470 verdicts as a platform block rather than reviewer negligence. It belongs in the reviewer skill's shipped guidance, which is a closeout routing decision rather than a wave item.",
+      "issue_created": false
+    },
+    {
+      "id": "D2",
+      "action": "amend_forecast_or_parked",
+      "reason": "The band is role-blind, not mistuned. Measured: the Admiral ran a full wave at 33 percent fill while crews trip at 17-21 percent. This is the gate-where-it-has-bitten that A2's DC4 override mechanism exists for, so it becomes input to A2's cut rather than a standalone retune.",
+      "issue_created": false
+    },
+    {
+      "id": "D3",
+      "action": "record_evidence_only",
+      "reason": "Mutation-testing the guard is a technique, not a defect. Promoting it into review doctrine is a closeout decision.",
+      "issue_created": false
+    },
+    {
+      "id": "D4",
+      "action": "record_evidence_only",
+      "reason": "Four forge-tooling hazards, all silent. Recorded in the ADMIRAL_LOG and the state note; routing them is a closeout call.",
+      "issue_created": false
+    },
+    {
+      "id": "D5",
+      "action": "amend_forecast_or_parked",
+      "reason": "The contract expired at this boundary by its own terms. It does NOT block wave 3 exit -- that wave completed cleanly -- it gates the NEXT launch, which is a latitude matter rather than a planning one. Recorded as a forecast entry condition on wave 4 alongside cutting A2, which is a scope decision the human owns.",
+      "issue_created": false
+    }
+  ],
+  "current_wave": {
+    "objective": "Wave 3: retire the two findings carried out of wave 2, and knock out the two cheap guard-hardening fixes wave 2 discovered rather than leaving them on the board.",
+    "exit_criteria": [
+      "All four issues merged to main with the suite green on the final merged main.",
+      "#461's narrowed assertion is proven to still catch what the control exists for, not merely to stop failing.",
+      "#465 ends with either the placeholder gone or an engine verb that fills it named in the imperative — an instruction with no affordance behind it is not an acceptable exit.",
+      "Any tooling that writes engine state files does so in binary, proven by a CRLF round-trip test.",
+      "All four dispositioned on the tracker."
+    ],
+    "issues": [
+      {
+        "id": "461",
+        "title": "The episode-store negative control fails every run that legitimately captures an episode, between git add and commit",
+        "desired_outcome": "The assertion tests worktree-vs-index only, so a staged-but-uncommitted legitimate capture passes while stray writes still fail.",
+        "useful_now": "It lands on a gate every Commander now passes through: verify_episode_captured.py --phase archive requires the episodes to be tracked, so write -> git add -> suite -> commit is the normal path and the suite is red in the middle of it. A crew without context reads that as a regression it caused.",
+        "appetite": "One gate",
+        "acceptance_or_falsification_evidence": "A stray unstaged write and a stray untracked file under episodes/active/ both still fail the control; a staged legitimate capture passes; the docstring's stated property and the code's predicate agree.",
+        "implementation_latitude": "Choose the predicate; a pair measured green pre-commit during #447 g4 is git diff --name-only episodes/ plus git ls-files --others --exclude-standard episodes/.",
+        "hard_constraints_no_gos": [
+          "The control must not be loosened carelessly — after the commit all three of worktree, index and HEAD agree, so its emptiness is honest, and its anti-vacuity guard strengthens as the store grows.",
+          "The rest of tests/test_episode_negative_control.py and the store's blob-OID checks are out of scope."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "tests/test_episode_negative_control.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "465",
+        "title": "Reviewer r6-fowler ships a placeholder no engine verb can fill, and filling it in text mode rewrites every CRLF",
+        "desired_outcome": "Either the placeholder is removed from the shipped template, or an engine verb exists that fills it and the imperative names that verb. Engine state files are written in binary.",
+        "useful_now": "An instruction an agent cannot follow through the engine is an invitation to hand-edit engine state, which the whole engine design exists to prevent. The CRLF rewrite produces no error, passes JSON validation, and destroys blame.",
+        "appetite": "One wave",
+        "acceptance_or_falsification_evidence": "A round-trip test proves CRLF is preserved exactly. The reviewer skill's Windows state-file guidance says binary explicitly.",
+        "implementation_latitude": "The remove-vs-add-a-verb choice is genuinely open and belongs to this Commander. Settle the related SKILL.md contradiction in the same pass: the prose says an open fail cannot consolidate to APPROVE, while the engine ships --override-reason for exactly that case, so the prose reads as stricter than the affordance and pushes a reviewer with a real out-of-scope finding toward either a wrong BLOCK or a silently downgraded finding.",
+        "hard_constraints_no_gos": [
+          "Adding an engine verb changes a shared interface — if that is the chosen path, say so in the return; the Admiral adjudicates whether it surfaces.",
+          "No hand-editing of engine state files."
+        ],
+        "local_unknowns": [
+          "Whether the placeholder is load-bearing for any other reviewer gate."
+        ],
+        "anchors": [
+          "scripts/checklist_engine.py",
+          "skills/constellation-reviewer"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "488",
+        "title": "The context-gauge writer counts bindings, not distinct paths",
+        "desired_outcome": "Two bindings resolving to one gauge path produce a reading; two resolving to genuinely different paths still skip.",
+        "useful_now": "Every Admiral run that drives its latitude bookend properly is currently running blind, including the one that found this.",
+        "appetite": "One gate",
+        "acceptance_or_falsification_evidence": "A test covers both directions, including the specific Admiral shape: a spine plus its own latitude survey in one work area.",
+        "implementation_latitude": "Choose the fix against the test, not the test against the fix.",
+        "hard_constraints_no_gos": [
+          "The #261 misattribution protection must not be weakened — genuinely different gauge paths still skip.",
+          "The gauge binding key is a load-bearing interface; changing its shape surfaces."
+        ],
+        "local_unknowns": [],
+        "anchors": [
+          "scripts/hooks/gauge_writer_hook.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      },
+      {
+        "id": "489",
+        "title": "test_verify_spec_confirmed's fixture glob silently picks matches[0]",
+        "desired_outcome": "More than one match fails with a message naming every match found, rather than choosing one.",
+        "useful_now": "The glob was the right fix for a hardcoded path that broke on archival, but it trades a loud failure for a quiet wrong answer in a verification test.",
+        "appetite": "One gate",
+        "acceptance_or_falsification_evidence": "Two matches fail and name both; zero matches keeps current behaviour.",
+        "implementation_latitude": "Choose the message.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": [
+          "tests/test_verify_spec_confirmed.py"
+        ],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {
+      "outcome": "A2 -- trip semantics, cut at its turn, which is now, against what B extended actually left behind. Provisionally three issues: DC1-3 (a trip becomes a change of instruction, #431 dissolves), DC4+DC6 (per-gate thresholds with the override exercised once, plus the mechanical compliance signal), DC5 (the full trip-handoff-refresh-resume round trip).",
+      "why_likely": "B extended is complete and F cannot type a verb whose meaning is unsettled. Wave 3 also handed A2 two gifts: a successful round trip run twice by hand, and the first measurement showing the default threshold is wrong for at least one role.",
+      "entry_conditions": [
+        "A refreshed latitude contract",
+        "A2 cut into issues, which is a scope decision"
+      ]
+    },
+    {
+      "outcome": "F #424 -- the MCP front door.",
+      "why_likely": "Verbs go where verbs belong, before content is written around them.",
+      "entry_conditions": [
+        "A2 settled"
+      ]
+    },
+    {
+      "outcome": "The governor thread landed as one piece: #458 wires the writer into tracked settings so it ships at all, #264 asserts it is still measuring, #452 does attribution properly.",
+      "why_likely": "Wave 3 produced a dated nine-hour incident of total governor silence on the orchestrator tier, and #264's 1144 lines of assertion sit unmerged 211 commits behind.",
+      "entry_conditions": [
+        "Human decision -- landing #264 is a scope change"
+      ]
+    }
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Whether the governor's HARD band should be per-role rather than global.",
+      "affects": "Every dispatch budget, and A2's DC4.",
+      "settle_by": "A2's cut, using wave 3's measurement.",
+      "current_evidence": "Admiral at 0.3297 with no trip; crews trip at 0.162-0.21. One threshold, very different roles.",
+      "next_probe": "Cut A2 with this as its named motivating gate."
+    },
+    {
+      "unknown": "Whether A2 is three issues or fewer.",
+      "affects": "Wave 4's width.",
+      "settle_by": "The cut itself.",
+      "current_evidence": "Six done-conditions, two of them (DC5, DC6) added by critics precisely because DC1-3 are satisfiable while the thing A2 exists for never happens.",
+      "next_probe": "Cut against what B extended left, not against the forecast."
+    },
+    {
+      "unknown": "Whether #264's unmerged gauge-chain tests still run after 211 commits.",
+      "affects": "Whether the governor thread can close cheaply.",
+      "settle_by": "A rebase and an honest re-run.",
+      "current_evidence": "Absent from main; #264 still open; its ambiguous-binding test verified consistent with #488's merged fix.",
+      "next_probe": "Rebase and run before deciding anything else about it."
+    }
+  ],
+  "revised_parked": [
+    "#452 multi-spine attribution -- narrower now that #488 handles the same-path case.",
+    "#458 ship the gauge writer -- measured: tracked .claude/settings.json wires spine_rail only; the gauge writer lives in an untracked settings.local.json.",
+    "#264 -- 1144 lines of end-to-end gauge assertion, written and unmerged, against the one open issue of the eight stale worktrees.",
+    "#423 E backlog re-cut -- runs on what survives.",
+    "#457 lease liveness -- evidenced, not cheap; a design question ending at a load-bearing interface.",
+    "The four silent gh/forge hazards, as a doctrine note rather than a wave.",
+    "Mutation-testing the guard, as review doctrine."
+  ],
+  "unlaunched_dispositions": [
+    {
+      "id": "U-a2",
+      "action": "keep",
+      "reason": "Its turn is now. Cutting it is the first thing wave 4 needs and it is a human scope decision."
+    },
+    {
+      "id": "U-f-424",
+      "action": "keep",
+      "reason": "Still gated behind A2."
+    },
+    {
+      "id": "U-c-421",
+      "action": "keep",
+      "reason": "Still gated behind F."
+    },
+    {
+      "id": "U-e-423",
+      "action": "keep",
+      "reason": "Runs on what survives."
+    },
+    {
+      "id": "U-452",
+      "action": "keep",
+      "reason": "Narrowed by #488's merge; kept rather than dropped."
+    },
+    {
+      "id": "U-458",
+      "action": "keep",
+      "reason": "Now measured and sharper: every governor observation this epic made came from config that does not ship."
+    },
+    {
+      "id": "U-457",
+      "action": "keep",
+      "reason": "Evidenced this epic; still a design question."
+    },
+    {
+      "id": "U-governor-trip-band",
+      "action": "keep",
+      "reason": "Re-framed rather than resolved: role-blind, not mistuned. Feeds A2's DC4."
+    },
+    {
+      "id": "U-a2-shape",
+      "action": "keep",
+      "reason": "Settles at the cut."
+    },
+    {
+      "id": "U-defect-family-as-a-wave",
+      "action": "keep",
+      "reason": "Confirmed as the epic's spine rather than a candidate wave -- six instances in wave 3 alone, two found by crews inside their own process."
+    }
+  ],
+  "material_changes": [
+    {
+      "surface": "current_wave.issues",
+      "before": "Wave 3 as launched: #461, #465, #488, #489.",
+      "after": "All four merged and closed; the wave is complete with no issue left open in it.",
+      "reason": "Every PR gated on a green CI exit code and an independently posted forge verdict before merge."
+    },
+    {
+      "surface": "latitude_contract.expiry",
+      "before": "Expiry at the wave-3 boundary or 72h from 2026-08-08T03:00Z.",
+      "after": "Expired. No further dispatch is authorised until the human refreshes it.",
+      "reason": "All four wave-3 issues merged, which is the named boundary. Stopping rather than sailing on a stale contract."
+    },
+    {
+      "surface": "reviewer_delivery_mechanism",
+      "before": "Reviewers post verdicts with gh pr review --approve or --request-changes.",
+      "after": "Reviewers post with gh pr review --comment -F <file>, verdict stated at the top of the body.",
+      "reason": "GitHub refuses approval of a self-authored PR and every agent shares one identity. A platform constraint, and it retro-explains wave 2's apparently missing #470 verdicts."
+    }
+  ],
+  "wave_review_comment": "## Wave 3 review\n\n**Four issues, four merges, four closes -- and for the first time in this epic every PR carries an independently posted verdict on the forge.** Main is green at `1789 passed, 2 skipped, 683 subtests, exit 0` on the final merged tree.\n\n| Issue | PR | Merge | What landed |\n|---|---|---|---|\n| #461 | #490 | `ad149283` | the episode-store control tests worktree-vs-index only |\n| #488 | #491 | `8b9330ea` | the gauge writer dedups by distinct path |\n| #489 | #491 | `8b9330ea` | the fixture resolver fails loudly on 2+ matches |\n| #465 | #492 | `4da9bc9b` | the r6-fowler placeholder has an affordance; the engine writes bytes |\n\n### The method, and what it found\n\nEvery launch order carried one instruction: **build the defective world and watch the current code get it wrong before fixing it**, because for all four issues green is what the broken version already does. The reviewers took it further than the orders asked.\n\n- #491's reviewer noticed the negative-direction test **passes on both sides of the fix**, said so, and **disabled the skip branch** to prove the test had teeth.\n- #492's reviewer mutated `save()` in **both** directions and found that **on Windows the CRLF fixture passes against the broken code** -- the obvious test for a CRLF bug is exactly the test that proves nothing here. The LF fixture is the discriminating one.\n- #465's own cold critic caught that **its integrate gate could not fail**: the check was `pytest -q tests`, green on a suite that had never gained the new tests.\n\nSix independent instances of one defect family in a single wave, two of them caught by crews inside their own process before shipping.\n\n### The governor fixed itself in front of us\n\n#488 was found on this Admiral, fixed by a crew it dispatched, and closed by watching the Admiral recover: `gauge-skip.json` vanished and a live reading appeared minutes after the merge, on the same two-binding configuration that had been silent for nine hours.\n\nThe reading is the finding. **33% fill** -- roughly double the 17-21% band at which every crew HARD-trips. The band is not mistuned; it is **role-blind**.\n\n### Cost\n\nTwo governor trips, two clean recoveries, both costing bookkeeping only -- W3-C tripped at wrap-up with all work verified, W3-A with its PR already open. That is A2's round trip, run twice by hand, before A2 has an issue cut.\n\n### Stopping here\n\nThe latitude contract expired at this boundary by its own terms. A2 is next and has no issue cut, which is a scope decision the human owns.",
+  "revised_epic_body": "## Current planning truth -- after wave 3\n\n**B extended is complete.** #433, #436, #460, #464, #461, #465, #488 and #489 are all merged and closed. Main is green at `1789 passed, 2 skipped, 683 subtests`.\n\n### Next: A2 -- and it is uncut\n\nA2 settles what a limit *means*: a trip becomes a change of instruction rather than a refusal, so there is room to build the handoff. Six done-conditions, provisionally three issues -- DC1-3 (the conversion, #431 dissolving), DC4+DC6 (per-gate thresholds with the override exercised once, plus a mechanical compliance signal), and DC5 (the full round trip).\n\nWave 3 handed A2 two things it did not have before:\n\n- **The round trip ran twice, by hand, successfully.** Both governor trips cost bookkeeping only. DC5 exists precisely because DC1-3 can all pass while continuity never happens once; it happened twice here.\n- **The first measurement that the default threshold is wrong for a role.** The Admiral ran a full wave at 33% fill; crews trip at 17-21%. That is the gate-where-it-has-bitten that DC4's override mechanism is for.\n\n### The governor thread, three of four parts already written\n\n| | What | State |\n|---|---|---|\n| #458 | wire the writer into tracked settings so it ships at all | not done -- it lives only in an untracked `settings.local.json`, so every governor observation this epic made came from config that ships to nobody |\n| #264 | assert the gauge is still *measuring* | **1144 lines written, unmerged**, 211 commits behind |\n| #488 | stop it silencing itself | **merged** |\n| #452 | attribution proper | open, narrower now |\n\n### The lens\n\nA check that cannot fail: a signal whose value is identical in the healthy and defective worlds. It is not a candidate theme -- it is the epic's spine, appearing in critic finding F8 (*\"the purest check-that-cannot-fail in the document\"*), in A2's own DC6 as a priced design cost, and six times in wave 3's execution.\n\n### Stopped\n\nThe latitude contract expired at the wave-3 boundary. Nothing launches until it is refreshed and A2 is cut.",
+  "escalation": null
+}

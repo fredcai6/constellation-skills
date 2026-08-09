@@ -1,0 +1,355 @@
+{
+  "work_id": "g2-implement-trip-semantics-467",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-begin-guard",
+    "m2-no-silent-close",
+    "m3-advisory",
+    "m4-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and read the guard sites",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, the g2 handoff, and the actual source at scripts/checklist_engine.py for dispatch, _trip_hard_gate, _trip_advisory, _refresh_attach_hint, has_pending_refresh_request, start, reopen, resume, advance, _latest_why_record. Confirm the baseline suite count. Verify the handoff is complete; block if not. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + project context + handoff read; guard sites read in source; handoff confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "global-crew.md + global-everyone.md + CREW_CONTEXT.md + GLOSSARY.md + g2 handoff read; source read at dispatch:2649, _trip_hard_gate:1439, _trip_advisory:1399, _refresh_attach_hint:1254, has_pending_refresh_request:1146, start:1821, advance:1854, resume:1999, reopen:2058, _latest_why_record:1121; baseline reproduced 1793 passed / 2 skipped / 683 subtests; frozen selector exits 5 today (349 deselected, 0 collected); handoff complete on all eight fields"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-begin-guard": {
+      "id": "m1-begin-guard",
+      "title": "(a)+(b) HARD guards BEGIN verbs, never the closing advance",
+      "imperative": "TDD. Write the permanent DC2 guard test (fill>=hard, NO pending refresh-request anywhere in the spine: the advance completes AND the digest updates to the why written at that gate) plus the begin-work refusal tests for start and reopen, and the resume-NOT-guarded test. Names must match trip_begin / begin_work / handoff. Observe them RED against unmodified source for the right reason (attest c1). Then remove the HARD guard from the advance branch of dispatch and hang it on start and reopen, preserving #190's identity check and the None-reading / survey no-ops. Re-aim, never delete, existing Trip tests that pin HARD-refuses-advance.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED observed: the DC2 guard test and the start/reopen begin-work tests fail against unmodified source, each for its own stated reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed, 5 failed / 6 passed / 349 deselected. Two handoff tests fail because _trip_hard_gate refuses the closing advance at fill>=hard with no request (the #431 deadlock). Three trip_begin tests fail with 'EngineError not raised' because start and reopen carry no guard today. The 6 passing are the falsifiable-half and fail-safe companions (below-hard, None reading, survey, no base_dir, resume-not-guarded, matching-request release), green in both worlds by design and defended by mutation instead. Output: .agent-work/issue-467-trip-semantics/evidence/g2-m1-RED.txt"
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: the new trip_begin/begin_work/handoff tests pass",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-begin-guard-1"
+        }
+      ],
+      "constraints": [
+        "resume is NOT guarded",
+        "verb return strings unchanged (pure verbs)",
+        "refusal raises BEFORE the liveness stamp",
+        "no change to gauge_reader._PROFILES",
+        "no validation added to attach",
+        "existing Trip tests re-aimed, never deleted"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-begin-guard-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-no-silent-close": {
+      "id": "m2-no-silent-close",
+      "title": "(c) At/over hard, refuse an advance that would record NOTHING",
+      "imperative": "TDD. Write tests (names matching the frozen selector) proving that at/over hard `advance --mechanical` is refused with a message naming the compliant form, and that `why_exempt` is suspended so an exempt gate still needs a --why; plus a test proving the digest cannot go stale after the fix. Observe RED (attest c1), then implement in dispatch at the CLI boundary and make green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 begin-guard landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED observed: mechanical-at-hard and why_exempt-suspension tests fail against the m1 tree for the right reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed, 2 failed / 17 passed / 347 deselected. test_handoff_mechanical_close_refused_at_hard and test_handoff_why_exempt_is_suspended_at_hard both fail with 'EngineError not raised' -- today a mechanical or why-less close at/over hard is accepted and writes nothing to the why_trail. The three companions (below-hard mechanical, None-reading, postcondition-ordering) pass today by design: they pin what must NOT change. Output: evidence/g2-m2-RED.txt"
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: the selector tests pass",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-no-silent-close-1"
+        }
+      ],
+      "constraints": [
+        "the refusal names the compliant form advance <id> --why \"<understanding>\"",
+        "refusal of silence, not refusal of the advance",
+        "no loosening of the --mechanical refusal without Commander authority"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-no-silent-close-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-advisory": {
+      "id": "m3-advisory",
+      "title": "(d) HARD advisory reads as a changed instruction; hint carries the real why-id",
+      "imperative": "TDD. Write tests asserting on the CONTENT of what the agent is told at HARD -- the advisory reads as a changed instruction (close this gate carrying your handoff, request a refresh, stop), never as an alarm -- and that _refresh_attach_hint emits the concrete current why-record id, not the literal <why-id>. Observe RED (attest c1), then rewrite and make green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED observed: advisory-content and concrete-why-id tests fail against the m2 tree for the right reason",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed, 4 failed / 21 passed / 346 deselected, each for its own reason: the two advisory tests fail on exact-string inequality against today's alarm wording ('advance is BLOCKED until you request a refresh' / 'refresh already requested -- hand off now; do not keep working'); the hint test fails with TypeError, _refresh_attach_hint takes 1 positional argument but 2 were given; the begin-work refusal test fails because the message still carries the literal why_ref=<why-id>. Output: evidence/g2-m3-RED.txt"
+        },
+        {
+          "id": "c2",
+          "statement": "GREEN: the selector tests pass",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-advisory-1"
+        }
+      ],
+      "constraints": [
+        "HARD means wrap up, never you are unsafe",
+        "assert on content, never on non-emptiness"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-advisory-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_checklist_engine.py -k 'trip_begin or begin_work or handoff'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-closeout": {
+      "id": "m4-closeout",
+      "title": "(e) docs, mutation log, wiring grep, full suite",
+      "imperative": "Update docs/CHECKLIST_SCHEMA.md's Trip section to describe shipped behaviour. Mutation-test every guard shipped: break the exact source branch, record the branch broken, the NAMED test that went red, and the TOTAL failure count, into .agent-work/issue-467-trip-semantics/g2-mutation-log.md. Run the wiring grep and state the external call-site count (zero is a stop condition). Run the full suite and explain any delta from the 1793 passed / 2 skipped / 683 subtests baseline. Write the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete and green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mutation log written with per-guard branch, NAMED red test, and TOTAL failure count; wiring grep run with external call-site count stated; docs Trip section updated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Mutation log written: 12 mutations, each with branch broken + NAMED red test + TOTAL failure count; M11 reported as a limitation (no narrow mutation exists) rather than dressed as a pass. Wiring grep run over _trip_hard_band_reading, TRIP_HARD_GUARDED_VERBS, require_why: 3 production call sites (:1514, :2770, :2806), zero inert symbols. docs/CHECKLIST_SCHEMA.md Trip section + start/advance/reopen verb rows updated; blast-radius grep found 1 remaining stale claim (the engine's own module header, fixed in place) and one out-of-scope stale claim in docs/agents/GLOSSARY.md, flagged not edited."
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-closeout-1"
+        },
+        {
+          "id": "c3",
+          "statement": "mutation log and result file exist",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/issue-467-trip-semantics/g2-mutation-log.md && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g2-implementer-result.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-closeout-2"
+        }
+      ],
+      "constraints": [
+        "do not commit",
+        "do not touch execute.json or spine.json"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-closeout-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/issue-467-trip-semantics/g2-mutation-log.md && test -s .agent-work/issue-467-trip-semantics/crew-handoffs/g2-implementer-result.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m4-closeout",
+      "statement": "docs/agents/GLOSSARY.md line 13 still says 'HARD blocks advance until the agent requests a context refresh' -- false after #467, and it is the glossary every constellation agent reads. Outside this handoff's allowed scope (CHECKLIST_SCHEMA.md Trip section only). Commander decision."
+    },
+    {
+      "id": "tc2",
+      "from": "m4-closeout",
+      "statement": "Mid-gate handoff channel: a gate that trips with UNMET postconditions has nowhere to leave its progress note -- block --next exists but current does not render its text. Raised, not built, per handoff Authority."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
+    "status": "released",
+    "claimed_at": "2026-08-08T11:37:23.600929+00:00",
+    "last_heartbeat": "2026-08-08T12:27:49.172565+00:00",
+    "claimed_by": "g2-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T12:28:03.776978+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Guard sites read in source. The design lands as: dispatch stops calling _trip_hard_gate on advance and calls it on start+reopen instead; a new _trip_hard_band_active predicate feeds a require_why flag into advance so that at/over hard why_exempt is suspended and --mechanical is refused, keeping advance's return values unchanged; _trip_advisory's HARD branch and _refresh_attach_hint are rewritten. Baseline 1793/2/683 confirmed; selector exits 5 today.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:45:09.880440+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-begin-guard",
+      "why": "(a)+(b) landed. dispatch now guards TRIP_HARD_GUARDED_VERBS = {start, reopen} and no longer guards advance; _trip_hard_gate keeps #190's identity check verbatim and delegates the band decision to a new _trip_hard_band_reading so the m2 no-silent-close rule cannot disagree about what 'at hard' means. 12 selector tests green; 4 existing Trip tests re-aimed from advance to start, none deleted; engine+gauge suites 406 passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:52:07.499362+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-no-silent-close",
+      "why": "(c) landed. advance gains require_why (default False, so direct callers are byte-identical); dispatch computes it from _trip_hard_band_reading at the CLI boundary. At/over hard --mechanical and silence are both refused by one exact message naming 'advance <id> --why', why_exempt is suspended AND the why is actually appended to the why_trail, and the postcondition refusal still precedes the why demand. 20 selector tests green; one more existing test re-aimed (test_hard_passes_once_refresh_request_exists -> a refresh-request does not buy silence); engine+gauge 411 passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:54:45.743299+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-advisory",
+      "why": "(d) landed. The HARD advisory now states a changed instruction -- close THIS gate carrying your handoff, request a refresh, stop -- with no BLOCKED/unsafe/runaway/lost wording, asserted by full-string equality in both the pending-request and no-request branches. _refresh_attach_hint gained an optional why_id and emits the concrete live why-record id at both the advisory and the begin-work refusal, falling back to <why-id> only when no live understanding exists. 25 selector tests green; one more existing test re-aimed (test_hard_advisory_on_current_points_at_attach dropped its BLOCKED assertion, gained the instruction + <why-id>-fallback pins); engine+gauge 416 passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T11:57:25.308331+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-closeout",
+      "why": "g2-implement complete. HARD now guards start+reopen and never the closing advance; at/over hard --mechanical is refused and why_exempt is suspended so the digest cannot stay pre-trip; the advisory reads as a changed instruction and the refresh hint carries the concrete why-id; CHECKLIST_SCHEMA.md describes shipped behaviour. Evidence: permanent DC2 guard red-then-green with fill>=hard and no refresh-request anywhere in the spine (asserted in-test); 12 mutations logged with named tests and totals; 22 new tests, 6 existing Trip tests re-aimed and none deleted; selector collects 25 (was 0, exit 5); full suite 1815 passed / 2 skipped / 682 subtests, +22 explained by the new tests and -1 subtest explained by test_context_manifest's clean-tracked-file filter seeing a dirty checklist_engine.py, which the Commander's commit at the seam resolves. Open: docs/agents/GLOSSARY.md line 13 is now false and is outside my scope -- flagged tc1.",
+      "mechanical": false,
+      "ts": "2026-08-08T12:27:49.172534+00:00"
+    }
+  ]
+}

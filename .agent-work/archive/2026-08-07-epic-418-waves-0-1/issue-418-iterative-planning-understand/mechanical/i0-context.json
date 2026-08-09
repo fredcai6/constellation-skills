@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "i0-context",
+  "mechanical": {
+    "run": "issue-418-iterative-planning-understand",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 0,
+    "spine-step": "i0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-understand-i0-context@c693fa1d5a1c25a8b98b8cc7c3204dc5275bd05b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning-understand",
+    "generated_at": "2026-08-06T15:42:01Z"
+  }
+}

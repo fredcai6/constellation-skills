@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-doctrine-red",
+  "mechanical": {
+    "run": "issue-418-g3-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-doctrine-red",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-g3-implement-m1-doctrine-red@2251685fd672114f97f5d8c4eb9faefd284ac1b7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-g3-implement",
+    "generated_at": "2026-08-06T18:18:54Z"
+  }
+}

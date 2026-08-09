@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-closeout",
+  "mechanical": {
+    "run": "g2-implement-trip-semantics-467",
+    "project": "constellation-skills",
+    "role": "g2-implementer",
+    "refusals": 0,
+    "spine-step": "m4-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-trip-semantics-467-m4-closeout@82b813ab41c25982a4e91ecaa57b557a26e5b44b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement-trip-semantics-467",
+    "generated_at": "2026-08-08T11:57:32Z"
+  }
+}

@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -221,12 +222,32 @@ def build_crew_argv(launcher: str, *, role: str, handoff: str, model: str | None
 
 _CLI_DRIFT_MARKERS = ("unknown option", "unrecognized arguments", "unknown command")
 
+# ISSUE #454. Same defect class as run_skill_eval's marker sniff: every marker
+# above is a MULTI-WORD phrase matched by substring against a colour-capable CLI's
+# CAPTURED stderr. The Claude Code harness exports FORCE_COLOR=3, which makes a
+# child colourize even when its stdout is a pipe rather than a terminal, and an
+# escape landing between the words ("\x1b[31munknown\x1b[0m option") silently stops
+# the phrase matching. The hint would then never print, and a plain flag-drift
+# failure would read as an unexplained crew failure. The reported `line` would also
+# carry raw escapes into the message a human reads.
+#
+# DECLINED, deliberately (scope): `crew_env` does NOT unset FORCE_COLOR. That would
+# fix it at the source but is a production-behavior change to what a live crew
+# launch inherits — the Admiral's call. Stripping here closes the defect without
+# changing what the child does. Floated up with #454.
+_ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+
+
+def strip_ansi(text: str) -> str:
+    """Captured output as plain text. PURE. See the #454 note above."""
+    return _ANSI_RE.sub("", text or "")
+
 
 def cli_drift_hint(stderr_text: str) -> str | None:
     """Actionable message when a failed launch looks like agent-CLI flag drift
     (the launcher rejected our argv) rather than a crew failure. Returns None
     when the stderr carries no drift marker."""
-    for line in stderr_text.splitlines():
+    for line in strip_ansi(stderr_text).splitlines():
         lowered = line.lower()
         if any(marker in lowered for marker in _CLI_DRIFT_MARKERS):
             return (

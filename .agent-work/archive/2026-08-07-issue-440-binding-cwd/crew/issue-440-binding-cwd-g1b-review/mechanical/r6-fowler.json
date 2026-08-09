@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "mechanical": {
+    "run": "issue-440-binding-cwd-g1b-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r6-fowler",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-binding-cwd-g1b-review-r6-fowler@926090cbdebb0be8b5ae7f4d07ff931d8ba2c142",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-binding-cwd-g1b-review",
+    "generated_at": "2026-08-06T09:58:13Z"
+  }
+}

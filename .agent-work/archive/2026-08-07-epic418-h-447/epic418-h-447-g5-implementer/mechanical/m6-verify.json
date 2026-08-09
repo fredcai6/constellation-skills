@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m6-verify",
+  "mechanical": {
+    "run": "epic418-h-447-g5-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 4,
+    "spine-step": "m6-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-g5-implementer-m6-verify@93c6d4468c9f13ab5f030a6eeabcd5af1c43c5c5",
+    "artifact-ref": [
+      "tests/data/retired_names.approved.txt"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447-g5-implementer",
+    "generated_at": "2026-08-07T18:26:57Z"
+  }
+}

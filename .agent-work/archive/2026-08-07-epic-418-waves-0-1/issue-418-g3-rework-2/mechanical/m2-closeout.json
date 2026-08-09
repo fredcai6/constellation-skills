@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-closeout",
+  "mechanical": {
+    "run": "issue-418-g3-rework-2",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m2-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-g3-rework-2-m2-closeout@78721508c10c97a3621face0feaf350a5d253aae",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-g3-rework-2",
+    "generated_at": "2026-08-06T19:06:08Z"
+  }
+}

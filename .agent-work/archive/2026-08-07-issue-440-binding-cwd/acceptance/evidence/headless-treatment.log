@@ -1,0 +1,12 @@
+CMD: C:\Users\fredc\.local\bin\claude.exe -p <prompt> --settings C:\Users\fredc\AppData\Local\Temp\acc440\settings\treatment.json --model opus --permission-mode acceptEdits --add-dir C:\Users\fredc\AppData\Local\Temp\acc440\run-treatment
+CWD: C:\Users\fredc\AppData\Local\Temp\acc440\run-treatment\main
+CLAUDE_PROJECT_DIR: C:\Users\fredc\AppData\Local\Temp\acc440\run-treatment\main
+EXIT: 0
+TIMED_OUT: False
+ELAPSED_S: 156.4
+
+--- STDOUT ---
+DONE
+
+--- STDERR ---
+

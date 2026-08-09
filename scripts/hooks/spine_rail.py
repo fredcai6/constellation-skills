@@ -24,13 +24,17 @@ Design contract (frozen DESIGN_SPEC #138 channel B, D3):
 - Three registrations only (Stop, SessionStart, PostToolUse). No PreCompact.
 - 3-strike escape hatch so a genuinely stuck agent is never trapped.
 
-Stdlib only (json, os, sys, shlex, pathlib). Windows-friendly: UTF-8 writes,
-native paths, no /tmp literals.
+Stdlib only (json, os, re, shlex, subprocess, sys, pathlib). Windows-friendly:
+UTF-8 writes, native paths, no /tmp literals. The ONE subprocess is a bounded
+`git worktree list` probe used to resolve a relative --file (#440); it is never
+the engine (see the `git_worktree_roots` docstring).
 """
 
 import json
 import os
+import re
 import shlex
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -387,15 +391,314 @@ def _extract_opt(tokens: list, name: str):
     return None
 
 
-def _resolve_abs(file_val: str, cwd, project_dir: Path) -> str:
+# --- #440: validated candidate-root resolution of a relative --file ----------
+#
+# The payload carries NO per-agent root. `CLAUDE_PROJECT_DIR` is fixed at
+# session launch (#269, not ours to change -- decision:not-fixing-269) and the
+# payload's `cwd` is the SESSION LAUNCH directory, measured identical across a
+# parent and its subagents (tests/fixtures/probe_payloads.jsonl, six real
+# payloads). So "join the relative --file onto cwd and trust it" recorded a
+# main-checkout path for every worktree-dispatched agent: 60 of 64 live entries
+# on 2026-08-05. The resolution must therefore VERIFY against the filesystem
+# rather than compute an answer it cannot check
+# (decision:fix-the-resolution-not-the-caller).
+
+PATH_SOURCE_ABSOLUTE = "absolute"
+PATH_SOURCE_WORKTREE_OPT = "worktree_opt"
+PATH_SOURCE_CD_TARGET = "cd_target"
+PATH_SOURCE_PAYLOAD_CWD = "payload_cwd"
+PATH_SOURCE_GIT_WORKTREE = "git_worktree"
+PATH_SOURCE_PROJECT_DIR = "project_dir"
+
+# TOLD TRUTH vs GUESS (#440 g1b). The first three sources are the CALLER's own
+# statement of where it is -- an absolute --file, an absolute --worktree, a `cd`
+# in its own command. The rest are inferences this hook makes on the caller's
+# behalf. Only the inferences can be wrong about which tree the agent meant, so
+# only the inferences are subject to the ambiguity guard in
+# `resolve_spine_candidate`; a told-truth rung short-circuits ahead of it.
+TOLD_TRUTH_PATH_SOURCES = frozenset((
+    PATH_SOURCE_ABSOLUTE,
+    PATH_SOURCE_WORKTREE_OPT,
+    PATH_SOURCE_CD_TARGET,
+))
+
+
+def looks_like_checklist(path) -> bool:
+    """True only if `path` is a readable JSON OBJECT carrying a top-level
+    `items` LIST -- the weakest test that positively identifies a checklist.
+
+    Existence alone is NOT enough, and that is the whole point: the defect this
+    resolution fixes has been CREATING phantom `.agent-work/<work_id>/` trees
+    inside the main checkout (the gauge writer's atomic write makes parent
+    directories), so `exists()` can be decoyed by leftovers from the very bug
+    being fixed. A stray `gauge.json` has no `items`; a checklist always does --
+    `active_id` reads exactly `items` + `tasks`, and the engine cannot drive a
+    file without them.
+
+    `tasks` is deliberately NOT also required: `items` alone already separates a
+    checklist from every leftover this hook can meet, and a stricter test only
+    buys new ways to reject a legitimate file. NEVER raises.
+    """
     try:
-        p = Path(file_val)
-        if p.is_absolute():
-            return str(p)
-        base = Path(cwd) if cwd else project_dir
-        return str((base / p).resolve())
+        if not path:
+            return False
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return isinstance(data, dict) and isinstance(data.get("items"), list)
     except Exception:
-        return file_val
+        return False
+
+
+def normalize_shell_path(text):
+    """A path as a SHELL wrote it -> a path this process can open. None if
+    unusable.
+
+    Two shells reach this hook. The Bash tool on Windows is git-bash, so a `cd`
+    target is routinely MSYS-style (`/c/Programs/foo`), which is not a valid
+    Windows path and fails every existence test; PowerShell writes native form.
+    Strips one layer of surrounding quotes (the `cd` target is parsed out of raw
+    command TEXT, not out of shlex tokens, so its quotes survive).
+
+    KNOWN, NOT CHASED (#440): a bare drive root written MSYS-style (`/c`) is not
+    converted -- no engine command cd's to a drive root, and a two-character
+    token is not worth the false-positive risk of rewriting any `/x` path.
+    """
+    try:
+        if not isinstance(text, str):
+            return None
+        s = text.strip()
+        if len(s) >= 2 and s[0] == s[-1] and s[0] in ("'", '"'):
+            s = s[1:-1].strip()
+        if not s:
+            return None
+        # /c/Programs/foo -> C:/Programs/foo
+        if len(s) > 3 and s[0] == "/" and s[1].isalpha() and s[2] == "/":
+            s = s[1].upper() + ":/" + s[3:]
+        return s
+    except Exception:
+        return None
+
+
+# A PostToolUse hook runs on the turn's critical path, so the ONLY subprocess
+# this module ever spawns is bounded by this. 2 seconds is generous for a local
+# `git worktree list` (milliseconds warm) and short enough that a locked index,
+# a dead network drive or a missing `git` costs the turn nothing it will notice.
+GIT_PROBE_TIMEOUT_SECONDS = 2.0
+
+
+def git_worktree_roots(project_dir) -> list:
+    """Worktree roots registered against `project_dir`, EXCLUDING the main tree.
+
+    The main tree is filtered out on purpose: rung 5 already yields the project
+    dir, so leaving it in would only relabel that same answer as `git_worktree`
+    and cost the `path_source` field its meaning. A `git_worktree` source now
+    says exactly one thing -- the spine was found in a DIFFERENT tree.
+
+    This is the module's one subprocess, and it does not contradict the "do NOT
+    subprocess the engine" contract in the docstring: the engine is a stateful
+    thing whose answers must come from its state file, whereas `git` is being
+    asked a question about the FILESYSTEM that no file in this repo records.
+
+    Never raises, never hangs: any non-zero exit, timeout, missing binary or
+    unparsable output returns []. The caller's generator is lazy, so this is not
+    even reached unless rungs 0-3 all failed.
+    """
+    try:
+        proc = subprocess.run(
+            ["git", "worktree", "list", "--porcelain"],
+            cwd=str(project_dir),
+            capture_output=True,
+            text=True,
+            timeout=GIT_PROBE_TIMEOUT_SECONDS,
+        )
+        if proc.returncode != 0:
+            return []
+        roots = []
+        for line in (proc.stdout or "").splitlines():
+            if not line.startswith("worktree "):
+                continue
+            root = line[len("worktree "):].strip()
+            if root and not _same_path(root, str(project_dir)):
+                roots.append(root)
+        return roots
+    except Exception:
+        return []
+
+
+# A `cd` / `pushd` / `Set-Location` and its target, anywhere in the observed
+# command text. The leading class is a command-position guard so `--cd x` and
+# `abcd x` do not match. `;` is in the separator class because PowerShell 5.1
+# has no `&&` and chains with `;`. Quoted alternatives come first so a target
+# containing spaces is captured whole.
+_CD_RE = re.compile(
+    r"""(?:^|[;&|(]|\s)(?:cd|pushd|Set-Location)\s+("[^"]*"|'[^']*'|[^\s;&|]+)""",
+    re.IGNORECASE,
+)
+
+
+def last_cd_target(command):
+    """The LAST `cd`/`pushd`/`Set-Location` target in `command`, or None.
+
+    KNOWN, NOT CHASED (#440): only the last one is tried. An earlier `cd` in the
+    same command is not a fallback -- if the last target does not validate the
+    ladder moves on to the next RUNG rather than to an earlier `cd`. Every
+    engine invocation this hook has been measured against has at most one.
+    """
+    try:
+        matches = _CD_RE.findall(command or "")
+        return matches[-1] if matches else None
+    except Exception:
+        return None
+
+
+def _candidate_roots(data: dict, project_dir: Path, tokens: list, command: str):
+    """Candidate roots for a relative `--file`, in ladder order, as a GENERATOR.
+
+    Lazy on purpose: rung 4 shells out to `git`, and a PostToolUse hook must not
+    pay for -- or hang on -- a subprocess it does not need. A consumer that stops
+    at a TOLD-TRUTH rung (0-2) never advances the generator far enough to run it,
+    which is the case a worktree-dispatched agent always takes.
+
+    Since g1b (#440) a consumer that reaches the GUESSED rungs does drain the
+    generator, because it cannot know its guess is unambiguous without asking
+    every other guessed rung -- so `git` is spawned there. That is still not the
+    turn's hot path: `handle_post_tool_use` returns before any of this unless the
+    observed command is an engine `claim` or `release`, which happens twice per
+    run, not once per tool call.
+    """
+    cwd = data.get("cwd")
+
+    # Rung 1: an ABSOLUTE --worktree in the observed command. Relative forms are
+    # skipped rather than joined: the engine's own convention is `--worktree .`,
+    # which resolves against the same untrustworthy cwd this whole ladder exists
+    # to stop trusting, so it would be a wrong answer wearing a right label.
+    wt = normalize_shell_path(_extract_opt(tokens, "--worktree"))
+    if wt and Path(wt).is_absolute():
+        yield wt, PATH_SOURCE_WORKTREE_OPT
+
+    # Rung 2: the last cd/Set-Location/pushd target in the command text. A
+    # relative target resolves against the payload cwd; if that does not
+    # validate the ladder falls through -- it never guesses a second base.
+    cd = normalize_shell_path(last_cd_target(command))
+    if cd:
+        cd_path = Path(cd)
+        if cd_path.is_absolute():
+            yield str(cd_path), PATH_SOURCE_CD_TARGET
+        elif cwd:
+            yield str(Path(cwd) / cd_path), PATH_SOURCE_CD_TARGET
+
+    # Rung 3: the payload cwd -- today's behaviour, now merely a candidate.
+    if cwd:
+        yield str(cwd), PATH_SOURCE_PAYLOAD_CWD
+
+    # Rung 4: every OTHER git worktree registered against the project dir. This
+    # is the only rung that answers when the command carries no positional clue
+    # at all -- an agent whose Bash tool already runs inside its worktree writes
+    # no `cd`, so nothing in the payload names its root.
+    for root in git_worktree_roots(project_dir):
+        yield root, PATH_SOURCE_GIT_WORKTREE
+
+    # Rung 5: the project dir.
+    yield str(project_dir), PATH_SOURCE_PROJECT_DIR
+
+
+def resolve_spine_candidate(file_val, data: dict, project_dir: Path,
+                            tokens: list, command: str):
+    """`(abs_spine, path_source)` for this command's `--file`, or `(None, None)`.
+
+    Rung 0 first: an absolute `--file` is ground truth and is taken AS-IS,
+    deliberately WITHOUT a validity test. Validating it would break the case the
+    store most needs to survive -- a `release` whose spine has already been
+    archived, moved or deleted must still be able to name its own entry.
+
+    Otherwise the first TOLD-TRUTH root (rungs 1-2) that yields a VALIDATING
+    checklist wins outright, exactly as before -- the caller stated where it is,
+    so there is nothing to be uncertain about and nothing to weigh it against.
+
+    The GUESSED rungs (3 onward) are held to a stricter rule (#440 g1b): the
+    EARLIEST validating guess is kept, but if a later guess validates a
+    DIFFERENT file the answer is thrown away and NOTHING is bound. `.agent-work/`
+    is tracked, so a committed checklist sits at the same relative path in the
+    main checkout and in every worktree; without this the payload cwd (rung 3)
+    simply beat the worktree (rung 4) and the store recorded the main checkout's
+    copy -- a confident wrong path, the failure class this whole issue exists to
+    end. Skip on uncertainty is the store's own posture and it is not symmetric:
+    a missing binding is recoverable, a wrong one silently misattributes one
+    agent's context reading to another agent's work area.
+
+    Two guesses resolving to the SAME file are AGREEMENT, not ambiguity (rung 5
+    re-yields the payload cwd whenever a top-level agent runs in the project
+    dir) -- bind it, and keep the earliest rung's `path_source`.
+
+    `(None, None)` means BIND NOTHING: a binding naming a spine that is not
+    there is precisely the defect being fixed, so silence beats a confident
+    wrong record (the same fail-closed posture as `binding_key` returning None,
+    and the same refusal `resolve_recorded_release_target` makes on two matches).
+    NEVER raises.
+
+    KNOWN, NOT CHASED (#440 g1b): the guard is all-or-nothing across the guessed
+    rungs -- it does not try to BREAK a tie (by mtime, by lease freshness, or by
+    reading which spine is actually active). Any such tie-break is a new guess
+    layered on the guesses that just disagreed, which is what this is refusing.
+    """
+    try:
+        if not file_val:
+            return None, None
+        rel = Path(file_val)
+        if rel.is_absolute():
+            return str(rel), PATH_SOURCE_ABSOLUTE
+        guess = None  # (abs_path, source) of the EARLIEST validating guess
+        for base, source in _candidate_roots(data, project_dir, tokens, command):
+            try:
+                candidate = str((Path(base) / rel).resolve())
+            except Exception:
+                continue
+            if not looks_like_checklist(candidate):
+                continue
+            if source in TOLD_TRUTH_PATH_SOURCES:
+                return candidate, source
+            if guess is None:
+                guess = (candidate, source)
+            elif not _same_path(candidate, guess[0]):
+                return None, None  # two guesses, two files -> refuse to guess
+        return guess if guess is not None else (None, None)
+    except Exception:
+        return None, None
+
+
+def resolve_recorded_release_target(file_val, key_bindings):
+    """The one recorded `abs_spine` under this key that a relative `--file`
+    names, or None when the answer is ambiguous or absent.
+
+    `release` is not `claim`, and the filesystem ladder is the wrong tool for
+    it: by release time the spine may already be archived, moved or deleted, so
+    NO candidate would validate, the entry would never be removed, and nothing
+    reaps abandoned keys (#419). A release must be able to remove what its own
+    claim put there, and the store itself is the record of what that was.
+
+    Exactly one match wins. Two matches is genuine ambiguity -- one session_id
+    can legitimately hold two spines whose relative paths are identical in two
+    different trees (#202) -- and guessing between them would delete a live
+    agent's binding. The caller falls through to the ladder instead.
+    """
+    try:
+        if not file_val or not key_bindings:
+            return None
+        rel = str(file_val).replace("\\", "/").strip().lower()
+        while rel.startswith("./"):
+            rel = rel[2:]
+        if not rel:
+            return None
+        # Leading separator: `run1/spine.json` must not match a recorded
+        # `.../run11/spine.json`.
+        suffix = "/" + rel
+        matches = [
+            path for path in key_bindings
+            if isinstance(path, str) and path.replace("\\", "/").lower().endswith(suffix)
+        ]
+        return matches[0] if len(matches) == 1 else None
+    except Exception:
+        return None
 
 
 def _now_iso() -> str:
@@ -436,11 +739,23 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
             return {}  # unresolved identity -> bind nothing (fail closed)
         file_val = _extract_opt(tokens, "--file")
         cwd = data.get("cwd") or str(project_dir)
-        abs_spine = _resolve_abs(file_val, cwd, project_dir) if file_val else None
-        if not abs_spine:
-            return {}  # nothing to key the entry by -- fail-open, no write
         binding = load_binding(project_dir)
+        abs_spine = None
+        path_source = None
+        if verb == "release":
+            # Recorded binding FIRST (#440) -- see resolve_recorded_release_target.
+            abs_spine = resolve_recorded_release_target(file_val, binding.get(key))
+        if not abs_spine:
+            abs_spine, path_source = resolve_spine_candidate(
+                file_val, data, project_dir, tokens, command
+            )
         if verb == "claim":
+            if not abs_spine:
+                # No candidate root yields a real checklist -- BIND NOTHING
+                # (#440). A missing binding is recoverable; a confident wrong one
+                # silently misattributes one agent's context reading to another
+                # agent's work area.
+                return {}
             engine_session = _extract_opt(tokens, "--session-id")
             key_bindings = dict(binding.get(key) or {})
             key_bindings[abs_spine] = {
@@ -448,6 +763,9 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
                 "engine_session": engine_session,
                 "worktree": cwd,
                 "claimed_at": _now_iso(),
+                # Provenance (#440): WHICH rung resolved the path. Additive
+                # VALUE field only -- the binding KEY shape (#419) is untouched.
+                "path_source": path_source,
             }
             binding[key] = key_bindings
             save_binding(project_dir, binding)
@@ -459,7 +777,7 @@ def handle_post_tool_use(data: dict, project_dir: Path) -> dict:
             # every wave's fan-out. Nothing reaps them -- #419's one-time
             # sweeper was deleted after its single run, as that issue required.
             key_bindings = binding.get(key)
-            if key_bindings and abs_spine in key_bindings:
+            if abs_spine and key_bindings and abs_spine in key_bindings:
                 key_bindings = dict(key_bindings)
                 del key_bindings[abs_spine]
                 if key_bindings:

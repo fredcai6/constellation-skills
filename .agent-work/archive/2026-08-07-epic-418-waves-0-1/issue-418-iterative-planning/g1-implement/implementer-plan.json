@@ -1,0 +1,408 @@
+{
+  "work_id": "issue-418-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-contract-tests",
+    "m2-contract-implementation",
+    "m3-filing-idempotency",
+    "m4-installer-rename",
+    "m5-docs-audit",
+    "m6-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited crew/everyone doctrine, project deltas, frozen execute plan, and handoff. Verify all required handoff fields and attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context, glossary, handoff, and frozen execute plan loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-contract-tests": {
+      "id": "m1-contract-tests",
+      "title": "Encode strict initial-cut contract tests",
+      "imperative": "Rename/rewrite focused tests first for the shaped-brief seam, strict schema, eight headings, current-wave-only behavior, and edge validation; run the focused command and record a causal RED.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new focused initial-cut tests were written before production changes and observed failing for missing intended behavior",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "TDD required",
+        "no compatibility alias",
+        "no excluded or historical path edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-contract-implementation": {
+      "id": "m2-contract-implementation",
+      "title": "Implement shaped-brief and initial-cut contract",
+      "imperative": "Implement the minimal canonical skill, verifier, renderer, schema, direct Explorer seam, eight-heading output, and edge rules needed to turn the causal RED green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "causal RED captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "strict shaped-brief/current-wave contract and rendered epic behavior pass focused tests",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_initial_issues.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-contract-implementation-1"
+        }
+      ],
+      "constraints": [
+        "strict fail-fast inputs",
+        "forecast is non-runnable",
+        "output title/spec path copy source fields exactly"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-contract-implementation-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_initial_issues.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-filing-idempotency": {
+      "id": "m3-filing-idempotency",
+      "title": "Strengthen offline filing idempotency",
+      "imperative": "Add crash-window and receipt-key mismatch tests, then minimally strengthen current-wave-only find/create and receipt recovery while preserving adapters and offline Markdown.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "initial-cut contract is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every-child crash matrix, receipt mismatch, offline Markdown, and forecast spy pass",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_initial_issues.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-filing-idempotency-1"
+        }
+      ],
+      "constraints": [
+        "no live tracker calls",
+        "preserve existing adapter and receipt invariants"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-filing-idempotency-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_initial_issues.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-installer-rename": {
+      "id": "m4-installer-rename",
+      "title": "Complete hard rename and installer migration",
+      "imperative": "Rename the skill and tests, add installer migration matrix coverage, and implement the exact legacy-destination policy for force/no-force/dry-run/subset/full installs.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "filing behavior is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "focused initial-cut and installer migration suites pass",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_initial_issues.py tests/test_install_constellation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-installer-rename-1"
+        }
+      ],
+      "constraints": [
+        "hard rename",
+        "no compatibility alias",
+        "archives and external provenance untouched"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-installer-rename-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_initial_issues.py tests/test_install_constellation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-docs-audit": {
+      "id": "m5-docs-audit",
+      "title": "Update live docs and audit wiring",
+      "imperative": "Update allowed live docs/indexes and Explorer route name, run registration verification and scoped public-helper call-site/live-name audits against the exact allowlist.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "hard rename and installer migration are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "canonical skill registration verifies",
+          "check": {
+            "kind": "command",
+            "command": "uv run python scripts/verify_skill_registered.py --skill to-initial-issues"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-docs-audit-1"
+        },
+        {
+          "id": "c2",
+          "statement": "wiring grep and rename inventory were reviewed; only intentional CLI entrypoints have zero external call sites and historical/provenance allowlist remains",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "single canonical public route",
+        "exact rename inventory"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-docs-audit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python scripts/verify_skill_registered.py --skill to-initial-issues",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-closeout": {
+      "id": "m6-closeout",
+      "title": "Verify and write implementer result",
+      "imperative": "Run the identical required focused GREEN command, inspect the final diff and exclusions, write IMPLEMENTER_RESULT.md with all required evidence and workflow feedback, then advance before releasing the lease.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "implementation, docs, wiring, and rename audits complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "required focused verification passes",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_initial_issues.py tests/test_install_constellation.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-closeout-1"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT contains gate id, red/green exits and identical command/output, tests-before-production evidence, diff digest, rename inventory, map impact, and workflow feedback",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "preserve unrelated dirty changes",
+        "result is local-only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_initial_issues.py tests/test_install_constellation.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g1-implementer-20260806",
+    "status": "released",
+    "claimed_at": "2026-08-06T16:45:50.829424+00:00",
+    "last_heartbeat": "2026-08-06T17:02:18.323606+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T17:02:22.653086+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "G1 freezes a strict direct shaped-brief contract, current-wave-only actionability, hard rename, and preserved offline receipt semantics within an explicit file allowlist.",
+      "mechanical": false,
+      "ts": "2026-08-06T16:46:17.151926+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-contract-tests",
+      "why": "The identical focused command exits 1 on missing initial-cut paths, direct-manifest helpers, and canonical installer registration, proving the tests causally name the intended new behavior before production edits.",
+      "mechanical": false,
+      "ts": "2026-08-06T16:50:54.603992+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-contract-implementation",
+      "why": "The direct v1 shaped-brief seam now validates exact fields, preserves source identity and planning context, renders exactly eight sections, and accepts zero-edge acyclic current waves while rejecting structural violations.",
+      "mechanical": false,
+      "ts": "2026-08-06T16:55:12.469788+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-filing-idempotency",
+      "why": "Filing exposes one actionable accessor, validates receipt and entity keys before adapter calls, and applies the same find-create-receipt crash recovery protocol to the epic and each current-wave child.",
+      "mechanical": false,
+      "ts": "2026-08-06T16:55:21.836539+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-installer-rename",
+      "why": "The hard rename has one discoverable/installable identity, and installer migration recognizes only the exact legacy destination, requires force for removal, preserves unrelated siblings, and is non-mutating in dry-run.",
+      "mechanical": false,
+      "ts": "2026-08-06T16:58:03.960498+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-docs-audit",
+      "why": "The canonical route is registered across live indexes/docs/Explorer seams; public verifier, renderer, builder, receipt, and filing helpers have executable callers/tests, while 93 old-name paths are confined to the exact historical, fixture, external-provenance, and migration allowlist with zero unexpected paths.",
+      "mechanical": false,
+      "ts": "2026-08-06T16:59:37.438625+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-closeout",
+      "why": "The final result binds the causal identical-command red/green transcript to the 20-path digest, exact rename inventory, migration matrix, structural map impacts, preserved exclusions, and reproducible registration/wiring audits.",
+      "mechanical": false,
+      "ts": "2026-08-06T17:02:18.323587+00:00"
+    }
+  ]
+}

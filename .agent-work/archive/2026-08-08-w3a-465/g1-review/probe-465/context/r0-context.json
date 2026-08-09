@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "2c66616c4373ffbf99425556647ed81a1028a52d"
+  },
+  "run": {
+    "work_id": "probe-465",
+    "generated_at": "2026-08-08T05:58:46Z",
+    "roots": {
+      "skill": "C:/Programs/wt-w3a-465",
+      "repo": "C:/Programs/wt-w3a-465",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/wt-w3a-465"
+    }
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "work_id": "w3c-488-489-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "#488 positive: new same-path/Admiral-shape tests (dedups_two_bindings, admiral_shape_two_spines) fail red against pre-fix resolve_gauge_path (2 failed), pass green against fixed. #488 negative: genuinely-different-path test passes both sides (as it should -- unchanged behavior); mutation test disabling the ambiguous-binding skip branch entirely makes it fail red, proving it has teeth and #261 protection is exercised, not just present. #489: pre-fix matches[0] logic reproduced ad hoc -- silently returns SPEC A, drops SPEC B, no exception. Fixed _resolve_revised_spec_matches raises AssertionError naming both on 2+, names all 3 on a 3-match case, returns [] on zero, returns sole match on one; real single fixture (.agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md) still exercises the one-match path with the live ConfirmPhaseRegressionOnALiveSpec tests passing 2/2.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fences held. Diff outside .agent-work touches exactly scripts/hooks/gauge_writer_hook.py, tests/test_gauge_writer.py, tests/test_verify_spec_confirmed.py -- all owned by #488/#489. scripts/checklist_engine.py (fenced to #465) and tests/test_episode_negative_control.py (fenced to #461) untouched. .agent-work changes confined to .agent-work/epic-418-redux/notes-488-489.md and .agent-work/w3c-488-489/** (crew's own artifacts). Live binding store .agent-work/.spine-rail-binding.json not touched by the PR diff; my own repro/mutation runs used tmp_path fixtures only, never the live store.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full suite: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests -- 1789 passed, 2 skipped, 683 subtests passed in 452.46s, real exit code 0 (captured directly, no pipe). Matches expected wave-3 baseline (1782 wave-2 baseline + 7 new tests: 3 in test_gauge_writer.py + 4 in test_verify_spec_confirmed.py). No unexpected count.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "CREW_CONTEXT.md rules checked against the diff: python not py used throughout evidence; all new/touched writes use encoding='utf-8' explicitly (test fixtures write_text(..., encoding='utf-8')); no record-store hand-edits (episodes/, checklist files untouched by the code fix); TDD red-green independently reproduced for both directions (satisfies 'a check that cannot fail is indistinguishable from one that passed'); #489 test asserts against actual computed path strings in the raised message, not a hardcoded/matched keyword ('assert against behaviour, not text that describes it'); adversarial synthetic fixtures (2-match, 3-match) pair with the real single-fixture regression test, not relying on the shipped tree alone.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence. Map Impact notes in IMPLEMENTER_RESULT.md (struct:gauge_writer_hook.resolve_gauge_path deduped by distinct Path; decision:dont-weaken-261 honored) match the diff -- verified against the actual code change. No new module/seam/capability introduced; the #489 extraction is test-scoped only. No out-of-scope discoveries found during this review; no triage candidates to flag.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/w3c-488-489/g1-review/fowler_pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass over PR #491's diff (12/12 smells visited, all absent): no long-method/large-class/duplicated-code/feature-envy/data-clumps/primitive-obsession/long-parameter-list/shotgun-surgery/divergent-change/message-chains/speculative-generality/comments-as-deodorant found. Notable: resolve_gauge_path's docstring grew substantially but documents genuinely non-obvious behavior (why same-path duplicates dedup while distinct paths still skip, tied to #261 history and a measured live incident) rather than papering over convoluted code -- judged absent, not overridden. Record: .agent-work/w3c-488-489/g1-review/fowler_pass.json; verify_fowler_pass.py exit 0 (smells=12, flagged=[], overridden=[]).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/w3c-488-489/g1-review/fowler_pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "PR #491 (issues #488, #489) empirically re-derived: #488 positive direction confirmed red-then-green (new same-path/Admiral-shape tests fail 2/3 against pre-fix resolve_gauge_path, pass 3/3 against fixed). #488 negative direction confirmed intact via mutation test: disabling the ambiguous-binding skip branch entirely turns the negative-direction test red, proving #261's protection is actively exercised, not just present -- genuinely different gauge paths still skip and flag every candidate. #489 confirmed via ad hoc repro of the exact pre-fix matches[0] logic (silently drops a second match, no signal) plus the fixed _resolve_revised_spec_matches raising and naming both/all matches on 2+/3+, returning [] on zero, and the real single-fixture regression test still passing 2/2. Fences held: only scripts/hooks/gauge_writer_hook.py, tests/test_gauge_writer.py, tests/test_verify_spec_confirmed.py touched outside .agent-work; checklist_engine.py and test_episode_negative_control.py untouched; live binding store never mutated. Full suite: 1789 passed, 2 skipped, 683 subtests, exit 0 -- matches expected baseline. Fowler pass: 12/12 baseline smells visited, all absent."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "rev-488489",
+    "status": "released",
+    "claimed_at": "2026-08-08T05:27:02.339494+00:00",
+    "last_heartbeat": "2026-08-08T05:41:19.264388+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T05:42:14.872225+00:00"
+  }
+}

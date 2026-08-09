@@ -1,0 +1,833 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 redux \u2014 the agent can see the whole gate",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Finish epic #418's remaining course. Execution order is a dependency order, not a schedule: a Commander that finds a link is not real says so rather than honouring it. Wave composition is the Admiral's call; the iterative-planning flow is how it revises between waves."
+    },
+    "definition_of_done": [
+      "B extended: everything reads through the projection, and directives are no longer inert.",
+      "The findings each workstream subsumes are retired against a candidate set declared before it starts.",
+      "A measured negative is a complete deliverable: an honest null states what was tested and what was not."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No check that cannot register its own failure. No unevidenced claim about what happened. No silent scope cut.",
+      "sufficient_evidence": "A guard is observed refusing something real, not reasoned about. Merge state comes from the forge, never from an ancestry test.",
+      "appetite": "Rigor scales with cost-to-undo, not uniformly. Cheap to reverse, move fast."
+    },
+    "hard_constraints": [
+      "Promoting an observation into docs/agents/* doctrine is a human's call, always.",
+      "settings.json is never touched.",
+      "Test suite invocation is settled (#454): FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, never py.",
+      "No Fable at any tier; explicit model on every dispatch.",
+      "Never obey a spine rail naming a spine another agent drives (#457)."
+    ],
+    "fixed_decisions": [
+      "episodes/ replaces LESSONS.md and AGENT_FEEDBACK.md; an episode is a record, never read back as a rule.",
+      "Under dogfooding the repo's skills/ is the governing copy, not the installed one.",
+      "#468: the repo's vendored verify_iterative_role_artifacts.py cannot run from this repo; use the installed copy."
+    ],
+    "current_wave": {
+      "objective": "Wave 5: the final wave -- close the gate machinery at both ends of a run, land the readiness answer, and clear the cheap engine/doc debt before the epic closes.",
+      "exit_criteria": [
+        "Every dispatched issue merged or dispositioned with its state verified on the forge.",
+        "Main green on the final merged tree with the test delta attributed, not merely green.",
+        "No gate closed by editing a verdict; a gate that genuinely cannot close is waived on named authority."
+      ],
+      "issues": [
+        {
+          "title": "COMMANDER_SPINE archive.c2b's <branch> placeholder is never resolved -- always fails",
+          "desired_outcome": "#439 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "439"
+        },
+        {
+          "title": "commander spine template: archive.c2b's PR-reachability check ships an unsubstituted <branch> placeholder and can never pass",
+          "desired_outcome": "#484 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "484"
+        },
+        {
+          "title": "engine: archive gate c2b accepts only an OPEN PR, so a well-run epic forces --force on the success path",
+          "desired_outcome": "#446 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "446"
+        },
+        {
+          "title": "The wave-launch gate cannot run as its own spine instructs: _installed_skills_root() accepts the repo checkout and resolves to a wrong root",
+          "desired_outcome": "#501 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "501"
+        },
+        {
+          "title": "Role verifier's installed-skill guard passes from the source repo, because the repo is named constellation-skills",
+          "desired_outcome": "#468 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "468"
+        },
+        {
+          "title": "The Admiral spine's execute gate cannot be closed by a run that finishes: c3 demands a launch authorization at a boundary that exits stop",
+          "desired_outcome": "#506 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "506"
+        },
+        {
+          "title": "No checkable answer to 'is this project constellation ready' \u00e2\u20ac\u201d the governor ships nowhere and nothing notices",
+          "desired_outcome": "#458 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "458"
+        },
+        {
+          "title": "Crew handoffs address an ephemeral agent instance, so every delivery after a Commander relaunch misroutes \u00e2\u20ac\u201d and neither end can recover",
+          "desired_outcome": "#507 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "507"
+        },
+        {
+          "title": "A crew's verdict is addressed to the commander that dispatched it \u00e2\u20ac\u201d which may have handed off, so the mail lands on an agent that owns nothing",
+          "desired_outcome": "#370 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "370"
+        },
+        {
+          "title": "Crew cannot SendMessage its dispatching commander: 4/4 dispatches failed and every result had to be relayed through the Admiral",
+          "desired_outcome": "#413 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "413"
+        },
+        {
+          "title": "engine: append() and _build_amend_task duplicate the Task shape by hand",
+          "desired_outcome": "#474 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "474"
+        },
+        {
+          "title": "engine: a template-only Task field is invisible to the completeness superset assertion (anchors is one today)",
+          "desired_outcome": "#475 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "475"
+        },
+        {
+          "title": "docs: nothing checks CHECKLIST_SCHEMA.md's Task table against the engine's Task builder",
+          "desired_outcome": "#476 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "476"
+        },
+        {
+          "title": "engine: refusals counter records zero when a refusal happens before the lease claim (exc-9)",
+          "desired_outcome": "#427 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "427"
+        },
+        {
+          "title": "engine: --authority on amend/waive is validated only as non-empty, so 'human ratification' is enforced by nothing",
+          "desired_outcome": "#503 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "503"
+        },
+        {
+          "title": "engine: dead defensive branch in _render_directive_lines (proved dead by mutation; kept deliberately)",
+          "desired_outcome": "#479 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "479"
+        },
+        {
+          "title": "record: the directives flat-list branch silently dropped content -- inside the fix for that very defect class",
+          "desired_outcome": "#480 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "480"
+        },
+        {
+          "title": "checklist_engine.py journal append is still text-mode -- same line-ending defect class as the fixed save()",
+          "desired_outcome": "#493 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "493"
+        },
+        {
+          "title": "six repo JSON writers pass encoding but not newline, against CREW_CONTEXT's always-pass-newline rule",
+          "desired_outcome": "#495 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "495"
+        },
+        {
+          "title": "CREW_CONTEXT's always-pass-newline rule doesn't name save()'s byte-faithful exception",
+          "desired_outcome": "#496 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "496"
+        },
+        {
+          "title": "TREND_SNAPSHOT.md \u00c2\u00a72 lists `_shared` as a 20th role \u00e2\u20ac\u201d the installer says it is not a skill, and the error is built to propagate to every successor",
+          "desired_outcome": "#411 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "411"
+        },
+        {
+          "title": "governor: the CONTEXT gauge is read per checklist directory, so a crew inherits its Commander's reading",
+          "desired_outcome": "#477 fixed, refuted, or dispositioned with evidence.",
+          "useful_now": "Dispatched in wave 5, the epic's final wave.",
+          "appetite": "One wave, shared across five crews.",
+          "acceptance_or_falsification_evidence": "Merged PR with its state verified on the forge, or a recorded disposition on the issue.",
+          "implementation_latitude": "How the ledger is keyed and rendered is the crew's; widening the live selector to match all why-records was refused in advance.",
+          "hard_constraints_no_gos": [
+            "No new CLI surface.",
+            "The live selector's keying must not change; widening it to match all why-records is refused.",
+            "A verdict is never reworded to fit a gate."
+          ],
+          "local_unknowns": [
+            "Whether the observable survives to the seam -- this turned out to be the blocking finding.",
+            "Whether a per-gate threshold override could make the trip fire on a real reading rather than a large plant."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "tests/test_checklist_engine.py",
+            "docs/CHECKLIST_SCHEMA.md",
+            "docs/agents/GLOSSARY.md"
+          ],
+          "type": "AFK",
+          "blocks": [],
+          "id": "477"
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "A2 \u2014 trip semantics, cut into an issue at its turn and against what B extended actually left behind.",
+        "why_likely": "B extended is now complete, and F cannot type a verb whose meaning is unsettled.",
+        "entry_conditions": [
+          "Wave 3 merged"
+        ]
+      },
+      {
+        "outcome": "F #424 \u2014 the MCP front door.",
+        "why_likely": "Verbs go where verbs belong, before content is written around them.",
+        "entry_conditions": [
+          "A2 cut and settled"
+        ]
+      },
+      {
+        "outcome": "C #421 \u2014 relocation against a settled verb contract.",
+        "why_likely": "The spec orders it after F for exactly this reason.",
+        "entry_conditions": [
+          "F merged"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the governor's 17-21% HARD trip band is where it should be.",
+        "affects": "Every dispatch budget in every remaining wave.",
+        "settle_by": "A human ruling at the wave-3 checkpoint; it is a production default.",
+        "current_evidence": "6 of wave 2's 10 dispatches were governor relaunches. Confounded: the Admiral's own gauge was dark for the whole wave (#488), so the band was never observed from the orchestrator's side.",
+        "next_probe": "Wave 3 runs with #488 fixed, which gives the first Admiral-side reading of its own fill against the same band."
+      },
+      {
+        "unknown": "Whether A2 is one issue or several.",
+        "affects": "Forecast ordering for F and C.",
+        "settle_by": "Cutting it at its turn.",
+        "current_evidence": "B extended completes with wave 3.",
+        "next_probe": "Cut after wave 3 merges, not before."
+      },
+      {
+        "unknown": "Whether #465's placeholder is settled by removal or by a new engine verb.",
+        "affects": "Whether wave 3 touches a shared interface.",
+        "settle_by": "The #465 Commander, on evidence about whether the placeholder is load-bearing elsewhere.",
+        "current_evidence": "No engine verb fills it today; amend --op retext-check corrects check text, not a placeholder in a null-check statement.",
+        "next_probe": "The Commander's return states which path it took and why."
+      }
+    ],
+    "parked_possibilities": [
+      "#452 multi-spine attribution \u2014 an honest null is permitted here. #488 is the same subsystem and may subsume or be subsumed by it.",
+      "#458 ship the gauge writer (workstream R).",
+      "#423 E backlog re-cut \u2014 runs on what survives the redux.",
+      "#457 lease liveness \u2014 evidenced but not cheap; a design question with a load-bearing interface at the end of it.",
+      "The defect-family theme as an organizing wave rather than a set of point fixes."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "439",
+      "outcome": "Merged and closed. archive.c2b's unsubstituted <branch> is replaced by a branch derived at check time; the verdict rides the exit code.",
+      "evidence": "PR #516 MERGED at f9945286 per gh pr view (state=MERGED); gh issue view 439 -> CLOSED."
+    },
+    {
+      "issue_id": "484",
+      "outcome": "Merged and closed. The old check was always-red (unquoted < is shell input redirection, so gh was never invoked), not narrow as filed; the issue's own suggested fix would have inverted it into a check that cannot fail.",
+      "evidence": "PR #516 MERGED at f9945286; gh issue view 484 -> CLOSED. Old text reproduced exit 1 on all four fixtures with identical stderr."
+    },
+    {
+      "issue_id": "446",
+      "outcome": "Merged and closed. The reachability criterion now accepts {OPEN, MERGED} and rejects {no-PR, CLOSED-unmerged}, so a merged PR no longer fails the gate.",
+      "evidence": "PR #516 MERGED at f9945286; gh issue view 446 -> CLOSED. Four-state matrix reproduced on three independent harnesses."
+    },
+    {
+      "issue_id": "501",
+      "outcome": "Merged and closed. _is_installed_bundle decides by structure; the decoy leg reproduces the defect live against the real installed bundle under a name-only revert.",
+      "evidence": "PR #516 MERGED at f9945286; gh issue view 501 -> CLOSED."
+    },
+    {
+      "issue_id": "468",
+      "outcome": "Merged and closed. The role verifier's installed-skill guard is structural, not name-based.",
+      "evidence": "PR #516 MERGED at f9945286; gh issue view 468 -> CLOSED."
+    },
+    {
+      "issue_id": "506",
+      "outcome": "Merged and closed. execute.c3 verifies a stop transition instead of refusing it, so a run that finishes can close its own gate.",
+      "evidence": "PR #516 MERGED at f9945286; gh issue view 506 -> CLOSED. Blocked, repaired, re-reviewed and approved on independent re-running."
+    },
+    {
+      "issue_id": "458",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #513 MERGED at c045ed2f; gh issue view 458 -> CLOSED."
+    },
+    {
+      "issue_id": "507",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #511 MERGED at 39fb542a; gh issue view 507 -> CLOSED."
+    },
+    {
+      "issue_id": "370",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #511 MERGED at 39fb542a; gh issue view 370 -> CLOSED."
+    },
+    {
+      "issue_id": "474",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #514 MERGED at b2f33603; gh issue view 474 -> CLOSED."
+    },
+    {
+      "issue_id": "475",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #514 MERGED at b2f33603; gh issue view 475 -> CLOSED."
+    },
+    {
+      "issue_id": "476",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #514 MERGED at b2f33603; gh issue view 476 -> CLOSED."
+    },
+    {
+      "issue_id": "427",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #514 MERGED at b2f33603; gh issue view 427 -> CLOSED."
+    },
+    {
+      "issue_id": "479",
+      "outcome": "Merged and closed (kept-and-guarded, not deleted).",
+      "evidence": "PR #514 MERGED at b2f33603; gh issue view 479 -> CLOSED."
+    },
+    {
+      "issue_id": "480",
+      "outcome": "Verified already fixed and already guarded; no code change.",
+      "evidence": "PR #514 MERGED at b2f33603; gh issue view 480 -> CLOSED."
+    },
+    {
+      "issue_id": "493",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #514 MERGED at b2f33603; gh issue view 493 -> CLOSED."
+    },
+    {
+      "issue_id": "496",
+      "outcome": "Merged and closed.",
+      "evidence": "PR #509 MERGED at 4bde569e; gh issue view 496 -> CLOSED."
+    },
+    {
+      "issue_id": "411",
+      "outcome": "Merged and closed by hand after the merge: 'Closes #496, #411.' closed only #496, because GitHub honours the first issue in a comma-list.",
+      "evidence": "PR #509 MERGED at 4bde569e; gh issue view 411 -> CLOSED after manual close."
+    },
+    {
+      "issue_id": "477",
+      "outcome": "Merged and closed. The engine declines a CONTEXT gauge reading sampled strictly before the acting session claimed the checklist, and says so rather than going quiet.",
+      "evidence": "PR #517 MERGED at c9f894f4; gh issue view 477 -> CLOSED. Fail-open matrix run: 13 passed."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "Wave 5 landed in full and main is green.",
+      "expected": "Suite green on the final merged main, not per-PR, with the delta attributed.",
+      "observed": "1943 passed, 2 skipped, 884 subtests, real exit 0 at c9f894f4. Collected 1922 -> 1945 (+23) and subtests 872 -> 884 (+12), attributed from the squash commits rather than the PR bodies: #514 +10 tests / 0 subTest loops, #517 +13 tests / 2 subTest loops. Zero unexplained; nothing silently stopped being collected.",
+      "source": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, redirected not piped, exit read directly."
+    },
+    {
+      "claim": "The post-merge count was predicted before the merge and matched exactly.",
+      "expected": "A prediction derived from a measured fork point, not from remembered per-PR deltas.",
+      "observed": "Fork point ea854471 measured at 1869 collected in a throwaway detached worktree created and removed in one command; main 1898; crew-1 branch 1893. Predicted 1898 + 24 = 1922. Measured after merging #516: 1922 collected, 1920 passed + 2 skipped. Exact.",
+      "source": "pytest --collect-only at three revisions; git worktree add --detach / remove."
+    },
+    {
+      "claim": "#506 is fixed and the close gate it blocked can now be exercised honestly.",
+      "expected": "The installed verifier carries the fix, checked against the repo blob rather than the installer's own report.",
+      "observed": "All three installed copies of scripts/verify_iterative_role_artifacts.py transitioned dabb48ff -> fc1b50f9 (constellation-admiral, -commander, -explorer) after a --force reinstall. A transition, not an equality: the originally-planned step hashed verify_replan.py, which is byte-identical in all three places and untouched by this wave.",
+      "source": "git hash-object on each installed copy vs git rev-parse HEAD:<path>, before and after reinstall."
+    },
+    {
+      "claim": "The engine was changed twice underneath this live run and the run survived both.",
+      "expected": "The Admiral's own spine still resolves on the merged engine, with no hand-repair.",
+      "observed": "current against .agent-work/epic-418-redux/spine.json exited 0 after each of #514 and #517, lease active, ACTIVE execute unchanged, git status on the spine directory 0 before and after. #517 was additionally smoke-tested from its branch BEFORE merging, producing byte-identical output to the then-current main engine.",
+      "source": "python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current."
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D5",
+      "signal": "Two issues from the range the user asked wave 5 to cover -- #477 and #478 -- were never written into any launch order, so they were never worked. Found by auditing issue states before the close, not by any gate.",
+      "classification": "evidence_only",
+      "affects": "Wave 5's assigned scope only. No fixed boundary and no forecast item.",
+      "evidence": "LO-w5-c4-engine.md names five of the seven issues in 474..480. gh issue view 477/478 -> OPEN with closedAt null, and neither number appears in PR #514's body. #477 was then dispatched late and merged (PR #517, c9f894f4); #478 carried with its disposition posted on the issue.",
+      "reason": "The crew delivered exactly what its order listed, and the order was the only definition of 'the group' anyone downstream could see. A command-derived assignment can still be under-inclusive when the derived population is never reconciled against a total -- 474..480 has seven members."
+    },
+    {
+      "id": "D6",
+      "signal": "Three of PR #516's failures were green in the worktree and red only on the CI runner: two prescriptive-episode guard rejections and one assertion comparing Windows paths as strings across an 8.3 short-name boundary (RUNNER~1 vs runneradmin).",
+      "classification": "evidence_only",
+      "affects": "Verification coverage across environments. No shipped behaviour.",
+      "evidence": "Runner log at 2d9d2313 and 5bf0114e: '3 failed, 1918 passed, 1 skipped, 872 subtests'. The runner's pass/skip split (1918/1) differs from this box's (1896/2) on the same tree. Repaired at 53f02ddd by restating five episodes as records and comparing roots as paths; CI green on that exact head before merge.",
+      "reason": "Every verification discipline this wave built -- mutation, red-before-green, byte-identical restore, delta reconciliation -- runs in the worktree, and none of it can see a second environment. CI is the only instrument that samples the other one, and it is consulted last."
+    },
+    {
+      "id": "D7",
+      "signal": "Crew 1's own spine carried the pre-fix archive.c2b and could not close its final gate: the crew that repaired the always-red reachability check was blocked by the copy instantiated before its own fix.",
+      "classification": "evidence_only",
+      "affects": "One gate on one crew's instantiated spine. The shipped template carries the fix.",
+      "evidence": "The instantiated check text is `gh pr list --head <branch> --state open --json number --jq 'length > 0'`, verbatim pre-fix. Waived on Admiral authority at 8dee8282 after the branch was pushed (aa2038d9..34e97f46) and PR #516 opened, with GitHub itself confirming all six closing references.",
+      "reason": "Corpus drift (#344) in miniature. The waiver was granted pre-emptively rather than on a float, because a crew meeting an unpassable gate at the end of a long run has two cheaper exits than asking -- hand-edit the spine, or restate the verdict -- and both are worse."
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "413",
+    "503",
+    "495"
+  ],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/verify_iterative_role_artifacts.py",
+      "scripts/checklist_engine.py",
+      "skills/commander/templates/COMMANDER_SPINE.template.json",
+      "tests/test_iterative_planning_doctrine.py",
+      "docs/CHECKLIST_SCHEMA.md"
+    ],
+    "map_status": "docs/architecture present; the cartographer reconcile is a closeout substep and has still not run for waves 4-5. Wave 5 changed the launch/archive gate surface, the role verifier's installed-bundle detection, the engine's Task shape, and the gauge read path. One seam is explicitly unmapped and was floated by crew 1's g4 reviewer as tc4: the template -> top-level-script -> installed-bundle composition, whose only record that the three wave-5 fixes compose across it currently lives inside a single test class."
+  }
+}

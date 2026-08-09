@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-red-evidence",
+  "mechanical": {
+    "run": "h-447-g1-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m5-red-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-h-447-g1-implementer-m5-red-evidence@a3065b53854cd6dd998b1944259d6027992e5af5",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "h-447-g1-implementer",
+    "generated_at": "2026-08-06T09:36:04Z"
+  }
+}

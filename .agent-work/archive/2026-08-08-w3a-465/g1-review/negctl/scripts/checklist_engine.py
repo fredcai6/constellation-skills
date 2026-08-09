@@ -1,0 +1,2879 @@
+#!/usr/bin/env python
+"""Workbench checklist engine: work one gated/survey plan through its gates.
+
+The engine holds the canonical state; an agent transacts with it one step at a
+time. It enforces *mechanism* (ordering, evidence shape, the rework cap, the
+consolidation consistency guard) and never judges quality. See
+docs/CHECKLIST_SCHEMA.md.
+"""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import importlib.util
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path, PureWindowsPath
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    # The context-manifest assembly seam (#305). Imported here so `start`/`reopen`
+    # can emit. The sidecar and its closure now DO ship with every engine-carrying
+    # skill, declared in install_constellation.SCRIPT_RUNTIME_COMPANIONS — an
+    # earlier version of this comment said the opposite and treated the fallback
+    # as the normal installed case, which is precisely how the seam stayed inert
+    # everywhere it was installed (#362). The fallback is kept for a genuinely
+    # partial tree only, following the same "absence is normal, never raise" rule
+    # the manifest producer itself follows. It is NOT the expected path, and
+    # tests/test_install_constellation.py asserts an installed engine binds the
+    # real function rather than this one.
+    from episode_capture import emit_step_manifest  # noqa: E402
+except ImportError:  # pragma: no cover — only reachable from a partial install
+    def emit_step_manifest(*_args, **_kwargs):  # type: ignore[misc]
+        return None
+
+
+def _utf8_stdio() -> None:
+    """Captured stdio on Windows falls back to cp1252; checklist text with
+    non-ascii then crashes every print. Field feedback (f1brainz
+    engine-current-cp1252-crash): own the encoding here instead of requiring
+    PYTHONIOENCODING at every call site."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, OSError):
+            pass
+
+
+_utf8_stdio()
+
+GATED = "gated"
+SURVEY = "survey"
+# The full task-status vocabulary (#227 gate g3): the single source of truth
+# an (status, verb) recovery grid is GENERATED from, rather than hand-typed
+# per test. TERMINAL below is the subset that ends a task's lifecycle.
+STATUS_VALUES = ("pending", "in-progress", "blocked", "complete", "skipped")
+TERMINAL = {"complete", "skipped"}
+DEFAULT_REWORK_CAP = 3
+DEFAULT_LEASE_STALE_SECONDS = 1800
+
+# Verbs that mutate canonical state and therefore require the active session
+# (once a lease exists). `current` is read-only; `claim`/`heartbeat`/`release`
+# manage the lease itself and are handled separately.
+MUTATING_VERBS = {
+    "start", "advance", "record", "consolidate", "skip", "block",
+    "resume", "reopen", "append", "attest", "waive", "attach", "flag-candidate",
+    "amend",
+}
+
+
+# --------------------------------------------------------------------------- #
+# gauge reader binding (#181) — loaded by file path so the engine drives whether
+# it is run as a script or imported by a test via spec_from_file_location (both
+# set __file__ to scripts/checklist_engine.py, so the sibling resolves). The load
+# is fail-safe: if gauge_reader.py is missing or fails to import, `_gauge_reader`
+# is None and the Trip policy (#182) simply does nothing — no reading, no advice,
+# never forces, consistent with the whole governor's skip-on-uncertainty posture.
+# --------------------------------------------------------------------------- #
+def _load_gauge_reader():
+    try:
+        path = Path(__file__).resolve().parent / "gauge_reader.py"
+        spec = importlib.util.spec_from_file_location("gauge_reader", path)
+        mod = importlib.util.module_from_spec(spec)
+        # Register BEFORE exec: gauge_reader's frozen @dataclass with a
+        # `from __future__ import annotations` field resolves its own module via
+        # sys.modules during class creation, which crashes if we exec unregistered.
+        sys.modules[spec.name] = mod
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:
+        return None
+
+
+_gauge_reader = _load_gauge_reader()
+
+
+class EngineError(Exception):
+    """A refusal: the requested transition is not allowed. No exit-0.
+
+    Optional structured attributes (#227 gate g3) let the CLI boundary
+    (`main()`, via `recovery_for()`) compose a recovery line WITHOUT
+    re-parsing the message string -- the verb functions that raise stay pure
+    (their message text is unchanged); they just also hand the boundary the
+    facts it needs:
+      - `task_id` / `verb`: which task, and which attempted verb, refused.
+      - `status`: the task's ACTUAL status at refusal time (a status-caused
+        refusal -- start/advance/resume/reopen each require one).
+      - `unmet`: the REAL unmet condition ids from a live check inside the
+        verb (`start`'s preconditions, `advance`'s postconditions), each as
+        {"id", "which", "kind"}. A command/git-change-policy kind's pass/fail
+        is only known HERE, at the moment the check ran -- `state()` must
+        never re-derive it (INV-2 purity), so this is genuinely a fact only
+        the exception carries.
+      - `valid_ids`: every real p*/c* id on the task, for an unknown-cond-id
+        refusal on `attest` (a malformed-argument refusal, a 4th axis
+        outside the (status, verb) grid -- see `recovery_for`).
+    None of these are read anywhere except `recovery_for` at the CLI
+    boundary; a caller that never inspects them (most of the existing test
+    suite, which raises/asserts EngineError by message text) is unaffected."""
+
+    def __init__(self, message, *, task_id=None, verb=None, status=None,
+                 unmet=None, valid_ids=None):
+        super().__init__(message)
+        self.task_id = task_id
+        self.verb = verb
+        self.status = status
+        self.unmet = unmet
+        self.valid_ids = valid_ids
+
+
+# --------------------------------------------------------------------------- #
+# time source (single hook so tests can control time)
+# --------------------------------------------------------------------------- #
+def _now() -> str:
+    """Current UTC time as an ISO-8601 string. The single module-level time
+    hook: monkeypatch this in tests to control claim/heartbeat timestamps."""
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _parse_ts(value: str) -> datetime:
+    """Parse an ISO-8601 timestamp, tolerating a trailing 'Z'. Returns a
+    timezone-aware datetime (assumes UTC when no offset is present)."""
+    text = (value or "").strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    dt = datetime.fromisoformat(text)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+def lease_stale_seconds(config: dict) -> int:
+    return int((config or {}).get("lease_stale_seconds", DEFAULT_LEASE_STALE_SECONDS))
+
+
+# --------------------------------------------------------------------------- #
+# state helpers
+# --------------------------------------------------------------------------- #
+def load(path: Path) -> dict:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _dominant_newline(path: Path) -> bytes:
+    """The line ending `path` already uses: CRLF only when its endings are
+    unambiguously CRLF, LF in every other case (missing file, empty file, LF file,
+    MIXED file). Mixed is deliberately not guessed at — see `save`."""
+    try:
+        raw = Path(path).read_bytes()
+    except OSError:
+        return b"\n"
+    crlf = raw.count(b"\r\n")
+    bare_lf = raw.count(b"\n") - crlf
+    return b"\r\n" if crlf and not bare_lf else b"\n"
+
+
+def save(path: Path, data: dict) -> None:
+    """Write the checklist as JSON, PRESERVING the line ending the file already
+    uses, and write BYTES so nothing translates them again.
+
+    Text mode (`newline=None`, what this used to do) rewrites every ending to the
+    platform's — CRLF on Windows, LF on POSIX. One engine verb would then rewrite a
+    whole file's endings and destroy its blame, on a file the engine only meant to
+    add one field to.
+
+    **A file that does not exist yet, or one with MIXED endings, gets LF.** Mixed is
+    not a preference the engine can read, so it normalises rather than guesses.
+    """
+    # NEGATIVE CONTROL (reviewer-injected): the "just always write LF" over-correction.
+    payload = (json.dumps(data, indent=2) + "\n").encode("utf-8")
+    Path(path).write_bytes(payload)
+
+
+def load_config(cl: dict, base: Path | None) -> dict:
+    """Resolve config: inline `config` wins; else follow `config_ref` to a file
+    (tried relative to the working dir, then to the checklist's dir); else empty."""
+    if isinstance(cl.get("config"), dict):
+        return cl["config"]
+    ref = cl.get("config_ref")
+    if ref:
+        if Path(ref).is_absolute():
+            candidates = [Path(ref)]
+        else:
+            candidates = [Path.cwd() / ref] + ([base / ref] if base is not None else [])
+        for path in candidates:
+            if path.exists():
+                data = json.loads(path.read_text(encoding="utf-8"))
+                return data.get("config", data)
+    return {}
+
+
+def rework_cap(config: dict) -> int:
+    return int((config or {}).get("rework_cap", DEFAULT_REWORK_CAP))
+
+
+def task(cl: dict, iid: str) -> dict:
+    if iid not in cl.get("tasks", {}):
+        raise EngineError(f"no such item {iid!r}")
+    return cl["tasks"][iid]
+
+
+def active_id(cl: dict) -> str | None:
+    """First item (in order) that is not yet terminal."""
+    for iid in cl.get("items", []):
+        if cl["tasks"][iid]["status"] not in TERMINAL:
+            return iid
+    return None
+
+
+# --------------------------------------------------------------------------- #
+# doctrine rail (#138, channel A) — engine-carried doctrine at every decision
+# point. `dispatch()` appends the position-derived rail to the success output of
+# the railed verbs; `main()` appends the check-failure rail to the REFUSED path.
+# The verb functions themselves stay PURE (their return values are unchanged) so
+# existing exact-equality tests keep passing — the rail rides only the CLI
+# boundary chokepoints. No new mechanism, verb, schema, or per-step authored text.
+#
+# CANONICALITY: This table is the canonical enforcement source;
+# `_shared/global-everyone.md` elaborates and cites it; on conflict the table
+# wins. The five strings are FROZEN and verbatim (measurement precondition for
+# #145) — do not paraphrase; token placeholders {id}/{n}/{imperative} are the
+# only substituted parts.
+# --------------------------------------------------------------------------- #
+RAIL_VERBS = {"claim", "current", "start", "advance", "attest", "attach"}
+
+_RAIL_STRINGS = {
+    "early": "Work the engine never saw did not happen. Run the step's checks, "
+             "then `attest` and `advance {id}`.",
+    "mid-flight": "A working solution is the MIDDLE of this run — you are {n} "
+                  "steps from done. Next: {imperative}. Run it.",
+    "check-failure": "This check failed; that verdict is scoped to this check, "
+                     "not the approach. Do the missing work and `attest`/`attach` "
+                     "the evidence, or escalate with `block`/`waive` and a reason. "
+                     "Report 'this check failed', never 'this step is impossible'. "
+                     "Quiet abandonment and fabricated evidence are the two "
+                     "forbidden exits.",
+    "near-terminal": "The finish is a sequence, not an announcement. Final "
+                     "`advance` first, then `release` — the journal, not your "
+                     "prose, is the proof.",
+    "terminal": "Release is your last journaled action. Run `release`; do not "
+                "claim it.",
+}
+
+
+def _rail_position(cl: dict) -> tuple[str, dict]:
+    """Derive the decision-point position for a gated checklist and the tokens its
+    rail string needs. ``remaining`` is the ordered list of not-yet-terminal items;
+    its head (``remaining[0]``) is the active gate.
+
+    - ``n == 0`` -> ``terminal`` (only ``release`` remains).
+    - ``n == 1`` -> ``near-terminal`` (active step is the last before release).
+    - active gate is the first item -> ``early``.
+    - otherwise -> ``mid-flight``.
+    """
+    remaining = [iid for iid in cl["items"] if cl["tasks"][iid]["status"] not in TERMINAL]
+    n = len(remaining)
+    if n == 0:
+        return "terminal", {}
+    active = remaining[0]
+    if n == 1:
+        return "near-terminal", {}
+    if active == cl["items"][0]:
+        return "early", {"id": active}
+    return "mid-flight", {"n": n, "imperative": cl["tasks"][active].get("imperative", "")}
+
+
+_RAIL_CURRENT_MIDFLIGHT_POINTER = "the ACTIVE line above"
+
+
+def _rail(point: str, cl: dict) -> str:
+    """Return the doctrine block to append at a decision point, or ``""`` when no
+    rail applies. Non-gated (survey) checklists get NO rail. ``point`` is either
+    ``"check-failure"`` (the REFUSED path, no token substitution) or any railed verb
+    name, in which case the position is derived from ``items`` state.
+
+    Issue #420: on the `current` verb specifically, `render_human()`'s own
+    ``ACTIVE {id} [{status}] — {imperative}`` line already prints the active
+    gate's full imperative, so substituting it AGAIN into the mid-flight rail's
+    ``{imperative}`` token duplicated it. For every OTHER railed verb
+    (claim/start/advance/attest/attach) there is no ACTIVE line in that verb's
+    own output — the rail's imperative mention is the ONLY place the caller
+    sees "what's next" there, so it must keep the full text unchanged. The fix
+    is verb-aware and touches only what fills the token, never the frozen
+    `_RAIL_STRINGS` values themselves: substitute a short pointer for
+    `{imperative}` only when `point == "current"` and the position is
+    `mid-flight` (the only position that uses the `{imperative}` token)."""
+    if cl.get("type") != GATED:
+        return ""
+    if point == "check-failure":
+        text = _RAIL_STRINGS["check-failure"]
+    else:
+        pos, tokens = _rail_position(cl)
+        if pos == "mid-flight" and point == "current":
+            tokens = dict(tokens, imperative=_RAIL_CURRENT_MIDFLIGHT_POINTER)
+        text = _RAIL_STRINGS[pos]
+        for key, value in tokens.items():
+            text = text.replace("{" + key + "}", str(value))
+    return f"\n\nRAIL: {text}"
+
+
+def _rail_prefix(point: str, cl: dict) -> str:
+    """The doctrine rail as a FRONT-loaded prefix (#227 gate g3, items 2/4):
+    ``"RAIL: <text>\\n\\n"`` when a rail applies, else ``""``. `_rail()`'s own
+    unit contract is UNCHANGED (still a ``"\\n\\n" + "RAIL: " + text`` suffix
+    shape -- pinned by `test_rail_marker_and_leading_newlines`); this only
+    repositions the SAME text at the two CLI-boundary call sites
+    (`dispatch()`'s success path, `main()`'s REFUSED path) so the banner
+    lands FIRST and the operative result/refusal line lands LAST on the
+    stream -- the field defect this fixes: `tail -1` used to show only the
+    banner, silently hiding a real REFUSED line."""
+    rail = _rail(point, cl)
+    return f"{rail.lstrip(chr(10))}\n\n" if rail else ""
+
+
+# --------------------------------------------------------------------------- #
+# recovery (#227 gate g3, item a) — every STATE-CAUSED `REFUSED` names its
+# exact exit verb. Composed ONLY at the CLI boundary (`main()`), never inside
+# a verb function: the same design law as the rail above (~:160-171) — verb
+# functions stay pure, so `recovery_for` reads ONLY the structured facts an
+# `EngineError` carries (see the class docstring) plus the task's condition
+# definitions in `cl` (kind/statement/id — never the message text itself).
+#
+# Reuses `_next_verbs()` (the SAME tested "legal move from here" mapping
+# `current` already shows, incl. its `NextVerbsAreLegalFromHere` proof that
+# every hint it prints actually runs) for the two non-terminal statuses
+# (`pending`/`in-progress`) rather than re-deriving that logic — one source of
+# truth for "what command is actually legal right now."  `blocked`/`complete`/
+# `skipped` are handled directly: `blocked` must NOT blindly suggest `resume`
+# when the gate has no restorable prior status (constraint 6 — that would
+# print the exact command that just refused), and `skipped` genuinely has no
+# recovery verb (an honest "no verb reverses a skip" beats a fabricated one).
+# --------------------------------------------------------------------------- #
+_RECOVERY_TAIL = "Do not edit the JSON — use the engine."
+
+
+def recovery_for(exc: "EngineError", cl: dict) -> str:
+    """A recovery line naming a runnable exit command for a state-caused
+    `EngineError`, or ``""`` when the refusal carries no `task_id` (not every
+    refusal is state-caused — a missing/malformed argument, an unowned lease,
+    etc. are left as their existing bare message)."""
+    tid = exc.task_id
+    if tid is None or tid not in cl.get("tasks", {}):
+        return ""
+    t = cl["tasks"][tid]
+
+    # Axis 4 (outside the (status, verb) grid): unknown --cond id on attest.
+    if exc.valid_ids is not None:
+        ids = ", ".join(exc.valid_ids) if exc.valid_ids else "(this task defines no conditions)"
+        return (f"Recovery: {tid} defines these condition ids: {ids} -- re-run attest "
+                f"with a real --cond from that list. {_RECOVERY_TAIL}")
+
+    # amend's drop/rescope/retext-check sub-ops guard on task status exactly
+    # like start/advance/resume/reopen (Reviewer BLOCK, g3-review rework 1:
+    # these previously raised bare messages with no recovery at all). They get
+    # DEDICATED branches, not the generic complete/skipped/blocked/pending
+    # branches below: those are tuned for "how do I finish this gate," but
+    # drop/rescope need the gate back at 'pending' specifically (no verb ever
+    # resets a gate to 'pending' except `resume` restoring a blocked gate whose
+    # recorded prior_status was 'pending' -- verified live, not assumed), and
+    # retext-check needs 'pending' OR 'in-progress' (so `reopen` on a complete
+    # gate -- which lands 'in-progress' -- genuinely unblocks it too).
+    if exc.verb in ("amend-drop", "amend-rescope", "amend-retext-check"):
+        status = exc.status if exc.status is not None else t.get("status")
+        op_label = {"amend-drop": "drop", "amend-rescope": "rescope",
+                    "amend-retext-check": "retext-check"}[exc.verb]
+        wants_in_progress_too = exc.verb == "amend-retext-check"
+        if wants_in_progress_too and status == "complete":
+            return (f'Recovery: reopen {tid} --reason "<why>", then retry the same amend '
+                    f"delta (retext-check accepts a pending or in-progress gate). {_RECOVERY_TAIL}")
+        if status == "blocked":
+            detail = t.get("status_detail") or {}
+            prior = detail.get("prior_status")
+            wants = ("pending", "in-progress") if wants_in_progress_too else ("pending",)
+            if prior in wants:
+                return (f'Recovery: resume {tid} --reason "<why the blocker cleared>", then '
+                        f"retry the same amend delta ({op_label} only applies to "
+                        f"{'a pending or in-progress' if wants_in_progress_too else 'a pending'} "
+                        f"gate). {_RECOVERY_TAIL}")
+        needed = "a pending or in-progress" if wants_in_progress_too else "a pending"
+        return (f"Recovery: amend's {op_label} only applies to {needed} gate; {tid} is "
+                f"{status!r} and no verb reaches {needed} status from here -- escalate to a "
+                f"human if the plan genuinely needs to change. {_RECOVERY_TAIL}")
+
+    # Real unmet conditions found by a LIVE check inside start()/advance():
+    # command/git-change-policy kinds are only knowable HERE (INV-2 forbids
+    # `state()` from re-deriving them).
+    if exc.unmet:
+        lines = []
+        for cond in exc.unmet:
+            cid, which, kind = cond["id"], cond["which"], cond["kind"]
+            if kind in ("null", "artifact"):
+                hint = f'attest {tid} --cond {cid} --which {which} --note "<verification>"'
+                if kind == "artifact":
+                    hint += " --evidence <evidence-id>"
+            else:
+                singular = which[:-1]  # preconditions -> precondition
+                hint = (f"fix the underlying issue so {singular} {cid} passes, "
+                        f"then retry {exc.verb} {tid}")
+            lines.append(hint)
+        return "Recovery: " + " | ".join(lines) + f". {_RECOVERY_TAIL}"
+
+    # Status-caused: `exc.verb` required a different status than the task is
+    # actually in.
+    status = exc.status if exc.status is not None else t.get("status")
+    if status == "complete":
+        return f'Recovery: reopen {tid} --reason "<why>". {_RECOVERY_TAIL}'
+    if status == "skipped":
+        return (f"Recovery: {tid} is 'skipped' (terminal) -- no verb reverses a skip; "
+                f"this needs a human decision (`amend` a new gate, or accept it stays "
+                f"skipped). {_RECOVERY_TAIL}")
+    if status == "blocked":
+        detail = t.get("status_detail") or {}
+        prior = detail.get("prior_status")
+        if prior in ("pending", "in-progress"):
+            return (f'Recovery: resume {tid} --reason "<why the blocker cleared>" '
+                    f'(there is no separate "unblock" verb -- resume is it). {_RECOVERY_TAIL}')
+        # Reviewer BLOCK (g3-review, rework 1): the previous text also offered
+        # `reopen` as an alternative here -- reopen() requires status=="complete"
+        # and this branch is ONLY reached when status=="blocked", so it always
+        # refused when run (reproduced live). Only `skip` genuinely works from
+        # a non-restorable blocked gate; do not name an exit without running it.
+        return (f"Recovery: {tid} is blocked with no restorable prior status (rework-cap "
+                f'escalated, or blocked before `resume` existed) -- `resume`/`reopen` would '
+                f"also refuse here (reopen needs a complete gate, not blocked); use "
+                f'`skip {tid} --reason "<why>"`, or escalate to a human. {_RECOVERY_TAIL}')
+    if status == "pending" and cl.get("type", GATED) == GATED:
+        # Position-awareness (Reviewer BLOCK, g3-review rework 2): before this
+        # gate, `_next_verbs` had exactly one caller (`state()`), always
+        # invoked on the checklist's own active gate. `recovery_for` is the
+        # first caller to invoke it on an ARBITRARY refusing task, which need
+        # not be active. `start()` -- and ONLY `start()` -- additionally
+        # refuses a non-active gate on a GATED checklist, so `_next_verbs`'s
+        # bare "start {tid}" suggestion can itself refuse when `tid` isn't
+        # active (reproduced live: a 2-gate fixture, g2 pending/non-active,
+        # `advance g2` refused with a `start g2` recovery that ALSO refused).
+        # `advance`/`resume`/`reopen` carry NO active-gate check, so the
+        # `in-progress` sub-case below has no equivalent hole.
+        active = active_id(cl)
+        if active is not None and active != tid:
+            # Do NOT try to guess the active gate's own correct command here:
+            # that would re-run `_next_verbs`'s status dispatch a second,
+            # riskier time -- the active gate could itself be pending,
+            # in-progress, or blocked, and blindly suggesting "start
+            # {active}" would refuse whenever it is not literally pending
+            # (the exact same anti-pattern this fix exists to close, one
+            # level removed). `current` is read-only, NEVER refuses, and is
+            # the single already-correct source for "what do I do right
+            # now" -- point at it instead of re-deriving.
+            return (f"Recovery: {tid} is not the active gate; the checklist works "
+                    f"gates in order and {active!r} must be worked first -- run "
+                    f"`current` to see {active}'s legal next move (do not act on "
+                    f"{tid} yet). {_RECOVERY_TAIL}")
+    if status in ("pending", "in-progress"):
+        hints = _next_verbs(tid, t, cl.get("type", GATED))
+        if hints:
+            return "Recovery: " + " | ".join(hints) + f". {_RECOVERY_TAIL}"
+    return ""
+
+
+def _new_evidence_id(t: dict) -> str:
+    return f"e-{t['id']}-{len(t.get('evidence', [])) + 1}"
+
+
+def _find_evidence(cl: dict, eid: str) -> dict | None:
+    """Find an evidence item by id across ALL tasks' evidence lists. Evidence ids
+    are globally unique (`e-<task>-<n>`), so a checklist-wide search lets one task's
+    artifact postcondition be satisfied by reference to an artifact attached to a
+    sibling task (see `attest --evidence`). Returns the evidence dict or None."""
+    for t in cl.get("tasks", {}).values():
+        for ev in t.get("evidence", []):
+            if ev.get("id") == eid:
+                return ev
+    return None
+
+
+# --------------------------------------------------------------------------- #
+# git-change-policy — mechanical artifact-output guardrails (#8)
+#
+# Split deliberately into a PURE evaluator (no git, no filesystem) and a thin
+# git collector, so the policy semantics are fully unit-testable without a
+# working tree. The evaluator decides VIOLATIONS; the collector gathers the
+# changed-file facts (path/size/binary) the evaluator consumes.
+# --------------------------------------------------------------------------- #
+def _glob_to_regex(pattern: str) -> str:
+    r"""Translate a path glob into an anchored regex. `**` matches across path
+    separators (any number of segments); a single `*` matches within one
+    segment (no `/`); `?` matches one non-separator char. A trailing `/**` also
+    matches the directory itself (so `records/**` covers `records/x` and
+    `records/a/b`). We do NOT use `PurePosixPath.match`: before Python 3.13 it
+    treats `**` as a single-segment wildcard, so `records/**` would miss
+    `records/a/b` — exactly the nested record-dump case this policy must catch."""
+    # `records/**` should also match `records/a/b` -> normalize a trailing
+    # `/**` to `(/.*)?` by handling it as part of the `**` translation below.
+    out: list[str] = []
+    i, n = 0, len(pattern)
+    while i < n:
+        c = pattern[i]
+        if c == "*":
+            if i + 1 < n and pattern[i + 1] == "*":
+                # `**` (optionally `/**` or `**/`) crosses separators
+                i += 2
+                if i < n and pattern[i] == "/":
+                    i += 1
+                    out.append("(?:.*/)?")  # zero or more leading segments
+                else:
+                    out.append(".*")
+                continue
+            out.append("[^/]*")  # single star: within a segment
+        elif c == "?":
+            out.append("[^/]")
+        elif c == "/":
+            # collapse a `/**` suffix so the dir prefix also matches the dir
+            if pattern[i:] == "/**":
+                out.append("(?:/.*)?")
+                i = n
+                continue
+            out.append("/")
+        else:
+            out.append(re.escape(c))
+        i += 1
+    return "^" + "".join(out) + "$"
+
+
+def _glob_match(path: str, pattern: str) -> bool:
+    """Match a POSIX-style path against a glob pattern with recursive `**`.
+
+    We normalize to forward slashes so Windows-style paths still match. A bare
+    basename pattern like `*.parquet` matches on any segment (it is also tried
+    against the final path component) so `sub/dir/x.parquet` is caught."""
+    norm = (path or "").replace("\\", "/")
+    regex = _glob_to_regex(pattern)
+    if re.match(regex, norm):
+        return True
+    # basename-style pattern (no separator): also match the final component,
+    # mirroring `*.parquet` matching anywhere in the tree.
+    if "/" not in pattern:
+        return bool(re.match(regex, norm.rsplit("/", 1)[-1]))
+    return False
+
+
+def evaluate_git_change_policy(files: list[dict], policy: dict) -> list[str]:
+    """PURE policy evaluation. Returns a list of human-readable violations
+    (empty == satisfied). `files` is a list of dicts:
+    `{"path": str, "size": int, "binary": bool}`. No git, no filesystem — this
+    is the fully unit-testable core.
+
+    A file VIOLATES if:
+      - it matches any `deny_globs` entry (an explicit deny ALWAYS denies — it
+        beats an allow); OR
+      - its size exceeds `max_file_bytes`; OR
+      - it is binary and `require_human_waiver_for_binary` is true,
+    UNLESS the path matches an `allow_globs` entry, which exempts it from the
+    SIZE and BINARY checks only (deny still denies). Empty/missing policy lists
+    mean "no constraint of that kind"; a clean (empty) file list yields zero
+    violations."""
+    policy = policy or {}
+    deny = policy.get("deny_globs") or []
+    allow = policy.get("allow_globs") or []
+    max_bytes = policy.get("max_file_bytes")
+    binary_needs_waiver = bool(policy.get("require_human_waiver_for_binary"))
+
+    violations: list[str] = []
+    for f in files:
+        path = f.get("path", "")
+        size = f.get("size")
+        is_binary = bool(f.get("binary"))
+
+        denied = next((g for g in deny if _glob_match(path, g)), None)
+        if denied is not None:
+            violations.append(f"{path}: matches deny glob {denied!r}")
+            # explicit deny is terminal for this file; allow cannot rescue it
+            continue
+
+        allowed = any(_glob_match(path, g) for g in allow)
+        if allowed:
+            continue  # exempt from size/binary checks
+
+        if isinstance(max_bytes, (int, float)) and isinstance(size, (int, float)) and size > max_bytes:
+            violations.append(f"{path}: size {int(size)}B exceeds max_file_bytes {int(max_bytes)}")
+        if is_binary and binary_needs_waiver:
+            violations.append(f"{path}: binary/blob addition requires a human waiver")
+    return violations
+
+
+def _git(args: list[str], base_dir: Path | None) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", *args], cwd=str(base_dir) if base_dir else None,
+        capture_output=True, text=True,
+    )
+
+
+def repo_revision(base_dir: Path | None = None) -> dict:
+    """The repo's HEAD commit and whether its working tree is dirty relative to it
+    -- Tommy's doctrine-version traceability stamp (#300 g5): "practically, it's
+    just the repo rev number ... it could just be the current repo version in
+    totality for ease."
+
+    A bare commit SHA lies about a dirty tree -- that is precisely why
+    `context_manifest.rev()` never uses one for a per-file row. An earlier
+    version of this docstring argued `dirty` keeps that coarser, repo-wide SHA
+    honest by shipping *inside the same content field* as `commit` -- a review
+    disproved that (#300 g5 rework 1): two checkouts at the same commit,
+    delivering byte-identical declared canon, disagreed on content solely
+    because `git status --porcelain` is repo-wide and picked up dirt on a file
+    no declaration named. What to do about that was `context_manifest`'s call,
+    not this function's: `commit` is canon-determined (identical for any
+    checkout of that commit) so it is safe as manifest *content*, and `dirty`
+    first moved to the manifest's excluded `run` subtree and was then dropped
+    altogether (#327, #305 g4) -- it is repo-wide, so it reports dirt on files no
+    declaration names, and once a real caller made that observable the field
+    turned out to be neither dependably constant nor informatively varying.
+    Neither move reopens the honesty gap a bare SHA has -- the per-file blob OID
+    already answers "which bytes did this agent actually get" for a dirty,
+    untracked or out-of-repo file, which is the question `dirty` was protecting;
+    `commit` only ever had to be the coarse, human-facing traceability stamp.
+    This function is unaffected and still returns both fields together: it is a
+    general repo-facts primitive, not pre-shaped to one caller's appetite, and
+    its one manifest consumer simply now uses `commit` only.
+
+    Uses `_git()`, the same subprocess helper `_collect_changed_files` already
+    relies on for git-change-policy -- so this stays the one place in the module
+    that shells out for repo-level git facts, not a second ad-hoc caller.
+    `context_manifest.py` imports this function by name rather than reimplementing
+    it, which keeps that module's own "shells out to nothing" invariant
+    (`ProducerGuards.test_producer_shells_out_to_nothing`) literally true: no
+    `subprocess` identifier ever appears in its source.
+
+    Absence -- no git on PATH, `base_dir` not inside a repository, or any other
+    git failure -- yields `{"commit": None, "dirty": None}` rather than raising.
+    A revision stamp is best-effort provenance, not a precondition the caller
+    must satisfy first; this mirrors `read_bytes()`/`rev()`'s "absence is normal,
+    never raise" rule for a manifest row.
+    """
+    commit_proc = _git(["rev-parse", "HEAD"], base_dir)
+    if commit_proc.returncode != 0:
+        return {"commit": None, "dirty": None}
+    commit = commit_proc.stdout.strip()
+    status_proc = _git(["status", "--porcelain"], base_dir)
+    dirty = bool(status_proc.stdout.strip()) if status_proc.returncode == 0 else None
+    return {"commit": commit, "dirty": dirty}
+
+
+def _collect_changed_files(policy: dict, base_dir: Path | None) -> list[dict]:
+    """Thin git collector: gather `{path, size, binary}` for the changed files.
+
+    mode `staged` -> `git diff --cached`; mode `branch` -> `git diff <base>...HEAD`.
+    Binary detection uses `git diff --numstat` (a binary file shows `-\t-`).
+    Size comes from the working-tree file when present, else `git cat-file` on
+    the staged/HEAD blob. Kept small and isolated so the PURE evaluator carries
+    the testable logic."""
+    policy = policy or {}
+    mode = policy.get("mode", "staged")
+    if mode == "branch":
+        base = policy.get("base", "origin/main")
+        name_args = ["diff", "--name-only", f"{base}...HEAD"]
+        numstat_args = ["diff", "--numstat", f"{base}...HEAD"]
+        blob_ref = "HEAD"
+    else:
+        name_args = ["diff", "--cached", "--name-only"]
+        numstat_args = ["diff", "--cached", "--numstat"]
+        blob_ref = ":"  # the staged index entry for a path is `:<path>`
+
+    names_proc = _git(name_args, base_dir)
+    if names_proc.returncode != 0:
+        raise EngineError(f"git-change-policy: collecting changed files failed: {names_proc.stderr.strip()}")
+    paths = [ln for ln in names_proc.stdout.splitlines() if ln.strip()]
+
+    binary_paths: set[str] = set()
+    numstat_proc = _git(numstat_args, base_dir)
+    if numstat_proc.returncode == 0:
+        for line in numstat_proc.stdout.splitlines():
+            parts = line.split("\t")
+            if len(parts) >= 3 and parts[0] == "-" and parts[1] == "-":
+                binary_paths.add(parts[2])
+
+    root = base_dir or Path.cwd()
+    files: list[dict] = []
+    for path in paths:
+        size = None
+        wt = root / path
+        if wt.is_file():
+            try:
+                size = wt.stat().st_size
+            except OSError:
+                size = None
+        if size is None:
+            ref = f"{blob_ref}{path}" if blob_ref == ":" else f"{blob_ref}:{path}"
+            cat = _git(["cat-file", "-s", ref], base_dir)
+            if cat.returncode == 0:
+                try:
+                    size = int(cat.stdout.strip())
+                except ValueError:
+                    size = None
+        files.append({"path": path, "size": size, "binary": path in binary_paths})
+    return files
+
+
+def _bash_candidates_from_git(git_path: str) -> list[str]:
+    """Candidate bash.exe paths derived from a git executable path. Windows
+    backstop for when `git` is on PATH but its bash directory is not.
+
+    `shutil.which("git")` resolves git to varying depths — `…\\Git\\mingw64\\bin\\git.exe`
+    (Git root = great-grandparent), `…\\Git\\cmd\\git.exe` (grandparent), or
+    `…\\Git\\bin\\git.exe` (parent) — while bash always lives at `…\\Git\\bin\\bash.exe`
+    and `…\\Git\\usr\\bin\\bash.exe`. Walk up 4 ancestor directories and, for each,
+    emit both bash locations. Pure: no filesystem access (the caller filters by
+    existence). Uses PureWindowsPath so it parses Windows paths the same on any host
+    OS — this helper only runs on Windows but its unit tests run anywhere."""
+    candidates: list[str] = []
+    d = PureWindowsPath(git_path).parent
+    for _ in range(4):
+        candidates.append(str(d / "bin" / "bash.exe"))
+        candidates.append(str(d / "usr" / "bin" / "bash.exe"))
+        d = d.parent
+    return candidates
+
+
+def _find_posix_shell() -> str | None:
+    """Locate a POSIX shell to run `command` checks under: bash on Windows, sh on
+    POSIX. Returns the shell path, or None if none is found. On Windows
+    `shutil.which("bash")` is the primary lookup (Git for Windows usually puts its
+    bash dir on PATH); the git-derived candidates are a backstop for when git is on
+    PATH but bash is not."""
+    if os.name != "nt":
+        return shutil.which("sh")
+    found = shutil.which("bash")
+    if found:
+        return found
+    git = shutil.which("git")
+    if git:
+        for cand in _bash_candidates_from_git(git):
+            if os.path.isfile(cand):
+                return cand
+    return shutil.which("sh")
+
+
+def _run_check_command(command: str) -> tuple[subprocess.CompletedProcess, str]:
+    """Run a `command`-kind check. Route it through a POSIX shell when one is found
+    (so authored grep/&&/pipe checks behave the same on Windows as on POSIX);
+    when NO POSIX shell is available, FAIL VISIBLY instead of routing the POSIX-form
+    check text through the platform shell (cmd.exe on Windows) — a silent cmd.exe run
+    would misinterpret grep/&&/pipe checks and could false-pass or false-fail. In that
+    case we do not call subprocess.run at all: we return a synthetic failed result
+    (returncode 127) whose stderr names the missing shell. Returns (completed process,
+    marker) where marker is "posix" or "no-posix-shell"; POSIX-form text is never run
+    through cmd.exe."""
+    shell = _find_posix_shell()
+    if shell:
+        proc = subprocess.run([shell, "-c", command], capture_output=True, text=True)
+        return proc, "posix"
+    proc = subprocess.CompletedProcess(
+        args=command,
+        returncode=127,
+        stdout="",
+        stderr=(
+            "no POSIX shell (bash/sh) found to run a command-type check; the engine "
+            "refuses to run POSIX-form check text through cmd.exe — install Git for "
+            "Windows (bash) or a POSIX sh so command checks can run"
+        ),
+    )
+    return proc, "no-posix-shell"
+
+
+def _check_condition(cond: dict, t: dict, base_dir: Path | None = None) -> bool:
+    """Verify one condition. command -> run it; artifact -> presence/match;
+    git-change-policy -> evaluate the staged/branch diff against an artifact
+    policy (#8); null -> the agent must have attested it (trust but verify).
+
+    A WAIVED condition is honored without re-running its check: a human override
+    (see `waive`) has accepted the condition, and re-running the command would
+    overwrite `satisfied` and silently un-waive it at every `advance`."""
+    if cond.get("waived"):
+        return True
+    if cond.get("attested"):
+        # An artifact postcondition satisfied by cross-task reference (see `attest
+        # --evidence`): honor it without re-scanning, since the artifact branch only
+        # looks at this task's OWN evidence and would otherwise reset it to False.
+        return True
+    chk = cond.get("check")
+    if chk is None:
+        return bool(cond.get("satisfied"))
+    kind = chk.get("kind")
+    if kind == "command":
+        # ISSUE #454, corner case NOT chased (deliberate): the engine's own verdict
+        # here is returncode-only, and an exit code carries no ANSI, so this site is
+        # immune to the forced-colour defect that broke the mutation floor. What is
+        # NOT immune is an author who writes a check that pipes a colour-capable
+        # tool into a text matcher (`pytest ... | grep -c passed`): under the
+        # harness's FORCE_COLOR=3 that grep runs against escape-laden text inside
+        # the shell, where this engine cannot see it. No shipped template does this,
+        # so nothing is fixed here. If check text ever starts parsing tool output,
+        # the check itself must clear FORCE_COLOR / pass --color=no.
+        proc, shell_marker = _run_check_command(chk["command"])
+        cond["satisfied"] = proc.returncode == 0
+        eid = _new_evidence_id(t)
+        t.setdefault("evidence", []).append(
+            {
+                "id": eid,
+                "type": "command-output",
+                "payload": {"cmd": chk["command"], "exit": proc.returncode, "shell": shell_marker},
+                "produced_by": "engine",
+                "ts": "",
+            }
+        )
+        if cond["satisfied"]:
+            cond["satisfied_by"] = eid
+        return cond["satisfied"]
+    if kind == "artifact":
+        want = chk.get("match", {})
+        for ev in t.get("evidence", []):
+            if ev.get("superseded"):
+                # A superseded evidence item (see `reopen` cascade) is inert: it
+                # must not re-satisfy a gate from a stale approval after reopen.
+                continue
+            if ev.get("type") == chk["evidence_type"] and all(
+                ev.get("payload", {}).get(k) == v for k, v in want.items()
+            ):
+                cond["satisfied"] = True
+                cond["satisfied_by"] = ev["id"]
+                return True
+        cond["satisfied"] = False
+        return False
+    if kind == "git-change-policy":
+        files = _collect_changed_files(chk, base_dir)
+        violations = evaluate_git_change_policy(files, chk)
+        eid = _new_evidence_id(t)
+        t.setdefault("evidence", []).append(
+            {
+                "id": eid,
+                "type": "artifact-policy",
+                "payload": {
+                    "mode": chk.get("mode", "staged"),
+                    "violations": violations,
+                    "files_checked": len(files),
+                },
+                "produced_by": "engine",
+                "ts": "",
+            }
+        )
+        cond["satisfied"] = not violations
+        if cond["satisfied"]:
+            cond["satisfied_by"] = eid
+        return cond["satisfied"]
+    raise EngineError(f"unknown check kind {kind!r}")
+
+
+# --------------------------------------------------------------------------- #
+# session leasing — actor authority over the checklist STATE
+# --------------------------------------------------------------------------- #
+def _is_stale(session: dict | None, config: dict) -> bool:
+    """A lease is stale when its `last_heartbeat` is older than the configured
+    timeout. A missing/closed lease, or one with an unparseable heartbeat, is
+    treated conservatively (a missing one is not 'stale'; it just isn't active).
+    Tests can drive staleness by writing an old `last_heartbeat` directly, or by
+    monkeypatching `_now`."""
+    if not session or session.get("status") != "active":
+        return False
+    hb = session.get("last_heartbeat")
+    if not hb:
+        return True
+    try:
+        age = (_parse_ts(_now()) - _parse_ts(hb)).total_seconds()
+    except (ValueError, TypeError):
+        return True
+    return age > lease_stale_seconds(config)
+
+
+def _active_lease(cl: dict) -> dict | None:
+    """The lease iff it is present and `status: active`; else None. A released
+    lease does not gate mutation."""
+    sess = cl.get("engine_session")
+    if isinstance(sess, dict) and sess.get("status") == "active":
+        return sess
+    return None
+
+
+def _refresh_owner_heartbeat(cl: dict, session_id: str | None) -> None:
+    """Stamp liveness: if `session_id` owns the active lease, advance its
+    `last_heartbeat` to now. No-op when there is no active lease, a different
+    session owns it, or `session_id` is falsy. Called after every mutating verb
+    the owner issues *and that succeeds*, so an actively-working owner never goes
+    stale and a genuine idle gap self-heals on the owner's next successful verb.
+    A refused verb never reaches here, so a failing-only session can still go
+    stale. It never writes a takeover record — the owner resuming its own work is
+    not a takeover."""
+    lease = _active_lease(cl)
+    if lease is not None and session_id and session_id == lease.get("session_id"):
+        lease["last_heartbeat"] = _now()
+
+
+def require_session(cl: dict, verb: str, session_id: str | None, config: dict) -> None:
+    """The actor-authority gate. Mutating verbs are session-gated only ONCE an
+    ACTIVE lease exists; with no active lease a missing `--session-id` is fine
+    (legacy checklists/templates have no `engine_session`).
+
+    Staleness gates **non-owners only** — it answers "has the owner gone quiet
+    long enough that someone else may seize the lease?" The rightful owner is
+    NEVER blocked by its own staleness, because an owner issuing a verb IS the
+    liveness signal (the stamp `_refresh_owner_heartbeat` records it). So the
+    owner always passes; a non-owner is refused — with a `claim` instruction if
+    the lease is stale, or an ownership instruction if it is a different,
+    still-active lease."""
+    if verb not in MUTATING_VERBS:
+        return
+    lease = _active_lease(cl)
+    if lease is None:
+        return  # no lease claimed: legacy behavior, no session needed
+    if session_id == lease.get("session_id"):
+        return  # the owner is never blocked by its own staleness
+    if _is_stale(lease, config):
+        raise EngineError(
+            f"checklist lease {lease.get('session_id')!r} is stale; "
+            f"`claim` it (same id or --force --reason) before mutating"
+        )
+    raise EngineError(
+        f"checklist is owned by active session {lease.get('session_id')!r}; "
+        f"pass --session-id {lease.get('session_id')!r} or take over with "
+        f"`claim --force --reason ...`"
+    )
+
+
+def claim(
+    cl: dict,
+    session_id: str,
+    claimed_by: str,
+    worktree: str,
+    config: dict,
+    force: bool = False,
+    reason: str | None = None,
+) -> str:
+    """Claim ownership of the checklist for `session_id`.
+
+    - No existing/closed/stale lease: create a fresh active lease.
+    - Same `session_id` already active: idempotent resume; refresh heartbeat.
+    - A DIFFERENT active, non-stale lease: refuse unless `--force --reason`.
+    - `--force` takes over any lease, recording the prior session in
+      `previous_session_id` and the `takeover_reason` (force needs a reason)."""
+    if not (session_id or "").strip():
+        raise EngineError("claim requires a non-empty --session-id")
+    reason = (reason or "").strip() or None
+    if force and not reason:
+        raise EngineError("claim --force requires a non-empty --reason")
+
+    existing = cl.get("engine_session")
+    existing = existing if isinstance(existing, dict) else None
+    now = _now()
+
+    # idempotent same-session resume of an active lease
+    if (
+        existing
+        and existing.get("status") == "active"
+        and existing.get("session_id") == session_id
+        and not force
+    ):
+        existing["last_heartbeat"] = now
+        existing["claimed_by"] = claimed_by or existing.get("claimed_by")
+        if worktree is not None:
+            existing["worktree"] = worktree
+        return f"resumed lease {session_id} (heartbeat refreshed)"
+
+    blocking = (
+        existing
+        and existing.get("status") == "active"
+        and existing.get("session_id") != session_id
+        and not _is_stale(existing, config)
+    )
+    if blocking and not force:
+        raise EngineError(
+            f"checklist already owned by active session "
+            f"{existing.get('session_id')!r}; use `claim --force --reason ...` to take over"
+        )
+
+    previous_id = None
+    takeover_reason = None
+    if existing and existing.get("session_id") and existing.get("session_id") != session_id:
+        if force:
+            previous_id = existing.get("session_id")
+            takeover_reason = reason
+        elif _is_stale(existing, config):
+            previous_id = existing.get("session_id")
+            takeover_reason = reason or "stale lease reclaimed"
+
+    # #305: ARM the refusals counter. Armed here, at lease creation, so that a
+    # `refusals: 0` is a real reading — "an engine that counts refusals drove this
+    # run, and none happened" — rather than being ambiguous with "this file predates
+    # the counter". That is what keeps ABSENCE meaningful, which is what lets
+    # `episode_capture.mechanical_fields` REFUSE the field rather than report a
+    # fabricated 0. `setdefault`, so a re-claim never resets a live tally; and
+    # deliberately not on the idempotent-resume path above (which returns early),
+    # because resuming a pre-counter run must not backdate a 0 over refusals that
+    # really happened and were never recorded.
+    cl.setdefault("refusals", 0)
+    cl["engine_session"] = {
+        "session_id": session_id,
+        "status": "active",
+        "claimed_at": now,
+        "last_heartbeat": now,
+        "claimed_by": claimed_by,
+        "worktree": worktree,
+        "previous_session_id": previous_id,
+        "takeover_reason": takeover_reason,
+    }
+    if force and previous_id:
+        return f"FORCED takeover of {previous_id} by {session_id} -> active (reason: {takeover_reason})"
+    if previous_id:
+        return f"reclaimed stale lease {previous_id}; {session_id} -> active"
+    return f"claimed lease {session_id} -> active"
+
+
+def heartbeat(cl: dict, session_id: str) -> str:
+    """Refresh the active lease's `last_heartbeat`. Only the owning session may
+    heartbeat; refuses if there is no active lease or the id mismatches."""
+    lease = _active_lease(cl)
+    if lease is None:
+        raise EngineError("no active lease to heartbeat; `claim` first")
+    if session_id != lease.get("session_id"):
+        raise EngineError(
+            f"heartbeat session {session_id!r} does not own the lease "
+            f"({lease.get('session_id')!r})"
+        )
+    lease["last_heartbeat"] = _now()
+    return f"heartbeat {session_id} @ {lease['last_heartbeat']}"
+
+
+def release(cl: dict, session_id: str, force: bool = False, reason: str | None = None) -> str:
+    """Close the lease (`status: released`). Only the owning session may release,
+    unless `--force --reason` is given. After release, a new `claim` succeeds."""
+    sess = cl.get("engine_session")
+    if not isinstance(sess, dict) or sess.get("status") != "active":
+        raise EngineError("no active lease to release")
+    if session_id != sess.get("session_id") and not force:
+        raise EngineError(
+            f"release session {session_id!r} does not own the lease "
+            f"({sess.get('session_id')!r}); use --force --reason to override"
+        )
+    if force and session_id != sess.get("session_id") and not (reason or "").strip():
+        raise EngineError("release --force (non-owner) requires a non-empty --reason")
+    sess["status"] = "released"
+    sess["released_at"] = _now()
+    return f"released lease {sess.get('session_id')}"
+
+
+def _lease_line(cl: dict) -> str | None:
+    """Human-readable active-lease summary for `current`, or None if no lease."""
+    sess = cl.get("engine_session")
+    if not isinstance(sess, dict):
+        return None
+    status = sess.get("status")
+    if status == "active":
+        return f"LEASE active: {sess.get('session_id')} (by {sess.get('claimed_by')}, heartbeat {sess.get('last_heartbeat')})"
+    return f"LEASE {status}: {sess.get('session_id')}"
+
+
+# --------------------------------------------------------------------------- #
+# why-capture + refresh primitives (#179) — Modules 1 & 4.
+#
+# A top-level append-only `why_trail` records the running understanding at each
+# non-exempt `advance`. Entries are NEVER mutated or deleted; a `reopen` freshens
+# the digest by APPENDING a reopen-marker for each gate it resets, so a reopened
+# gate's stale understanding stops being "latest" without editing any prior row.
+# The live DIGEST is the latest non-mechanical, non-superseded `why`. All of this
+# is backward compatible: a spine with no `why_trail` gets one on first write
+# (setdefault), and a task with no `why_exempt` is treated as NOT exempt (opt-out
+# default) — so a legacy gate REFUSES cleanly on a why-less advance, never crashes.
+# --------------------------------------------------------------------------- #
+def _append_why(cl: dict, gate: str, why: str | None, mechanical: bool) -> str:
+    """Append one why-record to the top-level append-only `why_trail` and return
+    its id. `why` is the running-understanding text (None for a mechanical step).
+    `setdefault` creates `why_trail` on first write so legacy spines drive
+    unchanged. Never mutates or removes a prior entry."""
+    trail = cl.setdefault("why_trail", [])
+    wid = f"w-{len(trail) + 1}"
+    trail.append({
+        "id": wid, "gate": gate, "why": why,
+        "mechanical": bool(mechanical), "ts": _now(),
+    })
+    return wid
+
+
+def _append_reopen_marker(cl: dict, gate: str, reason: str) -> None:
+    """Append a reopen-marker to `why_trail`: the append-only way a `reopen`
+    FRESHENS the digest. A why-record for `gate` is stale once a later reopen-marker
+    names that gate, so `_latest_why_record` skips past it — no prior row edited."""
+    trail = cl.setdefault("why_trail", [])
+    wid = f"w-{len(trail) + 1}"
+    trail.append({
+        "id": wid, "gate": gate, "reopen": True,
+        "reason": reason, "ts": _now(),
+    })
+
+
+def _latest_why_record(cl: dict) -> dict | None:
+    """The live why-record: the newest `why_trail` entry that is a real (non-
+    mechanical) understanding AND has not been superseded by a later reopen of its
+    own gate. Returns the entry dict, or None when no live understanding exists.
+    A mechanical marker is never live (it carries no understanding)."""
+    trail = cl.get("why_trail", []) or []
+    for i in range(len(trail) - 1, -1, -1):
+        e = trail[i]
+        if e.get("reopen") or e.get("mechanical") or e.get("why") is None:
+            continue
+        gate = e.get("gate")
+        if any(trail[j].get("reopen") and trail[j].get("gate") == gate
+               for j in range(i + 1, len(trail))):
+            continue  # a later reopen of this gate freshened past this understanding
+        return e
+    return None
+
+
+def _digest(cl: dict) -> str | None:
+    """The live digest text: the latest non-mechanical, non-superseded `why`, or
+    None when no live understanding exists."""
+    rec = _latest_why_record(cl)
+    return rec.get("why") if rec else None
+
+
+def has_pending_refresh_request(cl: dict, gate: str, why_ref: str | None = None) -> bool:
+    """Pure predicate: True iff a pending `refresh-request` targets `gate`.
+
+    A refresh-request is a `refresh-request`-typed evidence item (attached via the
+    ordinary `attach` verb) whose payload carries POINTERS ONLY: `seam` = the gate
+    it concerns, `why_ref` = the why-record id it was raised against — never copies
+    of state. It is pending while present and not superseded (the reopen cascade
+    supersedes evidence; the flow that consumes/fulfils it is #183). No shared
+    mutable state, no side effects.
+
+    `why_ref` (#190) is an OPTIONAL identity filter. When None (the default — the
+    DISPLAY semantic: "a refresh is pending for this gate"), any pending request for
+    the gate matches, UNCHANGED. When given, a pending request ALSO has to carry the
+    matching `payload.why_ref` — an identity match, so a NEW trip on a still-open
+    gate cannot ride a stale/earlier request's coattails (HARD-band callers pass the
+    current-digest why-record id; a None id degrades to the gate-only match)."""
+    for t in cl.get("tasks", {}).values():
+        if not isinstance(t, dict):
+            continue
+        for ev in t.get("evidence", []) or []:
+            if not isinstance(ev, dict) or ev.get("type") != "refresh-request":
+                continue
+            if ev.get("superseded"):
+                continue
+            payload = ev.get("payload") or {}
+            if payload.get("seam") != gate:
+                continue
+            if why_ref is not None and payload.get("why_ref") != why_ref:
+                continue
+            return True
+    return False
+
+
+def _why_suffix(cl: dict, aid: str | None) -> str:
+    """The why-capture lines appended to `current`: a `DIGEST:` line carrying the
+    live understanding, and a `REFRESH REQUESTED:` line when a pending
+    refresh-request targets the active gate/item. Empty when neither applies. No new
+    verb — these ride the read-only `current`. Renders for BOTH gated and survey
+    checklists (#189): a survey never accumulates a `why_trail` (`_append_why` only
+    fires on `advance`, which refuses surveys), so `_digest` is None and NO `DIGEST:`
+    line appears — only the `REFRESH REQUESTED:` line, which is the reach-up target
+    for survey roles (reviewer). Gated output is unchanged."""
+    out = ""
+    digest = _digest(cl)
+    if digest is not None:
+        out += f"\nDIGEST: {digest}"
+    if aid is not None and has_pending_refresh_request(cl, aid):
+        rec = _latest_why_record(cl)
+        ref = f" (why_ref {rec['id']})" if rec else ""
+        out += f"\nREFRESH REQUESTED: {aid}{ref}"
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# Trip — two-band gate policy (#182), Module 3 of the Context Governor (epic-178).
+#
+# At each GATE BOUNDARY the engine reads the context-fullness gauge (#181's reader)
+# and applies model-keyed thresholds (#181's `thresholds_for`). Two bands, both
+# fail-safe on a missing/stale reading (`read()` collapses stale -> None inside):
+#
+#   SOFT (fill >= soft): an ADVISORY stop-by-default question rides the read-only
+#     `current` output — "you've used most of your context; unless you're basically
+#     done, hand off here at this seam." SOFT NEVER forces; the agent may decline
+#     (any reason accepted in v1 — we do not police reason quality; declining is
+#     simply choosing to `advance`, which SOFT never blocks).
+#   HARD (fill >= hard): the engine REFUSES to `advance` until a `refresh-request`
+#     exists for the gate (#179's `has_pending_refresh_request`), pointing at the
+#     exact `attach` command. HARD ALWAYS forces.
+#
+# CHECKS AT GATE BOUNDARIES ONLY — the mid-gate runaway is a deliberately accepted
+# limit; there is no mid-gate check. Like the doctrine rail, this policy rides the
+# CLI-boundary chokepoints in `dispatch` so the verb functions stay PURE (their
+# return values are unchanged, so existing exact-equality tests keep passing): SOFT
+# is a suffix on `current`'s dispatch output; HARD is a pre-`advance` guard.
+#
+# The agent NEVER introspects fill: the engine supplies the fill fact, the agent
+# supplies the stop-point judgment.
+#
+# ROLLOUT CAVEAT: do NOT enable/exercise the HARD band in production until #183's
+# tier-skill wiring lands — an agent hitting HARD writes a refresh-request with no
+# invoker watching and can strand. Both bands are built and tested here; this is a
+# rollout-ordering constraint, not a build dependency.
+# --------------------------------------------------------------------------- #
+def _gauge_path(base_dir: Path | None) -> Path | None:
+    """The gauge file for this checklist: `.agent-work/<work_id>/gauge.json`, a
+    SIBLING of the spine — #180's writer drops it at `Path(spine).parent /
+    "gauge.json"`, and `base_dir` IS that spine directory. Returns None when the
+    location is unresolvable (no `base_dir`, e.g. a checklist processed without a
+    file path): an unresolvable work_id yields no reading and no advice."""
+    if base_dir is None:
+        return None
+    return Path(base_dir) / "gauge.json"
+
+
+def _read_gauge(base_dir: Path | None):
+    """Read a fresh `Reading` for this checklist, or None. Fail-safe: an absent
+    reader binding or unresolvable path collapses to None, and the reader itself
+    never raises (every failure mode — absent/corrupt/malformed/stale/clock-skew —
+    is already collapsed to None inside `read()`). A None reading must produce
+    neither a SOFT question nor a HARD refusal."""
+    if _gauge_reader is None:
+        return None
+    path = _gauge_path(base_dir)
+    if path is None:
+        return None
+    return _gauge_reader.read(path)
+
+
+def _refresh_attach_hint(gate: str) -> str:
+    """The exact `attach` command that raises a refresh-request for `gate` — the
+    remedy both bands point the agent at (payload is pointers only: seam + why_ref,
+    per #179). `<why-id>` is a placeholder the agent fills from the live DIGEST."""
+    return (f"attach {gate} --type refresh-request "
+            f"--field seam={gate} --field why_ref=<why-id>")
+
+
+def _uncalibrated_advisory(base_dir: Path | None) -> str:
+    """A visible notice that the context governor is OFF for this run because
+    the running model has no calibration entry.
+
+    Deliberately not a refusal and not a nudge to hand off: with no window we
+    cannot claim the context is either full or empty, so the honest report is
+    that the instrument is unavailable, plus the one-line fix. Fail-safe like
+    everything else on this path -- an absent reader or unresolvable location
+    yields the empty string."""
+    if _gauge_reader is None:
+        return ""
+    path = _gauge_path(base_dir)
+    if path is None:
+        return ""
+    try:
+        model = _gauge_reader.uncalibrated_model(path)
+    except Exception:
+        return ""
+    if not model:
+        return ""
+    return (f"\nCONTEXT GAUGE OFF: no calibration entry for model {model!r}, so "
+            f"context fullness is NOT being measured this run — no soft/hard "
+            f"trip will fire, however long the run gets. Watch your own context "
+            f"and hand off on judgement. To fix: add {model!r} to both "
+            f"MODEL_WINDOWS (scripts/hooks/gauge_writer_hook.py) and _PROFILES "
+            f"(scripts/gauge_reader.py), using the window from the published "
+            f"model catalog — never an inferred one.")
+
+
+def _format_age(delta: timedelta) -> str:
+    """Render a timedelta as whole seconds/minutes/hours — pure arithmetic and
+    string formatting only, NO threshold comparisons (constraint:no-threshold-
+    values): the unit boundaries below (60s/min, 3600s/hr) are unit-conversion
+    arithmetic, not a judgment call on whether an age is "old" — this function
+    never decides that, it only renders whatever age it is handed. A negative
+    delta (a caller passing a future observed_at) clamps to 0s rather than
+    printing a negative age."""
+    total_seconds = int(delta.total_seconds())
+    if total_seconds < 0:
+        total_seconds = 0
+    if total_seconds < 60:
+        return f"{total_seconds}s"
+    if total_seconds < 3600:
+        minutes, seconds = divmod(total_seconds, 60)
+        return f"{minutes}m{seconds:02d}s"
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes = remainder // 60
+    return f"{hours}h{minutes:02d}m"
+
+
+def _skip_reason_advisory(gauge_path: Path | None) -> str:
+    """A visible notice that the writer hook POSITIVELY LOCALIZED why no
+    reading was written at this gauge path (issue #271) — ambiguous session->
+    spine binding, or a transcript with no usable usage record. Neither cause
+    is routine silence: the writer hook already knows exactly why it skipped,
+    so saying nothing here would waste information it already has. Fail-safe
+    like every other gauge-adjacent advisory — an absent reader, unresolvable
+    path, or any problem reading the sidecar yields the empty string."""
+    if _gauge_reader is None or gauge_path is None:
+        return ""
+    try:
+        info = _gauge_reader.skip_reason(gauge_path)
+    except Exception:
+        return ""
+    if not info:
+        return ""
+    age = _format_age(datetime.now(timezone.utc) - info["observed_at"])
+    reason = info["reason"]
+    if reason == "ambiguous-binding":
+        count = info.get("candidate_count")
+        candidates = f"{count} candidate spines" if count is not None else "more than one candidate spine"
+        return (f"\nCONTEXT GAUGE SILENT: this session is bound to {candidates} at "
+                f"once, so the writer hook could not tell which one a reading "
+                f"belongs to and wrote nothing rather than guess (flagged {age} "
+                f"ago). Watch your own context and hand off on judgement.")
+    if reason == "no-usable-record":
+        return (f"\nCONTEXT GAUGE SILENT: the writer hook found a transcript but "
+                f"no usable usage record in it, so no reading was written "
+                f"(flagged {age} ago). Watch your own context and hand off on "
+                f"judgement.")
+    # Forward-compatible fallback for a reason string this dispatcher doesn't
+    # name explicitly yet — still says SOMETHING rather than staying silent.
+    return (f"\nCONTEXT GAUGE SILENT: no reading was written (flagged {age} ago) "
+            f"— reason: {reason!r}. Watch your own context and hand off on "
+            f"judgement.")
+
+
+def _stale_record_advisory(gauge_path: Path | None) -> str:
+    """When `read()` itself rejected the gauge file at this path (e.g. it is
+    simply too old, or clock-skewed, or names an uncalibrated model), report
+    the file's OWN raw facts — fill, model, age — with explicitly NO threshold
+    judgment: this is not a fresh SOFT/HARD verdict, just the last recorded
+    number, so a caller never mistakes a frozen reading for a live low one.
+    Fail-safe like every other gauge-adjacent advisory."""
+    if _gauge_reader is None or gauge_path is None:
+        return ""
+    try:
+        raw = _gauge_reader.raw_record(gauge_path)
+    except Exception:
+        return ""
+    if not raw:
+        return ""
+    age = _format_age(datetime.now(timezone.utc) - raw["observed_at"])
+    return (f"\nCONTEXT GAUGE SILENT: the last recorded reading at this path was "
+            f"{raw['fill_fraction']:.0%} full on {raw['model']!r}, sampled {age} "
+            f"ago — too old (or otherwise rejected) to trust as a live reading. "
+            f"This is the raw last-known number, NOT a fresh soft/hard judgment. "
+            f"Watch your own context and hand off on judgement.")
+
+
+def _no_reading_advisory(base_dir: Path | None) -> str:
+    """Dispatch across every localizable "why is there no reading" cause, in
+    order, returning the FIRST non-empty result — exactly one signal reaches
+    the caller even when more than one sidecar happens to exist at a path:
+
+    1. `_uncalibrated_advisory` (#252) — completely unchanged, called exactly
+       as before this gate. A STANDING defect (true until a human edits a
+       code table), so it takes priority over the two newer, TRANSIENT causes
+       below.
+    2. `_skip_reason_advisory` (#271) — the writer hook positively localized
+       WHY it skipped this exact path (ambiguous binding / no usable record).
+    3. `_stale_record_advisory` (#271) — last resort: `read()` itself rejected
+       the file at this path, so report its raw last-known facts rather than
+       staying silent about a frozen number.
+
+    Each branch already fails safe to "" on its own (see their docstrings);
+    this dispatcher adds no new failure surface."""
+    advisory = _uncalibrated_advisory(base_dir)
+    if advisory:
+        return advisory
+    gauge_path = _gauge_path(base_dir)
+    advisory = _skip_reason_advisory(gauge_path)
+    if advisory:
+        return advisory
+    return _stale_record_advisory(gauge_path)
+
+
+def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
+    """The Trip advisory suffix for the read-only `current` at a gate boundary
+    (gated checklists only). Empty for surveys, a missing/stale reading, or when
+    below `soft`. SOFT band: a stop-by-default question (advisory — never forces).
+    HARD band: the same escalated to the exact remedy; the refusal itself is
+    enforced on `advance` by `_trip_hard_gate`."""
+    if cl.get("type") != GATED:
+        return ""
+    gate = active_id(cl)
+    if gate is None:
+        return ""
+    reading = _read_gauge(base_dir)
+    if reading is None:
+        # No reading is normally silent (absent/stale gauge is routine). Three
+        # causes are NOT routine and must be said out loud, in priority order:
+        # an uncalibrated model (#252), a positively-localized writer skip
+        # (#271), or the gauge file's own raw facts if `read()` rejected it.
+        # See _no_reading_advisory for the dispatch order and why.
+        return _no_reading_advisory(base_dir)
+    soft, hard = _gauge_reader.thresholds_for(reading.model)
+    fill = reading.fill_fraction
+    if fill >= hard:
+        # Identity-aware (#190): a NEW trip must carry its OWN fresh refresh-request
+        # raised against the CURRENT understanding, not ride an earlier one's
+        # coattails. `wid is None` (no why_trail — e.g. why_exempt gates) degrades to
+        # the gate-only match, preserving all existing behavior.
+        rec = _latest_why_record(cl)
+        wid = rec["id"] if rec else None
+        if has_pending_refresh_request(cl, gate, why_ref=wid):
+            return (f"\nCONTEXT {fill:.0%} (>= hard): refresh already requested for "
+                    f"{gate} — hand off now; do not keep working.")
+        return (f"\nCONTEXT {fill:.0%} (>= hard): `advance` is BLOCKED until you "
+                f"request a refresh. Run: {_refresh_attach_hint(gate)}  — then hand off.")
+    if fill >= soft:
+        return (f"\nCONTEXT {fill:.0%} (>= soft): you've used most of your context. "
+                f"Unless you're basically done, hand off here at {gate} rather than "
+                f"pushing through (advisory — decline with a reason if you're nearly done).")
+    return ""
+
+
+def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
+    """Trip HARD backstop at the `advance` gate boundary: REFUSE to advance when
+    the gauge reads `fill >= hard` and no `refresh-request` is pending for the
+    gate. No-op for surveys, a missing/stale reading (None), or below `hard` — HARD
+    never forces on an absent reading. Called BEFORE `advance` mutates state, so a
+    refusal leaves the gate exactly `in-progress`."""
+    if cl.get("type") != GATED or not iid:
+        return
+    reading = _read_gauge(base_dir)
+    if reading is None:
+        return
+    _, hard = _gauge_reader.thresholds_for(reading.model)
+    if reading.fill_fraction < hard:
+        return
+    # Identity-aware release (#190): the pending refresh-request must be keyed to the
+    # CURRENT understanding (`_latest_why_record`), so a distinct new trip on a
+    # still-open gate cannot be waved through on a stale request's coattails. A None
+    # why-record id (no why_trail — why_exempt gates) degrades to the gate-only match,
+    # keeping every existing Trip test green.
+    rec = _latest_why_record(cl)
+    wid = rec["id"] if rec else None
+    if has_pending_refresh_request(cl, iid, why_ref=wid):
+        return  # the agent already requested a refresh; the backstop is satisfied
+    raise EngineError(
+        f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit — "
+        f"advancing is blocked until you request a refresh, so work is handed off at "
+        f"a seam rather than lost to a runaway. Run: {_refresh_attach_hint(iid)}"
+    )
+
+
+# --------------------------------------------------------------------------- #
+# state projection (ports-and-adapters port; #227 gate g2) — the single
+# sanctioned answer to "what is true right now and what may I legally do next,"
+# so an agent never has to fall through to reading spine.json or the engine
+# source to find a condition id or a recovery verb. Ratified design:
+# .agent-work/archive/2026-07-24-explore-design-thrust/dit-I1-ports-RESULT.md
+# (constellation-skills repo, read-only). DELIBERATE DEVIATION from that panel
+# (g2 handoff): NO public --json flag, NO render_json adapter, NO explain/show
+# verb — the projection below is INTERNAL STRUCTURE ONLY, consumed solely by
+# render_human() to build current()'s text. `contract` is still carried so a
+# future consumer can pin a shape version, but nothing exposes it yet.
+#
+# INV-2 (purity): state() reads STORED condition flags ONLY. It must NEVER call
+# _check_condition / _run_check_command / subprocess for a command/git-change-
+# policy check — reading state must never be a probe. Sharp edge, made
+# explicit: a condition's `satisfied: false` in the view means "not yet
+# recorded as passing," NEVER "would fail if run now" — only start()/advance()
+# actually run a check.
+# --------------------------------------------------------------------------- #
+_STATE_CONTRACT_VERSION = 1
+
+
+def _condition_kind(c: dict) -> str:
+    """The condition's check kind for display: the literal `check.kind`, or
+    "null" for a qualitative (`check: null`) condition. Never runs the check."""
+    chk = c.get("check")
+    if not isinstance(chk, dict):
+        return "null"
+    return chk.get("kind") or "null"
+
+
+def _condition_open(c: dict) -> bool:
+    """True iff the condition is NOT (yet) recorded as satisfied. Reads the
+    stored `satisfied` flag only — see the INV-2 sharp edge above; this is
+    never a live re-check."""
+    return not bool(c.get("satisfied"))
+
+
+def _condition_view(c: dict) -> dict:
+    return {
+        "id": c.get("id"),
+        "statement": c.get("statement", ""),
+        "kind": _condition_kind(c),
+        "satisfied": bool(c.get("satisfied")),
+        "waived": bool(c.get("waived")),
+        "attested": bool(c.get("attested")),
+    }
+
+
+def _attestable(kind: str) -> bool:
+    """`attest` accepts a qualitative (`check: null`) condition unconditionally,
+    or an `artifact` condition by reference (`--evidence`). `command`/
+    `git-change-policy` conditions are engine-checked and refuse attest (see
+    `attest()`), so they never get an attest hint."""
+    return kind in ("null", "artifact")
+
+
+def _blocking_conditions(conds: list[dict]) -> list[dict]:
+    """The subset of `conds` that WILL make `start()`/`advance()` refuse right
+    now, from state() alone -- i.e. the conditions a `next:` hint must actually
+    account for before suggesting the terminal verb (rework 1, g2 review BLOCK:
+    the pre-fix `_next_verbs()` ignored this and suggested a verb that refused
+    immediately).
+
+    Only `null`/`artifact`-kind conditions qualify: `_check_condition()` never
+    re-runs them (their `satisfied` flag only moves via `attest`/`waive`), so an
+    open one here is a GUARANTEED refusal. `command`/`git-change-policy`
+    conditions are the opposite case: they are engine-checked LIVE inside
+    `start()`/`advance()` itself, so state() cannot know whether they'd pass
+    right now without probing them -- and INV-2 forbids that probe. So a
+    command/git-change-policy condition showing `[unmet]` must NOT suppress the
+    hint; it may well pass when the suggested verb actually runs."""
+    return [c for c in conds if _condition_open(c) and _attestable(_condition_kind(c))]
+
+
+def _next_verbs(aid: str, t: dict, kind: str) -> list[str]:
+    """Legal-from-here move templates for the active task, hand-derived from
+    the RUNTIME contract of each verb's body — NOT from argparse. Two traps
+    this must not reintroduce:
+
+    INV-1 (g2 handoff): `advance --why` is optional at `parse_args()` but
+    required at runtime unless `--mechanical` or the gate is `why_exempt` (see
+    `advance()`); `attest --evidence` is optional at `parse_args()` but
+    required at runtime whenever the condition's `check.kind == "artifact"`
+    (see `attest()`). Walking `parser._actions` for `required=True` would
+    silently omit exactly those two.
+
+    Rework 1 (g2 review BLOCK): the TERMINAL verb (`start` for a pending task,
+    `advance` for an in-progress one) must only appear once every blocking
+    null/artifact condition for it is resolved — see `_blocking_conditions()`.
+    The gate is ASYMMETRIC: `start()` refuses on unmet PREconditions, `advance()`
+    on unmet POSTconditions, so each is checked against its own list only.
+    `resume` carries no precondition/postcondition gate at all (see `resume()`),
+    so it is never suppressed. `record` is NOT ungated -- since #422/#328 a
+    `record --result pass` refuses on an unmet `command`-kind postcondition (see
+    `record()`) -- yet its hint is never suppressed either, for the INV-2 reason
+    spelled out at the hint itself below.
+
+    Placeholders (`<...>`) mark free text only the agent can supply; every
+    other token is a real id read off THIS task."""
+    status = t.get("status")
+    if status == "blocked":
+        return [f'resume {aid} --reason "<why the blocker cleared>"']
+    if status not in ("pending", "in-progress"):
+        return []
+    preconds = t.get("preconditions") or []
+    postconds = t.get("postconditions") or []
+    verbs: list[str] = []
+    sections = [("preconditions", preconds)]
+    if status == "in-progress":
+        sections.append(("postconditions", postconds))
+    for which, conds in sections:
+        for c in conds:
+            if not _condition_open(c):
+                continue
+            ckind = _condition_kind(c)
+            if not _attestable(ckind):
+                continue
+            hint = f"attest {aid} --cond {c.get('id')} --which {which}"
+            if ckind == "artifact":
+                hint += " --evidence <evidence-id>"
+            verbs.append(hint)
+    if status == "pending":
+        if not _blocking_conditions(preconds):
+            verbs.append(f"start {aid}")
+    elif kind == SURVEY:
+        # Never suppressed -- but NOT because record() is ungated (it was when
+        # this hint was written; #422/#328 changed that). record()'s only
+        # condition gate is on `command`-kind postconditions, and only for
+        # `--result pass`. Two things make the hint legal anyway:
+        #   1. That gate is `command`-kind ONLY, which is exactly the class
+        #      _blocking_conditions() excludes -- INV-2 forbids state() probing
+        #      a command, so an [unmet] one must not suppress the hint; it may
+        #      well pass when record actually runs.
+        #   2. `--result fail` is never gated by it at all (recording an honest
+        #      failure must not be blocked by the check that is failing), so the
+        #      <pass|fail> hint always offers at least one legal move.
+        # `null`/`artifact`-kind postconditions on a survey item remain
+        # unevaluated by record() (#422/#328's declared scope), so unlike
+        # advance() there is no _blocking_conditions() test to apply here.
+        verbs.append(f'record {aid} --result <pass|fail> [--finding "<text>"]')
+    elif not _blocking_conditions(postconds):
+        if t.get("why_exempt"):
+            verbs.append(f"advance {aid}")
+        else:
+            verbs.append(f'advance {aid} --why "<understanding>" (or --mechanical)')
+    return verbs
+
+
+def state(cl: dict) -> dict:
+    """Pure state projection: `cl -> StateView`. Read-only — see the INV-2
+    purity note above. `current()` is `render_human(state(cl))`; the whole
+    completeness upgrade (#227 items 1+3) lives here, not in the adapter."""
+    kind = cl.get("type", GATED)
+    aid = active_id(cl)
+    active = None
+    if aid is not None:
+        t = task(cl, aid)
+        active = {
+            "id": aid,
+            "status": t.get("status"),
+            "imperative": t.get("imperative", ""),
+            "preconditions": [_condition_view(c) for c in (t.get("preconditions") or [])],
+            "postconditions": [_condition_view(c) for c in (t.get("postconditions") or [])],
+            "next_verbs": _next_verbs(aid, t, kind),
+            # Issue #420 defect 2: pure passthrough, no side effect, no check
+            # re-run (INV-2) -- `constraints` ([str]) and `anchors` (dict of
+            # category -> [str], or a flat [str] on some archived gates) are
+            # real, populated corpus content that never reached `current`
+            # before this fix. render_human() does the shape-handling.
+            "constraints": t.get("constraints") or [],
+            "anchors": t.get("anchors"),
+            # Issue #433: `directives` is the third field with the same
+            # defect -- populated on 8 corpus gates (including the shipped
+            # commander spine's `execute`) and never projected, so a gate's
+            # standing instruction never reached the agent it binds. Same
+            # pure passthrough as `anchors`; render_human() handles the two
+            # live shapes via _render_directive_lines().
+            "directives": t.get("directives"),
+        }
+    waived_postconditions: list[str] = []
+    consolidation_pending = False
+    if aid is None:
+        if kind == SURVEY and cl.get("consolidation") is None:
+            consolidation_pending = True
+        else:
+            for iid in cl.get("items", []):
+                wt = cl["tasks"][iid]
+                for c in wt.get("postconditions", []) or []:
+                    if c.get("waived"):
+                        waived_postconditions.append(f"{iid}.{c['id']}")
+    return {
+        "kind": kind,
+        "active": active,
+        "lease_line": _lease_line(cl),
+        "why_text": _why_suffix(cl, aid),
+        "consolidation_pending": consolidation_pending,
+        "waived_postconditions": waived_postconditions,
+        "contract": _STATE_CONTRACT_VERSION,
+    }
+
+
+def _anchor_category_items(items) -> list[str]:
+    """Normalize one `anchors` dict category's value to a list of strings.
+    Two shapes appear in the live corpus: a list of strings (most mission-
+    frame anchors), or a single bare string (e.g. EXECUTE_PLAN.template.json's
+    g1-review gate: `{"inherits": "g1-implement anchors — ..."}`). A bare
+    string must NOT be treated as an iterable of characters — that silently
+    exploded one sentence into one line per letter (found in review of issue
+    #420, reproduced against `skills/commander/templates/
+    EXECUTE_PLAN.template.json`'s shipped g1-review gate)."""
+    if isinstance(items, str):
+        return [items]
+    if isinstance(items, list):
+        return [item for item in items if isinstance(item, str)]
+    return []
+
+
+def _render_anchor_lines(anchors) -> list[str]:
+    """Format the `anchors` field for display. Three shapes appear in the
+    live corpus (verified against 20+ archived execute.json gates plus the
+    shipped EXECUTE_PLAN.template.json, issue #420): a dict of
+    category -> [str] (most Commander mission-frame anchors), a dict of
+    category -> str (e.g. g1-review's `{"inherits": "..."}`), or a flat [str]
+    on some archived gates. Unrecognized shapes render nothing rather than
+    guessing at a format the corpus doesn't actually use."""
+    if isinstance(anchors, dict):
+        return [f"  {category}: {item}"
+                for category, items in anchors.items()
+                for item in _anchor_category_items(items)]
+    if isinstance(anchors, list):
+        return [f"  {item}" for item in anchors]
+    return []
+
+
+def _directive_leaf(value) -> str:
+    """Spell one `directives` leaf for display. A string renders BARE -- these
+    leaves are template paths, output paths and field names an agent pastes
+    straight out of `current`, so JSON's surrounding quotes would be noise. A
+    list joins its leaves with `", "`. Every other scalar takes JSON spelling,
+    so a Python `False` prints as `false` and what the agent reads matches the
+    JSON the gate actually carries (`auto_file_discrepancies: false` on the
+    shipped commander spine)."""
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return ", ".join(_directive_leaf(v) for v in value)
+    return json.dumps(value)
+
+
+def _render_directive_lines(directives) -> list[str]:
+    """Format the `directives` field for display (issue #433). Two shapes
+    appear in the live corpus, verified against a tree-wide inventory of this
+    worktree (2955 gates scanned, 8 populated `directives` blocks):
+
+    - a dict of name -> contract dict -- the shape ALL 8 populated corpus
+      gates carry, e.g. the shipped skills/commander/templates/
+      COMMANDER_SPINE.template.json `execute` gate's `replan_input`. The name
+      gets its own line and each contract field an indented line under it.
+    - a flat [str] -- the shape docs/CHECKLIST_SCHEMA.md declares and the
+      `add` amend op accepts unvalidated. One indented line per ITEM: the
+      branch is total, so a non-string item takes its `_directive_leaf`
+      spelling rather than being dropped. Filtering the branch to strings would
+      silently swallow a populated directive the agent is meant to read, which
+      is the very defect this issue closes -- and `_render_anchor_lines` does
+      not filter its own list branch either.
+
+    A dict value that is not itself a dict renders as one leaf line beside its
+    name rather than an empty header. Unrecognized shapes render nothing
+    rather than guessing at a format the corpus doesn't actually use -- the
+    same rule _render_anchor_lines states. Deliberately NOT routed through
+    the anchors normalizer: the two fields' shapes genuinely differ
+    (decision:own-helper-not-anchors-helper)."""
+    if isinstance(directives, dict):
+        lines: list[str] = []
+        for name, contract in directives.items():
+            if isinstance(contract, dict):
+                lines.append(f"  {name}:")
+                lines.extend(f"    {field}: {_directive_leaf(value)}"
+                             for field, value in contract.items())
+            else:
+                lines.append(f"  {name}: {_directive_leaf(contract)}")
+        return lines
+    if isinstance(directives, list):
+        return [f"  {_directive_leaf(item)}" for item in directives]
+    return []
+
+
+def render_human(view: dict) -> str:
+    """Human adapter: format a StateView as the text agents read from
+    `current`. Pure presentation — every fact comes from `view`; this function
+    adds none of its own. The FIRST line of the active branch stays exactly
+    `ACTIVE {id} [{status}] — {imperative}` (tests/test_checklist_engine.py's
+    GoldenOutputBriefing class, ~3779 on, pins this across every shipped
+    template — the docstring used to cite line 818, a stale reference to an
+    unrelated `require_session` lease test, corrected by issue #420); the
+    conditions block, `n/m met` summary, `constraints:`/`anchors:` blocks (issue
+    #420 defect 2 — emitted only when populated, so an empty/absent field adds
+    no output), the `directives:` block (issue #433, same emitted-only-when-
+    populated rule) and `next:` hint are appended AFTER it. The why/refresh suffix
+    (`_why_suffix`, composed — not replaced — into `view["why_text"]` by
+    `state()`) rides last, same relative order as before this change; the Trip
+    `CONTEXT` advisory is a `dispatch()`-level suffix outside `current()`
+    entirely and is untouched."""
+    prefix = f"{view['lease_line']}\n" if view.get("lease_line") else ""
+    active = view.get("active")
+    if active is None:
+        if view.get("consolidation_pending"):
+            body = "ALL ITEMS VISITED. Next: consolidate"
+        else:
+            waived = view.get("waived_postconditions") or []
+            body = (f"DONE: no open items. WAIVED: {waived}" if waived
+                    else "DONE: no open items.")
+        return prefix + body + view.get("why_text", "")
+
+    lines = [f"ACTIVE {active['id']} [{active['status']}] — {active['imperative']}"]
+    open_pre = [c for c in active["preconditions"] if not c["satisfied"]]
+    open_post = [c for c in active["postconditions"] if not c["satisfied"]]
+    # (rework 1, non-blocking Fowler note) share the label+lines shape with
+    # _next_verbs()'s sections pattern instead of repeating it per list.
+    for which, open_conds in (("preconditions", open_pre), ("postconditions", open_post)):
+        if open_conds:
+            lines.append(f"{which}:")
+            lines.extend(f"  {c['id']} [unmet] {c['kind']} — {c['statement']}" for c in open_conds)
+    total = len(active["preconditions"]) + len(active["postconditions"])
+    if total:
+        met = total - len(open_pre) - len(open_post)
+        lines.append(f"{met}/{total} met")
+    if active.get("constraints"):
+        lines.append("constraints:")
+        lines.extend(f"  {c}" for c in active["constraints"])
+    anchor_lines = _render_anchor_lines(active.get("anchors"))
+    if anchor_lines:
+        lines.append("anchors:")
+        lines.extend(anchor_lines)
+    directive_lines = _render_directive_lines(active.get("directives"))
+    if directive_lines:
+        lines.append("directives:")
+        lines.extend(directive_lines)
+    if active.get("next_verbs"):
+        lines.append("next: " + " | ".join(active["next_verbs"]))
+    body = "\n".join(lines)
+    return prefix + body + view.get("why_text", "")
+
+
+# --------------------------------------------------------------------------- #
+# verbs (each returns a human/agent-readable message; refusals raise)
+# --------------------------------------------------------------------------- #
+def current(cl: dict) -> str:
+    return render_human(state(cl))
+
+
+def start(cl: dict, iid: str, base_dir: Path | None = None) -> str:
+    t = task(cl, iid)
+    if t["status"] != "pending":
+        raise EngineError(f"{iid} is {t['status']!r}, cannot start",
+                           task_id=iid, verb="start", status=t["status"])
+    if cl["type"] == GATED and active_id(cl) != iid:
+        # Reviewer BLOCK (g3-review rework 3): this raise never carried
+        # task_id/verb/status, so recovery_for() returned "" for it and the
+        # bare message's own embedded advice ("start {active} first") was
+        # unconditional -- wrong whenever the active gate isn't literally
+        # pending (reproduced live for both in-progress and blocked active
+        # gates). Wiring status="pending" (guaranteed true here -- the
+        # status!="pending" branch above already returned) routes this
+        # straight into the EXISTING pending/GATED/non-active branch below,
+        # which already never guesses a command for the active gate -- no
+        # new logic, just making this raise visible to the one that already
+        # exists.
+        raise EngineError(f"{iid} is not the active gate; start {active_id(cl)!r} first",
+                           task_id=iid, verb="start", status=t["status"])
+    preconds = t.get("preconditions", [])
+    unmet = [c["id"] for c in preconds if not _check_condition(c, t, base_dir)]
+    if unmet:
+        raise EngineError(
+            f"{iid}: preconditions unmet {unmet} (verify upstream work, then attest)",
+            task_id=iid, verb="start",
+            unmet=[{"id": c["id"], "which": "preconditions", "kind": _condition_kind(c)}
+                   for c in preconds if c["id"] in unmet],
+        )
+    t["status"] = "in-progress"
+    emit_step_manifest(cl, iid, base_dir)  # #305: AFTER the mutation — active_id() picks the step.
+    return f"{iid} -> in-progress"
+
+
+def advance(cl: dict, iid: str, from_child: str | None = None, base_dir: Path | None = None,
+            why: str | None = None, mechanical: bool = False) -> str:
+    if cl["type"] != GATED:
+        raise EngineError("advance is for gated checklists; use record")
+    t = task(cl, iid)
+    if t["status"] != "in-progress":
+        raise EngineError(f"{iid} is {t['status']!r}, must be in-progress to advance",
+                           task_id=iid, verb="advance", status=t["status"])
+    if from_child:
+        child_path = Path(from_child)
+        if not child_path.is_absolute() and base_dir is not None:
+            child_path = base_dir / from_child
+        if not child_path.exists():
+            raise EngineError(f"child checklist {from_child} not found")
+        cons = json.loads(child_path.read_text(encoding="utf-8")).get("consolidation")
+        if not cons:
+            raise EngineError(f"child {from_child} has no consolidation yet")
+        # Idempotent seam (#191): keep the attach BEFORE the guards (an artifact
+        # postcondition may legitimately consume this from-child review-result), but
+        # skip a duplicate. `main()` persists state even on a refused advance (missing
+        # --why / unmet postcondition), so a refuse-then-retry would otherwise
+        # double-attach the same consolidation — `attach` appends unconditionally.
+        already = any(
+            e.get("type") == "review-result" and e.get("payload") == cons
+            for e in t.get("evidence", []) or []
+        )
+        if not already:
+            attach(cl, iid, "review-result", cons)
+    posts = t.get("postconditions", [])
+    if not posts:
+        raise EngineError(f"{iid}: a gated gate needs >=1 postcondition")
+    unmet = [c["id"] for c in posts if not _check_condition(c, t, base_dir)]
+    if unmet:
+        raise EngineError(
+            f"{iid}: postconditions unmet {unmet}",
+            task_id=iid, verb="advance",
+            unmet=[{"id": c["id"], "which": "postconditions", "kind": _condition_kind(c)}
+                   for c in posts if c["id"] in unmet],
+        )
+    # Why-capture (#179): postconditions are proven ABOVE, before we ever solicit
+    # the why (no buying past unfinished work — a failed postcondition yields the
+    # postcondition refusal, not the why prompt). A non-exempt gate must then carry
+    # either a running --why or an explicit --mechanical marker; SILENCE FAILS CLOSED.
+    # A missing `why_exempt` is treated as NOT exempt (opt-out default). The record
+    # lands on the append-only why_trail; a mechanical marker never becomes the digest.
+    if not bool(t.get("why_exempt")):
+        if mechanical:
+            _append_why(cl, iid, why=None, mechanical=True)
+        elif (why or "").strip():
+            _append_why(cl, iid, why=why.strip(), mechanical=False)
+        else:
+            raise EngineError(
+                f"{iid}: advancing a non-exempt gate requires a running understanding — "
+                f"pass --why \"<understanding>\" (reference the task state, don't duplicate "
+                f"it) or --mechanical for a step that carries no new understanding"
+            )
+    t["status"] = "complete"
+    waived = [c["id"] for c in posts if c.get("waived")]
+    if waived:
+        return f"{iid} -> complete (WAIVED postconditions {waived})"
+    return f"{iid} -> complete"
+
+
+def record(cl: dict, iid: str, result: str, finding: str | None,
+           base_dir: Path | None = None) -> str:
+    if cl["type"] != SURVEY:
+        raise EngineError("record is for survey checklists; use advance")
+    if result not in ("pass", "fail"):
+        raise EngineError("result must be pass or fail")
+    t = task(cl, iid)
+    if result == "pass":
+        # #422 D-scope ruling (survey-record-check-scope): mirror advance()'s
+        # postcondition check (same _check_condition, same refusal shape) for
+        # `command`-kind postconditions ONLY. `null`-kind and `artifact`-kind
+        # postconditions on a survey item remain UNEVALUATED here — out of
+        # scope for this issue, no current template needs it (build what's
+        # needed, comment the rest, pass it up). A `result=='fail'` request is
+        # never gated by this check: recording an honest failure must not be
+        # blocked by the very check that is failing.
+        posts = t.get("postconditions", [])
+        command_posts = [c for c in posts if _condition_kind(c) == "command"]
+        unmet = [c["id"] for c in command_posts if not _check_condition(c, t, base_dir)]
+        if unmet:
+            raise EngineError(
+                f"{iid}: command postconditions unmet {unmet}; cannot record pass",
+                task_id=iid, verb="record",
+                unmet=[{"id": c["id"], "which": "postconditions", "kind": "command"}
+                       for c in command_posts if c["id"] in unmet],
+            )
+    t["result"] = result
+    t["finding"] = finding
+    t["status"] = "complete"
+    return f"{iid} recorded {result}" + (f": {finding}" if finding else "")
+
+
+def consolidate(cl: dict, verdict: str | None, summary: str | None, override_reason: str | None) -> str:
+    if cl["type"] != SURVEY:
+        raise EngineError("consolidate is for survey checklists")
+    open_items = [i for i in cl["items"] if cl["tasks"][i]["status"] not in TERMINAL]
+    if open_items:
+        raise EngineError(f"cannot consolidate; unvisited items {open_items}")
+    fails = [i for i in cl["items"] if cl["tasks"][i].get("result") == "fail"]
+    if verdict == "APPROVE" and fails and not override_reason:
+        raise EngineError(f"cannot APPROVE with failing items {fails}; supply --override-reason")
+    cons: dict = {
+        "verdict": verdict,
+        "findings": [
+            f"{i}: {cl['tasks'][i].get('finding')}" for i in fails if cl["tasks"][i].get("finding")
+        ],
+    }
+    if summary:
+        cons["summary"] = summary
+    if override_reason:
+        cons["override_reason"] = override_reason
+    cl["consolidation"] = cons
+    return f"consolidated: verdict={verdict} findings={len(cons['findings'])}"
+
+
+def skip(cl: dict, iid: str, reason: str) -> str:
+    t = task(cl, iid)
+    t["status"] = "skipped"
+    t.setdefault("status_detail", {})["reason"] = reason
+    return f"{iid} -> skipped because {reason}"
+
+
+def block(cl: dict, iid: str, blocker: str, authority: str, next_action: str) -> str:
+    t = task(cl, iid)
+    detail = {"blocker": blocker, "authority_needed": authority, "next_action": next_action}
+    # Record the pre-block status so `resume` can restore it (status_detail only —
+    # NOT the bubbled blockers entry). On a re-block of an already-blocked gate keep
+    # the ORIGINAL prior_status; a `blocked` status with no recorded prior (e.g. a
+    # reopen cap-escalation) deliberately records none, so `resume` refuses it.
+    prior = t["status"]
+    existing = t.get("status_detail") or {}
+    if prior != "blocked":
+        detail["prior_status"] = prior
+    elif "prior_status" in existing:
+        detail["prior_status"] = existing["prior_status"]
+    t["status"] = "blocked"
+    t["status_detail"] = detail
+    cl.setdefault("blockers", []).append({"item": iid, "blocker": blocker,
+                                          "authority_needed": authority, "next_action": next_action})
+    return f"{iid} -> blocked (bubbled to parent)"
+
+
+def resume(cl: dict, iid: str, reason: str, note: str | None = None) -> str:
+    """Move a resolved `block` forward: return a blocked gate to the status it held
+    BEFORE it was blocked (recorded by `block` as status_detail.prior_status), so the
+    delegate float-then-resume pattern has a sanctioned path — before this, the only
+    exit from a block was `skip` (OBE). Clears the blocked markers, records the
+    resolution, and drops the gate's entry from the bubbled `blockers` list.
+
+    Restores ONLY a `pending`/`in-progress` prior status. A blocked gate with no
+    restorable prior (a reopen rework-cap escalation, or a legacy block predating
+    this verb) is REFUSED — resuming a cap-escalated gate would bypass the rework cap.
+    Refuses a gate that is not `blocked` and an empty reason."""
+    t = task(cl, iid)
+    if t["status"] != "blocked":
+        raise EngineError(f"can only resume a blocked gate; {iid} is {t['status']!r}",
+                           task_id=iid, verb="resume", status=t["status"])
+    if not (reason or "").strip():
+        raise EngineError("resume requires a non-empty --reason (how the blocker was resolved)")
+    detail = t.get("status_detail") or {}
+    prior = detail.get("prior_status")
+    if prior not in ("pending", "in-progress"):
+        raise EngineError(
+            f"{iid} has no restorable pre-block status (it was rework-cap escalated or "
+            f"blocked before `resume` existed, not blocked via `block`); use `reopen`/"
+            f"`skip` or a human decision, not `resume`",
+            task_id=iid, verb="resume", status="blocked",
+        )
+    t["status"] = prior
+    detail.pop("prior_status", None)
+    detail["resume_reason"] = reason
+    if note:
+        detail["resume_note"] = note
+    t["status_detail"] = detail
+    blockers = cl.get("blockers")
+    if isinstance(blockers, list):
+        cl["blockers"] = [b for b in blockers if b.get("item") != iid]
+    return f"{iid} resumed -> {prior} (blocker resolved: {reason})"
+
+
+def _reset_conditions(conds: list[dict]) -> None:
+    """Reset each condition to unsatisfied and drop the markers that would let a
+    stale approval carry across a rework: `satisfied_by`, `waived` (a prior human
+    waiver does not survive rework) and `attested` (nor an artifact-by-reference
+    attestation). Shared by the target-gate reset and the downstream cascade."""
+    for c in conds:
+        c["satisfied"] = False
+        c.pop("satisfied_by", None)
+        c.pop("waived", None)
+        c.pop("attested", None)
+
+
+def _supersede_evidence(t: dict, iid: str, reason: str) -> None:
+    """Mark every evidence item on task `t` superseded by a reopen of `iid`.
+    Evidence is RETAINED (audit trail preserved) but rendered inert for
+    satisfaction (see `_check_condition` artifact branch and `attest --evidence`):
+    a reopened gate must not re-pass from the stale approval it just invalidated."""
+    for ev in t.get("evidence", []):
+        ev["superseded"] = {"by": f"reopen:{iid}", "reason": reason, "ts": _now()}
+
+
+def reopen(cl: dict, iid: str, reason: str, cap: int | None = None,
+           base_dir: Path | None = None) -> str:
+    """Reopen a complete gate for rework. Increments `rework_count`, escalates
+    (blocks + bubbles, no reopen) when the cap is exceeded, and on the success
+    path resets the gate's postconditions and CASCADES downstream: every later
+    gate that is `complete`/`in-progress` is reset to `pending` (both pre- and
+    postconditions cleared, evidence superseded, `status_detail.superseded_by_reopen`
+    stamped). `skipped`/`blocked` downstream gates are deliberate OBE/bubble states
+    and are left untouched. Evidence on the target and each cascaded gate is
+    superseded (retained, not deleted) so a reopened gate cannot re-pass from a
+    stale approval — the bug this cascade fixes."""
+    t = task(cl, iid)
+    if cl["type"] != GATED:
+        raise EngineError("reopen applies to gated checklists")
+    if t["status"] != "complete":
+        raise EngineError(f"can only reopen a complete gate; {iid} is {t['status']!r}",
+                           task_id=iid, verb="reopen", status=t["status"])
+    if cap is None:
+        cap = rework_cap(cl.get("config", {}))
+    if t.get("rework_count", 0) + 1 > cap:
+        detail = {
+            "blocker": f"rework cap {cap} exceeded: {reason}",
+            "authority_needed": "parent agent / human",
+            "next_action": "escalate; do not re-dispatch",
+        }
+        t["status"] = "blocked"
+        t["status_detail"] = detail
+        cl.setdefault("blockers", []).append({"item": iid, **detail})
+        return f"ESCALATED {iid}: rework cap {cap} reached; blocked and bubbled to parent (not reopened)"
+    t["rework_count"] = t.get("rework_count", 0) + 1
+    t["status"] = "in-progress"
+    # #305: AFTER the mutation — active_id() picks the in-progress step.
+    #
+    # This call is a BACKFILL, not a live emit: reopen refuses anything that is
+    # not `complete`, and a complete gate necessarily passed `start`, which
+    # already wrote this step's manifest — and emit_step_manifest is
+    # write-if-absent, so it returns early. On every reachable path in a spine
+    # created at or after #305 this is a no-op. It earns its keep only for a
+    # spine that predates the seam, where `start` ran before the emit existed
+    # and this is the first chance to write the manifest at all (observed live:
+    # reopening such a gate did emit). An earlier version of this comment
+    # justified the call as if it emitted normally; it does not.
+    emit_step_manifest(cl, iid, base_dir)
+    t.setdefault("status_detail", {})["reopen_reason"] = reason
+    _reset_conditions(t.get("postconditions", []))
+    _supersede_evidence(t, iid, reason)
+    # Cascade to downstream gates: reopening an upstream gate invalidates the work
+    # that depended on it. Only complete/in-progress gates are reset; skipped and
+    # blocked gates are deliberate states we do not churn.
+    items = cl.get("items", [])
+    cascaded: list[str] = []
+    if iid in items:
+        for did in items[items.index(iid) + 1:]:
+            dt = cl["tasks"][did]
+            if dt["status"] not in ("complete", "in-progress"):
+                continue
+            dt["status"] = "pending"
+            _reset_conditions(dt.get("preconditions", []))
+            _reset_conditions(dt.get("postconditions", []))
+            _supersede_evidence(dt, iid, reason)
+            dt.setdefault("status_detail", {})["superseded_by_reopen"] = iid
+            cascaded.append(did)
+    # Freshen the digest (#179): append a reopen-marker for the target and every
+    # cascaded gate, so their now-stale understanding stops being the latest `why`
+    # (append-only — prior why-records are never mutated). See `_latest_why_record`.
+    _append_reopen_marker(cl, iid, reason)
+    for did in cascaded:
+        _append_reopen_marker(cl, did, reason)
+    msg = f"{iid} reopened (rework {t['rework_count']}/{cap})"
+    if cascaded:
+        msg += f"; cascade-reset downstream {cascaded} (evidence superseded, retained)"
+    return msg
+
+
+_AMEND_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+
+
+def _build_amend_task(op: dict) -> dict:
+    """Build a full pending task from an `add` op, mirroring `append()`'s shape.
+    `preconditions`/`constraints` default to empty; `directives`/`child_checklist`
+    default to None. Deep-copied so the caller's op dict is never aliased into
+    canonical state."""
+    return {
+        "id": op["id"],
+        "title": op["title"],
+        "imperative": op["imperative"],
+        "preconditions": copy.deepcopy(op.get("preconditions") or []),
+        "postconditions": copy.deepcopy(op["postconditions"]),
+        "constraints": copy.deepcopy(op.get("constraints") or []),
+        "directives": copy.deepcopy(op.get("directives")),
+        "child_checklist": op.get("child_checklist"),
+        "status": "pending",
+        "status_detail": {},
+        "result": None,
+        "finding": None,
+        "evidence": [],
+        "rework_count": 0,
+    }
+
+
+def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | None = None) -> str:
+    """Intentional mid-stream re-planning of a GATED checklist. Apply a delta of
+    `add`/`drop`/`rescope` ops that touch PENDING gates only, plus a `retext-check`
+    op that corrects the check TEXT of a PENDING or IN-PROGRESS gate without
+    satisfying its condition — completed/blocked/skipped gates are never edited, and
+    no op ever marks a condition satisfied. The whole delta is ALL-OR-NOTHING: it is
+    validated and built on COPIES, and only committed to `cl` once every op passes,
+    so a refusal leaves `cl` unmutated (important: `main()` persists `cl` even on
+    the error path). Records an audit entry to `cl["amendments"]`.
+
+    - `add`: insert a new pending gate (`id` kebab-ish and unique; non-empty
+      `title`/`imperative`; >=1 postcondition). `after` names an existing gate to
+      insert behind (omit to append). The insert may not land before a frozen
+      (non-pending) gate.
+    - `drop`: remove a pending gate.
+    - `rescope`: overwrite provided fields (title/imperative/pre/postconditions/
+      constraints/directives) on a pending gate; postconditions if given stay >=1.
+    - `retext-check`: correct the check TEXT of one condition on a pending or
+      in-progress gate (`command` for a command check, or a same-kind `check`
+      object), then reset that condition to unsatisfied — an authoring fix that
+      never marks the condition satisfied (that stays `waive`'s job) and never
+      changes the check's kind.
+    Requires non-empty `--reason` and `--authority` (human ratification), same as
+    `waive`.
+
+    On a **survey** only a delta whose ops are ALL `retext-check` is accepted: a
+    survey item's command postcondition can carry a placeholder that must be
+    resolved through the engine rather than by hand (the reviewer's `r6-fowler`
+    record path). `add`/`drop`/`rescope` stay gated-only — a CONSERVATIVE choice,
+    not a type-level impossibility; see the refusal text below."""
+    if cl.get("type") not in (GATED, SURVEY):
+        raise EngineError(
+            f"amend applies to gated and survey checklists (this one is {cl.get('type')!r})"
+        )
+    if not (authority or "").strip():
+        raise EngineError("amend requires a non-empty --authority")
+    if not (reason or "").strip():
+        raise EngineError("amend requires a non-empty --reason")
+    ops = (delta or {}).get("ops")
+    if not isinstance(ops, list) or not ops:
+        raise EngineError("amend delta needs a non-empty 'ops' list")
+
+    if cl.get("type") == SURVEY:
+        gated_only = sorted({
+            str(op.get("op") if isinstance(op, dict) else op)
+            for op in ops
+            if not (isinstance(op, dict) and op.get("op") == "retext-check")
+        })
+        if gated_only:
+            raise EngineError(
+                f"amend on a survey accepts a retext-check-only delta; "
+                f"{', '.join(gated_only)} refused here. This is a CONSERVATIVE "
+                "choice, not a type-level impossibility: adding, dropping or "
+                "rescoping a survey item is a coherent thing to want, and it is "
+                "refused only because nothing needs it yet. Split the "
+                "retext-check ops into "
+                "their own delta, or raise the need with the authority named in "
+                "your handoff."
+            )
+
+    # Build the new state on copies; commit to cl only after every op validates.
+    new_items = list(cl["items"])
+    new_tasks = dict(cl["tasks"])
+    summaries: list[str] = []
+
+    def _floor() -> int:
+        """1 + index of the last non-pending (frozen) gate; 0 if none. A new gate
+        may not be inserted at an index below this."""
+        floor = 0
+        for idx, tid in enumerate(new_items):
+            if new_tasks[tid]["status"] != "pending":
+                floor = idx + 1
+        return floor
+
+    for op in ops:
+        kind = op.get("op")
+        if kind == "add":
+            nid = op.get("id")
+            if not isinstance(nid, str) or not _AMEND_ID_RE.match(nid):
+                raise EngineError(f"add: id {nid!r} must match ^[a-z0-9][a-z0-9-]*$")
+            if nid in new_tasks:
+                raise EngineError(f"add {nid}: id already exists")
+            if not (op.get("title") or "").strip():
+                raise EngineError(f"add {nid}: a non-empty title is required")
+            if not (op.get("imperative") or "").strip():
+                raise EngineError(f"add {nid}: a non-empty imperative is required")
+            posts = op.get("postconditions")
+            if not isinstance(posts, list) or len(posts) < 1:
+                raise EngineError(f"add {nid}: a gated gate needs >=1 postcondition")
+            after = op.get("after")
+            if after is not None:
+                if after not in new_tasks:
+                    raise EngineError(f"add {nid}: after {after!r} does not exist")
+                insert_at = new_items.index(after) + 1
+            else:
+                insert_at = len(new_items)
+            floor = _floor()
+            if insert_at < floor:
+                frozen = new_items[floor - 1]
+                raise EngineError(
+                    f"add {nid}: cannot insert before frozen (non-pending) gate {frozen}"
+                )
+            new_tasks[nid] = _build_amend_task(op)
+            new_items.insert(insert_at, nid)
+            summaries.append(f"added {nid}")
+        elif kind == "drop":
+            tid = op.get("id")
+            if tid not in new_tasks:
+                raise EngineError(f"drop {tid}: no such gate")
+            status = new_tasks[tid]["status"]
+            if status != "pending":
+                raise EngineError(
+                    f"drop {tid}: only a pending gate can be dropped (is {status!r})",
+                    task_id=tid, verb="amend-drop", status=status,
+                )
+            new_items.remove(tid)
+            del new_tasks[tid]
+            summaries.append(f"dropped {tid}")
+        elif kind == "rescope":
+            tid = op.get("id")
+            if tid not in new_tasks:
+                raise EngineError(f"rescope {tid}: no such gate")
+            status = new_tasks[tid]["status"]
+            if status != "pending":
+                raise EngineError(
+                    f"rescope {tid}: only a pending gate can be rescoped (is {status!r})",
+                    task_id=tid, verb="amend-rescope", status=status,
+                )
+            overwritable = ("title", "imperative", "postconditions",
+                            "preconditions", "constraints", "directives")
+            fields = {k: op[k] for k in overwritable if k in op}
+            if not fields:
+                raise EngineError(f"rescope {tid}: at least one overwritable field is required")
+            if "postconditions" in fields:
+                posts = fields["postconditions"]
+                if not isinstance(posts, list) or len(posts) < 1:
+                    raise EngineError(f"rescope {tid}: postconditions must be a non-empty list")
+            # Deep-copy the task before overwriting so the original object in
+            # cl["tasks"] stays untouched until the final commit (all-or-nothing).
+            updated = copy.deepcopy(new_tasks[tid])
+            for key, value in fields.items():
+                updated[key] = copy.deepcopy(value)
+            new_tasks[tid] = updated
+            summaries.append(f"rescoped {tid}")
+        elif kind == "retext-check":
+            tid = op.get("id")
+            if tid not in new_tasks:
+                raise EngineError(f"retext-check {tid}: no such gate")
+            status = new_tasks[tid]["status"]
+            if status not in ("pending", "in-progress"):
+                raise EngineError(
+                    f"retext-check {tid}: only a pending or in-progress gate's check text "
+                    f"may be corrected (is {status!r}); reopen a complete gate instead",
+                    task_id=tid, verb="amend-retext-check", status=status,
+                )
+            which = op.get("which", "postconditions")
+            if which not in ("preconditions", "postconditions"):
+                raise EngineError(f"retext-check {tid}: which must be 'preconditions' or 'postconditions'")
+            cond_id = op.get("cond")
+            # Deep-copy before mutating so canonical state is untouched until commit.
+            updated = copy.deepcopy(new_tasks[tid])
+            target = next((c for c in updated.get(which, []) if c.get("id") == cond_id), None)
+            if target is None:
+                raise EngineError(f"retext-check {tid}: no {which} condition {cond_id!r}")
+            old_check = target.get("check")
+            if not isinstance(old_check, dict):
+                raise EngineError(
+                    f"retext-check {tid}.{cond_id}: only an engine-checked condition has check "
+                    f"text to correct (this is check:null — satisfy via attest or accept risk via waive)"
+                )
+            if "command" in op:
+                if old_check.get("kind") != "command":
+                    raise EngineError(
+                        f"retext-check {tid}.{cond_id}: 'command' corrects a command check, but "
+                        f"this check is kind {old_check.get('kind')!r}"
+                    )
+                new_command = op["command"]
+                if not isinstance(new_command, str) or not new_command.strip():
+                    raise EngineError(f"retext-check {tid}.{cond_id}: 'command' must be a non-empty string")
+                old_check["command"] = new_command
+            elif "check" in op:
+                new_check = op["check"]
+                if not isinstance(new_check, dict) or new_check.get("kind") is None:
+                    raise EngineError(
+                        f"retext-check {tid}.{cond_id}: a replacement 'check' must be an object with "
+                        f"a non-null kind (a check:null swap is not a check-text correction)"
+                    )
+                if new_check.get("kind") != old_check.get("kind"):
+                    raise EngineError(
+                        f"retext-check {tid}.{cond_id}: cannot change check kind "
+                        f"{old_check.get('kind')!r} -> {new_check.get('kind')!r}; correct the text, "
+                        f"not the condition's nature"
+                    )
+                target["check"] = copy.deepcopy(new_check)
+            else:
+                raise EngineError(f"retext-check {tid}.{cond_id}: provide 'command' or a 'check' object")
+            # Correcting the check invalidates any prior (wrong-check) verdict: force a
+            # fresh re-evaluation but NEVER satisfy (that stays waive's job). Clears
+            # satisfied/satisfied_by AND waived/attested so _check_condition cannot
+            # short-circuit past the corrected check on a stale approval.
+            _reset_conditions([target])
+            new_tasks[tid] = updated
+            summaries.append(f"retext-check {tid}.{cond_id}")
+        else:
+            raise EngineError(f"amend: unknown op kind {kind!r}")
+
+    # Commit: every op validated. Only now do we touch canonical state.
+    cl["items"] = new_items
+    cl["tasks"] = new_tasks
+    cl.setdefault("amendments", []).append(
+        {"ts": _now(), "reason": reason, "authority": authority, "ops": summaries}
+    )
+    return f"amended: {', '.join(summaries)} (authority {authority})"
+
+
+def append(cl: dict, iid: str, title: str, imperative: str) -> str:
+    if cl["type"] != SURVEY:
+        raise EngineError("append only on survey checklists")
+    if iid in cl.get("tasks", {}):
+        raise EngineError(f"item {iid!r} already exists")
+    cl["tasks"][iid] = {
+        "id": iid,
+        "title": title,
+        "imperative": imperative,
+        "preconditions": [],
+        "postconditions": [],
+        "constraints": [],
+        "directives": None,
+        "child_checklist": None,
+        "status": "pending",
+        "status_detail": {},
+        "result": None,
+        "finding": None,
+        "evidence": [],
+        "rework_count": 0,
+    }
+    cl["items"].append(iid)
+    return f"appended {iid}"
+
+
+def attest(cl: dict, iid: str, cond_id: str, which: str, note: str | None, evidence_id: str | None = None) -> str:
+    """Satisfy a condition by attestation.
+
+    Two paths:
+    - `check: null` (qualitative): the agent's manual verification stands in for a
+      mechanical check — set `satisfied` from the note. Unchanged legacy behavior.
+    - `check.kind == "artifact"`: satisfy the postcondition **by reference** to an
+      already-attached artifact (`--evidence <id>`), instead of re-attaching the
+      same artifact to a sibling task. The engine still enforces mechanism: the
+      referenced evidence must EXIST, be of the required `evidence_type`, and match
+      the required `match` fields. It never lets an agent assert an artifact out of
+      thin air (that is what a `check: null` attest does, not this).
+
+    `command` / `git-change-policy` checks stay engine-checked and refuse attest.
+
+    The requested `which` list is searched FIRST (an explicit `--which` still wins),
+    then the OTHER condition list as a fallback — precondition ids (`p*`) and
+    postcondition ids (`c*`) are disjoint, so a bare `attest <id> --cond c1` (default
+    `--which preconditions`) still resolves a postcondition without forcing the caller
+    to pass `--which postconditions`. If the cond is in neither list, the error names
+    both."""
+    t = task(cl, iid)
+    other = "postconditions" if which == "preconditions" else "preconditions"
+    for list_name in (which, other):
+        for c in t.get(list_name, []):
+            if c["id"] != cond_id:
+                continue
+            chk = c.get("check")
+            if chk is None:
+                c["satisfied"] = True
+                c["satisfied_by"] = note or "attested"
+                return f"attested {iid}.{cond_id}"
+            if chk.get("kind") == "artifact":
+                if not evidence_id:
+                    raise EngineError(
+                        f"{cond_id} is an artifact check; attest it by referencing an "
+                        f"already-attached artifact via --evidence <id>"
+                    )
+                ev = _find_evidence(cl, evidence_id)
+                if ev is None:
+                    raise EngineError(f"evidence {evidence_id!r} not found in this checklist")
+                if ev.get("superseded"):
+                    raise EngineError(
+                        f"evidence {evidence_id!r} is superseded and cannot satisfy a condition"
+                    )
+                want_type = chk.get("evidence_type")
+                if ev.get("type") != want_type:
+                    raise EngineError(
+                        f"evidence {evidence_id!r} is type {ev.get('type')!r}, "
+                        f"not the required {want_type!r}"
+                    )
+                want_match = chk.get("match", {})
+                if not all(ev.get("payload", {}).get(k) == v for k, v in want_match.items()):
+                    raise EngineError(f"evidence {evidence_id!r} does not match required {want_match}")
+                c["satisfied"] = True
+                c["satisfied_by"] = evidence_id
+                c["attested"] = {"evidence": evidence_id, "note": note}
+                return f"attested {iid}.{cond_id} via {evidence_id}"
+            raise EngineError(f"{cond_id} is engine-checked; cannot attest")
+    raise EngineError(
+        f"condition {cond_id!r} not found in preconditions or postconditions on {iid}",
+        task_id=iid, verb="attest",
+        valid_ids=[c["id"] for c in t.get("preconditions", [])]
+        + [c["id"] for c in t.get("postconditions", [])],
+    )
+
+
+def waive(
+    cl: dict,
+    iid: str,
+    cond_id: str,
+    which: str,
+    authority: str,
+    reason: str | None,
+    forced: bool = False,
+) -> str:
+    """Human override: explicitly satisfy a condition by waiver, auditable.
+
+    Refused unless the condition's `override_policy.allowed` is true — unless an
+    explicit high-friction `--force` is given (force still demands authority +
+    reason and is recorded as a forced override). The engine does not judge
+    whether a waiver is wise; it records authority and refuses accidental use."""
+    t = task(cl, iid)
+    for c in t.get(which, []):
+        if c["id"] != cond_id:
+            continue
+        policy = c.get("override_policy") or {}
+        allowed = bool(policy.get("allowed"))
+        if not allowed and not forced:
+            raise EngineError(
+                f"{iid}.{cond_id} is not waivable (no override policy); pass --force to override deliberately"
+            )
+        if not (authority or "").strip():
+            raise EngineError("waive requires a non-empty --authority")
+        reason = (reason or "").strip() or None
+        if (policy.get("reason_required") or forced) and not reason:
+            raise EngineError("waive requires a non-empty --reason")
+        eid = _new_evidence_id(t)
+        t.setdefault("evidence", []).append(
+            {
+                "id": eid,
+                "type": "waiver",
+                "payload": {"cond": cond_id, "authority": authority, "reason": reason, "forced": forced},
+                "produced_by": "human",
+                "ts": "",
+            }
+        )
+        c["satisfied"] = True
+        c["satisfied_by"] = eid
+        c["waived"] = {"authority": authority, "reason": reason, "evidence": eid, "forced": forced}
+        tag = " (FORCED)" if forced else ""
+        return f"waived {iid}.{cond_id}{tag} by {authority} -> {eid}"
+    raise EngineError(f"{which} {cond_id!r} not found on {iid}")
+
+
+def attach(cl: dict, iid: str, etype: str, payload: dict) -> str:
+    t = task(cl, iid)
+    eid = _new_evidence_id(t)
+    t.setdefault("evidence", []).append(
+        {"id": eid, "type": etype, "payload": payload, "produced_by": "engine", "ts": ""}
+    )
+    return f"attached {eid} ({etype}) to {iid}"
+
+
+def flag_candidate(cl: dict, frm: str, statement: str) -> str:
+    cands = cl.setdefault("triage_candidates", [])
+    cid = f"tc{len(cands) + 1}"
+    cands.append({"id": cid, "from": frm, "statement": statement})
+    return f"flagged {cid}"
+
+
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--file", required=True, help="checklist JSON file")
+    p.add_argument("--dry-run", action="store_true", help="do not write changes back")
+    sub = p.add_subparsers(dest="verb", required=True)
+
+    def add_session(parser: argparse.ArgumentParser) -> None:
+        # optional on every mutating verb; only enforced once a lease exists
+        parser.add_argument("--session-id", dest="session_id", default=None,
+                            help="owning engine session (required only once a lease has been claimed)")
+
+    sub.add_parser("current")
+
+    s = sub.add_parser("claim")
+    s.add_argument("--session-id", dest="session_id", required=True)
+    s.add_argument("--claimed-by", dest="claimed_by", default="agent", help="role claiming the lease")
+    s.add_argument("--worktree", default=".")
+    s.add_argument("--force", action="store_true", help="take over an active/ambiguous lease (records prior session)")
+    s.add_argument("--reason", help="required with --force: why the takeover is justified")
+    s = sub.add_parser("heartbeat")
+    s.add_argument("--session-id", dest="session_id", required=True)
+    s = sub.add_parser("release")
+    s.add_argument("--session-id", dest="session_id", required=True)
+    s.add_argument("--force", action="store_true", help="release a lease you do not own (requires --reason)")
+    s.add_argument("--reason", help="required when force-releasing a lease you do not own")
+
+    s = sub.add_parser("start")
+    s.add_argument("id")
+    add_session(s)
+    s = sub.add_parser("advance")
+    s.add_argument("id")
+    s.add_argument("--from-child", dest="from_child", help="child checklist file; attach its consolidation as review-result first")
+    s.add_argument("--why", help="the running understanding justifying this advance; required on a non-exempt gate unless --mechanical (reference the task state, do not duplicate it)")
+    s.add_argument("--mechanical", action="store_true", help="discharge the why prompt: this advance carries no new understanding (a distinct flag, not a magic string)")
+    add_session(s)
+    s = sub.add_parser("record")
+    s.add_argument("id")
+    s.add_argument("--result", required=True, choices=["pass", "fail"])
+    s.add_argument("--finding")
+    add_session(s)
+    s = sub.add_parser("consolidate")
+    s.add_argument("--verdict")
+    s.add_argument("--summary")
+    s.add_argument("--override-reason")
+    add_session(s)
+    s = sub.add_parser("skip")
+    s.add_argument("id")
+    s.add_argument("--reason", required=True)
+    add_session(s)
+    s = sub.add_parser("block")
+    s.add_argument("id")
+    s.add_argument("--blocker", required=True)
+    s.add_argument("--authority", default="parent agent")
+    s.add_argument("--next", dest="next_action", default="")
+    add_session(s)
+    s = sub.add_parser("resume")
+    s.add_argument("id")
+    s.add_argument("--reason", required=True)
+    s.add_argument("--note")
+    add_session(s)
+    s = sub.add_parser("reopen")
+    s.add_argument("id")
+    s.add_argument("--reason", required=True)
+    add_session(s)
+    s = sub.add_parser("append")
+    s.add_argument("id")
+    s.add_argument("--title", required=True)
+    s.add_argument("--imperative", required=True)
+    add_session(s)
+    s = sub.add_parser("amend")
+    s.add_argument("--delta", required=True, help="path to a JSON delta file: {\"ops\": [...]}")
+    s.add_argument("--reason", required=True, help="why this re-planning is justified")
+    s.add_argument("--authority", required=True, help="who ratified the amendment (e.g. human)")
+    add_session(s)
+    s = sub.add_parser("attest")
+    s.add_argument("id")
+    s.add_argument("--cond", required=True)
+    s.add_argument("--which", choices=["preconditions", "postconditions"], default="preconditions")
+    s.add_argument("--note")
+    s.add_argument("--evidence", help="evidence id that satisfies an artifact postcondition by reference (avoids re-attaching the same artifact to a sibling task)")
+    add_session(s)
+    s = sub.add_parser("waive")
+    s.add_argument("id")
+    s.add_argument("--cond", required=True)
+    s.add_argument("--which", choices=["preconditions", "postconditions"], default="postconditions")
+    s.add_argument("--authority", required=True, help="who is accepting the risk (e.g. human)")
+    s.add_argument("--reason", help="why the check is being waived")
+    s.add_argument("--force", action="store_true", help="waive even without an override policy (high-friction; recorded as forced)")
+    add_session(s)
+    s = sub.add_parser("attach")
+    s.add_argument("id")
+    s.add_argument("--type", required=True)
+    s.add_argument("--payload", help="JSON object (or use the quote-safe --field / --payload-file)")
+    s.add_argument("--payload-file", dest="payload_file", help="path to a JSON file holding the payload")
+    s.add_argument("--field", action="append", default=[], metavar="K=V", help="repeatable key=value; avoids passing JSON through the shell")
+    add_session(s)
+    s = sub.add_parser("flag-candidate")
+    s.add_argument("--from", dest="frm", required=True)
+    s.add_argument("--statement", required=True)
+    add_session(s)
+    return p.parse_args(argv)
+
+
+def build_payload(args: argparse.Namespace) -> dict:
+    """Assemble an attach payload without forcing JSON through the shell.
+    Priority: --payload-file, then --payload (JSON), then --field K=V pairs."""
+    if getattr(args, "payload_file", None):
+        return json.loads(Path(args.payload_file).read_text(encoding="utf-8"))
+    payload = json.loads(args.payload) if getattr(args, "payload", None) else {}
+    for pair in getattr(args, "field", None) or []:
+        key, _, value = pair.partition("=")
+        payload[key] = value
+    if not payload:
+        raise EngineError("attach needs one of --payload-file, --payload, or --field K=V")
+    return payload
+
+
+def dispatch(cl: dict, args: argparse.Namespace, base_dir: Path | None = None) -> str:
+    v = args.verb
+    config = load_config(cl, base_dir)
+    # heartbeat/release manage the lease only and are NOT railed — keep their pure
+    # early returns. current/claim ARE railed, so they fall through to the append.
+    if v == "heartbeat":
+        return heartbeat(cl, args.session_id)
+    if v == "release":
+        return release(
+            cl, args.session_id,
+            force=getattr(args, "force", False), reason=getattr(args, "reason", None),
+        )
+    if v == "current":
+        # Trip SOFT/HARD advisory (#182) rides the read-only `current` at the gate
+        # boundary — like the doctrine rail, it hangs off this CLI chokepoint so
+        # `current` itself stays pure. Empty for surveys / missing reading / below soft.
+        message = current(cl) + _trip_advisory(cl, base_dir)
+    elif v == "claim":
+        message = claim(
+            cl, args.session_id, args.claimed_by, args.worktree, config,
+            force=getattr(args, "force", False), reason=getattr(args, "reason", None),
+        )
+    else:
+        # Actor-authority gate: once an active lease exists, a mutating verb must
+        # carry the owning --session-id. No lease -> legacy behavior (no session).
+        session_id = getattr(args, "session_id", None)
+        require_session(cl, v, session_id, config)
+        # Trip HARD backstop (#182): at the `advance` gate boundary, refuse when the
+        # gauge reads >= hard and no refresh-request exists yet. Checked BEFORE the
+        # verb runs so a refusal never mutates state. No-op on a missing reading.
+        if v == "advance":
+            _trip_hard_gate(cl, getattr(args, "id", None), base_dir)
+        # Run the verb FIRST: a refused verb raises here (before the liveness stamp),
+        # so it never refreshes the lease even though main() persists on the error
+        # path. Only a verb that returns successfully reaches the stamp below.
+        message = _run_verb(cl, args, base_dir)
+        # Owner activity = liveness: a SUCCESSFUL mutating verb by the owner refreshes
+        # the lease, so an actively-working session never goes stale and an idle gap
+        # self-heals. A refused verb never gets here.
+        if v in MUTATING_VERBS:
+            _refresh_owner_heartbeat(cl, session_id)
+    # Doctrine rail (#138 channel A): prepend the position-derived doctrine block
+    # to the railed verbs' success output. The verb functions above stay pure; the
+    # rail rides only this CLI-boundary chokepoint. `_rail_prefix` returns "" for
+    # non-gated checklists. FRONT, not suffix (#227 gate g3, item b/constraint 4):
+    # the operative result line must land LAST on the stream so `tail -1` reads
+    # it, not the banner -- the field defect this fixes.
+    if v in RAIL_VERBS:
+        message = _rail_prefix(v, cl) + message
+    return message
+
+
+def _run_verb(cl: dict, args: argparse.Namespace, base_dir: Path | None) -> str:
+    """Execute a mutating verb and return its message, or raise EngineError if the
+    verb refuses. Read-only/lease verbs are handled by `dispatch` before this."""
+    v = args.verb
+    if v == "start":
+        return start(cl, args.id, base_dir=base_dir)
+    if v == "advance":
+        return advance(cl, args.id, from_child=getattr(args, "from_child", None),
+                       base_dir=base_dir, why=getattr(args, "why", None),
+                       mechanical=getattr(args, "mechanical", False))
+    if v == "record":
+        return record(cl, args.id, args.result, args.finding, base_dir=base_dir)
+    if v == "consolidate":
+        return consolidate(cl, args.verdict, args.summary, args.override_reason)
+    if v == "skip":
+        return skip(cl, args.id, args.reason)
+    if v == "block":
+        return block(cl, args.id, args.blocker, args.authority, args.next_action)
+    if v == "resume":
+        return resume(cl, args.id, args.reason, getattr(args, "note", None))
+    if v == "reopen":
+        return reopen(cl, args.id, args.reason, cap=rework_cap(load_config(cl, base_dir)),
+                      base_dir=base_dir)
+    if v == "append":
+        return append(cl, args.id, args.title, args.imperative)
+    if v == "amend":
+        try:
+            delta = json.loads(Path(args.delta).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise EngineError(f"amend: cannot read delta {args.delta!r}: {exc}")
+        return amend(cl, delta, args.reason, args.authority, base_dir=base_dir)
+    if v == "attest":
+        return attest(cl, args.id, args.cond, args.which, args.note, evidence_id=getattr(args, "evidence", None))
+    if v == "waive":
+        return waive(cl, args.id, args.cond, args.which, args.authority, args.reason, forced=args.force)
+    if v == "attach":
+        return attach(cl, args.id, args.type, build_payload(args))
+    if v == "flag-candidate":
+        return flag_candidate(cl, args.frm, args.statement)
+    raise EngineError(f"unknown verb {v!r}")
+
+
+# --------------------------------------------------------------------------- #
+# append-only journal sidecar (#131) — one line per SUCCESSFUL mutating verb
+#
+# The spine is a single mutable JSON file: a careful agent could study genuine
+# engine output and forge the whole terminal shape. The journal raises that cost.
+# It is written ONLY by main() (the CLI boundary), append-only, one JSON line per
+# successful mutating verb, each line hash-chained to the previous. The engine
+# NEVER reads it back for its own operation, so it is fully backward compatible:
+# a journal-absent spine keeps working everywhere. Only the eval provenance check
+# cross-verifies it (journal-absent spines are grandfathered there).
+# --------------------------------------------------------------------------- #
+def journal_path(spine_path: Path) -> Path:
+    """The journal sidecar for a spine file: ``<spine>.journal`` (so
+    ``spine.json`` -> ``spine.json.journal``, and a child ``review.json`` gets its
+    own ``review.json.journal``)."""
+    return Path(str(spine_path) + ".journal")
+
+
+def _all_evidence_ids(cl: dict) -> set[str]:
+    ids: set[str] = set()
+    for t in cl.get("tasks", {}).values():
+        if isinstance(t, dict):
+            for ev in t.get("evidence", []) or []:
+                if isinstance(ev, dict) and ev.get("id"):
+                    ids.add(ev["id"])
+    return ids
+
+
+def _journal_hash(entry: dict) -> str:
+    """SHA-256 over the entry's canonical (sorted, hash-excluded) JSON. The
+    ``prev_hash`` field is part of that payload, so each line commits to the whole
+    chain before it — tampering with any earlier line invalidates every hash after."""
+    payload = {k: entry[k] for k in
+               ("seq", "ts", "session_id", "verb", "task", "evidence_ids", "prev_hash")}
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+
+
+def _read_journal_tail(jp: Path) -> tuple[int, str]:
+    """(next seq, last hash) for an existing journal, or (1, "") when absent/empty.
+    Never raises — a corrupt/unreadable journal degrades to a fresh chain rather
+    than blocking the engine (the sidecar must never break a mutation)."""
+    try:
+        lines = [ln for ln in jp.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    except OSError:
+        return 1, ""
+    if not lines:
+        return 1, ""
+    try:
+        last = json.loads(lines[-1])
+        return len(lines) + 1, last.get("hash", "")
+    except ValueError:
+        return len(lines) + 1, ""
+
+
+def append_journal_entry(spine_path: Path, verb: str, task_id: str | None,
+                         session_id: str | None, evidence_ids: list[str]) -> None:
+    """Append one hash-chained line to the spine's journal for a successful
+    mutating verb. Best-effort and non-fatal: a journal write failure must never
+    fail the mutation it records (the spine is already the source of truth), so any
+    OSError is swallowed."""
+    jp = journal_path(spine_path)
+    seq, prev = _read_journal_tail(jp)
+    entry = {
+        "seq": seq,
+        "ts": _now(),
+        "session_id": session_id,
+        "verb": verb,
+        "task": task_id,
+        "evidence_ids": sorted(evidence_ids),
+        "prev_hash": prev,
+    }
+    entry["hash"] = _journal_hash(entry)
+    try:
+        with jp.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    path = Path(args.file)
+    cl = load(path)
+    ev_before = _all_evidence_ids(cl)
+    try:
+        message = dispatch(cl, args, base_dir=path.parent)
+    except EngineError as exc:
+        # state may carry legitimate mutations (command results, escalation); persist unless read-only/dry-run
+        if not args.dry_run and args.verb != "current":
+            # #305: the ONE engine-state source for the `refusals` mechanical field.
+            # It has to live here because this is the only place a refusal is
+            # observable at all: the journal sidecar is success-only by construction
+            # (`append_journal_entry` sits after the `return 1` below), so a refusal
+            # left no trace anywhere and the field was secretly agent-dependent.
+            # Incremented INSIDE the persistence guard, not above it: a bump that is
+            # never saved is a tally that disagrees with its own file, and a dry-run
+            # is by definition not something that happened. Run-scoped rather than
+            # step-scoped, unlike `rework_count` — a refusal does not always name a
+            # task (an unknown item, a lease conflict, a malformed verb), and scoping
+            # it to a step would silently drop exactly those, which is the same class
+            # of fabrication as inventing a value.
+            # Only an ARMED counter is incremented. Creating it here on a pre-counter
+            # checklist would write `refusals: 1` onto a run whose real total is
+            # unknown and may be five — a plausible wrong number, which is worse than
+            # an absent one and is the one thing this field must never be.
+            armed = cl.get("refusals")
+            if isinstance(armed, int) and not isinstance(armed, bool):
+                cl["refusals"] = armed + 1
+            save(path, cl)
+        # Recovery (#227 gate g3, item a): a state-caused refusal names its exact
+        # exit verb, composed HERE at the CLI boundary from the exception's
+        # structured attributes -- never inside the verb function that raised.
+        recovery = recovery_for(exc, cl)
+        refused_line = f"REFUSED: {exc}" + (f" {recovery}" if recovery else "")
+        # Doctrine rail (#138 channel A): a refusal is a check-failure decision
+        # point. Prepend the check-failure rail (gated checklists only; "" for
+        # surveys) -- FRONT, not suffix (#227 gate g3, item b): the operative
+        # REFUSED(+recovery) line must land LAST so `tail -1` reads it, not the
+        # banner. This is the exact field defect: an Admiral piping engine
+        # output through `tail -1` twice saw only RAIL and never the refusal.
+        print(f"{_rail_prefix('check-failure', cl)}{refused_line}", file=sys.stderr)
+        return 1
+    if not args.dry_run and args.verb != "current":
+        save(path, cl)
+        # Journal AFTER the spine is persisted, only on the SUCCESS path, only for
+        # verbs that actually mutate canonical state. New evidence produced by this
+        # verb is captured by diffing the evidence-id set across the dispatch.
+        if args.verb in MUTATING_VERBS:
+            new_ev = sorted(_all_evidence_ids(cl) - ev_before)
+            append_journal_entry(
+                path, args.verb, getattr(args, "id", None),
+                getattr(args, "session_id", None), new_ev,
+            )
+    print(message)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

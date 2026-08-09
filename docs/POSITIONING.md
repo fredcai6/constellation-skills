@@ -23,9 +23,9 @@ Constellation **remixes capabilities** from both (vertical-slice language, HITL/
 
 ## The three entry paths (choose by how the problem feels)
 
-**1 — Vague idea → `explorer`.** Let it breathe. Exploration cycles (shotgun / compare / refine) using interrogator doctrine, excursions (research / `prototyper` / design-it-twice), a cold critic panel, a hard human-only confirmation gate. Out: a confirmed **design spec** + the issues it should become. Explorer stays *pure exploration* — it does not file issues itself; `to-issues` cuts them.
+**1 — Vague idea → `explorer`.** Let it breathe. Exploration cycles (shotgun / compare / refine) using interrogator doctrine, excursions (research / `prototyper` / design-it-twice), a cold critic panel, a hard human-only confirmation gate. Out: a confirmed shaped brief with an evidence-supported initial wave. Explorer stays *pure exploration* — it does not file issues itself; `to-initial-issues` cuts the runnable wave.
 
-**2 — Big but AFK-easy → `admiral`.** Runs a whole epic in waves of delegated commanders; can enter here directly (interrogator makes sure the idea is fully fledged first). Closeout: lessons-auditor + cartographer reconcile.
+**2 — Big but AFK-easy → `admiral`.** Runs a whole epic in waves of delegated commanders; can enter here directly (interrogator makes sure the idea is fully fledged first). Closeout: episode capture + cartographer reconcile.
 
 **3 — Hard / into-the-weeds → `commander` (human-run).** Deep, focused interrogation that will not quit early (joint understanding is the gate). Two crew in cycles: **`implementer`** (rigorous TDD, vertical-slice chunks) and **`reviewer`** (validates intent *and* implementation, plus a Fowler code-smell pass). Multiple implementer ⇄ reviewer cycles are built-in design-it-twice. Then `cartographer` updates the network and collects feedback.
 
@@ -34,21 +34,21 @@ Constellation **remixes capabilities** from both (vertical-slice language, HITL/
 ## The spine that connects them
 
 ```
-idea → EXPLORER → [confirmed spec] → TO-ISSUES (cut) → ADMIRAL (epic) / COMMANDER (issue)
+idea → EXPLORER → [confirmed shaped brief] → TO-INITIAL-ISSUES (cut) → ADMIRAL (epic) / COMMANDER (issue)
                                                               → IMPLEMENTER ⇄ REVIEWER
                                                               → DIAGNOSE (when something breaks)
                                                               → CARTOGRAPHER (update network)
                                                               → closeout: retire spec's WHY into the network
 ```
 
-The `to-issues` box — the cut-work seam between exploration and execution — is what turns a confirmed spec into a dependency-ordered, HITL/AFK-typed issue set (remixing Pocock `to-issues`/`to-tickets`: dependency edges + typing, filing owned here, invoked by the explorer agent but not baked into explorer).
+The `to-initial-issues` box — the cut-work seam between exploration and execution — turns a confirmed shaped brief into one runnable, typed current wave while keeping forecast and uncertainty nonbinding (remixing Pocock `to-issues`/`to-tickets`: dependency edges + typing, filing owned here, invoked by the explorer agent but not baked into explorer).
 
 ## Each skill's seat
 
 | Constellation skill | Seat in the system | Replaces / remixes |
 |---|---|---|
 | `explorer` | Ideation → confirmed design spec, human-only convergence | superpowers `brainstorming` |
-| `to-issues` | Cut a confirmed spec into dependency-ordered, typed issues | Pocock `to-issues`, superpowers `writing-plans` |
+| `to-initial-issues` | Cut a confirmed shaped brief into one runnable current wave | Pocock `to-issues`, superpowers `writing-plans` |
 | `admiral` | Run an epic in delegated commander waves | superpowers `dispatching-parallel-agents`, `subagent-driven-development`, `finishing-a-development-branch` |
 | `commander` / `commander-delegated` | One issue end to end (live human / frozen launch order) | superpowers `executing-plans`, `subagent-driven-development` |
 | `interrogator` | Facts-vs-decisions grilling with a no-quit-early finish gate | Pocock `grill-me`, `grill-with-docs` |
@@ -62,7 +62,6 @@ The `to-issues` box — the cut-work seam between exploration and execution — 
 | `prototyper` | Throwaway prototype answering one named question | (native) |
 | `charter` | Compile project doctrine, glossary, engine config | (native) |
 | `curator` | Periodic corpus-health maintenance | (native) |
-| `lessons-auditor` | Fresh-context lesson distillation at closeout | (native) |
 | `docent` | Static HTML explainer from map truth | (native) |
 | `workbench` | The checklist-engine substrate every skill drives | (native) |
 

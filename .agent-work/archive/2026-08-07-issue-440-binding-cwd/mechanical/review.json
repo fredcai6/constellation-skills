@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "review",
+  "mechanical": {
+    "run": "issue-440-binding-cwd",
+    "project": "constellation-skills",
+    "role": "commander-delegated",
+    "refusals": 9,
+    "spine-step": "review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-binding-cwd-review@73035bf1e71e53f4ffdddb0fe40a158fdba3aa07",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-binding-cwd",
+    "generated_at": "2026-08-07T16:13:59Z"
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "work_id": "w3a-465",
+  "root": "C:/Programs/wt-w3a-465",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "7c8b5cba1b7301ab9a8f7cba60583b311e31a6719ba2f384e4af05661e046c64",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/GLOSSARY.md",
+      "content_hash": "68b68c35ea331b736499bbc5f862ded2b0fe98ebafd42274bd4ed13f8b380d8c",
+      "source": "agent-declared"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "4c98eae16f4d7a2bb91996762ca7b8945ae85bd6d478ca6dc05313c3cc759ea2"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "This repo ships no docs/architecture/ map at all: no generated/map.json, no index.md, no packets dir. The reviewer skill (skills/reviewer/) and the checklist engine (scripts/checklist_engine.py) that issue #465 touches have no architecture packet, so the relationship between a survey template's postcondition text and the verbs that can mutate it is unmapped."
+  ],
+  "escalation": "Escalating to the Admiral of epic #418: constellation-skills carries no docs/architecture/ map, so every Commander in this epic orients DEGRADED. Not in scope for #465; recorded here as a standing gap.",
+  "emitted_at": "2026-08-08T04:58:27.450738+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "tracker_calls": 0,
+  "network_calls": 0,
+  "subprocess_calls": 0,
+  "gh_shim_first": true,
+  "tracker_adapter": "raise-on-write",
+  "frozen_hashes": {
+    "DESIGN_SPEC.md": "b2ef1b2a51268b2ee806541f625d7fd8c52b28179239ed7291308a140d2e9ddb",
+    "ISSUE_SET.json": "17bb5086744f23956146cdff02b9cccf02116595be9ce93727a5fa12b002f1f6"
+  }
+}

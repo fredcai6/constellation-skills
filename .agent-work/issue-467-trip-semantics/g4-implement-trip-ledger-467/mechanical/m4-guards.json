@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-guards",
+  "mechanical": {
+    "run": "g4-implement-trip-ledger-467",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m4-guards",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g4-implement-trip-ledger-467-m4-guards@795329567137099c3efe7057d7febf8c6128d355",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g4-implement-trip-ledger-467",
+    "generated_at": "2026-08-08T16:07:20Z"
+  }
+}

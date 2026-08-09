@@ -1,0 +1,339 @@
+{
+  "work_id": "issue-447",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-447",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@100a33c",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "lesson:falsify-a-check-against-a-decoy-before-trusting-it",
+          ".agent-work/issue-310/PLAN_ALTERNATIVES.md",
+          "commit:c60f0ad",
+          ".agent-work/issue-419-governor-identity/CRITIC_TRIAGE.md finding 2",
+          ".agent-work/CONSTELLATION_FEEDBACK.md 2026-08-05 entry for issue-419-governor-identity"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Issue-310 authored the acceptance criteria for its own gates, including the command postconditions each gate would be judged by."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Each gate postcondition would report red when the condition it was written to catch was present."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Two of the four BLOCKING findings recorded in .agent-work/issue-310/PLAN_ALTERNATIVES.md were checks that could not fail, sitting in this run's own gate acceptance criteria; engine telemetry shows both were replaced by amend at the plan step (commit c60f0ad) before any gate ran on them."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "No false green reached the journal, because both checks were replaced before any gate ran on them; the cost was re-authoring two acceptance criteria at the plan step. Playbook counters at migration: mentions 2, confirmed 0, disconfirmed 0, recurrences 1, last confirmed 2026-08-05 (issue-419-governor-identity), 1 run since. History at migration: recurred 2026-08-05 (issue-419-governor-identity), where a cold critic measured that every machine-checkable postcondition in that plan was already green at HEAD with zero code written; exported 2026-08-05 to .agent-work/CONSTELLATION_FEEDBACK.md as constellation debt rather than trust."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The two unfalsifiable postconditions were found by cold reading of the run's own acceptance criteria rather than by running them against a decoy, and both were replaced by amend at the plan step before any gate ran on them."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-447",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@100a33c",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "lesson:a-verdict-must-not-select-on-the-gap-it-escalates",
+          ".agent-work/issue-310/B2_GATE_EVIDENCE.md section 7",
+          ".agent-work/issue-310/B2_GATE_EVIDENCE.md section 5"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Issue-310's B2 gate escalated a missing threshold and its unit as choices nobody had made, and then had to select its own outcome from a decision table."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The outcome would be selected on a decision row that did not depend on the same missing input the run had just escalated."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "An independent cold reader, not the author, found that decision row R3 would have fired the outcome on a size judgement -- a threshold denominated in words, which is exactly one of the two choices section 5 of the same document says nobody has made."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The verdict had to be re-founded on a leg that does not need the escalated input rather than reworded, and it was an independent cold reader rather than the author who caught it; no further cost recorded. Playbook counters at migration: mentions 1, confirmed 0, disconfirmed 0, last confirmed none, 2 runs since."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Row R3 was deliberately not invoked, and the conclusion was re-founded on a leg that does not need the escalated threshold instead of the wording being patched."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-447",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@100a33c",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "lesson:grading-a-contested-claim-settled-launders-it",
+          ".agent-work/issue-310/MISSION_FRAME.md decision 3"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Issue-310 recorded decision 3 in .agent-work/issue-310/MISSION_FRAME.md with a @grade tag stating how fixed the decision was."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The grade would track how contested the structural claim was, so a later executor could tell 'revise freely' from 'not yours to unsettle'."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Decision 3 was graded 'settled/structural' and survived the understand and plan steps ungainsaid; only the cold-critic dispatch surfaced that an ablation arm needs zero authoring, which contested the claim."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The decision had to be regraded from 'settled/structural' to 'guess/structural' after the fact, and nothing between understand and plan had challenged the grade. Playbook counters at migration: mentions 1, confirmed 0, disconfirmed 0, last confirmed none, 2 runs since."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Decision 3 was regraded from 'settled/structural' to 'guess/structural' once the cold critic contested it, and that cold-critic dispatch is the only thing in the run that surfaced the over-grade."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-447",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@100a33c",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "lesson:reasoning-gate-crew-waiver-can-be-wrong-for-synthesis",
+          ".agent-work/issue-310/PLAN_ALTERNATIVES.md M5 disposition",
+          "skills/commander/references/commander-core.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Issue-310 decided at the PLAN_ALTERNATIVES M5 disposition whether to waive a crew dispatch on a pure design note, applying commander-core's guidance that a crew there is shallower, not safer."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The waiver would hold at the verdict gate the same way it held at the measurement gate."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The run's only real failure mode was in synthesis at the verdict gate, and one cold reader with a single-question brief found it; the finding forced a re-founding of the verdict rather than an edit."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The verdict had to be re-founded rather than edited, and the guidance that held for the measurement gate did not hold for the synthesis gate. Playbook counters at migration: mentions 1, confirmed 0, disconfirmed 0, last confirmed none, 2 runs since."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "One cold reader with a single-question brief was put on the verdict gate despite the design-note waiver, and that reader is what found the synthesis failure."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-447",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@100a33c",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "lesson:name-scoped-test-filter-gates-are-strong-but-structurally-blind",
+          "staged-feedback/governor-262/AGENT_FEEDBACK.md 'Lessons applied this run'",
+          "governor-262 execute.json g1-integrate.c1b",
+          "governor-262 execute.json g2-integrate.c1b",
+          "governor-262 g1 implementer result",
+          "governor-262 g2 reviewer result",
+          "commit:b69e6c8"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Governor-262 scoped its g1-integrate.c1b and g2-integrate.c1b postconditions to pytest -k name filters, which makes a gate structurally unable to close on an empty test set because pytest exits 5 when -k matches nothing."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The -k-filtered gate commands would see the defects in the work each gate was written to admit."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Both gates' only real defects were invisible to their -k filter -- g1's fourth source-resolution site in the test file, and g2's entire verify_skill_registered fix whose only tests live in a different test file the gate command never runs -- and the Admiral verified at base commit b69e6c8 that -k hook and -k 'wire or wiring or detect' each collect 0 of 61, so neither filter could pass vacuously."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Neither defect would have surfaced from the gate commands at all; both were caught solely by the whole-file and whole-suite runs, and the filter's honesty depended on nothing unrelated drifting into matching it. Playbook counters at migration: mentions 1, confirmed 0, disconfirmed 0, last confirmed none, 1 run since."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The run paired each -k gate with an unfiltered whole-file and whole-suite run, and that pairing is what caught both defects."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-447",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@100a33c",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "lesson:enumerate-the-sites-by-command-before-editing-a-claim",
+          ".agent-work/issue-419-governor-identity/results/g3-REVIEW_RESULT.md",
+          ".agent-work/issue-419-governor-identity/results/g3-IMPLEMENTER_RESULT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Issue-419-governor-identity changed the gauge record, which falsified the stated claim that the gauge record is four fields, and its g3 handoff named the site to fix."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Fixing the site the handoff named would leave the claim consistent across the tree."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The claim was asserted at seven sites across four files: the handoff named one, the first review found two and BLOCKed, the rework's by-command enumeration found six, and the re-review found a seventh in a fourth file nobody had swept -- each pass having reported the previous state clean."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One BLOCK, one rework round-trip and two review passes, every one of which had certified the previous state clean before the next found more sites. Playbook counters at migration: mentions 1, confirmed 0, disconfirmed 0, last confirmed none, 1 run since."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The rework enumerated every site asserting the claim by command, with the count stated, before editing any of them, and that enumeration is what took the sweep from one site to six."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-447",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@100a33c",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "lesson:archive-the-producer-with-the-output",
+          ".agent-work/issue-419-governor-identity/results/g4-REVIEW_RESULT.md",
+          ".agent-work/issue-419-governor-identity/evidence/g4-assert-control-output.txt"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Issue-419-governor-identity archived evidence/g4-assert-control-output.txt together with the script that produced it, as the run's g4 evidence."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The archived output would regenerate from its own archived producer."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The file does not regenerate from its archived script: a trailing section had been appended from a command that was never recorded, though every number in it reproduced independently when the reviewer re-derived them, so no claim rested on it."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "No claim rested on the non-reproducing artifact, and nothing in any current gate asks for regeneration, so it would not have been caught without a reviewer who chose to regenerate the file rather than read it. Playbook counters at migration: mentions 1, confirmed 0, disconfirmed 0, last confirmed none, 1 run since."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The g4 reviewer regenerated the archived output from its archived script instead of reading it and re-derived every number independently, which is how the unrecorded trailing command surfaced."
+        }
+      }
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "issue-447",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic418-h-447/MISSION_FRAME.md@100a33c",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "lesson:crew-blocked-on-a-commander-blocked-on-that-crew-has-no-exit",
+          "staged-feedback/governor-262/AGENT_FEEDBACK.md 'Crew self-amendment, ratified'",
+          "governor-262 g2-implement result",
+          "governor-262 g2 implementer plan amendments array"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Governor-262's g2 implementer needed a ruling from its Commander because its own check text did not match what the handoff required."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Escalating to the tier above would produce the ruling, because the escalation model assumes the tier above is available to answer."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The Commander was at that moment idle waiting on that crew's own result, so the crew escalated twice -- naming the deadlock explicitly in both messages -- and no ruling could arrive; this was a genuine deadlock, not an unresponsive principal."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The escalation model had no exit for the deadlock, so crew judgement filled a structural gap; the open question left behind is whether the fix is a pre-authorized bounded self-amendment class in the handoff template or an engine affordance for handing a decision back. Playbook counters at migration: mentions 1, confirmed 0, disconfirmed 0, last confirmed none, 1 run since."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The g2 implementer used the engine's amend --op retext-check to align its own mis-authored check text with what the handoff required, leaving one auditable entry in its plan's amendments array rather than fabricating authority or abandoning the gate."
+        }
+      }
+    }
+  ]
+}

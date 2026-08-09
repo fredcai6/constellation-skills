@@ -1,0 +1,173 @@
+{
+  "work_id": "w3a-465-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, GLOSSARY.md, the PR diff (git diff main...HEAD), and the crew's own g1-review HANDOFF.md at .agent-work/w3a-465/g1-review/HANDOFF.md.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff (issue #465) asked for: (1) an engine verb to fill r6-fowler's placeholder instead of hand-editing, (2) save() to write bytes preserving line endings instead of text-mode churn, (3) two prose corrections. All three verified independently: mutation-tested save() by reverting to git-stashed text-mode write_text -- test_save_preserves_lf_line_endings went RED (8 CRLF endings written into an LF fixture) on this Windows box, confirming the LF fixture is the Windows-discriminating one exactly as the test file's own comment documents; restored, reran, 4/4 green. Separately mutated save() to force eol=b'\\n' unconditionally (the 'always write LF' over-correction) and confirmed test_save_preserves_crlf_line_endings went RED, proving the CRLF fixture also discriminates. Drove the amend affordance live via the CLI (not just the shipped unit test) from a fresh probe survey instantiated from the raw template with the <fowler-pass-record-path> placeholder still in place: claimed a lease, advanced through r0..r5, started r6-fowler, then ran amend --delta <file> --reason ... --authority ... with a delta whose single op is retext-check on r6-fowler.c1, using only the CLI form documented in docs/CHECKLIST_SCHEMA.md and the shipped imperative -- it succeeded, corrected the command text, left satisfied=false, and appended one entry to amendments with the reason/authority/op. Confirmed record --result pass is still correctly refused while the (now-corrected) command postcondition fails for real. The Commander handoff's own wrong '--op retext-check' phrasing is NOT present in the shipped template or docs -- ops live inside --delta as documented.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff main...HEAD --stat -- . ':!.agent-work' shows exactly the six allowed files: scripts/checklist_engine.py, skills/reviewer/SKILL.md, skills/reviewer/templates/REVIEW_SURVEY.template.json, docs/CHECKLIST_SCHEMA.md, skills/workbench/references/checklist-engine.md, tests/test_engine_survey_retext_and_newlines.py. None of the four specifically-excluded paths (tests/test_episode_negative_control.py, scripts/hooks/gauge_writer_hook.py, tests/test_verify_spec_confirmed.py, tests/test_gauge_writer.py) appear anywhere in the diff. consolidate() (line 1949) is untouched -- the diff's two hunks in checklist_engine.py are at lines ~166-199 (save/_dominant_newline) and ~2148-2220 (amend), confirmed via git diff hunk headers; the prose-only change to SKILL.md's consolidation-guard sentence does not touch the function.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence (tests/test_engine_survey_retext_and_newlines.py) is present and demonstrates the claimed behavior, independently reproduced rather than accepted from the crew's transcript: (a) test file uses write_bytes/read_bytes throughout, never write_text/read_text -- confirmed by direct read of the source, so no vacuous-by-construction fixture; (b) mutation-tested both directions of save()'s CRLF guarantee myself (see r1-handoff finding) and both went red on the unfixed code, green after restore; (c) drove the amend-on-survey affordance live via the CLI end to end (not merely re-running the shipped pytest), including a live REFUSED confirmation that add/drop/rescope still refuse on a survey with the documented conservative-choice wording. Evidence is fresh (produced by my own commands this session), not a leftover.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Checked against CREW_CONTEXT.md Verification Discipline rules: (1) check-that-cannot-fail -- mutated save() twice (revert to text-mode; force always-LF) and both times the corresponding test went red, so the guarantee is genuinely guarded, not a check that passes on both sides of the fix. (2) assert-against-behaviour -- test asserts CRLF/LF byte counts via read_bytes(), never a docstring or message string. (3) loop-asserts-what-it-looped-over -- line_ending_counts asserts both crlf==0 AND lf>0 (or the inverse), not merely count>=0, so an empty/degenerate result cannot read as pass; the test even pre-asserts 'fixture was not born LF/CRLF' before calling save(), guarding the fixture setup itself per the CREW_CONTEXT rule to assert a mutation actually applied. (4) Windows file-write rule (encoding+newline) -- save() sidesteps the whole class by writing raw bytes (write_bytes) instead of text mode, a stronger fix than the documented workaround. (5) Record-stores-never-hand-edited -- I drove every checklist mutation in this review through engine verbs only (claim/start/record/amend), never hand-edited a survey JSON; confirmed my own review.json's provenance is engine-stamped. Doc re-grep (r4 extends into documentation correctness): grep -rn 'gated only|gated checklists only|gated-only' --include=*.md --include=*.py --include=*.json . | grep -v '^./.agent-work' | grep -i amend returns exactly ONE hit -- docs/CHECKLIST_SCHEMA.md:280 -- and it correctly describes add/drop/rescope as gated-only (not the amend verb itself), matching the crew's own re-grep claim, reproduced independently rather than accepted. Also scanned skills/commander/references/commander-core.md's amend mention (describes Commander's own gated-only usage of add/drop/rescope, accurate since Commander never drives a survey) and docs/CHECKLIST_ENGINE_DESIGN.md (generic 'decides whether to amend' prose, not an applicability claim) -- neither is stale. SKILL.md's corrected sentence ('an open fail cannot consolidate to APPROVE... unless --override-reason') matches the unchanged consolidate() implementation (line 1949, --override-reason at line 2575/2714) and does not overstate: it still says never downgrade fail to pass, keep the two exits (BLOCK or APPROVE-with-override-reason) honest.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No unreconciled architecture divergence. Function signatures unchanged (save(path,data), amend(cl,delta,reason,authority,base_dir)); no new module or seam. The implementer's Map Impact notes match the diff: amend's applicability widens from gated-only to gated-plus-survey-retext-check-only, save() gains a byte-faithful preservation guarantee, no caller moves. Out-of-scope drift correctly left as triage candidates rather than fixed silently: tc2 (checklist_engine.py:2762 journal append still text-mode), tc3 (five other JSON writers lack newline='\\n'), tc4 (interrogator's zc-consolidate carries an identical placeholder defect + identical open-fail prose claim) -- all named in the HANDOFF's 'Known out-of-scope items' and not touched by this diff, consistent with fence-check r2-scope. No decision here required Commander authority beyond the two in-latitude calls the implementer already logged (survey guard ordering; unknown-type message wording).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/harvest-418-redux/reviews/w3a-465-review/g1-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independent Fowler pass (not the crew's all-absent record, which was re-derived from scratch): fowler-pass.json at .agent-work/harvest-418-redux/reviews/w3a-465-review/g1-review/fowler-pass.json, verify_fowler_pass.py exits 0 (smells=12, flagged=[long-method, shotgun-surgery], overridden=[]). long-method flagged non-blocking: amend()'s new ~18-line survey-guard block could be extracted into a top-level predicate mirroring the existing nested _floor() helper, but is short and self-contained as shipped. shotgun-surgery flagged non-blocking: one behavioral decision required prose correction at five doc/template sites; the code change itself stayed localized to two functions in one file, and both the crew's and my own re-grep confirm all five sites were actually fixed with no sixth stale site. Neither finding blocks; both are recorded as observations for Commander/Triage visibility, distinct from the implementer's own record which rendered every smell absent.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/harvest-418-redux/reviews/w3a-465-review/g1-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "PR #492 (issue #465) verified independently. Both directions of the CRLF/LF preservation guarantee in save() were mutation-tested against the unfixed code and went red as expected (text-mode revert churned LF->CRLF; forced-always-LF churned CRLF->LF), then restored to green -- the guarantee is genuinely guarded, not a check that passes on both sides. The amend-on-survey affordance was driven end to end via the raw CLI (not just the shipped pytest) from the raw template with the placeholder unresolved, following only the documented command shape; it corrected the check text, logged reason/authority/op to amendments, left the condition unsatisfied, and record --result pass correctly still refused until the corrected command genuinely passed. add/drop/rescope were confirmed live-refused on a survey with the documented conservative-choice wording. Both prose corrections (SKILL.md's open-fail/--override-reason sentence; five doc/template gated-only sites) were independently re-verified against the unchanged consolidate() implementation and an independent re-grep that reproduced the crew's exact one-hit result. Fences held: diff touches exactly the six allowed files, none of the four excluded paths. Full suite: 1786 passed, 2 skipped, 683 subtests passed, real exit 0; the shortfall vs main's 1789 is fully explained by this branch (merge-base c0ad5ecd, pre-wave-3 base of 1782 tests) not yet containing the #461/#488/#489 merges already on main, not a regression -- 1782+4(this PR's own new tests)=1786 here vs 1782+7(two sibling merges)=1789 on main. Two non-blocking Fowler observations recorded (long-method: amend()'s new survey-guard block could be extracted like the existing _floor() helper; shotgun-surgery: one behavior change required five doc-site corrections, code itself stayed localized) -- neither blocks."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "rev-465-session1",
+    "status": "released",
+    "claimed_at": "2026-08-08T06:13:51.218739+00:00",
+    "last_heartbeat": "2026-08-08T06:28:21.298075+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T06:28:26.421663+00:00"
+  }
+}

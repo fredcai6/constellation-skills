@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-begin-guard",
+  "files": [],
+  "repo_rev": {
+    "commit": "d80eda7c92b711baa6a24d34f6c2aecb5f71350b"
+  },
+  "run": {
+    "work_id": "g2-implement-trip-semantics-467",
+    "generated_at": "2026-08-08T11:46:38Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-467"
+    }
+  }
+}

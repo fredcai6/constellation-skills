@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g6-verify",
+  "files": [],
+  "repo_rev": {
+    "commit": "f2dd40a8e6a68e562cb8fb9f706da66d01f303d6"
+  },
+  "run": {
+    "work_id": "epic418-h-447",
+    "generated_at": "2026-08-07T19:31:33Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-h-447",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-h-447"
+    }
+  }
+}

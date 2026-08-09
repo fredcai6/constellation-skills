@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-store-root-comment",
+  "mechanical": {
+    "run": "h-447-g2-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m5-store-root-comment",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 1,
+    "context-manifest-ref": "ctx-h-447-g2-implementer-m5-store-root-comment@d184d15a6e83ae17d4a741967d4a5e0a5fc05e0f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "h-447-g2-implementer",
+    "generated_at": "2026-08-07T14:52:01Z"
+  }
+}

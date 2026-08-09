@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-release",
+  "mechanical": {
+    "run": "issue-440-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m4-release",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-g1-implement-m4-release@86859a609adabad2a29bbdff3247902404442c51",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-g1-implement",
+    "generated_at": "2026-08-06T08:52:27Z"
+  }
+}

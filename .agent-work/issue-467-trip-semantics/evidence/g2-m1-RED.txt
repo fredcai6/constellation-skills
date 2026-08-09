@@ -1,0 +1,169 @@
+FF..F.F.F..                                                              [100%]
+================================== FAILURES ===================================
+_ TripHardGuardsBeginNotClose.test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest>
+
+    def test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest(self):
+        """The permanent regression guard against the #431 deadlock returning.
+    
+        Pinned at `fill >= hard` with NO refresh-request anywhere in the spine —
+        exactly the condition under which the pre-#467 engine REFUSED. It asserts
+        BOTH halves: the advance completes, AND the digest becomes the
+        understanding written AT this gate. If this fixture ever acquires a pending
+        refresh-request, the guard lifts, the advance passes on both sides of the
+        change, and this test silently stops guarding anything."""
+        cl = self._three_gates()
+        self.assertEqual(_refresh_requests_anywhere(cl), [])
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            # the two properties this test's value depends on, asserted in place
+            self.assertGreaterEqual(E._read_gauge(Path(".")).fill_fraction, self.hard)
+>           msg = E.dispatch(
+                cl, _advance_ns("g1", why="handed off at g1: HARD now guards the begin verbs"),
+                base_dir=Path("."))
+
+tests\test_checklist_engine.py:3489: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\checklist_engine.py:2680: in dispatch
+    _trip_hard_gate(cl, getattr(args, "id", None), base_dir)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cl = {'blockers': [], 'config': {'rework_cap': 3}, 'consolidation': None, 'items': ['g1', 'g2', 'g3'], ...}
+iid = 'g1', base_dir = WindowsPath('.')
+
+    def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
+        """Trip HARD backstop at the `advance` gate boundary: REFUSE to advance when
+        the gauge reads `fill >= hard` and no `refresh-request` is pending for the
+        gate. No-op for surveys, a missing/stale reading (None), or below `hard` — HARD
+        never forces on an absent reading. Called BEFORE `advance` mutates state, so a
+        refusal leaves the gate exactly `in-progress`."""
+        if cl.get("type") != GATED or not iid:
+            return
+        reading = _read_gauge(base_dir)
+        if reading is None:
+            return
+        _, hard = _gauge_reader.thresholds_for(reading.model)
+        if reading.fill_fraction < hard:
+            return
+        # Identity-aware release (#190): the pending refresh-request must be keyed to the
+        # CURRENT understanding (`_latest_why_record`), so a distinct new trip on a
+        # still-open gate cannot be waved through on a stale request's coattails. A None
+        # why-record id (no why_trail — why_exempt gates) degrades to the gate-only match,
+        # keeping every existing Trip test green.
+        rec = _latest_why_record(cl)
+        wid = rec["id"] if rec else None
+        if has_pending_refresh_request(cl, iid, why_ref=wid):
+            return  # the agent already requested a refresh; the backstop is satisfied
+>       raise EngineError(
+            f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit — "
+            f"advancing is blocked until you request a refresh, so work is handed off at "
+            f"a seam rather than lost to a runaway. Run: {_refresh_attach_hint(iid)}"
+        )
+E       checklist_engine.EngineError: g1: context at 20% is at/over the hard limit — advancing is blocked until you request a refresh, so work is handed off at a seam rather than lost to a runaway. Run: attach g1 --type refresh-request --field seam=g1 --field why_ref=<why-id>
+
+scripts\checklist_engine.py:1462: EngineError
+_ TripHardGuardsBeginNotClose.test_handoff_digest_names_the_understanding_written_at_the_tripping_gate _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_handoff_digest_names_the_understanding_written_at_the_tripping_gate>
+
+    def test_handoff_digest_names_the_understanding_written_at_the_tripping_gate(self):
+        """#431's actual observable (DC3): after the handoff-carrying close, the
+        digest names the understanding written AT the tripping gate, not the one
+        from the gate before it."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="pre-trip understanding")
+        E.start(cl, "g2")
+        self.assertEqual(E._digest(cl), "pre-trip understanding")
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+>           msg = E.dispatch(cl, _advance_ns("g2", why="at-g2 handoff understanding"),
+                             base_dir=Path("."))
+
+tests\test_checklist_engine.py:3506: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+scripts\checklist_engine.py:2680: in dispatch
+    _trip_hard_gate(cl, getattr(args, "id", None), base_dir)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+cl = {'blockers': [], 'config': {'rework_cap': 3}, 'consolidation': None, 'items': ['g1', 'g2', 'g3'], ...}
+iid = 'g2', base_dir = WindowsPath('.')
+
+    def _trip_hard_gate(cl: dict, iid: str | None, base_dir: Path | None) -> None:
+        """Trip HARD backstop at the `advance` gate boundary: REFUSE to advance when
+        the gauge reads `fill >= hard` and no `refresh-request` is pending for the
+        gate. No-op for surveys, a missing/stale reading (None), or below `hard` — HARD
+        never forces on an absent reading. Called BEFORE `advance` mutates state, so a
+        refusal leaves the gate exactly `in-progress`."""
+        if cl.get("type") != GATED or not iid:
+            return
+        reading = _read_gauge(base_dir)
+        if reading is None:
+            return
+        _, hard = _gauge_reader.thresholds_for(reading.model)
+        if reading.fill_fraction < hard:
+            return
+        # Identity-aware release (#190): the pending refresh-request must be keyed to the
+        # CURRENT understanding (`_latest_why_record`), so a distinct new trip on a
+        # still-open gate cannot be waved through on a stale request's coattails. A None
+        # why-record id (no why_trail — why_exempt gates) degrades to the gate-only match,
+        # keeping every existing Trip test green.
+        rec = _latest_why_record(cl)
+        wid = rec["id"] if rec else None
+        if has_pending_refresh_request(cl, iid, why_ref=wid):
+            return  # the agent already requested a refresh; the backstop is satisfied
+>       raise EngineError(
+            f"{iid}: context at {reading.fill_fraction:.0%} is at/over the hard limit — "
+            f"advancing is blocked until you request a refresh, so work is handed off at "
+            f"a seam rather than lost to a runaway. Run: {_refresh_attach_hint(iid)}"
+        )
+E       checklist_engine.EngineError: g2: context at 20% is at/over the hard limit — advancing is blocked until you request a refresh, so work is handed off at a seam rather than lost to a runaway. Run: attach g2 --type refresh-request --field seam=g2 --field why_ref=<why-id>
+
+scripts\checklist_engine.py:1462: EngineError
+_ TripHardGuardsBeginNotClose.test_trip_begin_reopen_refused_at_hard_without_refresh _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_trip_begin_reopen_refused_at_hard_without_refresh>
+
+    def test_trip_begin_reopen_refused_at_hard_without_refresh(self):
+        cl = self._g2_pending_after_g1()  # g1 is complete
+        before = copy.deepcopy(cl)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+>           with self.assertRaises(E.EngineError) as ctx:
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: EngineError not raised
+
+tests\test_checklist_engine.py:3527: AssertionError
+_ TripHardGuardsBeginNotClose.test_trip_begin_stale_why_ref_does_not_release_begin_work _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_trip_begin_stale_why_ref_does_not_release_begin_work>
+
+    def test_trip_begin_stale_why_ref_does_not_release_begin_work(self):
+        """#190's identity check, preserved verbatim at the new guard sites: a
+        request keyed to an EARLIER understanding does not wave a new trip through."""
+        cl = self._g2_pending_after_g1()  # live why-record is w-1
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-99"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+>           with self.assertRaises(E.EngineError):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           AssertionError: EngineError not raised
+
+tests\test_checklist_engine.py:3547: AssertionError
+_ TripHardGuardsBeginNotClose.test_trip_begin_start_refused_at_and_above_hard_without_refresh _
+
+self = <test_checklist_engine.TripHardGuardsBeginNotClose testMethod=test_trip_begin_start_refused_at_and_above_hard_without_refresh>
+
+    def test_trip_begin_start_refused_at_and_above_hard_without_refresh(self):
+        for fill in (self.hard, self.over_hard):
+            cl = self._g2_pending_after_g1()
+            before = copy.deepcopy(cl)
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+>               with self.assertRaises(E.EngineError) as ctx:
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E               AssertionError: EngineError not raised
+
+tests\test_checklist_engine.py:3517: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_handoff_digest_names_the_understanding_written_at_the_tripping_gate
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_trip_begin_reopen_refused_at_hard_without_refresh
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_trip_begin_stale_why_ref_does_not_release_begin_work
+FAILED tests/test_checklist_engine.py::TripHardGuardsBeginNotClose::test_trip_begin_start_refused_at_and_above_hard_without_refresh
+5 failed, 6 passed, 349 deselected in 2.25s

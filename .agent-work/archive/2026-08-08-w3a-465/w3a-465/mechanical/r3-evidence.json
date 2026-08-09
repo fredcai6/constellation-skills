@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "w3a-465",
+    "project": "constellation-skills",
+    "role": "constellation-reviewer w3a-465 g1",
+    "refusals": 1,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3a-465-r3-evidence@1186a5496a0b2d0fc9a703414309efb7572195fc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3a-465",
+    "generated_at": "2026-08-08T06:01:33Z"
+  }
+}

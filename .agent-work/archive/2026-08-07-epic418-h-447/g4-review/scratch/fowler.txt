@@ -1,0 +1,1 @@
+fowler pass ok: .agent-work/epic418-h-447/g4-review/fowler-pass.json (smells=12, flagged=['shotgun-surgery'], overridden=['duplicated-code', 'comments-as-deodorant'])

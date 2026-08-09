@@ -1,0 +1,13 @@
+VERIFYING the #467 DC5 round trip at C:\Programs\constellation-skills-wt\epic418-a2-467\.agent-work\acceptance-467
+
+  [OK]   V1: two distinct engine session ids acted -- acc-89f734 closed a1, acc-7f3d1b closed a2
+  [OK]   V2: A's why-record w-1 exists at gate 'a1', carries a real understanding, and is the record the refusal at 'a2' was keyed to
+  [OK]   V3: the agent that was refused (acc-89f734) is the agent that wrote the handoff the successor reads
+  [OK]   V4: B (acc-7f3d1b) advanced a2 at 2026-08-08T20:11:33.522044+00:00, after A's last action at 2026-08-08T20:08:25.897461+00:00
+  [OK]   V5: ledger holds 3 entries (1 refused, 2 released); every one carries its own fill/hard pair, every fill is at/over its hard, and every hard is below the shipped 0.15 (the per-gate override was applied)
+  [OK]   V6: the refresh-request for 'a2' is keyed to w-1, A's own understanding -- B was released by A's handoff, not by a stale request
+  [OK]   V7: the deliverable holds items 1-6 exactly; A left 1-3, B added 4-6
+  [OK]   V8: the nonce 4b3dc4 in B's line 6 appears in A's why-record w-1 -- the one fact only the handoff carried made it across the seam
+  [OK]   V9: every gate is complete: {'a1': 'complete', 'a2': 'complete'}
+
+ROUND TRIP VERIFIED: 9 assertions held.

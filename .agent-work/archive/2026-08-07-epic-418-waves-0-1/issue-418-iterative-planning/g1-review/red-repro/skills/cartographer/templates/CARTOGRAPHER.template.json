@@ -1,0 +1,47 @@
+{
+  "work_id": "<work-id>",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": ["context", "packets", "index-overlays", "map-compliance"],
+  "tasks": {
+    "context": {
+      "id": "context",
+      "title": "Load map and context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas if present: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, and the current map (index + touched packets). Attest c1.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "context and current map loaded", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "packets": {
+      "id": "packets",
+      "title": "Reconcile node packets",
+      "imperative": "Reconcile each touched node packet against the code with evidence; update wording, status/confidence, dependencies, and rationale.",
+      "preconditions": [{"id": "p1", "statement": "current map loaded", "check": null, "satisfied": false}],
+      "postconditions": [{"id": "c1", "statement": "touched packets reflect current code", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "index-overlays": {
+      "id": "index-overlays",
+      "title": "Update index and overlays",
+      "imperative": "Update the index and overlays to match the reconciled packets.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "index and overlays consistent with packets", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    },
+    "map-compliance": {
+      "id": "map-compliance",
+      "title": "Verify map compliance",
+      "imperative": "Verify map compliance. Record unresolved structural questions; flag future work as triage candidates.",
+      "preconditions": [],
+      "postconditions": [{"id": "c1", "statement": "map compliant; open structural questions recorded", "check": null, "satisfied": false}],
+      "constraints": [], "directives": null, "child_checklist": null,
+      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": []
+}

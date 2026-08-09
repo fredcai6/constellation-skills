@@ -10,10 +10,10 @@ Define current meanings only; do not include debate history or uncertain terms.
 | `lease` | — | The exclusive claim one session holds on a work area, so a second agent cannot drive the same spine. | — | Release it last; a run is not done while it holds the lease. |
 | `latitude` | — | The scope of actions a role may take without asking the human. | — | A lease is exclusivity; latitude is permission. |
 | `gauge` | — | The context governor's written reading of one agent's context fill: the model plus the filled fraction of its window. | — | — |
-| `trip` | — | The event where a gauge reading crosses a band (SOFT or HARD) and the engine restricts what the agent may do next. | — | HARD blocks `advance` until the agent requests a context refresh. |
-| `episode` | — | One stored record of something observed in a run, kept for later harvest. | — | Lives under `episodes/active/` or `episodes/retired/`. |
+| `trip` | — | The event where a gauge reading crosses a band (SOFT or HARD) and the engine restricts what the agent may do next. | — | HARD refuses the verbs that BEGIN work at a gate — `start` and `reopen` — until a refresh-request is pending; the `advance` that closes the gate you are already in is never refused, only closing it silently is. |
+| `episode` | — | One stored record of something observed in a run. | — | Lives under `episodes/active/` or `episodes/retired/`. A record, never a rule. |
 | `episode store` | — | The durable home of episodes. | ~~record store~~ — use **episode store** | — |
-| `harvest` | — | Reading stored episodes back to act on them. | — | An arm is captured; a harvest is read back. |
+| `harvest` | — | Gathering what a run's own artifacts recorded and writing it into the episode store as episodes. | — | The direction is INTO the store. There is no reading harvested episodes back out as rules. |
 | `arm` | — | One group of runs in a before-and-after comparison; the PRE arm runs before a change, the POST arm after. | ~~apparatus~~, ~~capture rig~~ — use **arm** | Borrowed from clinical-trial design. |
 | `instrument` | — | The machinery that records measurements during a run. | — | As a verb, "instrumented" means fitted with that machinery. |
 | `ablation` | — | An arm with one piece deliberately removed, to show whether that piece causes the effect. | — | — |

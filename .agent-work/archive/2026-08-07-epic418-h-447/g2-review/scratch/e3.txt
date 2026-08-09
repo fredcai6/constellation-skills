@@ -1,0 +1,1 @@
+episode capture: REFUSED — missing store: C:\Program Files\Git\nonexistent is not a directory. Enumerating a store that is not there returns an empty candidate set, which reads exactly like an empty store — so this is refused rather than answered. Check --store-root.

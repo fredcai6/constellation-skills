@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-reproduce",
+  "mechanical": {
+    "run": "issue-418-g1-rework-1",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m1-reproduce",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-g1-rework-1-m1-reproduce@1d121f019850860eb2a6671585264374f155d9b9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-g1-rework-1",
+    "generated_at": "2026-08-06T17:15:43Z"
+  }
+}

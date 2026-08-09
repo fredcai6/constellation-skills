@@ -1,0 +1,365 @@
+{
+  "work_id": "issue-458-readiness",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read MISSION_FRAME.md and plan-alternatives.md in this work area, plus the frozen launch order at C:/Programs/constellation-skills/.agent-work/epic-418-redux/launch-orders/LO-w5-c2-readiness.md (read-only, outside the worktree). Confirm the frozen plan's intent (a readiness CHECK mode on install_constellation.py, never wiring settings.json) and scope, then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mission frame + plan-alternatives + launch order intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "MISSION_FRAME.md, plan-alternatives.md, and LO-w5-c2-readiness.md re-confirmed: readiness CHECK mode on install_constellation.py, no settings.json writes, Pre-Rulings 1-5 in force"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Readiness check: implement",
+      "imperative": "Add a readiness-check mode to scripts/install_constellation.py (Pre-Ruling 4: a mode of the existing installer, not a new script, since it already carries detect_hook_wiring/describe_hook_wiring most of the way there). It answers four items as separately-callable, separately-testable functions (plan-alternatives.md's named hybrid): (1) ENGINE PRESENT AND RUNNABLE (environment-scoped, not tree-scoped) -- verified by actually importing and running pytest under `sys.executable` specifically (e.g. `[sys.executable, '-m', 'pytest', '--version']`), never a bare `python`/`py` shell-out -- the python-vs-py gap is the discriminating case cited in this dispatch: `py` on a real box exits nonzero with 'No module named pytest' and reads exactly like a red suite if only a launch is checked, and a hardcoded interpreter name risks reproducing that exact false negative; (2) SKILLS INSTALLED AND REGISTERED (tree/target-scoped) -- CORPUS.json / installed constellation-* folders present and matching what --agent/--scope would target -- resolving whether the readiness mode itself requires --agent/--scope or stands scope-agnostic before that parsing is an explicit decision point for you to make and justify in IMPLEMENTER_RESULT, not a buried default; (3) HOOKS WIRED IN A FILE THAT SHIPS (environment-scoped) -- reuse detect_hook_wiring/describe_hook_wiring, but apply TWO distinct ships-tests: project scope = the wiring file is git-tracked (`git ls-files` membership, not merely present -- the Mission's own measured table: settings.local.json can be WIRED while the tracked settings.json is not, and WIRED-but-untracked reads as NOT ready); user scope has no tracked/untracked axis (~/.claude/settings.json is never part of a repo) so its ships-test is simply 'is this the file the harness actually reads at runtime'; (4) WORK AREA PRESENT (tree-scoped) -- a `.git` entry at repo root (README.md's own Baseline Assumptions: 'a Git repo, Markdown docs, and file-based workflow state'), NOT a requirement that .agent-work/ already exist -- a project ready to *start* using Constellation has not necessarily run it yet. One thin CLI/report layer on top prints a readiness verdict and REFUSES (nonexit-0, named reason per failing item) when any item fails; it never repairs or writes settings.json at any scope (Pre-Ruling 2, hard). Add unit tests for each of the four check functions plus the CLI mode's exit-code/refusal behavior, including a constructed-unready case for items 1 and 3 (environment-scoped -- a fresh clone alone cannot exercise these, see g1-integrate). Fill templates/IMPLEMENTER_HANDOFF.template.md citing this gate's anchors block, dispatch a subagent invoking constellation-implementer, and integrate the returned IMPLEMENTER_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "e0-context complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Never touch scripts/checklist_engine.py or tests/test_checklist_engine.py (crew 4 owns them this wave)",
+        "Never write settings.json at any scope",
+        "Never promote an observation into docs/agents/* doctrine",
+        "File ownership this wave: scripts/install_constellation.py and its tests, plus any new readiness-only script if the implementer argues the split is worth it (with reasons, per Pre-Ruling 4)"
+      ],
+      "anchors": {
+        "structural": [
+          "README.md (declared substitute, DEGRADED-NO-MAP -- no struct: anchors exist to cite) -- 'Repo layout vs. installed layout' and 'Install' sections"
+        ],
+        "capability": [
+          "install_constellation.py's existing hook-wiring detector (detect_hook_wiring / describe_hook_wiring) -- reused, not re-derived"
+        ],
+        "constraint": [
+          "Pre-Ruling 2 (not overridable): settings.json never touched, any scope",
+          "Pre-Ruling 3 (not overridable): must be run against a fresh clone and observed to refuse for real"
+        ],
+        "decision": [
+          "Pre-Ruling 1 resolves R-vs-#458 toward the CHECK, not the stronger fresh-clone-produces-a-reading fix @grade: settled/human \u00b7 leans launch-order-pre-ruling-1 \u00b7 settle: n/a \u2014 human-authored, frozen"
+        ],
+        "evidence": [
+          "claim: 'engine present and runnable' means pytest actually imports and runs, checked via python -m pytest --version, never a bare interpreter-presence check",
+          "claim: hook-wiring readiness requires the file backing WIRED to be tracked/shipping, not merely present"
+        ],
+        "confidence_flags": []
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "assigned_gate": "g1 (issue-458-readiness, execute.json)",
+            "completed_slice": "Added a report-only readiness-check mode to scripts/install_constellation.py: four separately-callable, separately-testable check functions (check_engine_runnable, check_work_area_present, check_skills_installed, check_hooks_shippable + its is_git_tracked helper), combined by build_readiness_report/describe_readiness_report, and exposed as a new --check-readiness CLI flag driven by run_readiness_check. The mode answers 'is this project set up to run Constellation' and exits nonzero with a named per-item reason on any failing item; it never repairs anything and never writes settings.json at any scope, under any condition. Along the way, fixed a real bug the CLI tests caught: resolve_target_roots rejected --project at --scope user (a correct rule for INSTALL, where --project has no meaning as an install location at user scope) even though readiness's own --project (item 4, work-area) is orthogonal to the skills install target -- decoupled by stripping --project from target-root resolution only, while still using the original --project for project_root.",
+            "files_changed": [
+              "scripts/install_constellation.py",
+              "tests/test_install_constellation.py"
+            ],
+            "test_mode_satisfied": "TDD red->green for all five plan items (m1-m5): tests written first, observed failing (AttributeError: module has no attribute '<new symbol>') for m1-m4, then implemented to green. m5 deviated from strict red-first -- the CLI implementation was drafted alongside the tests rather than tests-then-code -- but the first real test run still surfaced a genuine defect (SystemExit(2): '--project is only valid with --scope project') that required a real code fix before the suite went green, so red->green still happened, just not by the by-design AttributeError route. Logged as a workflow-feedback item below.",
+            "evidence": {
+              "readiness_test_slice": {
+                "command": "python -m pytest tests/ -k readiness -q",
+                "output": "25 passed, 1869 deselected in 5.09s",
+                "result": "pass"
+              },
+              "full_test_file": {
+                "command": "python -m pytest tests/test_install_constellation.py -q",
+                "output": "132 passed, 380 subtests passed in 48.92s",
+                "result": "pass",
+                "note": "no pre-existing test in the touched file failed or changed behavior"
+              },
+              "per_gate_test_runs": [
+                {
+                  "gate": "m1-engine-check",
+                  "command": "python -m pytest tests/test_install_constellation.py -k check_engine_runnable -q",
+                  "red": "4 failed (AttributeError: no attribute 'check_engine_runnable')",
+                  "green": "4 passed"
+                },
+                {
+                  "gate": "m2-work-area-check",
+                  "command": "python -m pytest tests/test_install_constellation.py -k check_work_area_present -q",
+                  "red": "4 failed (AttributeError: no attribute 'check_work_area_present')",
+                  "green": "4 passed"
+                },
+                {
+                  "gate": "m3-skills-check",
+                  "command": "python -m pytest tests/test_install_constellation.py -k check_skills_installed -q",
+                  "red": "5 failed (AttributeError: no attribute 'check_skills_installed')",
+                  "green": "5 passed"
+                },
+                {
+                  "gate": "m4-hooks-check",
+                  "command": "python -m pytest tests/test_install_constellation.py -k \"is_git_tracked or check_hooks_shippable\" -q",
+                  "red": "7 failed (AttributeError: no attribute 'is_git_tracked' / 'check_hooks_shippable')",
+                  "green": "7 passed"
+                },
+                {
+                  "gate": "m5-report-cli",
+                  "command": "python -m pytest tests/test_install_constellation.py -k ReadinessCLITests -q",
+                  "red": "3 failed, 2 passed -- SystemExit(2): 'error: --project is only valid with --scope project' (real bug, not a missing-symbol AttributeError; see test_mode_satisfied)",
+                  "green": "5 passed"
+                }
+              ],
+              "git_check_ignore": {
+                "command": "git check-ignore scripts/install_constellation.py tests/test_install_constellation.py",
+                "exit_code": 1,
+                "meaning": "neither edited file is gitignored -- both remain tracked-eligible"
+              },
+              "wiring_grep": {
+                "command": "grep -rn \"<symbol>\" --include=*.py scripts tests | grep -v \"^tests\" | grep -v \"def <symbol>\"",
+                "call_site_counts_outside_own_definition_and_tests": {
+                  "check_engine_runnable": 1,
+                  "check_work_area_present": 1,
+                  "check_skills_installed": 1,
+                  "is_git_tracked": 1,
+                  "check_hooks_shippable": 1,
+                  "build_readiness_report": 1,
+                  "describe_readiness_report": 1,
+                  "run_readiness_check (CLI entry point, called from main())": 1,
+                  "--check-readiness (argparse flag + args.check_readiness branch in main())": 3
+                },
+                "detail": "Each new check function is called exactly once in production code, from build_readiness_report (scripts/install_constellation.py:1104-1112); build_readiness_report is called once from run_readiness_check (:1155); run_readiness_check is called once from main()'s --check-readiness branch (:1617); the --check-readiness flag is defined once in build_parser() (:1579) and read/branched on twice in main() (:1604, plus two InstallError guard messages that reference the flag by name at :1610 and :1615). All new symbols are wired into the real CLI path, not just exercised by their own tests."
+              }
+            },
+            "assumptions_used": {
+              "agent_scope_decision": "The readiness mode REQUIRES --agent/--scope (they are already required parser arguments; the mode did not add a bypass). Reason: readiness item 2 (skills installed) and item 3 (hooks shippable, whose ships-test differs by scope) are inherently target-specific -- 'installed' and 'shippable' only mean something relative to a concrete --agent/--scope target, so build_readiness_report consumes the SAME target_root resolve_target_roots computes for a real install, and check_hooks_shippable branches its ships-test on args.scope directly.",
+              "project_flag_decoupling": "--project is accepted at --scope user for --check-readiness even though resolve_target_roots rejects it there for plain installs (no meaning as an install location at user scope). Readiness's own --project names the directory item 4 (work area) checks, which is orthogonal to where skills install, so run_readiness_check strips --project from target-root resolution only when scope=='user', while still using the original --project for project_root. This is a genuine behavior difference from plain install argument validation, confined to the --check-readiness branch.",
+              "hook_capable_agents": "For a non-hook-capable agent (Codex/Cursor/Gemini), item 3 (hooks) is reported READY with an explicit 'not applicable: <agent> has no hook mechanism to check' reason, rather than silently omitted or defaulted true with no reason. Chosen so the reader can always tell a real determination from a non-check, per the handoff's Protected Intent.",
+              "exit_codes": "Exit 0 when every targeted agent is fully ready, exit 1 otherwise (no finer-grained exit-code taxonomy per item, unlike check_corpus_freshness.py's 3-way split) -- the handoff only requires 'nonzero ... named reason', which the per-item reason strings in the printed report satisfy without a second encoding in the exit code.",
+              "no_new_script": "Kept as a mode of install_constellation.py per Pre-Ruling 4 (default against a new script). It reuses AGENT_TARGETS, resolve_target_roots, CORPUS_MARKER, detect_hook_wiring/describe_hook_wiring, and settings_path_for_target_root directly -- a standalone script would need to re-import or re-derive all of these, which is a real cost, not just a preference."
+            },
+            "stop_conditions_hit": [],
+            "out_of_scope_observations": [
+              "check_corpus_freshness.py (a sibling report-only script) uses a 3-way exit code (0 current / 1 behind / 2 cannot-determine) rather than a 2-way pass/fail. The readiness check's per-item reason text already distinguishes 'genuinely not ready' from nothing in this build (there is no 'cannot determine' case among the four items -- each one resolves definitively), so a 3rd exit code was not needed here, but a future readiness item that CAN legitimately be undeterminable (mirroring detect_hook_wiring's own WIRING_UNDETERMINABLE state for an unresolvable env-token hook entry) would need one. Flagging as a design note, not acting on it -- out of this gate's scope.",
+              "--check-readiness does not currently interact with --dry-run (readiness never writes regardless, so --dry-run is accepted but has no effect in that branch). Not a defect since nothing is ever written, but worth a one-line README mention if/when this mode is documented for end users -- README.md's own Install section covers plain install and --wire-hooks/--baseline-only but was not touched here (out of the handoff's allowed scope: docs/agents/* was explicitly excluded, and README.md was not named in Allowed Scope either)."
+            ],
+            "workflow_feedback": "Handoff gaps: none material -- the four Close Criteria items, the fresh-clone caveat for items 2/4, and the --agent/--scope decision point were all actionable as written. Context rediscovered: the codebase's own sanctioned pattern for testing a subprocess boundary (mock.patch.object(installer.subprocess, 'run', side_effect=fake_run), used by the existing interpreter-probe tests) wasn't named in the handoff but was easy to find by reading tests/test_install_constellation.py's existing probe tests per the handoff's own pointer to detect_hook_wiring/describe_hook_wiring -- a one-line pointer to that existing pattern would have saved a few minutes. Instructions improvised around: for m5 (the CLI mode) I drafted the implementation and the tests together instead of strictly test-first, which meant the first real test run caught a genuine bug (resolve_target_roots's --project/--scope=user rejection colliding with readiness's own --project use) rather than the by-design 'function does not exist yet' AttributeError the plan's postcondition text expected -- the net TDD value (a real defect caught before green) held, but the letter of 'observed failing because the function does not exist yet' did not; recorded honestly in the engine's attest note rather than silently reconciled. What would have made this easier: none beyond the above -- the handoff's Required Evidence and Wiring Grep sections were precise enough to execute directly."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Readiness check: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was implemented, how to inspect the diff, task statement, close criteria (readiness check reports and refuses without repairing; never touches settings.json; distinguishes tracked from untracked hook wiring; treats a launchable python that lacks pytest as NOT ready), allowed scope, specific exclusions (checklist_engine.py / tests/test_checklist_engine.py off-limits), the inbound map anchors from g1-implement's anchors block, and the evidence from IMPLEMENTER_RESULT. Dispatch a subagent invoking constellation-reviewer with the completed handoff. Wait for and integrate the returned REVIEW_RESULT as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and integrated at g1-implement"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors -- review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "summary": "4 checks + CLI mode independently verified, mutation-tested the load-bearing pytest-discrimination case, ran CLI end-to-end against a real fresh git-init'd project, settings.json write path confirmed unreachable from --check-readiness, Fowler pass 0 flagged. 1 non-blocking triage candidate: README doesn't document the new flag yet (correctly left out of scope)."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Readiness check: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the new tests yourself, then clone this repo fresh to a scratch directory and run the readiness check against that fresh, unconfigured clone. A fresh clone only resets the REPO TREE, not the executing environment (cold-critic finding folded into MISSION_FRAME.md) -- so expect the observed refusal to come from item (2) skills-installed or item (4) work-area-present (tree-scoped), NOT necessarily items (1) engine-runnable or (3) hooks-wired (environment-scoped, proven instead by their own constructed-unready unit tests from g1-implement). Quote the refusal verbatim, name which item(s) triggered it, and attach it as a `fresh-clone-refusal` evidence item satisfying c3 below (Pre-Ruling 3, not overridable -- a check only ever observed passing on the author's own box is the same defect one level up). Then advance this gate: a command-kind postcondition (the test command) is satisfied by `advance`, which re-runs the check, NOT by `attest`. BLOCK: send the implementer back for rework or raise a blocker if the gate is unresolvable. Log any out-of-scope finds as triage candidates -- do not act on them here.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received: APPROVE"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "new unit tests for the four readiness checks and the CLI mode pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -k readiness -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-2"
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": null
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "the readiness check was run against a genuinely fresh clone and observed to REFUSE with a named reason; the quoted refusal is attached as evidence, not merely narrated (cold-critic finding: a claim in the imperative has no gate behind it unless a postcondition checks it)",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "fresh-clone-refusal"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-integrate-1",
+          "type": "fresh-clone-refusal",
+          "payload": {
+            "command": "python scripts/install_constellation.py --agent claude --scope project --project <fresh-clone-of-constellation-skills-from-github> --check-readiness",
+            "exit_code": "1",
+            "refusal": "Claude Code:\\n  - engine: READY -- pytest runnable under C:\\Users\\fredc\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe (pytest 9.0.2)\\n  - skills: NOT READY -- no skills directory at <fresh-clone>\\.claude\\skills\\n  - hooks: NOT READY -- - Context Governor hooks: UNWIRED -- no PostToolUse entry for gauge_writer_hook.py in <fresh-clone>\\.claude\\settings.json, so the Context Governor never fires. Re-run with --wire-hooks to add one; nothing is written without that flag.\\n  - work_area: READY -- .git present at <fresh-clone>\\n  NOT READY",
+            "triggering_items": "skills,hooks",
+            "note": "Fresh clone from https://github.com/fredcai6/constellation-skills.git (commit 7f4a80f9), never installed at project scope. As anticipated in MISSION_FRAME.md/execute.json before this run: the tree-scoped items (skills, work_area) are what a fresh clone can exercise; work_area passed (repo has .git) while skills correctly refused (never installed there). Hooks also refused for the same environment reason a fresh clone happens to share (no .claude/settings.json at all in a bare clone) -- engine (environment-scoped) read READY because it reflects this agent's own interpreter, exactly as predicted, and is proven NOT-ready instead by g1-implement's own constructed-unready unit test, not by this clone."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -k readiness -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Re-confirmed frozen intent (readiness CHECK, no settings.json writes) before dispatching g1's implementer crew.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:06:03.531043+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Implementer crew built the four readiness checks + CLI mode + 25 new tests; independently re-ran: 25/25 readiness tests pass, 132/132 full file passes (380 subtests), git check-ignore exits 1 on both edited files (tracked), settings.json untouched, wiring grep confirms real call sites. No blockers.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:06:26.908271+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "REVIEW_RESULT: APPROVE, 0 findings. Independently re-verified reviewer's own claims: verdict APPROVE, evidence_reproduced shows real independent test runs and settings.json-unreachable check. Proceeding to integrate.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:16:41.162654+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "REVIEW_RESULT APPROVE integrated (referenced e-g1-review-1). Fresh-clone refusal observed and attached: cloned constellation-skills fresh from GitHub, ran --check-readiness against it unconfigured -- refused (exit 1), skills+hooks NOT READY, work_area READY, engine READY (environment-scoped, correctly not exercised by tree-scope alone, proven instead by g1-implement's own unit test per the plan). Re-ran tests myself: 25/25 readiness, 132/132 full file (380 subtests).",
+      "mechanical": false,
+      "ts": "2026-08-09T00:19:03.505753+00:00"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-418-g3-review-3",
+  "diff_ref": "ordinal-pinned nine-path G3 inventory at sha256:ee7d13260409778468d88bd15190e15d31cd64d61a517074b35108baa7e0c895",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, constellation-reviewer references/global-crew.md and references/global-everyone.md, frozen G3 handoff",
+  "smells": [
+    {"smell":"long-method","verdict":"absent","finding":"","override":null},
+    {"smell":"large-class","verdict":"absent","finding":"","override":null},
+    {"smell":"duplicated-code","verdict":"overridden","finding":"","override":{"repo_standard":"Frozen G3 requires both shipped role prose and parsed spine contracts at Explorer, Commander, and Admiral boundaries.","reason":"The limited prose/directive mirroring exposes human instructions and executable checklist interfaces; tests assert their agreement, so this is contract synchronization rather than accidental duplication."}},
+    {"smell":"feature-envy","verdict":"absent","finding":"","override":null},
+    {"smell":"data-clumps","verdict":"absent","finding":"","override":null},
+    {"smell":"primitive-obsession","verdict":"overridden","finding":"","override":{"repo_standard":"CREW_CONTEXT requires strict public contracts, fail-fast boundary validation, and behavior assertions; G1/G2 freeze exact JSON artifacts.","reason":"Boundary ids, decision enums, and artifact fields deliberately remain JSON primitives because the public portable contract is JSON and the installed verifier validates exact shape and enum semantics."}},
+    {"smell":"long-parameter-list","verdict":"absent","finding":"","override":null},
+    {"smell":"shotgun-surgery","verdict":"overridden","finding":"","override":{"repo_standard":"Frozen G3 explicitly wires the iterative chain through the three role owners and installer bundle table.","reason":"The finite edits are required at distinct role-owned interfaces; one shared verifier centralizes behavior while each role retains only its own command and doctrine."}},
+    {"smell":"divergent-change","verdict":"absent","finding":"","override":null},
+    {"smell":"message-chains","verdict":"absent","finding":"","override":null},
+    {"smell":"speculative-generality","verdict":"absent","finding":"","override":null},
+    {"smell":"comments-as-deodorant","verdict":"absent","finding":"","override":null}
+  ],
+  "rail_exception": null
+}

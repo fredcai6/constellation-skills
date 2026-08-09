@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m4-acceptance-test",
+      "cond": "c2",
+      "which": "postconditions",
+      "command": "python -m pytest tests/test_crew_delivery_addressing.py -q"
+    }
+  ]
+}

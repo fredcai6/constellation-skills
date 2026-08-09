@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-418-iterative-planning-g3-review-2",
+  "diff_ref": "Ordinal-sorted nine-path G3 inventory pinned by sha256:136a4de0f775630e65726cc03e1967559e79650904925022efbbe98419cca758, including new helper and tests",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, constellation-reviewer references/global-crew.md and references/global-everyone.md, frozen g3-implement and rework contracts",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Frozen G3 requires parsed spine invariants and matching live role doctrine while project conventions keep agent-readable obligations in Markdown", "reason": "The compact doctrine/directive mirroring serves distinct human/agent and mechanical consumers and is cross-checked by tests; removing either would drop a required interface."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Frozen G3 requires exact versioned G1/G2 JSON run artifacts and audit-line interoperability", "reason": "JSON objects and strings are the public cross-role artifact interface; the helper delegates semantic validation to the installed G1/G2 modules instead of adding wrapper translations."}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Frozen G3 explicitly wires the Explorer, Commander, and Admiral role boundaries plus installer/runtime tests as one finite operative chain", "reason": "The multi-role edits are the named endpoints of one intentional contract chain, not recurring accidental coupling; each role owns a distinct boundary."}},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

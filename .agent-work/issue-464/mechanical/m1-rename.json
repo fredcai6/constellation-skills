@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-rename",
+  "mechanical": {
+    "run": "issue-464",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m1-rename",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-464-m1-rename@351d1221da68abae9190a19365a226422cbd70b6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-464",
+    "generated_at": "2026-08-07T22:53:25Z"
+  }
+}

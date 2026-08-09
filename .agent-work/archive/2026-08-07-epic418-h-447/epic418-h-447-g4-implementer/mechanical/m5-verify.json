@@ -1,0 +1,44 @@
+{
+  "contract": 1,
+  "step": "m5-verify",
+  "mechanical": {
+    "run": "epic418-h-447-g4-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m5-verify",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-g4-implementer-m5-verify@38c691c88ca5ba383703a3632adda514d5a14e71",
+    "artifact-ref": [
+      ".agent-work/AGENT_FEEDBACK.md",
+      ".agent-work/LESSONS.md",
+      "episodes/active/issue-447-001.md",
+      "episodes/active/issue-447-002.md",
+      "episodes/active/issue-447-003.md",
+      "episodes/active/issue-447-004.md",
+      "episodes/active/issue-447-005.md",
+      "episodes/active/issue-447-006.md",
+      "episodes/active/issue-447-007.md",
+      "episodes/active/issue-447-008.md",
+      "scripts/apply_lessons_delta.py",
+      "scripts/verify_agent_feedback.py",
+      "scripts/verify_lessons_applied.py",
+      "skills/lessons-auditor/SKILL.md",
+      "skills/lessons-auditor/templates/LESSONS_AUDIT.template.json",
+      "skills/lessons-auditor/templates/LESSON_CANDIDATES.template.md",
+      "skills/lessons-auditor/templates/RUN_BRIEF.template.md",
+      "skills/workbench/templates/AGENT_FEEDBACK.template.md",
+      "skills/workbench/templates/LESSONS.template.md",
+      "tests/test_apply_lessons_delta.py",
+      "tests/test_verify_agent_feedback.py",
+      "tests/test_verify_lessons_applied.py"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447-g4-implementer",
+    "generated_at": "2026-08-07T17:00:58Z"
+  }
+}

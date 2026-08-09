@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "impl-w5-docs-496-411",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-impl-w5-docs-496-411-m0-context@65921fad46656f5768dc385887de43078d11853a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "impl-w5-docs-496-411",
+    "generated_at": "2026-08-08T22:56:33Z"
+  }
+}

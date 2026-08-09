@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-418-iterative-planning-g3-review-5",
+  "diff_ref": "exact ordinal nine-path G3 inventory at sha256:e087a982015aa0796554604746f759532b616e9390df5bff1cb6acb5b59d6070",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, constellation-reviewer references/global-crew.md",
+  "smells": [
+    {"smell":"long-method","verdict":"absent","finding":"Verifier functions remain single-purpose and short enough to read as one fail-fast contract path.","override":null},
+    {"smell":"large-class","verdict":"absent","finding":"No classes or aggregate state owners were introduced beyond the narrow exception type.","override":null},
+    {"smell":"duplicated-code","verdict":"overridden","finding":"Role doctrine and spine imperatives deliberately mirror the same transition constraints.","override":{"repo_standard":"Global doctrine: the checklist is the workflow; project role docs must keep Constellation context current when meaning changes.","reason":"The prose teaches the role while the spine is the executable gate surface; both consumers require the invariant and neither is a replaceable duplicate."}},
+    {"smell":"feature-envy","verdict":"absent","finding":"The helper delegates G1/G2 semantics through their public installed verifiers rather than reaching through their internals.","override":null},
+    {"smell":"data-clumps","verdict":"absent","finding":"Boundary, launch, and transition fields are exact persisted contracts rather than recurring loose parameter bundles.","override":null},
+    {"smell":"primitive-obsession","verdict":"overridden","finding":"Strict JSON scalar and enum fields are intentionally explicit at the cross-role artifact boundary.","override":{"repo_standard":"AGENTS.md requires strict function inputs and clear interfaces; CREW_CONTEXT requires behavior guards through the consumer.","reason":"Portable JSON artifacts are the declared interface and exact primitive validation is the fail-fast contract, not an internal domain model being avoided."}},
+    {"smell":"long-parameter-list","verdict":"absent","finding":"Public verifier entrypoints take only mode/work-id or artifact objects; no long call signature was added.","override":null},
+    {"smell":"shotgun-surgery","verdict":"overridden","finding":"Explorer, Commander, Admiral, and installer wiring change together for one end-to-end role contract.","override":{"repo_standard":"Frozen G3 gate explicitly requires Explorer, Commander, and Admiral to consume the exact G1/G2 seams while preserving their distinct checkpoints.","reason":"The finite multi-role edit is the product boundary being implemented; centralizing role-specific workflow text would erase the separate executable checkpoints."}},
+    {"smell":"divergent-change","verdict":"absent","finding":"The helper owns one cohesive concern: offline verification/rendering of iterative role artifacts.","override":null},
+    {"smell":"message-chains","verdict":"absent","finding":"Nested JSON access is bounded at declared template structures and validated before use.","override":null},
+    {"smell":"speculative-generality","verdict":"absent","finding":"Fresh installed execution proves every new verifier path and directive has a live consumer.","override":null},
+    {"smell":"comments-as-deodorant","verdict":"absent","finding":"Comments explain installer ordering and public-boundary intent; behavior is enforced by code and tests.","override":null}
+  ],
+  "rail_exception": null
+}

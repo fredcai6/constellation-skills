@@ -1,0 +1,7 @@
+{
+  "gate_id": "g1",
+  "verdict": "APPROVE",
+  "reviewer_identity": "/root/g1_reviewer_2",
+  "reviewed_diff_digest": "sha256:6cbbac6e4c8bd29cca580e5aca324a107a35f7921ae2a1149311f774adf9db30",
+  "result_path": ".agent-work/issue-418-iterative-planning/g1-review-2/REVIEW_RESULT.md"
+}

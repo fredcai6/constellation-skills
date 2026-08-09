@@ -34,7 +34,11 @@ the gate.
 
 Pass `encoding='utf-8', newline='\n'` explicitly on **every** write. The default encoding
 here is not UTF-8 and the default newline translation produces CRLF, which shows up later
-as spurious diffs and as byte-level comparison failures.
+as spurious diffs and as byte-level comparison failures. **The sanctioned exception:**
+`scripts/checklist_engine.py`'s `save()` writes bytes directly and preserves whichever line
+ending the target file already has instead of forcing `\n` — a byte-faithful writer earns
+the same trust this rule protects, so it satisfies the rule's intent without its literal
+mechanism.
 
 `.gitattributes` sets `* text=auto`, so a checkout may legitimately hold CRLF while the blob
 holds LF. **Never compare two files by raw working-tree bytes** — compare normalized content
@@ -46,7 +50,7 @@ MAX_PATH is real. Prefer short paths under deeply-nested work areas.
 
 ## Record Stores Are Never Hand-Edited
 
-Three stores in this repo are written **only** through their validated delta writers. An LLM
+Two stores in this repo are written **only** through their validated delta writers. An LLM
 or a human editing them directly is a defect regardless of how correct the resulting text
 looks — the writers enforce partition allowlists, mandatory reasons, single-line values and
 all-or-nothing application.
@@ -54,12 +58,11 @@ all-or-nothing application.
 | store | the only write path |
 |---|---|
 | `episodes/` | `scripts/apply_episode_delta.py` |
-| `.agent-work/LESSONS.md` | `scripts/apply_lessons_delta.py` |
 | any checklist (`spine.json`, `execute.json`, survey files) | `checklist_engine.py` verbs |
 
-Read them with `scripts/query_episodes.py` and the engine's `current` verb. Retiring an
-episode **moves its file** between `episodes/active/` and `episodes/retired/`; membership is
-the directory, never a parsed `status` field.
+Retiring an episode **moves its file** between `episodes/active/` and `episodes/retired/`;
+membership is the directory, never a parsed `status` field. That move is a write like any
+other and goes through the writer above.
 
 ---
 

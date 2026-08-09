@@ -1,0 +1,311 @@
+{
+  "work_id": "issue-440-binding-cwd-g2-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-q1-attribution",
+    "r8-q2-arm-difference",
+    "r9-check-rewrite",
+    "r10-verifier-failability",
+    "r11-freshness",
+    "r12-quiet-rerun"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md/global-everyone.md (reviewer skill references), docs/agents/CREW_CONTEXT.md + GLOSSARY.md present, REVIEWER_HANDOFF.md, the cbd9aee..b332287 diff (scripts/hooks/spine_rail.py is the only non-.agent-work code change plus tests/test_spine_rail.py), and the full acceptance packet (run_two_arm.py, verify_evidence.py, evidence/*).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The g2 dispatch asked for a two-arm live-fire acceptance answering whether a HARD trip fires from a worktree-dispatched agent's own reading. It delivered exactly that: treatment advance_exit 1 with the HARD-band REFUSED text and m1 left in-progress; control advance_exit 0 with m1 complete. verify_evidence.py re-run by me exits 0 (46 notes / 45 checks) and --selftest exits 0 with all 5 damaged copies correctly failing. Both real exit codes captured by redirect+echo.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Commit b332287 touches ONLY .agent-work/ (35 files); git show --name-only shows zero files outside it. The code under test -- scripts/hooks/spine_rail.py, scripts/hooks/gauge_writer_hook.py, scripts/checklist_engine.py, scripts/gauge_reader.py, tests/test_spine_rail.py -- is untouched by g2. The one substantive in-scope edit (verify_evidence.py check_live_checkout_untouched) was flagged loudly by the implementer rather than buried. No commit to a protected path; live checkout C:/Programs/constellation-skills was not written (verified: its binding store contains no 'acc440', 'sbwork', 'AppData' or 'Temp' substring).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Evidence present and it does demonstrate the behaviour. Treatment: binding key composite 9d959dcd-...#a26a9cb68fda52cdc, spine = wt/.agent-work/sbwork/spine.json, path_source git_worktree; gauge.json beside that spine, fill 0.559655, model claude-sonnet-5, identity_resolution_ms 0.0433; advance_exit 1 with the HARD-band REFUSED text; m1 in-progress. Control: binding = main path, path_source null; gauge at the phantom main path, fill 0.562149 (also over HARD, so a POSITIVE control); nothing beside the worktree spine; advance_exit 0; m1 complete. HARD for claude-sonnet-5 = 150000/1000000 = 0.15 confirmed at source (scripts/gauge_reader.py:84). Both fills are ~3.7x HARD and 0.0025 apart, so the outcome difference cannot be an inflation difference. GAP: verify_evidence.py never asserts the LIVE treatment arm's path_source (only the preflight's) -- see r10.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Two documented CREW_CONTEXT standards are not met by the harness. (1) Verification Discipline: \"A round-trip test over the real shipped artifacts proves the artifacts are clean -- it does not prove the tool is correct. Pair it with adversarial fixtures authored to make the tool return a wrong answer: a false FAIL on valid input, a SILENT PASS on invalid input.\" verify_evidence.py --selftest supplies five such fixtures and all five are caught; I supplied eight more and all eight are silent passes (see r10). The standard is explicit and the coverage falls short of it. (2) Python Invocation: \"Use python, not py.\" build_settings wires BOTH hooks with py (run_two_arm.py:215, 221) while preflight invokes the same hook with python (:520). On this box those are different interpreters (3.12.13 vs 3.14.x), so preflight's stated purpose #1 -- \"the arm tree is COMPLETE\" -- was established under an interpreter the live arms never used. Not a Q2 confound (both arms use py) and demonstrably harmless here (both arms' hooks ran and wrote their stores), but it is a literal deviation from a documented standard and it puts a hole in the preflight's assurance. MET: real exit codes were taken by redirect-then-echo, never off a pipe (prompt-treatment.txt line 89, and the crew's own command table); no Fable at any tier -- parent --model opus in headless-*.log, subagent \"sonnet\" in the prompt, gauge model claude-sonnet-5; the live checkout was never written; nothing outside .agent-work/ was committed. OBSERVATION on \"assert against behaviour, never against text that describes it\": verify_evidence.py:150-152 greps REFUSED and \"hard limit\" out of engine stdout, which that standard warns about -- acceptable here only because advance_exit and m1_status_after are asserted alongside it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture map exists (DEGRADED-NO-MAP), so there is no recorded structure to diverge from, and the change is confined to .agent-work/. The implementer's Map Impact notes check out against the diff: structural unchanged, spine_rail.py remains the only per-arm variable, and the new constraint candidate (the live binding store is shared concurrently-written state, no check may assume byte-stability) is correct -- I confirmed it independently by watching the store change again under my own engine claim. ONE PRECISION the Commander should carry: the requested regrade of decision 'existence-verified-resolution' from guess to measured is justified but should be SCOPED. The live arms exercised only rung 4 (git_worktree) succeeding and rung 5 (project_dir) failing to validate. The told-truth rungs 0-2 (absolute --file, absolute --worktree, cd target) and the g1b two-guesses-disagree refusal were NOT exercised by this acceptance -- they remain unit-tested only. My own reproduction did exercise the ambiguity guard (spine planted in both trees -> nothing bound) and the cd_target rung, so the evidence for those now exists, but it is mine, not the harness's. Recommend regrading the guessed-rung path to measured and leaving the told-truth path as-is. TRIAGE CANDIDATES surfaced by the crew and confirmed by me at the source: the live binding store holds two junk entries, spines literally named 'C:\\Programs\\constellation-skills\\x' and 'C:\\Programs\\constellation-skills\\$E' (an unexpanded shell variable) -- I read both in the live store. The hook is willing to bind a path that does not exist, which is worth an issue given #440 is about binding the wrong path.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/issue-440-binding-cwd/crew/g2-review/FOWLER_PASS.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Pass run over the only code b332287 adds (run_two_arm.py 793 lines, verify_evidence.py 405 lines). Record at .agent-work/issue-440-binding-cwd/crew/g2-review/FOWLER_PASS.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=7, overridden=3). FLAGGED: long-method (main() 715-789; collect()'s 38-line inline dict literal); data-clumps (the untyped sb dict through six call sites, which is why verify_evidence must rediscover the sandbox root by path-walking); primitive-obsession (arm identity is a bare string tested by substring, verify_evidence.py:111,115); long-parameter-list (launch() six positionals, :451); shotgun-surgery (the evidence schema is declared nowhere, so collect() records skip_sidecar_wt, skip_sidecar_main, uncalibrated_wt, binding_entries[].path_source and headless.exit that NO check asserts -- the mechanism behind five of the eight verifier holes); message-chains (verify_evidence.py:257 Path(m).parent.parent.name silently yields a wrong root if the sandbox depth changes, and the leakage test then searches for the wrong string while still reporting PASS); speculative-generality (probe() computes a FULL/TRUNCATED verdict, writes it, then unconditionally returns FILLER_COUNT -- docstring and the 577-579 comment describe a two-branch policy the body does not have). OVERRIDDEN with logged standards: duplicated-code and feature-envy (verify_evidence.py:34-36 independence contract + CREW_CONTEXT Verification Discipline); comments-as-deodorant (CREW_CONTEXT 'Evidence You Owe Back' + the in-repo KNOWN-NOT-CHASED convention -- the comments carry the experimental design; the one real abuse is probe(), flagged above rather than excused).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/issue-440-binding-cwd/crew/g2-review/FOWLER_PASS.json",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/issue-440-binding-cwd/crew/g2-review/FOWLER_PASS.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-q1-attribution": {
+      "id": "r7-q1-attribution",
+      "title": "Q1: is the trip the worktree-dispatched agent's own reading?",
+      "imperative": "Attack the claim that the captured HARD trip came from the worktree-dispatched agent's own gauge reading rather than the parent's or a hand-placed file. Verify at source, not from the report, and reproduce the resolution independently.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Q1 = YES, settled six ways. (1) prompt-treatment.txt:51,54,89 -- --file is RELATIVE, no cd, no --worktree, no env var carries the worktree root; the only worktree-shaped token is the shim script path. (2) MY OWN from-scratch reproduction (not the crew's code): payload cwd = sandbox main, relative --file, no cd -> HEAD hook binds the WORKTREE spine with path_source git_worktree; pre-fix cbd9aee hook binds the MAIN path. Variant B1 moved the engine script token OUT of the worktree into main/bin and the hook STILL resolved to the worktree -- so the root is derived from git worktree list, not scraped from the command. Variant B3 (no agent_id) yields a BARE session key, confirming a composite key implies a dispatched agent. Variant C1 shows a cd would have recorded cd_target, not git_worktree. (3) spine_rail.py _candidate_roots enumerates the only five root sources; the script token is not among them. (4) run_two_arm.py's every write site (165,229,304,324,344,348,478,520,539,572,733,741,764,772,781) writes only settings, filler, shim, spine.json, logs and evidence -- it never writes gauge.json or a binding store into an arm sandbox, so the gauge was not hand-placed. (5) gauge_writer_hook.py:608-631 -- with agent_id present the reading comes ONLY from the derived subagents/agent-<id>.jsonl with NO parent fallback, and find_latest_usage:325 additionally requires isSidechain truthy AND agentId == agent_id, so 0.559655 is arithmetic over the SUBAGENT's own usage records and structurally cannot be the parent's; :648-657 shows identity_resolution_ms rides only that path. (6) gauge model claude-sonnet-5 vs parent --model opus (headless-treatment.log). The trip's exit 1 was captured by echo EXIT=$? straight after the redirect (prompt line 89), not off a pipe.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-q2-arm-difference": {
+      "id": "r8-q2-arm-difference",
+      "title": "Q2: do the two arms differ ONLY in the hook path?",
+      "imperative": "Verify from build_arms/build_settings/build_sandbox source and by diffing the artifacts yourself that scripts trees, settings, prompts, models, spine, filler and command sequence are otherwise identical, and that arm-diff.txt was taken over whole trees.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Q2 = YES in substance, with one provenance caveat. Verified myself, not from the recorded output: (a) build_arms (run_two_arm.py:165-177) builds treatment by copytree of REPO/scripts and control by 'git archive cbd9aee scripts' -- WHOLE trees, not a curated subset; arm_diff (:185-187) runs 'diff -rq <control>/scripts <treatment>/scripts' over those whole trees and arm-diff.txt names exactly one differing file, scripts/hooks/spine_rail.py. (b) I diffed settings-treatment.json against settings-control.json directly: exactly two differing lines, both arms/treatment -> arms/control in a hook command; env, permissions and matchers identical, and build_settings (:190-231) generates everything but the two absolute paths from one loop. (c) I diffed the two prompts: raw diff shows only run-treatment vs run-control in sandbox paths, and after normalising the arm name the diff is EMPTY (exit 0). (d) models, spine, filler (random.Random(4400), fixed seed) and command sequence all come from one code path. (e) build_sandbox copies HEAD's checklist_engine.py and gauge_reader.py into BOTH sandboxes -- correct design (hold the observer constant), and those two files are identical at cbd9aee anyway. CAVEAT: the arms came from TWO SEPARATE harness invocations ~3 min apart (mtimes: prompt-treatment.txt 07:38:30, then arm-diff.txt/settings-*.json 07:41:48, preflight-arms.json 07:41:49, prompt-control.txt 07:41:50; main() writes arm-diff/settings BEFORE any arm, so a newer arm-diff can only mean a second invocation). The crew discloses this (IMPLEMENTER_RESULT.md:66-67). So the committed arm-diff.txt and settings-treatment.json are run 2's rebuild, not the artifacts in force during the treatment run -- deterministic and therefore identical in substance, but post-hoc reconstruction rather than capture. Not disqualifying; recorded as a finding.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-check-rewrite": {
+      "id": "r9-check-rewrite",
+      "title": "Adjudicate the rewritten live-checkout check",
+      "imperative": "The original byte-identity guard on the live binding store FAILED and was replaced with a leakage test. Rule plainly: legitimate correction or weakening. Verify the live store really holds no sandbox path.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "RULING: legitimate correction, not a weakening of the exclusion -- but it is a weakening of the WINDOW, and that should be said out loud. Legitimate because (i) the original asserted byte-identity of C:/Programs/constellation-skills/.agent-work/.spine-rail-binding.json, which every concurrently-running agent rewrites through the LIVE checkout's own PostToolUse hook -- I confirmed this directly: the store is 4561 bytes NOW versus 4213 before and 4663 after the run, and it currently contains MY OWN review.json under key cdcd8db2-...#a5a, put there by my engine claim minutes ago. It is unsatisfiable while the constellation is busy and its failure carries no information about the harness. (ii) The harness structurally cannot write it: CLAUDE_PROJECT_DIR is set to the sandbox main (launch(), run_two_arm.py:460) and git_worktree_roots probes that sandbox repo, which has exactly one worktree, so no rung can reach the live checkout. (iii) The replacement is falsifiable and IS falsified by the new fifth selftest mutation. VERIFIED INDEPENDENTLY: the live store contains no 'acc440', 'sbwork', 'AppData', 'Temp', 'run-treatment', 'run-control' or 'pf-treatment' substring; all 12 entries name real repo paths. THE WEAKENING: the leakage test reads the live store at VERIFICATION time, not run time, so a sandbox entry that leaked and was later removed by a release would go undetected, and the check drifts further from the event on every re-run. The before/after fingerprint it replaced was at least contemporaneous. Also note live-checkout-untouched.json's 'before' was taken at run 2's start (07:41:47), so its window does not cover the treatment arm at all.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-verifier-failability": {
+      "id": "r10-verifier-failability",
+      "title": "Can verify_evidence.py actually fail?",
+      "imperative": "Run --selftest, then attempt mutations its five cases do not cover and report every hole.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "It CAN fail, but far less than '46 checks / EVIDENCE COMPLETE AND SELF-CONSISTENT' implies. --selftest exits 0 and all five bundled mutations are correctly caught. I then wrote eight of my own against COPIES; ALL EIGHT still exit 0: (1) stale-by-30-hours -- shift observed_at AND wall_clock_at_collect back coherently: passes, so the freshness check cannot detect stale evidence at all; (2) treatment-path_source-null -- erase the very provenance the fix is about: passes, because check_treatment never looks at binding_entries; (3) treatment-binding-points-at-MAIN -- make the treatment binding name the sandbox main, i.e. the fix did NOT work: passes; (4) treatment-headless-exit-1 -- only timed_out is checked, never headless.exit; (5) parent-and-subagent-same-model -- makes attribution signal 3 vacuous, never cross-checked against parent_model; (6) treatment-gauge-ALSO-in-main -- a gauge at BOTH paths would mean an ambiguous binding: passes; (7) skip-sidecar-present -- a writer skip flag beside a written gauge is contradictory: skip_sidecar_wt/main are collected but never asserted; (8) arm-prompts-differ-in-substance -- I changed control's prompt to read 2 filler files instead of 24 and it passes, because prompt-*.txt is never read by the verifier at all. Item (3) is the most serious: the verifier would green-light a treatment arm that reproduced the bug. Item (8) means Q2 is not machine-checked for the prompts. NONE of these describes the actual evidence -- I checked each fact by hand and the real files are correct -- so this is a coverage defect in the checker, not a defect in the result.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r11-freshness": {
+      "id": "r11-freshness",
+      "title": "Freshness of the passing evidence",
+      "imperative": "Confirm the evidence is from the fresh run and nothing stale was carried forward; test whether the claimed 30-minute freshness window can actually detect staleness.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The EVIDENCE is genuinely fresh, but the mechanism claimed to guarantee that does not work, and one stale file WAS carried forward. Fresh, verified by filesystem mtimes I read myself: prompt-treatment.txt 07:38:30 -> +156.4s elapsed -> arm-treatment.json and headless-treatment.log both 07:41:07 (exact); prompt-control.txt 07:41:50 -> +143.5s -> arm-control.json and headless-control.log both 07:44:13; arm-diff/settings 07:41:48, preflight 07:41:49. All 2026-08-07, all internally consistent. MECHANISM DEFECT: check_attribution (verify_evidence.py:202-217) compares observed_at against wall_clock_at_collect -- BOTH written by the same collect() call -- so it only proves the gauge was sampled seconds before collection, never that collection was recent. My stale-by-30-hours mutation shifts both coherently and still exits 0. The R2 handoff's claim (IMPLEMENTER_HANDOFF_R2.md:87-89) that 'a gauge from attempt 1 is ~28 hours old and will fail that' is therefore WRONG about this checker; whatever failed attempt 1 was something else. STALE FILE CARRIED FORWARD: evidence/probe.json is dated 2026-08-06T03:19 and records filler_chars 240000 with verdict TRUNCATED, contradicting the harness's current FILLER_CHARS = 28_000 and the docstring claim (run_two_arm.py:80-87) that a whole filler file arrives untruncated. verify_evidence.py never reads probe.json. Not load-bearing (both arms demonstrably inflated past HARD), but it is committed evidence that does not support what it is cited for.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r12-quiet-rerun": {
+      "id": "r12-quiet-rerun",
+      "title": "The quiet first treatment launch",
+      "imperative": "Confirm the arm was re-run UNCHANGED rather than adjusted until it passed. Decide whether this is a garden of forking paths.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Ruling: a DECLINED run that complied on an identical re-run, not a garden of forking paths -- but the handoff asked me to confirm this from headless-*.log and that is NOT possible, so I confirmed it a different way. The first launch's log is gone: the harness writes TMP/logs/<arm>.log and copies it over evidence/headless-<arm>.log on every invocation, so the surviving headless-treatment.log (07:41:07) is the SECOND launch only, and TMP was deleted. The crew's account of the decline (IMPLEMENTER_RESULT.md:75-89) is therefore uncorroborated prose. What IS checkable, and is decisive on the forking-paths question: the prompt is a pure function of harness constants (subagent_prompt/parent_prompt, run_two_arm.py:360-444) and run_two_arm.py's on-disk mtime is 2026-08-06 03:26 -- BEFORE both Aug-7 launches -- and git status reports it unmodified. So the prompt generator could not have been touched between the quiet launch and the compliant one, and --filler-count 24 matches the file's own FILLER_COUNT default. The arm was re-run unchanged. Residual: at least three invocations ran on Aug 7 (quiet treatment, compliant treatment, control) and only two are on record.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE-WITH-FINDINGS",
+    "findings": [
+      "r4-quality: Two documented CREW_CONTEXT standards are not met by the harness. (1) Verification Discipline: \"A round-trip test over the real shipped artifacts proves the artifacts are clean -- it does not prove the tool is correct. Pair it with adversarial fixtures authored to make the tool return a wrong answer: a false FAIL on valid input, a SILENT PASS on invalid input.\" verify_evidence.py --selftest supplies five such fixtures and all five are caught; I supplied eight more and all eight are silent passes (see r10). The standard is explicit and the coverage falls short of it. (2) Python Invocation: \"Use python, not py.\" build_settings wires BOTH hooks with py (run_two_arm.py:215, 221) while preflight invokes the same hook with python (:520). On this box those are different interpreters (3.12.13 vs 3.14.x), so preflight's stated purpose #1 -- \"the arm tree is COMPLETE\" -- was established under an interpreter the live arms never used. Not a Q2 confound (both arms use py) and demonstrably harmless here (both arms' hooks ran and wrote their stores), but it is a literal deviation from a documented standard and it puts a hole in the preflight's assurance. MET: real exit codes were taken by redirect-then-echo, never off a pipe (prompt-treatment.txt line 89, and the crew's own command table); no Fable at any tier -- parent --model opus in headless-*.log, subagent \"sonnet\" in the prompt, gauge model claude-sonnet-5; the live checkout was never written; nothing outside .agent-work/ was committed. OBSERVATION on \"assert against behaviour, never against text that describes it\": verify_evidence.py:150-152 greps REFUSED and \"hard limit\" out of engine stdout, which that standard warns about -- acceptable here only because advance_exit and m1_status_after are asserted alongside it.",
+      "r10-verifier-failability: It CAN fail, but far less than '46 checks / EVIDENCE COMPLETE AND SELF-CONSISTENT' implies. --selftest exits 0 and all five bundled mutations are correctly caught. I then wrote eight of my own against COPIES; ALL EIGHT still exit 0: (1) stale-by-30-hours -- shift observed_at AND wall_clock_at_collect back coherently: passes, so the freshness check cannot detect stale evidence at all; (2) treatment-path_source-null -- erase the very provenance the fix is about: passes, because check_treatment never looks at binding_entries; (3) treatment-binding-points-at-MAIN -- make the treatment binding name the sandbox main, i.e. the fix did NOT work: passes; (4) treatment-headless-exit-1 -- only timed_out is checked, never headless.exit; (5) parent-and-subagent-same-model -- makes attribution signal 3 vacuous, never cross-checked against parent_model; (6) treatment-gauge-ALSO-in-main -- a gauge at BOTH paths would mean an ambiguous binding: passes; (7) skip-sidecar-present -- a writer skip flag beside a written gauge is contradictory: skip_sidecar_wt/main are collected but never asserted; (8) arm-prompts-differ-in-substance -- I changed control's prompt to read 2 filler files instead of 24 and it passes, because prompt-*.txt is never read by the verifier at all. Item (3) is the most serious: the verifier would green-light a treatment arm that reproduced the bug. Item (8) means Q2 is not machine-checked for the prompts. NONE of these describes the actual evidence -- I checked each fact by hand and the real files are correct -- so this is a coverage defect in the checker, not a defect in the result.",
+      "r11-freshness: The EVIDENCE is genuinely fresh, but the mechanism claimed to guarantee that does not work, and one stale file WAS carried forward. Fresh, verified by filesystem mtimes I read myself: prompt-treatment.txt 07:38:30 -> +156.4s elapsed -> arm-treatment.json and headless-treatment.log both 07:41:07 (exact); prompt-control.txt 07:41:50 -> +143.5s -> arm-control.json and headless-control.log both 07:44:13; arm-diff/settings 07:41:48, preflight 07:41:49. All 2026-08-07, all internally consistent. MECHANISM DEFECT: check_attribution (verify_evidence.py:202-217) compares observed_at against wall_clock_at_collect -- BOTH written by the same collect() call -- so it only proves the gauge was sampled seconds before collection, never that collection was recent. My stale-by-30-hours mutation shifts both coherently and still exits 0. The R2 handoff's claim (IMPLEMENTER_HANDOFF_R2.md:87-89) that 'a gauge from attempt 1 is ~28 hours old and will fail that' is therefore WRONG about this checker; whatever failed attempt 1 was something else. STALE FILE CARRIED FORWARD: evidence/probe.json is dated 2026-08-06T03:19 and records filler_chars 240000 with verdict TRUNCATED, contradicting the harness's current FILLER_CHARS = 28_000 and the docstring claim (run_two_arm.py:80-87) that a whole filler file arrives untruncated. verify_evidence.py never reads probe.json. Not load-bearing (both arms demonstrably inflated past HARD), but it is committed evidence that does not support what it is cited for."
+    ],
+    "summary": "Q1 = YES and Q2 = YES; the claimed win survives a hostile read. The HARD trip really was produced by the worktree-dispatched agent's own reading, and the two arms really do differ only in the hook path. I settled both by reading the source and by building my own from-scratch reproduction, not by trusting the harness: with a payload cwd on the sandbox main, a relative --file, no cd and no --worktree, the HEAD hook binds the WORKTREE spine with path_source git_worktree while the pre-fix hook binds the MAIN path, and it still does so when I move the engine script token out of the worktree entirely, which kills the \"the harness handed the answer to the code\" hypothesis. gauge_writer_hook.py:608-631 reads only the derived subagents/agent-<id>.jsonl with no parent fallback and find_latest_usage:325 additionally requires isSidechain and a matching agentId, so the 0.559655 fill is structurally incapable of being the parent's. The harness writes no gauge and no binding store into either arm sandbox. FINDINGS, none of which overturn the result: verify_evidence.py is much weaker than its \"46 checks / COMPLETE AND SELF-CONSISTENT\" banner suggests -- all eight of my own mutations silently pass, including one that makes the treatment binding point at the sandbox main, i.e. the bug NOT fixed; its freshness window compares two timestamps written by the same call and therefore cannot detect stale evidence at all; evidence/probe.json is a stale Aug-6 file contradicting the harness's current constants; the two arms came from two separate harness invocations, so the committed arm-diff.txt and settings-treatment.json are a deterministic post-hoc rebuild rather than the artifacts in force during the treatment run; and the first, declined treatment launch left no log because the harness overwrites it. The rewritten live-checkout check is a legitimate correction -- the byte-identity guard it replaced is unsatisfiable while any other agent is running, which I confirmed by watching the store change again under my own engine claim -- but it moves the test from run time to verification time and that should be recorded. The live store holds no sandbox path, verified directly."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r10-verifier-failability",
+      "statement": "verify_evidence.py has eight uncovered silent-pass holes, the most serious being that a treatment arm whose binding points at the sandbox MAIN (i.e. the bug NOT fixed) still exits 0. Close the gap between what collect() records and what verify() asserts: path_source, headless.exit, the skip/uncalibrated sidecars, parent_model vs gauge_model, treatment gauge absent at the phantom path, and the two prompts being identical modulo arm name."
+    },
+    {
+      "id": "tc2",
+      "from": "r11-freshness",
+      "statement": "The evidence freshness check is not a freshness check. verify_evidence.py:202-217 compares observed_at against wall_clock_at_collect, both written by the same collect() call, so evidence of any age passes. If a freshness window is wanted, compare collected_at against the verifier's own clock. Also retire or regenerate evidence/probe.json, which is dated 2026-08-06 and records filler_chars 240000 / TRUNCATED against a harness whose FILLER_CHARS is 28000."
+    },
+    {
+      "id": "tc3",
+      "from": "r5-reconciliation",
+      "statement": "spine_rail.py will bind a spine path that does not exist on disk when it comes from a told-truth rung: the live binding store holds entries for C:/Programs/constellation-skills/x and C:/Programs/constellation-skills/$E, the latter an unexpanded shell variable recorded verbatim. Given #440 is about binding the wrong path, a hook willing to record a nonexistent one deserves an issue."
+    },
+    {
+      "id": "tc4",
+      "from": "r12-quiet-rerun",
+      "statement": "Acceptance harnesses that need a subagent to inflate context should not overwrite the previous launch's headless log. run_two_arm.py writes TMP/logs/<arm>.log and copies it over evidence/headless-<arm>.log every invocation, so the declined first treatment launch left no record and its diagnosis is uncorroborated prose. Timestamp the log per launch."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g2-review-reviewer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-07T14:56:51.167185+00:00",
+    "last_heartbeat": "2026-08-07T15:15:41.769479+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T15:18:01.722922+00:00"
+  }
+}

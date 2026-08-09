@@ -1,0 +1,166 @@
+# Frozen approval census for the `retired-name-on-shipped-surface` leg of
+# scripts/verify_retirement.py (#403 / #447 g5).
+#
+# Format: identical to tests/data/store_mentions.approved.txt, and read by the SAME
+# parser -- one `# <reason>` line, then one `<path>:<normalized line>` entry directly
+# beneath it. `normalize()` collapses all whitespace. A path never contains a colon; the
+# quoted line often does, so the FIRST colon separates the two fields.
+#
+# WHY THIS EXISTS. The leg could not reach zero and was never going to. Invariant 7 of
+# #447 g5 REQUIRES ~33 sites in docs/RECURSIVE_IMPROVEMENT_DESIGN.md to survive untouched
+# -- it is a June 2026 design RECORD, and rewriting it to describe a system it never
+# described would falsify history. The commander spine's archive.c4 deny_globs keep both
+# retired path strings as a re-staging block. scripts/stage_feedback.py survives by
+# explicit ruling. With no approval mechanism at all, test_canon_is_clean's
+# xfail(strict=True) could never XPASS and the scaffolding would outlive the work.
+#
+# THE BRIGHT LINE. A reason amounting to "an agent is still told to use the retired thing"
+# is NOT approvable -- fix the surface instead. Every reason below is one of: a frozen
+# historical record, a deny-glob re-staging block, a survivor script naming what it
+# stages, a tombstone naming the retired files in order to forbid them, or a replacement
+# naming what it replaced.
+#
+# NOT A PATTERN ALLOWLIST. Exact sites only, so anything new still has to be looked at by
+# a human and given its own reason. Only the CONTENT half of the leg is approvable here;
+# a restored file or skill DIRECTORY whose name is the retired thing fires regardless.
+#
+# ONE OPEN NOTE, recorded rather than silently approved: scripts/stage_feedback.py still
+# writes an `AGENT_FEEDBACK.md` and a `lessons-delta.json` into its staging dir, and names
+# a verifier deleted at g4. It was already orphaned before this gate -- no shipped surface
+# references it outside its own tests and the historical design record -- and it is out of
+# g5's scope. Filed upward as a triage candidate at #447 g5.
+
+# RETURN.md's two line approvals were REMOVED at #447 closeout, not orphaned. They were
+# correct while the file was workstream A's and named the retired files twice. Once this run
+# wrote its OWN return report the same path carried ~17 retired names and ~9 store mentions,
+# and per-line approvals would have described a document that every future run on this path
+# rewrites wholesale -- dead the moment the next Commander returns. RETURN.md is instead
+# classified in RUN_NOTES alongside the root-level notes-*.md files, as what it is: a report
+# about a finished run, addressed to an Admiral, never a surface an agent is instructed by.
+# The reason is written out at RUN_NOTES["RETURN.md"] in scripts/verify_retirement.py.
+
+# the ruling that the playbook is deliberately ABSENT from the artifact taxonomy -- it names the retired file in order to record the exclusion, and #447 g5 invariant 8 requires this paragraph to survive
+docs/CONSTELLATION_OVERVIEW.md:**`.agent-work/LESSONS.md` is not in this taxonomy, and that is the ruling, not an
+
+# June 2026 design record, audit table row: names where the run retrospective was then written, and records that nothing read it
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:| Run retrospective | spine `feedback` step → `.agent-work/AGENT_FEEDBACK.md` | adherence, friction, what worked, improvement signals | **nothing reads it** (nominal: "Charter refresh", untriggered) |
+
+# June 2026 design record, audit table row: names the lesson-disposition gate as it then stood
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:| Lesson dispositions | lessons carrying a `target`, settled at the Commander `feedback` step | concrete template/interface + doctrine fixes | `verify_lessons_applied.py` forced apply-or-defer gate; `WORKFLOW_CLOSEOUT.template.md` confirms the gate passed (the retired Template Update Candidates table is superseded by this flow) |
+
+# June 2026 design record, audit table row: names the feedback-invariant verifier as it then stood
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:| Feedback invariant | `scripts/verify_agent_feedback.py` | file exists, mentions work-id, durable placement | spine postconditions at `feedback` and `archive` |
+
+# June 2026 design record, gap analysis: records that the feedback log was write-only
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:2. **Commander in sequence.** `AGENT_FEEDBACK.md` is write-only. No spine step reads
+
+# June 2026 design record, parenthetical: names the gate that force-settled lesson application at the feedback step
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:force-settled by `verify_lessons_applied.py` at the `feedback` step.)
+
+# June 2026 design record, proposal: names the verifier it would have extended to require a section's presence
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:verifier like `verify_agent_feedback.py`) to require the section's presence.
+
+# June 2026 design record, superseded-block quote: the context-step read and digest injection the design proposed
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> The `context`-step read below, and the `SessionStart` `LESSONS.md` digest injection
+
+# June 2026 design record, superseded-block quote: names the writer the feedback step then distilled deltas through
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> `feedback` step still distils delta ops through `apply_lessons_delta.py`, and the
+
+# June 2026 design record, Loop 2 proposal: names the append-only log half of the split durable store
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- Split the durable store: keep `.agent-work/AGENT_FEEDBACK.md` as the append-only
+
+# June 2026 design record, Loop 2 proposal: names the curated-playbook half of the split durable store
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:log; add `.agent-work/LESSONS.md` as the curated playbook (small, itemized lessons
+
+# June 2026 design record, Loop 2 proposal: the context-step READ this retirement exists to abolish, kept as the record of what was proposed
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- Spine `context` step gains a read: load `LESSONS.md` (and skim undigested log
+
+# June 2026 design record, Loop 2 proposal: describes the delta update the playbook would take
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:**delta** update of `LESSONS.md` — new lesson, increment a recurring one, or retire
+
+# June 2026 design record, Loop 2 proposal: names the verifier extension the split would have needed
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- `verify_agent_feedback.py` extends to check `LESSONS.md` exists/durable and that
+
+# June 2026 design record, Loop 3 proposal: names the gate that would refuse the feedback advance
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:and `verify_lessons_applied.py` refuses the `feedback` advance while any
+
+# June 2026 design record, Loop 5 proposal: the SessionStart digest injection into ad-hoc sessions, kept as history
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:inject the `LESSONS.md` digest so even ad-hoc non-Commander sessions inherit
+
+# June 2026 design record, sequencing list: names the read path Loop 2 would have added
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:2. Loop 2 read path + LESSONS.md — makes the existing log stop being write-only.
+
+# June 2026 design record, role survey: names the Reflector role this retirement deleted
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:**`constellation-lessons-auditor`** — ACE's Reflector as a bounded Constellation
+
+# June 2026 design record, build list: names the skill it proposed and where it would be wired
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:4. `constellation-lessons-auditor` skill; wire as Admiral closeout step and optional
+
+# June 2026 design record, open question: asks whether the digest injection should be unconditional
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- Should `LESSONS.md` injection be unconditional at `context`, or selected per
+
+# June 2026 design record, rejected alternative: names the LLM-editing shape the design refused
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:Commander LLM-editing LESSONS.md — Generator and Curator collapsed, the exact
+
+# June 2026 design record, rejected alternative: names the script that would apply deltas mechanically instead
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:justification and grounding citation — and a script (`apply_lessons_delta.py`,
+
+# June 2026 design record, rejected alternative: names the verifier that script was proposed as a sibling of
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:sibling of `verify_agent_feedback.py`) applies them mechanically, enforcing
+
+# June 2026 design record, drill proposal: names where the drill link would have been enforced
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:`docs/superpowers/drills/<lesson-id>.md`; enforced in `apply_lessons_delta.py`) — the
+
+# June 2026 design record, superseded note: records what the writer deliberately did NOT carry
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:> `apply_lessons_delta.py` carries no `DEFAULT_CAP`, no active-entry refusal branch,
+
+# June 2026 design record, concurrency hazard: names the shared log two parallel Commanders would race on
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:Parallel Commanders under an Admiral share `.agent-work/AGENT_FEEDBACK.md` and
+
+# June 2026 design record, concurrency hazard: names the second shared file in that same race
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:LESSONS.md with no locking. The per-work-id sidecar file proposal
+
+# June 2026 design record, resolution: names the trio the durable-root fix made canonical
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:trio (LESSONS.md, AGENT_FEEDBACK.md, CONSTELLATION_FEEDBACK.md) is one canonical
+
+# June 2026 design record, resolution: names the first member of the worktree-local staged trio
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:checkout, it stages the worktree-local trio — the `AGENT_FEEDBACK.md` entry,
+
+# June 2026 design record, resolution: names the verifier that accepted the staged shape in lieu of a durable write
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:serializes the harvest into the canonical files at epic closeout. `verify_agent_feedback.py`
+
+# June 2026 design record, follow-on: names what the staging script writes
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:**`scripts/stage_feedback.py`** (#154): it writes the `AGENT_FEEDBACK.md` entry,
+
+# June 2026 design record, follow-on: names the verifier whose accepted layout that script matched
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:exact layout `verify_agent_feedback.py` accepts, so a fenced Commander no longer
+
+# June 2026 design record, ordering constraint: names the file the constraint was about
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:- **Ordering constraint for any future mechanized write-through:** AGENT_FEEDBACK.md
+
+# June 2026 design record, trigger proposal: names the entry-count threshold that would trigger an audit
+docs/RECURSIVE_IMPROVEMENT_DESIGN.md:closeout; for plain Commander runs it triggers when LESSONS.md > 5 entries or on
+
+# the retirement TOMBSTONE: names both retired files in order to FORBID them and to forbid any successor playbook -- this block is where a good-faith agent acting on a stale instruction lands
+docs/agents/ORCHESTRATOR_CONTEXT.md:`.agent-work/LESSONS.md` and `.agent-work/AGENT_FEEDBACK.md` are **retired** (#447). This
+
+# the surviving store writer's module docstring: records which prior-art contract it inherited (validate-then-apply, all-or-nothing)
+scripts/apply_episode_delta.py:Mirrors scripts/apply_lessons_delta.py's contract (validate-then-apply, all-or-nothing,
+
+# the surviving store writer: records a deliberate DEPARTURE from the prior art's date stamping
+scripts/apply_episode_delta.py:not generated here. (apply_lessons_delta.py stamps its own dates; this store departs
+
+# the surviving store writer: records that the mandatory non-empty retire reason was inherited, not re-decided
+scripts/apply_episode_delta.py:# C3a — the mandatory non-empty reason (mirrors apply_lessons_delta.py's own
+
+# placeholder-token comment: a HYPOTHETICAL example of a skill-dir token carrying hyphens, illustrating the parser's rule; it directs nobody to anything
+scripts/init_work_area.py:# carry hyphens, e.g. a hypothetical <lessons-auditor-skill-dir>). A token in
+
+# the replacement gate's own docstring: names what it replaced, which is the fact that makes the gate's existence legible
+scripts/verify_episode_captured.py:The write-side replacement for the retiring `.agent-work/LESSONS.md` /
+
+# the replacement gate's own docstring: names the second retired file and the issue that retired both
+scripts/verify_episode_captured.py:`.agent-work/AGENT_FEEDBACK.md` machinery (issue #447). It answers exactly one
+
+# commander spine archive.c4: the deny_globs RE-STAGING BLOCK. Both retired path strings are kept here deliberately so a future run cannot re-stage either file -- a stronger reason than the one they were added for
+skills/commander/templates/COMMANDER_SPINE.template.json:{"id": "c4", "statement": "staged diff carries no suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); refuse closeout unless a human waives via the engine override path", "check": {"kind": "git-change-policy", "mode": "staged", "max_file_bytes": 1000000, "deny_globs": ["*.parquet", "*.pkl", "*.pickle", "*.joblib", "*.pt", "*.onnx", "*.bin", "*.ckpt", "data/generated/**", "records/**", ".agent-work/LESSONS.md", ".agent-work/AGENT_FEEDBACK.md", ".agent-work/CONSTELLATION_FEEDBACK.md", ".agent-work/CONSTELLATION_FEEDBACK.collected.json"], "allow_globs": ["docs/**", "src/**", "tests/**", "skills/**", "scripts/**", ".agent-work/**"], "require_human_waiver_for_binary": true}, "satisfied": false, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}}

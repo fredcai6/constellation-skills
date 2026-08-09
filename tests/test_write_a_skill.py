@@ -138,6 +138,15 @@ class RealSkillRegistrationTests(unittest.TestCase):
         # Uses the live registration maps + the real skills/ corpus.
         self.rail.verify_skill_registered("write-a-skill", ROOT / "skills")  # no raise
 
+    def test_new_lean_replan_skill_is_registered_and_clears_the_mint_rail(self):
+        self.assertTrue(
+            (ROOT / "skills" / "replan" / "SKILL.md").is_file(),
+            "missing replanning behavior: the lean replan skill has not been minted",
+        )
+        self.assertIn("replan", self.installer.SKILL_REFERENCE_BUNDLES)
+        self.assertIn("replan", self.installer.SKILL_SCRIPT_BUNDLES)
+        self.rail.verify_skill_registered("replan", ROOT / "skills")
+
     def test_rail_resolves_a_subdir_sourced_script_instead_of_falsely_refusing(self):
         """Regression (#262): the rail checked bundle members with a hand-rolled
         `REPO_ROOT/"scripts"/script`, blind to SCRIPT_SOURCE_SUBDIRS. The moment

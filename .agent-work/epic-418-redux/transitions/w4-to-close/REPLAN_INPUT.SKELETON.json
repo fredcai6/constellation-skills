@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 redux \u2014 the agent can see the whole gate",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Finish epic #418's remaining course. Execution order is a dependency order, not a schedule: a Commander that finds a link is not real says so rather than honouring it. Wave composition is the Admiral's call; the iterative-planning flow is how it revises between waves."
+    },
+    "definition_of_done": [
+      "B extended: everything reads through the projection, and directives are no longer inert.",
+      "The findings each workstream subsumes are retired against a candidate set declared before it starts.",
+      "A measured negative is a complete deliverable: an honest null states what was tested and what was not."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No check that cannot register its own failure. No unevidenced claim about what happened. No silent scope cut.",
+      "sufficient_evidence": "A guard is observed refusing something real, not reasoned about. Merge state comes from the forge, never from an ancestry test.",
+      "appetite": "Rigor scales with cost-to-undo, not uniformly. Cheap to reverse, move fast."
+    },
+    "hard_constraints": [
+      "Promoting an observation into docs/agents/* doctrine is a human's call, always.",
+      "settings.json is never touched.",
+      "Test suite invocation is settled (#454): FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, never py.",
+      "No Fable at any tier; explicit model on every dispatch.",
+      "Never obey a spine rail naming a spine another agent drives (#457)."
+    ],
+    "fixed_decisions": [
+      "episodes/ replaces LESSONS.md and AGENT_FEEDBACK.md; an episode is a record, never read back as a rule.",
+      "Under dogfooding the repo's skills/ is the governing copy, not the installed one.",
+      "#468: the repo's vendored verify_iterative_role_artifacts.py cannot run from this repo; use the installed copy."
+    ],
+    "current_wave": {
+      "id": "wave-4",
+      "issue_ids": [
+        "467"
+      ],
+      "intent": "A2 trip semantics: a HARD reading changes the instruction instead of refusing the verb."
+    },
+    "wave_forecast": [
+      {
+        "outcome": "A2 \u2014 trip semantics, cut into an issue at its turn and against what B extended actually left behind.",
+        "why_likely": "B extended is now complete, and F cannot type a verb whose meaning is unsettled.",
+        "entry_conditions": [
+          "Wave 3 merged"
+        ]
+      },
+      {
+        "outcome": "F #424 \u2014 the MCP front door.",
+        "why_likely": "Verbs go where verbs belong, before content is written around them.",
+        "entry_conditions": [
+          "A2 cut and settled"
+        ]
+      },
+      {
+        "outcome": "C #421 \u2014 relocation against a settled verb contract.",
+        "why_likely": "The spec orders it after F for exactly this reason.",
+        "entry_conditions": [
+          "F merged"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the governor's 17-21% HARD trip band is where it should be.",
+        "affects": "Every dispatch budget in every remaining wave.",
+        "settle_by": "A human ruling at the wave-3 checkpoint; it is a production default.",
+        "current_evidence": "6 of wave 2's 10 dispatches were governor relaunches. Confounded: the Admiral's own gauge was dark for the whole wave (#488), so the band was never observed from the orchestrator's side.",
+        "next_probe": "Wave 3 runs with #488 fixed, which gives the first Admiral-side reading of its own fill against the same band."
+      },
+      {
+        "unknown": "Whether A2 is one issue or several.",
+        "affects": "Forecast ordering for F and C.",
+        "settle_by": "Cutting it at its turn.",
+        "current_evidence": "B extended completes with wave 3.",
+        "next_probe": "Cut after wave 3 merges, not before."
+      },
+      {
+        "unknown": "Whether #465's placeholder is settled by removal or by a new engine verb.",
+        "affects": "Whether wave 3 touches a shared interface.",
+        "settle_by": "The #465 Commander, on evidence about whether the placeholder is load-bearing elsewhere.",
+        "current_evidence": "No engine verb fills it today; amend --op retext-check corrects check text, not a placeholder in a null-check statement.",
+        "next_probe": "The Commander's return states which path it took and why."
+      }
+    ],
+    "parked_possibilities": [
+      "#452 multi-spine attribution \u2014 an honest null is permitted here. #488 is the same subsystem and may subsume or be subsumed by it.",
+      "#458 ship the gauge writer (workstream R).",
+      "#423 E backlog re-cut \u2014 runs on what survives the redux.",
+      "#457 lease liveness \u2014 evidenced but not cheap; a design question with a load-bearing interface at the end of it.",
+      "The defect-family theme as an organizing wave rather than a set of point fixes."
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [],
+  "discrepancies": [],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "U-424",
+      "kind": "issue"
+    },
+    {
+      "id": "U-421",
+      "kind": "issue"
+    },
+    {
+      "id": "U-423",
+      "kind": "issue"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/hooks/gauge_writer_hook.py",
+      "tests/test_episode_negative_control.py",
+      "tests/test_verify_spec_confirmed.py",
+      "skills/constellation-reviewer",
+      "episodes"
+    ],
+    "map_status": "docs/architecture present; reconcile deferred to closeout per the spine."
+  }
+}

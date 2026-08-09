@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-418-iterative-planning",
+  "diff_ref": "Exact 11-path G2 inventory in g2-implement/G2_DIGEST_PATHS.txt at sha256:bcac2c18ac5a6d88883f6123d173b72d4f020fd457b42b4b04268674a481abd5",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, reviewer references/global-crew.md and global-everyone.md, frozen g2-implement contract",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "flagged", "finding": "The replan verifier validates nested G1 values by cloning and rewriting an entire manifest through verify_manifest_shape. This reaches through the G1 seam and loses the caller's real graph context: issue replacements are validated alone, so a dependency on B is refused even when B exists in the result wave. Expose/use a context-aware G1 component validator or validate the assembled result plan through the public seam.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Frozen G2 requires versioned strict JSON input/result templates and a pure verifier/renderer", "reason": "Serialized dictionaries, arrays, booleans, and strings are the required public artifact interface; explicit entry validation keeps that interface deep without adding a translation layer."}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

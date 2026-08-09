@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-face-a",
+  "mechanical": {
+    "run": "g1-implement-red-repro-467",
+    "project": "constellation-skills",
+    "role": "g1-implementer",
+    "refusals": 1,
+    "spine-step": "m2-face-a",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-red-repro-467-m2-face-a@99fb9130727ec28f73ffb6b75991357117f8afa5",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement-red-repro-467",
+    "generated_at": "2026-08-08T10:29:51Z"
+  }
+}

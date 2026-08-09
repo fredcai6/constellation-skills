@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "e2e-probe",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-e2e-probe-r4-quality@532d930d82caa11cab1611531229f698756d55d6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "e2e-probe",
+    "generated_at": "2026-08-08T06:16:29Z"
+  }
+}

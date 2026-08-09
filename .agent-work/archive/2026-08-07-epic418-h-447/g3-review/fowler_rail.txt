@@ -1,0 +1,1 @@
+fowler pass ok: .agent-work/epic418-h-447/g3-review/fowler.json (smells=12, flagged=['duplicated-code'], overridden=['long-method', 'shotgun-surgery', 'speculative-generality', 'comments-as-deodorant'])

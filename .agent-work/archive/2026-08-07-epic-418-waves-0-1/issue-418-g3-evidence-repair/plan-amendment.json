@@ -1,0 +1,32 @@
+{
+  "ops": [
+    {
+      "op": "rescope",
+      "id": "m1",
+      "title": "Make audit-cardinality evidence causal",
+      "imperative": "Change only the zero/multiple audit fixtures to otherwise-authorized applicable advance or replan packets with matching audit decisions. Temporarily bypass audit enforcement and prove these assertions fail, restore enforcement, then run the exact focused suite while preserving the full launch table.",
+      "preconditions": [
+        {"id": "p1", "statement": "context loaded and handoff complete", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "changed audit tests fail causally when audit enforcement is bypassed and production is restored", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "exact focused suite passes with production restored", "check": {"kind": "command", "command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py"}, "satisfied": false}
+      ],
+      "constraints": ["final diff is tests-only relative to rework 3", "no production/schema/engine/network/tracker/history/unrelated edits"]
+    },
+    {
+      "op": "add",
+      "id": "m2-closeout",
+      "after": "m1",
+      "title": "Refresh G3 evidence identity",
+      "imperative": "Run installer, G1/G2/init, reviewer installed matrix and JSON/diff/no-network/path audits; refresh the exact nine-path digest and IMPLEMENTER_RESULT with causal tests-only evidence; advance then release last.",
+      "preconditions": [
+        {"id": "p1", "statement": "causal audit tests and focused suite are green", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "fresh digest/result and all required evidence ready for independent review", "check": null, "satisfied": false}
+      ],
+      "constraints": ["preserve unrelated dirty changes", "release is final journal action"]
+    }
+  ]
+}

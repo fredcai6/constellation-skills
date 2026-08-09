@@ -1,0 +1,178 @@
+{
+  "work_id": "issue-418-g3-rework-3",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the relevant packet. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded implementer and inherited doctrine, project crew context/glossary, complete rework-3 handoff and fresh review-3 evidence. Task, intent, scope, exclusions, TDD evidence, stop conditions and return path are explicit."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Restrict NEXT_WAVE decisions",
+      "imperative": "TDD first in the real installed runtime: prove generic G2 validates/renders an applicable repair while admiral-prelaunch incorrectly accepts it. Then minimally authorize only applicable advance or replan, retaining success for both and refusal for repair, stop, and applicable:false.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context and bounded launch-authorization handoff loaded."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "real installed repair authorization test written first and observed causally failing",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Before production edits, installed canonical G2 verified and rendered an applicable repair, then exact frozen suite exited 1 because installed admiral-prelaunch returned 0 for that same repair; 35 tests and 4 subtests passed."
+        },
+        {
+          "id": "c2",
+          "statement": "exact focused suite passes",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "prelaunch-only correction",
+        "generic G2 validation/rendering unchanged",
+        "no engine/schema/network/tracker/history/unrelated edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-closeout": {
+      "id": "m2-closeout",
+      "title": "Refresh final G3 identity",
+      "imperative": "Run all reviewer installed probes, installer and G1/G2/init suites, JSON/diff/no-network/path audits; refresh the exact nine-path digest and IMPLEMENTER_RESULT with causal RED/GREEN; advance then release last.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "decision authorization matrix is green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Focused installed-runtime suite green: 36 passed, 6 subtests in 1.89s; advance and replan authorize, repair/stop/applicable:false refuse."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fresh digest/result and required evidence ready for independent review",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Focused suite 36 passed/6 subtests; installer 108/379; G1-G2-init 62/59; all reviewer reproductions executed with obsolete repair-success expectations now correctly inverted; three JSON spines parse; scoped diff/no-network/path audits pass; refreshed nine-path digest is sha256:3672b7a33efae2ced6b9e70331f63855f503b1334ead7e42f4ccb19c035cc917 and result is current."
+        }
+      ],
+      "constraints": [
+        "preserve unrelated dirty changes",
+        "release is final journal action"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g3-rework-3-20260806",
+    "status": "released",
+    "claimed_at": "2026-08-06T19:17:19.235240+00:00",
+    "last_heartbeat": "2026-08-06T19:21:05.504116+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T19:21:05.806676+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-06T19:17:59.325150+00:00",
+      "reason": "Instantiate the bounded rework-3 TDD and closeout gates from the generic implementer template under the user's confirmed epic authority.",
+      "authority": "human",
+      "ops": [
+        "rescoped m1",
+        "added m2-closeout"
+      ]
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Generic G2 validity includes repair, but NEXT_WAVE authority is the narrower applicable advance/replan subset.",
+      "mechanical": false,
+      "ts": "2026-08-06T19:18:00.396650+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "NEXT_WAVE authority is now expressed directly as the applicable advance/replan allowlist, while repair remains a generic valid/renderable hold record.",
+      "mechanical": false,
+      "ts": "2026-08-06T19:19:13.756571+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-closeout",
+      "why": "The final identity binds the explicit applicable advance/replan authorization table and real installed evidence that generic repair remains valid while prelaunch refuses it.",
+      "mechanical": false,
+      "ts": "2026-08-06T19:21:05.504107+00:00"
+    }
+  ]
+}

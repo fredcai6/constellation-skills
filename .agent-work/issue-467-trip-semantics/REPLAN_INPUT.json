@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Trip semantics: HARD must refuse the verbs that BEGIN work, not the verb that writes the handoff",
+      "spec_path": ".agent-work/issue-467-trip-semantics/PROBLEM_STATEMENT.md",
+      "intent_and_why": "Issue #467 in epic #418 wave 4. The shipped context governor refuses `advance` at HARD. But `advance --why` is the ONLY writer of the why-trail, and that --why IS the cold-start DIGEST a successor reads. So the governor refuses the one verb that writes the handoff, which is #431. Moving HARD's enforcement to the verbs that BEGIN work (`start`, `reopen` -- not `resume`, which returns an agent to a gate it is already mid-way through) fixes it at zero new CLI surface, which is also the shape #424 is blocked on."
+    },
+    "definition_of_done": [
+      "The #431 deadlock is reproduced as a genuine RED at unmodified HEAD before any fix is written.",
+      "HARD refuses the verbs that begin work and permits `advance --why`, so a tripping agent can write its handoff.",
+      "`advance --mechanical` is refused at/over hard and `why_exempt` is suspended there, so the fix cannot be walked around.",
+      "The engine emits a concrete why-id rather than a `<why-id>` placeholder that no-ops when followed literally.",
+      "DC6's observable is 'did anyone BEGIN work while over the line', never 'did a handoff artifact appear'.",
+      "The full suite holds at its baseline: 1793 passed, 2 skipped, 683 subtests, real exit 0."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No check may be satisfiable by construction. Epic #418's central defect is a check that cannot fail; a manufactured RED is that defect wearing the costume of evidence.",
+      "sufficient_evidence": "A RED reproduced at unmodified HEAD that an independent reader has actively tried to break, plus the shipped engine and gauge suites at baseline.",
+      "appetite": "One bounded issue, five gates, inside epic #418 wave 4."
+    },
+    "hard_constraints": [
+      "The RED must be observable at UNMODIFIED HEAD: `git diff --stat -- scripts tests` empty, and `main...HEAD` empty.",
+      "No absence is evidence -- a silent governor and a governor with headroom are indistinguishable, so every gate that depends on a reading must prove the reading was READ.",
+      "The repro is disposable and leaves no residue; it is not promoted to a regression test (the deadlock is a property of a refusal path being deleted, so it is unreproducible by construction afterwards).",
+      "Never run pytest via `py` (#454 gives a false HARNESS ERROR); use `FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests`.",
+      "A piped command's `$?` is the PIPE's exit code; use `${PIPESTATUS[0]}` or redirect and read separately.",
+      "No writes under `.agent-work/epic-418-redux/**` (the Admiral's) and none to `.claude/settings.json` (#458)."
+    ],
+    "fixed_decisions": [
+      "The plan frozen at `plan` is executed, not re-planned; changes go through the engine's `amend`/`reopen`, never by hand-editing execute.json.",
+      "constraint:no-absence-is-evidence",
+      "decision:red-leaves-no-residue",
+      "HARD guards the verbs that BEGIN work; `resume` is explicitly NOT guarded."
+    ],
+    "current_wave": {
+      "objective": "Reproduce #431 as a genuine RED at unmodified HEAD, then move HARD's enforcement off `advance` and onto the verbs that begin work.",
+      "exit_criteria": [
+        "g1 closed: the RED is reproduced and an independent reviewer has tried to break it and failed.",
+        "g2-g4 closed: the fix lands, the mechanical walkaround is closed, and the concrete why-id is emitted.",
+        "The suite holds at baseline."
+      ],
+      "issues": [
+        {
+          "id": "467",
+          "title": "Trip semantics -- HARD must not refuse the verb that writes the handoff",
+          "desired_outcome": "A tripping agent at/over HARD can run `advance --why` to write its DIGEST, and is refused only when it tries to BEGIN new work.",
+          "useful_now": "#424 is blocked on this shape, and every Commander handoff in this epic currently depends on a governor that refuses the handoff-writing verb.",
+          "appetite": "Five gates inside one issue: reproduce the RED, move the guard, close the mechanical walkaround, emit the concrete why-id, and hold the suite at baseline.",
+          "acceptance_or_falsification_evidence": "A RED at unmodified HEAD that flips GREEN under the fix and RED again if reverted; falsified if any assertion passes on BOTH sides of the fix while being presented as #431 evidence.",
+          "implementation_latitude": "Internals of the guard are free; the CLI surface must not grow.",
+          "hard_constraints_no_gos": [
+            "No new CLI verbs or flags.",
+            "`resume` must remain unguarded.",
+            "The repro must not become a regression test."
+          ],
+          "local_unknowns": [
+            "Whether #431 is a mechanical lock or an instruction-conformance defect -- SETTLED at g1, see D2."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/gauge_reader.py",
+            "tests/test_checklist_engine.py",
+            "tests/test_gauge_reader.py"
+          ],
+          "type": "HITL",
+          "hitl_reason": "The acceptance evidence is a governor RED that must be judged genuine rather than manufactured, and epic #418's central defect is a check that cannot fail. That judgement is a human/Admiral call, not a machine check -- and it has already produced two decisions this run that exceeded Commander latitude: whether ACCEPT WITH FINDINGS satisfies a postcondition matching the literal string APPROVE, and whether committed disposable evidence should be untracked.",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "#424 unblocks once the trip-semantics shape is settled",
+        "why_likely": "#424 was blocked specifically on whether the fix needed new CLI surface; g1's evidence says it does not.",
+        "entry_conditions": [
+          "#467 lands and holds the suite at baseline"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether a cold successor can close a round trip without a human telling it which projection to trust",
+        "affects": "DC5, and whether the trip/resume design is complete as built",
+        "settle_by": "The next unassisted resume on this spine",
+        "current_evidence": "Two resumes observed. The first needed no briefing and succeeded on content but was misread by the instrument. The second (this one) succeeded on both, but ONLY because the Admiral supplied a two-line correction that the spine's own projection is stale mid-execute.",
+        "next_probe": "Resume once more with the one-command instruction and no correction, after the mid-execute staleness is addressed."
+      },
+      {
+        "unknown": "How many shipped checks cannot PASS as written",
+        "affects": "The epic's framing -- it has been hunting checks that cannot FAIL",
+        "settle_by": "A sweep of template-shipped command postconditions for literal placeholders",
+        "current_evidence": "Two found in one gate: r6-fowler in REVIEW_SURVEY.template.json (literal `<placeholder>` a shell reads as a redirect), and this run's own g1-integrate c3 (matches the literal verdict string APPROVE while the frozen handoff prescribes a different vocabulary).",
+        "next_probe": "grep template-shipped `command` checks for angle-bracket placeholders."
+      }
+    ],
+    "parked_possibilities": [
+      "A lease-aware gauge writer that declines to write for an agent not holding the spine's lease, closing the handoff-window misattribution with a mechanism that already exists."
+    ]
+  },
+  "completed_outcomes": [],
+  "wave_evidence": [
+    {
+      "claim": "The RED is observable at UNMODIFIED HEAD.",
+      "expected": "No source change under scripts/ or tests/, in the worktree or on the branch.",
+      "observed": "`git diff --stat -- scripts tests` empty AND `git diff --stat main...HEAD -- scripts tests` empty, re-run in the Commander's own shell at g1-integrate.",
+      "source": "commander re-verification at g1-integrate"
+    },
+    {
+      "claim": "A fresh valid reading was actually READ, not quietly absent.",
+      "expected": "The engine prints its OWN `CONTEXT <n>% (>= hard)` advisory, matching the planted fill fraction.",
+      "observed": "`CONTEXT 30% (>= hard)` printed by the engine, planted 0.30 against opus-5 hard 0.15; reproduced independently by the reviewer (four occurrences in its transcript) and again by the Commander (24 ASSERT OK / 0 FAIL, real exit 0).",
+      "source": "repro_431.py --all, run by implementer, reviewer, and Commander separately"
+    },
+    {
+      "claim": "The stale DIGEST is the real consequence of the shipped instruction, not an arrangement of the repro.",
+      "expected": "A counterfactual control differing ONLY in the gauge yields the FRESH digest.",
+      "observed": "Control verified by normalized JSON diff of the two scratch spines -- every delta is a downstream consequence of the refusal. `advance` confirmed in source as the sole why_trail writer (both _append_why call sites inside advance()). The reviewer's own PROBE 1 tightened the control (gauge PRESENT at 0.02 rather than absent) and the RED survived.",
+      "source": "reviewer PROBE 1 + normalized-JSON differ"
+    },
+    {
+      "claim": "The repro proves #431 specifically, not something adjacent.",
+      "expected": "Assertions flip under the planned fix; any assertion green on both sides is not #431 evidence.",
+      "observed": "11 of 24 assertions flip, including every load-bearing #431 claim. All 13 both-sides assertions are harness, setup, control, or deliberate honest-scope -- none is presented as #431 evidence.",
+      "source": "reviewer answer 3"
+    },
+    {
+      "claim": "The shipped engine and gauge behaviour is unchanged by g1.",
+      "expected": "Engine and gauge suites pass at HEAD.",
+      "observed": "394 passed, 30 subtests passed, real exit 0 (tests/test_checklist_engine.py tests/test_gauge_reader.py). Full suite re-run by the reviewer at the exact baseline: 1793 passed, 2 skipped, 683 subtests, REAL_EXIT=0.",
+      "source": "commander re-verification at g1-integrate; reviewer answer 4"
+    },
+    {
+      "claim": "The live Commander spine and gauge were not disturbed by running the repro.",
+      "expected": "Live spine.json/execute.json unchanged across a full repro run.",
+      "observed": "md5 of both files identical before and after `repro_431.py --all`.",
+      "source": "commander re-verification at g1-integrate"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D1",
+      "signal": "g1-integrate's postcondition c3 matches the literal verdict string APPROVE, but the reviewer handoff frozen at the g1 seam prescribes the vocabulary ACCEPT / ACCEPT WITH FINDINGS / REJECT and calls ACCEPT WITH FINDINGS the healthy outcome. The reviewer obeyed the handoff, so c3 cannot pass as written.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "g1-integrate closure only; the RED itself is unaffected and verified genuine.",
+      "evidence": "execute.json g1-integrate c3 = {kind: artifact, evidence_type: review-result, match: {verdict: APPROVE}}; crew-handoffs/g1-reviewer-handoff.md prescribes the other three-value vocabulary; crew-handoffs/g1-reviewer-result.md returns ACCEPT WITH FINDINGS with 0 blocking findings.",
+      "reason": "Two frozen artifacts authored one step apart by the same agent disagree on a free-text verdict string, and nothing checks that they agree. Resolving it by attaching a second artifact reading APPROVE would be fabricated evidence, so it is floated to the Admiral rather than resolved in-gate."
+    },
+    {
+      "id": "D2",
+      "signal": "#431 is an instruction-conformance defect, not a mechanical deadlock: the post-attach `advance` SUCCEEDS and writes a fresh DIGEST. The engine permits the advance while, in the same breath, telling the agent not to run it.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "What g2-g4 must measure the fix against. A fix verified as 'the advance is no longer blocked' would be verifying something that was never blocked.",
+      "evidence": "Reviewer PROBE 2, written specifically to test this. The repro narrated the property in prose ('a further advance would be permitted') rather than asserting it -- reviewer finding N3.",
+      "reason": "This is the plan's most load-bearing structural assumption and it was carried as narration, not as an assertion. It survived, but the framing must be corrected before g2-g4 design their evidence."
+    },
+    {
+      "id": "D3",
+      "signal": "A shipped check that cannot PASS: REVIEW_SURVEY.template.json ships r6-fowler's c1 command containing a literal `<fowler-pass-record-path>`, which a POSIX shell reads as a redirect from a nonexistent file. No engine verb can fill it -- `amend` is gated-only, `attest` refuses engine-checked conditions -- so a force-waive is the only exit.",
+      "classification": "evidence_only",
+      "affects": "Epic #418's framing. It has been hunting checks that cannot FAIL; this is the mirror case, and D1 is a second instance in this run's own frozen plan.",
+      "evidence": "Reviewer workflow feedback W1; the reviewer force-waived with the real command and its real exit 0 recorded in the waiver, and the Fowler pass itself genuinely passed.",
+      "reason": "A real defect in a shipped template, outside #467's done-conditions. Recorded, not filed -- this run has no filing authority."
+    },
+    {
+      "id": "D4",
+      "signal": "The commit-at-the-seam handoff protocol swept the deliberately-disposable repro into permanent history. All 29 files under red-repro/ entered tracking in 62f564c7, the predecessor Commander's seam-commit at its trip -- not through any `git add` by the implementer, whose 'not git added' claim was true when written.",
+      "classification": "evidence_only",
+      "affects": "decision:red-leaves-no-residue, and the trip protocol generally. Every repro re-run now dirties 25 tracked files; the Commander's own re-run at g1-integrate did exactly that.",
+      "evidence": "`git ls-files -- .../red-repro | wc -l` = 29; `git check-ignore` exit 1; `git log --diff-filter=A -- .../red-repro/repro_431.py` = 62f564c7; `git show --stat 62f564c7 -- .../red-repro` = 29 files changed, 1953 insertions; `git diff --name-only -- .../red-repro | wc -l` = 25 after the Commander's re-run.",
+      "reason": "Two doctrines are in direct tension -- commit-at-the-seam (which makes a trip lossless) and leaves-no-residue (which keeps disposable evidence disposable) -- and nothing currently notices. The implementer handoff even carried a Deliverable Path Check saying not to commit it; a Commander committing at a seam does not consult it. The remedy is outside the frozen plan, so it was floated, not done."
+    },
+    {
+      "id": "D5",
+      "signal": "The spine's cold-start projection is stale by construction for any trip that happens mid-`execute`. `advance` is the only writer of the why-trail and the spine's `execute` step spans all 16 gates, so a Commander tripping mid-step cannot update the spine's DIGEST at all.",
+      "classification": "evidence_only",
+      "affects": "DC5. The spine's `current` told this Commander to drive execute.json from `e0-context`, a gate complete and committed two agents earlier.",
+      "evidence": "spine.json current still carries the w-4 DIGEST written two agents ago; execute.json current was accurate. RESUME_OBSERVATION.md, second-resume section.",
+      "reason": "This is the ordinary case, not an edge case, since `execute` is where nearly all the time goes. Neither the predecessor nor this Commander amended the frozen plan to route around it. It cost nothing here only because the Admiral supplied a two-line correction by hand -- which is the remaining manual step in the round trip."
+    },
+    {
+      "id": "D6",
+      "signal": "The gauge misattribution at a handoff is real but narrower than RESUME_OBSERVATION.md's first section records. It does NOT make the round trip loop permanently.",
+      "classification": "drop",
+      "affects": "DC5. The predecessor recorded that a resumed Commander reads as over the line the instant it starts and the round trip therefore cannot close.",
+      "evidence": "On arrival, execute.json current printed `CONTEXT 15% (>= hard)` against a gauge stamped 10:45:36Z that was not this Commander's. The first mutating command rewrote it to fill_fraction 0.051788 at 10:46:57Z and the band released unaided; nothing was waived. Difference from the predecessor's run: both earlier agents had STOPPED before this one started, so nothing contended.",
+      "reason": "Partially falsified as stated. The mechanism (many agent keys, one spine-derived gauge path, last writer wins) is real, but it bites only while the tripped predecessor is still taking tool calls -- which is exactly what 'commit at the seam, hand off, and go idle' already forbids. Two runs, one variable changed, opposite outcomes: a cleaner attribution than either run alone. The lease-aware-writer fix would close even the overlap window."
+    },
+    {
+      "id": "D7",
+      "signal": "`why_ref=<why-id>` copy-pasted literally from the engine's own refusal attaches with exit 0 and does NOT release HARD -- a silent no-op on the exact command the engine prints at the agent. The real id is not recoverable from `current` or from the refusal text.",
+      "classification": "evidence_only",
+      "affects": "Nothing new -- g2(d) already plans the fix (emit the concrete why-id).",
+      "evidence": "Found by the g1 implementer; independently corroborated by reviewer PROBE 3 (attach exit 0, following advance still refused) and PROBE 4 (no `w-N` appears in current or in the refusal); independently corroborated a third time by TRIP_OBSERVATION.md item 4.",
+      "reason": "Already owned by a planned gate; recorded because it now has three independent confirmations and because the shape -- an engine printing a command that fails silently when followed literally -- is worth checking wherever else the engine prints commands."
+    }
+  ],
+  "open_current_wave_issue_ids": [
+    "467"
+  ],
+  "unlaunched_items": [
+    {
+      "id": "g2",
+      "kind": "issue"
+    },
+    {
+      "id": "g3",
+      "kind": "issue"
+    },
+    {
+      "id": "g4",
+      "kind": "issue"
+    },
+    {
+      "id": "424",
+      "kind": "forecast"
+    },
+    {
+      "id": "cold-resume-without-correction",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "checks-that-cannot-pass-sweep",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "lease-aware-gauge-writer",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/gauge_reader.py",
+      "scripts/gauge_writer_hook.py",
+      "tests/test_checklist_engine.py",
+      "tests/test_gauge_reader.py"
+    ],
+    "map_status": "No packet architecture map in this skill-source repo; the structural record for this change is the engine reference (workbench references/checklist-engine.md) and the governor design docs. Reconcile folds into those rather than into docs/architecture/."
+  }
+}

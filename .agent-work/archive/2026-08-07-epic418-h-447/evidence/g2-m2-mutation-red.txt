@@ -1,0 +1,62 @@
+....FFFF                                                                 [100%]
+================================== FAILURES ===================================
+____________ RefusalTests.test_missing_active_directory_is_refused ____________
+
+self = <test_verify_episode_captured.RefusalTests testMethod=test_missing_active_directory_is_refused>
+
+    def test_missing_active_directory_is_refused(self):
+        (self.store / "retired").mkdir(parents=True)
+        rc, out, err = self.run_gate(["issue-447", "--store-root", str(self.store)])
+>       self.assertEqual(self.verify.EXIT_REFUSED, rc)
+E       AssertionError: 2 != 1
+
+tests\test_verify_episode_captured.py:162: AssertionError
+_______________ RefusalTests.test_missing_store_root_is_refused _______________
+
+self = <test_verify_episode_captured.RefusalTests testMethod=test_missing_store_root_is_refused>
+
+    def test_missing_store_root_is_refused(self):
+        rc, out, err = self.run_gate(["issue-447", "--store-root", str(self.store)])
+>       self.assertEqual(self.verify.EXIT_REFUSED, rc)
+E       AssertionError: 2 != 1
+
+tests\test_verify_episode_captured.py:155: AssertionError
+____ RefusalTests.test_refusal_is_distinguishable_from_the_no_match_block _____
+
+self = <test_verify_episode_captured.RefusalTests testMethod=test_refusal_is_distinguishable_from_the_no_match_block>
+
+    def test_refusal_is_distinguishable_from_the_no_match_block(self):
+        """Two different failures must not share one exit code — a spine that cannot
+        tell "you did not capture" from "I could not look" cannot act on either."""
+        self.empty_store()
+        blocked, _, _ = self.run_gate(["issue-447", "--store-root", str(self.store)])
+        refused, _, _ = self.run_gate(["issue-447", "--store-root", str(self.base / "typo")])
+        self.assertEqual(self.verify.EXIT_BLOCKED, blocked)
+>       self.assertEqual(self.verify.EXIT_REFUSED, refused)
+E       AssertionError: 2 != 1
+
+tests\test_verify_episode_captured.py:172: AssertionError
+_________ RefusalTests.test_unreadable_record_is_refused_not_skipped __________
+
+self = <test_verify_episode_captured.RefusalTests testMethod=test_unreadable_record_is_refused_not_skipped>
+
+    def test_unreadable_record_is_refused_not_skipped(self):
+        """A record with no `- run:` line is refused rather than skipped: skipping is
+        how a real record becomes invisible to the gate that is supposed to require it."""
+        self.seed("issue-447")
+        stray = self.store / "active" / "issue-447-002.md"
+        with stray.open("w", encoding="utf-8", newline="\n") as handle:
+            handle.write("<!-- episode-state: schema=1 id=issue-447-002 status=active -->\n")
+        rc, out, err = self.run_gate(["issue-447", "--store-root", str(self.store)])
+>       self.assertEqual(self.verify.EXIT_REFUSED, rc)
+E       AssertionError: 2 != 0
+
+tests\test_verify_episode_captured.py:183: AssertionError
+---------------------------- Captured stdout call -----------------------------
+created episode:issue-447-001
+=========================== short test summary info ===========================
+FAILED tests/test_verify_episode_captured.py::RefusalTests::test_missing_active_directory_is_refused
+FAILED tests/test_verify_episode_captured.py::RefusalTests::test_missing_store_root_is_refused
+FAILED tests/test_verify_episode_captured.py::RefusalTests::test_refusal_is_distinguishable_from_the_no_match_block
+FAILED tests/test_verify_episode_captured.py::RefusalTests::test_unreadable_record_is_refused_not_skipped
+4 failed, 4 passed in 0.41s

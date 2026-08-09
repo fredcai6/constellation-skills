@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m7-suite",
+  "mechanical": {
+    "run": "epic418-h-447-g3-implementer",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m7-suite",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic418-h-447-g3-implementer-m7-suite@3561ea1b750b627b301dd1d4dbebc898d4b467eb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic418-h-447-g3-implementer",
+    "generated_at": "2026-08-07T16:00:45Z"
+  }
+}

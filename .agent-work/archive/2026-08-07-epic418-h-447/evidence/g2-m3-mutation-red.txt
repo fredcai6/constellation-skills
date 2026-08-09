@@ -1,0 +1,7 @@
+=== MUTATION A-archive-leg-disabled (applied: 1 site) -> pytest exit 1
+FAILED tests/test_verify_episode_captured.py::ArchivePhaseTests::test_archive_phase_fails_for_an_untracked_episode
+1 failed, 2 passed in 0.36s
+=== MUTATION B-git-always-untracked (applied: 1 site) -> pytest exit 1
+FAILED tests/test_verify_episode_captured.py::ArchivePhaseTests::test_archive_phase_passes_for_a_tracked_episode
+1 failed, 2 passed in 0.38s
+RESTORED: bytes identical to pre-mutation

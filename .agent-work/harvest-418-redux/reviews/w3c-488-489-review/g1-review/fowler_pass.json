@@ -1,0 +1,20 @@
+{
+  "work_id": "w3c-488-489-review",
+  "diff_ref": "PR #491, epic-418/w3c-488-489, commit b481f936 vs 39110aba: scripts/hooks/gauge_writer_hook.py, tests/test_gauge_writer.py, tests/test_verify_spec_confirmed.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "resolve_gauge_path's body gains one boolean clause (`and candidate not in candidates`) inside the existing loop; _resolve_revised_spec_matches is a new ~10-line function. Neither approaches a length worth flagging.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No classes touched; module-level functions only.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "The three new test_gauge_writer.py tests share a few lines of setup boilerplate (work.mkdir + _bind calls) between the direct resolve_gauge_path test and the end-to-end handle_post_tool_use test. This is idiomatic pytest style (each test readable standalone, unit-level and end-to-end pairing deliberately duplicated rather than sharing a fixture) rather than production-logic duplication Fowler's smell targets.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No cross-module reach; resolve_gauge_path still only touches its own module's binding/candidate data.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "No parameter groups traveling together were introduced.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "Candidates remain typed Path objects (not strings); the dedup check is `candidate not in candidates` on Path equality, not a stringly-typed comparison.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "resolve_gauge_path keeps its existing 2 params; _resolve_revised_spec_matches takes 1.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "Each fix is confined to its own file/function pair (#488: gauge_writer_hook.py + its test; #489: test_verify_spec_confirmed.py only, self-contained).", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "resolve_gauge_path changes for exactly one reason (dedup by path); no unrelated concerns folded in.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No chained attribute/call traversal introduced.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "Both fixes are narrowly targeted at the measured defect (#488 live incident, #489's #470-flagged matches[0]); no unused hooks or generalized abstraction added ahead of need.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The expanded resolve_gauge_path docstring documents genuinely non-obvious reasoning (why 2+ distinct paths must still skip while same-path duplicates must not, tied to the #261 misattribution history and a measured live incident) -- it clarifies subtle intent, not a substitute for simplifying convoluted code. The code itself stayed simple (one added boolean clause)."}
+  ],
+  "rail_exception": null
+}

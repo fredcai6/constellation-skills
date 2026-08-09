@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "m5-doc-correction",
+      "cond": "c1",
+      "which": "postconditions",
+      "command": "! grep -rn 'gated only' docs/CHECKLIST_SCHEMA.md skills/workbench/references/checklist-engine.md | grep -qi amend && ! grep -qi 'gated checklists only' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' docs/CHECKLIST_SCHEMA.md && grep -q 'retext-check' skills/workbench/references/checklist-engine.md"
+    }
+  ]
+}

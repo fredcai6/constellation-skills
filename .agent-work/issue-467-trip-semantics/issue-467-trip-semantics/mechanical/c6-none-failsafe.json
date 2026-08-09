@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "c6-none-failsafe",
+  "mechanical": {
+    "run": "issue-467-trip-semantics",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "c6-none-failsafe",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-trip-semantics-c6-none-failsafe@e905b023eaec1d211737a1fbbd292dfc31dbe970",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-trip-semantics",
+    "generated_at": "2026-08-08T12:54:36Z"
+  }
+}

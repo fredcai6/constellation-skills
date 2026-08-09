@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "c10-suite-delta-attribution",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "c10-suite-delta-attribution",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-c10-suite-delta-attribution@b243bc530c0861aeaa6f2d461ebadefe4f95ec72",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T04:20:57Z"
+  }
+}

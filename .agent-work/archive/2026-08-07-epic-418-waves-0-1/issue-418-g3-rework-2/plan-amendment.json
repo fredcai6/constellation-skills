@@ -1,0 +1,32 @@
+{
+  "ops": [
+    {
+      "op": "rescope",
+      "id": "m1",
+      "title": "Refuse non-authorizing transitions",
+      "imperative": "TDD first: extend the real installed Admiral runtime test so applicable:false and decision:stop each return nonzero from admiral-prelaunch. Capture causal RED, then minimally require applicable true and a non-terminal decision after generic G2 verification and before audit/render success.",
+      "preconditions": [
+        {"id": "p1", "statement": "context loaded and handoff complete", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "two real installed launch-safety regressions written first and observed causally failing", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "exact frozen installed-runtime suite passes", "check": {"kind": "command", "command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py"}, "satisfied": false}
+      ],
+      "constraints": ["no G1/G2 schema or engine change", "no network/tracker/history/unrelated edits", "preserve generic validation/rendering outside prelaunch authorization"]
+    },
+    {
+      "op": "add",
+      "id": "m2-closeout",
+      "after": "m1",
+      "title": "Refresh G3 review identity",
+      "imperative": "Run reviewer installed probe, installer and G1/G2/init suites, JSON/diff/no-network audits; recompute the exact nine-path ordinal digest and refresh IMPLEMENTER_RESULT with rework-2 RED/GREEN. Advance, then release last.",
+      "preconditions": [
+        {"id": "p1", "statement": "launch-safety regressions and minimal correction are green", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "fresh digest/result and all required evidence are ready for independent review", "check": null, "satisfied": false}
+      ],
+      "constraints": ["preserve unrelated dirty changes", "release is the final journal action"]
+    }
+  ]
+}

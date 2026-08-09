@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "w3c-488-489-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3c-488-489-review-r2-scope@07abd59a5793a6759c85c26d81a7d5b7e13b7166",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3c-488-489-review",
+    "generated_at": "2026-08-08T05:29:38Z"
+  }
+}

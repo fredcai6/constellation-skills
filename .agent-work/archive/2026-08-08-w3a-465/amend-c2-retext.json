@@ -1,0 +1,11 @@
+{
+  "ops": [
+    {
+      "op": "retext-check",
+      "id": "execute",
+      "which": "postconditions",
+      "cond": "c2",
+      "command": "py C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id w3a-465"
+    }
+  ]
+}

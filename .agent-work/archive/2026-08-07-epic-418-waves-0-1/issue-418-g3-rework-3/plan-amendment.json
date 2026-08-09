@@ -1,0 +1,32 @@
+{
+  "ops": [
+    {
+      "op": "rescope",
+      "id": "m1",
+      "title": "Restrict NEXT_WAVE decisions",
+      "imperative": "TDD first in the real installed runtime: prove generic G2 validates/renders an applicable repair while admiral-prelaunch incorrectly accepts it. Then minimally authorize only applicable advance or replan, retaining success for both and refusal for repair, stop, and applicable:false.",
+      "preconditions": [
+        {"id": "p1", "statement": "context loaded and handoff complete", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "real installed repair authorization test written first and observed causally failing", "check": null, "satisfied": false},
+        {"id": "c2", "statement": "exact focused suite passes", "check": {"kind": "command", "command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py"}, "satisfied": false}
+      ],
+      "constraints": ["prelaunch-only correction", "generic G2 validation/rendering unchanged", "no engine/schema/network/tracker/history/unrelated edits"]
+    },
+    {
+      "op": "add",
+      "id": "m2-closeout",
+      "after": "m1",
+      "title": "Refresh final G3 identity",
+      "imperative": "Run all reviewer installed probes, installer and G1/G2/init suites, JSON/diff/no-network/path audits; refresh the exact nine-path digest and IMPLEMENTER_RESULT with causal RED/GREEN; advance then release last.",
+      "preconditions": [
+        {"id": "p1", "statement": "decision authorization matrix is green", "check": null, "satisfied": false}
+      ],
+      "postconditions": [
+        {"id": "c1", "statement": "fresh digest/result and required evidence ready for independent review", "check": null, "satisfied": false}
+      ],
+      "constraints": ["preserve unrelated dirty changes", "release is final journal action"]
+    }
+  ]
+}

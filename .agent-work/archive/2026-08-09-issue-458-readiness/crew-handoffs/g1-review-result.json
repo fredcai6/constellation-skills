@@ -1,0 +1,78 @@
+{
+  "verdict": "APPROVE",
+  "findings": [],
+  "evidence_reproduced": {
+    "readiness_test_slice": {
+      "command": "python -m pytest tests/test_install_constellation.py -k readiness -q",
+      "output": "25 passed, 107 deselected in 2.88s",
+      "result": "pass",
+      "note": "Implementer's own headline claim was '25 passed, 1869 deselected' because they ran against the whole tests/ directory; I ran the single file the handoff's Required Evidence names. Same 25 passed either way -- the deselected-count difference is scope, not a discrepancy."
+    },
+    "full_test_file": {
+      "command": "python -m pytest tests/test_install_constellation.py -q",
+      "output": "132 passed, 380 subtests passed in 34.47s",
+      "result": "pass"
+    },
+    "git_check_ignore": {
+      "command": "git check-ignore scripts/install_constellation.py tests/test_install_constellation.py",
+      "exit_code": 1,
+      "meaning": "neither edited file is gitignored -- confirmed independently"
+    },
+    "diff_scope": {
+      "command": "git diff --name-only",
+      "output": "scripts/install_constellation.py, tests/test_install_constellation.py",
+      "meaning": "only the two allowed files changed; checklist_engine.py / test_checklist_engine.py (specific exclusions) are absent from the diff"
+    },
+    "settings_json_never_written": {
+      "method": "read (not grepped) every new function in the diff",
+      "finding": "the only settings_path.write_text() call in the whole file lives inside wire_hooks() (line ~912), reached only from the args.wire_hooks branches in main() (lines 1623, 1679-1686). The --check-readiness branch (line 1604) returns at line 1617, before any of that code, and explicitly raises InstallError if --wire-hooks or --baseline-only is combined with --check-readiness -- so settings.json cannot be written on this path under any argument combination, including the two ways a caller might try to combine flags to trigger it.",
+      "also": "test_check_readiness_never_writes_settings_json (new test) passed, and I additionally confirmed by reading the write path myself rather than trusting the grep-based claim in IMPLEMENTER_RESULT."
+    },
+    "mutation_test_of_load_bearing_discrimination": {
+      "what": "the handoff calls check_engine_runnable's interpreter-missing / pytest-missing / working three-way distinction 'the load-bearing distinction the whole gate exists to get right' -- verified this is a real, failable test, not a check that cannot fail",
+      "method": "loaded a fresh installer module instance via the test file's own load_installer(), monkeypatched check_engine_runnable on that instance to always return ReadinessCheck(True, 'fake always ready'), then ran test_check_engine_runnable_not_ready_when_pytest_missing against the mutated instance",
+      "result": "FAILED: AssertionError: True is not false -- the test genuinely catches a regression to always-ready"
+    },
+    "end_to_end_cli_fresh_target": {
+      "what": "ran the actual --check-readiness CLI (not the test suite) against a real git-init'd empty project directory and a real never-installed --dest, outside any test fixture",
+      "command": "python scripts/install_constellation.py --agent claude --scope user --dest <never-installed-temp-dir> --check-readiness --project <fresh-git-init-temp-dir>",
+      "output": "engine: READY; skills: NOT READY -- no skills directory at <dest>; hooks: NOT READY -- Context Governor hooks: UNWIRED; work_area: READY -- .git present at <project>; overall NOT READY, exit 1",
+      "meaning": "confirms the refusal is real end-to-end behavior, not only a synthetic-test artifact -- relevant to the handoff's Map Anchors Pre-Ruling 3 concern, though the actual fresh-clone observation remains g1-integrate's job, not mine"
+    },
+    "agent_scope_decision_stated_and_reasoned": {
+      "location": "g1-implement-result.json, assumptions_used.agent_scope_decision",
+      "confirmed": "yes -- states and reasons that --agent/--scope remain required (they were already argparse required=True, verified independently by reading build_parser() at lines 1541-1542) because readiness items 2 and 3 are inherently target-specific; not silently assumed"
+    },
+    "close_criteria_checked": {
+      "four_check_functions": "confirmed present and independently callable: check_engine_runnable, check_work_area_present, check_skills_installed, check_hooks_shippable (+ is_git_tracked helper)",
+      "engine_check_uses_sys_executable": "confirmed by reading the function signature (python: str = sys.executable) and the docstring's explicit rejection of a bare python/py shell-out",
+      "cli_refuses_nonzero_named_reason": "confirmed by code read and reproduced by direct CLI run above",
+      "no_regression": "132/132 full file passes; diff only appends new test classes after the last pre-existing test, never touches an existing test"
+    }
+  },
+  "fowler_smells": [
+    {"smell": "long-method", "verdict": "absent"},
+    {"smell": "large-class", "verdict": "absent"},
+    {"smell": "duplicated-code", "verdict": "absent", "note": "check_hooks_shippable reuses detect_hook_wiring/describe_hook_wiring; run_readiness_check reuses resolve_target_roots/select_skills/discover_skills"},
+    {"smell": "feature-envy", "verdict": "absent"},
+    {"smell": "data-clumps", "verdict": "absent", "note": "ReadinessCheck(ready, reason) is the value-object antidote to a data clump"},
+    {"smell": "primitive-obsession", "verdict": "absent"},
+    {"smell": "long-parameter-list", "verdict": "overridden", "finding": "build_readiness_report takes 7 keyword-only parameters", "override_standard": "install_skills() (line 1164) already takes 8 keyword-only parameters for the same reason -- an orchestration function threading independently-resolved values through one call site", "override_reason": "matches the file's own established convention for orchestration functions; a parameter object here would be inconsistent with the surrounding code, not an improvement"},
+    {"smell": "shotgun-surgery", "verdict": "absent"},
+    {"smell": "divergent-change", "verdict": "overridden", "finding": "install_constellation.py now serves install, --wire-hooks, --baseline-only, and --check-readiness -- four distinct reasons to change the file", "override_standard": "handoff Map Anchors Pre-Ruling 4: explicit human ruling against a new script, logged in IMPLEMENTER_RESULT.assumptions_used.no_new_script", "override_reason": "the ruling authority explicitly weighed and rejected a standalone script because of the re-import/re-derive cost of AGENT_TARGETS, resolve_target_roots, CORPUS_MARKER, detect_hook_wiring/describe_hook_wiring, settings_path_for_target_root"},
+    {"smell": "message-chains", "verdict": "absent"},
+    {"smell": "speculative-generality", "verdict": "absent", "note": "expected_skills and python= are both exercised by real call sites, not unused hooks"},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "note": "docstrings explain non-obvious design rationale consistent with the file's existing dense-rationale-comment style; they document decisions, not compensate for unclear code"}
+  ],
+  "summary": "APPROVE. Readiness-check mode on scripts/install_constellation.py verified independently against every Close Criteria item: four separately-callable, separately-tested check functions (engine-runnable via sys.executable distinguishing interpreter-missing/pytest-missing/working; work-area-present via .git as dir-or-file; skills-installed via CORPUS.json plus expected-skill-folder membership; hooks-shippable reusing detect_hook_wiring plus git-ls-files tracked-ness, scoped correctly between project and user), combined by a thin CLI layer that reports and refuses with a named per-item reason and exits 0 only when every targeted agent is fully ready. Read every new function myself rather than trusting the grep-based wiring claim: settings.json is written at exactly one place in the file, inside wire_hooks(), structurally unreachable from the --check-readiness branch, which also explicitly rejects --wire-hooks/--baseline-only combinations up front. Reproduced both required pytest runs myself (25/25, 132/132/380 subtests). Went beyond restating the implementer's evidence: mutation-tested the load-bearing interpreter-vs-pytest discrimination case against a deliberately-broken always-ready stand-in and confirmed the guarding test genuinely fails, and ran the CLI itself end-to-end against a real fresh git-init'd project and a real never-installed target outside the test suite. Diff scope is exactly the two allowed files; the specific exclusions (checklist_engine.py, test_checklist_engine.py) are absent, as required. Fowler pass: 12/12 baseline smells rendered, 0 flagged, 2 overridden with logged repo-standard reasons, verify_fowler_pass.py exits 0. Zero blocking findings. One real, already-acknowledged, explicitly out-of-scope gap raised as a triage candidate: README.md's Install section does not yet mention --check-readiness (the implementer correctly left it untouched since README.md was not in this gate's Allowed Scope).",
+  "triage_candidates": [
+    "README.md's Install section documents --wire-hooks and --baseline-only but not the new --check-readiness flag; a future doc pass should add a one-line mention. Not a blocker -- README.md was outside this gate's Allowed Scope."
+  ],
+  "workflow_feedback": "Handoff was precise and actionable end to end -- Close Criteria, Allowed Scope, Specific Exclusions, and Required Evidence all mapped directly onto concrete, checkable things. One minor friction: the handoff's Required Evidence names 'python -m pytest tests/test_install_constellation.py -k readiness -q' but IMPLEMENTER_RESULT's own headline evidence ran against the whole tests/ directory instead, producing a different deselected-count that could read as a discrepancy on a quick diff of numbers; worth noting in this gate's evidence that the pass count (25) matched even though the denominator did not, so a future reviewer doesn't waste time chasing a mismatch that isn't one. Engine mechanics: REVIEW_SURVEY.template.json's r6-fowler item ships with 'templates/FOWLER_PASS.template.json' as its literal check command path in the imperative text, but the actual postcondition c1 (which is what advance/record gates on) already carries the real resolved path as a placeholder to fill at instantiation -- that's the documented normal path and worked cleanly once I substituted it; flagging only because the imperative prose and the postcondition disagree in wording (template path vs. instance path) in a way a less careful reader could stumble on.",
+  "engine_attachment": {
+    "status": "not_attached_directly",
+    "reason": "This reviewer instance had access to the checklist engine and drove the full survey through it (claim -> start/record x6 -> flag-candidate -> consolidate --verdict APPROVE -> release) at .agent-work/issue-458-readiness/g1-review/review.json, consolidating to verdict=APPROVE with 0 findings. I was not given the parent execute.json spine's gN-review/gN-integrate gate ids or a session-id for that spine in this handoff, so I could not run the attach verb against execute.json myself. Handing this REVIEW_RESULT JSON back to the dispatching Commander to attach as g1-review's review-result evidence via `attach g1-review --type review-result --field verdict=APPROVE ...` against execute.json.",
+    "survey_file": ".agent-work/issue-458-readiness/g1-review/review.json",
+    "survey_consolidation": "consolidated: verdict=APPROVE findings=0"
+  }
+}

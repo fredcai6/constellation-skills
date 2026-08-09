@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "relevant": {
+    "command": "uv run python -m pytest -q tests/test_initial_issues.py tests/test_replan.py tests/test_iterative_planning_doctrine.py tests/test_epic_418_demo.py tests/test_iterative_planning_acceptance.py tests/test_install_constellation.py tests/test_write_a_skill.py",
+    "exit": 0
+  },
+  "full": {
+    "command": "uv run python -m pytest -q tests",
+    "exit": 0
+  }
+}

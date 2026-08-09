@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-418-iterative-planning-g2-review-2",
+  "diff_ref": "Ordinal-sorted 11-path G2 inventory pinned by sha256:0c8223f5d01de36dd476672f3bfb593e08f61bb0c7ee42895ba320b85b688aff, including untracked skills/replan and tests/test_replan.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, constellation-reviewer references/global-crew.md and references/global-everyone.md, frozen g2-implement and rework contracts",
+  "smells": [
+    {"smell": "long-method", "verdict": "overridden", "finding": "", "override": {"repo_standard": "global-crew.md requires explicit contracts at meaningful boundaries and the frozen G2 handoff requires one strict input verifier", "reason": "verify_replan_input is a linear, fail-fast traversal of the serialized public packet. Domain-specific nested validators are already extracted; further fragmentation would scatter the one input contract without reducing caller knowledge."}},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "", "override": {"repo_standard": "global-crew.md requires minimal change, explicit contracts, and no speculative abstraction", "reason": "The short wave, forecast, and uncertainty validators deliberately name distinct G1 seams while sharing only copy-set-verify mechanics. A callback-driven generic helper would obscure the field-specific public error boundary for negligible reduction."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Frozen G2 requires versioned JSON templates that reuse exact G1 serialized shapes without translation", "reason": "Dictionary/list/string primitives are the public packet format and are validated at the boundary; wrapper objects would add an unrequested translation seam."}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "overridden", "finding": "", "override": {"repo_standard": "The frozen G2 gate explicitly requires installer registration plus README/SKILL_INDEX exposure and focused registration tests for a new public skill", "reason": "These are finite canonical registration surfaces for minting one skill, not recurring implementation coupling; omitting one would create a dead or undiscoverable seam."}},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

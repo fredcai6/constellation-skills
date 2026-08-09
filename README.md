@@ -28,12 +28,13 @@ Constellation deliberately holds native, rigor-flavored versions of the capabili
 
 ## Skill set
 
-The corpus is **19 skills**. `skills/_shared/` is **not a skill** — it is shared doctrine (e.g. `skill-goodness.md`, deep-module notes) that multiple skills consume.
+The corpus is **20 skills**. `skills/_shared/` is **not a skill** — it is shared doctrine (e.g. `skill-goodness.md`, deep-module notes) that multiple skills consume.
 
 | Skill | Purpose |
 |---|---|
 | `constellation-explorer` | Shape a raw idea into an interrogated, critically reviewed, human-confirmed design spec before any work is cut; convergence is human-only. |
-| `constellation-to-issues` | Cut a confirmed design spec into a dependency-ordered, HITL/AFK-typed issue set and file it (GitHub-first, tracker-pluggable). |
+| `constellation-to-initial-issues` | Cut a confirmed shaped brief into one runnable current wave while preserving later outcomes as nonbinding forecast and uncertainty. |
+| `constellation-replan` | Classify wave evidence into an explicit advance, repair, replan, or stop transition while preserving launched identities and fixed intent. |
 | `constellation-admiral` | Run an epic as the human's delegate: latitude contract, Commander waves, adjudication, lessons-and-architecture closeout. |
 | `constellation-commander` | Run one bounded issue end to end for a live human as the human's rigor scaffold. |
 | `constellation-commander-delegated` | Run one bounded issue end to end under a frozen Admiral launch order with no reachable human, citing the order and escalating genuine gaps. |
@@ -48,9 +49,9 @@ The corpus is **19 skills**. `skills/_shared/` is **not a skill** — it is shar
 | `constellation-prototyper` | Build a throwaway prototype that answers one named question (logic / UI / measurement), with a mandatory disposition at closeout. |
 | `constellation-charter` | Interrogate engineering doctrine and compile Orchestrator, Crew, Glossary, and engine config. |
 | `constellation-curator` | Periodic human-run maintenance of the skills corpus: measure, mend mechanical issues in place, route design decisions to Triage. |
-| `constellation-lessons-auditor` | Fresh-context Reflector at closeout: distill scoped, grounded lesson candidates from run artifacts; nominate, never apply. |
 | `constellation-docent` | Generate a self-contained static HTML explainer site for humans from Cartographer map truth, stamped with the source-map digest so a stale site is visibly flagged. |
 | `constellation-workbench` | Manage local workflow files and drive the checklist engine (gated/survey); the substrate every other skill uses. |
+| `constellation-how-to-talk` | Keep an agent's prose clear, concise, and grounded — each sentence one point in the plainest words — so meaning stays consistent across artifacts, agents, and sessions. Applies to any human-facing output, so it is not tier-specific. |
 
 ## Repo layout vs. installed layout
 
@@ -230,7 +231,6 @@ docs/
     *.template.json
     *.template.md
 
-  AGENT_FEEDBACK.md                # unified run retrospective; persists across work-ids, never archived
   CHARTER_OPEN_QUESTIONS.md
   SCOUT_REPORT.md
 
@@ -251,7 +251,7 @@ docs/
 Rules:
 
 - `docs/agents/AGENT_GUIDE.md` is the single repo-orientation guide (repo layout, documentation map, conventions) — the shared middle of Orchestrator and Crew context. Root `AGENTS.md` and `CLAUDE.md` are thin pointers to it; keep guidance in the guide, not the pointers.
-- `.agent-work/AGENT_FEEDBACK.md` is the unified run retrospective. Commander appends one entry per run before archive; it persists across work-ids and is never moved into `archive/`. Use it to improve doctrine over time, not as project truth.
+- What a run learned is recorded as **episodes** under the repo-root `episodes/` directory, not anywhere under `.agent-work/`. Commander and Admiral write them at closeout through `scripts/apply_episode_delta.py`, the store's only write path. An episode is a record of what happened, never a rule for a later agent to follow — a rule belongs in `docs/agents/*` and putting one there is a human's call.
 - If it is in `docs/`, it is meant to guide future workflows.
 - If it is in `.agent-work/templates/`, it is the project-owned template catalog. Agents prefer `.agent-work/templates/<template-name>` and fall back to bundled `templates/<template-name>`.
 - If it is in `.agent-work/`, it is temporary workflow state or archived history.

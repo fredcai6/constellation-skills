@@ -1,0 +1,177 @@
+{
+  "work_id": "issue-418-g3-evidence-repair",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff and the relevant packet. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded implementer/inherited doctrine, project crew context/glossary, complete evidence-repair handoff and review-4 result. Runtime is approved; scope is only causal audit fixtures, temporary enforcement bypass evidence, restored production, required suites/digest/result."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Make audit-cardinality evidence causal",
+      "imperative": "Change only the zero/multiple audit fixtures to otherwise-authorized applicable advance or replan packets with matching audit decisions. Temporarily bypass audit enforcement and prove these assertions fail, restore enforcement, then run the exact focused suite while preserving the full launch table.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Complete tests-only handoff and evidence defect loaded."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "changed audit tests fail causally when audit enforcement is bypassed and production is restored",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Changed only zero/multiple audit fixtures to applicable advance with matching audit decisions. Temporarily removed the single audit-verifier call: exact focused suite exited 1 with both causal subtests failing because prelaunch returned 0; 36 tests and 6 other subtests passed. Restored the exact production call, then focused suite passed 36 tests and 8 subtests."
+        },
+        {
+          "id": "c2",
+          "statement": "exact focused suite passes with production restored",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "final diff is tests-only relative to rework 3",
+        "no production/schema/engine/network/tracker/history/unrelated edits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-closeout": {
+      "id": "m2-closeout",
+      "title": "Refresh G3 evidence identity",
+      "imperative": "Run installer, G1/G2/init, reviewer installed matrix and JSON/diff/no-network/path audits; refresh the exact nine-path digest and IMPLEMENTER_RESULT with causal tests-only evidence; advance then release last.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "causal audit tests and focused suite are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Causal audit mutation RED captured, production restored, and focused suite green at 36 passed/8 subtests."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "fresh digest/result and all required evidence ready for independent review",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Causal mutation RED captured for zero and multiple authorized audit cases, exact production audit call restored, focused suite 36 passed/8 subtests, installer 108/379, G1-G2-init 62/59; reviewer matrix executed; JSON/diff/no-network/path audits pass; fresh nine-path digest is sha256:e087a982015aa0796554604746f759532b616e9390df5bff1cb6acb5b59d6070 and tests-only result is current."
+        }
+      ],
+      "constraints": [
+        "preserve unrelated dirty changes",
+        "release is final journal action"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g3-evidence-repair-20260806",
+    "status": "released",
+    "claimed_at": "2026-08-06T19:33:08.832738+00:00",
+    "last_heartbeat": "2026-08-06T19:36:40.853931+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T19:36:41.139927+00:00"
+  },
+  "amendments": [
+    {
+      "ts": "2026-08-06T19:33:45.958370+00:00",
+      "reason": "Instantiate the bounded tests-only evidence repair and closeout gates under the user's confirmed epic authority.",
+      "authority": "human",
+      "ops": [
+        "rescoped m1",
+        "added m2-closeout"
+      ]
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The zero/duplicate audit assertions currently short-circuit on repair authorization, so only their packet decision and matching audit text need correction.",
+      "mechanical": false,
+      "ts": "2026-08-06T19:33:47.053010+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "Otherwise-authorized advance packets now isolate exact-one audit cardinality, and the mutation test proves neither refusal can be satisfied by an earlier authorization branch.",
+      "mechanical": false,
+      "ts": "2026-08-06T19:34:58.787390+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-closeout",
+      "why": "The refreshed identity now proves exact-one audit enforcement with launch-authorized inputs and a direct mutation red, without changing approved production behavior.",
+      "mechanical": false,
+      "ts": "2026-08-06T19:36:40.853923+00:00"
+    }
+  ]
+}

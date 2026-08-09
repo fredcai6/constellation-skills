@@ -1,0 +1,305 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Post-phase-1 mechanisms + cleanup (epic #418)",
+      "spec_path": ".agent-work/archive/2026-08-03-explore-post-phase1/DESIGN_SPEC.md",
+      "intent_and_why": "Phase 1 left two problems: a bloated backlog, and two mechanisms that keep slipping. The context governor still produces zero readings on live runs, and role instructions are still front-loaded into always-loaded prose instead of being pushed to the agent by the spine at the gate where they matter. This epic is the mechanisms-plus-cleanup stage: make the frame hold, then clean the decks. Done looks like a governor writing real per-agent readings on a live run with the engine's trip mechanic acting on them; an engine output channel that carries each instruction exactly once and renders every populated gate block; the named prose-only invariants refusing instead of hoping; a backlog short enough that every surviving issue ties to the target architecture or a real defect, checkable by one issue-list sweep; and an agent driving a real role spine end to end through an MCP door."
+    },
+    "definition_of_done": [
+      "The governor writes real per-agent readings on a live run and the engine's trip mechanic acts on them.",
+      "The engine's current output carries each instruction exactly once and renders every populated gate block.",
+      "The named prose-only invariants (#329 worktree isolation, #328's two record() surveys) refuse instead of hoping.",
+      "The backlog is short enough that every surviving open issue ties to the target architecture or a real defect, checkable by one issue-list sweep.",
+      "An agent drives a real role spine end to end through the MCP door, each agent holding its own server instance."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every threshold and durable choice is graded guess or placeholder unless someone actually measured it; a check that cannot register its own failure is a defect, not a pass.",
+      "sufficient_evidence": "Each issue carries independently observable acceptance evidence gated on a real command exit code.",
+      "appetite": "First-round good-enough over better-later; build what needs to work and do not chase corner cases."
+    },
+    "hard_constraints": [
+      "Scope discipline narrows breadth, never evidence; a declined corner case gets a comment at the code site and is floated up, never silently absorbed.",
+      "Vision work, performance-metrics methodology, and the simplified-English thread are ruled out of this design."
+    ],
+    "fixed_decisions": [
+      "Episodes are a record of what happened, not a playbook; nothing may read them back as a rule.",
+      "Launched issue identities remain stable once a Commander is dispatched against them.",
+      "Wave boundaries are stop-and-present checkpoints; the Admiral does not roll into the next wave unilaterally."
+    ],
+    "current_wave": {
+      "objective": "Land the governor and engine-channel mechanisms, wire the named invariants, and finish the episode-store retirement.",
+      "exit_criteria": [
+        "A HARD trip fires from a per-agent reading on a live dispatched agent, and the reading lands in the tree that agent is actually working in.",
+        "Both shared record ledgers are retired behind a guard that is observed failing before it is observed passing."
+      ],
+      "issues": [
+        {
+          "id": "419",
+          "title": "Governor: per-agent identity so subagent readings are attributed and trip",
+          "desired_outcome": "Every agent, subagents included, is tracked under its own identity and readings actually appear.",
+          "useful_now": "Zero readings on live runs is the defect that blocks every other governor decision.",
+          "appetite": "One Commander, four gates.",
+          "acceptance_or_falsification_evidence": "A HARD trip fires live on a dispatched subagent and the engine refuses its advance; a control arm produces no reading.",
+          "implementation_latitude": "Choose the identity-resolution mechanism; preserve the fail-safe that a missing gauge never forces a handoff.",
+          "hard_constraints_no_gos": ["Gauge failures collapse to None and never force a handoff."],
+          "local_unknowns": [],
+          "anchors": ["scripts/gauge_reader.py", "scripts/hooks/gauge_writer_hook.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "420",
+          "title": "Engine output channel: de-dup the RAIL echo, render anchors and constraints",
+          "desired_outcome": "current carries each instruction exactly once and renders every populated gate block.",
+          "useful_now": "Blocks C: relocated instructions cannot reach agents through a channel that drops them.",
+          "appetite": "One Commander, three gates.",
+          "acceptance_or_falsification_evidence": "A golden test across all six RAIL verbs shows single-echo output with anchors and constraints rendered.",
+          "implementation_latitude": "Choose the rendering approach; a de-duplication that cannot be done truthfully is an honest null, not a licence to ship a lying pointer.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": ["scripts/checklist_engine.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "422",
+          "title": "Wire the prose-only invariants: #329 worktree isolation and #328's record() surveys",
+          "desired_outcome": "The named checks refuse instead of hoping.",
+          "useful_now": "Prose invariants are the class of check that cannot register its own failure.",
+          "appetite": "One Commander, three gates.",
+          "acceptance_or_falsification_evidence": "A deliberate-breakage test passes: the wired check refuses the broken case.",
+          "implementation_latitude": "Choose where the checks live; they must fail closed.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": ["scripts/checklist_engine.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "425",
+          "title": "File the explorer run's triage-candidate defects",
+          "desired_outcome": "Every triage candidate the explorer surfaced exists as a tracker reference.",
+          "useful_now": "Findings banked in a run artifact are invisible to the tracker sweep the epic's done-condition depends on.",
+          "appetite": "One Commander, one gate.",
+          "acceptance_or_falsification_evidence": "Each candidate resolves to a tracker reference; no code change is expected.",
+          "implementation_latitude": "Choose granularity and grouping.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": ["docs/agents"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "440",
+          "title": "Governor: a worktree-dispatched agent's binding records a main-checkout path",
+          "desired_outcome": "A dispatched agent's reading lands beside the spine it is actually driving, not in a phantom directory in the main checkout.",
+          "useful_now": "#419 proved the trip can fire; this decides whether it fires where the work is. Without it the governor is unusable in the worktree topology every epic runs in.",
+          "appetite": "One Commander, four gates.",
+          "acceptance_or_falsification_evidence": "A two-arm sandbox where treatment refuses the worktree-dispatched agent's advance and the control arm is shown to have produced a real gauge.json with fill at or above hard at the wrong path.",
+          "implementation_latitude": "Choose the root-resolution strategy; refuse to guess when candidate roots disagree.",
+          "hard_constraints_no_gos": [
+            "Never hand-inject the value being proved; the hook must derive the root.",
+            "The control arm must be a positive control: a merely quiet control is worthless."
+          ],
+          "local_unknowns": [],
+          "anchors": ["scripts/hooks/spine_rail.py", "scripts/hooks/gauge_writer_hook.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "447",
+          "title": "Finish #308's retirement: episodes replace both LESSONS.md and AGENT_FEEDBACK.md",
+          "desired_outcome": "One store of observations replaces two inboxes plus a playbook, with a guard that keeps the read path retired.",
+          "useful_now": "The retirement was declared but not completed; two shared ledgers still ship, still collide on every merge, and still instruct agents to read them.",
+          "appetite": "One Commander, four gates.",
+          "acceptance_or_falsification_evidence": "A shipped guard observed failing on purpose before it is observed passing, and both ledgers untracked.",
+          "implementation_latitude": "Choose the guard's mechanism and the untracking sequence.",
+          "hard_constraints_no_gos": [
+            "No successor playbook is created; a retirement that re-points the read path at episodes/ reproduces the defect.",
+            "Record stores are never hand-edited; episodes/ is written only through apply_episode_delta.py."
+          ],
+          "local_unknowns": [],
+          "anchors": ["episodes", "docs/EPISODE_STORE.md"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Relocate gate-specific instructions into the spine, first tranche",
+        "why_likely": "The engine channel now renders anchors and constraints, so relocated instructions have somewhere to land.",
+        "entry_conditions": ["The engine output channel is merged and the governor writes readings in the tree the agent works in."]
+      },
+      {
+        "outcome": "MCP front door for the engine",
+        "why_likely": "The CLI's flag persnicketiness costs a measured share of every run; the door cleaves responsibility at a clean seam.",
+        "entry_conditions": ["Per-step spine instructions exist, so the door has typed content to carry."]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the backlog can be consolidated faster than the epic generates findings",
+        "affects": "The epic's fourth done-condition, and whether cleanup is achievable inside this epic at all",
+        "settle_by": "An issue-list sweep at the wave-1 boundary",
+        "current_evidence": "The epic opened against 117 open issues; the count is now higher, not lower",
+        "next_probe": "Count open issues and unlabelled open issues at each wave boundary and compare against the opening figure"
+      },
+      {
+        "unknown": "Whether a per-agent reading can be attributed when a session is bound to several candidate spines",
+        "affects": "Whether the governor works for an Admiral driving an epic, as opposed to a Commander driving one spine",
+        "settle_by": "#440's two-arm harness, or a follow-on if #440's fix does not reach the multi-spine case",
+        "current_evidence": "The Admiral's own session has produced no reading for over a day: the writer hook sees three candidate spines and writes nothing rather than guess",
+        "next_probe": "Re-read the gauge on an Admiral session after #440 merges"
+      }
+    ],
+    "parked_possibilities": [
+      "Vision work: the idea substrate and the federation reading of #297",
+      "Performance-metrics methodology",
+      "The simplified-English and glossary thread"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "419",
+      "outcome": "WIN. A HARD trip fired live: a dispatched subagent at 33% fill had its advance refused by the engine, and the control arm produced no reading.",
+      "evidence": "Merged at cbd9aee; the tree hash of that commit equals the tree the run tested, so the recorded suite is a run of merged main."
+    },
+    {
+      "issue_id": "420",
+      "outcome": "WIN. Both fixes landed, and anchors/constraints were proved NOT vestigial against 20-plus archived gates, so C's relocation targets demonstrably exist.",
+      "evidence": "Merged at c33d421 via PR #435; golden test extended past current to the other five RAIL verbs."
+    },
+    {
+      "issue_id": "422",
+      "outcome": "WIN. #329 and #328 refuse instead of hoping; the deliberate-breakage test passes.",
+      "evidence": "Merged at e74fe55 via PR #438."
+    },
+    {
+      "issue_id": "425",
+      "outcome": "WIN, and correctly a null for code: nine tracker references filed, no code change.",
+      "evidence": "Issues #427-#433 and companions filed; no diff, which was the right outcome."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The governor writes real per-agent readings on a live run and the trip mechanic acts on them.",
+      "expected": "A dispatched agent's context fill produces a reading that the engine trips on.",
+      "observed": "True for identity and for the trip itself (#419), but the reading is written against the main checkout's path even when the agent is dispatched into a worktree, so it lands in the wrong tree. Separately, an Admiral session bound to three candidate spines gets no reading at all: the writer hook refuses to guess and writes nothing.",
+      "source": "#419's live two-arm evidence; #440's reproduction; the CONTEXT GAUGE SILENT notice on this epic's own spine, flagged 27h32m before it was read"
+    },
+    {
+      "claim": "The backlog is short enough that every surviving open issue ties to the target architecture or a real defect.",
+      "expected": "Open-issue count falls materially below the 117 the epic opened against.",
+      "observed": "138 open issues, of which 40 carry no theme label. The epic has generated roughly twenty new findings (#427-#433, #436-#437, #439, #440-#444, #446, #447, #448-#451) against four issues closed under E's batch confirm. Net direction is up, not down.",
+      "source": "gh issue list sweep run today against the live tracker"
+    },
+    {
+      "claim": "Theme labelling for backlog consolidation does not exist and would have to be created from scratch.",
+      "expected": "No theme labels in the repo, per the epic's own state note.",
+      "observed": "Thirteen theme:* labels now exist and are applied to about 98 of 138 open issues. The state note is stale on this point.",
+      "source": "gh label list and a per-issue label sweep run today"
+    },
+    {
+      "claim": "A well-run epic can close its own archive gate on the success path.",
+      "expected": "The archive gate closes when the work is merged.",
+      "observed": "The gate's check is the literal string gh pr list --head <branch>, with the placeholder never resolved, and it accepts only an OPEN PR — so a merged epic fails it and is forced to --force.",
+      "source": "#439 and #446; observed directly in the Commander spine template"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D1",
+      "signal": "A worktree-dispatched agent's binding records a main-checkout path, so its reading lands in the wrong tree.",
+      "classification": "blocks_current_wave_exit",
+      "affects": "The current wave's first exit criterion: the reading must land where the agent is working.",
+      "evidence": "#440, reproduced; #419 proved the trip fires but not that it fires in the right tree.",
+      "reason": "The current wave already carries #440 as its repair; it is launched and open."
+    },
+    {
+      "id": "D2",
+      "signal": "The epic's cleanup done-condition is moving backwards: 117 open at the start, 138 now, with 40 unlabelled.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "The fourth definition-of-done item and any forecast that assumed consolidation would converge inside this epic.",
+      "evidence": "Live tracker sweep today; roughly twenty findings filed by this epic against four issues closed.",
+      "reason": "A done-condition the epic's own execution falsifies must be re-cut, not re-attempted."
+    },
+    {
+      "id": "D3",
+      "signal": "C #421 is no longer corpus shrinkage; it is the mechanism that carries per-step instructions for F #424, and #432's fix routes into it.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "The decomposition: C's value, its ordering against F, and the reason it may be deferred.",
+      "evidence": "Tommy's ruling 5 in the epic state note; #432 filed during this epic.",
+      "reason": "The forecast entry for C describes work that no longer matches what C is for."
+    },
+    {
+      "id": "D4",
+      "signal": "A session bound to several candidate spines gets no gauge reading at all, so the governor is silent for exactly the role that drives an epic.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Whether the governor's done-condition is reachable by #440 alone, or needs a further issue.",
+      "evidence": "This epic's own spine has reported CONTEXT GAUGE SILENT for over a day; #440's scope is the single-spine worktree case.",
+      "reason": "The multi-spine case is a distinct defect from #440's and is not covered by any launched issue."
+    },
+    {
+      "id": "D5",
+      "signal": "#285's proposed close rationale — that #308 deleted the playbook wholesale — is false.",
+      "classification": "evidence_only",
+      "affects": "Nothing further: #285 is already held open and routed to #447.",
+      "evidence": "Measured on cbd9aee: the file, its writer, its own read instruction, two skills pointing at it, and the AGENT_FEEDBACK gate all still shipped.",
+      "reason": "The disposition it would drive has already been taken; recording the disproof is the whole action."
+    },
+    {
+      "id": "D6",
+      "signal": "The archive gate accepts only an open PR and never resolves its <branch> placeholder, so a well-run epic is forced to --force on its own success path.",
+      "classification": "later_only",
+      "affects": "This epic's closeout and every future epic's, but not the current wave's exit.",
+      "evidence": "#439 and #446, both filed this epic; observed directly in COMMANDER_SPINE archive.c2b.",
+      "reason": "It bites at closeout, not at the wave-1 boundary, so it belongs in the forecast rather than the current wave."
+    }
+  ],
+  "open_current_wave_issue_ids": ["440", "447"],
+  "unlaunched_items": [
+    {"id": "421", "kind": "issue"},
+    {"id": "423", "kind": "issue"},
+    {"id": "424", "kind": "issue"},
+    {"id": "427", "kind": "issue"},
+    {"id": "428", "kind": "issue"},
+    {"id": "429", "kind": "issue"},
+    {"id": "430", "kind": "issue"},
+    {"id": "431", "kind": "issue"},
+    {"id": "432", "kind": "issue"},
+    {"id": "433", "kind": "issue"},
+    {"id": "436", "kind": "issue"},
+    {"id": "437", "kind": "issue"},
+    {"id": "439", "kind": "issue"},
+    {"id": "441", "kind": "issue"},
+    {"id": "442", "kind": "issue"},
+    {"id": "443", "kind": "issue"},
+    {"id": "444", "kind": "issue"},
+    {"id": "446", "kind": "issue"},
+    {"id": "448", "kind": "issue"},
+    {"id": "449", "kind": "issue"},
+    {"id": "450", "kind": "issue"},
+    {"id": "451", "kind": "issue"},
+    {"id": "F-relocate", "kind": "forecast"},
+    {"id": "F-mcp-door", "kind": "forecast"},
+    {"id": "U-backlog-converges", "kind": "uncertainty"},
+    {"id": "U-multi-spine-attribution", "kind": "uncertainty"},
+    {"id": "P-vision", "kind": "parked"},
+    {"id": "P-metrics", "kind": "parked"},
+    {"id": "P-simplified-english", "kind": "parked"}
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/hooks/spine_rail.py",
+      "scripts/hooks/gauge_writer_hook.py",
+      "scripts/gauge_reader.py",
+      "episodes",
+      "skills/commander/templates/COMMANDER_SPINE.template.json"
+    ],
+    "map_status": "No architecture map; the repo is a skill-source corpus whose structural record is README.md, SKILL_INDEX.md and docs/agents/ORCHESTRATOR_CONTEXT.md"
+  }
+}

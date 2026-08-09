@@ -1,0 +1,4 @@
+tests/test_iterative_planning_doctrine.py::ArchiveReachabilityRuntimeTests::test_archive_mutation_reintroduced_defects_all_drive_the_check_red
+tests/test_iterative_planning_doctrine.py::ArchiveReachabilityRuntimeTests::test_archive_mutation_the_stub_refuses_an_unmodelled_check_shape
+
+[32m[32m2/36 tests collected (34 deselected)[0m[32m in 0.37s[0m[0m

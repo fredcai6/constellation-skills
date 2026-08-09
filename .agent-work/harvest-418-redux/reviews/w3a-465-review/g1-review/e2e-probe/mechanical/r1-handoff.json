@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "e2e-probe",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-e2e-probe-r1-handoff@ff7cb5bcdbda2ab3d34def20d898aa27a8650462",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "e2e-probe",
+    "generated_at": "2026-08-08T06:16:28Z"
+  }
+}

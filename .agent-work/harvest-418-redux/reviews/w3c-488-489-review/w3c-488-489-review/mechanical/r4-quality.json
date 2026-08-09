@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r4-quality",
+  "mechanical": {
+    "run": "w3c-488-489-review",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r4-quality",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w3c-488-489-review-r4-quality@7d2a0473209ad56274ede17f4d5e825beb237e91",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w3c-488-489-review",
+    "generated_at": "2026-08-08T05:38:13Z"
+  }
+}

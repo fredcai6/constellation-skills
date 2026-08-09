@@ -1,0 +1,337 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 wave 5 - bookend gates",
+      "spec_path": ".agent-work/epic-418-redux/launch-orders/LO-w5-c1-gates.md",
+      "intent_and_why": "Close the iterative-planning epic's own bookends: the role verifier must know where it is running from, the stop exit must not authorize a next wave, and the archive command text must resolve. Each is a check that today either cannot fail or fails for the wrong reason."
+    },
+    "definition_of_done": [
+      "All six issues are fixed, each behind a gate that fails closed when its tests were never written."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every gate closes on a -k selector keyed to a stated test naming contract; a zero-match selector exits 5 and fails the gate.",
+      "sufficient_evidence": "Targeted tests plus the coupled suite at each gate boundary; the full suite at g4.",
+      "appetite": "One crew, four gates"
+    },
+    "hard_constraints": [
+      "scripts/checklist_engine.py and tests/test_checklist_engine.py are crew 4's sole writers this wave",
+      "No hooks, no settings.json, no docs/agents/* doctrine promotion",
+      "Collateral red in a non-owned file is a float to the Admiral, not a local edit"
+    ],
+    "fixed_decisions": [
+      "A running process identifies an installed bundle by structure, not by name (launch-order pre-ruling 4)",
+      "The -k selectors are the cold critic's BLOCK remedy and are load-bearing, not stylistic"
+    ],
+    "current_wave": {
+      "objective": "Fix the three bookend defects behind gates that cannot close vacuously",
+      "exit_criteria": [
+        "guard_location, guard_mutation, stop_mutation and archive_c2b selectors each collect nonzero and pass",
+        "The full suite is green at g4"
+      ],
+      "issues": [
+        {
+          "id": "501",
+          "title": "Role verifier resolves the wrong skills root from the source checkout",
+          "desired_outcome": "The guard decides by structure and refuses elsewhere naming the real problem.",
+          "useful_now": "It is the defect blocking the epic's own close.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "The three-location matrix and the name-only-decoy test pass; a permissive guard drives them red.",
+          "implementation_latitude": "Choose the predicate shape inside the pre-rulings; add tests.",
+          "hard_constraints_no_gos": [
+            "Do not widen the guard into a check that cannot fail"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/verify_iterative_role_artifacts.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "468",
+          "title": "Guard refuses outright from a Commander worktree",
+          "desired_outcome": "The worktree reaches the same not-installed verdict without consulting the name.",
+          "useful_now": "Same predicate, opposite polarity; fixing one without the other leaves the run broken.",
+          "appetite": "Shared with 501",
+          "acceptance_or_falsification_evidence": "The worktree row of the three-location matrix.",
+          "implementation_latitude": "Shared with 501.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": [
+            "scripts/verify_iterative_role_artifacts.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "506",
+          "title": "A stop packet can authorize NEXT_WAVE",
+          "desired_outcome": "stop cannot authorize a next wave; the existing negative assertion is inverted.",
+          "useful_now": "It is the second bookend.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "stop_mutation selector collects nonzero and passes.",
+          "implementation_latitude": "Choose internals; preserve the engine boundary.",
+          "hard_constraints_no_gos": [
+            "checklist_engine.py is crew 4's"
+          ],
+          "local_unknowns": [],
+          "anchors": [
+            "tests/test_iterative_planning_doctrine.py"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "439",
+          "title": "Archive command text does not resolve",
+          "desired_outcome": "The archive command's resolved text runs.",
+          "useful_now": "Third bookend.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "archive_c2b selector collects nonzero and passes.",
+          "implementation_latitude": "Extract the command text from the template rather than restating it.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [
+            "Whether the text can be exercised without real network access"
+          ],
+          "anchors": [
+            "skills/commander/templates/COMMANDER_SPINE.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "484",
+          "title": "archive.c2b carries an unresolvable <branch> token",
+          "desired_outcome": "<branch> no longer appears as an unresolved token in the archive command.",
+          "useful_now": "Shares the file and the fix with 439.",
+          "appetite": "Shared with 439",
+          "acceptance_or_falsification_evidence": "The resolved text contains no unowned token.",
+          "implementation_latitude": "Shared with 439.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": [
+            "skills/commander/templates/COMMANDER_SPINE.template.json"
+          ],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "446",
+          "title": "Integrate the three fixes and prove them together",
+          "desired_outcome": "The full suite is green and the verifier runs against the branch under review, not the machine's installed corpus.",
+          "useful_now": "It is the wave's own exit.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Full suite green; c2 passes --skills-root explicitly.",
+          "implementation_latitude": "Route deferrals to triage.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": [
+            "tests/"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "The epic's own close can be verified end to end",
+        "why_likely": "The three bookends are the only known blockers",
+        "entry_conditions": [
+          "All six issues closed"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the archive command text can be exercised without real network access",
+        "affects": "g3's evidence strength",
+        "settle_by": "g3",
+        "current_evidence": "No test in this repo invokes gh; the verifier is network-free",
+        "next_probe": "A stub gh early on PATH, asserting on the exit code"
+      }
+    ],
+    "parked_possibilities": [
+      "Corpus-level fix for implementer-result conditions carrying no match",
+      "config_ref pointing at a nonexistent docs/agents/engine-config.json"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "501",
+      "outcome": "Fixed and independently reviewed. _installed_skills_root() decides by structure, not by name.",
+      "evidence": "-k guard_location 11 passed / 13 deselected / 11 subtests, exit 0; -k guard_mutation 1 passed / 23 deselected / 6 subtests, exit 0; coupled suite 387 passed / 480 subtests, exit 0. Reviewer verdict APPROVE at .agent-work/w5-gates/crew-handoffs/g1-review-RESULT.md."
+    },
+    {
+      "issue_id": "468",
+      "outcome": "Fixed by the same predicate. The Commander worktree now reaches not-installed without consulting the name and falls through to the probe with a visible stderr note.",
+      "evidence": "The commander-worktree row of test_guard_location_predicate_separates_the_three_real_locations, measured on disk with its three structural columns reported in the subTest."
+    },
+    {
+      "issue_id": "506",
+      "outcome": "Fixed. admiral-prelaunch is now decision-aware: a recorded, G2-verified, rendered stop transition packet closes the prelaunch check, while advance and replan are unchanged and repair is still refused. The launch_id relaxation is genuinely conditional, not a blanket loosening.",
+      "evidence": "The stop_boundary and stop_mutation selectors, and the reviewer's own three stop-shortcuts (skip G2 validation, skip the unique-audit-entry match, skip the render) all measured RED at bd56ac8a. Recorded because the FIRST review BLOCKed here: the render shortcut survived green at 57048457, so the mutation test did not cover the leg it claimed to. The gate caught it, not the suite."
+    },
+    {
+      "issue_id": "439",
+      "outcome": "Fixed, but NOT as the issue describes. The issue's diagnosis (the literal <branch> token ships unsubstituted) is right about the token and wrong about the consequence: gh never ran at all, because '<' is a shell input redirection under sh -c. The branch is now derived at CHECK time from the existing <repo-root> token, so no new resolver token was needed and scripts/init_work_area.py took a zero-line diff.",
+      "evidence": "The four-state matrix and the always-fails reproduction in wave_evidence, plus test_archive_c2b_derives_the_branch_from_the_real_repository and the archive_mutation leg that reintroduces the literal token."
+    },
+    {
+      "issue_id": "484",
+      "outcome": "Fixed, but the issue's SUGGESTED replacement was refused with evidence. Keeping --jq 'length > 0' would exit 0 on an empty list -- a check that cannot fail, inside a wave about checks that cannot fail. The count is compared in the shell instead, so the exit code carries the verdict.",
+      "evidence": "The 0/0/0/0 counterfactual measurement in wave_evidence, and the archive_mutation leg that restores the stdout form and goes red."
+    },
+    {
+      "issue_id": "446",
+      "outcome": "Fixed as the SECOND defect of the same postcondition, not merged into #439/#484. Its complaint -- that only an OPEN pull request is accepted, so a merged PR (the strongest evidence the work is reachable) fails -- is a distinct defect from the unsubstituted token, and pre-ruling 5 required both be fixed rather than one. The check now accepts {OPEN, MERGED} while still rejecting CLOSED-unmerged and no-PR. Note the issue's premise is also corrected by the always-fails finding: the shipped check rejected a MERGED PR, but so did it reject an OPEN one.",
+      "evidence": "MERGED exit 0 in the four-state matrix; test_archive_c2b_a_merged_pr_alone_satisfies_the_check; and the archive_mutation leg narrowing back to --state open, which is only discriminating on a MERGED fixture -- verified by the reviewer, who measured that the same mutation on an OPEN fixture is a genuine no-op."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The structural predicate separates all three real locations.",
+      "expected": "Installed bundle accepted; main checkout and Commander worktree both not-installed.",
+      "observed": "Installed bundle: own SKILL.md present, parent CORPUS.json present, 20 sibling bundles -> True. Main checkout (C:/Programs/constellation-skills): no own SKILL.md, parent no CORPUS.json, 0 constellation-*/SKILL.md children -> False. Commander worktree (C:/Programs/constellation-skills-wt/epic418-w5-gates): the same three columns -> False.",
+      "source": "tests/test_iterative_planning_doctrine.py::GuardLocationStructureTests::test_guard_location_predicate_separates_the_three_real_locations, plus an on-disk measurement of the same three columns before crew dispatch"
+    },
+    {
+      "claim": "The guard is not a check that cannot fail.",
+      "expected": "An unconditionally-permissive guard drives the guard_location tests red.",
+      "observed": "Replacing _is_installed_bundle's body with `return True` gives 10 failed / 6 passed / 13 deselected, exit 1 -- red on the decoy test, on both non-installed rows of the matrix, and on four runtime resolution tests. The reviewer measured 9 failed independently before I added an eleventh test. Restored and confirmed by blob OID.",
+      "source": "Reviewer's own mutation run, and my own re-run after the post-review fix"
+    },
+    {
+      "claim": "The two-clause structural test does not self-certify.",
+      "expected": "A lone constellation-*-named directory carrying its own SKILL.md is NOT an installed bundle when nothing else marks its parent.",
+      "observed": "Found by the reviewer and fixed at g1-integrate: _is_skills_root globs constellation-* children of the PARENT, so the candidate satisfied clause 2 by being that child, and the test decayed to the old name test plus a SKILL.md. _is_installed_bundle now passes exclude=path. Removing the exclusion drives the new regression test red on assertFalse(_is_installed_bundle(lonely)) -- a behavioural red, not a signature error.",
+      "source": "tests/test_iterative_planning_doctrine.py::GuardLocationStructureTests::test_guard_location_predicate_refuses_to_let_a_candidate_certify_itself"
+    },
+    {
+      "claim": "--skills-root exists and wins when given.",
+      "expected": "The flag beats an otherwise-resolvable root and is reachable from all three modes.",
+      "observed": "Passing, including test_guard_location_flag_beats_an_otherwise_resolvable_root and test_guard_location_flag_wins_and_is_reachable_from_all_three_modes. g4-integrate.c2 depends on this flag.",
+      "source": "tests/test_iterative_planning_doctrine.py::GuardRuntimeTests"
+    },
+    {
+      "claim": "Both -k selectors collect a nonzero number of tests.",
+      "expected": "Nonzero collection, so neither gate closes vacuously.",
+      "observed": "guard_location 11 passed / 13 deselected, exit 0. guard_mutation 1 passed / 23 deselected, exit 0. Both run unpiped so the exit code is pytest's own. A bogus selector exits 5 on this machine, confirmed by the reviewer as a discriminating control.",
+      "source": "Direct pytest runs at g1-integrate"
+    },
+    {
+      "claim": "archive.c2b's reachability verdict rides the exit code and discriminates all four pull-request states.",
+      "expected": "no-PR and CLOSED-unmerged nonzero (unreachable); OPEN and MERGED zero (reachable).",
+      "observed": "no-PR exit 1, OPEN exit 0, MERGED exit 0, CLOSED-unmerged exit 1, with EMPTY stdout in all four -- so nothing rides on printed text. Measured twice independently: by the Commander against four real branches on the live gh, and offline by the implementer and again by the reviewer through a PATH stub running the command text extracted from the shipped template. The three measurements agree.",
+      "source": "Live gh (Commander) + stubbed shell at g3-implement, g3-review pass 1 and pass 2"
+    },
+    {
+      "claim": "The SHIPPED archive.c2b was an always-fails check, not an open-PR-only check. #439, #484 and #446 all describe its behaviour wrongly.",
+      "expected": "If the issues were right, the old text would exit 0 on an OPEN pull request and nonzero on the other three.",
+      "observed": "The old text exits 1 in ALL FOUR states with `bash: line 1: branch: No such file or directory`. The engine runs check text through sh -c, where the unquoted '<' in `--head <branch>' is an INPUT REDIRECTION, so gh was never invoked at all. It passed no-PR and CLOSED-unmerged for entirely the wrong reason. Reproduced independently by the implementer and by the reviewer.",
+      "source": "Direct shell runs at g3-implement and g3-review"
+    },
+    {
+      "claim": "Adopting the replacement #484 suggests would convert a check that cannot pass into one that cannot fail.",
+      "expected": "If --jq 'length > 0' carried the verdict, an empty list would exit nonzero.",
+      "observed": "#484's form exits 0/0/0/0 across all four states. gh --jq prints `true` or `false` and exits 0 either way; a command condition's verdict is its EXIT CODE and stdout is discarded (docs/CHECKLIST_SCHEMA.md). The count is therefore compared IN THE SHELL. Measured by the Commander on live gh and by the reviewer offline.",
+      "source": "Live gh (Commander) + g3-review counterfactual"
+    },
+    {
+      "claim": "The g3 test harness itself could have gone vacuous, and did not, because the reviewer measured it.",
+      "expected": "A stub that models the shipped check should refuse any shape it does not model.",
+      "observed": "The first stub required --head, --state and --json but rejected nothing EXTRA, so `--repo someone/else` and `--limit 100` were answered silently and read exactly like the baseline -- a future check could have queried the wrong repository with the whole four-state matrix green. Reviewer BLOCKed on it; repaired at 84d1e998 by whitelisting the four modelled flags. Load-bearing confirmed by deleting the guard again: exactly the two new legs go red. Reviewer then probed 21 flag SHAPES (combined-form, short flags, positionals, missing values, adversarial values, unicode lookalikes) and all refuse.",
+      "source": "g3-review pass 1 BLOCK, rework 84d1e998, g3-review pass 2 APPROVE"
+    },
+    {
+      "claim": "The three fixes COMPOSE through the real shipped artifacts, not through repo-side copies.",
+      "expected": "If the fixture were only apparently real, mutating a repo source would leave the installed bundle's behavior unchanged.",
+      "observed": "Mutating repo sources demonstrably changed the behavior of the INSTALLED bundle, and the refusal output names the empty-home skills root among its search roots, so the developer's real corpus cannot leak in. The real installer lays down a real bundle, the real init_work_area.py entrypoint instantiates THAT BUNDLE'S OWN spine template as a subprocess (not in-process resolve_spine), and the bundle's own verifier runs with HOME/USERPROFILE pointed at an empty directory. Verified by the g4 reviewer by mutation rather than by reading.",
+      "source": "tests/test_iterative_planning_doctrine.py::ComposedShippedArtifactTests (shared fixture), verified by the g4 reviewer by mutating repo sources and observing the INSTALLED bundle's behavior change; refusal output naming the empty-home skills root"
+    },
+    {
+      "claim": "The three composition tests are not tautological.",
+      "expected": "Each must go red on a stated broken input, with the mutation proven to have actually applied.",
+      "observed": "All SIX broken inputs reproduced by the reviewer itself, built at byte level, each mutation asserted applied IN BYTES before any red was believed, restored from saved bytes and verified with read_bytes() plus git status. Assertions matched the implementer's claims exactly: m1 {} != {'archive.c2b': ['<branch>']}; m2 and m6 0 == 0; m4 and m5 0 != 1; m3 two SUBFAILED. The CRLF discipline is load-bearing here -- an LF literal silently matches nothing, 'succeeds', and would have certified a no-op.",
+      "source": "g4-review-RESULT.md non-tautology section and .agent-work/w5-gates/g4-review/ probe scripts; six byte-level mutations m1-m6, each asserted applied in bytes and restored via read_bytes() plus git status"
+    },
+    {
+      "claim": "#501 is reproducible LIVE against the artifact a user installs, not merely in a repo-side fixture.",
+      "expected": "Reverting _is_installed_bundle to the name test should let a constellation--named directory with no SKILL.md pass as an installed bundle.",
+      "observed": "It returns EXIT 0 against the REAL installed bundle: AssertionError 0 == 0 : name-only-decoy-inside-a-real-skills-root is not an installed bundle. The second polarity landed in the same run -- the constellation-skills-named checkout went red FOR THE WRONG REASON, which is itself the proof that asserting the refusal REASON is load-bearing: a leg asserting only a nonzero exit would have passed there. This is the sharpest evidence in the wave.",
+      "source": "tests/test_iterative_planning_doctrine.py::ComposedShippedArtifactTests::test_compose_verifier_... decoy leg, reproduced live by the g4 reviewer against the real installed bundle"
+    },
+    {
+      "claim": "No gate's mutation floor can be satisfied by a sibling gate's test.",
+      "expected": "All six load-bearing selectors sit at their pre-g4 counts and no new test matches an old selector.",
+      "observed": "Re-derived by the reviewer by matched node IDENTITY, not merely by count: guard_location 11/11 subtests, guard_mutation 1/6, stop_boundary 2, stop_mutation 1/8, archive_c2b 4/4, archive_mutation 2/11 -- each at its pre-g4 value, and no matched node ID belongs to the new class. -k compose_stop collects ZERO and exits 5, confirming the g2-collision rename is complete. The implementer's first plan named compose_stop, collected zero, and the engine REFUSED the advance -- the selector rail catching a vacuous close in flight.",
+      "source": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k <selector> for all six selectors, re-derived by matched node ID by the g4 reviewer; -k compose_stop exits 5 with zero collected"
+    },
+    {
+      "claim": "The run's own closure check runs from a Commander worktree instead of refusing on the guard.",
+      "expected": "verify_iterative_role_artifacts.py commander --work-id w5-gates --skills-root <root> exits 0 from this worktree.",
+      "observed": "Exit 0, 'iterative role artifact ok: commander (w5-gates)'. Measured by the Commander and re-run by the engine as gate check g4-integrate.c2. This is finding 2 -- present in NEITHER issue -- discharged against the live run: before fix B this command could not pass from any Commander worktree, because a worktree directory is not named constellation-*. The explicit --skills-root is load-bearing; without it the check validates against whatever corpus is installed on the machine rather than the branch under review.",
+      "source": "python scripts/verify_iterative_role_artifacts.py commander --work-id w5-gates --skills-root C:/Users/fredc/.claude/skills -- exit 0; also engine-checked as execute.json gate g4-integrate.c2"
+    },
+    {
+      "claim": "No fix left collateral red behind, and the suite delta reconciles on both sides.",
+      "expected": "Full suite green, with the delta attributable test by test.",
+      "observed": "1891 passed, 2 skipped, 872 subtests, exit 0, 473.71s -- measured independently by the reviewer, by the Commander, and again by the engine as gate check g4-integrate.c1. Collect 1893 against a fork point of 1869: +24 passed, +43 subtests, skips unchanged at 2, 0 tests removed. Attribution 12 guard (g1) / 3 stop (g2) / 6 archive (g3) / 3 composition (g4), re-derived by the reviewer from its OWN throwaway worktree cut at aa2038d9 (measuring 1867 there) plus an AST count of test methods per class at each gate commit, a method validated by its count of 36 at 764a2728 matching pytest's 1+35.",
+      "source": "python -m pytest -q at HEAD (1891/2/872, exit 0, 473.71s) and at aa2038d9 (1867/2/829, exit 0) from a throwaway worktree the g4 reviewer cut itself; also engine-checked as g4-integrate.c1"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The g1-review handoff stated the review target was the uncommitted working tree, but the implementer had already committed the pair at c63c2bb0, so git status showed both files clean.",
+      "classification": "evidence_only",
+      "affects": "Crew handoff accuracy for g2, g3 and g4",
+      "evidence": "Reviewer workflow feedback in g1-review-RESULT.md; a reviewer following the handoff literally could have returned BLOCK on 'the diff cannot be accessed'.",
+      "reason": "The reviewer recovered without help and the verdict stands; later handoffs must name a resolvable ref."
+    },
+    {
+      "id": "D1",
+      "signal": "The structural predicate let a candidate certify itself, which would have returned #501 in its original shape the moment constellation-skills gained a root-level SKILL.md.",
+      "classification": "evidence_only",
+      "affects": "The g1 fix's durability",
+      "evidence": "Reviewer finding, reproduced and fixed at g1-integrate with a regression test under the guard_location naming contract.",
+      "reason": "Fixed inside the gate under inherited latitude; no plan change is warranted."
+    },
+    {
+      "id": "D2",
+      "signal": "The g4 implementer hit a hard context trip before writing its own result file and correctly REFUSED to attest measurements it had not personally run. The Commander ran the one remaining command and transcribed the report, marking in the file which sections are the implementer's and which are the Commander's. The g4 reviewer was told explicitly that it was the first independent pair of eyes on those numbers.",
+      "classification": "evidence_only",
+      "affects": "Crew result provenance for any gate whose implementer trips mid-run",
+      "evidence": "The provenance note at the head of g4-implement-RESULT.md; the g4-review handoff instructing the reviewer to treat every measurement in it as a claim.",
+      "reason": "The refusal to attest unrun work is the doctrine working. The cost is that the Commander becomes a transcriber, which is where D3 entered."
+    },
+    {
+      "id": "D3",
+      "signal": "That transcribed result carried one false premise: it claimed only tests/test_iterative_planning_doctrine.py differs from the fork point aa2038d9 outside .agent-work/, where THREE production paths do. The claim is true against the g4 baseline 84d1e998, not against the fork point. Caught by the g4 reviewer, re-derived by the Commander with git diff --numstat, and corrected in place with provenance marked. The +24 conclusion is unaffected because only the test file carries tests. Non-blocking, but it is a real instance of a measurement surviving a context handoff with its frame of reference silently swapped.",
+      "classification": "evidence_only",
+      "affects": "The accuracy of transcribed measurements across a context handoff",
+      "evidence": "git diff --numstat aa2038d9 764a2728 -- . ':(exclude).agent-work/**' returns THREE production paths (verify_iterative_role_artifacts.py, COMMANDER_SPINE.template.json, the doctrine test file), not one. Found by the g4 reviewer, re-derived and corrected in place by the Commander.",
+      "reason": "Non-blocking and the delta conclusion is unaffected, but a measurement whose baseline silently changed is exactly the failure mode this epic exists to catch. Worth carrying into the epic retrospective."
+    },
+    {
+      "id": "D4",
+      "signal": "MECHANISM finding, epic-level, already filed as #477 and being fixed in a parallel worktree: the context gauge is written per checklist DIRECTORY, not per agent, so a fresh agent reads its PREDECESSOR'S reading until its own first tool call lands. This crew was relaunched into that loop repeatedly -- read inherited number, trip, hand off, relaunch -- and every cycle looked like correct doctrine being followed. This Commander saw the inherited 18% on its first current call, made a tool call, and re-read to get its own 3.4%; the trip line then disappeared. The workaround is real but it is a human-carried instruction, not a mechanism.",
+      "classification": "evidence_only",
+      "affects": "Every crew in this epic, and every future relaunch into a live checklist",
+      "evidence": "This Commander's own first `current` call reported CONTEXT 18% (>= hard) with a TRIP HISTORY of 3; gauge.json then read 0.034439 after one tool call, and the trip line vanished on re-read. Four crews in this wave were relaunched into the same loop.",
+      "reason": "Already filed as #477 and under repair in a parallel worktree. Recorded here as wave evidence because the loop consumed real crew launches and each cycle was indistinguishable from correct doctrine."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/verify_iterative_role_artifacts.py",
+      "tests/test_iterative_planning_doctrine.py",
+      "skills/commander/templates/COMMANDER_SPINE.template.json"
+    ],
+    "map_status": "DEGRADED-NO-MAP: this repo has no architecture map, so anchors are named by path and there are no struct:/decision: ids to cite."
+  }
+}

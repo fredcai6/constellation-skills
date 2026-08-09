@@ -1,0 +1,20 @@
+{
+  "work_id": "w3b-461-review",
+  "diff_ref": "c0ad5ecd..fa1378ed -- tests/test_episode_negative_control.py (test_canon_episode_store_untouched only)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "The two new blocks (git diff --name-only ... / assert unstaged == '' ...) and (git ls-files --others --exclude-standard ... / assert untracked == '' ...) share an identical shape: subprocess.run -> .stdout.strip() -> assert == '' with an f-string naming the offender. Non-blocking: a tiny local helper (run_git_empty(args, label)) would remove the duplication, but the two calls are genuinely different git commands answering different halves of the worktree-vs-index question, and keeping them as separate statements gives each its own assert line and its own failure message naming which half tripped (unstaged vs untracked) -- worth more here than deduplicating 4 lines. Leaving as an observation, not a blocker.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "The docstring grew substantially, but it explains a genuinely non-obvious git semantic (git status --porcelain conflates worktree-vs-index with index-vs-HEAD) that caused the original defect -- it clarifies WHY the predicate is shaped this way, it does not paper over unclear code. The predicate itself (two named, separately-asserted git reads) is legible without the comment; the comment is load-bearing context for the NEXT person who is tempted to 'simplify' back to git status --porcelain.", "override": null}
+  ],
+  "rail_exception": null
+}

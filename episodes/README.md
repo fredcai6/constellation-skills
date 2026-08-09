@@ -9,11 +9,13 @@ partition, retirement policy, and Stratum A mapping: **`docs/EPISODE_STORE.md`**
 The store must **outlive** the run that captures it, and its whole purpose is to stay
 findable across sessions and worktrees so a later rhyme-detection pass (issue #308) can
 find neighbours of a new episode months later. That only works if the store is **tracked
-in git**: `.agent-work/` is gitignored (see `.gitignore` line 1) and nothing under it
-survives a `git worktree remove` or a fresh clone. `episodes/` is a plain repo-root
-directory, tracked like any other, so a commit here is visible in every worktree, every
-clone, and every later checkout — no special durability plumbing required. See
-`docs/EPISODE_STORE.md` § "Why a tracked path" for the full argument.
+in git** at a path with no durability plumbing of its own: `episodes/` is a plain repo-root
+directory, tracked like any other, so the moment a commit lands the store is visible in
+every worktree, every clone, and every later checkout, with nothing to configure and
+nothing to resolve at runtime. A store whose location has to be computed — from a lease, a
+work-id, or which worktree happens to be current — is a store that can be written to the
+wrong place while every gate still reports green. See `docs/EPISODE_STORE.md` § "Why a
+tracked path" for the full argument.
 
 ## What lives here
 
@@ -68,15 +70,11 @@ enumerating to zero episodes with exit 0, which would read exactly like an empty
 ## What does NOT live here
 
 - **Nothing hand-edited.** `scripts/apply_episode_delta.py` is the only write path — a
-  validated, all-or-nothing delta writer mirroring `scripts/apply_lessons_delta.py`'s
-  contract. Read with `scripts/query_episodes.py`.
-- **No automated capture wiring** (issue #305) and **no consolidation / rhyme-search**
-  (issue #308) — both are downstream of this store, not part of it.
-
-## Not to be confused with
-
-`.agent-work/LESSONS.md` — a live, curated, human-facing playbook of open problems,
-deliberately transitory ("where lessons pass through, not where they live"). This store
-is the opposite: a raw, append-mostly, machine-consumed capture that is meant to outlive
-its own consolidation. The two systems are siblings, not the same thing, and this run
-does not touch `LESSONS.md` or its writer.
+  validated, all-or-nothing delta writer: it checks the whole delta before it touches the
+  store, and either every operation lands or none does.
+- **No consolidation / rhyme-search** (issue #308) — downstream of this store, not part of
+  it.
+- **No rules.** An episode records what was observed, and nothing here is read back as an
+  instruction. A rule for a future agent to follow belongs in `docs/agents/*` and is a
+  human's call — see `docs/agents/ORCHESTRATOR_CONTEXT.md` § "The Retired Learning
+  Playbook".

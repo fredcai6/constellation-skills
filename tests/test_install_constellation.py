@@ -15,7 +15,8 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "scripts" / "install_constellation.py"
-VERIFIER = ROOT / "scripts" / "verify_agent_feedback.py"
+# PRUNED (#447 g4): VERIFIER pointed at scripts/verify_agent_feedback.py, deleted by this
+# retirement, as did load_verifier() and the two tests below that were its only callers.
 
 
 def load_module(name: str, path: Path):
@@ -30,10 +31,6 @@ def load_installer():
     return load_module("install_constellation", INSTALLER)
 
 
-def load_verifier():
-    return load_module("verify_agent_feedback", VERIFIER)
-
-
 # issue-116: derived from the installer's OWN enumeration (discover_skills()),
 # never a second hand-maintained roster -- a skill added/renamed under skills/
 # now shows up here automatically instead of silently drifting out of sync.
@@ -41,6 +38,21 @@ SKILL_NAMES = sorted(skill.install_name for skill in load_installer().discover_s
 
 
 class InstallConstellationTests(unittest.TestCase):
+    def test_replan_installs_its_pure_verifier_and_g1_contract_helper(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--skills", "replan"], env={}, out=lambda _: None,
+                ),
+            )
+            installed = target_root / "constellation-replan" / "scripts"
+            self.assertTrue((installed / "verify_replan.py").is_file())
+            self.assertTrue((installed / "verify_issue_set.py").is_file())
+
     def test_codex_project_scope_installs_all_skills_under_project_codex_skills(self):
         installer = load_installer()
 
@@ -72,7 +84,7 @@ class InstallConstellationTests(unittest.TestCase):
                     target_root
                     / "constellation-commander"
                     / "scripts"
-                    / "verify_agent_feedback.py"
+                    / "verify_episode_captured.py"  # #447: replaced verify_agent_feedback.py
                 ).exists()
             )
             self.assertTrue(
@@ -299,11 +311,11 @@ class InstallConstellationTests(unittest.TestCase):
                 spine["tasks"]["init"]["postconditions"][0]["check"]["command"],
             )
             self.assertIn(
-                (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
+                (commander_root / "scripts" / "verify_episode_captured.py").as_posix(),
                 spine["tasks"]["feedback"]["postconditions"][0]["check"]["command"],
             )
             self.assertIn(
-                (commander_root / "scripts" / "verify_agent_feedback.py").as_posix(),
+                (commander_root / "scripts" / "verify_episode_captured.py").as_posix(),
                 spine["tasks"]["archive"]["postconditions"][0]["check"]["command"],
             )
             # the state-note precondition on execute is bundled and its token rewritten
@@ -383,49 +395,11 @@ class InstallConstellationTests(unittest.TestCase):
         self.assertNotIn("<commander-skill-dir>", spine_text)
         self.assertIn(f"python3 {commander_root}/scripts/init_work_area.py", spine_text)
 
-    def test_agent_feedback_verifier_enforces_durable_log_location(self):
-        verifier = load_verifier()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            agent_work = root / ".agent-work"
-            work_id = "issue-123"
-            (agent_work / work_id).mkdir(parents=True)
-            feedback = agent_work / "AGENT_FEEDBACK.md"
-            feedback.write_text(
-                f"## 2026-06-08 — {work_id}\n\n"
-                "**Friction / unclear:**\n- spine step ambiguous about lease release\n",
-                encoding="utf-8",
-            )
-
-            verifier.verify_agent_feedback(root, work_id, "feedback")
-
-            bad_feedback = agent_work / work_id / "AGENT_FEEDBACK.md"
-            bad_feedback.write_text("archived by mistake", encoding="utf-8")
-            with self.assertRaises(verifier.FeedbackVerificationError):
-                verifier.verify_agent_feedback(root, work_id, "feedback")
-
-    def test_agent_feedback_verifier_enforces_archive_phase(self):
-        verifier = load_verifier()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            agent_work = root / ".agent-work"
-            work_id = "issue-123"
-            (agent_work / work_id).mkdir(parents=True)
-            (agent_work / "AGENT_FEEDBACK.md").write_text(
-                f"## 2026-06-08 — {work_id}\n\n"
-                "**Friction / unclear:**\n- spine step ambiguous about lease release\n",
-                encoding="utf-8",
-            )
-
-            with self.assertRaises(verifier.FeedbackVerificationError):
-                verifier.verify_agent_feedback(root, work_id, "archive")
-
-            archive_dir = agent_work / "archive" / f"2026-06-08-{work_id}"
-            archive_dir.mkdir(parents=True)
-            (agent_work / work_id).rmdir()
-            verifier.verify_agent_feedback(root, work_id, "archive")
+    # PRUNED (#447 g4): test_agent_feedback_verifier_enforces_durable_log_location and
+    # test_agent_feedback_verifier_enforces_archive_phase. Both loaded and exercised
+    # scripts/verify_agent_feedback.py, which this retirement deleted; their subject is gone,
+    # not merely renamed. Nothing about the INSTALLER, which this file is otherwise about,
+    # was asserted by either.
 
     def test_dry_run_prints_plan_without_creating_target(self):
         installer = load_installer()
@@ -454,6 +428,91 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertFalse(target_root.exists())
             self.assertIn("DRY RUN", "\n".join(output))
             self.assertIn("constellation-triage", "\n".join(output))
+
+    def test_initial_issues_is_the_only_discoverable_cut_skill(self):
+        installer = load_installer()
+        skills = installer.discover_skills()
+        self.assertIn("to-initial-issues", {skill.source_name for skill in skills})
+        self.assertIn("constellation-to-initial-issues", {skill.install_name for skill in skills})
+        self.assertNotIn("to-issues", {skill.source_name for skill in skills})
+        self.assertNotIn("constellation-to-issues", {skill.install_name for skill in skills})
+
+    def test_legacy_initial_cut_destination_refuses_without_force_and_names_migration(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            legacy = target_root / "constellation-to-issues"
+            legacy.mkdir(parents=True)
+            marker = legacy / "legacy.txt"
+            marker.write_text("keep until authorized", encoding="utf-8")
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr), self.assertRaises(SystemExit):
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--skills", "to-initial-issues"], env={}, out=lambda _: None,
+                )
+            self.assertIn("--skills to-initial-issues --force", stderr.getvalue())
+            self.assertEqual("keep until authorized", marker.read_text(encoding="utf-8"))
+            self.assertFalse((target_root / "constellation-to-initial-issues").exists())
+
+    def test_subset_force_removes_only_exact_legacy_destination_then_installs_canonical(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            legacy = target_root / "constellation-to-issues"
+            unrelated = target_root / "constellation-to-issues-not-legacy"
+            foreign = target_root / "foreign-skill"
+            legacy.mkdir(parents=True)
+            unrelated.mkdir()
+            foreign.mkdir()
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--skills", "to-initial-issues", "--force"],
+                    env={}, out=lambda _: None,
+                ),
+            )
+            self.assertFalse(legacy.exists())
+            self.assertTrue(unrelated.exists())
+            self.assertTrue(foreign.exists())
+            self.assertTrue((target_root / "constellation-to-initial-issues" / "SKILL.md").is_file())
+
+    def test_initial_cut_migration_dry_run_never_mutates_legacy_or_installs_canonical(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            legacy = target_root / "constellation-to-issues"
+            legacy.mkdir(parents=True)
+            marker = legacy / "legacy.txt"
+            marker.write_text("unchanged", encoding="utf-8")
+            output = []
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--skills", "to-initial-issues", "--force", "--dry-run"],
+                    env={}, out=output.append,
+                ),
+            )
+            self.assertEqual("unchanged", marker.read_text(encoding="utf-8"))
+            self.assertFalse((target_root / "constellation-to-initial-issues").exists())
+            self.assertIn("constellation-to-issues", "\n".join(output))
+
+    def test_full_force_leaves_exactly_canonical_initial_cut_destination(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            (target_root / "constellation-to-issues").mkdir(parents=True)
+            self.assertEqual(
+                0,
+                installer.main(
+                    ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                     "--force"], env={}, out=lambda _: None,
+                ),
+            )
+            self.assertFalse((target_root / "constellation-to-issues").exists())
+            self.assertTrue((target_root / "constellation-to-initial-issues").is_dir())
 
     def test_subset_force_does_not_wipe_unselected_skills(self):
         # --skills SUBSET with --force must replace only the selected skills;
@@ -626,15 +685,88 @@ class InstallConstellationTests(unittest.TestCase):
             self.assertEqual(0, exit_code)
             self.assertTrue((home / ".claude" / "skills" / "constellation-triage" / "SKILL.md").exists())
 
-    def test_lessons_gate_verifier_bundled_into_commander_and_admiral(self):
+    def test_episode_write_path_bundled_into_commander_and_admiral(self):
+        # #447: the playbook's apply/verify pair retired; what replaces it is the episode
+        # store's WRITE side. The writer is named only in the spine IMPERATIVE (no check
+        # runs it), so `test_every_spine_command_names_an_installed_script` below cannot
+        # see it -- this per-name pin is what covers that half. The retired trio is
+        # asserted ABSENT in the same breath, so a revert shows up here rather than as a
+        # mid-run gate failure.
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             target_root = Path(tmp) / "skills"
             installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
                             "--skills", "commander", "admiral"], env={}, out=lambda _: None)
             for skill in ("constellation-commander", "constellation-admiral"):
-                self.assertTrue(
-                    (target_root / skill / "scripts" / "verify_lessons_applied.py").exists())
+                scripts_root = target_root / skill / "scripts"
+                for script in ("apply_episode_delta.py", "verify_episode_captured.py"):
+                    with self.subTest(skill=skill, script=script):
+                        self.assertTrue((scripts_root / script).is_file(), scripts_root / script)
+                for retired in ("apply_lessons_delta.py", "verify_lessons_applied.py",
+                                "verify_agent_feedback.py"):
+                    with self.subTest(skill=skill, retired=retired):
+                        self.assertFalse((scripts_root / retired).exists(),
+                                         f"{skill} still ships the retired {retired}")
+
+    #: Every spine template the installer ships, paired with the skill that serves it.
+    #: Derived from the two roles that own a spine rather than globbed, because a spine
+    #: only means anything alongside the skill whose scripts/ its commands resolve into.
+    SPINE_TEMPLATES = {
+        "commander": "COMMANDER_SPINE.template.json",
+        "admiral": "ADMIRAL_SPINE.template.json",
+    }
+
+    def test_every_spine_command_names_an_installed_script(self):
+        # GENERAL, deliberately not per-name. A test that asserts "commander installs
+        # verify_episode_captured.py" protects the #447 rewiring and nothing after it; this
+        # asserts that NO spine command names a script its own skill does not install, which
+        # protects every future rewiring the same way. A spine that names an unshipped script
+        # fails mid-run at the gate that needed it, with the run already half-done -- catching
+        # it at install time is the whole point.
+        #
+        # Both condition lists are walked: a precondition command (execute.p2's state-note
+        # check) can strand a run exactly as a postcondition command can.
+        #
+        # Not every command names a script -- archive.c2b shells out to `gh pr list`. A
+        # command with no `.py` token is legitimately skipped; the assertion is about the
+        # ones that DO name one.
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "skills"
+            exit_code = installer.main(
+                ["--agent", "codex", "--scope", "user", "--dest", str(target_root),
+                 "--skills", *self.SPINE_TEMPLATES],
+                env={}, out=lambda _: None)
+            self.assertEqual(0, exit_code)
+
+            checked = 0
+            for skill, template in self.SPINE_TEMPLATES.items():
+                skill_root = target_root / f"constellation-{skill}"
+                spine_path = skill_root / "templates" / template
+                self.assertTrue(spine_path.is_file(), spine_path)
+                spine = json.loads(spine_path.read_text(encoding="utf-8"))
+                for task_id, task in spine["tasks"].items():
+                    for which in ("preconditions", "postconditions"):
+                        for cond in task.get(which) or ():
+                            check = cond.get("check")
+                            if not isinstance(check, dict) or check.get("kind") != "command":
+                                continue
+                            for named in re.findall(r"[\w.\-]+\.py",
+                                                    check.get("command", "")):
+                                script = Path(named).name
+                                checked += 1
+                                with self.subTest(skill=skill, task=task_id,
+                                                  cond=cond["id"], script=script):
+                                    self.assertTrue(
+                                        (skill_root / "scripts" / script).is_file(),
+                                        f"{skill} spine {task_id}.{cond['id']} runs "
+                                        f"{script}, which SKILL_SCRIPT_BUNDLES does not "
+                                        f"install into {skill_root / 'scripts'}",
+                                    )
+            # A loop that reported clean without examining anything is the failure this
+            # guard is here to catch, so the count is asserted rather than trusted.
+            self.assertGreater(checked, 0, "no spine command named a script -- the walk "
+                                           "found nothing to check, which is not a pass")
 
     def test_bundled_scripts_carry_their_sibling_imports(self):
         # Every bundled script that does `from X import ...` on a sibling
@@ -707,7 +839,7 @@ class InstallConstellationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             target_root = Path(tmp) / "skills"
             installer.main(["--agent", "codex", "--scope", "user", "--dest", str(target_root),
-                            "--skills", "explorer", "commander", "lessons-auditor"],
+                            "--skills", "explorer", "commander"],
                            env={}, out=lambda _: None)
 
             # EVERYONE moves -> bundled references/global-everyone.md (rides to all
@@ -732,10 +864,10 @@ class InstallConstellationTests(unittest.TestCase):
                 with self.subTest(bucket="global-orchestrator", sig=sig):
                     self.assertIn(sig, orch)
 
-            # SINGLE-HOME move 9 -> the home keeps the full rule in its own SKILL.md.
-            auditor = (target_root / "constellation-lessons-auditor"
-                       / "SKILL.md").read_text(encoding="utf-8")
-            self.assertIn("forks its identity", auditor)  # move 9 sibling-ids
+            # PRUNED (#447 g4): the move-9 leg asserted "forks its identity" in
+            # constellation-lessons-auditor/SKILL.md. That skill tree is deleted by this
+            # retirement, so move 9's single home no longer exists and the leg has no
+            # subject. Every other move's pin above is untouched and still asserted.
 
     def test_relocated_doctrine_leaves_no_residual_in_carrier_skill_md(self):
         # issue-102 Move 11 no-residual: each retired inline signature must NOT
@@ -1615,7 +1747,7 @@ class TemplateBaselineTests(unittest.TestCase):
                 self.assertEqual(len(entry["sha256"]), 64)
             names = {e["template"] for e in manifest["templates"]}
             self.assertIn("COMMANDER_SPINE.template.json", names)
-            self.assertIn("LESSONS.template.md", names)
+            self.assertIn("WORKFLOW_CLOSEOUT.template.md", names)
 
     def test_reinstall_leaves_existing_baseline_untouched(self):
         installer = load_installer()
@@ -1650,7 +1782,7 @@ class TemplateBaselineTests(unittest.TestCase):
             self.assertTrue(before)
             self.assertFalse(any(s == "constellation-commander" for s, _ in before))
             wb_baseline = (troot / ".baseline" / "constellation-workbench"
-                           / "LESSONS.template.md").read_text(encoding="utf-8")
+                           / "WORKFLOW_CLOSEOUT.template.md").read_text(encoding="utf-8")
 
             # a later install brings a skill whose templates the project never tracked
             messages = []
@@ -1671,7 +1803,7 @@ class TemplateBaselineTests(unittest.TestCase):
                 self.assertEqual(after[key], sha)
             self.assertEqual(
                 wb_baseline,
-                (troot / ".baseline" / "constellation-workbench" / "LESSONS.template.md")
+                (troot / ".baseline" / "constellation-workbench" / "WORKFLOW_CLOSEOUT.template.md")
                 .read_text(encoding="utf-8"),
             )
 
@@ -1687,12 +1819,12 @@ class TemplateBaselineTests(unittest.TestCase):
                     "--baseline-only", "--skills", "workbench"]
             installer.main(args, env={}, cwd=project, out=lambda _l: None)
             troot = project / ".agent-work" / "templates"
-            lessons_wc = troot / "LESSONS.template.md"
-            self.assertTrue(lessons_wc.is_file())  # fresh install seeded it
-            lessons_wc.unlink()  # project opts out of tracking it locally
+            closeout_wc = troot / "WORKFLOW_CLOSEOUT.template.md"
+            self.assertTrue(closeout_wc.is_file())  # fresh install seeded it
+            closeout_wc.unlink()  # project opts out of tracking it locally
 
             installer.main(args, env={}, cwd=project, out=lambda _l: None)  # reinstall
-            self.assertFalse(lessons_wc.exists())  # not backfilled (already tracked)
+            self.assertFalse(closeout_wc.exists())  # not backfilled (already tracked)
 
     def test_user_scope_install_writes_no_baseline(self):
         installer = load_installer()
@@ -2465,3 +2597,359 @@ class HookWiringOptInTests(_HookWiringFixture):
             self.assertIn("commit", output)
             self.assertIn("absolute path", output)
             self.assertIn("user name", output)
+
+
+# --------------------------------------------------------------------------- #
+# readiness check (#458) -- report-only, refuses when unready, never repairs
+# --------------------------------------------------------------------------- #
+class ReadinessEngineCheckTests(unittest.TestCase):
+    """check_engine_runnable: readiness item 1, engine present and runnable.
+
+    Must distinguish interpreter-missing from pytest-missing from
+    both-present-and-working -- a bare launch success is NOT proof pytest
+    actually runs. `py` on a real box exits nonzero with 'No module named
+    pytest' and reads exactly like a red suite if only a launch is checked."""
+
+    def test_check_engine_runnable_ready_when_pytest_runs_under_the_interpreter(self):
+        installer = load_installer()
+        result = installer.check_engine_runnable(python=sys.executable)
+        self.assertTrue(result.ready)
+        self.assertIn(sys.executable, result.reason)
+
+    def test_check_engine_runnable_not_ready_when_interpreter_missing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = str(Path(tmp) / "no-such-interpreter")
+            result = installer.check_engine_runnable(python=missing)
+        self.assertFalse(result.ready)
+        self.assertIn(missing, result.reason)
+        self.assertNotIn("pytest", result.reason.lower())
+
+    def test_check_engine_runnable_not_ready_when_pytest_missing(self):
+        """The discriminating case named in the handoff: a launch that exits
+        nonzero because pytest is not importable must read as pytest-missing,
+        not interpreter-missing, and must never be reported as ready."""
+        installer = load_installer()
+
+        def fake_run(cmd, **kwargs):
+            self.assertEqual([sys.executable, "-m", "pytest", "--version"], cmd)
+            return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="No module named pytest")
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=fake_run):
+            result = installer.check_engine_runnable(python=sys.executable)
+        self.assertFalse(result.ready)
+        self.assertIn("pytest", result.reason.lower())
+
+    def test_check_engine_runnable_uses_the_given_interpreter_not_a_bare_launcher(self):
+        """Regression guard: argv must be [<python>, '-m', 'pytest', ...], never
+        a bare 'python'/'py' token standing in for the interpreter."""
+        installer = load_installer()
+        seen = {}
+
+        def fake_run(cmd, **kwargs):
+            seen["cmd"] = cmd
+            return subprocess.CompletedProcess(cmd, 0, stdout="pytest 8.0.0\n", stderr="")
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=fake_run):
+            installer.check_engine_runnable(python=sys.executable)
+        self.assertEqual(sys.executable, seen["cmd"][0])
+
+
+class ReadinessWorkAreaCheckTests(unittest.TestCase):
+    """check_work_area_present: readiness item 4, work area present
+    (tree-scoped). README.md's own Baseline Assumptions: 'a Git repo, Markdown
+    docs, and file-based workflow state'. Must NOT require .agent-work/ to
+    already exist -- a project ready to START using Constellation has not
+    necessarily run it yet."""
+
+    def test_check_work_area_present_ready_with_a_git_directory(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / ".git").mkdir()
+            result = installer.check_work_area_present(project)
+        self.assertTrue(result.ready)
+
+    def test_check_work_area_present_ready_with_a_git_worktree_file_pointer(self):
+        """A git worktree's `.git` is a FILE, not a directory -- this very
+        worktree is the proof case for that shape."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / ".git").write_text("gitdir: /elsewhere/.git/worktrees/x\n", encoding="utf-8")
+            result = installer.check_work_area_present(project)
+        self.assertTrue(result.ready)
+
+    def test_check_work_area_present_not_ready_with_no_git_entry(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            result = installer.check_work_area_present(Path(tmp))
+        self.assertFalse(result.ready)
+        self.assertIn(str(Path(tmp)), result.reason)
+
+    def test_check_work_area_present_does_not_require_agent_work_dir(self):
+        """A project that has never run Constellation still has no .agent-work/
+        -- that must not count against readiness."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / ".git").mkdir()
+            self.assertFalse((project / ".agent-work").exists())
+            result = installer.check_work_area_present(project)
+        self.assertTrue(result.ready)
+
+
+class ReadinessSkillsCheckTests(unittest.TestCase):
+    """check_skills_installed: readiness item 2, skills installed and
+    registered (tree/target-scoped). Decision point resolved here: the
+    readiness mode reuses --agent/--scope (via the same target_root install
+    itself computes) rather than standing scope-agnostic -- "installed" is
+    inherently target-specific, so `expected_skills` matches what a real
+    --agent/--scope/--skills combination would have installed."""
+
+    def test_check_skills_installed_not_ready_when_target_root_missing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"  # never created
+            result = installer.check_skills_installed(target)
+        self.assertFalse(result.ready)
+
+    def test_check_skills_installed_not_ready_without_corpus_marker(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"
+            target.mkdir()
+            (target / "constellation-workbench").mkdir()  # skill dir with no CORPUS.json
+            result = installer.check_skills_installed(target)
+        self.assertFalse(result.ready)
+        self.assertIn("CORPUS.json", result.reason)
+
+    def test_check_skills_installed_not_ready_when_an_expected_skill_is_missing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"
+            target.mkdir()
+            (target / "constellation-workbench").mkdir()
+            (target / "CORPUS.json").write_text("{}", encoding="utf-8")
+            result = installer.check_skills_installed(
+                target, expected_skills=["constellation-workbench", "constellation-implementer"])
+        self.assertFalse(result.ready)
+        self.assertIn("constellation-implementer", result.reason)
+
+    def test_check_skills_installed_ready_when_corpus_and_expected_skills_present(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"
+            target.mkdir()
+            (target / "constellation-workbench").mkdir()
+            (target / "constellation-implementer").mkdir()
+            (target / "CORPUS.json").write_text("{}", encoding="utf-8")
+            result = installer.check_skills_installed(
+                target, expected_skills=["constellation-workbench", "constellation-implementer"])
+        self.assertTrue(result.ready)
+
+    def test_check_skills_installed_ready_with_no_expected_skills_given(self):
+        """expected_skills=None -- any installed corpus counts, matching a
+        scope-agnostic caller that hasn't resolved a skill set yet."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"
+            target.mkdir()
+            (target / "constellation-workbench").mkdir()
+            (target / "CORPUS.json").write_text("{}", encoding="utf-8")
+            result = installer.check_skills_installed(target)
+        self.assertTrue(result.ready)
+
+
+class ReadinessHooksCheckTests(_HookWiringFixture):
+    """is_git_tracked + check_hooks_shippable: readiness item 3, hooks wired in
+    a file that ships. Reuses detect_hook_wiring/describe_hook_wiring rather
+    than re-deriving wiring detection. Two DISTINCT ships-tests: project scope
+    requires git-tracked membership (`git ls-files`) -- presence on disk alone
+    is not enough, since a gitignored settings.local.json can be WIRED while
+    the tracked settings.json is not; user scope has no tracked/untracked axis
+    at all, so WIRED alone is sufficient there."""
+
+    def _git(self, cwd, *args):
+        return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True)
+
+    def _init_repo(self, repo_root):
+        self._git(repo_root, "init", "-q")
+        self._git(repo_root, "config", "user.email", "test@example.com")
+        self._git(repo_root, "config", "user.name", "Test")
+
+    def _project_dest(self, repo_root) -> Path:
+        return repo_root / ".claude" / "skills"
+
+    # -- is_git_tracked -------------------------------------------------------
+
+    def test_is_git_tracked_true_for_a_committed_file(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._init_repo(tmp)
+            path = Path(tmp) / "settings.json"
+            path.write_text("{}", encoding="utf-8")
+            self._git(tmp, "add", "settings.json")
+            self._git(tmp, "commit", "-q", "-m", "init")
+            self.assertTrue(installer.is_git_tracked(path))
+
+    def test_is_git_tracked_false_for_an_untracked_file(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._init_repo(tmp)
+            path = Path(tmp) / "settings.local.json"
+            path.write_text("{}", encoding="utf-8")  # never `git add`ed
+            self.assertFalse(installer.is_git_tracked(path))
+
+    def test_is_git_tracked_false_outside_any_repo(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "settings.json"
+            path.write_text("{}", encoding="utf-8")
+            self.assertFalse(installer.is_git_tracked(path))
+
+    # -- check_hooks_shippable --------------------------------------------------
+
+    def test_check_hooks_shippable_not_ready_when_unwired(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._init_repo(tmp)
+            result = installer.check_hooks_shippable(self._dest(tmp), scope="project", env={})
+        self.assertFalse(result.ready)
+
+    def test_check_hooks_shippable_project_scope_not_ready_when_wired_but_untracked(self):
+        """The load-bearing case: settings.json is WIRED on disk but was never
+        `git add`ed -- must read as NOT ready, not silently pass."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            self._init_repo(repo_root)
+            hook = self._fake_hook_file(tmp)
+            dest = self._project_dest(repo_root)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            (dest.parent / "settings.json").write_text(
+                json.dumps({"hooks": {"PostToolUse": [
+                    self._entry(f'py "{hook.as_posix()}"')]}}), encoding="utf-8")
+            # deliberately never `git add`ed
+            result = installer.check_hooks_shippable(dest, scope="project", env={})
+        self.assertFalse(result.ready)
+        self.assertIn("track", result.reason.lower())
+
+    def test_check_hooks_shippable_project_scope_ready_when_wired_and_tracked(self):
+        """Mirrors the real install layout: .git lives at the project root, but
+        settings.json lives one level down under .claude/ -- git must still
+        resolve tracked-ness from that nested cwd."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            self._init_repo(repo_root)
+            hook = self._fake_hook_file(tmp)
+            dest = self._project_dest(repo_root)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            (dest.parent / "settings.json").write_text(
+                json.dumps({"hooks": {"PostToolUse": [
+                    self._entry(f'py "{hook.as_posix()}"')]}}), encoding="utf-8")
+            self._git(repo_root, "add", ".claude/settings.json")
+            self._git(repo_root, "commit", "-q", "-m", "wire hooks")
+            result = installer.check_hooks_shippable(dest, scope="project", env={})
+        self.assertTrue(result.ready)
+
+    def test_check_hooks_shippable_user_scope_ready_when_wired_with_no_git_repo_at_all(self):
+        """User scope has no tracked/untracked axis -- WIRED alone is enough,
+        even with no git repo present at all (~/.claude/settings.json is never
+        part of a repo)."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry(f'py "{hook.as_posix()}"')]}})
+            result = installer.check_hooks_shippable(self._dest(tmp), scope="user", env={})
+        self.assertTrue(result.ready)
+
+
+class ReadinessCLITests(unittest.TestCase):
+    """run_readiness_check / --check-readiness: the thin report layer over the
+    four checks. Exits 0 only when every targeted agent is fully ready; exits
+    nonzero with a named per-item reason otherwise. Never repairs, never
+    writes settings.json at any scope, under any condition."""
+
+    def _git_init(self, path):
+        path.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "init", "-q"], cwd=str(path), capture_output=True, text=True)
+        return path
+
+    def test_check_readiness_exits_zero_when_every_item_is_ready(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_init(Path(tmp) / "project")
+            dest = Path(tmp) / "skills"
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", "workbench", "--wire-hooks"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+
+            lines = []
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", "workbench", "--check-readiness", "--project", str(project)],
+                env={}, cwd=project, out=lines.append,
+            )
+        self.assertEqual(0, code)
+        self.assertIn("READY", "\n".join(lines))
+
+    def test_check_readiness_exits_nonzero_and_names_the_failing_item(self):
+        """Refusing case: nothing installed at the target -- must exit nonzero
+        and name the specific failing reason, not fail silently."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_init(Path(tmp) / "project")
+            dest = Path(tmp) / "skills"  # never installed into
+            lines = []
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--check-readiness", "--project", str(project)],
+                env={}, cwd=project, out=lines.append,
+            )
+        self.assertNotEqual(0, code)
+        output = "\n".join(lines)
+        self.assertIn("NOT READY", output)
+        self.assertIn(str(dest), output)
+
+    def test_check_readiness_never_writes_settings_json(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_init(Path(tmp) / "project")
+            dest = Path(tmp) / "skills"
+            installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--check-readiness", "--project", str(project)],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertFalse((dest.parent / "settings.json").exists())
+
+    def test_check_readiness_refuses_combination_with_wire_hooks(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user",
+                         "--dest", str(Path(tmp) / "skills"),
+                         "--check-readiness", "--wire-hooks"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+
+    def test_check_readiness_refuses_combination_with_baseline_only(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "project", "--project", tmp,
+                         "--check-readiness", "--baseline-only"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)

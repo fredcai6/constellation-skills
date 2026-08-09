@@ -1,0 +1,1 @@
+{"ops": [{"op": "retext-check", "id": "r6-fowler", "cond": "c1", "which": "postconditions", "command": "python scripts/verify_fowler_pass.py .agent-work/harvest-418-redux/reviews/w3a-465-review/g1-review/fowler-pass.json"}]}

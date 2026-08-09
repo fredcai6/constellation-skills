@@ -121,17 +121,47 @@ class Reading:
     observed_at: datetime
 
 
-def thresholds_for(model: str) -> tuple[float, float]:
-    """Return the (soft, hard) fill FRACTIONS for `model`.
+def thresholds_for(model: str, headroom_tokens: float = 0) -> tuple[float, float]:
+    """Return the (soft, hard) fill FRACTIONS for `model`, minus an optional
+    absolute-token reserve.
 
     Converts the model's intent-first absolute caps to fractions against its own
     window (`soft_cap/window`, `hard_cap/window`) -- the same `(float, float)`
     shape Trip has always consumed. An unknown model falls back to
     `_DEFAULT_PROFILE` (fractions == DEFAULT_THRESHOLDS), so the caller always
     gets a usable pair, never a lookup failure.
+
+    `headroom_tokens` (#467) is a caller-declared reserve of context a
+    particular piece of work needs left over -- an ABSOLUTE token count, in the
+    same unit as the caps, because context-rot degradation tracks absolute
+    tokens rather than window fraction (see _PROFILES above). It comes off BOTH
+    caps before the division, so a reserve tightens the soft and hard bands by
+    the same absolute amount, and a 30K reserve means the same 30K of real room
+    on a 1M model as on a 200K one.
+
+    TIGHTEN-ONLY, and structurally so -- this is a safety property, not a style
+    choice: an override that could RAISE a threshold would let a caller opt out
+    of the governor entirely. Two clamps make loosening unreachable rather than
+    merely untested:
+
+      1. the reserve itself is clamped non-negative, so a negative (or hostile)
+         value is a NO-OP that reproduces the shipped default exactly, never an
+         addition to a cap;
+      2. each reduced cap is clamped non-negative, so an absurdly large reserve
+         floors the fraction at 0.0 (trip immediately -- the TIGHTEST possible
+         setting) rather than going negative.
+
+    Neither clamp can be satisfied by a value above the shipped cap, so for every
+    input the returned pair is <= the un-overridden pair for that model.
+
+    Still a TOTAL function under an override: an arbitrary model string yields a
+    pair computed off `_DEFAULT_PROFILE`'s own window. That is NOT a reading-path
+    fallback -- `read()` rejects a record whose model has no profile (#252), so
+    an override can never be judged against a guessed window.
     """
     window, soft_cap, hard_cap = _PROFILES.get(model, _DEFAULT_PROFILE)
-    return (soft_cap / window, hard_cap / window)
+    reserve = max(0, headroom_tokens)
+    return (max(0, soft_cap - reserve) / window, max(0, hard_cap - reserve) / window)
 
 
 def _parse_observed_at(raw_value) -> datetime | None:

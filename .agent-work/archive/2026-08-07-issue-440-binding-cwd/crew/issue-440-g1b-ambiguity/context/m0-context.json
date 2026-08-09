@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "9d44aa6470719c274e6e5fe2f32af60761e97017"
+  },
+  "run": {
+    "work_id": "issue-440-g1b-ambiguity",
+    "generated_at": "2026-08-06T09:40:34Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-a2-440"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-a2-440"
+    }
+  }
+}

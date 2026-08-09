@@ -1,0 +1,152 @@
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json claim --session-id acc-89f734
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance a1`.
+
+claimed lease acc-89f734 -> active
+(exit 0)
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json start a1 --session-id acc-89f734
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance a1`.
+
+a1 -> in-progress
+(exit 0)
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json current --session-id acc-89f734
+[1;34musage: [0m[1;35mchecklist_engine.py[0m [[32m-h[0m] [36m--file [33mFILE[0m [[36m--dry-run[0m]
+                           [32m{current,claim,heartbeat,release,start,advance,record,consolidate,skip,block,resume,reopen,append,amend,attest,waive,attach,flag-candidate} ...[0m
+checklist_engine.py: error: unrecognized arguments: --session-id acc-89f734
+(exit 2)
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json current
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance a1`.
+
+LEASE active: acc-89f734 (by agent, heartbeat 2026-08-08T20:06:35.126304+00:00)
+ACTIVE a1 [in-progress] — ACCEPTANCE ROUND TRIP (issue #467) -- gate a1 of 2.
+
+HOW TO DRIVE THIS SPINE. Working directory is
+C:/Programs/constellation-skills-wt/epic418-a2-467 -- cd there first. Every engine
+command has exactly this shape:
+
+  python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json <VERB> [ARGS] --session-id <YOUR-SESSION-ID>
+
+YOUR-SESSION-ID is an id you invent RIGHT NOW and reuse for every command you run:
+the letters `acc-` followed by six random hexadecimal characters. Do not reuse an id
+you find written anywhere, and do not use the harness session id. Your first command
+is `claim --session-id <YOUR-SESSION-ID>`; add `--force` only if claim reports the
+lease is held by a different id.
+
+LOG EVERYTHING. Append to
+C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/log-<YOUR-SESSION-ID>.txt
+the exact command line and the COMPLETE output of EVERY engine command you run,
+including the ones the engine refuses. A refusal is data, not a failure: record it
+in full and then do what it tells you to do. Never work around a refusal.
+
+THE WORK FOR a1. Run `start a1`, then create the file
+C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/roundtrip.md
+containing exactly these four lines and nothing else:
+
+  # Round trip 467
+  1. alpha
+  2. bravo
+  3. charlie
+
+THE NONCE. Invent a nonce now: six random hexadecimal characters. Write it NOWHERE
+on disk -- not in roundtrip.md, not in your log file, not in any other file. It must
+exist in exactly one place when you are done: the closing understanding you hand to
+the engine in the next step.
+
+CLOSING a1. When the four lines are on disk, close the gate with:
+
+  advance a1 --why "<your understanding>"
+
+Your understanding must state what you completed, that the nonce is <your nonce>,
+and what still remains. Write it for an agent that has never seen this run and will
+be handed nothing but the engine's `current` output -- that agent is real and it is
+next.
+
+THEN STOP. After a1 closes, run `start a2`. If the engine refuses it, run the exact
+command its refusal prints, then run `release --session-id <YOUR-SESSION-ID>` and
+STOP. Do NOT do gate a2's work, even if you have room. Then report what you did.
+postconditions:
+  c1 [unmet] command — roundtrip.md holds the heading and items 1-3, and nothing more
+0/1 met
+next: advance a1 --why "<understanding>" (or --mechanical)
+REFRESH REQUESTED: a1
+CONTEXT 5% (>= hard): your instruction has changed, and the refresh for a1 is already requested. Close THIS gate carrying your handoff (`advance a1 --why "<understanding>"`) and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate.
+TRIP LEDGER: 1 begin(s) at/over the hard line are on the record under this understanding (latest: start a1 -> begin-released). Closing THIS gate clears this line; the line below, if present, is not.
+TRIP HISTORY: 1 begin(s) at/over the hard line are on the record across this checklist's full history (latest: start a1 -> begin-released). No close clears this line.
+(exit 0)
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json advance a1 --why "<closing understanding -- contains the nonce; redacted from this log per task instructions that the nonce must exist nowhere on disk except the closing understanding handed to the engine>" --session-id acc-89f734
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` -- the journal, not your prose, is the proof.
+
+a1 -> complete
+(exit 0)
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json current
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+LEASE active: acc-89f734 (by agent, heartbeat 2026-08-08T20:07:15.559836+00:00)
+ACTIVE a2 [pending] — ACCEPTANCE ROUND TRIP (issue #467) -- gate a2 of 2, the last gate.
+
+The agent that worked gate a1 is gone. Everything you need is in this output.
+
+HOW TO DRIVE THIS SPINE. Working directory is
+C:/Programs/constellation-skills-wt/epic418-a2-467 -- cd there first. Every engine
+command has exactly this shape:
+
+  python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json <VERB> [ARGS] --session-id <YOUR-SESSION-ID>
+
+YOUR-SESSION-ID is an id you invent RIGHT NOW and reuse for every command you run:
+the letters `acc-` followed by six random hexadecimal characters. Do not reuse an id
+you find written anywhere, and do not use the harness session id. Your first command
+is `claim --session-id <YOUR-SESSION-ID>`; add `--force` only if claim reports the
+lease is held by a different id.
+
+LOG EVERYTHING. Append to
+C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/log-<YOUR-SESSION-ID>.txt
+the exact command line and the COMPLETE output of EVERY engine command you run,
+including the ones the engine refuses. A refusal is data, not a failure: record it
+in full and then do what it tells you to do. Never work around a refusal.
+
+THE WORK FOR a2. Run `start a2`, then APPEND to the existing file
+C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/roundtrip.md
+exactly these three lines, in this order, after the lines already there:
+
+  4. delta
+  5. echo
+  6. NONCE: <nonce>
+
+<nonce> is the six-hexadecimal-character nonce the previous agent carried in its
+closing understanding. It is written in NO file anywhere on disk. Read it out of the
+DIGEST line in this output. If you cannot find it there, do not invent one and do
+not guess -- stop and report that the digest did not carry it.
+
+Do not alter the heading or lines 1-3.
+
+CLOSING a2. Close with `advance a2 --why "<your understanding>"`, then run
+`release --session-id <YOUR-SESSION-ID>`, then report what you did.
+postconditions:
+  c1 [unmet] command — roundtrip.md holds items 1-6 with item 6 carrying a 6-hex nonce
+0/1 met
+next: start a2
+DIGEST: Completed gate a1 (ACCEPTANCE ROUND TRIP, issue #467): created .agent-work/acceptance-467/roundtrip.md containing exactly the four required lines -- heading '# Round trip 467' and items 1. alpha, 2. bravo, 3. charlie -- and nothing else. The nonce is <REDACTED FROM LOG POST-HOC -- the engine echoed the closing-understanding DIGEST back verbatim in this `current` output, which briefly put the nonce in this log file; struck out here to restore "nowhere on disk except the closing understanding handed to the engine" per THE NONCE instruction. The unredacted nonce reached the engine correctly via the `advance a1 --why ...` call above and is preserved in spine.json's digest, which is the engine's legitimate record.>. Remaining: gate a2 of 2 is untouched -- not started, no work done. This session (acc-89f734) hit the hard context line with a refresh already requested for a1, so it is closing this gate with this handoff and stopping; it will attempt 'start a2' only to observe the engine's refusal, then release the lease per instructions. The next agent should run the engine's 'current' command first and proceed from gate a2 with no assumptions beyond what 'current' reports.
+CONTEXT 5% (>= hard): your instruction has changed. You have taken this as far as this context can carry it — now close THIS gate carrying your handoff (`advance a2 --why "<understanding>"`), request a refresh, and stop. A fresh agent picks up from your DIGEST; do not begin work at another gate. Request the refresh with: attach a2 --type refresh-request --field seam=a2 --field why_ref=w-1
+TRIP HISTORY: 1 begin(s) at/over the hard line are on the record across this checklist's full history (latest: start a1 -> begin-released). No close clears this line.
+(exit 0)
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json start a2 --session-id acc-89f734
+RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.
+
+REFUSED: a2: context at 5% is at/over the hard limit, so this is not the moment to BEGIN work here — finish and close the gate you are already in, then request a refresh so a fresh agent starts this one. Run: attach a2 --type refresh-request --field seam=a2 --field why_ref=w-1
+(exit 1)
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json attach a2 --type refresh-request --field seam=a2 --field why_ref=w-1 --session-id acc-89f734
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+attached e-a2-1 (refresh-request) to a2
+(exit 0)
+
+$ python scripts/checklist_engine.py --file C:/Programs/constellation-skills-wt/epic418-a2-467/.agent-work/acceptance-467/spine.json release --session-id acc-89f734
+released lease acc-89f734
+(exit 0)
+

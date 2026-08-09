@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m7-seam-measurement",
+  "mechanical": {
+    "run": "issue-467-g4-rework",
+    "project": "constellation-skills",
+    "role": "implementer:g4-rework",
+    "refusals": 3,
+    "spine-step": "m7-seam-measurement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-467-g4-rework-m7-seam-measurement@f7b9c66a6fab18fd76fb2434c99c40f9c914f9dd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-467-g4-rework",
+    "generated_at": "2026-08-08T18:30:24Z"
+  }
+}

@@ -1,0 +1,1 @@
+REFUSED: amend on a survey accepts a retext-check-only delta; add refused here. This is a CONSERVATIVE choice, not a type-level impossibility: adding, dropping or rescoping a survey item is a coherent thing to want, and it is refused only because nothing needs it yet. Split the retext-check ops into their own delta, or raise the need with the authority named in your handoff.

@@ -110,6 +110,125 @@ class EnumerationDeliberateBreakage(unittest.TestCase):
         self.assertIn("1 worktree-entering template", fixed.stdout)
 
 
+class EnumerationGeneralizesPastOneEntry(unittest.TestCase):
+    """#436: WORKTREE_ENTERING_GATES has only ever carried ONE entry (the
+    Commander `init` gate), so the enumeration loop had only ever been
+    observed refusing on that single, already-known entry -- never on a
+    genuinely NEW second (template, gate) pair it had never enumerated
+    before. A check that has only ever been observed passing/failing on the
+    same one item is not proven to discriminate; this is the falsification
+    debt #436 exists to close.
+
+    This test monkeypatches the imported module's WORKTREE_ENTERING_GATES to
+    two entries: the real, still-fixed Commander entry, plus a brand-new
+    fixture template/gate the script has never seen. It asserts the script
+    refuses AND names the new offender specifically, while NOT naming the
+    already-known, still-correct Commander entry -- proving precision, not
+    just a blanket failure. It also asserts the enumerated count (2) is
+    surfaced in the failure output (see EnumerationStatesCountOnFailure)."""
+
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location(
+            "verify_worktree_precondition_coverage_test", COVERAGE_SCRIPT
+        )
+        self.mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.mod)
+        self._orig_gates = self.mod.WORKTREE_ENTERING_GATES
+
+        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp_root = Path(self.tmp.name)
+
+        # Entry 1: the real, unmodified (fixed) Commander template -- proves
+        # a correct entry stays silent even while a sibling entry fails.
+        commander_data = json.loads(REAL_TEMPLATE.read_text(encoding="utf-8"))
+        commander_dest = self.tmp_root / TEMPLATE_REL_PATH
+        commander_dest.parent.mkdir(parents=True, exist_ok=True)
+        commander_dest.write_text(json.dumps(commander_data, indent=2), encoding="utf-8")
+
+        # Entry 2: a genuinely new worktree-entering fixture template/gate --
+        # never previously enumerated -- missing the isolation precondition.
+        self.new_rel_path = "skills/scoutbot/templates/SCOUTBOT_SPINE.template.json"
+        self.new_gate_id = "init2"
+        new_data = {
+            "tasks": {
+                self.new_gate_id: {
+                    "id": self.new_gate_id, "title": "init2", "imperative": "do init2",
+                    "preconditions": [],
+                    "postconditions": [{"id": "c1", "statement": "x", "check": None, "satisfied": False}],
+                }
+            }
+        }
+        new_dest = self.tmp_root / self.new_rel_path
+        new_dest.parent.mkdir(parents=True, exist_ok=True)
+        new_dest.write_text(json.dumps(new_data, indent=2), encoding="utf-8")
+
+        self.mod.WORKTREE_ENTERING_GATES = (
+            (TEMPLATE_REL_PATH, "init"),
+            (self.new_rel_path, self.new_gate_id),
+        )
+
+    def tearDown(self):
+        self.mod.WORKTREE_ENTERING_GATES = self._orig_gates
+        self.tmp.cleanup()
+
+    def test_refuses_new_second_entry_without_naming_known_fixed_entry(self):
+        with self.assertRaises(self.mod.CoverageError) as ctx:
+            self.mod.verify_coverage(self.tmp_root)
+        message = str(ctx.exception)
+
+        self.assertIn(self.new_rel_path, message)
+        self.assertIn(self.new_gate_id, message)
+        # The already-known, still-fixed Commander entry must NOT be named --
+        # a blanket failure that flags everything proves nothing.
+        self.assertNotIn(TEMPLATE_REL_PATH, message)
+
+    def test_passes_once_new_entry_carries_the_precondition(self):
+        new_dest = self.tmp_root / self.new_rel_path
+        data = json.loads(new_dest.read_text(encoding="utf-8"))
+        data["tasks"][self.new_gate_id]["preconditions"] = [{
+            "id": "c0",
+            "statement": "worktree isolation proven",
+            "check": {"kind": "command", "command": f"verify_worktree_isolation.py --here x"},
+            "satisfied": False,
+        }]
+        new_dest.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+        count = self.mod.verify_coverage(self.tmp_root)
+        self.assertEqual(count, 2)
+
+
+class EnumerationStatesCountOnFailure(unittest.TestCase):
+    """#436 pre-ruling decision:count-is-part-of-the-output: the success path
+    already states the enumerated count ("N worktree-entering template(s)
+    checked"); the failure path did not. A guard that loops must state what
+    it looped over on EVERY exit, not just the clean one -- otherwise a
+    reader of a failure can't tell whether 1 of 1 or 1 of 50 templates were
+    actually reached before the loop stopped mattering."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp_root = Path(self.tmp.name)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write_broken_copy(self) -> Path:
+        data = json.loads(REAL_TEMPLATE.read_text(encoding="utf-8"))
+        data["tasks"]["init"]["preconditions"] = []
+        dest = self.tmp_root / TEMPLATE_REL_PATH
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        return dest
+
+    def test_failure_output_states_enumerated_count(self):
+        self._write_broken_copy()
+        result = _run_coverage_script(self.tmp_root)
+        self.assertNotEqual(result.returncode, 0)
+        # "1 of 1" -- states both the failing count and the total enumerated,
+        # not just a bare list of problems.
+        self.assertIn("1 of 1 worktree-entering template", result.stderr)
+
+
 class EngineDeliberateBreakage(unittest.TestCase):
     """The wired precondition must actually block `start()` -- not just the
     standalone coverage script -- when `--here` disagrees with the real

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "files": [],
+  "repo_rev": {
+    "commit": "9d44aa6470719c274e6e5fe2f32af60761e97017"
+  },
+  "run": {
+    "work_id": "issue-440-binding-cwd-g1b-review",
+    "generated_at": "2026-08-06T09:58:13Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-reviewer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-a2-440",
+      "durable": "C:/Programs/constellation-skills-wt/epic418-a2-440"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills"
+    }
+  }
+}

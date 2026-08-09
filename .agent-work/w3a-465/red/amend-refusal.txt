@@ -1,0 +1,7 @@
+--- RED 1: no verb can fill it ---
+REFUSED: amend applies to gated checklists
+amend exit=1
+
+--- RED 2: the unfilled placeholder blocks the reviewer's own pass ---
+REFUSED: r6-fowler: command postconditions unmet ['c1']; cannot record pass Recovery: fix the underlying issue so postcondition c1 passes, then retry record r6-fowler. Do not edit the JSON — use the engine.
+record exit=1

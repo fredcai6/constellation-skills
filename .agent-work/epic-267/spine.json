@@ -144,19 +144,21 @@
           "id": "c1",
           "statement": "every epic issue dispositioned (merged, honest-null closed, deferred with ruling, or escalated)",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Dispositioned, verified against the forge not memory: MERGED+CLOSED = #261, #262 (PR #293 merged 2026-07-28T14:16Z), #202, #263, #265. REMAIN OPEN and tracked forward, not dropped = #264 (3 unmerged commits on governor/264-e2e-assertion, disposal blocked pending #412's orphan-risk read per epic-418's confirmed spec), #235 and #257 (both carried explicitly into epic-418 - #235 as a named triage candidate in issue #425, #257 inside cluster K1's boundary for workstream E), #266/#214/#248 (wave 3 never launched; survive as backlog for epic-418 workstream E's consolidation sweep). Zero issues silently dropped."
         },
         {
           "id": "c2",
           "statement": "ADMIRAL_LOG current through the last wave: all rulings, incidents, merges, and errors logged",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "ADMIRAL_LOG is 1924 lines and current through the run's final event (PR #293 cleared, merge classifier-refused, escalated). The late-closeout events of 2026-08-05 are recorded in the epic-418 ADMIRAL_LOG and in the epic-267 retrospective appended to .agent-work/AGENT_FEEDBACK.md, since this closeout was driven by the epic-418 Admiral."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {
         "blocker": "Batch 2 of wave 2 (#262, #264) cannot dispatch without Fred's ruling on #269 part 3: does a worktree-scoped agent run its worktree's hook code or the main checkout's? Commander recommends pinning to the main checkout (anti-tamper: an agent's own branch cannot edit the code that judges it); Admiral concurs. #262 additionally touches installer wiring and ~/.claude/settings.json, which surfaces to the human unconditionally under the refreshed latitude contract. Batch 1 (#265, #268) is dispatched and in flight - this blocker is genuinely on human authority, not on a subordinate.",
         "authority_needed": "fred",
@@ -189,7 +191,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute complete: all 11 issues dispositioned, 5 merged/closed, 6 open and explicitly tracked forward"
         }
       ],
       "postconditions": [
@@ -197,7 +200,14 @@
           "id": "c1",
           "statement": "lessons audit ran with fresh context; every candidate has a routed disposition (graduate-and-retire, template delta, Charter, export, inbox delta, or drop); lesson-inbox deltas applied via apply_lessons_delta.py only",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-2",
+          "waived": {
+            "authority": "human",
+            "reason": "FORCED. Tommy instructed 2026-08-05 to close 267 out. The fresh-context property cannot be supplied: this Admiral is mid-epic-418 and is NOT a cold reader of 267, and dispatching a fresh lessons-auditor subagent is outside this session's granted tool authority. Done instead, NOT a substitute: 5 commander harvests checked against ticked-work-ids; the one unpaid (governor-262) corrected for 3 stale confirm targets and applied; its 3rd add dropped as already-graduated to #294; 3 new candidates routed into the epic-418 lessons audit. Residual risk accepted: ADMIRAL_CANDIDATES.md C1 and C2 have never been adjudicated by a cold reader.",
+            "evidence": "e-closeout-2",
+            "forced": true
+          }
         },
         {
           "id": "c2",
@@ -206,19 +216,28 @@
             "kind": "command",
             "command": "python scripts/verify_agent_feedback.py epic-267 --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-4"
         },
         {
           "id": "c3",
           "statement": "architecture reconciled for the epic's net change",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-3",
+          "waived": {
+            "authority": "human",
+            "reason": "FORCED. Same instruction, same tool-authority boundary. Mitigating fact so this is not a blank cheque: this closeout changed NO source code. The epic's net architectural change (5 merged PRs) was reconciled at each merge during the live July run; today's edits are .agent-work/ artifacts only - a lessons-delta application, a retrospective, an archive copy, a worktree sweep. No un-reconciled net change exists to hand a cartographer. Residual risk accepted: no cartographer pass ever viewed epic-267's five PRs as one combined change.",
+            "evidence": "e-closeout-3",
+            "forced": true
+          }
         },
         {
           "id": "c4",
           "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Hygiene done and verified: governor-262 worktree removed (clean tree, PR #293 forge-confirmed MERGED) and its local branch deleted; git worktree prune run. governor-264 worktree and its 3 unmerged commits DELIBERATELY KEPT - epic-418's confirmed spec requires #412's orphan-risk read before disposal. ADMIRAL_LOG + LATITUDE_CONTRACT + ADMIRAL_CANDIDATES archived to .agent-work/archive/2026-07-28-epic-267/."
         },
         {
           "id": "c5",
@@ -227,7 +246,12 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-1",
+          "attested": {
+            "evidence": "e-closeout-1",
+            "note": null
+          }
         },
         {
           "id": "c6",
@@ -236,17 +260,78 @@
             "kind": "command",
             "command": "python scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-5"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-closeout-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "close out epic-267",
+            "verbatim": "lets close out 267. its making our lives hard and we're effectively done.",
+            "who": "Tommy",
+            "date": "2026-08-05",
+            "scope": "accepts the epic summary and authorises closing the run with 6 issues open and tracked forward"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "human",
+            "reason": "FORCED. Tommy instructed 2026-08-05 to close 267 out. The fresh-context property cannot be supplied: this Admiral is mid-epic-418 and is NOT a cold reader of 267, and dispatching a fresh lessons-auditor subagent is outside this session's granted tool authority. Done instead, NOT a substitute: 5 commander harvests checked against ticked-work-ids; the one unpaid (governor-262) corrected for 3 stale confirm targets and applied; its 3rd add dropped as already-graduated to #294; 3 new candidates routed into the epic-418 lessons audit. Residual risk accepted: ADMIRAL_CANDIDATES.md C1 and C2 have never been adjudicated by a cold reader.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-3",
+          "type": "waiver",
+          "payload": {
+            "cond": "c3",
+            "authority": "human",
+            "reason": "FORCED. Same instruction, same tool-authority boundary. Mitigating fact so this is not a blank cheque: this closeout changed NO source code. The epic's net architectural change (5 merged PRs) was reconciled at each merge during the live July run; today's edits are .agent-work/ artifacts only - a lessons-delta application, a retrospective, an archive copy, a worktree sweep. No un-reconciled net change exists to hand a cartographer. Residual risk accepted: no cartographer pass ever viewed epic-267's five PRs as one combined change.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_agent_feedback.py epic-267 --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -255,13 +340,14 @@
   "blockers": [],
   "engine_session": {
     "session_id": "admiral-epic-267",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-07-27T16:38:26.440366+00:00",
-    "last_heartbeat": "2026-07-28T07:34:01.894358+00:00",
+    "last_heartbeat": "2026-08-05T22:40:47.896102+00:00",
     "claimed_by": "admiral",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-05T22:40:54.971019+00:00"
   },
   "why_trail": [
     {
@@ -277,6 +363,20 @@
       "why": "The latitude contract is settled and confirmed by the human as written: option 1 sequencing (#261 alone, first, merged before anything else dispatches), thresholds untouched, installer wiring opt-in, #262 gets a design-it-twice panel, gauge record schema frozen. Two decision classes always surface regardless of delegation: any Governor threshold value, and anything writing the user's ~/.claude/settings.json. Permission prereqs are pre-cleared so commanders file findings to the tracker directly instead of banking them worktree-locally. Checkpoints are stop-and-present at wave boundaries only; contract expires end of wave 2 or on the first threshold/settings.json question. I now know exactly how much rope each commander has and what has to come back to Fred, so execution can start.",
       "mechanical": false,
       "ts": "2026-07-27T16:48:00.520776+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "execute",
+      "why": "Closing this run out on Tommy's explicit instruction of 2026-08-05. The substantive governor work landed (5 issues merged); the remaining 6 are open, owned, and carried forward rather than dropped. Continuing to hold execute open buys nothing and the stale lease was actively shadowing epic-418's rail. Closing is the correct disposition, not a concession.",
+      "mechanical": false,
+      "ts": "2026-08-05T22:39:14.554618+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "closeout",
+      "why": "Every closeout obligation is either satisfied and engine-verified (c2 feedback invariant, c6 ripe lessons, both exit 0), done and attested (c4 hygiene), accepted by Tommy (c5), or force-waived with a named residual risk under his instruction (c1 lessons audit, c3 cartographer reconcile). The two waivers are the honest cost of closing a run eight days after it died, with the human asking for it closed rather than resurrected.",
+      "mechanical": false,
+      "ts": "2026-08-05T22:40:47.896056+00:00"
     }
   ]
 }

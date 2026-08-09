@@ -1,0 +1,207 @@
+{
+  "work_id": "issue-418-g3-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-doctrine-red",
+    "m2-doctrine-green",
+    "m3-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load frozen G3 context",
+      "imperative": "Read inherited doctrine, project deltas, G3 handoff, frozen G3 packet, and current Explorer, Commander, Admiral, G1, and G2 public seams. Verify task, intent, scope, exclusions, evidence, test mode, stop conditions, and return format; attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all G3 context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded inherited doctrine, project crew/glossary, complete G3 handoff/frozen task, current Explorer/Commander/Admiral skill and spine seams, exact G1 shaped-brief/initial-cut verifier, exact G2 input/result templates and verifier, and existing Explorer tests. Handoff supplies task, protected intent, TDD command, scope/exclusions, required evidence, zero-consumer stop condition, and result format."
+        }
+      ],
+      "constraints": [
+        "preserve G1/G2 schemas",
+        "no network writes",
+        "preserve unrelated changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-doctrine-red": {
+      "id": "m1-doctrine-red",
+      "title": "Encode operative doctrine and seam tests",
+      "imperative": "Create parsed doctrine/template invariants and public seam tests before doctrine edits. Run the exact focused command and capture a causal RED on missing iterative role contracts; attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Frozen role, schema, and evidence context is loaded; handoff is complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests were written before doctrine changes and exact command failed causally",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Added parsed role-template invariants and direct G1/G2 public seam tests before doctrine edits. Exact frozen command exited 1 with 3 causal failures naming absent Explorer shaped-brief, Commander replan-input, and Admiral wave-transition contracts; 26 existing/public seam tests passed, so RED was not import/path/setup."
+        }
+      ],
+      "constraints": [
+        "TDD required",
+        "red cannot be import/path/setup failure"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-doctrine-green": {
+      "id": "m2-doctrine-green",
+      "title": "Wire iterative role contracts",
+      "imperative": "Minimally update Explorer, Commander, and Admiral operative contracts to consume the exact G1/G2 seams, preserve rigor and human authority, classify discrepancies before issues, and require one explicit exit before launch. Keep tests and documentation current.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "causal doctrine/seam RED captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Causal parsed-contract RED captured with G1/G2 public seams already green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "exact frozen focused command passes",
+          "check": {
+            "kind": "command",
+            "command": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-doctrine-green-1"
+        }
+      ],
+      "constraints": [
+        "no engine redesign",
+        "no weakening review or human gates",
+        "no tracker/network mutation"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-doctrine-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "uv run python -m pytest -q tests/test_explorer_templates.py tests/test_iterative_planning_doctrine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-closeout": {
+      "id": "m3-closeout",
+      "title": "Audit and return Gate 3",
+      "imperative": "Audit operative invariant chain and public call sites, parse changed JSON, inspect exclusions and map impact, compute final ordinal path+byte digest, write IMPLEMENTER_RESULT with causal evidence and workflow feedback, attest c1, advance, then release last.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "iterative role contracts are green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Exact frozen suite passes 30 tests; confirmatory G1/G2 and role materialization tests pass 76 tests and 59 subtests."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "G3 result contains gate identity, RED/GREEN, final digest/inventory, scope, map impact, and workflow feedback",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT records gate g3, causal tests-before-doctrine RED, identical final 31-test GREEN, confirmatory G1/G2 evidence, seven-path ordinal digest sha256:c3a48b776e9581b51f74125c72d05e536dac8cecf1e97da7d0afdc32602cbbca, scope/exclusions, map impact, and workflow feedback. JSON, wiring, no-network, ignore, diff, and prior-G2 identity audits passed."
+        }
+      ],
+      "constraints": [
+        "local result only",
+        "preserve unrelated dirty changes"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g3-implementer-20260806",
+    "status": "released",
+    "claimed_at": "2026-08-06T18:16:53.839751+00:00",
+    "last_heartbeat": "2026-08-06T18:28:36.666282+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-06T18:28:42.479084+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Gate 3 is a doctrine wiring change with structured template directives plus public G1/G2 seam tests; it requires no schema or engine change.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:18:46.307131+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-doctrine-red",
+      "why": "The tests distinguish operative structured directives from prose markers and independently exercise the field-preserving G1 and exact G2 verifier/renderer seams.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:20:02.951068+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-doctrine-green",
+      "why": "Explorer now emits one canonical confirmed shaped brief and limits heavy critique to irreversible/load-bearing initial commitments; Commander returns exact classified G2 evidence without filing; Admiral verifies one four-way exit before each next launch while preserving repair, authority, and tracker-port boundaries. Parsed Markdown/templates and public G1/G2 seams are green.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:25:37.278507+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-closeout",
+      "why": "The live role chain now preserves compact human-confirmed shaping, evidence-first discrepancy return, and a verified four-way wave exit before launch, with exact G1/G2 seams and all prior rigor gates intact; the final review identity is reproducible.",
+      "mechanical": false,
+      "ts": "2026-08-06T18:28:36.666273+00:00"
+    }
+  ]
+}

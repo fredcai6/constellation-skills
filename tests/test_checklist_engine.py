@@ -861,6 +861,49 @@ class Leasing(unittest.TestCase):
             self.assertEqual(E.main(["--file", str(f), "release", "--session-id", "s1"]), 0)
             self.assertEqual(E.load(f)["engine_session"]["status"], "released")
 
+    def test_refusal_before_the_first_ever_claim_is_counted(self):
+        # #427: claim()'s own `cl.setdefault("refusals", 0)` (~1030) only arms
+        # the counter on a SUCCESSFUL claim. A checklist that has never once
+        # been successfully claimed (no `engine_session`, ever) has no armed
+        # counter, so main()'s persistence-path increment (only bumps an
+        # already-int value, deliberately, to avoid backdating a pre-counter
+        # checklist with a guessed number) silently drops a refusal that
+        # happens BEFORE that first claim -- e.g. this malformed claim call
+        # itself. 0 would be a TRUE reading here (never claimed, ever), not a
+        # guess, so it should be armed and counted.
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        self.assertIsNone(cl.get("engine_session"))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(
+                f, ["claim", "--session-id", "", "--claimed-by", "implementer"])
+            self.assertEqual(code, 1)
+            after = E.load(f)
+        self.assertEqual(after.get("refusals"), 1)
+
+    def test_refusal_on_a_never_claimed_child_gate_plan_does_not_arm_the_counter(self):
+        # #357 g1 review carry-over: a child gate plan is legitimately driven
+        # WITHOUT ever calling `claim` at all -- `engine_session` stays None
+        # for its whole life by design (production shape, not a checklist
+        # mid-way to its first claim). #427's own fix must not conflate the
+        # two: arming on ANY refusal while unclaimed would give this shape a
+        # `refusals` key it is supposed to never carry (episode_capture's
+        # negative control asserts the key's ABSENCE is structural, not "zero
+        # refusals happened"). A refused `start` on an unknown gate id needs
+        # no lease and no `claim` call to reach -- exactly the #357 shape.
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        self.assertIsNone(cl.get("engine_session"))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "does-not-exist"])
+            self.assertEqual(code, 1)
+            after = E.load(f)
+        self.assertNotIn("refusals", after,
+                          "a never-claimed child gate plan must not have its "
+                          "refusals key armed by a non-claim refusal")
+
 
 class ShippedTemplates(unittest.TestCase):
     def test_every_template_is_valid_json_and_checklists_walk(self):
@@ -1791,6 +1834,77 @@ class JournalEmission(unittest.TestCase):
             Path(str(f) + ".journal").write_text("not json at all\n", encoding="utf-8")
             self.assertEqual(E.main(["--file", str(f), "start", "g1"]), 0)
             self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")
+
+
+class AppendJournalEntryLineEndings(unittest.TestCase):
+    """Issue #493: `append_journal_entry` wrote in text mode
+    (`jp.open('a', encoding='utf-8')`), the same defect class #465 fixed in
+    `save()` -- a platform-default newline translation on write churns an
+    existing journal's endings on every append and ignores the file's own
+    convention. Mirrors tests/test_engine_survey_retext_and_newlines.py's
+    save() pattern: fixtures built with `write_bytes`, assertions on
+    `read_bytes` -- a `write_text` fixture is born CRLF on Windows and a
+    `read_text` assertion is vacuously true forever under universal-newline
+    translation, so neither can prove anything here."""
+
+    def _line_ending_counts(self, raw: bytes) -> tuple[int, int]:
+        crlf = raw.count(b"\r\n")
+        return crlf, raw.count(b"\n") - crlf
+
+    def _append(self, jp: Path) -> None:
+        spine_path = Path(str(jp)[:-len(".journal")])
+        E.append_journal_entry(spine_path, "start", "g1", "s1", [])
+
+    def test_append_preserves_lf_journal_endings(self):
+        # On WINDOWS this is the discriminating case: the old text-mode open
+        # translates every written '\n' to the platform ending ('\r\n'), so
+        # the new line lands CRLF while the rest of the journal stays LF --
+        # a churned, mixed-ending file.
+        with tempfile.TemporaryDirectory() as d:
+            jp = Path(d) / "spine.json.journal"
+            jp.write_bytes(b'{"seq": 1, "hash": "x"}\n')
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertEqual(crlf, 0, "fixture was not born LF")
+
+            self._append(jp)
+
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertEqual(
+                crlf, 0,
+                f"append_journal_entry churned an LF journal to CRLF "
+                f"({crlf} CRLF endings written)")
+            self.assertGreater(lf, 1, "append wrote no new line")
+
+    def test_append_preserves_crlf_journal_endings(self):
+        # Guard against the obvious over-correction of "always write LF" --
+        # on POSIX this is the discriminating case, on Windows it is the one
+        # that must not regress.
+        with tempfile.TemporaryDirectory() as d:
+            jp = Path(d) / "spine.json.journal"
+            jp.write_bytes(b'{"seq": 1, "hash": "x"}\r\n')
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertGreater(crlf, 0, "fixture was not born CRLF")
+            self.assertEqual(lf, 0, "fixture was not born CRLF")
+
+            self._append(jp)
+
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertGreater(crlf, 1, "append wrote no CRLF endings at all")
+            self.assertEqual(
+                lf, 0,
+                f"append_journal_entry churned a CRLF journal to LF "
+                f"({lf} bare LF endings written)")
+
+    def test_append_defaults_new_journal_to_lf(self):
+        with tempfile.TemporaryDirectory() as d:
+            jp = Path(d) / "spine.json.journal"
+            self.assertFalse(jp.exists())
+
+            self._append(jp)
+
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertEqual(crlf, 0, "a brand-new journal must default to LF")
+            self.assertGreater(lf, 0, "append wrote no line endings at all")
 
 
 class DoctrineRail(unittest.TestCase):
@@ -3211,11 +3325,46 @@ def _reading(fill, model="claude-opus-4-8"):
     )
 
 
-def _advance_ns(iid="g1"):
+def _advance_ns(iid="g1", why=None, mechanical=False):
     return types.SimpleNamespace(
-        verb="advance", id=iid, from_child=None, why=None,
-        mechanical=False, session_id=None,
+        verb="advance", id=iid, from_child=None, why=why,
+        mechanical=mechanical, session_id=None,
     )
+
+
+def _start_ns(iid="g1"):
+    return types.SimpleNamespace(verb="start", id=iid, session_id=None)
+
+
+def _reopen_ns(iid="g1", reason="rework"):
+    return types.SimpleNamespace(verb="reopen", id=iid, reason=reason, session_id=None)
+
+
+def _resume_ns(iid="g1", reason="blocker resolved", note=None):
+    return types.SimpleNamespace(verb="resume", id=iid, reason=reason, note=note,
+                                 session_id=None)
+
+
+def _refresh_requests_anywhere(cl):
+    """Every `refresh-request` evidence item in the WHOLE checklist, superseded or
+    not — the load-bearing precondition of the permanent DC2 guard below. With one
+    of these present the HARD guard lifts, so the guarded advance succeeds on BOTH
+    sides of #467 and the test would prove nothing."""
+    return [ev for t in cl.get("tasks", {}).values()
+            for ev in (t.get("evidence") or [])
+            if isinstance(ev, dict) and ev.get("type") == "refresh-request"]
+
+
+def _without_trip_ledger(cl):
+    """#467: a refused BEGIN now makes exactly ONE state change — `_trip_hard_gate`
+    appends a `trip_ledger` entry recording the attempt before it raises. Every other
+    no-mutation property the guards below assert (no status flip, no manifest, no
+    liveness stamp, no evidence) still holds exactly as it did, so those guards
+    compare with the ledger lifted out — and each one asserts the ledger's OWN
+    expected growth separately, so lifting it out cannot hide a regression."""
+    out = copy.deepcopy(cl)
+    out.pop("trip_ledger", None)
+    return out
 
 
 class TripTwoBandGatePolicy(unittest.TestCase):
@@ -3265,18 +3414,21 @@ class TripTwoBandGatePolicy(unittest.TestCase):
         self.assertEqual(self.cl["tasks"]["g1"]["status"], "complete")
 
     # --- HARD band (refusal, on `advance`) ---------------------------------- #
-    def test_hard_refuses_at_and_above_hard_without_refresh(self):
+    def test_hard_refuses_begin_work_at_and_above_hard_without_refresh(self):
         # Acceptance 2/4 (falsifiable: does HARD ever let you pass without a
-        # refresh-request? -> NO): at/above hard with no refresh-request, advance
-        # REFUSES and the gate stays in-progress.
+        # refresh-request? -> NO). RE-AIMED by #467: the verb HARD refuses is the one
+        # that BEGINS work at a gate (`start`), never the one that closes the gate the
+        # agent is already inside. At/above hard with no refresh-request, `start`
+        # REFUSES and the gate stays pending.
         for fill in (self.hard, min(self.hard + 0.05, 1.0)):
             cl = copy.deepcopy(self.cl)
+            E.advance(cl, "g1")  # close g1 normally; g2 is now the next PENDING gate
             with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
                 with self.assertRaises(E.EngineError) as ctx:
-                    E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
-            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+                    E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
             self.assertIn("refresh", str(ctx.exception).lower())
-            self.assertIn("attach g1 --type refresh-request", str(ctx.exception))
+            self.assertIn("attach g2 --type refresh-request", str(ctx.exception))
 
     def test_hard_never_refuses_below_hard(self):
         # Acceptance 2: just below hard, HARD does not fire — advance passes.
@@ -3284,32 +3436,55 @@ class TripTwoBandGatePolicy(unittest.TestCase):
             msg = E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
         self.assertIn("g1 -> complete", msg)
 
-    def test_hard_passes_once_refresh_request_exists(self):
-        # HARD forces UNTIL a refresh-request exists for the gate; with one present,
-        # advance is allowed through (the agent has already requested the refresh).
+    def test_hard_handoff_close_needs_a_why_even_with_a_refresh_request_pending(self):
+        # RE-AIMED by #467. Before: "HARD forces UNTIL a refresh-request exists, then
+        # advance passes" — which no longer says anything, since HARD never refuses an
+        # advance at all now. The live question in its place is whether a pending
+        # refresh-request buys SILENCE at the close. It must not: the request is a
+        # pointer for the next agent, not a substitute for the understanding this one
+        # owes. The gate is why_exempt, so this also pins that the exemption stays
+        # suspended at hard even on the already-requested path.
         E.attach(self.cl, "g1", "refresh-request", {"seam": "g1", "why_ref": "w-1"})
-        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
-            msg = E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
-        self.assertIn("g1 -> complete", msg)
-        self.assertEqual(self.cl["tasks"]["g1"]["status"], "complete")
-
-    def test_hard_refusal_leaves_state_unmutated(self):
-        # A HARD refusal is raised BEFORE the verb runs: no why_trail, no status flip.
-        before = copy.deepcopy(self.cl)
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
             with self.assertRaises(E.EngineError):
                 E.dispatch(self.cl, _advance_ns("g1"), base_dir=Path("."))
-        self.assertEqual(self.cl, before)
+            self.assertEqual(self.cl["tasks"]["g1"]["status"], "in-progress")
+            msg = E.dispatch(self.cl, _advance_ns("g1", why="handing off at g1"),
+                             base_dir=Path("."))
+        self.assertIn("g1 -> complete", msg)
+        self.assertEqual(self.cl["tasks"]["g1"]["status"], "complete")
+        self.assertEqual(E._digest(self.cl), "handing off at g1")
+
+    def test_hard_refusal_leaves_state_unmutated(self):
+        # A HARD refusal is raised BEFORE the verb runs: no status flip, no manifest,
+        # no liveness stamp. RE-AIMED by #467 from `advance` to `start` — same
+        # ordering property, asserted on the verb HARD now guards.
+        E.advance(self.cl, "g1")
+        before = copy.deepcopy(self.cl)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(self.cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(_without_trip_ledger(self.cl), _without_trip_ledger(before))
+        # ...and the one mutation a refusal DOES make (#467): the recorded begin.
+        self.assertEqual([e["id"] for e in self.cl["trip_ledger"]], ["tl-1"])
+        self.assertEqual(self.cl["trip_ledger"][0]["outcome"], "begin-refused")
 
     def test_hard_advisory_on_current_points_at_attach(self):
-        # On the read-only `current`, the HARD band escalates the advisory to the
-        # exact remedy (the attach command) and flags that advance is blocked.
+        # On the read-only `current`, the HARD band still escalates to the exact
+        # remedy (the attach command). RE-AIMED by #467: the "BLOCKED" assertion had
+        # to go, because the advisory no longer claims `advance` is blocked — it is
+        # not, and saying so was the instruction defect behind #431. In its place the
+        # advisory states a changed instruction. This fixture's gates are why_exempt
+        # and carry no why_trail, so it also pins the `<why-id>` fallback for a
+        # checklist with no live understanding to name.
         with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
             out = E.dispatch(self.cl, types.SimpleNamespace(verb="current"),
                              base_dir=Path("."))
         self.assertIn(">= hard", out)
-        self.assertIn("BLOCKED", out)
-        self.assertIn("attach g1 --type refresh-request", out)
+        self.assertIn("your instruction has changed", out)
+        self.assertIn("attach g1 --type refresh-request --field seam=g1 "
+                      "--field why_ref=<why-id>", out)
+        self.assertNotIn("BLOCKED", out)
 
     # --- missing/stale reading (None) --------------------------------------- #
     def test_none_reading_never_forces_and_gives_no_advice(self):
@@ -3371,8 +3546,9 @@ class RefreshRequestIdentity(unittest.TestCase):
 
     def test_hard_coattails_fixed_stale_why_ref_refused_then_fresh_releases(self):
         # A STALE refresh-request (keyed to an earlier understanding) must NOT wave a
-        # distinct new trip through HARD on the same still-open gate; a FRESH request
-        # keyed to the current digest releases it.
+        # distinct new trip through HARD; a FRESH request keyed to the current digest
+        # releases it. RE-AIMED by #467 from `advance` to `start`: #190's identity
+        # check is unchanged, it just now defends the BEGIN-work boundary.
         _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
         cl = gated(
             g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
@@ -3380,24 +3556,626 @@ class RefreshRequestIdentity(unittest.TestCase):
             g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
         )
         E.advance(cl, "g1", why="u1")                 # -> w-1
-        E.start(cl, "g2"); E.advance(cl, "g2", why="u2")  # -> w-2; g3 active, latest why w-2
-        E.start(cl, "g3")
+        E.start(cl, "g2"); E.advance(cl, "g2", why="u2")  # -> w-2; g3 pending, latest why w-2
         # stale request keyed to w-1 (an earlier trip's understanding)
         E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-1"})
-        adv = types.SimpleNamespace(verb="advance", id="g3", from_child=None,
-                                    why="u3", mechanical=False, session_id=None)
+        ns = _start_ns("g3")
         before = copy.deepcopy(cl)
         with mock.patch.object(E, "_read_gauge", return_value=_reading(hard)):
             with self.assertRaises(E.EngineError):
-                E.dispatch(cl, adv, base_dir=Path("."))
-        self.assertEqual(cl["tasks"]["g3"]["status"], "in-progress")  # unmutated
-        self.assertEqual(cl, before)
+                E.dispatch(cl, ns, base_dir=Path("."))
+        self.assertEqual(cl["tasks"]["g3"]["status"], "pending")  # unmutated
+        self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
+        self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])  # #467
+        self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-refused")
         # a FRESH request keyed to the current digest (w-2) releases HARD
         E.attach(cl, "g3", "refresh-request", {"seam": "g3", "why_ref": "w-2"})
         with mock.patch.object(E, "_read_gauge", return_value=_reading(hard)):
-            msg = E.dispatch(cl, adv, base_dir=Path("."))
-        self.assertIn("g3 -> complete", msg)
-        self.assertEqual(cl["tasks"]["g3"]["status"], "complete")
+            msg = E.dispatch(cl, ns, base_dir=Path("."))
+        self.assertIn("g3 -> in-progress", msg)
+        self.assertEqual(cl["tasks"]["g3"]["status"], "in-progress")
+
+
+class TripHardGuardsBeginNotClose(unittest.TestCase):
+    """#467 — the HARD band moves off the verb that CLOSES a gate and onto the two
+    verbs that BEGIN work at one (`start`, `reopen`).
+
+    Closing the gate you are already inside IS the handoff, so it is never refused
+    for being over the line. What IS refused is beginning new work you cannot
+    finish, and closing a gate SILENTLY — a mechanical or why-less close records no
+    understanding, so `_latest_why_record` skips it and the next agent cold-starts
+    from a pre-trip digest, which is #431 reproduced after the fix.
+
+    `resume` is deliberately NOT guarded: it restores a BLOCKED gate to the status
+    it held before, which for an `in-progress` prior returns the agent to the gate
+    it is already mid-way through — the "closing your own gate" case this design
+    promises never to refuse.
+
+    Every test name here matches the frozen `g2-integrate` closeout selector
+    (`trip_begin`, `begin_work`, `handoff`). pytest exits 5 on an empty collection,
+    so these names are load-bearing, not cosmetic."""
+
+    # The exact refusal raised when a gate would be closed with NOTHING recorded
+    # while the gauge is at/over hard. Asserted by equality, never by substring.
+    NO_SILENT_CLOSE = (
+        "g1: context is at/over the hard limit, so this gate cannot be closed "
+        "silently — a mechanical or why-less close records no understanding, and "
+        "the next agent would cold-start from a digest written before your work. "
+        "Closing the gate is NOT refused; only the silence is. Run: "
+        "advance g1 --why \"<understanding>\""
+    )
+
+    def setUp(self):
+        self.soft, self.hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self, why_exempt=False):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=why_exempt),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=why_exempt),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=why_exempt),
+        )
+
+    def _g2_pending_after_g1(self):
+        """g1 advanced with a real understanding (-> w-1); g2 is the next PENDING
+        gate, so `start g2` is a genuine BEGIN-work move and the live why-record
+        the identity check keys on is w-1."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    # --- THE PERMANENT DC2 GUARD -------------------------------------------- #
+    def test_handoff_advance_at_hard_with_no_refresh_request_closes_and_freshens_digest(self):
+        """The permanent regression guard against the #431 deadlock returning.
+
+        Pinned at `fill >= hard` with NO refresh-request anywhere in the spine —
+        exactly the condition under which the pre-#467 engine REFUSED. It asserts
+        BOTH halves: the advance completes, AND the digest becomes the
+        understanding written AT this gate. If this fixture ever acquires a pending
+        refresh-request, the guard lifts, the advance passes on both sides of the
+        change, and this test silently stops guarding anything."""
+        cl = self._three_gates()
+        self.assertEqual(_refresh_requests_anywhere(cl), [])
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            # the two properties this test's value depends on, asserted in place
+            self.assertGreaterEqual(E._read_gauge(Path(".")).fill_fraction, self.hard)
+            msg = E.dispatch(
+                cl, _advance_ns("g1", why="handed off at g1: HARD now guards the begin verbs"),
+                base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+        self.assertEqual(E._digest(cl), "handed off at g1: HARD now guards the begin verbs")
+        self.assertEqual(_refresh_requests_anywhere(cl), [])
+
+    def test_handoff_digest_names_the_understanding_written_at_the_tripping_gate(self):
+        """#431's actual observable (DC3): after the handoff-carrying close, the
+        digest names the understanding written AT the tripping gate, not the one
+        from the gate before it."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="pre-trip understanding")
+        E.start(cl, "g2")
+        self.assertEqual(E._digest(cl), "pre-trip understanding")
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(cl, _advance_ns("g2", why="at-g2 handoff understanding"),
+                             base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> complete"), msg)
+        self.assertEqual(E._digest(cl), "at-g2 handoff understanding")
+
+    # --- BEGIN-work verbs ARE guarded --------------------------------------- #
+    def test_trip_begin_start_refused_at_and_above_hard_without_refresh(self):
+        for fill in (self.hard, self.over_hard):
+            cl = self._g2_pending_after_g1()
+            before = copy.deepcopy(cl)
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+                with self.assertRaises(E.EngineError) as ctx:
+                    E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
+            # refused BEFORE any gate mutation or liveness stamp; the ONE state change
+            # a refusal now makes is the #467 ledger entry, asserted on its own.
+            self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
+            self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])
+            self.assertEqual(cl["trip_ledger"][0]["outcome"], "begin-refused")
+            self.assertEqual(cl["trip_ledger"][0]["verb"], "start")
+            self.assertIn("attach g2 --type refresh-request", str(ctx.exception))
+
+    def test_trip_begin_reopen_refused_at_hard_without_refresh(self):
+        cl = self._g2_pending_after_g1()  # g1 is complete
+        before = copy.deepcopy(cl)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+        self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+        self.assertEqual(_without_trip_ledger(cl), _without_trip_ledger(before))
+        self.assertEqual([e["id"] for e in cl["trip_ledger"]], ["tl-1"])  # #467
+        self.assertEqual(cl["trip_ledger"][0]["verb"], "reopen")
+        self.assertIn("attach g1 --type refresh-request", str(ctx.exception))
+
+    def test_trip_begin_start_released_by_a_matching_refresh_request(self):
+        cl = self._g2_pending_after_g1()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+        self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+
+    def test_trip_begin_stale_why_ref_does_not_release_begin_work(self):
+        """#190's identity check, preserved verbatim at the new guard sites: a
+        request keyed to an EARLIER understanding does not wave a new trip through."""
+        cl = self._g2_pending_after_g1()  # live why-record is w-1
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-99"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(cl["tasks"]["g2"]["status"], "pending")
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+
+    def test_trip_begin_start_allowed_just_below_hard(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard - 0.001)):
+            msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+
+    # --- `resume` is NOT guarded (specific exclusion) ----------------------- #
+    def test_trip_begin_resume_is_not_guarded_at_hard(self):
+        """`resume` returns a BLOCKED gate to its pre-block status. For an
+        `in-progress` prior that hands the agent back the gate it is already inside
+        — the case this design promises never to refuse."""
+        cl = self._three_gates()
+        E.block(cl, "g1", "needs a ruling", "human", "ask")
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(cl, _resume_ns("g1", reason="ruling arrived"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 resumed -> in-progress (blocker resolved: ruling arrived)"), msg)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+
+    # --- closing SILENTLY is refused (the other half of #431) --------------- #
+    def test_handoff_mechanical_close_refused_at_hard(self):
+        """`--mechanical` records no understanding, so `_latest_why_record` skips it
+        and the next agent cold-starts from a pre-trip digest — #431 reproduced after
+        the fix. At/over hard the mechanical close is refused by name."""
+        cl = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _advance_ns("g1", mechanical=True), base_dir=Path("."))
+        self.assertEqual(str(ctx.exception), self.NO_SILENT_CLOSE)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+        self.assertEqual(cl.get("why_trail", []), [])  # nothing recorded, nothing skipped
+
+    def test_handoff_why_exempt_is_suspended_at_hard(self):
+        """A `why_exempt` gate normally closes silently. At/over hard the exemption is
+        SUSPENDED — and suspended means the understanding is actually RECORDED, not
+        merely demanded: a --why that the engine accepted but never wrote to the
+        why_trail would leave the digest just as stale."""
+        cl = self._three_gates(why_exempt=True)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
+            self.assertEqual(str(ctx.exception), self.NO_SILENT_CLOSE)
+            self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+            msg = E.dispatch(cl, _advance_ns("g1", why="exempt gate, closed with an understanding"),
+                             base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+        self.assertEqual(E._digest(cl), "exempt gate, closed with an understanding")
+
+    def test_handoff_mechanical_close_still_allowed_below_hard(self):
+        """The falsifiable half: below hard nothing changes — a mechanical close is
+        still a legitimate marker for a step that carries no new understanding."""
+        cl = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard - 0.001)):
+            msg = E.dispatch(cl, _advance_ns("g1", mechanical=True), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+        self.assertTrue(cl["why_trail"][-1]["mechanical"])
+
+    def test_handoff_no_silent_close_never_fires_on_a_none_reading(self):
+        """Fail-safe: a missing/stale reading must not conjure a why requirement out
+        of a gate that is exempt, any more than it conjures a refusal."""
+        cl = self._three_gates(why_exempt=True)
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            msg = E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+
+    def test_handoff_unmet_postconditions_still_refuse_before_the_why_demand(self):
+        """Ordering preserved: you cannot be asked for a handoff understanding as a
+        way of buying past unfinished work — a failing postcondition still yields the
+        postcondition refusal, even at/over hard."""
+        cl = gated(g1=gate("g1", "in-progress", command=FAIL_COMMAND, why_exempt=False))
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _advance_ns("g1", mechanical=True), base_dir=Path("."))
+        self.assertEqual(str(ctx.exception), "g1: postconditions unmet ['c1']")
+
+    # --- fail-safe: the guard no-ops where it always has -------------------- #
+    def test_trip_begin_none_reading_never_refuses_begin_work(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            self.assertTrue(E.dispatch(cl, _start_ns("g2"), base_dir=Path(".")).endswith("g2 -> in-progress"))
+            msg = E.dispatch(cl, _reopen_ns("g1", reason="r"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 reopened (rework 1/3); cascade-reset downstream "
+                                     "['g2'] (evidence superseded, retained)"), msg)
+        self.assertEqual(cl["tasks"]["g1"]["status"], "in-progress")
+
+    def test_trip_begin_survey_never_refuses_begin_work(self):
+        sv = survey(v1=survey_item("v1", "pending"))
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(sv, _start_ns("v1"), base_dir=Path("."))
+        self.assertTrue(msg.endswith("v1 -> in-progress"), msg)
+
+    # --- what the agent is TOLD (the #431 observable) ----------------------- #
+    def _hard_advisory(self, cl, fill):
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+            return E._trip_advisory(cl, Path("."))
+
+    def test_handoff_hard_advisory_reads_as_a_changed_instruction(self):
+        """#431 is an instruction-conformance defect, so the fix is verified on what
+        the agent is TOLD. At HARD the advisory must read as a changed instruction —
+        close this gate carrying your handoff, request a refresh, stop — and never as
+        an alarm about being unsafe or blocked."""
+        cl = self._g2_pending_after_g1()  # g2 active/pending, live why-record w-1
+        out = self._hard_advisory(cl, self.over_hard)
+        self.assertEqual(out, (
+            f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
+            f"You have taken this as far as this context can carry it — now close THIS "
+            f"gate carrying your handoff (`advance g2 --why \"<understanding>\"`), "
+            f"request a refresh, and stop. A fresh agent picks up from your DIGEST; do "
+            f"not begin work at another gate. Request the refresh with: attach g2 "
+            f"--type refresh-request --field seam=g2 --field why_ref=w-1"
+        ))
+        for alarm in ("BLOCKED", "unsafe", "runaway", "lost"):
+            self.assertNotIn(alarm, out)
+
+    def test_handoff_hard_advisory_with_refresh_already_requested_reads_as_an_instruction(self):
+        cl = self._g2_pending_after_g1()
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        out = self._hard_advisory(cl, self.over_hard)
+        self.assertEqual(out, (
+            f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, "
+            f"and the refresh for g2 is already requested. Close THIS gate carrying "
+            f"your handoff (`advance g2 --why \"<understanding>\"`) and stop. A fresh "
+            f"agent picks up from your DIGEST; do not begin work at another gate."
+        ))
+        for alarm in ("BLOCKED", "unsafe", "runaway", "lost"):
+            self.assertNotIn(alarm, out)
+
+    def test_handoff_hard_advisory_rides_current_at_the_cli_boundary(self):
+        """The advisory reaches the agent through the read-only `current`, unchanged
+        by the rail prefix — `current` itself stays pure."""
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            out = E.dispatch(cl, types.SimpleNamespace(verb="current"), base_dir=Path("."))
+        self.assertTrue(out.endswith(self._hard_advisory(cl, self.over_hard)), out)
+
+    def test_handoff_refresh_hint_carries_the_concrete_why_id(self):
+        """The literal `<why-id>` placeholder cost four separate agents a silent
+        no-op: `attach ... --field why_ref=<why-id>` exits 0 and records a request
+        that matches no understanding, so the identity check never releases. The hint
+        must emit the real id, and fall back to the placeholder only when there is no
+        live why-record to name."""
+        self.assertEqual(
+            E._refresh_attach_hint("g2", "w-7"),
+            "attach g2 --type refresh-request --field seam=g2 --field why_ref=w-7")
+        self.assertNotIn("<why-id>", E._refresh_attach_hint("g2", "w-7"))
+        self.assertEqual(
+            E._refresh_attach_hint("g2", None),
+            "attach g2 --type refresh-request --field seam=g2 --field why_ref=<why-id>")
+
+    def test_trip_begin_refusal_names_the_concrete_why_id(self):
+        cl = self._g2_pending_after_g1()  # live why-record is w-1
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.hard)):
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertIn("--field why_ref=w-1", str(ctx.exception))
+        self.assertNotIn("<why-id>", str(ctx.exception))
+
+    def test_trip_begin_no_base_dir_never_refuses_begin_work(self):
+        cl = self._g2_pending_after_g1()
+        E._trip_hard_gate(cl, "g2", None)  # no raise: unresolvable gauge location
+        self.assertTrue(E.dispatch(cl, _start_ns("g2"), base_dir=None).endswith("g2 -> in-progress"))
+
+
+class GateHeadroomOverrideResolverTests(unittest.TestCase):
+    """#467 (b): ONE resolver for the per-gate context-headroom reserve, read from
+    `tasks.<gate>.context_headroom_tokens` and NOWHERE else. There is deliberately
+    no checklist-config tier: it would have zero users, and one adapter is a
+    hypothetical seam, not a real one. A missing, malformed, or negative value
+    resolves to 0 -- the shipped default, which no gate may lower."""
+
+    def _cl(self, **overrides):
+        cl = gated(g1=gate("g1", "in-progress"), g2=gate("g2", "pending"))
+        for iid, value in overrides.items():
+            cl["tasks"][iid]["context_headroom_tokens"] = value
+        return cl
+
+    def test_wellformed_headroom_override_is_read_from_its_own_gate_only(self):
+        cl = self._cl(g1=30_000)
+        self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 30_000)
+        # The neighbour declares nothing, so it reserves nothing. A per-gate knob
+        # that leaked onto its siblings would not be per-gate.
+        self.assertEqual(E._gate_headroom_tokens(cl, "g2"), 0)
+        # No gate named / no such gate -> 0, so the resolver is total.
+        self.assertEqual(E._gate_headroom_tokens(cl, None), 0)
+        self.assertEqual(E._gate_headroom_tokens(cl, "no-such-gate"), 0)
+
+    def test_no_checklist_config_tier_supplies_a_headroom_override(self):
+        # decision:no-config-tier -- gate-level ONLY. A value parked at the
+        # checklist root or in `config` must be invisible to the resolver, so a
+        # run-wide reserve cannot be smuggled in behind the per-gate one.
+        cl = self._cl()
+        cl["context_headroom_tokens"] = 30_000
+        cl["config"]["context_headroom_tokens"] = 30_000
+        self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 0)
+        self.assertEqual(E._gate_headroom_tokens(cl, "g2"), 0)
+
+    def test_malformed_or_negative_headroom_override_resolves_to_the_default_but_a_wellformed_one_does_not(self):
+        """BOTH halves, in ONE test, through the SAME resolver -- deliberately.
+
+        A test asserting only that a malformed value resolves to the default
+        CANNOT FAIL: resolving to the default is exactly what a missing feature
+        does, so it passes with the whole mechanism dead-coded. The positive
+        control below is what makes the negative half mean anything."""
+        malformed = ("30000", None, True, False, 1.5, float("nan"), [], {}, object())
+        for value in malformed:
+            with self.subTest(value=repr(value)):
+                cl = self._cl(g1=value)
+                self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 0)
+        for value in (-1, -30_000, -10 ** 12):
+            with self.subTest(value=value):
+                cl = self._cl(g1=value)
+                self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 0)
+        # POSITIVE CONTROL, same resolver, same fixture shape: a well-formed
+        # override resolves to a DIFFERENT number than the default it falls back
+        # to above. Without this assertion every line above would still pass
+        # against a resolver that always returned 0.
+        cl = self._cl(g1=30_000)
+        self.assertEqual(E._gate_headroom_tokens(cl, "g1"), 30_000)
+        self.assertNotEqual(E._gate_headroom_tokens(cl, "g1"), 0)
+
+
+class GateHeadroomOverrideTripTests(unittest.TestCase):
+    """#467 (c)+(d): the resolved reserve reaches BOTH the number the agent is SHOWN
+    (`_trip_advisory`) and the number it is JUDGED against (`_trip_hard_band_reading`,
+    which backs the begin-work guard and the no-silent-close rule), so the two can
+    never diverge.
+
+    Every assertion below runs at ONE fill on ONE model, and names BOTH sides: the
+    overridden gate's behaviour changes AND the neighbour's does not. Proving only
+    that the overridden gate trips earlier would be satisfied by giving every gate
+    an override, which is precisely the failure this pins against.
+
+    Numbers are INDEPENDENT literals for claude-opus-5 (1M window, 80K soft, 150K
+    hard), never read back off the profile table -- that would be circular."""
+
+    GATE = "execute"          # the overridden gate: the run's longest
+    NEIGHBOUR = "reconcile"   # the named neighbour: declares nothing, reserves nothing
+    MODEL = "claude-opus-5"
+    RESERVE = 50_000
+    DEFAULT_SOFT, DEFAULT_HARD = 0.08, 0.15        # 80_000/1M, 150_000/1M
+    OVERRIDDEN_SOFT, OVERRIDDEN_HARD = 0.03, 0.10  # (80_000-50_000)/1M, (150_000-50_000)/1M
+    FILL = 0.12  # ONE fill, strictly between OVERRIDDEN_HARD and DEFAULT_HARD
+
+    def setUp(self):
+        # Pin the band arithmetic this fixture depends on, so a later profile edit
+        # breaks HERE with a clear reason rather than quietly making every
+        # assertion below vacuous.
+        self.assertEqual(E._gauge_reader.thresholds_for(self.MODEL),
+                         (self.DEFAULT_SOFT, self.DEFAULT_HARD))
+        self.assertEqual(E._gauge_reader.thresholds_for(self.MODEL, self.RESERVE),
+                         (self.OVERRIDDEN_SOFT, self.OVERRIDDEN_HARD))
+        self.assertLess(self.OVERRIDDEN_HARD, self.FILL)
+        self.assertLess(self.FILL, self.DEFAULT_HARD)
+
+    def _cl(self, reserve=RESERVE, execute_status="in-progress"):
+        # PASS_COMMAND postconditions so `advance` is legal (a gated gate needs at
+        # least one); why_exempt (gate()'s default) so a clean close needs no --why,
+        # which is what makes the no-silent-close assertion below discriminating.
+        cl = gated(execute=gate(self.GATE, execute_status, command=PASS_COMMAND),
+                   reconcile=gate(self.NEIGHBOUR, "pending", command=PASS_COMMAND))
+        if reserve is not None:
+            cl["tasks"][self.GATE]["context_headroom_tokens"] = reserve
+        return cl
+
+    def _gauge(self, fill=FILL):
+        return mock.patch.object(E, "_read_gauge",
+                                 return_value=_reading(fill, self.MODEL))
+
+    # --- DC4: the overridden gate changes AND the neighbour does not -------- #
+    def test_headroom_override_trips_its_own_gate_and_not_its_neighbour(self):
+        """The binding condition. SAME checklist, SAME fill, SAME model, both sides
+        named: `execute` (reserve 50K) is at/over hard and refuses to be begun,
+        while `reconcile` (no reserve) is nowhere near hard and begins freely."""
+        cl = self._cl()
+        with self._gauge():
+            with self.assertRaises(E.EngineError) as ctx:
+                E._trip_hard_gate(cl, self.GATE, Path("."))
+            # ... and the neighbour, at that same 12%, is not refused at all.
+            self.assertIsNone(E._trip_hard_gate(cl, self.NEIGHBOUR, Path(".")))
+            # The band decision itself, read straight from the single place that
+            # makes it: a Reading for the overridden gate, None for the neighbour.
+            self.assertIsNotNone(E._trip_hard_band_reading(cl, Path("."), self.GATE))
+            self.assertIsNone(E._trip_hard_band_reading(cl, Path("."), self.NEIGHBOUR))
+        self.assertIn("12% is at/over the hard limit", str(ctx.exception))
+
+    def test_headroom_override_neighbour_is_unaffected_through_the_cli_boundary(self):
+        """The same both-sides discrimination end to end through `dispatch`, where
+        the guard actually rides: `start execute` REFUSES and leaves the gate
+        pending, `start reconcile` succeeds -- one fill, one model."""
+        cl = self._cl(execute_status="pending")
+        with self._gauge():
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns(self.GATE), base_dir=Path("."))
+            self.assertEqual(cl["tasks"][self.GATE]["status"], "pending")
+            # Advance past the overridden gate so the neighbour is the active one,
+            # then begin it at the SAME 12% fill: it opens normally.
+            neighbour_cl = copy.deepcopy(cl)
+            neighbour_cl["tasks"][self.GATE]["status"] = "complete"
+            msg = E.dispatch(neighbour_cl, _start_ns(self.NEIGHBOUR), base_dir=Path("."))
+        self.assertTrue(msg.endswith(f"{self.NEIGHBOUR} -> in-progress"), msg)
+
+    def test_headroom_override_changes_the_advisory_for_its_gate_only(self):
+        """What the agent is SHOWN, both sides named at one fill: active `execute`
+        reads the HARD instruction; active `reconcile` reads the ordinary SOFT
+        advisory and never the hard one."""
+        cl = self._cl()
+        with self._gauge():
+            overridden = E._trip_advisory(cl, Path("."))
+            neighbour_cl = copy.deepcopy(cl)
+            neighbour_cl["tasks"][self.GATE]["status"] = "complete"
+            neighbour = E._trip_advisory(neighbour_cl, Path("."))
+        self.assertIn(">= hard", overridden)
+        self.assertIn("your instruction has changed", overridden)
+        self.assertIn(f"advance {self.GATE}", overridden)
+        # The neighbour at the SAME 12%: above its own soft (8%), nowhere near its
+        # own hard (15%) -- i.e. exactly what it says with no override in play.
+        self.assertIn(">= soft", neighbour)
+        self.assertNotIn(">= hard", neighbour)
+
+    def test_headroom_override_neighbour_advisory_is_byte_identical_to_no_override(self):
+        """Stronger form of the not-its-neighbours half: the neighbour's advisory
+        with an override on `execute` is EXACTLY the text it has when no override
+        exists anywhere. Not merely 'still soft' -- unchanged."""
+        with_override = self._cl()
+        with_override["tasks"][self.GATE]["status"] = "complete"
+        without_override = self._cl(reserve=None)
+        without_override["tasks"][self.GATE]["status"] = "complete"
+        with self._gauge():
+            self.assertEqual(E._trip_advisory(with_override, Path(".")),
+                             E._trip_advisory(without_override, Path(".")))
+            # And the overridden gate's own advisory is NOT what it would be
+            # without the override -- so the equality above is discrimination,
+            # not a mechanism that does nothing.
+            self.assertNotEqual(E._trip_advisory(self._cl(), Path(".")),
+                                E._trip_advisory(self._cl(reserve=None), Path(".")))
+
+    # --- (c): shown number and judged number cannot diverge ----------------- #
+    def test_headroom_override_moves_the_advisory_and_the_guard_together(self):
+        """DEMONSTRATED, not asserted: sweep the whole fill range against several
+        reserves and require the advisory's HARD branch and the begin-work guard's
+        refusal to agree on EVERY sample. If the two ever read different resolved
+        numbers, some sample in the sweep separates them."""
+        seen = set()
+        for reserve in (0, 20_000, 50_000, 79_999, 140_000):
+            for fill in (0.0, 0.01, 0.02, 0.03, 0.05, 0.08, 0.0999, 0.10,
+                         0.12, 0.1499, 0.15, 0.30, 1.0):
+                cl = self._cl(reserve=reserve)
+                with self.subTest(reserve=reserve, fill=fill):
+                    with self._gauge(fill):
+                        advisory_says_hard = ">= hard" in E._trip_advisory(cl, Path("."))
+                        try:
+                            E._trip_hard_gate(cl, self.GATE, Path("."))
+                            guard_refuses = False
+                        except E.EngineError:
+                            guard_refuses = True
+                    self.assertEqual(advisory_says_hard, guard_refuses)
+                    seen.add(advisory_says_hard)
+        # The sweep must actually cross the line in both directions, or the
+        # equality above would hold vacuously.
+        self.assertEqual(seen, {True, False})
+
+    def test_headroom_override_also_governs_the_no_silent_close_rule(self):
+        """The third consumer of the same resolved number (g2's no-silent-close
+        rule, which rides `_trip_hard_band_reading` through `advance`'s
+        `require_why`): at 12% the overridden gate may not close in silence, while
+        the neighbour -- why_exempt, same fill, same model -- still may."""
+        cl = self._cl()
+        with self._gauge():
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _advance_ns(self.GATE), base_dir=Path("."))
+            self.assertEqual(cl["tasks"][self.GATE]["status"], "in-progress")
+            msg = E.dispatch(cl, _advance_ns(self.GATE, why="handing off at execute"),
+                             base_dir=Path("."))
+            self.assertIn(f"{self.GATE} -> complete", msg)
+            # The named neighbour at the same fill closes silently, as it always has.
+            E.dispatch(cl, _start_ns(self.NEIGHBOUR), base_dir=Path("."))
+            msg = E.dispatch(cl, _advance_ns(self.NEIGHBOUR), base_dir=Path("."))
+        self.assertIn(f"{self.NEIGHBOUR} -> complete", msg)
+
+    def test_no_silent_close_reads_the_gate_being_closed_not_a_blocked_active_gate(self):
+        """B-1 (g3 rework 2, mutation M15). The no-silent-close rule's band decision
+        must be read for the gate NAMED in the `advance`, never for whatever
+        `active_id()` reports -- M15's declared-EQUIVALENT reasoning claimed those
+        two are always the same gate. They are not: `block()` carries no status
+        guard and `blocked` is not in `TERMINAL`, so `active_id()` can sit BEHIND a
+        later in-progress gate. Reached through public verbs only -- start/advance/
+        start/block/advance -- the same sequence the reviewer reproduced at the
+        CLI: g1 (no override) is advanced to complete, then BLOCKED (legal --
+        block() has no status guard); g2 (carrying the override) is started while
+        g1 is still open and is left in-progress. `active_id(cl)` then reports g1,
+        even though the gate being CLOSED is g2."""
+        cl = gated(
+            g1=gate("g1", "pending", command=PASS_COMMAND, why_exempt=True),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=True),
+        )
+        cl["tasks"]["g2"]["context_headroom_tokens"] = self.RESERVE
+        # Low fill while g1 is opened/closed and g2 is opened, so neither begin-work
+        # guard (start is TRIP_HARD_GUARDED) refuses -- the fill rises to FILL (12%)
+        # only AFTER g2 is already under way, exactly as the CLI reproduction did.
+        with self._gauge(fill=0.0):
+            E.dispatch(cl, _start_ns("g1"), base_dir=Path("."))
+            E.dispatch(cl, _advance_ns("g1"), base_dir=Path("."))
+            E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        with self._gauge():  # FILL=0.12: over g2's overridden hard, under g1's default hard
+            E.dispatch(cl, types.SimpleNamespace(
+                verb="block", id="g1", blocker="upstream authority", authority="human",
+                next_action="wait", session_id=None,
+            ), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g1"]["status"], "blocked")
+            # The divergence M15 declared unreachable: the ACTIVE gate is g1, but
+            # the gate being CLOSED below is g2.
+            self.assertEqual(E.active_id(cl), "g1")
+            with self.assertRaises(E.EngineError) as ctx:
+                E.dispatch(cl, _advance_ns("g2", mechanical=True), base_dir=Path("."))
+            self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+        self.assertIn("cannot be closed silently", str(ctx.exception))
+
+    def test_headroom_override_defaults_to_the_active_gates_reserve(self):
+        """Asked without a gate, the band decision falls back to the ACTIVE gate --
+        the same gate `_trip_advisory` reports on, which is what keeps the shown
+        number and the judged number identical. Failing OPEN here (resolving to no
+        reserve when the caller names no gate) would silently drop an expensive
+        gate's protection, so the default is fail-tight, not fail-open."""
+        cl = self._cl()  # `execute` is active AND carries the reserve
+        with self._gauge():
+            self.assertIsNotNone(E._trip_hard_band_reading(cl, Path(".")))
+            # ... and with no override anywhere, the same call at the same fill is
+            # below hard -- so the line above is the reserve talking, not the fill.
+            self.assertIsNone(E._trip_hard_band_reading(self._cl(reserve=None), Path(".")))
+
+    def test_shipped_spine_template_carries_exactly_one_headroom_override(self):
+        """(d) exercised for real, against the SHIPPED template rather than a
+        fixture: the commander spine's `execute` gate -- the run's longest, and the
+        one whose imperative already tells the agent in prose to ensure context
+        headroom before entering -- carries a reserve, and NO other gate does.
+
+        The "no other gate" half is the load-bearing one: handing every gate an
+        override would invent a table of ungraded placeholders and destroy the
+        per-gate meaning of the knob. The reserve is read here through the REAL
+        resolver, so the authored number and the number the governor uses cannot
+        drift apart."""
+        spine = json.loads((ROOT / "skills" / "commander" / "templates"
+                            / "COMMANDER_SPINE.template.json").read_text(encoding="utf-8"))
+        carriers = [iid for iid, t in spine["tasks"].items()
+                    if "context_headroom_tokens" in t]
+        self.assertEqual(carriers, ["execute"])
+        reserve = E._gate_headroom_tokens(spine, "execute")
+        self.assertGreater(reserve, 0)
+        self.assertEqual(reserve, spine["tasks"]["execute"]["context_headroom_tokens"])
+        # Every other gate keeps the shipped default, named explicitly.
+        for iid in ("plan", "reconcile", "review", "archive"):
+            self.assertEqual(E._gate_headroom_tokens(spine, iid), 0)
+        # The value is a documented guess, not a bare magic number: the reasoning
+        # lives next to it so a later run can revise it in one obvious place.
+        self.assertIn("GUESS", spine["tasks"]["execute"]["context_headroom_note"])
+
+    # --- fail-safe: an override never manufactures a trip ------------------- #
+    def test_headroom_override_never_trips_without_a_reading(self):
+        """A reserve is a tightening of a reading, never a substitute for one: with
+        no gauge reading, an overridden gate is as ungoverned as any other."""
+        cl = self._cl()
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            self.assertEqual(E._trip_advisory(cl, Path(".")), "")
+            self.assertIsNone(E._trip_hard_gate(cl, self.GATE, Path(".")))
+            self.assertIsNone(E._trip_hard_band_reading(cl, Path("."), self.GATE))
 
 
 class FormatAgeTests(unittest.TestCase):
@@ -3576,27 +4354,52 @@ class TripRealGaugeFileWiring(unittest.TestCase):
         # why_exempt so advance needs no --why; HARD is orthogonal to why-capture.
         return gated(g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=True))
 
-    def test_fresh_hard_gauge_sibling_of_spine_refuses_then_passes_with_refresh(self):
+    def test_fresh_hard_gauge_sibling_of_spine_refuses_begin_work_then_passes_with_refresh(self):
+        # RE-AIMED by #467 from `advance` to `start`: same real-file wiring proof,
+        # asserted on the verb HARD now guards. Beginning work at a pending gate over
+        # the line is refused end-to-end through main(), and a refresh-request releases it.
         soft, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "spine.json"
-            E.save(f, self._spine())
+            E.save(f, gated(
+                g1=gate("g1", "complete", command=PASS_COMMAND, why_exempt=True),
+                g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=True),
+            ))
             # gauge sibling of the spine, fresh (observed_at == now), fill >= hard
             self._write_gauge(d, min(hard + 0.05, 1.0),
                               datetime.now(timezone.utc).isoformat())
             import contextlib, io
             err = io.StringIO()
             with contextlib.redirect_stderr(err):
-                rc = E.main(["--file", str(f), "advance", "g1"])
-            self.assertEqual(rc, 1)  # HARD refuses
+                rc = E.main(["--file", str(f), "start", "g2"])
+            self.assertEqual(rc, 1)  # HARD refuses BEGIN-work
             self.assertIn("REFUSED:", err.getvalue())
-            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")
-            # request a refresh, then the same advance is allowed through
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "pending")
+            # request a refresh, then the same start is allowed through
             self.assertEqual(
-                E.main(["--file", str(f), "attach", "g1", "--type", "refresh-request",
-                        "--field", "seam=g1", "--field", "why_ref=w-1"]), 0)
-            self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
-            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+                E.main(["--file", str(f), "attach", "g2", "--type", "refresh-request",
+                        "--field", "seam=g2", "--field", "why_ref=w-1"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "in-progress")
+
+    def test_handoff_fresh_hard_gauge_never_refuses_the_closing_advance(self):
+        """#467, the real-file twin of the permanent DC2 guard: with a REAL gauge
+        over hard and NO refresh-request anywhere, the gate the agent is already
+        inside closes through main() and the digest carries the understanding
+        written at it. The pre-#467 engine returned rc 1 here."""
+        _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, gated(g1=gate("g1", "in-progress", command=PASS_COMMAND,
+                                    why_exempt=False)))
+            self._write_gauge(d, min(hard + 0.05, 1.0),
+                              datetime.now(timezone.utc).isoformat())
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1",
+                                     "--why", "closing g1 carrying my handoff"]), 0)
+            cl = E.load(f)
+            self.assertEqual(cl["tasks"]["g1"]["status"], "complete")
+            self.assertEqual(E._digest(cl), "closing g1 carrying my handoff")
+            self.assertEqual(_refresh_requests_anywhere(cl), [])
 
     def test_stale_gauge_reads_none_and_never_forces(self):
         _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
@@ -3767,6 +4570,265 @@ class TripRealGaugeFileWiring(unittest.TestCase):
             self._write_gauge(d, 0.99, stale)
             self.assertEqual(E.main(["--file", str(f), "advance", "g1"]), 0)
             self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+
+
+# --------------------------------------------------------------------------- #
+# #477 — a reading has an OWNER, and the engine can name it.
+#
+# The gauge is written per checklist DIRECTORY by a PostToolUse hook, so the
+# number a fresh agent finds on its first `current` was sampled by whoever drove
+# that directory before it — its predecessor after a relaunch, or the Commander
+# whose work area its own plan sits in. Measured live on 2026-08-08 during epic
+# 418: `.agent-work/issue-458-readiness/gauge.json` read `fill_fraction 0.190464,
+# observed_at 23:18:53Z` — NINE MINUTES before the agent reading it existed. That
+# agent was over the hard line on turn one, having done nothing.
+#
+# There is NO predicate over the bare number `0.190464` that separates a reading
+# I took from one you took. The only fact on this side of the seam that carries
+# WHO and WHEN is the engine's own lease: `engine_session.claimed_at` is the
+# moment the acting session took this checklist. A sample taken strictly BEFORE
+# that moment cannot be this session's, whatever it says.
+#
+# The failure this closes is a LOOP, which is why it is worth a guard: relaunch ->
+# inherit the number -> trip HARD -> file a refresh-request -> stand down ->
+# relaunch, indefinitely, with every cycle looking like correct doctrine being
+# followed. It cost epic 418 four crew relaunches in one wave.
+# --------------------------------------------------------------------------- #
+class TripGaugeReadingOwnership(unittest.TestCase):
+    """#477 — the engine DECLINES a gauge reading sampled before the acting
+    session claimed this checklist, and says so instead of going quiet.
+
+    Every test here drives the REAL reader over a REAL gauge.json sibling of a
+    REAL spine through `main()`, because the defect is entirely in the pairing of
+    a real file with a real lease; a patched `_read_gauge` would prove nothing.
+
+    Timestamps are derived from the lease's own recorded `claimed_at` rather than
+    from a second wall-clock read, so `before` and `after` are exact rather than
+    racing the test's own runtime."""
+
+    def _write_gauge(self, d, fill, observed_at):
+        (Path(d) / "gauge.json").write_text(json.dumps({
+            "schema_version": 1, "fill_fraction": fill,
+            "model": "claude-opus-4-8", "observed_at": observed_at,
+        }), encoding="utf-8")
+
+    def _over_hard(self):
+        _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        return min(hard + 0.05, 1.0)
+
+    def _spine(self):
+        # g1 complete / g2 pending: `start g2` is the BEGIN-work verb HARD guards,
+        # so a trip is directly observable as a refusal.
+        return gated(
+            g1=gate("g1", "complete", command=PASS_COMMAND, why_exempt=True),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=True),
+        )
+
+    SESSION = "successor-session"
+
+    def _claim(self, f, cl=None, session_id=None):
+        """Save `cl` under a real active lease and return its `claimed_at`."""
+        cl = self._spine() if cl is None else cl
+        E.claim(cl, session_id or self.SESSION, "agent", ".", {})
+        E.save(f, cl)
+        return E._parse_ts(cl["engine_session"]["claimed_at"])
+
+    # --- the defect: an inherited reading must not be obeyed ---------------- #
+    def test_reading_sampled_before_the_claim_does_not_refuse_begin_work(self):
+        """THE #477 CASE. Fill over the hard line, sampled nine minutes before
+        this session claimed the checklist — the live epic-418 scenario, to the
+        minute. It is the predecessor's exhaustion, so it must not stop this
+        session beginning its first gate."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            rc = E.main(["--file", str(f), "start", "g2",
+                         "--session-id", self.SESSION])
+            self.assertEqual(rc, 0)
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "in-progress")
+
+    def test_reading_sampled_before_the_claim_is_not_rendered_as_a_band(self):
+        """`current` must not present an inherited number as this session's
+        soft/hard verdict. The band words are the whole payload an agent acts
+        on — an inherited `>= hard` is what starts the relaunch loop."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertEqual(rc, 0)
+            self.assertNotIn(">= hard", out)
+            self.assertNotIn(">= soft", out)
+
+    def test_declined_reading_is_announced_not_silent(self):
+        """Declining silently would reproduce the silent-governor failure this
+        subsystem has already been burned by twice (#252, #271): the agent sees
+        no number and cannot tell whether the gauge is broken, absent, or
+        withheld. Say which one, name the session, and name the remedy."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertIn("CONTEXT GAUGE", out)
+            # the age, so an agent can see how far back the sample is
+            self.assertIn("9m00s", out)
+            # the session it is being measured against
+            self.assertIn(self.SESSION, out)
+            # the remedy: land your own tool call, don't file against this
+            self.assertIn("refresh-request", out)
+
+    def test_an_inherited_reading_never_suspends_the_mechanical_close(self):
+        """At/over hard the engine bans a SILENT close (#431): `advance
+        --mechanical` is refused and `why_exempt` is suspended. Riding that off
+        an inherited number would force a fresh agent to write a handoff for
+        work it has not done."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND,
+                               why_exempt=True))
+            claimed_at = self._claim(f, cl)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            rc = E.main(["--file", str(f), "advance", "g1", "--mechanical",
+                         "--session-id", self.SESSION])
+            self.assertEqual(rc, 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+
+    # --- the other half: the governor must still work --------------------- #
+    # Without these, "decline every reading" would pass the four tests above,
+    # and the fix would be a way to switch the governor off.
+    def test_a_self_measured_reading_over_hard_still_refuses(self):
+        """Same file, same lease, one second the OTHER side of `claimed_at`."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at + timedelta(seconds=1)).isoformat())
+            import contextlib, io
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rc = E.main(["--file", str(f), "start", "g2",
+                             "--session-id", self.SESSION])
+            self.assertEqual(rc, 1)
+            self.assertIn("REFUSED:", err.getvalue())
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "pending")
+
+    def test_a_reading_sampled_exactly_at_the_claim_is_owned(self):
+        """The boundary is STRICTLY before. An equal timestamp is kept, so
+        second-resolution coincidence never silences a real reading."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(), claimed_at.isoformat())
+            rc = E.main(["--file", str(f), "start", "g2",
+                         "--session-id", self.SESSION])
+            self.assertEqual(rc, 1)
+
+    # --- fail OPEN: no provenance means today's behaviour, exactly --------- #
+    def test_no_lease_at_all_behaves_exactly_as_today(self):
+        """Every gauge.json in the wild predates this guard and most checklists
+        are driven with no lease at all. With nothing to measure ownership
+        against, the reading is used — a gauge that starts refusing readings
+        would stop every run in the fleet."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_gauge(d, self._over_hard(),
+                              (datetime.now(timezone.utc)
+                               - timedelta(minutes=9)).isoformat())
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
+
+    def test_a_released_lease_behaves_exactly_as_today(self):
+        """A released lease names nobody currently driving, so it cannot be the
+        anchor for whose reading this is."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            cl = self._spine()
+            E.claim(cl, self.SESSION, "agent", ".", {})
+            claimed_at = E._parse_ts(cl["engine_session"]["claimed_at"])
+            cl["engine_session"]["status"] = "released"
+            E.save(f, cl)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
+
+    def test_an_unparseable_claimed_at_behaves_exactly_as_today(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            cl = self._spine()
+            E.claim(cl, self.SESSION, "agent", ".", {})
+            claimed_at = E._parse_ts(cl["engine_session"]["claimed_at"])
+            cl["engine_session"]["claimed_at"] = "not-a-timestamp"
+            E.save(f, cl)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            self.assertEqual(E.main(["--file", str(f), "start", "g2",
+                                     "--session-id", self.SESSION]), 1)
+
+    # --- the predicate itself, unit-level --------------------------------- #
+    def _r(self, observed_at):
+        return E._gauge_reader.Reading(
+            schema_version=1, fill_fraction=0.5, model="claude-opus-4-8",
+            observed_at=observed_at)
+
+    def _leased(self, **overrides):
+        cl = {"engine_session": {
+            "session_id": self.SESSION, "status": "active",
+            "claimed_at": "2026-08-08T23:28:00+00:00"}}
+        cl["engine_session"].update(overrides)
+        return cl
+
+    def test_lease_claimed_at_reads_the_active_lease(self):
+        self.assertEqual(
+            E._lease_claimed_at(self._leased()),
+            datetime(2026, 8, 8, 23, 28, tzinfo=timezone.utc))
+
+    def test_lease_claimed_at_is_none_for_every_absent_or_unusable_shape(self):
+        for label, cl in (
+            ("no key", {}),
+            ("not a dict", {"engine_session": "nope"}),
+            ("released", self._leased(status="released")),
+            ("no status", self._leased(status=None)),
+            ("missing claimed_at", self._leased(claimed_at=None)),
+            ("empty claimed_at", self._leased(claimed_at="")),
+            ("unparseable claimed_at", self._leased(claimed_at="whenever")),
+            ("non-string claimed_at", self._leased(claimed_at=17)),
+        ):
+            with self.subTest(label):
+                self.assertIsNone(E._lease_claimed_at(cl))
+
+    def test_predicate_is_true_only_strictly_before_the_claim(self):
+        claimed = datetime(2026, 8, 8, 23, 28, tzinfo=timezone.utc)
+        cl = self._leased()
+        for label, observed, expected in (
+            ("nine minutes before", claimed - timedelta(minutes=9), True),
+            ("one microsecond before", claimed - timedelta(microseconds=1), True),
+            ("exactly at", claimed, False),
+            ("one second after", claimed + timedelta(seconds=1), False),
+        ):
+            with self.subTest(label):
+                self.assertIs(E._reading_predates_claim(cl, self._r(observed)),
+                              expected)
+
+    def test_predicate_fails_open_on_a_missing_reading_or_lease(self):
+        claimed = datetime(2026, 8, 8, 23, 28, tzinfo=timezone.utc)
+        self.assertIs(E._reading_predates_claim(self._leased(), None), False)
+        self.assertIs(
+            E._reading_predates_claim({}, self._r(claimed - timedelta(days=1))),
+            False)
 
 
 # --------------------------------------------------------------------------- #
@@ -3955,16 +5017,238 @@ class RenderAnchorsAndConstraints(unittest.TestCase):
         self.assertEqual(E.current(cl), "ACTIVE g1 [pending] — do g1\nnext: start g1")
 
 
+class RenderDirectives(unittest.TestCase):
+    """Issue #433: `directives` is the third populated Task field `state()`
+    never read, so `current()` dropped it exactly the way it dropped
+    `anchors`/`constraints` before #420. A tree-wide inventory of this
+    worktree (2955 gates) found 8 populated `directives` blocks, every one a
+    dict of name -> contract dict; `docs/CHECKLIST_SCHEMA.md` separately
+    declares the field as `[string] | null` and the `add` amend op accepts
+    that flat shape unvalidated, so BOTH shapes must render. `current` is
+    documented as a COMPLETE briefing (INV-1,
+    docs/CHECKLIST_ENGINE_DESIGN.md); a directive the agent never sees is a
+    silently unenforced instruction."""
+
+    SPINE = ROOT / "skills" / "commander" / "templates" / "COMMANDER_SPINE.template.json"
+
+    # The golden below is written over the ACTUAL SHIPPED spine, not a
+    # fixture shaped like it: the claim under test is
+    # `claim:a-populated-directives-block-appears-in-current` for a gate that
+    # really ships, so a hand-built fixture could not prove it.
+    def _shipped_spine_with_execute_active(self):
+        cl = json.loads(self.SPINE.read_text(encoding="utf-8"))
+        for iid in cl["items"]:
+            if iid == "execute":
+                break
+            cl["tasks"][iid]["status"] = "complete"
+        self.assertEqual(E.active_id(cl), "execute")
+        return cl
+
+    def test_shipped_commander_spine_execute_gate_renders_its_directives(self):
+        cl = self._shipped_spine_with_execute_active()
+        t = cl["tasks"]["execute"]
+        self.assertTrue(
+            t.get("directives"),
+            "fixture drift: the shipped COMMANDER_SPINE `execute` gate no "
+            "longer carries a populated `directives` block, so this golden "
+            "is no longer proving anything -- re-run the corpus inventory",
+        )
+        out = E.current(cl)
+
+        # INV-1's frozen first line: byte-identical to `ACTIVE {id} [{status}]
+        # — {imperative}`, unchanged by this issue (GoldenOutputBriefing pins
+        # the same format across every shipped template).
+        self.assertEqual(out.splitlines()[0],
+                          f"ACTIVE execute [pending] — {t['imperative']}")
+
+        self.assertIn(
+            "\ndirectives:\n"
+            "  replan_input:\n"
+            "    template: ../constellation-replan/templates/REPLAN_INPUT.template.json\n"
+            "    output: .agent-work/<work-id>/REPLAN_INPUT.json\n"
+            "    evidence_fields: completed_outcomes, wave_evidence, discrepancies\n"
+            "    classifications: blocks_current_wave_exit, invalidates_forecast_or_decomposition, later_only, evidence_only, drop\n"
+            "    auto_file_discrepancies: false\n"
+            "    check: verify_iterative_role_artifacts.py commander\n",
+            out,
+        )
+        # Placement: after the conditions body, before the `next:` hint --
+        # the same slot `anchors:` occupies.
+        self.assertEqual(out.count("directives:"), 1, out)
+        self.assertLess(out.index("directives:"), out.index("\nnext: "), out)
+
+    def test_nested_contract_dict_shape_renders_indented_leaves(self):
+        # Shape (a), the one all 8 populated corpus gates carry, isolated
+        # from the shipped template so the format itself is pinned: a list
+        # leaf joins with ", " and a non-string scalar takes JSON spelling
+        # (Python False -> `false`), so what prints reads back as the JSON
+        # the gate actually carries.
+        t = gate("g1", "pending")
+        t["directives"] = {"replan_input": {
+            "template": "../constellation-replan/templates/REPLAN_INPUT.template.json",
+            "evidence_fields": ["completed_outcomes", "wave_evidence"],
+            "auto_file_discrepancies": False,
+        }}
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "directives:\n"
+            "  replan_input:\n"
+            "    template: ../constellation-replan/templates/REPLAN_INPUT.template.json\n"
+            "    evidence_fields: completed_outcomes, wave_evidence\n"
+            "    auto_file_discrepancies: false\n"
+            "next: start g1"
+        ))
+
+    def test_dict_value_that_is_not_a_dict_renders_as_one_leaf_line(self):
+        # #479/#433 g1 review carry-over: shape (a)'s `else` branch -- a dict
+        # value that is not itself a dict -- was flagged dead by mutation and
+        # is kept deliberately (mirrors _render_anchor_lines' own
+        # unrecognized-shape posture), not deleted. This characterization
+        # test is the checkable form of that "kept deliberately" reason
+        # (pre-ruling #3): the corpus carries no such shape today (none found
+        # across skills/*/templates/*.template.json), so nothing else in the
+        # suite exercises it.
+        t = gate("g1", "pending")
+        t["directives"] = {"replan_input": "a bare string"}
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "directives:\n"
+            "  replan_input: a bare string\n"
+            "next: start g1"
+        ))
+
+    def test_flat_list_of_strings_shape_renders_one_line_each(self):
+        # Shape (b), the one docs/CHECKLIST_SCHEMA.md declares and the `add`
+        # amend op accepts unvalidated. Narrowing the renderer to dicts would
+        # silently reinstate the #433 defect for this shape.
+        t = gate("g1", "pending")
+        t["directives"] = ["file REPLAN_INPUT.json before advancing",
+                            "discrepancies are evidence, never auto-filed issues"]
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "directives:\n"
+            "  file REPLAN_INPUT.json before advancing\n"
+            "  discrepancies are evidence, never auto-filed issues\n"
+            "next: start g1"
+        ))
+
+    def test_flat_list_with_a_non_string_item_renders_every_item(self):
+        # g1 review carry-over: the list branch must be TOTAL, the way
+        # _render_anchor_lines' list branch is. Filtering it to
+        # `isinstance(item, str)` silently DROPPED a non-string item -- a
+        # populated value the briefing never shows, which is the #433 defect
+        # class reproduced inside the #433 fix, and it contradicted the
+        # helper's own stated rule. Non-string items take the JSON spelling
+        # _directive_leaf documents, so `False` prints as `false`.
+        t = gate("g1", "pending")
+        t["directives"] = ["file REPLAN_INPUT.json before advancing", 17, False]
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "directives:\n"
+            "  file REPLAN_INPUT.json before advancing\n"
+            "  17\n"
+            "  false\n"
+            "next: start g1"
+        ))
+
+    def test_absent_or_empty_directives_add_no_output(self):
+        # The #420 rule, held: an absent or empty field adds NOTHING -- no
+        # bare `directives:` header, no blank line. gate() already sets
+        # `directives: None`, the corpus default on 2947 of the 2955 gates
+        # inventoried.
+        baseline = "ACTIVE g1 [pending] — do g1\nnext: start g1"
+        self.assertEqual(E.current(gated(g1=gate("g1", "pending"))), baseline)
+        for empty in (None, {}, [], ""):
+            with self.subTest(directives=empty):
+                t = gate("g1", "pending")
+                t["directives"] = empty
+                self.assertEqual(E.current(gated(g1=t)), baseline)
+        t = gate("g1", "pending")
+        del t["directives"]  # key absent entirely, not merely null
+        self.assertEqual(E.current(gated(g1=t)), baseline)
+
+    def test_unrecognized_directives_shape_renders_nothing(self):
+        # Same discipline _render_anchor_lines states: a shape the corpus
+        # does not actually use renders nothing rather than guessing.
+        t = gate("g1", "pending")
+        t["directives"] = 17
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), "ACTIVE g1 [pending] — do g1\nnext: start g1")
+
+    def test_directives_render_after_anchors_and_before_next(self):
+        t = gate("g1", "pending")
+        t["constraints"] = ["CONSTRAINT_TEXT"]
+        t["anchors"] = {"structural": ["ANCHOR_TEXT"]}
+        t["directives"] = ["DIRECTIVE_TEXT"]
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "constraints:\n"
+            "  CONSTRAINT_TEXT\n"
+            "anchors:\n"
+            "  structural: ANCHOR_TEXT\n"
+            "directives:\n"
+            "  DIRECTIVE_TEXT\n"
+            "next: start g1"
+        ))
+
+    def test_state_passes_directives_through_without_re_running_checks(self):
+        # INV-2: state() is a pure projection. The passthrough must not
+        # touch a `command` check -- if it did, this gate's deliberately
+        # process-spawning postcondition would run on a read-only `current`.
+        t = gate("g1", "in-progress", command=FAIL_COMMAND, why_exempt=False)
+        t["directives"] = {"replan_input": {"output": "x.json"}}
+        cl = gated(g1=t)
+        with mock.patch.object(E.subprocess, "run",
+                                side_effect=AssertionError("state() ran a command check")):
+            view = E.state(cl)
+        self.assertEqual(view["active"]["directives"],
+                          {"replan_input": {"output": "x.json"}})
+
+
 class TaskFieldCompleteness(unittest.TestCase):
-    """Issue #420, defect 3: a real enumeration of the fields a Task may
-    carry (docs/CHECKLIST_SCHEMA.md's Task table, plus `anchors` -- documented
-    only in commander-core.md prose, not the schema table) asserting every
-    POPULATED field's content appears somewhere in current()'s rendered
-    output for a fixture that carries every field. Built as a loop over the
-    fixture's own keys minus a documented, justified exclusion set -- NOT a
-    hardcoded check of only anchors/constraints by name -- so a genuinely new
-    field added to Task later and forgotten in render_human() fails this test
-    by default, exactly the way anchors/constraints failed before this fix."""
+    """Issue #420 defect 3, made falsifiable by #433: a real enumeration of the
+    fields a Task may carry (docs/CHECKLIST_SCHEMA.md's Task table, plus
+    `anchors` -- documented only in commander-core.md prose, not the schema
+    table) asserting every POPULATED field's content appears somewhere in
+    current()'s rendered output for a fixture that carries every field. Built as
+    a loop over the fixture's own keys minus a documented, justified exclusion
+    set -- NOT a hardcoded check of only anchors/constraints by name -- so a
+    genuinely new field added to Task later and forgotten in render_human()
+    fails this test by default, exactly the way anchors/constraints failed
+    before #420's fix.
+
+    Three properties are what make this loop CAPABLE OF FAILING. #420's version
+    had none of them and so reported green in the defective world:
+
+      - `_leaf_texts` is TOTAL. The old `_flatten` returned [] for the nested
+        contract-dict shape every populated corpus `directives` block carries,
+        so the inner loop body never ran and the property asserted nothing
+        about the field while reporting green.
+      - the loop keeps a PER-FIELD ledger and asserts it EQUALS the set of
+        populated non-excluded fields. A single `checked_any` flag for the whole
+        loop let any field cover for any other, so a field the extractor read no
+        text out of still passed.
+      - the fixture's key set is asserted to be a SUPERSET of the engine's own
+        canonical Task builder `_build_amend_task`. The loop runs over the
+        FIXTURE's keys, so a field added to the engine's Task shape and
+        forgotten here would be absent from the loop, absent from the ledger's
+        expected set, and green -- the identical forgetting failure this class
+        exists to catch.
+
+    RESIDUAL LIMIT, stated rather than implied: the superset assertion closes
+    the hole for fields the ENGINE introduces. A field introduced only by a
+    template -- carried in a shipped checklist JSON but built by neither
+    `_build_amend_task` nor `append()` -- is still invisible to this property
+    and needs a human to add it to the fixture.
+
+    `test_the_property_fails_when_a_populated_field_is_unrendered` below is the
+    in-suite proof that the assertion path can actually go red: a property only
+    ever observed passing is indistinguishable from one that cannot fail."""
 
     # Fields intentionally excluded from the generic content-presence loop,
     # each for a stated reason -- not because checking them is inconvenient:
@@ -3989,41 +5273,51 @@ class TaskFieldCompleteness(unittest.TestCase):
     #                          prose.
     #   title              -- a short label, historically never part of the
     #                          briefing (redundant with `imperative`).
-    #   directives         -- KNOWN GAP, same unrendered-defect class as
-    #                          anchors/constraints (never read by state()
-    #                          either), but issue #420 caps this fix's
-    #                          authorized scope to "the two new fields":
-    #                          anchors + constraints (IMPLEMENTER_HANDOFF
-    #                          Allowed Scope). Excluded here rather than
-    #                          silently expanded into; flagged as an
-    #                          out-of-scope triage candidate in the
-    #                          IMPLEMENTER_RESULT instead.
+    # `directives` is deliberately NOT in the set below: as of #433 state()
+    # reads it and render_human() prints it, so it is ordinary rendered content
+    # and the generic loop carries it like anchors/constraints. It was excluded
+    # under #420 only because that issue capped its authorized scope to the two
+    # fields it introduced.
     _EXCLUDED_FIELDS = {
         "id", "status", "preconditions", "postconditions", "status_detail",
         "rework_count", "result", "finding", "evidence", "why_exempt",
-        "child_checklist", "context_refs", "title", "directives",
+        "child_checklist", "context_refs", "title",
     }
 
     @staticmethod
-    def _flatten(value):
-        """Best-effort text extraction for str / [str] / {category: [str]}
-        shapes -- the shapes anchors/constraints actually carry in the live
-        corpus. Anything else (list-of-dict, bool, int, None) yields []."""
-        if isinstance(value, str):
-            return [value]
-        if isinstance(value, list) and value and all(isinstance(v, str) for v in value):
-            return list(value)
-        if isinstance(value, dict):
-            out = []
-            for v in value.values():
-                if isinstance(v, list):
-                    out.extend(x for x in v if isinstance(x, str))
-                elif isinstance(v, str):
-                    out.append(v)
-            return out
-        return []
+    def _leaf_texts(value):
+        """TOTAL leaf extraction: recurse dicts and lists to any depth and
+        stringify every scalar, so EVERY populated shape yields something to
+        assert on. Returns [] only for None and for empty containers.
 
-    def test_every_populated_field_renders_for_a_fully_populated_gate(self):
+        This replaces #420's `_flatten`, which handled str / [str] /
+        {category: [str]} and returned [] for everything else -- including the
+        nested contract-dict shape all 8 populated corpus `directives` blocks
+        carry. A field the extractor reads nothing out of is a field the
+        property never checks, which is how the loop reported green while
+        asserting nothing.
+
+        Deliberately INDEPENDENT of the renderer's `_directive_leaf` /
+        `_render_directive_lines`: sharing them would let one bug render nothing
+        and assert nothing, in agreement, with both sides green. The one known
+        divergence is a bool leaf (Python `True` here vs the renderer's JSON
+        `true`); no field currently reachable by the loop carries one, and it
+        would surface as a loud red rather than a silent green."""
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value] if value else []
+        if isinstance(value, dict):
+            return [leaf for v in value.values()
+                    for leaf in TaskFieldCompleteness._leaf_texts(v)]
+        if isinstance(value, (list, tuple)):
+            return [leaf for v in value
+                    for leaf in TaskFieldCompleteness._leaf_texts(v)]
+        return [str(value)]
+
+    def _fully_populated_gate(self):
+        """One gate carrying every field the Task shape allows, each with
+        content unique enough to find in the rendered briefing."""
         t = gate("g1", "in-progress", why_exempt=False)
         # Both left OPEN (satisfied=False): render_human() only prints a
         # condition's statement while it is open (the satisfied-hiding
@@ -4035,14 +5329,23 @@ class TaskFieldCompleteness(unittest.TestCase):
                                  "check": None, "satisfied": False}]
         t["constraints"] = ["CONSTRAINT_UNIQUE_TEXT"]
         t["anchors"] = {"structural": ["ANCHOR_UNIQUE_TEXT"]}
-        t["directives"] = ["DIRECTIVE_UNIQUE_TEXT"]  # populated but excluded -- see class docstring
+        # The nested contract-dict shape -- the one all 8 populated corpus
+        # `directives` blocks carry, and the one the old `_flatten` returned []
+        # for. A flat [str] here would pass under a non-recursive extractor and
+        # so would prove nothing.
+        t["directives"] = {"replan_input": {
+            "template": "DIRECTIVE_TEMPLATE_UNIQUE_TEXT",
+            "evidence_fields": ["DIRECTIVE_FIELD_UNIQUE_TEXT"],
+        }}
         t["context_refs"] = [{"root": "repo", "path": "x", "required": True}]
         t["child_checklist"] = "some-other-work-id"
         t["evidence"] = [{"id": "e1", "type": "note", "payload": {}, "produced_by": "test", "ts": ""}]
         t["status_detail"] = {"note": "STATUS_DETAIL_UNIQUE_TEXT"}
-        cl = gated(g1=t)
-        out = E.current(cl)
+        return t
 
+    def _assert_every_populated_field_renders(self, t, out):
+        """The property itself, factored out so the negative self-test below
+        drives the REAL assertion path rather than a copy of it."""
         # Dedicated checks for the two structured, list-of-dict fields.
         self.assertIn("PRECOND_UNIQUE_TEXT", out)
         self.assertIn("POSTCOND_UNIQUE_TEXT", out)
@@ -4051,23 +5354,239 @@ class TaskFieldCompleteness(unittest.TestCase):
         # populated, non-excluded field whose content doesn't surface. A
         # future field added to Task and left unhandled by render_human()
         # lands here by default (it is not in _EXCLUDED_FIELDS) and fails.
-        checked_any = False
+        expected = set()
+        asserted = set()
         for field, value in t.items():
             if field in self._EXCLUDED_FIELDS or not value:
                 continue
-            for text in self._flatten(value):
-                checked_any = True
+            expected.add(field)
+            for text in self._leaf_texts(value):
+                asserted.add(field)
                 self.assertIn(
                     text, out,
                     f"populated field {field!r} (value {value!r}) has content "
                     f"{text!r} missing from current()'s output",
                 )
-        self.assertTrue(checked_any, "the generic loop asserted nothing -- "
-                         "the fixture or exclusion set is miscalibrated")
-        # Sanity: name the two fields this loop is specifically proving,
+        # The per-field ledger, NOT one flag for the whole loop: with a single
+        # `checked_any`, any field could cover for any other and a field the
+        # extractor read no text out of passed green.
+        self.assertEqual(
+            asserted, expected,
+            f"populated field(s) {sorted(expected - asserted)} were carried by "
+            f"the loop but asserted NOTHING -- _leaf_texts read no text out of "
+            f"them, so current()'s output was never checked against their "
+            f"content",
+        )
+
+    def test_every_populated_field_renders_for_a_fully_populated_gate(self):
+        t = self._fully_populated_gate()
+        out = E.current(gated(g1=t))
+        self._assert_every_populated_field_renders(t, out)
+        # Sanity: name the three fields this loop is specifically proving,
         # so a change to the fixture that accidentally drops them is loud.
         self.assertIn("CONSTRAINT_UNIQUE_TEXT", out)
         self.assertIn("ANCHOR_UNIQUE_TEXT", out)
+        self.assertIn("DIRECTIVE_TEMPLATE_UNIQUE_TEXT", out)
+
+    def test_fixture_carries_every_field_the_engines_task_builder_builds(self):
+        # The hole the loop above cannot see on its own: it runs over the
+        # FIXTURE's keys, so a Task field added to the engine later and
+        # forgotten here is absent from the loop, absent from the ledger's
+        # expected set, and passes green. Checked against the engine's OWN
+        # canonical Task builder rather than docs/CHECKLIST_SCHEMA.md's Task
+        # table: the table is hand-authored prose, and nothing checks it
+        # against what runs (it is currently stale on the `directives` row).
+        # _build_amend_task is asked for its keys rather than having them
+        # re-listed here, so the enumeration cannot drift from the builder.
+        built = E._build_amend_task({
+            "id": "x", "title": "t", "imperative": "i",
+            "postconditions": [{"id": "c1", "statement": "s",
+                                 "check": None, "satisfied": False}],
+        })
+        missing = set(built) - set(self._fully_populated_gate())
+        self.assertEqual(
+            missing, set(),
+            f"the engine's Task builder _build_amend_task now emits "
+            f"{sorted(missing)}, which this class's fixture does not carry, so "
+            f"the completeness loop would never see the field -- add it to "
+            f"_fully_populated_gate() with content the briefing should show, or "
+            f"to _EXCLUDED_FIELDS with a stated reason. append() mirrors the "
+            f"same shape (scripts/checklist_engine.py)",
+        )
+
+    def test_the_property_fails_when_a_populated_field_is_unrendered(self):
+        # The NEGATIVE self-test, and the durable machine proof that the
+        # assertion path above can reach a failing state. It drives
+        # _assert_every_populated_field_renders -- the same helper the positive
+        # test drives, not a copy -- against a briefing rendered WITHOUT the
+        # `directives` block, which is exactly what current() emitted before
+        # #433 while this class reported green.
+        t = self._fully_populated_gate()
+        unrendered = copy.deepcopy(t)
+        unrendered["directives"] = None
+        out = E.current(gated(g1=unrendered))
+        self.assertNotIn("DIRECTIVE_TEMPLATE_UNIQUE_TEXT", out)
+
+        # `t` still carries the populated block, so the property is being asked
+        # about a field the output does not show -- it must RAISE, and name it.
+        with self.assertRaises(AssertionError) as caught:
+            self._assert_every_populated_field_renders(t, out)
+        self.assertIn("directives", str(caught.exception))
+
+
+def _builder_task_keys():
+    """The engine's own canonical Task-shape key set, asked for rather than
+    re-listed here so the enumeration cannot drift from the builder (same
+    approach as TaskFieldCompleteness.test_fixture_carries_every_field_the_
+    engines_task_builder_builds above). `_build_amend_task` and `append()`
+    both delegate to `_new_task` as of #474, so either call site's output has
+    the identical key set."""
+    built = E._build_amend_task({
+        "id": "x", "title": "t", "imperative": "i",
+        "postconditions": [{"id": "c1", "statement": "s",
+                             "check": None, "satisfied": False}],
+    })
+    return set(built)
+
+
+def _collect_shipped_task_fields():
+    """Walk every shipped gated/survey checklist template
+    (skills/*/templates/*.template.json) and union every key any `tasks`
+    dict entry carries. This is the real corpus TaskFieldCompleteness's own
+    RESIDUAL LIMIT says nothing checks: a field a template carries but
+    neither `_build_amend_task` nor `append()` builds."""
+    fields = set()
+    for path in sorted(ROOT.glob("skills/*/templates/*.template.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("type") not in ("gated", "survey"):
+            continue
+        tasks = data.get("tasks", {})
+        if not isinstance(tasks, dict):
+            continue
+        for task in tasks.values():
+            if isinstance(task, dict):
+                fields |= set(task.keys())
+    return fields
+
+
+def _assert_task_fields_allowed(fields, allowlist, label):
+    """The shared assertion both the negative self-test and the positive
+    corpus test drive -- not a copy of it -- so a bug in one is a bug in
+    both. Anything in `fields` that is neither engine-built nor on the
+    stated `allowlist` is unaccounted for and fails loudly, naming it."""
+    unaccounted = fields - (_builder_task_keys() | allowlist)
+    assert not unaccounted, (
+        f"{label}: field(s) {sorted(unaccounted)} are neither built by the "
+        f"engine's Task constructor (_new_task) nor on the stated "
+        f"template-only allowlist -- add them to the allowlist with a "
+        f"stated reason, or fix the producer"
+    )
+
+
+class TemplateOnlyFieldAllowlist(unittest.TestCase):
+    """#475: TaskFieldCompleteness's own stated RESIDUAL LIMIT (above) says a
+    field introduced only by a shipped template -- carried in a checklist JSON
+    but built by neither `_build_amend_task` nor `append()` -- is invisible to
+    that property and needs a human to add it. This class closes that hole: a
+    walker over the real shipped templates plus a superset assertion against
+    (the engine's own Task builder keys) union (a small, stated allowlist of
+    template-only fields), so a genuinely new template-only field fails
+    loudly instead of silently passing.
+
+    RED-BEFORE-GREEN (NOT OVERRIDABLE per the issue): the negative self-test
+    below was written and run FIRST, before `_assert_task_fields_allowed` or
+    `_collect_shipped_task_fields` existed, and observed failing with
+    `NameError: name '_assert_task_fields_allowed' is not defined` -- proof
+    the check can fail on a planted field before it ships, not just pass by
+    construction. Only after that red was the helper implemented."""
+
+    ALLOWLIST = {
+        "anchors", "context_refs", "why_exempt",
+        "context_headroom_tokens", "context_headroom_note", "kind",
+    }
+
+    def test_negative_self_test_catches_a_synthetic_planted_field(self):
+        planted = _builder_task_keys() | {"totally_synthetic_field_zzqx"}
+        with self.assertRaises(AssertionError) as caught:
+            _assert_task_fields_allowed(
+                planted, self.ALLOWLIST, "synthetic plant")
+        self.assertIn("totally_synthetic_field_zzqx", str(caught.exception))
+
+    def test_shipped_templates_carry_no_unaccounted_task_fields(self):
+        # The real corpus walk: every `tasks` dict key across every shipped
+        # gated/survey template must be builder-emitted or on the allowlist.
+        shipped_fields = _collect_shipped_task_fields()
+        _assert_task_fields_allowed(
+            shipped_fields, self.ALLOWLIST, "shipped templates")
+
+
+def _doc_task_field_table():
+    """Parse docs/CHECKLIST_SCHEMA.md's `## Task` section field table (the
+    `| field | type | notes |` rows between the `## Task` header and the
+    next `## ` header) into a set of field names. Reads the `` `field` ``
+    column of every row shaped like a table data row -- the header and
+    separator rows don't backtick-quote a field name, so they never match."""
+    path = ROOT / "docs" / "CHECKLIST_SCHEMA.md"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = next(i for i, line in enumerate(lines) if line.strip() == "## Task")
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+        len(lines),
+    )
+    fields = set()
+    for line in lines[start:end]:
+        m = re.match(r"\|\s*`([A-Za-z_]+)`\s*\|", line)
+        if m:
+            fields.add(m.group(1))
+    return fields
+
+
+def _assert_doc_reconciles_with_builder(doc_fields, builder_keys, allowlist, label):
+    """The shared reconciliation assertion both the negative self-test and
+    the positive doc-vs-builder test drive -- not a copy of it. Two
+    directions, matching the issue's own stated check: every builder field
+    must be documented, and every documented field must be either
+    builder-emitted or on the stated template-only allowlist. This makes the
+    doc VERIFIABLE against what the engine builds, not authoritative over
+    it (#433 g3) -- a field the allowlist carries but the doc omits is not
+    itself a failure here."""
+    undocumented_builder = builder_keys - doc_fields
+    unaccounted_doc = doc_fields - (builder_keys | allowlist)
+    assert not undocumented_builder and not unaccounted_doc, (
+        f"{label}: builder field(s) {sorted(undocumented_builder)} are not "
+        f"documented in CHECKLIST_SCHEMA.md's Task table; documented "
+        f"field(s) {sorted(unaccounted_doc)} are neither builder-emitted "
+        f"nor on the stated template-only allowlist"
+    )
+
+
+class SchemaDocFieldReconciliation(unittest.TestCase):
+    """#476: docs/CHECKLIST_SCHEMA.md's `## Task` field table is hand-authored
+    prose that nothing checks against what the engine actually builds
+    (#433's g3 finding, quoted in the issue). This test makes the table
+    VERIFIABLE, not authoritative: a drift check between the doc and
+    `_new_task`'s real key set (plus m2-475's `TemplateOnlyFieldAllowlist.
+    ALLOWLIST`), never a new source of truth the engine is bound by.
+
+    RED-BEFORE-GREEN: the negative self-test drives the SAME
+    `_assert_doc_reconciles_with_builder` helper the positive test drives,
+    against a synthetic field set missing one real builder field
+    (`status`), and confirms it raises naming that field -- proof the
+    reconciliation can actually fail, not just pass by construction."""
+
+    def test_negative_self_test_catches_an_undocumented_builder_field(self):
+        doc_fields = _doc_task_field_table() - {"status"}
+        with self.assertRaises(AssertionError) as caught:
+            _assert_doc_reconciles_with_builder(
+                doc_fields, _builder_task_keys(),
+                TemplateOnlyFieldAllowlist.ALLOWLIST, "synthetic plant")
+        self.assertIn("status", str(caught.exception))
+
+    def test_schema_doc_task_table_reconciles_with_the_builder(self):
+        _assert_doc_reconciles_with_builder(
+            _doc_task_field_table(), _builder_task_keys(),
+            TemplateOnlyFieldAllowlist.ALLOWLIST,
+            "CHECKLIST_SCHEMA.md Task table")
 
 
 class Inv1CompletenessOracle(unittest.TestCase):
@@ -4343,7 +5862,12 @@ class NextVerbsAreLegalFromHere(unittest.TestCase):
         self.assertEqual(
             E.advance(copy.deepcopy(cl), "g1", why="test understanding"), "g1 -> complete")  # no raise
 
-    # --- resume() / record() carry no condition gate at all ------------------ #
+    # --- resume()/record() hints are never suppressed by open conditions ----- #
+    # resume() genuinely carries no condition gate. record() DOES carry one
+    # since #422/#328 (`--result pass` vs `command`-kind postconditions), but it
+    # is command-kind only -- the class _blocking_conditions() excludes under
+    # INV-2 -- and `--result fail` is ungated, so the hint stands either way.
+    # See tests/test_next_verbs_record_gate_comment.py (#437).
     def test_blocked_resume_hint_runs(self):
         cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND))
         E.block(cl, "g1", "waiting on x1 result", "parent agent", "escalate; do not re-dispatch")
@@ -4354,8 +5878,9 @@ class NextVerbsAreLegalFromHere(unittest.TestCase):
             "g1 resumed -> in-progress (blocker resolved: blocker cleared)")  # no raise
 
     def test_survey_in_progress_record_hint_runs_even_with_open_null_postcondition(self):
-        # record() carries no gate at all (unlike advance()) -- confirm the
-        # hint is present AND runnable despite an open null postcondition.
+        # A `null`-kind postcondition is one record() does not evaluate at all
+        # (#422/#328 scoped its check to `command`-kind), so unlike advance()
+        # the hint is present AND runnable despite this condition being open.
         cl = survey(v1=survey_item("v1", "in-progress"))
         cl["tasks"]["v1"]["postconditions"] = [{"id": "c1", "statement": "checked", "check": None, "satisfied": False}]
         verbs = self._next(cl, "v1")
@@ -4458,3 +5983,821 @@ class TestGlobToRegex(unittest.TestCase):
         self.assertIsNotNone(re.match(regex, "a/b"))
         self.assertIsNone(re.match(regex, "ab"))    # separator is required
         self.assertIsNone(re.match(regex, "aXb"))   # not interchangeable with any char
+
+
+class TripLedgerRecordsBeginsOverTheLine(unittest.TestCase):
+    """#467 (a) — the engine-only, append-only trip ledger.
+
+    The discriminating question this epic is about is NOT "did a handoff artifact
+    appear before the next advance" (`advance` already refuses a non-exempt gate
+    with no `--why`, so that is true in BOTH worlds and discriminates nothing). It
+    is: **did anyone BEGIN work while over the line?** Every test below is a
+    two-world pair — the defective spine AND its healthy counterpart — and names
+    the field that differs. A test that only asserted the defective side could not
+    fail.
+
+    Names match the frozen `g4-integrate` closeout selector (`ledger`).
+    """
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        self.soft, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+        self.under_hard = max(self.hard - 0.001, 0.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _g2_pending_after_g1(self):
+        """g1 closed with a real understanding (-> w-1); g2 pending, so `start g2`
+        is a genuine BEGIN-work move and the live why-record is w-1."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    def _ledger(self, cl):
+        return cl.get("trip_ledger")
+
+    # --- shape 1: an over-the-line BEGIN that was REFUSED -------------------- #
+    def test_ledger_begin_refused_is_recorded_and_the_healthy_world_records_nothing(self):
+        """DEFECTIVE: the agent is told to wrap up, closes g1 — and then begins g2
+        anyway. HEALTHY: same spine, same gauge, the agent closes g1 and STOPS.
+        Differing field: `trip_ledger` (absent vs one `begin-refused` entry)."""
+        # healthy world — told to wrap up, wrapped up, stopped.
+        healthy = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(healthy, _advance_ns("g1", why="wrapping up at g1"),
+                             base_dir=Path("."))
+        self.assertTrue(msg.endswith("g1 -> complete"), msg)
+        self.assertIsNone(self._ledger(healthy))          # <-- the differing field
+
+        # defective world — same close, then a BEGIN over the line.
+        defective = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(defective, _advance_ns("g1", why="wrapping up at g1"), base_dir=Path("."))
+            with self.assertRaises(E.EngineError):
+                E.dispatch(defective, _start_ns("g2"), base_dir=Path("."))
+        led = self._ledger(defective)                     # <-- the differing field
+        self.assertIsInstance(led, list)
+        self.assertEqual(len(led), 1)
+        self.assertEqual(led[0]["outcome"], "begin-refused")
+        self.assertEqual(led[0]["gate"], "g2")
+        self.assertEqual(led[0]["verb"], "start")
+        # the refusal still stands: the ledger records the attempt, it does not permit it
+        self.assertEqual(defective["tasks"]["g2"]["status"], "pending")
+
+    # --- shape 2: an over-the-line BEGIN that was RELEASED ------------------- #
+    def test_ledger_begin_released_is_recorded_when_the_same_verb_runs_over_the_line(self):
+        """Both worlds run the IDENTICAL command on the IDENTICAL spine and both
+        succeed — g2 goes `in-progress` either way. The ONLY difference is which
+        side of the hard line the gauge reads. Differing field: `trip_ledger`
+        (absent below the line vs one `begin-released` entry over it)."""
+        def _run(fill):
+            cl = self._g2_pending_after_g1()
+            E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+                msg = E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+            self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+            return cl
+
+        healthy = _run(self.under_hard)
+        self.assertIsNone(self._ledger(healthy))          # <-- the differing field
+
+        defective = _run(self.over_hard)
+        led = self._ledger(defective)                     # <-- the differing field
+        self.assertIsInstance(led, list)
+        self.assertEqual(len(led), 1)
+        self.assertEqual(led[0]["outcome"], "begin-released")
+        self.assertEqual(led[0]["gate"], "g2")
+        self.assertEqual(led[0]["verb"], "start")
+
+    # --- the entry's own shape ---------------------------------------------- #
+    def test_ledger_entry_carries_every_field_including_the_live_why_ref(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        entry = cl["trip_ledger"][0]
+        self.assertEqual(
+            set(entry),
+            {"id", "gate", "verb", "outcome", "fill", "hard", "model", "why_ref", "ts"})
+        self.assertEqual(entry["id"], "tl-1")
+        self.assertEqual(entry["model"], self.MODEL)
+        self.assertEqual(entry["why_ref"], "w-1")
+        self.assertAlmostEqual(entry["fill"], self.over_hard, places=4)
+        self.assertAlmostEqual(entry["hard"], self.hard, places=4)
+        # `ts` is a real engine timestamp, not a placeholder string
+        self.assertTrue(datetime.fromisoformat(entry["ts"]))
+
+    def test_ledger_records_the_per_gate_hard_line_not_a_global_constant(self):
+        """POSITIVE CONTROL for the `hard` field. Asserting `hard == self.hard`
+        above would still pass against a writer that stored one frozen number, so
+        this asserts the recorded `hard` MOVES with the begun gate's own headroom
+        reserve — the per-gate line the agent was actually judged against."""
+        cl = self._g2_pending_after_g1()
+        cl["tasks"]["g2"]["context_headroom_tokens"] = 30_000
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        entry = cl["trip_ledger"][0]
+        _, tightened = E._gauge_reader.thresholds_for(self.MODEL, 30_000)
+        self.assertAlmostEqual(entry["hard"], tightened, places=4)
+        self.assertNotAlmostEqual(entry["hard"], self.hard, places=4)
+
+    # --- append-only --------------------------------------------------------- #
+    def test_ledger_is_append_only_across_repeated_begins(self):
+        cl = self._g2_pending_after_g1()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            first = copy.deepcopy(cl["trip_ledger"][0])
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+            E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+            E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        led = cl["trip_ledger"]
+        self.assertEqual(len(led), 3)  # the count this guard looped over
+        self.assertEqual([e["id"] for e in led], ["tl-1", "tl-2", "tl-3"])
+        self.assertEqual([e["verb"] for e in led], ["start", "reopen", "start"])
+        self.assertEqual([e["outcome"] for e in led],
+                         ["begin-refused", "begin-refused", "begin-released"])
+        self.assertEqual(led[0], first)  # the earliest entry was never mutated
+
+    # --- end to end through the CLI ------------------------------------------ #
+    def _write_gauge(self, d, fill, observed_at):
+        (Path(d) / "gauge.json").write_text(json.dumps({
+            "schema_version": 1, "fill_fraction": fill,
+            "model": self.MODEL, "observed_at": observed_at,
+        }), encoding="utf-8")
+
+    def _cli_spine(self, d):
+        f = Path(d) / "spine.json"
+        E.save(f, self._three_gates())
+        # close g1 with a real understanding BEFORE any gauge exists -> w-1
+        self.assertEqual(E.main(["--file", str(f), "advance", "g1", "--why", "u1"]), 0)
+        return f
+
+    def test_ledger_begin_refused_survives_the_raise_through_the_cli(self):
+        """`main()` persists on the EngineError path for any verb that is not
+        `current` and not `--dry-run`, which is what makes a `begin-refused` entry
+        durable even though the verb raised. Proved end to end, from the file on
+        disk — not by calling the function directly.
+
+        Two worlds, same command: a FRESH over-hard gauge vs a STALE one (which the
+        reader discards, so the band is inactive). Differing field: `trip_ledger`
+        on the reloaded file."""
+        import contextlib, io
+        with tempfile.TemporaryDirectory() as d:
+            f = self._cli_spine(d)
+            stale = (datetime.now(timezone.utc) - timedelta(hours=2)).isoformat()
+            self._write_gauge(d, min(self.hard + 0.05, 1.0), stale)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)  # healthy
+            healthy = E.load(f)
+            self.assertIsNone(healthy.get("trip_ledger"))   # <-- the differing field
+
+        with tempfile.TemporaryDirectory() as d:
+            f = self._cli_spine(d)
+            self._write_gauge(d, min(self.hard + 0.05, 1.0),
+                              datetime.now(timezone.utc).isoformat())
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rc = E.main(["--file", str(f), "start", "g2"])
+            self.assertEqual(rc, 1)
+            self.assertIn("REFUSED:", err.getvalue())
+            defective = E.load(f)
+            led = defective.get("trip_ledger")             # <-- the differing field
+            self.assertIsInstance(led, list)
+            self.assertEqual(len(led), 1)
+            self.assertEqual(led[0]["outcome"], "begin-refused")
+            self.assertEqual(led[0]["gate"], "g2")
+            self.assertEqual(led[0]["verb"], "start")
+            self.assertEqual(led[0]["why_ref"], "w-1")
+            self.assertEqual(defective["tasks"]["g2"]["status"], "pending")
+
+    def test_ledger_begin_released_is_recorded_through_the_cli(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = self._cli_spine(d)
+            self._write_gauge(d, min(self.hard + 0.05, 1.0),
+                              datetime.now(timezone.utc).isoformat())
+            self.assertEqual(
+                E.main(["--file", str(f), "attach", "g2", "--type", "refresh-request",
+                        "--field", "seam=g2", "--field", "why_ref=w-1"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)
+            cl = E.load(f)
+            self.assertEqual(cl["tasks"]["g2"]["status"], "in-progress")
+            led = cl.get("trip_ledger")
+            self.assertIsInstance(led, list)
+            self.assertEqual(len(led), 1)
+            self.assertEqual(led[0]["outcome"], "begin-released")
+            self.assertEqual(led[0]["gate"], "g2")
+
+
+class TripLedgerComplianceSignal(unittest.TestCase):
+    """#467 (b) — the compliance signal: a PURE selector over the stored ledger,
+    keyed to the LIVE understanding. Its emptiness is the predicate.
+
+    Every test is a two-world pair. The sharpest of them holds the ledger BYTE
+    IDENTICAL across both worlds and moves only which understanding is live, so the
+    thing under test is the keying and nothing else.
+
+    Names match the frozen `g4-integrate` closeout selector (`compliance`)."""
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        _, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _tripped_at_g2(self):
+        """A spine carrying exactly one `begin-refused` entry written under w-1."""
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(len(cl["trip_ledger"]), 1)
+        self.assertEqual(cl["trip_ledger"][0]["why_ref"], "w-1")
+        return cl
+
+    def test_compliance_signal_is_empty_in_the_healthy_world_and_names_the_begin_in_the_defective_one(self):
+        healthy = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(healthy, _advance_ns("g1", why="wrapping up and stopping"),
+                       base_dir=Path("."))
+        self.assertEqual(E.begin_over_line_records(healthy), [])   # <-- differing value
+
+        defective = self._tripped_at_g2()
+        records = E.begin_over_line_records(defective)             # <-- differing value
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["outcome"], "begin-refused")
+        self.assertEqual(records[0]["gate"], "g2")
+
+    def test_compliance_signal_reads_the_live_understanding_not_a_superseded_one(self):
+        """The two worlds here hold an IDENTICAL ledger — same single entry, same
+        `why_ref`. The ONLY difference is whether that entry's understanding is
+        still the live one. Differing value: the selector's length (1 vs 0)."""
+        defective = self._tripped_at_g2()
+        ledger_snapshot = copy.deepcopy(defective["trip_ledger"])
+        self.assertEqual(len(E.begin_over_line_records(defective)), 1)
+
+        # the understanding moves on: a fresh agent closes g2 with its OWN why (w-2)
+        superseded = copy.deepcopy(defective)
+        E.attach(superseded, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.start(superseded, "g2")
+        E.advance(superseded, "g2", why="u2 — a fresh agent's understanding")
+        self.assertEqual(E._latest_why_record(superseded)["id"], "w-2")
+
+        # the ledger is untouched: the mark is retained, it just stops being current
+        self.assertEqual(superseded["trip_ledger"], ledger_snapshot)
+        self.assertEqual(E.begin_over_line_records(superseded), [])  # <-- differing value
+
+    def test_compliance_signal_goes_quiet_when_a_reopen_freshens_the_digest(self):
+        """The other supersede path: `reopen` appends a reopen-marker, so
+        `_latest_why_record` skips past the understanding the entry was written
+        under. Positive control first, so the quiet half means something."""
+        cl = self._tripped_at_g2()
+        self.assertEqual(len(E.begin_over_line_records(cl)), 1)     # positive control
+        before = copy.deepcopy(cl["trip_ledger"])
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+        self.assertIsNone(E._latest_why_record(cl))
+        self.assertEqual(cl["trip_ledger"], before)  # entry retained, never edited
+        self.assertEqual(E.begin_over_line_records(cl), [])         # <-- differing value
+
+    def test_compliance_signal_counts_both_begin_outcomes_and_nothing_else(self):
+        """The outcome filter, two-world on the SAME entry: `begin-refused` and
+        `begin-released` are the non-compliance record; any other outcome value a
+        future writer might add is not silently counted as one."""
+        cl = self._tripped_at_g2()
+        entry = cl["trip_ledger"][0]
+        for outcome in ("begin-refused", "begin-released"):
+            with self.subTest(outcome=outcome):
+                entry["outcome"] = outcome
+                self.assertEqual(len(E.begin_over_line_records(cl)), 1)
+        for outcome in ("advance-noted", "", None):
+            with self.subTest(outcome=outcome):
+                entry["outcome"] = outcome
+                self.assertEqual(E.begin_over_line_records(cl), [])
+
+    def test_compliance_selector_is_pure_and_reads_stored_state_only(self):
+        """Purity is load-bearing: the selector is called from the read-only
+        `current` path, where a probe would be a side effect. Asserted three ways —
+        no state change, no gauge read, no subprocess."""
+        cl = self._tripped_at_g2()
+        before = copy.deepcopy(cl)
+        with mock.patch.object(E, "_read_gauge",
+                               side_effect=AssertionError("the selector must not read the gauge")), \
+             mock.patch.object(E.subprocess, "run",
+                               side_effect=AssertionError("the selector must not run a subprocess")):
+            records = E.begin_over_line_records(cl)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(cl, before)  # no side effects
+
+    def test_compliance_signal_is_empty_on_a_spine_that_never_carried_a_ledger(self):
+        """Backward compatibility at the read side: a legacy spine with no
+        `trip_ledger` key is not a crash and not a claim — it is an empty record."""
+        cl = self._three_gates()
+        self.assertNotIn("trip_ledger", cl)
+        self.assertEqual(E.begin_over_line_records(cl), [])
+
+    # --- #467 B1 rework: the HISTORICAL selector, additive and UNKEYED -------- #
+    #
+    # The live selector above is keyed to the live understanding by design (close
+    # criterion (b)); that keying is what the mandated HARD-band close (`advance
+    # --why`) is guaranteed to supersede, emptying the live selector even in the
+    # exact runaway the ledger exists to catch (B1). The historical selector below
+    # answers a different question -- not "under the understanding now in force"
+    # but "ever" -- and is exactly what survives that supersede.
+
+    def test_historical_signal_is_empty_in_the_healthy_world_and_names_the_begin_in_the_defective_one(self):
+        healthy = self._three_gates()
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(healthy, _advance_ns("g1", why="wrapping up and stopping"),
+                       base_dir=Path("."))
+        self.assertEqual(E.begin_over_line_records_historical(healthy), [])   # <-- differing value
+
+        defective = self._tripped_at_g2()
+        records = E.begin_over_line_records_historical(defective)            # <-- differing value
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["outcome"], "begin-refused")
+        self.assertEqual(records[0]["gate"], "g2")
+
+    def test_historical_signal_survives_the_supersede_that_empties_the_live_one(self):
+        """THE B1 regression, at the selector level. Byte-identical ledger to
+        `test_compliance_signal_reads_the_live_understanding_not_a_superseded_one`
+        — only the understanding moves on — but here it is the HISTORICAL
+        selector under test, and it must NOT go quiet: going quiet on exactly this
+        transition is the defect. Differing value: the LIVE selector's length
+        (1 -> 0, positive control) vs the HISTORICAL selector's length (1 -> 1,
+        unchanged — the field this test actually measures)."""
+        defective = self._tripped_at_g2()
+        ledger_snapshot = copy.deepcopy(defective["trip_ledger"])
+        self.assertEqual(len(E.begin_over_line_records(defective)), 1)              # positive control (live, before)
+        self.assertEqual(len(E.begin_over_line_records_historical(defective)), 1)   # positive control (historical, before)
+
+        # the offender's own close: a fresh why-record supersedes the live one
+        superseded = copy.deepcopy(defective)
+        E.attach(superseded, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.start(superseded, "g2")
+        E.advance(superseded, "g2", why="u2 — the offender's own close")
+        self.assertEqual(E._latest_why_record(superseded)["id"], "w-2")
+
+        self.assertEqual(superseded["trip_ledger"], ledger_snapshot)  # entry retained, never edited
+        self.assertEqual(E.begin_over_line_records(superseded), [])                 # live goes quiet (positive control)
+        self.assertEqual(len(E.begin_over_line_records_historical(superseded)), 1)  # <-- differing value: historical does not
+        self.assertEqual(E.begin_over_line_records_historical(superseded)[0]["id"],
+                         ledger_snapshot[0]["id"])
+
+    def test_historical_signal_goes_quiet_only_when_the_ledger_itself_is_empty(self):
+        """The other supersede path (`reopen`) quiets the LIVE selector the same
+        way (already proven elsewhere); the historical one has no why_ref keying
+        for a reopen-marker to bypass, so it is unaffected. Positive control
+        first, so the differing value means something."""
+        cl = self._tripped_at_g2()
+        self.assertEqual(len(E.begin_over_line_records(cl)), 1)             # positive control
+        self.assertEqual(len(E.begin_over_line_records_historical(cl)), 1)  # positive control
+        with mock.patch.object(E, "_read_gauge", return_value=None):
+            E.dispatch(cl, _reopen_ns("g1", reason="rework"), base_dir=Path("."))
+        self.assertEqual(E.begin_over_line_records(cl), [])                 # live goes quiet (existing behaviour)
+        self.assertEqual(len(E.begin_over_line_records_historical(cl)), 1)  # <-- differing value: historical does not
+
+    def test_historical_signal_counts_both_begin_outcomes_and_nothing_else(self):
+        cl = self._tripped_at_g2()
+        entry = cl["trip_ledger"][0]
+        for outcome in ("begin-refused", "begin-released"):
+            with self.subTest(outcome=outcome):
+                entry["outcome"] = outcome
+                self.assertEqual(len(E.begin_over_line_records_historical(cl)), 1)
+        for outcome in ("advance-noted", "", None):
+            with self.subTest(outcome=outcome):
+                entry["outcome"] = outcome
+                self.assertEqual(E.begin_over_line_records_historical(cl), [])
+
+    def test_historical_selector_is_pure_and_reads_stored_state_only(self):
+        cl = self._tripped_at_g2()
+        before = copy.deepcopy(cl)
+        with mock.patch.object(E, "_read_gauge",
+                               side_effect=AssertionError("the selector must not read the gauge")), \
+             mock.patch.object(E.subprocess, "run",
+                               side_effect=AssertionError("the selector must not run a subprocess")):
+            records = E.begin_over_line_records_historical(cl)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(cl, before)  # no side effects
+
+    def test_historical_signal_is_empty_on_a_spine_that_never_carried_a_ledger(self):
+        cl = self._three_gates()
+        self.assertNotIn("trip_ledger", cl)
+        self.assertEqual(E.begin_over_line_records_historical(cl), [])
+
+    def test_historical_selector_never_raises_on_a_malformed_ledger(self):
+        """Fail-safe parity with the live selector (criterion 8): a corrupted
+        `trip_ledger` value is read as empty, never a crash."""
+        for malformed in (None, "not-a-list", {"also": "not-a-list"}):
+            with self.subTest(malformed=repr(malformed)):
+                cl = self._three_gates()
+                cl["trip_ledger"] = malformed
+                self.assertEqual(E.begin_over_line_records_historical(cl), [])
+
+    def test_historical_selector_skips_non_dict_entries_in_an_otherwise_valid_ledger(self):
+        cl = self._three_gates()
+        cl["trip_ledger"] = [1, "x", None, {"id": "tl-1", "outcome": "begin-refused",
+                                             "gate": "g2", "verb": "start"}]
+        records = E.begin_over_line_records_historical(cl)
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["id"], "tl-1")
+
+
+class TripLedgerComplianceOnTheHardAdvisory(unittest.TestCase):
+    """#467 (c) — the signal is surfaced by EXTENDING the existing `_trip_advisory`
+    HARD branch, not by a second render computing the same fact.
+
+    Every assertion is an EQUALITY against the whole advisory string, so the healthy
+    world is pinned byte-for-byte to what shipped and the defective world differs by
+    exactly the added line. A `assertIn`-only test here would pass against an
+    advisory that had silently changed everything else.
+
+    Names match the frozen `g4-integrate` closeout selector (`compliance`)."""
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        _, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _g2_pending_after_g1(self):
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    def _refuse_start(self, cl, iid="g2"):
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns(iid), base_dir=Path("."))
+
+    def _advisory(self, cl):
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            return E._trip_advisory(cl, Path("."))
+
+    # --- the exact strings, so both worlds are pinned ----------------------- #
+    def _expected_hard(self, gate, wid):
+        return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed. "
+                f"You have taken this as far as this context can carry it — now close THIS "
+                f"gate carrying your handoff (`advance {gate} --why \"<understanding>\"`), "
+                f"request a refresh, and stop. A fresh agent picks up from your DIGEST; do "
+                f"not begin work at another gate. Request the refresh with: attach {gate} "
+                f"--type refresh-request --field seam={gate} --field why_ref={wid}")
+
+    def _expected_hard_already_requested(self, gate):
+        return (f"\nCONTEXT {self.over_hard:.0%} (>= hard): your instruction has changed, "
+                f"and the refresh for {gate} is already requested. Close THIS gate carrying "
+                f"your handoff (`advance {gate} --why \"<understanding>\"`) and stop. A fresh "
+                f"agent picks up from your DIGEST; do not begin work at another gate.")
+
+    def _expected_live_note(self, n, verb, gate, outcome):
+        return (f"\nTRIP LEDGER: {n} begin(s) at/over the hard line are on the record "
+                f"under this understanding (latest: {verb} {gate} -> {outcome}). "
+                f"Closing THIS gate clears this line; the line below, if present, "
+                f"is not.")
+
+    def _expected_historical_note(self, n, verb, gate, outcome):
+        return (f"\nTRIP HISTORY: {n} begin(s) at/over the hard line are on the "
+                f"record across this checklist's full history (latest: {verb} {gate} "
+                f"-> {outcome}). No close clears this line.")
+
+    def _expected_note(self, n, verb, gate, outcome):
+        """The live line and the historical line together, for the common case
+        (used by every existing shape-4 test below) where nothing has yet been
+        superseded — the two selectors hold the SAME count and the SAME latest
+        entry, so both lines carry identical (n, verb, gate, outcome)."""
+        return (self._expected_live_note(n, verb, gate, outcome)
+                + self._expected_historical_note(n, verb, gate, outcome))
+
+    # --- shape 4: the rendered signal ---------------------------------------- #
+    def test_compliance_line_appears_on_the_hard_advisory_only_in_the_defective_world(self):
+        healthy = self._g2_pending_after_g1()
+        self.assertEqual(self._advisory(healthy), self._expected_hard("g2", "w-1"))
+
+        defective = self._g2_pending_after_g1()
+        self._refuse_start(defective)
+        self.assertEqual(
+            self._advisory(defective),
+            self._expected_hard("g2", "w-1")
+            + self._expected_note(1, "start", "g2", "begin-refused"))
+
+    def test_compliance_line_also_rides_the_already_requested_hard_advisory(self):
+        """The HARD branch has TWO sub-branches. Extending only the one an agent
+        without a pending request sees would leave the released case — the worse
+        one, where work actually proceeded over the line — silent."""
+        healthy = self._g2_pending_after_g1()
+        E.attach(healthy, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        self.assertEqual(self._advisory(healthy),
+                         self._expected_hard_already_requested("g2"))
+
+        defective = self._g2_pending_after_g1()
+        E.attach(defective, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(defective, _start_ns("g2"), base_dir=Path("."))  # released
+        self.assertEqual(defective["trip_ledger"][0]["outcome"], "begin-released")
+        self.assertEqual(
+            self._advisory(defective),
+            self._expected_hard_already_requested("g2")
+            + self._expected_note(1, "start", "g2", "begin-released"))
+
+    def test_compliance_line_names_the_count_and_the_latest_begin(self):
+        """The count is real, not a hardcoded 1, and the named begin is the LATEST
+        one — asserted against a spine carrying three entries of two kinds."""
+        cl = self._g2_pending_after_g1()
+        self._refuse_start(cl, "g2")
+        self._refuse_start(cl, "g2")
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(len(cl["trip_ledger"]), 3)  # the count this guard looped over
+        out = self._advisory(cl)
+        self.assertEqual(
+            out,
+            self._expected_hard_already_requested("g2")
+            + self._expected_note(3, "start", "g2", "begin-released"))
+        self.assertNotIn("1 begin(s)", out)
+
+    # --- #467 B1 rework: the HISTORICAL line, additive and rendered separately - #
+
+    def test_historical_line_renders_at_the_seam_even_when_the_live_line_is_absent(self):
+        """THE B1 regression, at the render site. World H: nothing was ever
+        tripped — no begin verb ever ran over the line, so there is neither a
+        live line nor a historical one. World D: the offender's own close — a
+        refused begin at g2, then that SAME agent closes g2 with `advance --why`
+        (the only legal close at/over hard) — which supersedes the live
+        selector (the existing, correct keying) but must NOT silence the
+        historical one. Positive control: World H proves the historical line
+        does not render spuriously. Differing field: whether `TRIP HISTORY`
+        appears at all, and the count it names."""
+        healthy = self._g2_pending_after_g1()
+        healthy_out = self._advisory(healthy)
+        self.assertNotIn("TRIP HISTORY", healthy_out)  # positive control
+
+        defective = self._g2_pending_after_g1()
+        self._refuse_start(defective, "g2")
+        self.assertEqual(len(defective["trip_ledger"]), 1)
+        E.attach(defective, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.start(defective, "g2")
+        E.advance(defective, "g2", why="u2 — the offender's own close")
+        out = self._advisory(defective)
+        self.assertNotIn("TRIP LEDGER:", out)   # the live line is absent (B1's own reproduction)
+        self.assertIn("TRIP HISTORY", out)      # <-- differing field: the historical line survives
+        self.assertIn("1 begin(s)", out)        # names the true count, not zero
+
+    def test_live_line_is_absent_after_the_offenders_own_close_but_the_historical_line_still_names_it(self):
+        """B1, corrected: this IS the offender's own close, not a fresh agent's —
+        the only legal close at/over hard is `advance --why`, and that is what an
+        agent that just ran an over-the-line begin has to run to leave the gate it
+        is trapped in. The keying reaches the RENDER, not just the selector: the
+        same retained entry stops being reported on the LIVE line once THAT close
+        writes the new why-record and supersedes the old one — that keying is
+        correct and untouched (close criterion (b)). What changed is that the
+        HISTORICAL line does not stop: unkeyed, it still names the retained begin.
+        Differing field: which line is present after the SAME close (live absent,
+        historical present) — this is the exact seam B1 measured as byte-identical
+        to a compliant agent; it no longer is."""
+        cl = self._g2_pending_after_g1()
+        self._refuse_start(cl, "g2")
+        self.assertEqual(len(cl["trip_ledger"]), 1)  # positive control: it is there
+        E.attach(cl, "g2", "refresh-request", {"seam": "g2", "why_ref": "w-1"})
+        E.start(cl, "g2")
+        E.advance(cl, "g2", why="u2 — the offender's own close, the gate its own HARD advisory told it to close")
+        self.assertEqual(len(cl["trip_ledger"]), 1)  # retained, not deleted
+        self.assertEqual(
+            self._advisory(cl),
+            self._expected_hard("g3", "w-2")
+            + self._expected_historical_note(1, "start", "g2", "begin-refused"))
+
+    def test_compliance_line_reaches_the_agent_through_current_at_the_cli_boundary(self):
+        healthy = self._g2_pending_after_g1()
+        defective = self._g2_pending_after_g1()
+        self._refuse_start(defective)
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            healthy_out = E.dispatch(healthy, types.SimpleNamespace(verb="current"),
+                                     base_dir=Path("."))
+            defective_out = E.dispatch(defective, types.SimpleNamespace(verb="current"),
+                                       base_dir=Path("."))
+        self.assertNotIn("TRIP LEDGER", healthy_out)     # <-- the differing field
+        self.assertIn("TRIP LEDGER", defective_out)
+        self.assertTrue(defective_out.endswith(
+            self._expected_note(1, "start", "g2", "begin-refused")), defective_out)
+
+    def test_compliance_line_never_appears_below_the_hard_band(self):
+        """The signal is a HARD-band escalation. Below the line the advisory is the
+        SOFT text (or nothing) and says nothing about the ledger — a spine can carry
+        a stale mark without every `current` re-litigating it."""
+        soft, _ = E._gauge_reader.thresholds_for(self.MODEL)
+        cl = self._g2_pending_after_g1()
+        self._refuse_start(cl)
+        self.assertEqual(len(cl["trip_ledger"]), 1)  # the mark is present either way
+        for fill in (max(soft - 0.01, 0.0), (soft + self.hard) / 2):
+            with self.subTest(fill=fill):
+                with mock.patch.object(E, "_read_gauge", return_value=_reading(fill)):
+                    self.assertNotIn("TRIP LEDGER", E._trip_advisory(cl, Path(".")))
+
+
+class TripLedgerFailSafeAndEngineOnly(unittest.TestCase):
+    """#467 — the four properties that decide whether the signal is trustworthy
+    rather than merely present: the fail-safe on a missing reading, engine-written-
+    only, backward compatibility, and surveys.
+
+    The fail-safe is the one most easily got wrong. A signal that reads SILENCE as
+    "clean" is the same defect class as a check that cannot fail: it produces the
+    compliant-looking answer in a world where nothing was observed at all. So the
+    rule asserted here is stronger than "no entry" — it is **no entry AND no
+    claim**.
+
+    Names match the frozen `g4-integrate` closeout selector."""
+
+    MODEL = "claude-opus-4-8"
+
+    def setUp(self):
+        _, self.hard = E._gauge_reader.thresholds_for(self.MODEL)
+        self.over_hard = min(self.hard + 0.05, 1.0)
+
+    def _three_gates(self):
+        return gated(
+            g1=gate("g1", "in-progress", command=PASS_COMMAND, why_exempt=False),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=False),
+            g3=gate("g3", "pending", command=PASS_COMMAND, why_exempt=False),
+        )
+
+    def _g2_pending_after_g1(self):
+        cl = self._three_gates()
+        E.advance(cl, "g1", why="u1")
+        return cl
+
+    # --- fail-safe ----------------------------------------------------------- #
+    def test_ledger_a_none_reading_writes_no_entry_and_makes_no_compliance_claim(self):
+        """Silence must read as NEITHER compliant NOR non-compliant. Both halves are
+        asserted, and the positive control at the end is what stops the whole test
+        from being satisfied by a dead mechanism."""
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d)  # empty: no gauge, no sidecars, so the advisory is silent
+            cl = self._g2_pending_after_g1()
+            with mock.patch.object(E, "_read_gauge", return_value=None):
+                msg = E.dispatch(cl, _start_ns("g2"), base_dir=base)
+                advisory = E._trip_advisory(cl, base)
+            self.assertTrue(msg.endswith("g2 -> in-progress"), msg)
+            self.assertNotIn("trip_ledger", cl)         # half 1: no entry
+            self.assertEqual(advisory, "")              # half 2: no claim either way
+            self.assertEqual(E.begin_over_line_records(cl), [])
+
+            # A spine that ALREADY carries a live mark, now read with NO gauge: the
+            # engine must not report non-compliance it cannot currently observe...
+            marked = self._g2_pending_after_g1()
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+                with self.assertRaises(E.EngineError):
+                    E.dispatch(marked, _start_ns("g2"), base_dir=base)
+            self.assertEqual(len(marked["trip_ledger"]), 1)
+            with mock.patch.object(E, "_read_gauge", return_value=None):
+                self.assertEqual(E._trip_advisory(marked, base), "")   # no claim
+            # POSITIVE CONTROL: the SAME spine, read WITH a gauge over the line, does
+            # report it. Without this line every assertion above would still pass
+            # against an advisory that had been dead-coded to "".
+            with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+                self.assertIn("TRIP LEDGER", E._trip_advisory(marked, base))
+
+    # --- engine-written only -------------------------------------------------- #
+    def test_compliance_ledger_write_site_is_unreachable_from_any_cli_verb(self):
+        """The exhaustive proof, read off the engine's own call graph rather than a
+        hand-maintained list of verbs.
+
+        Three facts, each asserted mechanically: (1) exactly three functions in the
+        engine name the `trip_ledger` key at all — one writes it, two read it (the
+        live selector and its #467 B1-rework sibling, the historical selector);
+        (2) the writer's only caller is `_trip_hard_gate`; (3) `_trip_hard_gate`'s
+        only caller is `dispatch`, and `_run_verb` — the function every CLI verb is
+        dispatched through — reaches neither. So no verb can create, edit, or delete
+        an entry, and the new reader is exactly that: a reader, called from the same
+        one render site as the live one."""
+        import ast
+        tree = ast.parse(SCRIPT.read_text(encoding="utf-8"))
+        funcs = {n.name: n for n in ast.walk(tree)
+                 if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+        self.assertGreater(len(funcs), 50, "the call-graph scan looked at nothing")
+
+        def names_the_key(node):
+            return any(isinstance(c, ast.Constant) and c.value == "trip_ledger"
+                       for c in ast.walk(node))
+
+        def calls_within(node):
+            return {c.func.id for c in ast.walk(node)
+                    if isinstance(c, ast.Call) and isinstance(c.func, ast.Name)}
+
+        def callers_of(name):
+            return sorted(f for f, node in funcs.items() if name in calls_within(node))
+
+        self.assertEqual(sorted(f for f, n in funcs.items() if names_the_key(n)),
+                         ["_append_trip_entry", "begin_over_line_records",
+                          "begin_over_line_records_historical"])
+        self.assertEqual(callers_of("_append_trip_entry"), ["_trip_hard_gate"])
+        self.assertEqual(callers_of("_trip_hard_gate"), ["dispatch"])
+        self.assertEqual(callers_of("begin_over_line_records"), ["_trip_advisory"])
+        self.assertEqual(callers_of("begin_over_line_records_historical"), ["_trip_advisory"])
+        run_verb_calls = calls_within(funcs["_run_verb"])
+        for unreachable in ("_append_trip_entry", "_trip_hard_gate"):
+            self.assertNotIn(unreachable, run_verb_calls)
+
+    def _write_gauge(self, d, fill, observed_at):
+        (Path(d) / "gauge.json").write_text(json.dumps({
+            "schema_version": 1, "fill_fraction": fill,
+            "model": self.MODEL, "observed_at": observed_at,
+        }), encoding="utf-8")
+
+    def test_ledger_only_the_begin_verbs_write_an_entry_over_the_line(self):
+        """The behavioural twin of the call-graph proof: with a REAL gauge parked
+        over the hard line, six non-begin verbs are driven through `main()` and none
+        of them leaves a mark. The seventh — a begin verb — does. Without that last
+        step the whole test would pass against a ledger that never wrote anything."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._three_gates())
+            self._write_gauge(d, self.over_hard, datetime.now(timezone.utc).isoformat())
+            non_begin = [
+                ["current"],
+                ["attach", "g1", "--type", "command-output", "--field", "cmd=x"],
+                ["flag-candidate", "--from", "g1", "--statement", "a candidate"],
+                ["advance", "g1", "--why", "u1"],
+                ["block", "g2", "--blocker", "b", "--next", "n"],
+                ["resume", "g2", "--reason", "unblocked"],
+            ]
+            for argv in non_begin:
+                with self.subTest(verb=argv[0]):
+                    self.assertEqual(E.main(["--file", str(f)] + argv), 0, argv)
+                    self.assertNotIn("trip_ledger", E.load(f))
+            self.assertEqual(len(non_begin), 6)  # the count this guard looped over
+
+            import contextlib, io
+            with contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
+            led = E.load(f)["trip_ledger"]
+            self.assertEqual(len(led), 1)
+            self.assertEqual(led[0]["verb"], "start")
+
+    # --- backward compatibility ---------------------------------------------- #
+    def test_ledger_a_spine_with_no_ledger_key_drives_unchanged(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._three_gates())
+            self.assertNotIn("trip_ledger", E.load(f))
+            self.assertEqual(E.main(["--file", str(f), "advance", "g1", "--why", "u1"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 0)
+            self.assertEqual(E.main(["--file", str(f), "advance", "g2", "--why", "u2"]), 0)
+            cl = E.load(f)
+            self.assertNotIn("trip_ledger", cl)  # the key is never created for nothing
+            self.assertEqual(cl["tasks"]["g2"]["status"], "complete")
+
+    def test_ledger_an_existing_ledger_is_extended_never_replaced(self):
+        """`setdefault`, not assignment: entries already on the spine survive a new
+        trip, and the new entry's id continues the existing sequence."""
+        cl = self._g2_pending_after_g1()
+        cl["trip_ledger"] = [{"id": "tl-1", "gate": "g0", "verb": "start",
+                              "outcome": "begin-refused", "fill": 0.99, "hard": 0.9,
+                              "model": self.MODEL, "why_ref": "w-1", "ts": "2026-01-01T00:00:00Z"}]
+        prior = copy.deepcopy(cl["trip_ledger"][0])
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+        self.assertEqual(len(cl["trip_ledger"]), 2)
+        self.assertEqual(cl["trip_ledger"][0], prior)   # untouched
+        self.assertEqual(cl["trip_ledger"][1]["id"], "tl-2")
+
+    # --- surveys -------------------------------------------------------------- #
+    def test_ledger_a_survey_never_writes_an_entry(self):
+        """`_trip_hard_band_reading` returns None for a survey, so the band is
+        inactive there and there is nothing to record. Paired with a gated positive
+        control on the same reading, so the silence means something."""
+        sv = survey(v1=survey_item("v1", "pending"))
+        with mock.patch.object(E, "_read_gauge", return_value=_reading(self.over_hard)):
+            msg = E.dispatch(sv, _start_ns("v1"), base_dir=Path("."))
+            self.assertTrue(msg.endswith("v1 -> in-progress"), msg)
+            self.assertNotIn("trip_ledger", sv)
+            # positive control: the same reading DOES record on a gated checklist
+            cl = self._g2_pending_after_g1()
+            with self.assertRaises(E.EngineError):
+                E.dispatch(cl, _start_ns("g2"), base_dir=Path("."))
+            self.assertEqual(len(cl["trip_ledger"]), 1)

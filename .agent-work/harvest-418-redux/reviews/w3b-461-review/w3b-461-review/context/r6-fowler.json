@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "files": [],
+  "repo_rev": {
+    "commit": "fa1378ed1a244fa71115c1b4e4f08313eb3b58a3"
+  },
+  "run": {
+    "work_id": "w3b-461-review",
+    "generated_at": "2026-08-08T05:27:32Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-workbench",
+      "repo": "C:/Programs/wt-rev-461",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/wt-rev-461"
+    }
+  }
+}

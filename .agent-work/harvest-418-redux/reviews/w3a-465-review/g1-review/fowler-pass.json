@@ -1,0 +1,20 @@
+{
+  "work_id": "w3a-465-review",
+  "diff_ref": "PR #492 (issue #465), branch epic-418/w3a-465, main...6774e75e -- scripts/checklist_engine.py (save/_dominant_newline/amend), skills/reviewer/SKILL.md, skills/reviewer/templates/REVIEW_SURVEY.template.json, docs/CHECKLIST_SCHEMA.md, skills/workbench/references/checklist-engine.md, tests/test_engine_survey_retext_and_newlines.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/reviewer/references/global-crew.md, skills/workbench/references/checklist-engine.md (Division of labor)",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "amend() was already a large multi-branch function (add/drop/rescope/retext-check) before this diff; the diff adds a ~18-line survey-type-gate + op-filter block near the top (lines ~2196-2214). The block is self-contained (reads `ops`, builds a `gated_only` set, raises) and could have been extracted into a small top-level predicate mirroring the existing nested `_floor()` helper pattern already used later in the same function, improving isolated testability. Not blocking: the added block is short, single-purpose, and read cleanly in place; the pre-existing function length is not something this diff meaningfully worsens.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "flagged", "finding": "One behavioral decision (amend's retext-check op now works on a survey) required correcting prose at five sites: docs/CHECKLIST_SCHEMA.md (two places, lines ~43/63 and ~280/372), skills/reviewer/SKILL.md, skills/reviewer/templates/REVIEW_SURVEY.template.json, and skills/workbench/references/checklist-engine.md. This is not a code cohesion defect -- the actual code change is localized to two functions in one file (save/_dominant_newline, amend) -- but it is worth naming as the recurring cost of describing one engine mechanism across several audience-tiered docs (schema reference, engine-ops reference, role-skill guidance). Not blocking: the crew's own re-grep evidence and my independent re-grep both confirm all five sites were actually corrected and no sixth stale site survives.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "The amend refusal text for a survey explicitly declines to build add/drop/rescope support now ('a CONSERVATIVE choice, not a type-level impossibility... raise the need with the authority'), naming a future extension point without building it. This is disciplined scope control, the opposite of speculative generality, so no override is needed -- nothing speculative was built.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

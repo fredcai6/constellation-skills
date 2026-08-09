@@ -1,0 +1,92 @@
+{
+  "work_id": "drill-183-retry-helper",
+  "type": "gated",
+  "config": {
+    "rework_cap": 3
+  },
+  "items": [
+    "g1-design-backoff",
+    "g2-implement-helper"
+  ],
+  "tasks": {
+    "g1-design-backoff": {
+      "id": "g1-design-backoff",
+      "title": "Design retry backoff strategy",
+      "imperative": "Decide the retry strategy for the flaky upstream client and record the rationale.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "strategy decided",
+          "check": {
+            "kind": "command",
+            "command": "true"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-design-backoff-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-design-backoff-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "true",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "why_exempt": false
+    },
+    "g2-implement-helper": {
+      "id": "g2-implement-helper",
+      "title": "Implement the retry helper",
+      "imperative": "Implement the retry helper per the chosen backoff strategy.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "helper implemented",
+          "check": {
+            "kind": "command",
+            "command": "true"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "why_exempt": false
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "g1-design-backoff",
+      "why": "chose exponential backoff with jitter (cap 30s) over fixed-delay retry: the upstream API only sometimes returns Retry-After on 429, and fixed-delay caused synchronized thundering-herd reconnects across workers on the days it did not",
+      "mechanical": false,
+      "ts": "2026-07-19T01:27:57.925773+00:00"
+    }
+  ]
+}

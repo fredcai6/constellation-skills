@@ -1,0 +1,78 @@
+{
+  "arm": "treatment",
+  "collected_at": "2026-08-07T14:41:07.211827+00:00",
+  "hook_path": "C:/Users/fredc/AppData/Local/Temp/acc440/arms/treatment/scripts/hooks/spine_rail.py",
+  "parent_model": "opus",
+  "subagent_model_requested": "sonnet",
+  "sandbox": {
+    "main": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\main",
+    "wt": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\wt",
+    "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\wt\\.agent-work\\sbwork\\spine.json"
+  },
+  "headless": {
+    "exit": 0,
+    "timed_out": false,
+    "elapsed_s": 156.4,
+    "stdout_tail": "DONE\n"
+  },
+  "binding_store_path": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\main\\.agent-work\\.spine-rail-binding.json",
+  "binding_store": {
+    "9d959dcd-0cb4-4f25-b391-d7be110eb5c5#a26a9cb68fda52cdc": {
+      "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\wt\\.agent-work\\sbwork\\spine.json": {
+        "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\wt\\.agent-work\\sbwork\\spine.json",
+        "engine_session": "sbsess",
+        "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\main",
+        "claimed_at": "2026-08-07T14:39:54.346928+00:00",
+        "path_source": "git_worktree"
+      }
+    }
+  },
+  "binding_entries": [
+    {
+      "key": "9d959dcd-0cb4-4f25-b391-d7be110eb5c5#a26a9cb68fda52cdc",
+      "spine": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\wt\\.agent-work\\sbwork\\spine.json",
+      "path_source": "git_worktree",
+      "worktree": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\main"
+    }
+  ],
+  "composite_keys": [
+    "9d959dcd-0cb4-4f25-b391-d7be110eb5c5#a26a9cb68fda52cdc"
+  ],
+  "gauge_in_worktree": {
+    "path": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\wt\\.agent-work\\sbwork\\gauge.json",
+    "exists": true,
+    "record": {
+      "schema_version": 1,
+      "fill_fraction": 0.559655,
+      "model": "claude-sonnet-5",
+      "observed_at": "2026-08-07T14:41:02.970Z",
+      "identity_resolution_ms": 0.04329999501351267
+    }
+  },
+  "gauge_in_main_phantom": {
+    "path": "C:\\Users\\fredc\\AppData\\Local\\Temp\\acc440\\run-treatment\\main\\.agent-work\\sbwork\\gauge.json",
+    "exists": false,
+    "record": null
+  },
+  "skip_sidecar_wt": null,
+  "skip_sidecar_main": null,
+  "uncalibrated_wt": null,
+  "transcript_diagnostics": {
+    "projects_root": "C:\\Users\\fredc\\.claude\\projects",
+    "slug_key": "C-Users-fredc-AppData-Local-Temp-acc440-run-treatment-main",
+    "matched_dirs": [],
+    "sessions": []
+  },
+  "advance_output": "RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.\n\nREFUSED: m1: context at 56% is at/over the hard limit \u2014 advancing is blocked until you request a refresh, so work is handed off at a seam rather than lost to a runaway. Run: attach m1 --type refresh-request --field seam=m1 --field why_ref=<why-id>\nEXIT=1\n",
+  "advance_exit": 1,
+  "m1_status_after": "in-progress",
+  "attribution": {
+    "composite_key_present": true,
+    "identity_resolution_ms": 0.04329999501351267,
+    "gauge_model": "claude-sonnet-5",
+    "subagent_model_id_expected": "claude-sonnet-5",
+    "fill_fraction": 0.559655,
+    "observed_at": "2026-08-07T14:41:02.970Z",
+    "wall_clock_at_collect": "2026-08-07T14:41:07.224484+00:00"
+  }
+}

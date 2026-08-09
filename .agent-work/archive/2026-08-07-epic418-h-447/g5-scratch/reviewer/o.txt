@@ -1,0 +1,1 @@
+r0-context recorded pass: Loaded global-everyone.md + global-crew.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g5 REVIEWER and IMPLEMENTER handoffs (11 frozen invariants), and the complete 1121-line 'git diff HEAD' (22 files; note tests/data/retired_names.approved.txt is STAGED so plain 'git diff' hides it).

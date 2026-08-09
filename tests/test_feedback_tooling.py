@@ -57,24 +57,31 @@ class CheckSkillFreshnessTests(unittest.TestCase):
         self.assertTrue(rows)
         self.assertTrue(all(r["status"] == "up-to-date" for r in rows))
 
+    # RETARGETED, not pruned (#447 g4): the two tests below used the retired
+    # LESSONS and AGENT_FEEDBACK templates purely as a SUBJECT for check_skill_freshness. This
+    # retirement deleted both templates, but check_skill_freshness itself survives, so
+    # deleting these tests would silently drop the only coverage of its upstream-changed,
+    # baseline-promoted, project-customized and both-changed statuses. They are pointed at
+    # two surviving workbench templates instead; not one assertion about the behaviour
+    # under test changed.
     def test_upstream_change_detected_and_baseline_promotion(self):
         upstream = (
-            self.skills_root / "constellation-workbench" / "templates" / "LESSONS.template.md"
+            self.skills_root / "constellation-workbench" / "templates" / "WORKFLOW_CLOSEOUT.template.md"
         )
         upstream.write_text(upstream.read_text(encoding="utf-8") + "\nupstream change\n", encoding="utf-8")
 
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["LESSONS.template.md"], "upstream-changed")
+        self.assertEqual(statuses["WORKFLOW_CLOSEOUT.template.md"], "upstream-changed")
 
         self.m.update_baseline(self.project, self.skills_root)
         # A project-local working copy is now seeded at install, so promoting the
         # baseline alone leaves that copy stale (it reads project-customized until
         # reconciled). The reconcile step brings the working copy up to the new
         # upstream too; then it reads up-to-date.
-        local = self.project / ".agent-work" / "templates" / "LESSONS.template.md"
+        local = self.project / ".agent-work" / "templates" / "WORKFLOW_CLOSEOUT.template.md"
         local.write_text(upstream.read_text(encoding="utf-8"), encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["LESSONS.template.md"], "up-to-date")
+        self.assertEqual(statuses["WORKFLOW_CLOSEOUT.template.md"], "up-to-date")
         manifest = json.loads(
             (self.project / ".agent-work" / "templates" / "TEMPLATES_MANIFEST.json").read_text(
                 encoding="utf-8"
@@ -83,21 +90,21 @@ class CheckSkillFreshnessTests(unittest.TestCase):
         self.assertEqual(manifest["baseline_origin"], "baseline-promoted")
 
     def test_local_customization_and_both_changed(self):
-        local = self.project / ".agent-work" / "templates" / "AGENT_FEEDBACK.template.md"
+        local = self.project / ".agent-work" / "templates" / "CONSTELLATION_FEEDBACK.template.md"
         baseline = (
             self.project / ".agent-work" / "templates" / ".baseline"
-            / "constellation-workbench" / "AGENT_FEEDBACK.template.md"
+            / "constellation-workbench" / "CONSTELLATION_FEEDBACK.template.md"
         )
         local.write_text(baseline.read_text(encoding="utf-8") + "\nproject custom field\n", encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["AGENT_FEEDBACK.template.md"], "project-customized")
+        self.assertEqual(statuses["CONSTELLATION_FEEDBACK.template.md"], "project-customized")
 
         upstream = (
-            self.skills_root / "constellation-workbench" / "templates" / "AGENT_FEEDBACK.template.md"
+            self.skills_root / "constellation-workbench" / "templates" / "CONSTELLATION_FEEDBACK.template.md"
         )
         upstream.write_text(upstream.read_text(encoding="utf-8") + "\nupstream change\n", encoding="utf-8")
         statuses = {r["template"]: r["status"] for r in self.m.check(self.project, self.skills_root)}
-        self.assertEqual(statuses["AGENT_FEEDBACK.template.md"], "both-changed")
+        self.assertEqual(statuses["CONSTELLATION_FEEDBACK.template.md"], "both-changed")
 
 
 class CollectFeedbackTests(unittest.TestCase):
@@ -206,8 +213,8 @@ class CollectFeedbackTests(unittest.TestCase):
         self.assertIn("recurring", report)
         self.assertIn("occurrences: 2", report)
 
-    def test_lesson_id_groups_across_slug_drift(self):
-        # Same originating lesson id, three drifted candidate slugs (the real
+    def test_episode_id_groups_across_slug_drift(self):
+        # Same originating episode id, three drifted candidate slugs (the real
         # spine-lease case): they must share ONE fingerprint and count as 3.
         root = Path(self.tmp.name) / "drift2"
         (root / ".agent-work").mkdir(parents=True)
@@ -220,7 +227,7 @@ class CollectFeedbackTests(unittest.TestCase):
         for i, slug in enumerate(slugs):
             body += (
                 f"\n## 2026-06-15 — drift2 — issue-{i}\n\n"
-                "- **Lesson:** `spine-lease-stale-on-long-crew`\n"
+                "- **Episode:** `spine-lease-stale-on-long-crew`\n"
                 f"- **Candidate:** `{slug}`\n"
                 f"- **Observed:** `worded differently each time, run {i}`\n"
                 "- **Proposal:** `heartbeat the lease around long gates`\n"
@@ -230,11 +237,37 @@ class CollectFeedbackTests(unittest.TestCase):
         self.assertEqual(len(new), 1)  # one finding, not three
         self.assertEqual(len(next(iter(new.values()))), 3)  # 3 occurrences
 
-    def test_lesson_id_takes_precedence_over_slug(self):
-        entry = {"lesson": "my-stable-id", "candidate": "some-drifty-slug",
+    def test_episode_id_takes_precedence_over_slug(self):
+        entry = {"episode": "my-stable-id", "candidate": "some-drifty-slug",
                  "observed": "x", "proposal": "y"}
         self.assertEqual(self.m.fingerprint(entry), self.m._hash12("lesson:my-stable-id"))
         self.assertNotEqual(self.m.fingerprint(entry), self.m._hash12("candidate:some-drifty-slug"))
+
+    def test_legacy_lesson_field_format_still_fingerprints(self):
+        # Un-upgraded external export: field-format doc still spells `Lesson`.
+        # The collector must still fingerprint on it (fallback, not cosmetic).
+        root = Path(self.tmp.name) / "legacy-field"
+        (root / ".agent-work").mkdir(parents=True)
+        body = (
+            "# Constellation Feedback Export\n\n"
+            "## 2026-06-16 — legacy-field — issue-0\n\n"
+            "- **Lesson:** `spine-lease-stale-on-long-crew`\n"
+            "- **Candidate:** `spine-lease-stale-on-long-crew-step`\n"
+            "- **Observed:** `not yet upgraded to Episode`\n"
+            "- **Proposal:** `heartbeat the lease around long gates`\n"
+        )
+        (root / ".agent-work" / "CONSTELLATION_FEEDBACK.md").write_text(body, encoding="utf-8")
+        new, _ = self.m.collect([root])
+        self.assertEqual(len(new), 1)
+        fp = next(iter(new))
+        self.assertEqual(fp, self.m._hash12("lesson:spine-lease-stale-on-long-crew"))
+
+    def test_episode_field_takes_precedence_over_legacy_lesson_field(self):
+        # An entry carrying BOTH keys (mid-migration overlap): episode wins.
+        entry = {"episode": "new-id", "lesson": "old-id",
+                 "candidate": "some-slug", "observed": "x", "proposal": "y"}
+        self.assertEqual(self.m.fingerprint(entry), self.m._hash12("lesson:new-id"))
+        self.assertNotEqual(self.m.fingerprint(entry), self.m._hash12("lesson:old-id"))
 
     def test_annotation_stripped_slug_groups_without_lesson_id(self):
         # No lesson id: annotation/cross-ref differences in the slug must not split.

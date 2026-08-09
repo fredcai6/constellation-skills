@@ -1,0 +1,9 @@
+$ python -m pytest -q tests/test_checklist_engine.py -k "this_pattern_collects_absolutely_nothing_xyzzy"
+
+418 deselected in 0.19s
+REAL EXIT = 5
+
+$ python -m pytest -q tests/test_checklist_engine.py -k "ledger or compliance or trip_log"
+..................................                  [100%]
+34 passed, 384 deselected, 21 subtests passed in 6.05s
+REAL EXIT = 0

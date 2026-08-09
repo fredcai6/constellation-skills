@@ -1,0 +1,86 @@
+{
+  "work_id": "issue-440-binding-cwd-g1b-review",
+  "diff_ref": "git diff 9d44aa6 -- scripts/hooks/spine_rail.py tests/test_spine_rail.py (hook +57/-7, tests +156/-4)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, the frozen DESIGN_SPEC #138 channel B D3 contract in spine_rail.py's module docstring",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "The g1b delta ADDS no length to any function body worth flagging: resolve_spine_candidate's loop grew from 7 to 12 lines and remains a single readable scan with one accumulator (`guess`). handle_post_tool_use - the function I flagged as long at g1 - is untouched by this diff, so re-raising it here would be double-counting a finding the Commander already holds.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "overridden",
+      "finding": "spine_rail.py grew a further ~50 lines (1002 -> ~1052).",
+      "override": {
+        "repo_standard": "The frozen DESIGN_SPEC #138 channel B D3 contract in the module docstring: three hook registrations, stdlib only, single self-contained file loaded by path.",
+        "reason": "Unchanged from my g1 review: the module is deliberately one file because tests and the harness load it via importlib.util.spec_from_file_location, not as a package. Splitting it would break that load contract. The standard subordinates the smell."
+      }
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "The guard reuses the existing _same_path helper for its file-identity comparison rather than open-coding a second normalization, which is the specific duplication this change could plausibly have introduced and did not.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The added logic operates on its own local accumulator and the generator it already consumed; it reaches into nothing else.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "CARRIED FORWARD from g1, not new: (data, project_dir, tokens, command) still travel together into _candidate_roots and resolve_spine_candidate, with tokens/file_val redundant views of command. The g1b change adds no new clump but does add a second reason to want the parameter object, since resolve_spine_candidate now holds real cross-rung state (`guess`) and is doing more than a lookup. Observation only; recorded so it is not lost, not as new rework.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "TOLD_TRUTH_PATH_SOURCES is a named frozenset built from the existing PATH_SOURCE_* constants rather than a set of bare string literals, and membership is tested against it rather than by comparing strings inline. This is the change avoiding the smell, not exhibiting it.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "flagged",
+      "finding": "CARRIED FORWARD from g1: resolve_spine_candidate(file_val, data, project_dir, tokens, command) is still 5 positional parameters. Unchanged by this diff; recorded for continuity with the g1 pass. Observation only - one call site, so the arity is not currently error-prone.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The fix for a residual found in one function was made in that same function. Two files changed, one of them the test file.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The module changed for exactly one reason: how the guessed rungs settle a disagreement. No unrelated concern rode along.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation introduced.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "The guard is deliberately all-or-nothing and the docstring explicitly REFUSES to build a tie-breaker ('KNOWN, NOT CHASED ... it does not try to BREAK a tie (by mtime, by lease freshness, or by reading which spine is actually active). Any such tie-break is a new guess layered on the guesses that just disagreed'). That is the opposite of speculative generality - a named decision not to build machinery that is not yet warranted, which matches the repo's advance-the-stream posture. Note my g1 finding that rung 1 is dead in production still stands and is unaffected by this diff.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "resolve_spine_candidate's docstring is now roughly 35 lines governing a ~20-line body, and the diff is again majority prose.",
+      "override": {
+        "repo_standard": "global-crew.md 'Match the surrounding code's naming, labeling, and in-file documentation conventions', plus this file's established convention of recording decision anchors and explicit 'KNOWN, NOT CHASED (#nnn)' limitation markers.",
+        "reason": "The prose records WHY the guessed rungs are held to a different rule than the told-truth rungs, why `.agent-work/` being tracked makes the collision real, and which tie-break was deliberately not built - none of which is recoverable from the code. It explains a non-obvious asymmetry rather than compensating for unreadable code; the body it documents is a plain loop. The standard subordinates the smell. One naming defect IS flagged separately outside this pass: the revised test's NAME now contradicts its own assertion."
+      }
+    }
+  ],
+  "rail_exception": null
+}

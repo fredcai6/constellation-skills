@@ -1,0 +1,27 @@
+{
+  "work_id": "adversarial-c2",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "governor-268",
+        "project": "constellation-skills",
+        "role": "implementer",
+        "spine-step": "g1-implement",
+        "context-manifest-ref": "ctx-governor-268-g1@a1b2c3d",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "lifecycle-standing": "active"
+      },
+      "agent_supplied": {
+        "task-intent": {"strength": "strong", "statement": "Fix the STATE_NOTE-fallback wording gap."},
+        "expected-behavior": {"strength": "medium", "statement": "Only the named defect carries the gap."},
+        "observed-behavior": {"strength": "strong", "statement": "The Admiral spine carries the same defect."},
+        "impact-cost": {"strength": "medium", "statement": "One extra sweep pass was needed."},
+        "workaround": {"strength": "strong", "statement": "none."}
+      }
+    }
+  ]
+}

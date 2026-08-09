@@ -1,0 +1,298 @@
+{
+  "work_id": "g1-implement-red-repro-467",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-harness",
+    "m2-face-a",
+    "m3-face-b",
+    "m4-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the g1 implementer handoff, and the engine surfaces named in the Map Anchors: scripts/checklist_engine.py (_trip_hard_gate, advance, _digest, _latest_why_record, _why_suffix, dispatch), scripts/gauge_reader.py (read, thresholds_for, _PROFILES), docs/CHECKLIST_SCHEMA.md section Trip. Verify the handoff is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + engine trip/why surfaces read; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-everyone.md; handoff read in full and complete (task, intent, scope, exclusions, evidence, test mode, stop conditions, return format). Read engine trip/why surfaces: _append_why/_latest_why_record/_digest/has_pending_refresh_request/_why_suffix (1086-1196), _gauge_path/_read_gauge/_trip_advisory/_trip_hard_gate (1229-1466), dispatch chokepoint (2649-2698), and gauge_reader.py in full."
+        }
+      ],
+      "constraints": [
+        "no file under scripts/ or tests/ may change"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-harness": {
+      "id": "m1-harness",
+      "title": "Scratch spine + planted gauge, proved read",
+      "imperative": "Under .agent-work/issue-467-trip-semantics/red-repro/, build a runnable script that constructs a real gated scratch spine using only the engine's own verbs, and plants a valid fresh gauge.json as a SIBLING of that scratch spine reading at/over HARD for claude-opus-5 (hard = 0.15; use fill_fraction 0.30). Prove the planted reading was actually read by capturing the engine's own 'CONTEXT <n>% (>= hard)' advisory line from real engine stdout. No source change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: doctrine, handoff, and engine surfaces read."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "repro script builds the scratch spine via engine verbs and plants a sibling gauge.json; the captured transcript contains the engine's literal 'CONTEXT' '(>= hard)' advisory, proving the reading was read (no-absence-is-evidence discharged)",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --assert-gauge-read"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-harness-1"
+        }
+      ],
+      "constraints": [
+        "gauge.json must sit beside the scratch spine, never beside the live spine",
+        "must not modify the live .agent-work/issue-467-trip-semantics/gauge.json or spine.json"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-harness-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --assert-gauge-read",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-face-a": {
+      "id": "m2-face-a",
+      "title": "Face A - stale DIGEST at the seam, asserted in code",
+      "imperative": "Drive the scratch spine so a why_trail record names an early PRE-TRIP understanding, then move to a later gate and get part-way through it so the agent's real understanding has moved on. Trip HARD, run the literal 'attach <gate> --type refresh-request --field seam=... --field why_ref=...' the refusal prints, then STOP without advancing. Assert in code that the DIGEST: line a cold successor reads from `current` STILL names the pre-trip understanding. Assert as equality/in against the pre-trip text, not by eyeballing. The RED is end-to-end staleness, not 'advance raises'.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 harness green: gauge planted and proved read",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 green: gauge planted and proved read via the silence/advisory pair."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Face A runs and its in-code assertion passes: the post-refusal DIGEST from `current` still names the pre-trip understanding; refusal text, the satisfying attach, and the stale DIGEST line all captured verbatim",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --face a"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-face-a-1"
+        }
+      ],
+      "constraints": [
+        "do not implement any part of the fix",
+        "do not hand-write end state; use engine verbs only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-face-a-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --face a",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-face-b": {
+      "id": "m3-face-b",
+      "title": "Face B - HARD refusal masks the unmet postcondition",
+      "imperative": "Same setup, but trip on a gate that is in-progress with an UNMET postcondition. Capture the HARD refusal the agent does get, then show the postcondition refusal it WOULD have got by re-running the same advance with the gauge removed or below hard. Assert in code that the two refusals differ and that the HARD one never mentions the postcondition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Face A green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Face A green at exit 0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Face B runs and asserts the masking: HARD refusal text captured, below-hard postcondition refusal captured, in-code assertion that the HARD refusal does not name the unmet postcondition",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --face b"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-face-b-1"
+        }
+      ],
+      "constraints": [
+        "inspection-only: no pytest cases, nothing under tests/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-face-b-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --face b",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-closeout": {
+      "id": "m4-closeout",
+      "title": "Closeout evidence - empty source diff, suite at baseline, single rerun command",
+      "imperative": "Run the whole repro from scratch with the single documented command and capture its literal output to a transcript file under red-repro/. Run `git diff --stat -- scripts tests` and confirm it is EMPTY, pasting it verbatim. Run the suite as `FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests` redirected to a file, reading the real exit code separately (never a pipe's $?), and confirm the 1793 passed / 2 skipped / 683 subtests baseline. Then write the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both faces green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both faces green at exit 0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "single command reruns from scratch and reproduces both faces; transcript captured",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --all"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-closeout-1"
+        },
+        {
+          "id": "c2",
+          "statement": "git diff --stat -- scripts tests is empty and the pytest suite is at the recorded baseline with real exit 0; both captured verbatim",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git diff --stat -- scripts tests produced ZERO bytes (verified twice, redirected to a file, exit read separately); git status --porcelain -- scripts tests also empty. Suite: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests, REAL_EXIT=0, 1793 passed, 2 skipped, 683 subtests passed in 356.83s -- exactly the recorded baseline. Result written to crew-handoffs/g1-implementer-result.md."
+        }
+      ],
+      "constraints": [
+        "never run pytest via `py` (#454)",
+        "never trust a piped command's $?"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-closeout-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --all",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g1-impl-467-1786184733",
+    "status": "released",
+    "claimed_at": "2026-08-08T10:25:33.417615+00:00",
+    "last_heartbeat": "2026-08-08T10:40:45.374369+00:00",
+    "claimed_by": "g1-implementer",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-a2-467",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T10:41:06.729029+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete and its central trap is understood: the shipped HARD refusal RELEASES once a keyed refresh-request exists, so an exception-only repro proves nothing. The real defect is that advance is the sole why_trail writer, so a refused advance leaves _latest_why_record pointing at the PREVIOUS gate's understanding, and _why_suffix therefore prints a DIGEST that is stale by exactly one gate to a cold successor. Repro must assert that equality in code and must show the CONTEXT (>= hard) advisory to prove the planted gauge was read.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:26:33.314650+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-harness",
+      "why": "Harness green at exit 0. The scratch spine is built by real engine verbs only (claim/start/attest/advance) and the gauge is planted as a SIBLING of that scratch spine, never the live one. The being-read proof is a silence/advisory pair on the SAME spine and session: no CONTEXT line before the gauge exists, then the engine's own 'CONTEXT 30% (>= hard)' line after -- so a later 'nothing happened' can never be confused with a silent governor. Discovered:  takes no --session-id, which is also the more faithful cold-successor read.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:29:40.028744+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-face-a",
+      "why": "Face A reproduced at exit 0, end to end, as staleness rather than as an exception. After the agent runs the literal attach the refusal prints, the HARD band RELEASES -- the engine switches to 'refresh already requested for g2, hand off now' -- yet the same output still reads DIGEST: PRE-TRIP UNDERSTANDING. Asserted as an equality against the pre-trip text, and the current understanding is asserted absent from both the output and the trail. A counterfactual run of the identical spine with no gauge advances the same gate and yields the fresh DIGEST, so the staleness is attributable to the refusal and nothing else.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:30:14.401867+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-face-b",
+      "why": "Face B reproduced at exit 0. At HARD the advance refusal names only the context limit; with the gauge rewritten below hard the same advance refuses with 'postconditions unmet [c2]'. Both refusal texts captured, asserted different, and the hard one asserted not to name c2. Honest scope added and asserted: current DOES still list c2 [unmet] at HARD, so the masking is scoped to the advance refusal path -- an agent that acts on the refusal text hands off believing context was its only blocker.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:30:57.214869+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-closeout",
+      "why": "Closeout verified. Single command 'python .agent-work/issue-467-trip-semantics/red-repro/repro_431.py --all' wipes the whole scratch root and reproduces both faces: 24 ASSERT OK, 0 ASSERT FAIL, real exit 0. Source diff for scripts and tests is zero bytes, checked twice via redirect with the exit read separately. Suite at baseline: 1793 passed, 2 skipped, 683 subtests, real exit 0. Result written to crew-handoffs/g1-implementer-result.md, including one empirically verified triage candidate: copy-pasting the refusal's literal why_ref placeholder attaches successfully but does not release HARD.",
+      "mechanical": false,
+      "ts": "2026-08-08T10:40:45.374341+00:00"
+    }
+  ]
+}

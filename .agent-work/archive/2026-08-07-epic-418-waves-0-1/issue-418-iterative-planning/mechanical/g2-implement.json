@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g2-implement",
+  "mechanical": {
+    "run": "issue-418-iterative-planning",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "g2-implement",
+    "rework-count": 1,
+    "failed-commands": 0,
+    "reopens": 2,
+    "context-manifest-ref": "ctx-issue-418-iterative-planning-g2-implement@d83119aa94ffe908dd7226aea93c85f5ee874a04",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-iterative-planning",
+    "generated_at": "2026-08-06T17:58:37Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "issue-440-g1b-ambiguity",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-440-g1b-ambiguity-m0-context@93f89b4747a1c86ee281ac85ba5e1e4288089ff1",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-440-g1b-ambiguity",
+    "generated_at": "2026-08-06T09:40:34Z"
+  }
+}

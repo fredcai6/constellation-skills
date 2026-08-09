@@ -1,0 +1,27 @@
+[OK ] CC1a seeded store: expected exit 0, got 0, sentinel-in-output=False
+      | episode capture: 2 episode(s) recorded for run 'issue-447' in C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\s1\episodes\active (2 scanned, phase feedback)
+      |   - issue-447-001
+[OK ] CC1b empty store: expected exit 1, got 1, sentinel-in-output=False
+      | episode capture: BLOCKED — no episode in C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\s2\episodes\active records run 'issue-447' (0 episode(s) scanned). Capture one with scripts/apply_episode_delta.py before advancing.
+[OK ] CC1c other-runs-only store: expected exit 1, got 1, sentinel-in-output=False
+      | episode capture: BLOCKED — no episode in C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\s3\episodes\active records run 'issue-447' (3 episode(s) scanned). Capture one with scripts/apply_episode_delta.py before advancing.
+[OK ] CC3a missing store root: expected exit 2, got 2, sentinel-in-output=False
+      | episode capture: REFUSED — missing store: C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\does-not-exist is not a directory. Enumerating a store that is not there returns an empty candidate set, which reads exactly like an empty store — so this is refused rather than answered. Check --store-root.
+[OK ] CC3b missing active/ dir: expected exit 2, got 2, sentinel-in-output=False
+      | episode capture: REFUSED — missing store layout: C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\s4\episodes\active is absent. An absent directory is not an empty one; git does not track empty directories, so a layout that was never committed arrives here. Refused rather than answered.
+[OK ] CC3c malformed record: expected exit 2, got 2, sentinel-in-output=False
+      | episode capture: REFUSED — malformed episode C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\s5\episodes\active\issue-447-999.md: no `- run:` line. A record this gate cannot read is refused, not skipped — skipping is how a real record becomes invisible to the gate that is supposed to require it.
+[OK ] CC2 archive, episode uncommitted: expected exit 1, got 1, sentinel-in-output=False
+      | episode capture: BLOCKED — 1 of 1 episode(s) for run 'issue-447' are not tracked by git, so they do not survive this worktree. Run `git add episodes/`.
+      |   - issue-447-001: error: pathspec 'C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\repo\episodes\active\issue-447-001.md' did not match any file(s) known to git
+[OK ] CC2b feedback phase, same untracked store: expected exit 0, got 0, sentinel-in-output=False
+      | episode capture: 1 episode(s) recorded for run 'issue-447' in C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\repo\episodes\active (1 scanned, phase feedback)
+      |   - issue-447-001
+[OK ] CC2c archive after git add: expected exit 0, got 0, sentinel-in-output=False
+      | episode capture: 1 episode(s) recorded for run 'issue-447' in C:\Users\fredc\AppData\Local\Temp\tmp38fs0zbh\repo\episodes\active (1 scanned, phase archive)
+      |   - issue-447-001
+[OK ] CC2d archive, RELATIVE --store-root: expected exit 0, got 0, sentinel-in-output=False
+      | episode capture: 1 episode(s) recorded for run 'issue-447' in episodes\active (1 scanned, phase archive)
+      |   - issue-447-001
+
+10 probes, 0 failed

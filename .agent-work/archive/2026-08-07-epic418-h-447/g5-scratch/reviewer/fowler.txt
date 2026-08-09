@@ -1,0 +1,1 @@
+fowler pass ok: .agent-work/epic418-h-447/g5-review/fowler-pass.json (smells=12, flagged=['data-clumps'], overridden=['duplicated-code', 'primitive-obsession', 'comments-as-deodorant'])

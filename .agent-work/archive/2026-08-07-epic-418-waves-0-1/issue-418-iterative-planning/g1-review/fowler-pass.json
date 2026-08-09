@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-418-iterative-planning",
+  "diff_ref": "Uncommitted 20-path G1 inventory listed in g1-implement/IMPLEMENTER_RESULT.md, including untracked skills/to-initial-issues/** and tests/test_initial_issues.py",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, constellation-reviewer references/global-crew.md and references/global-everyone.md, frozen g1-implement contract",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "overridden", "finding": "", "override": {"repo_standard": "global-crew.md: make the minimal change and add no speculative abstraction; frozen G1 requires the same receipt protocol for epic and child entities", "reason": "The two short filing flows intentionally expose different adapter methods, body builders, keys, and crash entity names. A shared callback-heavy helper would enlarge the interface without removing domain decisions; tests visit every entity/window to keep the protocol aligned."}},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Frozen G1 contract requires checked-in, strict JSON shaped-brief and initial-manifest artifacts at the Explorer-to-cutter boundary", "reason": "Dictionary/list/string primitives are the public serialized contract and are exhaustively validated at entry; replacing them with internal classes would add a translation seam the handoff explicitly forbids."}},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "overridden", "finding": "", "override": {"repo_standard": "Settled human decision: hard rename with one canonical path and no alias; frozen G1 rename inventory explicitly names public docs, registry, Explorer route, tests, and installer", "reason": "The cross-file edits are the finite registration surfaces of an intentional hard rename, not recurring implementation coupling; leaving any live surface unchanged would violate the canonical-path rule."}},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}

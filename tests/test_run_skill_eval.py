@@ -327,6 +327,57 @@ def test_is_permission_denial_false(text):
 
 
 # --------------------------------------------------------------------------- #
+# ISSUE #454 — forced colour must not blind the sniffs
+#
+# The harness exports FORCE_COLOR=3, so a colour-capable child CLI emits ANSI even
+# into a captured pipe. Every marker these two predicates match is a MULTI-WORD
+# phrase, so a single escape between the words makes the substring miss. That
+# failure is silent and points the wrong way: the infra fence would not fire and a
+# merely rate-limited run would be recorded as a real FAIL against a good corpus.
+# Each case below is a real marker with an escape placed exactly where a colourizer
+# highlighting one keyword would put it.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    "text",
+    [
+        "\x1b[31musage\x1b[0m limit reached",
+        "\x1b[1;33mrate\x1b[0m limit exceeded",
+        "\x1b[31mError\x1b[0m: \x1b[1mquota\x1b[0m",
+        "server \x1b[31moverloaded\x1b[0m",
+        "HTTP \x1b[31m429\x1b[0m",
+    ],
+)
+def test_is_infra_marker_sees_through_ansi_colour(text):
+    assert rse.is_infra_marker(text) is True, (
+        "#454 REGRESSION: a colourized infra banner did not fence the run, so "
+        "environment flake would be recorded as a corpus FAIL."
+    )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Claude \x1b[31mrequested\x1b[0m permissions to write",
+        "this action \x1b[1mrequires\x1b[0m manual approval",
+        "\x1b[31mPermission\x1b[0m denied",
+        "operation \x1b[33mnot\x1b[0m permitted",
+    ],
+)
+def test_is_permission_denial_sees_through_ansi_colour(text):
+    assert rse.is_permission_denial(text) is True, (
+        "#454 REGRESSION: a colourized permission refusal was not recognised."
+    )
+
+
+def test_ansi_stripping_does_not_invent_markers():
+    """The guard must not have been bought by making the sniffs trigger-happy."""
+    assert rse.strip_ansi("\x1b[32mall tests passed\x1b[0m") == "all tests passed"
+    assert rse.is_infra_marker("\x1b[32mall tests passed\x1b[0m") is False
+    assert rse.is_permission_denial("\x1b[32mwrote solution.py\x1b[0m") is False
+    assert rse.strip_ansi(None) == ""
+
+
+# --------------------------------------------------------------------------- #
 # classify_run — the infra-fence + pass/fail table (pure)
 # --------------------------------------------------------------------------- #
 def test_classify_completed_pass():

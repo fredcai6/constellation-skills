@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """Deterministically apply structured episode-delta operations to the episode store.
 
-The LLM proposes operations (create/amend-assertion/retire) in a JSON delta file; this
+The LLM proposes operations (create/amend-assertion/restate-assertion/retire) in a JSON
+delta file; this
 script validates every op and applies them mechanically, all-or-nothing: any invalid op
 anywhere in the delta rejects the WHOLE delta and leaves the store byte-for-byte
 unchanged. The LLM never writes an episode file directly — this script is the only
@@ -26,6 +27,24 @@ fixes the record grammar and the store's obligations):
                      changes only its lifecycle-standing and appends one history line.
                      Every sibling field, in this assertion and every other, is
                      untouched (EPISODE_STORE.md section 5).
+  restate-assertion — rewrite exactly ONE named assertion's `statement`, and append one
+                     history line carrying the ORIGINAL statement VERBATIM. The op exists
+                     so a record written as an instruction can be restated as an
+                     observation without losing what the record originally said.
+                     amend-assertion cannot do this: it accepts no `statement` at all and
+                     changes only lifecycle-standing, so a prescriptive sentence marked
+                     `superseded` still STANDS as the live statement. The history line is
+                     built HERE, from the parsed original, never supplied by the caller —
+                     a caller who could author it could misquote what was there, which
+                     defeats the whole point. The caller's `history` value supplies only
+                     the reason. Nothing else moves: not kind, strength or
+                     lifecycle-standing (a restatement changes wording, never epistemic
+                     status), not a sibling assertion, not a mechanical line, not the
+                     retirement block. EPISODE_STORE.md section 5 ("the record grows
+                     rather than getting rewritten") is the constraint this op answers to,
+                     and it is answered by preserving the original wording verbatim in the
+                     assertion's own history — nothing the store ever asserted is
+                     destroyed.
   retire           — move an episode out of ordinary search and into the archive,
                      RETAINED in history, with a mandatory non-empty reason. Never
                      touches any assertion's own lifecycle-standing (EPISODE_STORE.md
@@ -148,7 +167,14 @@ DIAGNOSIS_KINDS = ("suspected-cause", "proposed-remedy")
 STRENGTHS = ("weak", "medium", "strong")
 LIFECYCLE_STANDINGS = ("active", "disputed", "superseded", "rejected")
 
-OP_KINDS = ("create", "amend-assertion", "retire")
+OP_KINDS = ("create", "amend-assertion", "restate-assertion", "retire")
+
+# restate-assertion accepts EXACTLY these keys and no others. An allowlist rather than a
+# denylist for the same reason create's mechanical bin uses one: the dangerous input is a
+# field misfiled onto the op — most of all `lifecycle-standing`, `strength` or `kind`,
+# which a caller might reasonably expect a restatement to carry. It must not; a
+# restatement changes wording, and epistemic status moves only through amend-assertion.
+RESTATE_ALLOWED_FIELDS = ("op", "id", "assertion", "statement", "history")
 
 
 class EpisodeDeltaError(Exception):
@@ -508,6 +534,18 @@ def store_root() -> Path:
     under an active Admiral epic lease durable_root() would redirect to the worktree
     root and silo the store per worktree, which is exactly wrong for a tracked path
     that is the same logical directory in every worktree the moment a commit lands."""
+    # HAZARD, measured (#447): this resolves relative to THIS FILE, so it is only the
+    # project's store while this file sits in the project's scripts/. On a copy bundled
+    # into a skill and installed, it resolves to
+    # ~/.claude/skills/<role>/episodes — the skill install directory, not the repo. A
+    # spine that invoked this writer without an explicit --store-root would silently
+    # create a store outside the repo while every gate reported green: #308's failure
+    # shape wearing a new name. Callers running an INSTALLED copy must pass
+    # --store-root explicitly (wired into the spine commands at g3). The semantics
+    # above are deliberately unchanged — durable_root() is ruled out for the reason in
+    # the docstring, and a retirement is not the place to overturn that ruling.
+    # scripts/verify_episode_captured.py's --store-root default carries the same hazard
+    # and names it at the same place in its own main().
     return Path(__file__).resolve().parent.parent / "episodes"
 
 
@@ -856,6 +894,8 @@ def validate_delta(delta: dict) -> tuple[str, list[dict]]:
             _validate_create(op)
         elif kind == "amend-assertion":
             _validate_amend_assertion(op)
+        elif kind == "restate-assertion":
+            _validate_restate_assertion(op)
         elif kind == "retire":
             _validate_retire(op)
 
@@ -966,6 +1006,35 @@ def _validate_amend_assertion(op: dict) -> None:
     if standing not in LIFECYCLE_STANDINGS:
         raise EpisodeDeltaError(f"amend-assertion: lifecycle-standing must be one of {LIFECYCLE_STANDINGS}")
     _require_str(op, "history", "amend-assertion")
+
+
+def _validate_restate_assertion(op: dict) -> None:
+    """The op takes EXACTLY id, assertion, statement and history — nothing else.
+
+    The extra-field check runs FIRST, before the per-field checks, so a delta that
+    misfiles `lifecycle-standing` onto a restatement is refused for the reason it is
+    actually wrong (that field has no business here) rather than passing quietly because
+    the four required fields happened to be well-formed alongside it.
+
+    `statement` goes through the same _require_str() as create's own statement, so
+    single-line enforcement on the new text is not a second implementation that could
+    drift from create's — it IS create's."""
+    extra = set(op) - set(RESTATE_ALLOWED_FIELDS)
+    if extra:
+        raise EpisodeDeltaError(
+            f"restate-assertion: misfiled field(s) {sorted(extra)} — the op accepts "
+            f"EXACTLY {RESTATE_ALLOWED_FIELDS}, no more, no less. lifecycle-standing, "
+            "strength and kind in particular are NOT restated: a restatement changes "
+            "wording, and epistemic status moves only through amend-assertion."
+        )
+    episode_id = op.get("id")
+    if not isinstance(episode_id, str) or not ID_RE.fullmatch(episode_id):
+        raise EpisodeDeltaError(f"restate-assertion: invalid episode id {episode_id!r}")
+    assertion_id = op.get("assertion")
+    if not isinstance(assertion_id, str) or not re.fullmatch(r"[ad][0-9]+", assertion_id):
+        raise EpisodeDeltaError(f"restate-assertion: invalid assertion id {assertion_id!r}")
+    _require_str(op, "statement", "restate-assertion")
+    _require_str(op, "history", "restate-assertion")
 
 
 def _validate_retire(op: dict) -> None:
@@ -1137,6 +1206,24 @@ class _Transaction:
                 tmp_path.unlink(missing_ok=True)  # no-op once moved
 
 
+def _unhandled_op_kind_message(kind: str, site: str) -> str:
+    """The message behind the `else: raise` both op dispatch sites now carry.
+
+    Before this, apply_delta() and _dry_run_log() each dispatched on op kind through an
+    if/elif chain with NO else. validate_delta() rejects a kind outside OP_KINDS, so the
+    two chains only ever saw known kinds — but they are SEPARATE chains, and nothing tied
+    them together. An op added to OP_KINDS and wired into only one of them was silently
+    skipped by the other: for a dry run that meant no log line, no error, exit 0 and a
+    cheerful "DRY RUN — no write", i.e. a caller told its op was fine when the op had
+    never been looked at. A silent skip in the store's only write path is the worst
+    available failure mode, so both chains now end here instead of falling through."""
+    return (
+        f"internal: op kind {kind!r} is in OP_KINDS but has no branch in {site}() — "
+        "an op must be registered at BOTH dispatch sites (apply_delta and _dry_run_log), "
+        "or it is silently skipped at the one that missed it"
+    )
+
+
 def apply_delta(root: Path, delta: dict) -> list[str]:
     work_id, ops = validate_delta(delta)
     # The writer, and only the writer, may bring the layout into being: a create into a
@@ -1158,8 +1245,12 @@ def apply_delta(root: Path, delta: dict) -> list[str]:
             log.append(_apply_create(tx, op))
         elif kind == "amend-assertion":
             log.append(_apply_amend_assertion(tx, op))
+        elif kind == "restate-assertion":
+            log.append(_apply_restate_assertion(tx, op))
         elif kind == "retire":
             log.append(_apply_retire(tx, op))
+        else:
+            raise EpisodeDeltaError(_unhandled_op_kind_message(kind, "apply_delta"))
 
     tx.commit()
     return log
@@ -1226,6 +1317,49 @@ def _apply_amend_assertion(tx: _Transaction, op: dict) -> str:
     assertion.lifecycle_standing = op["lifecycle-standing"]
     assertion.history.append(op["history"].strip())
     return f"amended {episode_id}.{assertion_id} -> lifecycle-standing={assertion.lifecycle_standing}"
+
+
+def _restatement_history_line(reason: str, original_statement: str) -> str:
+    """Build the ONE history line a restatement appends.
+
+    Deliberately a named function taking the original statement as an argument the CALLER
+    of this function cannot forge: _apply_restate_assertion() passes the statement it read
+    off the parsed record, and the delta has no field that reaches this text. That is the
+    protected property — a restatement must never be able to claim the record said
+    something other than what it said.
+
+    Format: `restated — <reason> — original statement was: <original>`. The original goes
+    LAST, behind a fixed marker, and is exactly the text following the marker's LAST
+    occurrence — read it from the right (str.rpartition), never by searching forward. The
+    marker is NOT unique on the line: the reason is free text and may contain it, which
+    puts two markers on one line. Nothing the record said is destroyed when that happens
+    (the true original is still the tail, verbatim), but a reader that splits on the FIRST
+    marker gets text the caller wrote rather than what the record said. Both halves are
+    single-line-validated before they get here — the reason by _require_str() on the op,
+    the original by the same guard at the time it was written — so the rendered line cannot
+    grow a second line and forge a store field."""
+    return f"restated — {reason} — original statement was: {original_statement}"
+
+
+def _apply_restate_assertion(tx: _Transaction, op: dict) -> str:
+    episode_id = op["id"]
+    ep = tx.load(episode_id)
+    assertions = ep.all_assertions()
+    assertion_id = op["assertion"]
+    assertion = assertions.get(assertion_id)
+    if assertion is None:
+        raise EpisodeDeltaError(f"restate-assertion {episode_id}.{assertion_id}: no such assertion")
+    # Read the original BEFORE overwriting it, and build the history line from that read
+    # rather than from anything the delta carries. Surgical in exactly the same sense as
+    # _apply_amend_assertion(): only this assertion's statement changes, plus one appended
+    # history line. kind/strength/lifecycle-standing, every sibling assertion, every
+    # mechanical line and the retirement block are left exactly as parsed.
+    original_statement = assertion.statement
+    assertion.statement = op["statement"].strip()
+    assertion.history.append(
+        _restatement_history_line(op["history"].strip(), original_statement)
+    )
+    return f"restated {episode_id}.{assertion_id}"
 
 
 def _apply_retire(tx: _Transaction, op: dict) -> str:
@@ -1299,8 +1433,12 @@ def _dry_run_log(root: Path, delta: dict) -> list[str]:
             log.append(_apply_create(tx, op))
         elif kind == "amend-assertion":
             log.append(_apply_amend_assertion(tx, op))
+        elif kind == "restate-assertion":
+            log.append(_apply_restate_assertion(tx, op))
         elif kind == "retire":
             log.append(_apply_retire(tx, op))
+        else:
+            raise EpisodeDeltaError(_unhandled_op_kind_message(kind, "_dry_run_log"))
     log.append("DRY RUN — no write")
     return log
 

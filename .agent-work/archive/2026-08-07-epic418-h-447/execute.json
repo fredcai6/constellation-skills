@@ -1,0 +1,1591 @@
+{
+  "work_id": "epic418-h-447",
+  "type": "gated",
+  "config_ref": null,
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate",
+    "g5-implement",
+    "g5-review",
+    "g5-integrate",
+    "g6-verify"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Confirm the frozen plan's intent and scope against .agent-work/epic418-h-447/PROBLEM_STATEMENT.md, MISSION_FRAME.md and CRITIC_TRIAGE.md. CRITIC_TRIAGE.md is load-bearing: it records that two of the problem statement's 'measured' claims were FALSIFIED by the cold panel and re-verified false by the Commander. Specifically: durable_root() resolves to THIS WORKTREE (not the main checkout) under an active Admiral epic lease, so a plain `git rm` of .agent-work/AGENT_FEEDBACK.md would strand this run's own closeout; and .agent-work/ is TRACKED, not gitignored. Then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "plan intent and scope confirmed against the frozen artifacts, including the two falsified claims recorded in CRITIC_TRIAGE.md",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan intent and scope confirmed against the four frozen artifacts. CRITIC_TRIAGE.md read first per its own instruction: two PROBLEM_STATEMENT claims were falsified and re-verified false at source (durable_root resolves to THIS worktree under the active epic lease; .agent-work is TRACKED not gitignored)."
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "The guard, authored and proven RED on the untouched tree: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from the plan below, including this gate's anchors block, then dispatch a constellation-implementer subagent (Opus, named explicitly; NO Fable) and integrate the returned IMPLEMENTER_RESULT.\n\nTASK: Author the shipped regression guard BEFORE any retirement work, so it is falsified against the real disease rather than a decoy. Create scripts/verify_retirement.py exposing `scan(root: Path) -> list[Violation]` where Violation is a NamedTuple(leg, path, line, detail), sorted deterministically. It MUST return a list of named legs \u2014 never a bool and never a bare exit code \u2014 because the per-leg red-proofs must be able to assert `== [LEG_X]`. A CLI wrapper exits 1 on any violation. Enumerate surfaces from `git ls-files`, NOT Path.rglob, so a file deleted from the working tree but still in the index is still seen.\n\nFOUR LEGS ONLY (the plan's original eight were cut to four by the cold panel; do not re-add the dropped ones):\n  LEG A `retired-path-still-tracked` \u2014 `git ls-files` must not list .agent-work/LESSONS.md, .agent-work/AGENT_FEEDBACK.md, scripts/apply_lessons_delta.py, scripts/verify_lessons_applied.py, scripts/verify_agent_feedback.py. Path-based, so it cannot be paraphrased around. This is the ONLY leg that catches a future agent re-committing LESSONS.md verbatim \u2014 that file advertises its own read path in its own preamble, so zero new mentions would appear anywhere else.\n  LEG B `unapproved-store-mention` \u2014 a frozen approval census. Enumerate every line on the shipped surface naming `episodes/`, `episode store`, `query_episodes`, or `apply_episode_delta`, excluding the store's own module and its own spec, and compare against tests/data/store_mentions.approved.txt (`path:normalized-line` plus a REQUIRED one-line reason per entry). Its failure message must state the discriminator verbatim: 'a new shipped site now names the episode store: <path>:<line>. If this is a WRITE path, approve it with a reason. If it tells an agent to READ the store and condition behaviour on it, it violates constraint:episodes-are-not-prescriptions.' Seed the approved file with the 18 sites that exist today.\n  LEG C `replacement-absent` \u2014 the PRESENCE half. tests/test_prose_deletions.py's docstring states the rule: 'An absence-only suite would pass just as happily on a template that had deleted everything.' Assert the capture command is named in BOTH spine imperatives, is in the commander AND admiral install bundles, and exists on disk. At g1 this leg is legitimately RED and stays red until g3.\n  LEG D `retired-name-on-shipped-surface` \u2014 retired names absent from the shipped surface. Each record-only root carries a REQUIRED non-empty reason string: docs/superpowers/ ('historical plans and drills \u2014 records, not instructions'), tests/fixtures/ ('recorded transcripts; editing them falsifies a recording'), .agent-work/ ('run records'), episodes/ ('the store itself').\n\nThen tests/test_retirement_guard.py: one decoy red-proof per leg, each building a minimal git repo in tmp_path with EXACTLY ONE planted violation and asserting both `[v.leg for v in scan(decoy)] == [LEG_X]` AND the offending path \u2014 so a leg firing for the wrong reason is caught. Plus `test_every_leg_has_a_red_proof` asserting set(LEGS) == set(_REGISTERED) against a leg roster held independently in the test module, so a leg added later without a decoy, or quietly deleted, fails. Plus `test_canon_is_clean` asserting scan(REPO_ROOT) == [], carrying @pytest.mark.xfail(strict=True, reason='#447 g6 removes this marker'): the suite stays green while the tree is deliberately dirty, and strict XPASS fails the suite the moment the tree goes clean, so the scaffolding cannot outlive the work.\n\nFILES IN SCOPE: NEW: scripts/verify_retirement.py, tests/test_retirement_guard.py, tests/data/store_mentions.approved.txt. Touch NOTHING else \u2014 this gate deliberately produces zero retirement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "no dependency on a prior gate",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "No dependency on a prior gate; e0-context complete. Handoff written to crew-handoffs/g1-IMPLEMENTER_HANDOFF.md."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1",
+          "attested": {
+            "evidence": "e-g1-implement-1",
+            "note": "Verified in my hands, not from the claim: guard EXIT=1, 131 violations, 3 distinct legs, 8 passed 1 xfailed."
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name",
+          "claim:guard-red-on-real-disease \u2014 the g1 transcript of scan() failing on the UNTOUCHED tree is the centerpiece evidence; a guard authored after the tree is clean can only ever be falsified against decoys"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g1-IMPLEMENTER_RESULT.md",
+            "verdict": "complete, no unresolved blockers"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "The guard, authored and proven RED on the untouched tree: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and the IMPLEMENTER_RESULT, then dispatch a constellation-reviewer subagent (Opus, named explicitly; NO Fable). The reviewer must independently RE-RUN the evidence commands rather than reading the implementer's transcript. CLOSE CRITERIA: guard exists with exactly four legs; every leg has a passing decoy red-proof asserting leg AND path; the leg census passes; scan() on the real untouched tree returns violations across AT LEAST THREE distinct legs (A, C and D \u2014 B is seeded green by construction and goes red at g3)",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-implement returned a result",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-implement returned a result."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned with an explicit APPROVE/BLOCK verdict",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1",
+          "attested": {
+            "evidence": "e-g1-review-1",
+            "note": "Reviewer returned BLOCK with 1 blocking finding (guard fires on itself once tracked) which I independently reproduced via a throwaway GIT_INDEX_FILE: 121->133 retired-name plus 0->6 store-mention self-hits. Returned for rework; rework verified in my hands: staged and working-tree scans now agree at 128/5/5 across 3 legs with ZERO self-hits, guard tests 12 passed 1 xfailed."
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name",
+          "claim:guard-red-on-real-disease \u2014 the g1 transcript of scan() failing on the UNTOUCHED tree is the centerpiece evidence; a guard authored after the tree is clean can only ever be falsified against decoys"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g1-REVIEW_RESULT.md",
+            "verdict": "BLOCK -> reworked -> APPROVE on re-verification by the Commander"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "The guard, authored and proven RED on the untouched tree: integrate",
+      "imperative": "Check the verdict. On APPROVE, verify the crew's side-effects against the world yourself \u2014 re-run the evidence commands and confirm the postconditions pass in your hands \u2014 then commit. On BLOCK, return for rework. Harvest the result's Workflow Feedback into the run's episode-candidate pool. EVIDENCE: python -m pytest tests/test_retirement_guard.py -q ; python scripts/verify_retirement.py ; echo EXIT=$?  # MUST be 1 on the untouched tree ; python scripts/verify_retirement.py | cut -f1 | sort -u  # MUST list >=3 distinct legs",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1-review returned a verdict",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1-review returned BLOCK, adjudicated, reworked, re-verified."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "guard exists with exactly four legs; every leg has a passing decoy red-proof asserting leg AND path; the leg census passes; scan() on the real untouched tree returns violations across AT LEAST THREE distinct legs (A, C and D \u2014 B is seeded green by construction and goes red at g3)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "APPROVE after rework. Guard committed as efb1eca (3 files, 1088 insertions). On the COMMITTED tree it exits 1 across 3 legs with zero self-hits; staged and working-tree scans agree."
+        },
+        {
+          "id": "c2",
+          "statement": "required evidence reproduces in the Commander's own hands: python -m pytest tests/test_retirement_guard.py -q ; python scripts/verify_retirement.py ; echo EXIT=$?  # MUST be 1 on the untouched tree ; python scripts/verify_retirement.py | cut -f1 | sort -u  # MUST list >=3 distinct legs",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Evidence reproduced in my own hands, not read from the crew transcript: verify_retirement.py EXIT=1; legs = replacement-absent(5), retired-name-on-shipped-surface(128), retired-path-still-tracked(5); guard tests 12 passed 1 xfailed; full suite 1700 passed 2 skipped 1 xfailed EXIT=0 vs baseline 1688/2."
+        },
+        {
+          "id": "c3",
+          "statement": "the transcript of the guard FAILING on the untouched tree is captured verbatim into .agent-work/epic418-h-447/evidence/g1-guard-red.txt BEFORE any retirement edit is made",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Red transcript captured at .agent-work/epic418-h-447/evidence/g1-guard-red.txt BEFORE any retirement edit; g1 touched only the 3 new files and produced zero retirement."
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name",
+          "claim:guard-red-on-real-disease \u2014 the g1 transcript of scan() failing on the UNTOUCHED tree is the centerpiece evidence; a guard authored after the tree is clean can only ever be falsified against decoys"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "The replacement capture obligation: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from the plan below, including this gate's anchors block, then dispatch a constellation-implementer subagent (Opus, named explicitly; NO Fable) and integrate the returned IMPLEMENTER_RESULT.\n\nTASK: Build the write-path replacement BEFORE the old one is removed. Create scripts/verify_episode_captured.py: `verify_episode_captured.py <work-id> [--store-root PATH] [--phase feedback|archive]`. It globs the store's active/ directory for episodes whose mechanical `- run:` line matches the work id, and exits 1 if none. Under --phase archive it additionally requires `git ls-files --error-unmatch` to succeed on each matched path, so a run that writes an episode and forgets to `git add episodes/` genuinely fails.\n\nTHE VALVE \u2014 this is the load-bearing design property, not a detail. The verifier parses ONLY the `<!-- episode-state: -->` header and the `- run:` line. It MUST NOT parse or emit any assertion `statement`, and MUST NOT import query_episodes. Ids and counts out; statements never. It asserts CAPTURE ONLY \u2014 no ripeness, no apply-or-defer, no dormancy; those are playbook concepts that retire with the playbook (decision:capture-gate-checks-capture-only). Prove the valve with a sentinel test: seed a temp store where every statement is 'SENTINEL-DO-NOT-LEAK-9f2a', run the verifier with stdout+stderr captured, assert the sentinel appears in NEITHER; and give that test its own red proof by monkeypatching the verifier to echo the record body and asserting the sentinel IS then found.\n\nSTORE ROOT: do NOT change store_root()'s semantics. Its docstring already rules out durable_root() for a documented reason and this retirement is not the place to overturn that ruling. Instead the spine commands pass --store-root explicitly (wired in g3). Verify and record the reason: the installed writer's store_root() resolves to the SKILL INSTALL DIR (~/.claude/skills/constellation-commander/episodes), not the project repo \u2014 leave a comment at store_root() naming this hazard and pointing at the --store-root requirement.\n\nFILES IN SCOPE: NEW: scripts/verify_episode_captured.py, tests/test_verify_episode_captured.py. COMMENT ONLY: scripts/apply_episode_delta.py at store_root().",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 shipped the guard; LEG C is red and names the capture command this gate creates",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g1 shipped the guard; its replacement-absent leg is RED and names verify_episode_captured.py, the script this gate creates."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1",
+          "attested": {
+            "evidence": "e-g2-implement-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md",
+            "verdict": "complete, no unresolved blockers; blockers: none (explicit)",
+            "suite": "1705 passed / 0 real failures; the 10 test_mutation_floor 'failures' in the crew transcript are FORCE_COLOR=3 in the parent env breaking the harness FAILED regex, NOT a regression -- re-run with NO_COLOR=1 FORCE_COLOR=0: 14 passed, exit 0 (evidence/g2-mutation-floor-nocolor.txt)",
+            "valve": "sentinel test + own red proof + ast import-graph check; scan_episode stops at '## Agent-supplied'"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "The replacement capture obligation: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and the IMPLEMENTER_RESULT, then dispatch a constellation-reviewer subagent (Opus, named explicitly; NO Fable). The reviewer must independently RE-RUN the evidence commands rather than reading the implementer's transcript. CLOSE CRITERIA: verify_episode_captured.py passes on a seeded store, fails on an empty one and on a store holding only other runs' episodes; --phase archive fails on an uncommitted episode; the sentinel test proves no statement text can reach stdout or stderr, and its own red proof shows the sentinel test can fail",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-implement returned a result",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2-implement -> complete; e-g2-implement-1 attached (IMPLEMENTER_RESULT at .agent-work/epic418-h-447/results/g2-IMPLEMENTER_RESULT.md, blockers: none)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned with an explicit APPROVE/BLOCK verdict",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1",
+          "attested": {
+            "evidence": "e-g2-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g2-REVIEW_RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "0",
+            "independence": "19/19 survey items pass; reviewer built 10 adversarial probes and 4 of its own mutation red proofs rather than grading the transcript",
+            "suite": "FORCE_COLOR=0 NO_COLOR=1 python -m pytest -q -> EXIT=0, 1715 passed, 0 failed; the waived mutation-floor class disappears entirely, confirming the FORCE_COLOR root cause",
+            "tree-restored": "blob oid unchanged, HEAD unmoved, git status shows only the 3 intended paths (Commander re-verified)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "The replacement capture obligation: integrate",
+      "imperative": "Check the verdict. On APPROVE, verify the crew's side-effects against the world yourself \u2014 re-run the evidence commands and confirm the postconditions pass in your hands \u2014 then commit. On BLOCK, return for rework. Harvest the result's Workflow Feedback into the run's episode-candidate pool. EVIDENCE: python -m pytest tests/test_verify_episode_captured.py -q ; python scripts/verify_episode_captured.py no-such-run --store-root episodes ; echo EXIT=$?  # MUST be 1",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2-review returned a verdict",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2-review -> complete, verdict APPROVE, 0 blockers (e-g2-review-1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_episode_captured.py passes on a seeded store, fails on an empty one and on a store holding only other runs' episodes; --phase archive fails on an uncommitted episode; the sentinel test proves no statement text can reach stdout or stderr, and its own red proof shows the sentinel test can fail",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "required evidence reproduces in the Commander's own hands: python -m pytest tests/test_verify_episode_captured.py -q ; python scripts/verify_episode_captured.py no-such-run --store-root episodes ; echo EXIT=$?  # MUST be 1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "commander-verification",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/evidence/g2-integrate-commander.txt",
+            "commit": "dbf9a23",
+            "c1-legs": "seeded 0 / empty 1 / other-runs-only 1 / archive-uncommitted 1 / archive-after-commit 0 / missing-root 2, all run by the Commander against temp stores seeded through apply_episode_delta.py",
+            "c2": "pytest tests/test_verify_episode_captured.py -q EXIT=0 (15 passed, 4 subtests); verify_episode_captured.py no-such-run --store-root episodes EXIT=1",
+            "leak-check": "my own probe statement 'COMMANDER PROBE ONLY' grep -c = 0 across all three outputs",
+            "real-store-untouched": "verify_episode_captured.py issue-447 --store-root episodes EXIT=1; git status --porcelain episodes/ empty"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Rewire the spines and the install bundles: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from the plan below, including this gate's anchors block, then dispatch a constellation-implementer subagent (Opus, named explicitly; NO Fable) and integrate the returned IMPLEMENTER_RESULT.\n\nTASK: Swap the Commander and Admiral closeout obligations onto episode capture.\n\nskills/commander/templates/COMMANDER_SPINE.template.json \u2014 replace the `feedback` imperative. Roughly 70% of the current text is apply-or-defer, ripeness, bank_reason, dormancy, export/resolve/defer and delta-op vocabulary: all playbook concepts that retire with the playbook. The replacement keeps the honest-reflection opening and the crew-Workflow-Feedback harvest, then says: record what happened as episodes \u2014 one episode per distinct thing that happened, not one per run and not a summary \u2014 stating task-intent, expected-behavior, observed-behavior, impact-cost and workaround. It MUST carry this sentence explicitly: 'An episode is a record, not a rule: write what you observed, and do NOT write a rule for a future agent to follow \u2014 a rule to follow belongs in docs/agents/* and is a human''s call.' Write the delta to .agent-work/<work-id>/episode-delta.json and apply via `python <commander-skill-dir>/scripts/apply_episode_delta.py --delta ... --store-root episodes`, passing --store-root EXPLICITLY because the writer's default resolves relative to the installed skill directory.\n  RETARGET feedback.c1 IN PLACE to verify_episode_captured.py --phase feedback (never delete a c1). DELETE feedback.c2 (verify_lessons_applied) \u2014 it is the TERMINAL condition so removal renumbers nothing; its obligation does not move because ripeness and apply-or-defer no longer exist.\n  RETARGET archive.c1 IN PLACE to verify_episode_captured.py --phase archive. Update the archive imperative's AGENT_FEEDBACK sentence. In archive.c4 deny_globs, keep the two retired paths (they now read as a re-staging block) and add them to the guard's LEG B/D approved list with that reason.\n\nskills/admiral/templates/ADMIRAL_SPINE.template.json \u2014 same shape at closeout: c1 statement rewritten (check stays null), c2 retargeted to the capture verifier, c6 (verify_lessons_applied) deleted as terminal. DELETE the constellation-lessons-auditor dispatch and its disposition routing from the closeout imperative rather than repointing it at episodes/ \u2014 repointing is this mission's named failure mode.\n\nscripts/install_constellation.py \u2014 in the `admiral` and `commander` SKILL_SCRIPT_BUNDLES tuples drop apply_lessons_delta.py, verify_lessons_applied.py, verify_agent_feedback.py and add apply_episode_delta.py, verify_episode_captured.py. Delete the `lessons-auditor` entries from SKILL_SCRIPT_BUNDLES and SKILL_REFERENCE_BUNDLES. Do NOT bundle query_episodes.py \u2014 but do NOT claim that as a structural guarantee either; the cold panel measured four ways around it (repo-relative execution, plain Read/Grep, the unfiltered copytree at install_constellation.py:915, and SCRIPT_RUNTIME_COMPANIONS). Leave a comment at the bundle naming that.\n\nAdd to tests/test_install_constellation.py a GENERAL assertion, not a per-name one: every kind:'command' postcondition in both installed spine templates must name a script that exists in that skill's installed scripts/ directory. That protects every future rewiring, not just this one.\n\nFILES IN SCOPE: skills/commander/templates/COMMANDER_SPINE.template.json, skills/admiral/templates/ADMIRAL_SPINE.template.json, scripts/install_constellation.py, tests/test_install_constellation.py, tests/data/store_mentions.approved.txt",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g2 shipped verify_episode_captured.py, so the spine commands name a script that exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g2 committed dbf9a23: scripts/verify_episode_captured.py exists and is tracked. Guard's replacement-absent leg now reports 4 findings, none of them 'script missing' - only the two spines and the two bundles, which is exactly g3's work."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1",
+          "attested": {
+            "evidence": "e-g3-implement-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g3-IMPLEMENTER_RESULT.md",
+            "verdict": "complete, all 9 close criteria met, blockers: none",
+            "guard": "replacement-absent 4->0 and unapproved-store-mention 9->0, Commander-confirmed; 117 retired-name + 5 retired-path remain, which is exactly g4/g5's work",
+            "diff-shape": "both spines 4 insertions / 5 deletions, CRLF preserved 134 and 65 with zero bare LF, both still json.load-parse (Commander-confirmed)",
+            "suite": "FORCE_COLOR=0 NO_COLOR=1 pytest -q EXIT=0, 1716 passed 0 failed (baseline 1715 + the one new general install test)",
+            "escalation": "the retired-name leg has NO approval mechanism, so archive.c4 deny_globs can never be approved and the guard cannot reach green; Commander's ruling, carried into g5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Rewire the spines and the install bundles: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and the IMPLEMENTER_RESULT, then dispatch a constellation-reviewer subagent (Opus, named explicitly; NO Fable). The reviewer must independently RE-RUN the evidence commands rather than reading the implementer's transcript. CLOSE CRITERIA: both spine templates still parse as JSON; every command postcondition on both spines names a script that is bundled to that skill and exists on disk; no spine command names a retired script; guard LEG C goes GREEN and LEG B goes RED (new shipped sites now name the store, which is the approval diff working)",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3-implement returned a result",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3-implement -> complete, e-g3-implement-1 attached"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned with an explicit APPROVE/BLOCK verdict",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1",
+          "attested": {
+            "evidence": "e-g3-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g3-REVIEW_RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "0",
+            "intent-check": "reviewer swept both FULL templates not the diff hunks, enumerated all 26 episode-bearing sentences and read each as an agent; zero hits for lesson/ripeness/bank_reason/dormancy/playbook/graduate/inbox; query_episodes.py named in neither spine",
+            "one finding, fixed at integrate": "the new comment cited 'copytree at install_constellation.py:915' but its own 18-line insertion moved copytree to 932; I replaced the line number with the symbol name install_skills(), so it cannot rot again",
+            "suite": "FORCE_COLOR=0 NO_COLOR=1 pytest -q EXIT=0, 1716 passed 2 skipped 1 xfailed (Commander re-run after the fix)"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Rewire the spines and the install bundles: integrate",
+      "imperative": "Check the verdict. On APPROVE, verify the crew's side-effects against the world yourself \u2014 re-run the evidence commands and confirm the postconditions pass in your hands \u2014 then commit. On BLOCK, return for rework. Harvest the result's Workflow Feedback into the run's episode-candidate pool. EVIDENCE: python -m pytest tests/test_install_constellation.py -q ; python -c \"import json;[json.load(open(p,encoding='utf-8')) for p in ('skills/commander/templates/COMMANDER_SPINE.template.json','skills/admiral/templates/ADMIRAL_SPINE.template.json')]\" ; python scripts/verify_retirement.py | cut -f1 | sort -u",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3-review returned a verdict",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3-review -> complete, verdict APPROVE, 0 blockers (e-g3-review-1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both spine templates still parse as JSON; every command postcondition on both spines names a script that is bundled to that skill and exists on disk; no spine command names a retired script; guard LEG C goes GREEN and LEG B goes RED (new shipped sites now name the store, which is the approval diff working)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "required evidence reproduces in the Commander's own hands: python -m pytest tests/test_install_constellation.py -q ; python -c \"import json;[json.load(open(p,encoding='utf-8')) for p in ('skills/commander/templates/COMMANDER_SPINE.template.json','skills/admiral/templates/ADMIRAL_SPINE.template.json')]\" ; python scripts/verify_retirement.py | cut -f1 | sort -u",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "commander-verification",
+          "payload": {
+            "commit": "100a33c",
+            "json": "both templates json.load-parse; CRLF 134 and 65 with zero bare LF",
+            "command-conditions": "commander 8, admiral 2; ZERO name a retired script; every named script is bundled to that skill AND present in scripts/ (walked programmatically against SKILL_SCRIPT_BUNDLES, not by eye)",
+            "LEG C replacement-absent": "GREEN (4->0)",
+            "LEG B unapproved-store-mention": "went RED as the plan predicted (9 new sites from g2's script) and was worked to ZERO inside this gate via the census, which is the approval diff doing its job rather than the leg being bypassed",
+            "suite": "FORCE_COLOR=0 NO_COLOR=1 pytest -q EXIT=0, 1716 passed 2 skipped 1 xfailed; evidence/g3-suite.txt",
+            "install+guard tests": "EXIT=0, 115 passed 1 xfailed 371 subtests"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "Carry the live content, then untrack the two files and delete the machinery: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from the plan below, including this gate's anchors block, then dispatch a constellation-implementer subagent (Opus, named explicitly; NO Fable) and integrate the returned IMPLEMENTER_RESULT.\n\nTASK: PART 1 \u2014 carry. Migrate the EIGHT live lessons in .agent-work/LESSONS.md into the store, through the writer only (constraint:record-stores-never-hand-edited): falsify-a-check-against-a-decoy-before-trusting-it, a-verdict-must-not-select-on-the-gap-it-escalates, grading-a-contested-claim-settled-launders-it, reasoning-gate-crew-waiver-can-be-wrong-for-synthesis, enumerate-the-sites-by-command-before-editing-a-claim, archive-the-producer-with-the-output, name-scoped-test-filter-gates-are-strong-but-structurally-blind, crew-blocked-on-a-commander-blocked-on-that-crew-has-no-exit. Follow the precedent at episodes/active/issue-308-001.md: the lesson's grounding supplies task-intent / expected-behavior / observed-behavior, its counters and history supply impact-cost, and \u2014 critically \u2014 its prescriptive `statement` becomes the `workaround` assertion, an observation of what was done, NEVER a rule. Carry the originating lesson id as an artifact-ref for identity continuity.\n  CARRY RULE (explicit, to avoid fabricating observations): carry ONLY a lesson whose `grounding` already names the observed event. All eight qualify \u2014 each cites a concrete artifact line. Anything that would need a synthesised observed-behavior is DROPPED with a stated reason instead.\n  .agent-work/AGENT_FEEDBACK.md's 2119 lines (its state on main at 861ecbe) are DROPPED WITH REASON, not migrated: synthesising typed assertions from unstructured prose retrospectives is exactly the fabrication the store's own doctrine forbids, and git history retains the file at its final revision. Record the reason and the commit.\n\nPART 2 \u2014 untrack, do not delete. Use `git rm --cached` (NOT `git rm`) on .agent-work/LESSONS.md and .agent-work/AGENT_FEEDBACK.md. THIS IS LOAD-BEARING AND MEASURED: durable_root() resolves to THIS WORKTREE under the active Admiral epic lease (scripts/agent_work_root.py:136-140), so this run's own feedback/archive gate reads this worktree's AGENT_FEEDBACK.md. Deleting the working-tree copy would strand this run's closeout, and the only exits would be recreating the retired file \u2014 literally #308's failure shape \u2014 or a human override in a run with no reachable human. Untracking removes it from the index, which is what 'shipped' means and what guard LEG A checks, while the on-disk copy survives this run and dies with the worktree. Leave a comment recording this at the guard's LEG A.\n\nPART 3 \u2014 delete the machinery: scripts/apply_lessons_delta.py, scripts/verify_lessons_applied.py, scripts/verify_agent_feedback.py, skills/lessons-auditor/ (whole tree), skills/workbench/templates/LESSONS.template.md, skills/workbench/templates/AGENT_FEEDBACK.template.md, tests/test_apply_lessons_delta.py, tests/test_verify_lessons_applied.py, tests/test_verify_agent_feedback.py. Prune the methods in tests/test_agent_work_root.py and tests/test_feedback_tooling.py that load a deleted module; keep the rest.\n  DO NOT DELETE scripts/stage_feedback.py or scripts/collect_feedback.py. The plan originally cut stage_feedback.py on the premise that the fence mechanism exists only because .agent-work/ is gitignored. That premise is FALSE \u2014 .gitignore:1 says .agent-work/ is TRACKED, and the fence branch exists for epic-lease fencing, which is real and is this run's own situation. CONSTELLATION_FEEDBACK.md is a third file that #447 does not name and is NOT retired.\n\nFILES IN SCOPE: episodes/active/issue-447-*.md (via the writer only), .agent-work/epic418-h-447/episode-delta.json, and the deletions listed above",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g3 rewired the spines, so nothing shipped still invokes the machinery being deleted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g3 committed 100a33c. Verified programmatically, not by eye: across both spines' 10 command conditions ZERO name apply_lessons_delta.py, verify_lessons_applied.py or verify_agent_feedback.py, and every script they DO name is bundled to that skill and present in scripts/. The installer no longer bundles the three retired scripts or the lessons-auditor skill. Nothing shipped still invokes the machinery g4 deletes."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1",
+          "attested": {
+            "evidence": "e-g4-implement-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g4-IMPLEMENTER_RESULT.md",
+            "verdict": "complete; the one raised blocker (tc1) is dispositioned to the Commander's integrate commit with a measured mechanism, not left open",
+            "carry": "8 episodes issue-447-001..008, all via the writer, all git add-ed; count 8 confirmed by query_episodes; capture gate exits 0 in both feedback and archive phase (Commander-run)",
+            "workarounds": "all 8 scanned by the Commander for imperative force - zero hits on must/should/always/never/second-person; every one is a past-tense report of what a run did",
+            "untrack": "git rm --cached only; both paths left the index (ls-files exits 1) and both remain on disk (test -f exits 0), Commander-verified",
+            "guard": "retired-path-still-tracked 5->0; 85 retired-name prose findings remain, which is g5's gate",
+            "tc1": "tests/test_episode_negative_control.py::test_canon_episode_store_untouched asserts git status --porcelain episodes/ is empty, which the mandated staged episodes contradict; Commander read the test at line 1147-1150 and confirms the commit closes it"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "Carry the live content, then untrack the two files and delete the machinery: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and the IMPLEMENTER_RESULT, then dispatch a constellation-reviewer subagent (Opus, named explicitly; NO Fable). The reviewer must independently RE-RUN the evidence commands rather than reading the implementer's transcript. CLOSE CRITERIA: six episodes exist under episodes/active/ carrying run id issue-447, each with a workaround assertion holding the migrated statement as an observation; `git ls-files` no longer lists either retired path; the retired scripts and the lessons-auditor skill are gone; stage_feedback.py and collect_feedback.py SURVIVE; guard LEG A goes GREEN; this run's own feedback gate still passes against the surviving on-disk file",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4-implement returned a result",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4-implement -> complete, e-g4-implement-1 attached"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned with an explicit APPROVE/BLOCK verdict",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g4-review-1",
+          "attested": {
+            "evidence": "e-g4-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g4-REVIEW_RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "0; 17 checks all pass",
+            "workarounds": "all 8 graded individually by reading; W8 named as closest to the line and passed with a stated reason; a 40-statement modal scan returned 4 hits, all false positives",
+            "writer-provenance": "proved positively by replaying episode-delta.json into a scratch store and getting the 8 staged blobs back BYTE-IDENTICALLY - an OID-vs-HEAD check cannot prove this for new files",
+            "grounding": "all 8 checked against LESSONS-main-861ecbe.md, not the 3 required; every observed-behavior traces to its lesson's grounding, counters match digit for digit; nothing synthesised",
+            "guard-leg": "5->0 re-derived by feeding _leg_retired_path HEAD's tracked set, and shown still falsifiable (a decoy tracked set fires 2)",
+            "suite": "1618 passed 2 skipped 1 xfailed 0 failed after the Commander's integrate commit; arithmetic 1716-85-13=1618 re-derived independently"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "Carry the live content, then untrack the two files and delete the machinery: integrate",
+      "imperative": "Check the verdict. On APPROVE, verify the crew's side-effects against the world yourself - re-run the evidence commands and confirm the postconditions pass in your hands - then commit. On BLOCK, return for rework. Harvest the result's Workflow Feedback into the run's episode-candidate pool. EVIDENCE: python scripts/apply_episode_delta.py --delta .agent-work/epic418-h-447/episode-delta.json --dry-run ; python scripts/query_episodes.py select --field run --value issue-447  # count MUST be 8 ; git ls-files --error-unmatch .agent-work/LESSONS.md ; echo EXIT=$?  # MUST be non-zero ; python C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py epic418-h-447 --phase feedback ; echo EXIT=$?  # this run's OWN gate must still be reachable ; python -m pytest tests/test_episode_store.py tests/test_episode_fields.py -q",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4-review returned a verdict",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4-review -> complete, verdict APPROVE, 0 blockers, 17 checks (e-g4-review-1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "check": null,
+          "statement": "EIGHT episodes exist under episodes/active/ carrying run id issue-447, each with a workaround assertion holding the migrated statement as an observation; `git ls-files` no longer lists either retired path; the retired scripts and the lessons-auditor skill are gone; stage_feedback.py and collect_feedback.py SURVIVE; guard LEG A goes GREEN; this run's own feedback gate still passes against the surviving on-disk file",
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "check": null,
+          "statement": "required evidence reproduces in the Commander's own hands: python scripts/apply_episode_delta.py --delta .agent-work/epic418-h-447/episode-delta.json --dry-run ; python scripts/query_episodes.py select --field run --value issue-447  # count MUST be 8 ; git ls-files --error-unmatch .agent-work/LESSONS.md ; echo EXIT=$?  # MUST be non-zero ; python C:/Users/fredc/.claude/skills/constellation-commander/scripts/verify_agent_feedback.py epic418-h-447 --phase feedback ; echo EXIT=$?  # this run's OWN gate must still be reachable ; python -m pytest tests/test_episode_store.py tests/test_episode_fields.py -q",
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g4-integrate-1",
+          "type": "commander-verification",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/evidence/g4-integrate-commander.txt",
+            "commit": "77e428d",
+            "episodes": "8 under episodes/active carrying run issue-447, all committed; capture gate exits 0 in BOTH feedback and archive phase",
+            "workarounds": "all 8 scanned by me for imperative force: zero hits; every one a past-tense report",
+            "untrack": "git ls-files --error-unmatch exits 1 on both retired paths AND test -f exits 0 on both; git rm --cached, never git rm",
+            "own-gate": "installed verify_agent_feedback.py exits 1, byte-identical message, UNCHANGED from before g4 - reachable, not stranded",
+            "negative-control": "15 passed EXIT=0 after the commit; the raised blocker is closed, not hidden",
+            "suite": "1618 passed 2 skipped 1 xfailed 0 failed, exactly the predicted 1716-85-13",
+            "guard": "retired-path-still-tracked GONE; 85 retired-name prose findings remain for g5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-implement": {
+      "id": "g5-implement",
+      "title": "Prose pointers, the doctrine tombstone, and two corrected falsehoods: implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md for this gate from the plan below, including this gate's anchors block, then dispatch a constellation-implementer subagent (Opus, named explicitly; NO Fable) and integrate the returned IMPLEMENTER_RESULT.\n\nTASK: Doc-only gate. The operative invariants are pre-authored below as an explicit chain so the crew verifies a frozen list rather than inventing grep-shaped proxies for 'the document says what it should'.\n\nMUST BECOME TRUE:\n 1. docs/agents/CREW_CONTEXT.md:60 no longer says 'Read them with scripts/query_episodes.py'. This is a     LIVE PRESCRIPTION to read the store and is the run's governing constraint being violated in the     doctrine directory today. The record-stores table row for LESSONS.md is removed; the episodes row     stays but describes the WRITE path only.\n 2. docs/agents/GLOSSARY.md:16 no longer defines `harvest` as 'Reading stored episodes back to act on     them.' Either redefine it against the write path or remove the term.\n 3. episodes/README.md:12 no longer claims '.agent-work/ is gitignored (see .gitignore line 1)'. That is     FALSE \u2014 .gitignore line 1 is a comment stating .agent-work/ is TRACKED, and `git ls-files .agent-work`     returns 3069 files. The store's 'why a tracked path' argument currently rests on a false fact about a     file it names. Re-found the argument on a true one (the store must be visible in every worktree and     clone the moment a commit lands). Also delete the 'Not to be confused with' section, which asserts the     store is a SIBLING of the playbook \u2014 the exact claim this issue reverses.\n 4. A TOMBSTONE block exists in docs/agents/ORCHESTRATOR_CONTEXT.md naming the SHAPE of the retirement,     because no mechanical leg can catch a successor playbook that never names episodes: the two files are     retired; episodes/ replaces both; episodes are RECORDS and are never read back as rules; a rule to     follow goes in docs/agents/*; and there is to be no successor playbook and no read-and-apply loop.     This is where a good-faith agent acting from a stale instruction lands.\n 5. Every remaining LIVE pointer is repointed or removed: README.md:233,254; docs/CONSTELLATION_OVERVIEW.md:40;     skills/admiral/SKILL.md:60,67,68,70; skills/admiral/references/fleet-doctrine.md:7,162,163,166;     skills/commander/references/commander-core.md:60; skills/commander-delegated/SKILL.md:17;     skills/workbench/SKILL.md:16,29; skills/workbench/templates/WORKFLOW_CLOSEOUT.template.md:29;     skills/charter/templates/AGENT_GUIDE.template.md:74,75; SKILL_INDEX.md; docs/POSITIONING.md;     scripts/agent_work_root.py:4 (docstring).\n 6. skills/workbench/templates/CONSTELLATION_FEEDBACK.template.md:22's `Lesson:` field accepts an EPISODE     id instead of a lesson id \u2014 one field, the minimum that stops the referent dangling.     CONSTELLATION_FEEDBACK.md itself is NOT retired.\n\nMUST NOT CHANGE (survivors \u2014 an absence-only edit would pass just as happily having deleted everything):\n 7. docs/RECURSIVE_IMPROVEMENT_DESIGN.md keeps its ~37 sites UNTOUCHED and gains ONLY a superseding header     at the top. It is a design RECORD of the loop as built in June 2026, not doctrine. Rewriting it to     describe a system it never described would be falsifying history. The header must say it is history,     not instruction, and name where the current loop lives.\n 8. docs/CONSTELLATION_OVERVIEW.md:98's ruling paragraph SURVIVES \u2014 it already rules the playbook out of     the artifact taxonomy and is simply true now.\n 9. docs/superpowers/** and tests/fixtures/** are untouched records.\n10. docs/EPISODE_STORE.md's comparative references to apply_lessons_delta.py become descriptions of the     property itself ('a validated, all-or-nothing delta writer'), since they now cite a file the reader     cannot open.\n\n 11. THE GUARD CAN REACH GREEN. Invariants 1-6 and 10 cannot drive the retired-name leg to zero, because invariant 7 requires ~33 sites in docs/RECURSIVE_IMPROVEMENT_DESIGN.md to SURVIVE untouched, and archive.c4's deny_globs deliberately keeps both retired paths as a re-staging block. Measured at 77e428d: 85 findings, of which ~51 are on surfaces no invariant here retires (RECURSIVE_IMPROVEMENT_DESIGN.md 33, stage_feedback.py 8, apply_episode_delta.py 3, verify_episode_captured.py 2, RETURN.md 2, install_constellation.py 1, init_work_area.py 1, COMMANDER_SPINE.template.json 1). The leg has NO approval mechanism at all -- SCOPE_EXCLUSIONS covers only tests/ and the guard itself -- so test_canon_is_clean's xfail(strict=True) could never XPASS and the scaffolding would outlive the work, which is the exact defect g1's own review already caught once. Give the leg a reason-carrying approval census at tests/data/retired_names.approved.txt, in the SAME format as tests/data/store_mentions.approved.txt and reusing the same load/normalize machinery, and approve each residual with an honest per-line reason. A reason that amounts to 'an agent is still told to use the retired thing' is not approvable -- fix the surface instead. Do NOT weaken the leg into a pattern allowlist; the census names exact sites so anything new still has to be looked at. \n\nFILES IN SCOPE: the files enumerated in invariants 1-6 and 10; docs/RECURSIVE_IMPROVEMENT_DESIGN.md header only; scripts/verify_retirement.py and tests/data/retired_names.approved.txt and tests/test_retirement_guard.py for invariant 11",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4 removed the machinery, so the prose no longer describes anything that ships",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g4 committed 77e428d: both retired paths off the index and the machinery deleted; retired-path-still-tracked leg 5->0. What remains for g5 is prose only - 85 retired-name findings across 23 shipped surfaces, re-derived by command."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-implement-1",
+          "attested": {
+            "evidence": "e-g5-implement-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g5-IMPLEMENTER_RESULT.md",
+            "verdict": "complete, all 11 invariants, blockers: none",
+            "guard": "verify_retirement.py exits 0 and prints ZERO BYTES - Commander-confirmed; all four legs green",
+            "85 retired-name findings": "32 removed by fixing the surface, 53 approved with a per-line reason; the sweep created 13 new store mentions, each reasoned, so that leg stayed at 0",
+            "survivors": "RECURSIVE_IMPROVEMENT_DESIGN 16 insertions 0 deletions with git grep -c LESSONS.md = 12 at HEAD and now; superpowers, fixtures, episodes/, RETURN.md and all four fenced files empty-diff - all Commander-confirmed",
+            "census": "one parser not a fork (load_approved grew one optional census_path); PATH half of the leg deliberately unapprovable, stated at the code site; red-proved twice",
+            "suite": "5 failed 1619 passed; 3 distinct failures, all working-tree-vs-HEAD artifacts (canon_is_clean XPASS strict is g6's marker, the other two pin files invariants 3 and 5 mandate editing); deselecting the three gives 1619 passed exit 0"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-review": {
+      "id": "g5-review",
+      "title": "Prose pointers, the doctrine tombstone, and two corrected falsehoods: review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md from the gate plan and the IMPLEMENTER_RESULT, then dispatch a constellation-reviewer subagent (Opus, named explicitly; NO Fable). The reviewer must independently RE-RUN the evidence commands rather than reading the implementer's transcript. CLOSE CRITERIA: all ten pre-authored invariants hold: items 1-6 are true, items 7-10 are verifiably unchanged or minimally changed as specified; guard LEG D goes GREEN; LEG B's approved census is updated with a written reason per new entry",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g5-implement returned a result",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g5-implement -> complete, e-g5-implement-1 attached"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned with an explicit APPROVE/BLOCK verdict",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g5-review-1",
+          "attested": {
+            "evidence": "e-g5-review-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/results/g5-REVIEW_RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "0; 20 survey checks all pass; Fowler pass exit 0",
+            "not-absence-only": "inv10 was the one that could have been faked and was not - all 9 dead pointers became property descriptions and docs/EPISODE_STORE.md appears ZERO times in the 53-entry census, so every one was fixed by editing rather than approved",
+            "no-defect-written": "regex for read-shaped verbs near episode/store across all 521 added lines returned 7 hits, 6 of them explicit DENIALS of the read; every live use of the redefined harvest checked and none reads the store",
+            "census": "53 entries, 53 DISTINCT reasons; measured exactly-covering in both directions (53 approvals / 53 residual sites, zero dead, zero uncovered) plus a six-property decoy suite proving it was not weakened into a pattern allowlist",
+            "commander-fix": "removed 'curator rhyme-search' from the overview audience column (no implementation exists; grep -rn rhyme skills/curator/ is empty) - the guard immediately went exit 1 because the census is exactly-covering, census updated alongside",
+            "suite-postcommit": "1621 passed 2 skipped, 1 failed = test_canon_is_clean XPASS(strict), which is g6's marker; the two HEAD-pinning failures cleared on the commit exactly as predicted"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g5-integrate": {
+      "id": "g5-integrate",
+      "title": "Prose pointers, the doctrine tombstone, and two corrected falsehoods: integrate",
+      "imperative": "Check the verdict. On APPROVE, verify the crew's side-effects against the world yourself \u2014 re-run the evidence commands and confirm the postconditions pass in your hands \u2014 then commit. On BLOCK, return for rework. Harvest the result's Workflow Feedback into the run's episode-candidate pool. EVIDENCE: python -m pytest tests/test_retirement_guard.py -q ; git diff --stat docs/RECURSIVE_IMPROVEMENT_DESIGN.md  # MUST show only the inserted header ; git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md  # MUST be unchanged, proving the record was frozen not rewritten ; python scripts/verify_retirement.py ; echo EXIT=$?",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g5-review returned a verdict",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g5-review -> complete, verdict APPROVE, 0 blockers, 20 checks (e-g5-review-1)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "all ten pre-authored invariants hold: items 1-6 are true, items 7-10 are verifiably unchanged or minimally changed as specified; guard LEG D goes GREEN; LEG B's approved census is updated with a written reason per new entry",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "required evidence reproduces in the Commander's own hands: python -m pytest tests/test_retirement_guard.py -q ; git diff --stat docs/RECURSIVE_IMPROVEMENT_DESIGN.md  # MUST show only the inserted header ; git grep -c 'LESSONS.md' -- docs/RECURSIVE_IMPROVEMENT_DESIGN.md  # MUST be unchanged, proving the record was frozen not rewritten ; python scripts/verify_retirement.py ; echo EXIT=$?",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g5-integrate-1",
+          "type": "commander-verification",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/evidence/g5-integrate-commander.txt",
+            "commit": "fd7ef60",
+            "guard": "verify_retirement.py EXIT=0, ZERO bytes printed - all four legs green",
+            "frozen-record": "RECURSIVE_IMPROVEMENT_DESIGN.md 16 insertions 0 deletions, git grep -c LESSONS.md = 12 at 77e428d and 12 now - the record was frozen, not rewritten",
+            "survivors": "empty diff across docs/superpowers, tests/fixtures, episodes/active, episodes/retired, RETURN.md and all four fenced files",
+            "census-fix": "my own one-column edit to the overview audience column orphaned its verbatim approval and took the guard exit 0 -> 1; census updated alongside and re-verified",
+            "suite": "1621 passed 2 skipped; the single failure is test_canon_is_clean XPASS(strict), which is the tree going clean and is g6's marker to remove"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g6-verify": {
+      "id": "g6-verify",
+      "title": "Flip the guard green and prove the suite",
+      "imperative": "REASONING GATE \u2014 no crew. Crew waiver reason: this gate integrates and verifies work the Commander already holds full context for, and produces no new code beyond removing one pytest marker; a crew on it would be shallower, not safer.\n\nRemove the @pytest.mark.xfail(strict=True) marker from test_canon_is_clean in tests/test_retirement_guard.py so the clean-tree assertion becomes unconditional. Run the full suite. Report the pass count and explain the delta from the 1688-passed baseline BY NAME \u2014 the deletions legitimately lower it (test_apply_lessons_delta 849 lines, test_verify_lessons_applied 65, test_verify_agent_feedback 171, plus pruned methods), and the new guard and capture tests raise it. The claim is '0 failed', never 'strictly greater', because a retirement that deletes tests cannot honestly assert a higher count.\n\nThen the fresh-store smoke check: the corpus installs onto OTHER repos, so run the capture gate against a scratch repo holding an empty episodes/ and confirm it behaves rather than crashing. Finally re-run this run's OWN feedback gate and confirm the closeout path is still open.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g5 integrated; the tree is now clean of retired names",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "g5 integrated at fd7ef60: verify_retirement.py exits 0 and prints zero bytes, all four legs green - Commander-confirmed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the xfail marker is gone and test_canon_is_clean passes unconditionally",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "python -m pytest -q reports 0 failed, with the count delta explained by name",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c3",
+          "statement": "python scripts/verify_retirement.py exits 0 and prints nothing, having been observed failing on the untouched tree at g1 (evidence/g1-guard-red.txt)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c4",
+          "statement": "the fresh-store smoke check passes, and this run's own closeout gate is confirmed still reachable",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "Use `python`, NEVER `py` \u2014 py resolves to a runtime with no pytest here and produces fake greens.",
+        "Windows: pass encoding='utf-8', newline='\\n' explicitly on every file write.",
+        "Edit shipped compact-format JSON (the spine templates) as raw TEXT, surgically. NEVER round-trip through json.load/json.dump \u2014 it reflows the file and destroys blame. Re-validate with json.load after.",
+        "Edit canonical shared doctrine at skills/_shared/global-*.md, NEVER skills/<role>/references/global-*.md (install-time copies, silently regenerated).",
+        "Record stores are never hand-edited: episodes/ is written ONLY through scripts/apply_episode_delta.py.",
+        "Never delete a postcondition with id c1 from a spine step \u2014 c1 is the bare-form `attest` default in checklist_engine.py. Retarget c1 in place; only ever delete TERMINAL conditions.",
+        "Scope-discipline ruling (epic-418, Tommy): build the thing that needs to work and no more. A corner case you choose not to chase gets a comment AT THE CODE SITE naming it, and is floated up \u2014 never silently absorbed."
+      ],
+      "anchors": {
+        "structural": [
+          "struct:docs/EPISODE_STORE.md \u2014 the store's grammar, partition and retirement policy (doc level)",
+          "struct:episodes/README.md \u2014 the store's own directory doctrine (doc level)"
+        ],
+        "capability": [
+          "capability:run-closeout-learning \u2014 the Commander/Admiral feedback step's write path",
+          "capability:episode-store \u2014 episodes/{active,retired} + apply_episode_delta.py + query_episodes.py"
+        ],
+        "constraint": [
+          "constraint:episodes-are-not-prescriptions \u2014 Tommy 2026-08-06: the store records what happened; nothing may read it back as a rule. THE constraint this run exists to honour.",
+          "constraint:doctrine-lives-in-docs-agents \u2014 a rule to follow belongs in docs/agents/*, never in the store.",
+          "constraint:record-stores-never-hand-edited \u2014 episodes only via apply_episode_delta.py."
+        ],
+        "decision": [
+          "decision:episodes-replace-both \u2014 one store of observations replaces two inboxes plus a playbook; no successor playbook is created. @grade: settled/human",
+          "decision:untrack-do-not-delete \u2014 g4 uses `git rm --cached`, not `git rm`, so this run's own closeout gate (which resolves to THIS worktree under the active epic lease) is not stranded. @grade: settled/measured"
+        ],
+        "evidence": [
+          "claim:guard-fails-on-purpose \u2014 the guard is observed FAILING before it is observed passing",
+          "claim:suite-no-failures \u2014 python -m pytest -q reports 0 failed, count delta explained by name"
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g6-verify-1",
+          "type": "commander-verification",
+          "payload": {
+            "path": ".agent-work/epic418-h-447/evidence/g6-count-delta.md",
+            "commit": "f2dd40a",
+            "c1": "xfail(strict=True) removed from test_canon_is_clean; grep shows ZERO @pytest.mark in the file; tests/test_retirement_guard.py -q EXIT=0, 16 passed",
+            "c2": "FORCE_COLOR=0 NO_COLOR=1 pytest -q EXIT=0, 1622 passed 2 skipped 0 failed 0 xfailed; delta reconciled by name against the 1688 baseline in evidence/g6-count-delta.md, sums exactly",
+            "c3": "verify_retirement.py EXIT=0, ZERO bytes; observed FAILING at g1 across three legs on the untouched tree, evidence/g1-guard-red.txt",
+            "c4-fresh-store": "scratch git repo, empty episodes/: feedback BLOCKS exit 1, archive BLOCKS exit 1, missing root REFUSES exit 2, absent active/ REFUSES exit 2 - behaves, does not crash; evidence/g6-fresh-store.txt",
+            "c4-closeout": "installed verify_agent_feedback.py present and running, exit unchanged - this run's own closeout path is open"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": [],
+  "engine_session": {
+    "session_id": "exec-447",
+    "status": "released",
+    "claimed_at": "2026-08-06T09:14:10.257764+00:00",
+    "last_heartbeat": "2026-08-07T19:31:49.769534+00:00",
+    "claimed_by": "cmdr-447-episodes-retirement",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-h-447",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T19:32:16.994324+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-06T09:14:49.440596+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Guard shipped and observed RED on the untouched tree across 3 legs; the transcript is the centerpiece evidence #308 could not produce.",
+      "mechanical": false,
+      "ts": "2026-08-06T09:39:06.153790+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "BLOCK adjudicated: the blocking finding was real and reproduced independently, rework landed and re-verified.",
+      "mechanical": false,
+      "ts": "2026-08-06T10:22:23.203477+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "Guard shipped and independently falsified. The BLOCK was real (guard fired on itself once tracked) and the rework verified. Also surfaced: my /tmp scratch filenames collided with the concurrent cmdr-440 run and polluted one evidence file; switched to the session scratchpad.",
+      "mechanical": false,
+      "ts": "2026-08-06T10:24:17.667399+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "The valve held under execution, not assertion: scan_episode stops reading at '## Agent-supplied', so statement text never enters memory, and three independent proofs cover it (sentinel across all four outcome paths, that test's own red proof, and an ast import-graph check that a grep would have false-passed because the file's own prose names query_episodes). The gate now distinguishes exit 1 BLOCKED from exit 2 REFUSED - a split the implementer added beyond the handoff's 'non-zero', and the right call: a spine that cannot tell 'you did not capture' from 'I could not look' cannot act on either. The rework was the load-bearing find: _git_tracked passed a relative pathspec while setting cwd=path.parent, so a relative --store-root doubled the path and reported all 25 committed episodes untracked - a false BLOCK that would have failed every real archive gate, invisible to m3 because every test used absolute temp paths. Separately I falsified the crew's own suite claim: the 10 test_mutation_floor failures are not a regression, they are FORCE_COLOR=3 in this session's env putting ANSI codes between 'FAILED' and the node id, defeating the harness regex; with color off the file is 14 passed / exit 0, so the true failure count is zero and g6's suite claim is reachable.",
+      "mechanical": false,
+      "ts": "2026-08-07T15:14:19.573176+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "APPROVE, zero blockers, and the review was genuinely independent: the reviewer re-derived the exit-code matrix over stores it seeded itself and wrote four of its own leak mutations rather than replaying the implementer's. Two things it found that the implementer's own proof could not have: the implementer leaked only to stdout, so the stderr half of the sentinel assertion had never been shown able to fire until the reviewer leaked from matched_episodes() to stderr and got a red; and an informative null - echoing only the lines scan_episode actually reads stays GREEN, which is not a hole but the mechanism itself, because the read boundary at '## Agent-supplied' is the valve and statement bytes never enter memory. ast confirms stdlib-only imports while grep -c query_episodes returns 1, so a grep check would have false-passed. Criterion 6 was not merely scoped but cleared: with colour off the suite is EXIT=0, 1715 passed, 0 failed, so the waived class vanishes rather than being tolerated, and claim:suite-no-failures is now measured true rather than deferred. Tree verified byte-identical after the reviewer's mutations - blob oid unchanged, HEAD at bf8819a, only the three intended paths dirty.",
+      "mechanical": false,
+      "ts": "2026-08-07T15:37:32.661465+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "APPROVE verified against the world rather than against the transcript. I re-derived every c1 leg myself over temp stores seeded through apply_episode_delta.py, never the real one: seeded 0, empty 1, other-runs-only 1, archive-on-uncommitted 1 (git pathspec did not match), archive-after-git-commit 0, missing root 2. The archive leg is the one that matters and it flips on the single fact it is supposed to key on - the same episode, same store, exit 1 before the commit and 0 after - so it is testing durability and not merely existence. I ran my own leak probe with a statement string of my choosing and grep -c found it zero times in all three outputs, so the valve holds for text the crew never saw. Real store confirmed untouched: issue-447 in episodes/ still exits 1 and git status on episodes/ is empty, which also means g4's requirement of exactly 6 issue-447 episodes starts from zero. Committed dbf9a23. Harvested seven episode candidates into episode-candidates.md, including the one I found rather than the crew: the mutation-floor red was FORCE_COLOR in my own terminal, not a regression, and while it is red it masks real ones in that file.",
+      "mechanical": false,
+      "ts": "2026-08-07T15:41:36.181676+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "The deletion was real, not a rename, and that is the only thing that could have failed here silently. The implementer asserted the excised Admiral span CONTAINED lessons-auditor/bank_reason/graduate/authority=human and did NOT contain 'episodes' before cutting it, so the text removed cannot have been an already-repointed version - that is the right proof shape for a delete-don't-repoint requirement, and I would not have thought to ask for it. Guard legs confirmed in my own hands: replacement-absent 4->0, unapproved-store-mention 9->0, leaving only the 117 prose hits and the 5 tracked paths that g5 and g4 own. The last replacement-absent finding needed a code read rather than a bundle edit: _spine_names_replacement scans task IMPERATIVES, not check commands, so wiring the Admiral's closeout.c2 alone left it red - the guard is asserting that an agent is TOLD to run the gate, not merely that a machine will. Two deviations accepted: --store-root on the check commands as well as the imperatives (without it an installed copy resolves the store under ~/.claude/skills and every gate exits 2, the #308 shape the handoff called non-negotiable), and one trimmed clause that contradicted the archive.c1 I had just retargeted. Escalation carried forward, and it is mine not theirs: the retired-name leg has no approval census, so archive.c4's deny_globs entries - which correctly name both retired paths as a re-staging block - can never be approved, and neither can the frozen historical record in RECURSIVE_IMPROVEMENT_DESIGN.md that g5 is required NOT to rewrite. The guard cannot reach green until that leg gains a reason-carrying census. Ruling recorded, folded into g5.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:13:05.014424+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "APPROVE, no blockers, and the review earned it by testing the one thing that could have failed silently: whether the playbook was deleted or merely renamed. It swept the FULL templates rather than the diff hunks, enumerated all 26 episode-bearing sentences and read each one as an agent would, and found every one to be a write instruction, a never-hand-edit constraint, a commit, or the capture gate. The sentence it stopped hardest on is the right one - the Admiral's 'harvesting what the ADMIRAL_LOG, the crew Workflow Feedback and the Commander returns actually recorded' - and its reading is correct: those are the run's own artifacts, the material you write the record FROM, not a store you read and obey. The capture gate is the other place a read could hide and it conditions advancement on WHETHER you wrote, never on what earlier episodes say. It also red-proved the new general install test on a postcondition where the implementer used a precondition, so both limbs of the walk are now demonstrated live rather than one. One real finding, fixed here: the new comment cited a copytree line number that its own insertion had already invalidated - I replaced the number with the symbol install_skills(), which cannot rot. Two things carried forward rather than closed: the census approves CREW_CONTEXT.md's 'Read them with query_episodes.py' under a reason that describes three of its four block-mates and not that line, so g5 must fix the prose AND the approval reason together; and the reviewer answered my escalation - the retired-name census did NOT belong in g3, but it is a scheduled dependency, because deny_globs keeps both retired names permanently by design and the leg can never reach zero by deletion.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:36:41.193599+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "Verified against the world rather than the claim. I walked both spines programmatically against SKILL_SCRIPT_BUNDLES rather than reading the diff: commander has 8 command conditions and admiral 2, ZERO name a retired script, and every script named is both bundled to that skill and present in scripts/. LEG C is green. LEG B behaved exactly as the plan predicted - it went red when g2's new script added 9 shipped sites naming the store, and was worked to zero inside this gate through the census, which is the approval diff doing its job rather than the leg being bypassed. That is the distinction worth recording: the census is not a suppression list, it is the place a reviewer reads the REASON, and the reviewer read all 63 added lines to check exactly that. Committed 100a33c. Three candidates harvested into the pool: a guard that scans imperatives is asserting an agent is TOLD, not that a machine will; a comment citing a line number in its own file is invalidated by the edit that writes it; and an approval reason written once per block describes only some of its lines - which is how CREW_CONTEXT.md's read instruction sits in the census under a write-path reason today. That last one is g5's, and it must fix the prose and the approval entry together.",
+      "mechanical": false,
+      "ts": "2026-08-07T16:38:37.655885+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-implement",
+      "why": "The carry is honest and I checked the thing that mechanical checks cannot see. All eight workaround assertions read as past-tense reports of what a run did - I scanned them for imperative force and found zero hits on must/should/always/never/second-person, and more importantly they pass the read-aloud test: a future agent finding any of them reads a report, not an instruction. The one I would have got wrong is W1: its source rule said the check must be run against a decoy, but that run actually caught its checks by cold reading, so the episode reports the cold reading. Claiming a decoy run would have been the fabrication the store's doctrine forbids, and the crew chose the honest version over the tidy one. git rm --cached did exactly what it is load-bearing for: both paths left the index while both remain on disk, so this run's own closeout still has a file to read, and the installed verify_agent_feedback.py gate exits 1 before and 1 after - unchanged, not stranded. retired-path-still-tracked went 5 to 0. Two departures I accept: the prune widened from the two test files I named to four, which is not scope creep but the deletion's actual blast radius found by command - and it is the same shape as lesson W6, arriving in the very handoff that carries W6; and six tests were retargeted rather than pruned because their subject was a deleted template while the machinery under test survives, so pruning would have silently dropped its only coverage. One blocker raised and dispositioned rather than absorbed: the episode-store negative control asserts git status on episodes/ is empty, which the staged episodes this gate is required to produce contradict. I read the test at lines 1147-1150 myself; it reads git status, so my integrate commit closes it. Every future capturing run hits this, which makes it a triage item and not a one-off.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:29:30.187173+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g4-review",
+      "why": "APPROVE on 17 checks, and the review went past its brief in the two places that mattered. It proved writer-provenance POSITIVELY - replaying episode-delta.json into a scratch store and getting the eight staged blobs back byte-identically - which is the thing my handoff's OID-against-HEAD recipe cannot do for new files, since a new file has no HEAD blob to compare against. That is a defect in my handoff, not theirs. It also proved git rm --cached from state rather than from the claim: each retired path shows BOTH 'D ' and '??' simultaneously, and plain git rm cannot produce the '??'. On the negative control it answered both my questions and found something I had not asked: committing genuinely closes the test rather than hiding it, because git status compares worktree AND index against HEAD and after the commit all three agree - but the predicate is broader than the test's own stated intent, so every future capturing run reds it between git add and commit. That is a real triage item with a narrower green form already identified. The finding I am carrying up rather than acting on: roughly 24 of the 32 pre-existing canon episodes have IMPERATIVE workarounds, opening with bare imperative verbs or carrying 'must'. The eight this gate wrote are currently the only episodes in canon honouring constraint:episodes-are-not-prescriptions. This gate introduced none of it and decision:store-hardening-out-of-scope makes it a different job, so it is filed and floated, not fixed.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:53:03.744080+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g4-integrate",
+      "why": "Committed 77e428d and verified the closing move I was most exposed on: the raised blocker is CLOSED, not hidden. The episode-store negative control asserts git status on episodes/ is empty; after the commit worktree, index and HEAD all agree, so 15 passed and the emptiness is honest rather than papered over. Suite landed on 1618 passed, 0 failed - exactly 1716 minus 85 deleted minus 13 pruned, which is the arithmetic both crews derived independently and I re-ran. The load-bearing property holds in my own hands: both retired paths exit 1 on git ls-files AND exit 0 on test -f, so they are off the index and still on disk, and the installed verify_agent_feedback.py returns exit 1 with a byte-identical message - unchanged from before g4, which is the proof that I did not strand my own closeout while editing the machinery it runs on. One correction I made to my own evidence file: I had labelled the delta dry-run 're-application is a no-op'. It is not - the writer mints new ids per run, so re-applying would create 009-016. The dry-run proves the delta validates and nothing more, and I am not asserting what I did not measure. Four candidates harvested, the largest being that roughly 24 of the 32 pre-existing canon episodes carry imperative workarounds - the eight written here are currently the only ones in canon honouring the constraint this run exists to enforce, and the handoff I wrote pointed a crew at one of the offenders as its model.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:54:47.520793+00:00"
+    },
+    {
+      "id": "w-14",
+      "gate": "g5-implement",
+      "why": "The guard reaches green and it does so honestly. verify_retirement.py exits 0 and prints zero bytes in my own hands, and the split behind that number is the thing worth recording: of 85 findings, 32 were removed by fixing the surface and 53 were approved with a per-line reason - so the census is carrying most of the weight, which makes the honesty of those 53 reasons the real deliverable of this gate rather than the exit code. The sweep also CREATED 13 new store mentions, because surfaces that pointed at the playbook now point at the write path, and each got its own reason so the other leg stayed at zero. Two judgement calls I accept. harvest was redefined rather than deleted because its live uses are all write-side, so deleting it would have stranded them. And the Lesson: field name was KEPT while its accepted value became an episode id, because collect_feedback.py parses that field by literal name and fingerprints cross-run recurrence on it - renaming would have silently dropped every export's stable identity, which is a bigger loss than an awkward field name. Invariant 6 said 'accepts an episode id', not 'is renamed'. The header on the design record deliberately spells no retired name, because naming one would have moved the git grep -c count that invariant 7 uses to prove the record was frozen rather than rewritten - a nice piece of noticing that the proof and the edit were about to collide. Three suite failures, all working-tree-vs-HEAD artifacts: canon_is_clean XPASSing strictly is the tree going clean and is g6's marker to remove, and the other two pin files that invariants 3 and 5 REQUIRE editing. Deselecting the three gives 1619 passed, exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-07T18:55:41.389499+00:00"
+    },
+    {
+      "id": "w-15",
+      "gate": "g5-review",
+      "why": "APPROVE on 20 checks, and the review proved the half of a doc gate that is easy to fake. The invariant that could have been faked is 10, and it was not: all nine dead pointers to apply_lessons_delta.py became descriptions of the property, and docs/EPISODE_STORE.md appears ZERO times in the 53-entry census - so every one of those nine was fixed by editing rather than quietly approved. The best of them tells a reader MORE than the dead pointer did. On whether the sweep wrote the defect it was sweeping out, the reviewer ran a read-shaped-verb scan across all 521 added lines: 7 hits, 6 of which are explicit denials of the read, and it checked every live use of the redefined harvest to confirm none reads the store. It then measured the new census in both directions rather than just confirming it passes - 53 approvals against 53 residual sites, zero dead approvals and zero uncovered lines - which is the property that actually matters, since an approval file passes trivially by approving too much. It also caught a live trap in my own handoff: the obvious Python line-ending check, worktree against git show <rev>:<file>, reports all 23 files corrupted because .gitattributes sets * text=auto and blobs are LF by design. That would have been a false BLOCK on advice I gave. One judgement call it routed up rather than deciding, correctly: the new overview row named 'curator rhyme-search' in its audience column, and grep shows no such capability anywhere in skills/curator/ - #308's rhyme-detection is unshipped. I removed it, and the guard caught me within the minute, because the census records approved lines verbatim and is exactly-covering, so my one-column edit orphaned its approval and took exit 0 to exit 1. The guard works, and it worked on the person who commissioned it.",
+      "mechanical": false,
+      "ts": "2026-08-07T19:23:24.219084+00:00"
+    },
+    {
+      "id": "w-16",
+      "gate": "g5-integrate",
+      "why": "Committed fd7ef60. The guard exits 0 and prints zero bytes in my own hands, which is the mission's item 2 landed: a shipped guard that keeps the retirement true, observed failing on the untouched tree at g1 and observed passing now. I verified the half of a doc gate that an absence-only check cannot see: RECURSIVE_IMPROVEMENT_DESIGN.md is 16 insertions and 0 deletions with git grep -c LESSONS.md at 12 both at 77e428d and now, so the design record was frozen rather than rewritten, and the survivors plus all four fenced files have empty diffs. The two HEAD-pinning suite failures cleared on the commit exactly as predicted, leaving 1621 passed and the single strict XPASS that IS the tree going clean - g6's marker to remove. Three candidates harvested, and the first is about this gate catching me: removing 'curator rhyme-search' from the overview audience column, a consumer with no implementation anywhere in skills/curator/, orphaned its verbatim approval because the census is exactly-covering, and the guard went to exit 1 within the minute. An approval and the line it approves are one object. The other two are the reviewer's: the obvious byte-level baseline for a line-ending check is wrong here because .gitattributes stores blobs LF, which would have been a false BLOCK on advice I gave; and an approval file passes trivially by approving too much, so the property worth measuring is exact coverage in both directions rather than a green exit.",
+      "mechanical": false,
+      "ts": "2026-08-07T19:24:15.271587+00:00"
+    },
+    {
+      "id": "w-17",
+      "gate": "g6-verify",
+      "why": "The retirement is verified and the guard is unconditional. verify_retirement.py exits 0 printing zero bytes, having been observed FAILING at g1 across three legs on the untouched tree before it was ever observed passing - so the green means something. The marker came off because it forced itself off: strict xfail fails on XPASS, so the moment the tree really went clean at g5 the scaffolding broke the build. It did not need remembering. Suite is 1622 passed, 0 failed, 0 xfailed, and I reconciled the delta by name rather than by eye: 1688 baseline, +12 guard, +15 capture gate, +1 general install assertion, -85 deleted across three named files, -13 pruned, +3/-2 census, +2 HEAD-pinning tests restored by g5's commit, +1 this marker, summing exactly to 1622. The claim is '0 failed', never 'strictly greater' - a retirement that deletes 85 tests cannot honestly assert a higher count, and this one is only higher because the replacement carries more tests than what it replaced. The fresh-store check is the one that mattered most, because the corpus installs onto OTHER repos and this gate's whole hazard is a store resolved somewhere unexpected: against a scratch repo with an empty episodes/ it BEHAVES rather than crashing - blocks at exit 1 in both phases, refuses at exit 2 on a missing root, and refuses again when active/ is absent, because an absent directory is not an empty one and git does not track empty directories. And this run's own closeout path is confirmed open: the installed verify_agent_feedback.py is still present and running with an unchanged exit, so editing the machinery I run on did not strand me.",
+      "mechanical": false,
+      "ts": "2026-08-07T19:31:49.769526+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-07T16:40:52.674593+00:00",
+      "reason": "MEASURED, not assumed: main advanced from cbd9aee to 861ecbe while this run was down, and .agent-work/LESSONS.md was union-merged there. Its Active section now holds EIGHT lessons, not the six this plan was frozen against - name-scoped-test-filter-gates-are-strong-but-structurally-blind and crew-blocked-on-a-commander-blocked-on-that-crew-has-no-exit landed from the governor-262 side. Both satisfy the plan's own CARRY RULE: each grounding names a concrete observed event (the first cites two independent -k blindness observations inside one run plus the Admiral's own 0-of-61 collection check; the second cites a crew's two escalation messages and the amendments-array entry it left). Carrying six would silently drop two live lessons at merge time, which is the content loss the mission's 'Done looks like' item 3 forbids. The Admiral's resume brief instructs exactly this: do not write the retirement on the assumption that those files are frozen at what the worktree sees. Rescoping the count 6 -> 8 rather than attesting a statement I know to be false.",
+      "authority": "admiral:launch-order/H-447 (resume brief, 2026-08-07)",
+      "ops": [
+        "rescoped g4-integrate"
+      ]
+    },
+    {
+      "ts": "2026-08-07T16:41:11.511922+00:00",
+      "reason": "Same measured fact as the g4-integrate rescope, applied to the gate that names the lessons by slug: main's LESSONS.md holds eight Active lessons at 861ecbe, and AGENT_FEEDBACK.md is 2119 lines there rather than the 2056 this plan was frozen against. The two added slugs are named explicitly so the implementer cannot carry the stale six, and the drop-with-reason for AGENT_FEEDBACK.md now cites the state actually being dropped. Nothing else in the imperative changed.",
+      "authority": "admiral:launch-order/H-447 (resume brief, 2026-08-07)",
+      "ops": [
+        "rescoped g4-implement"
+      ]
+    },
+    {
+      "ts": "2026-08-07T17:55:57.072931+00:00",
+      "reason": "MEASURED at 77e428d: the retired-name leg stands at 85 findings and roughly 51 of them sit on surfaces NO invariant in this gate retires. Invariant 7 REQUIRES docs/RECURSIVE_IMPROVEMENT_DESIGN.md's ~33 sites to survive untouched because it is a design record and rewriting it would falsify history; archive.c4's deny_globs deliberately keeps both retired paths as a re-staging block, which is a stronger reason than the one they were added for; and stage_feedback.py survives by explicit ruling. The leg has no approval mechanism whatsoever, so as planned it can never reach zero, g6 cannot flip the guard green, and test_canon_is_clean's xfail(strict=True) can never XPASS - meaning the scaffolding outlives the work, which is precisely the defect g1's own review already caught once and fixed. The deliverable of this mission is a guard that keeps the retirement true; a guard that structurally cannot go green is not that. Adding invariant 11: give the leg a reason-carrying census mirroring the store-mention one, reusing its machinery, with an honest per-line reason and an explicit refusal to weaken it into a pattern allowlist. Scope grows by one mechanism and two files, and it grows toward the mission's stated 'Done looks like' item 2 rather than away from it.",
+      "authority": "commander:inherited-latitude (architecture/structural change; no load-bearing interface shape changed) - escalation raised by the g3 implementer, confirmed by the g3 reviewer, ruled by me",
+      "ops": [
+        "rescoped g5-implement"
+      ]
+    }
+  ]
+}

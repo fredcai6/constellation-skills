@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-replan-green",
+  "mechanical": {
+    "run": "issue-418-g2-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-replan-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-418-g2-implement-m2-replan-green@259a3aa2e91863ea8eca642b9353ff035df98695",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-418-g2-implement",
+    "generated_at": "2026-08-06T17:40:13Z"
+  }
+}
