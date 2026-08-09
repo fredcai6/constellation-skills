@@ -1,0 +1,4 @@
+tests/test_iterative_planning_doctrine.py::InstalledIterativeRoleRuntimeTests::test_admiral_prelaunch_stop_boundary_permits_but_does_not_require_a_null_launch_id
+tests/test_iterative_planning_doctrine.py::InstalledIterativeRoleRuntimeTests::test_admiral_prelaunch_stop_boundary_verifies_a_transition_that_authorizes_no_launch
+
+[32m[32m2/36 tests collected (34 deselected)[0m[32m in 0.29s[0m[0m

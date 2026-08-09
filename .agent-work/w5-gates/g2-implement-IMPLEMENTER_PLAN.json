@@ -1,0 +1,311 @@
+{
+  "work_id": "w5-gates-g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-stop-boundary",
+    "m2-stop-mutation",
+    "m3-coupled-suite",
+    "m4-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context and confirm the handoff is complete",
+      "imperative": "Read the inherited global doctrine (global-crew.md, global-everyone.md), the g2-implement handoff, the current text of scripts/verify_iterative_role_artifacts.py and tests/test_iterative_planning_doctrine.py, and the installed replan verifier's stop contract. Confirm the handoff carries task, intent, scope, exclusions, evidence, test mode, stop conditions, return format. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + both owned files + replan stop contract read; handoff complete; anchors re-confirmed by text not line number",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md + global-everyone.md, the g2-implement handoff (task/intent/scope/exclusions/evidence/test-mode/stop-conditions/return-format all present -- handoff COMPLETE), the full text of scripts/verify_iterative_role_artifacts.py and the relevant classes of tests/test_iterative_planning_doctrine.py, and skills/replan/scripts/verify_replan.py. Anchors re-confirmed by text at HEAD 6f48ece4: _next_wave at :188 (handoff said 186), verify_admiral_prelaunch at :210 (said 207), the launch/authorization _require pair at :222-226, and the assertion to invert at tests/...:466 found by its message text. Measured the unmapped seam before changing it: verify_replan.py already treats stop as first-class (only stop may set current_wave to null) and render_replan_markdown never touches current_wave. Confirmed against the LIVE epic packet at .agent-work/epic-418-redux/transitions/w4-to-close/ (read-only): decision=stop, applicable=True, verify_replan_result passes, render returns 8611 chars. Fix A cheapest shape is NOT refuted -- the only blockers are the two clauses in this script."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-stop-boundary": {
+      "id": "m1-stop-boundary",
+      "title": "A verified stop transition passes pre-launch without authorizing a launch",
+      "imperative": "TDD. RED first: add golden-path tests carrying `stop_boundary` in their method names that drive admiral-prelaunch over a stop transition -- one with NEXT_WAVE.launch_id null, one copying the live epic-418-redux w4-to-close stop packet -- and observe them fail at unmodified HEAD; attest c1. Then GREEN: restructure verify_iterative_role_artifacts.py so _next_wave validates boundary_id (a path component) and trigger unconditionally, and a new decision-aware clause validates launch_id only after the decision is known -- stop skips the authorization clause and may say launch_id is null; repair stays refused. In the same slice invert the one sanctioned recorded assertion (found by the text 'stop cannot authorize NEXT_WAVE'). c2 is the stop_boundary selector green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff confirmed complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: stop_boundary tests written and observed failing against the unmodified verifier -- manual attest, check null so the engine does not run the by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed at the unmodified verifier. 'python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_boundary' exited 1: 2 failed, 24 deselected. --collect-only reported 2 collected, exit 0, so the selector is nonzero. The two failures land on the two DIFFERENT blocking clauses the handoff named, which is what proves both are real: ..._verifies_a_transition_that_authorizes_no_launch fails with 'REFUSED: Admiral NEXT_WAVE.launch_id must be a nonempty string' (the _next_wave clause), and ..._permits_but_does_not_require_a_null_launch_id fails with 'REFUSED: only advance or replan may authorize NEXT_WAVE' (the authorization clause)."
+        },
+        {
+          "id": "c2",
+          "statement": "a verified stop transition passes admiral-prelaunch and still writes CURRENT_TRUTH.md and WAVE_REVIEW.md; stop_boundary selector green and collects a nonzero count",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_boundary"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-stop-boundary-1"
+        }
+      ],
+      "constraints": [
+        "Keep the mode name admiral-prelaunch; a separate admiral-boundary mode is DECLINED.",
+        "boundary_id SAFE_ID validation stays unconditional -- it is a path-safety guard, not a policy.",
+        "repair stays refused; do not widen to it.",
+        "Copy the live stop fixture; never mutate .agent-work/epic-418-redux/transitions/w4-to-close/.",
+        "Test naming contract is load-bearing: `stop_boundary` must appear in the method names.",
+        "Only scripts/verify_iterative_role_artifacts.py and tests/test_iterative_planning_doctrine.py may be edited."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-stop-boundary-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_boundary",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-stop-mutation": {
+      "id": "m2-stop-mutation",
+      "title": "Mutation proof that the stop relaxation is narrow and downstream still runs",
+      "imperative": "Pre-ruling 2's mutation test, carrying `stop_mutation` in its method name. Mutate the stop fixture along each dimension the relaxation could have wrongly swallowed -- audit decision mismatch, audit cardinality zero, a G2-invalid stop packet, an unsafe boundary_id, and a repair packet -- and assert each drives admiral-prelaunch RED, asserting first that each mutation really applied. This is what would catch a naive early-return-on-stop shape. c1 is the stop_mutation selector green with a nonzero collected count.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 green: the decision-aware clause is in and the stop golden path passes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete: decision-aware clause in, stop golden path green (2 passed, exit 0)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "stop_mutation selector green and collects a nonzero count; every mutation drives the check red rather than passing",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_mutation"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-stop-mutation-1"
+        }
+      ],
+      "constraints": [
+        "Assert the mutation applied before asserting the red -- a mutation that never took leaves a green that reads like a working guard.",
+        "Never mutate the live epic packet; mutate only the temp-area copy."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-stop-mutation-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_mutation",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-coupled-suite": {
+      "id": "m3-coupled-suite",
+      "title": "Coupled suite green with the delta accounted for",
+      "imperative": "Run the handoff's coupled eight-file suite bare, read its own exit code, and account for the delta against the HEAD 6f48ece4 baseline of 387 passed / 480 subtests. An unexplained delta is a finding. Any red outside the two owned files is a FLOAT, not an edit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 and m2 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 and m2 complete and green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "coupled suite exits 0 and the passed/subtest delta from baseline is accounted for",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-coupled-suite-1"
+        }
+      ],
+      "constraints": [
+        "Run bare -- never pipe pytest into tail or head.",
+        "Use python, never py."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-coupled-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-result": {
+      "id": "m4-result",
+      "title": "Write the IMPLEMENTER_RESULT",
+      "imperative": "Write .agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md: COMPLETE or BLOCKED, the explicit inversion statement (what the assertion was, what it now asserts, and why this inversion IS the fix rather than a pre-ruling-6 violation), per-item evidence with real exit codes and per-selector collected counts, files touched, floats, map impact against the inbound anchors, and honest workflow feedback. Attest c1 once the file exists and says all of that.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 green; all evidence in hand",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 green; all evidence in hand."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RESULT.md written with verdict, inversion statement, per-item evidence with real exit codes and collected counts, files touched, floats, map impact, workflow feedback",
+          "check": {
+            "kind": "command",
+            "command": "test -f /c/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md && grep -q 'Inversion' /c/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-result-2"
+        }
+      ],
+      "constraints": [
+        "Do not write any report file other than this RESULT.md."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /c/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md && grep -q 'Inversion' /c/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-result-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f /c/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md && grep -q 'Inversion' /c/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "g2-implement-impl",
+    "status": "released",
+    "claimed_at": "2026-08-09T01:14:30.079718+00:00",
+    "last_heartbeat": "2026-08-09T01:25:38.568004+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T01:25:44.506637+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "The gate's one unmapped seam -- decision vs authorization -- resolves in fix A's favour. Everything downstream of the two clauses in verify_iterative_role_artifacts.py already handles stop: the installed G2 verifier lists stop in DECISIONS and sanctions current_wave:null only for it, and the renderer never reads current_wave at all. So the refusal is local to this script, not inherited from the seam it delegates to. The ordering wrinkle is real but shallow: boundary_id is needed to LOCATE the decision, so structure validation must stay ahead of policy -- split _next_wave into an unconditional structural half and a decision-aware authorization half called after REPLAN_RESULT is read. One nuance the ruling settles: 'may express no launch authorized' is permissive, so under stop launch_id is accepted either null or a valid SAFE_ID; that permissiveness is what lets the sanctioned assertion inversion at tests:466 (which keeps launch_id='wave-2') go green without a second fixture change.",
+      "mechanical": false,
+      "ts": "2026-08-09T01:15:37.917482+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-stop-boundary",
+      "why": "GREEN. The restructure landed as two functions rather than one relaxed condition, because the ordering wrinkle is structural: _next_wave now checks only what is decision-independent (key set, boundary_id path safety, trigger), and _require_launch_authorization carries the policy and runs after REPLAN_RESULT is read. boundary_id validation stayed exactly where it was and stayed unconditional, so the stop condition about losing it never triggered. The one nuance worth recording: under stop the null launch_id is PERMITTED, not required, and the else-branch falls through to the same SAFE_ID check, so path safety on a present launch_id survives the relaxation -- asserted directly with a '../escape' launch_id that must still refuse. Selector green: exit 0, 2 passed, 24 deselected; the whole doctrine file is 26 passed / 25 subtests, exit 0, which covers the inverted assertion.",
+      "mechanical": false,
+      "ts": "2026-08-09T01:18:29.952459+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-stop-mutation",
+      "why": "Mutation test green: exit 0, 1 test, 7 subtests, selector collects 1. Two things it taught me that the plan did not anticipate. First, my intended G2-breaking mutation was a no-op: emptying revised_forecast on the LIVE stop packet keeps it G2-valid, because an empty forecast is legitimate when the epic ends. Caught only because the assert-the-mutation-applied discipline is paired with an assert-it-went-red -- the subtest failed loudly instead of passing vacuously. Swapped to blanking revised_epic_body, the field CURRENT_TRUTH.md is actually written from. Second, I proved the test has teeth rather than asserting it: temporarily over-relaxed the code to 'null launch_id skips authorization' (the plausible wrong shape), and repair_names_no_launch caught it -- a repair packet sailed through with exit 0. Restored and re-verified; both selectors green. Also worth recording for the reviewer: an early-return-on-stop shape is caught by m1's golden test, not this one, because that test asserts the two Markdown writes actually happened.",
+      "mechanical": false,
+      "ts": "2026-08-09T01:21:26.298184+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-coupled-suite",
+      "why": "Coupled suite exit 0: 390 passed / 487 subtests against the 387 / 480 baseline at HEAD 6f48ece4. The delta is +3 tests and +7 subtests, and every unit of it is mine: the 3 tests are the two stop_boundary golden-path methods plus the one stop_mutation method, and the 7 subtests are that method's 7 mutation subTests. Nothing else moved -- in particular the sanctioned inversion changed an assertion INSIDE an existing subTest (launch_authority='stop'), so it shifts no count, which is the cleanest evidence that the inversion swapped an expectation rather than adding or removing coverage. No red anywhere, so nothing to float from the suite. The two CRLF-artifact files under transitions/close-to-w5/ were left unstaged and untouched as instructed.",
+      "mechanical": false,
+      "ts": "2026-08-09T01:23:13.713351+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-result",
+      "why": "RESULT.md written at .agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md: COMPLETE, with the inversion stated in the terms the handoff demanded (what it was, what it now asserts, and why the inversion IS the fix rather than a recorded exit bent to fit one -- the direction of causation is the whole argument). Per-selector exit codes and collected counts recorded as observed: stop_boundary exit 0 / 2 collected, stop_mutation exit 0 / 1 collected with 7 subtests, coupled suite exit 0 at 390 passed / 487 subtests with the +3/+7 delta fully attributed. Numbers re-verified against git diff --numstat (45/7 and 187/2) and the inversion line re-measured to :468-475 before claiming it. One process note: this postcondition first REFUSED because my own grep anchor was case-sensitive and the heading was not capitalized -- I retitled the section rather than touch the check, which is the correct direction. Honest-null branch tested and did not fire; scoped in the file to stop only.",
+      "mechanical": false,
+      "ts": "2026-08-09T01:25:38.567981+00:00"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "zc-consolidate",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 2,
+    "spine-step": "zc-consolidate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-zc-consolidate@099ef54ed165a25d1836693cefe035dbd392a5c9",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-08T23:06:32Z"
+  }
+}

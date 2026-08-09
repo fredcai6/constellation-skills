@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "v3-deletions-cost-nothing",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 4,
+    "spine-step": "v3-deletions-cost-nothing",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-v3-deletions-cost-nothing@33f967421cac23aab7d239469fe2823180f5fa44",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T02:56:58Z"
+  }
+}

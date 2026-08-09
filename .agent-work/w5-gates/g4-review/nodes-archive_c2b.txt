@@ -1,0 +1,6 @@
+tests/test_iterative_planning_doctrine.py::ArchiveReachabilityRuntimeTests::test_archive_c2b_a_merged_pr_alone_satisfies_the_check
+tests/test_iterative_planning_doctrine.py::ArchiveReachabilityRuntimeTests::test_archive_c2b_derives_the_branch_from_the_real_repository
+tests/test_iterative_planning_doctrine.py::ArchiveReachabilityRuntimeTests::test_archive_c2b_four_pr_states_decide_reachability_by_exit_code
+tests/test_iterative_planning_doctrine.py::ArchiveReachabilityRuntimeTests::test_archive_c2b_ships_no_unresolved_placeholder
+
+[32m[32m4/36 tests collected (32 deselected)[0m[32m in 0.27s[0m[0m

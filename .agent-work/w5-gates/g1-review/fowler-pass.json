@@ -1,0 +1,83 @@
+{
+  "work_id": "w5-gates",
+  "diff_ref": "g1-review target: scripts/verify_iterative_role_artifacts.py (+99/-31) and tests/test_iterative_planning_doctrine.py (+366), committed at c63c2bb0 on epic-418/w5-bookend-gates (git diff main...HEAD, tracked files only).",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Writing Files On Windows; Python Invocation), docs/agents/ORCHESTRATOR_CONTEXT.md (strengthened durable system), references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "_installed_skills_root is 35 lines and the mutation test is 47; both are longer than a default reading of the smell would like.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, 'Verification Discipline': 'Any guard that loops must assert what it looped over ... Print or assert the count', 'If you mutate, assert the mutation actually applied', and 'A round-trip test over the real shipped artifacts ... pair it with adversarial fixtures'.",
+        "reason": "The length is the standard's direct cost, not accidental sprawl. _installed_skills_root's 35 lines are one linear four-step resolution chain whose docstring states the order, plus the enumerate-every-root-tried refusal the handoff's criterion 5 requires; splitting it would scatter a decision that must be read in order. The mutation test's 47 lines are mostly the mandated self-assertions (the wrong root IS plausible; each target IS absent from it and IS present in the correct root) that stop an empty or mis-built fixture reporting clean. Extracting those would hide the very assertions the standard exists to force into view."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "The two new test classes are focused and sized to their subject: GuardLocationStructureTests (pure predicate, lines 497-592) and GuardRuntimeTests (subprocess behaviour, 593-835). The split is along a real seam -- in-process predicate versus shelled-out run -- not an arbitrary cut. No production class was added.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "CORPUS_MARKER = \"CORPUS.json\" is copied from install_constellation.py:1040 into verify_iterative_role_artifacts.py:18. The duplication is deliberate and defensible -- an installed bundle has no installer on its path -- but NOTHING asserts the two copies still agree. If the installer's marker is ever renamed, _is_skills_root silently stops matching by marker and degrades to clause 2 (the sibling-glob), which keeps working in the common case, so the drift would never surface as a failure. This is the shape the repo's own rule warns about: 'Define a guard by its consumer's behaviour, not by a hand-maintained list.' Observation, not a blocker -- a one-line test asserting the verifier's constant equals the installer's would close it, and the installer was correctly off-limits to this change.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The new helpers operate on their own Path argument and reach no further than one level (path, path.parent) to answer a question that is genuinely about that path's surroundings. No method is more interested in another object's data than its own.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No recurring group of parameters travels together. skills_root moves alone; work_id was already the sole identifier on each verify_* entry point.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "skills_root is typed str | Path | None and normalized to a Path on the first line of the branch that uses it. That is an adapter at the CLI boundary -- argparse hands over a string -- not a primitive standing in for a missing type. Everything downstream is Path.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "The longest signature added is two parameters (work_id, skills_root). _is_skills_root, _is_installed_bundle and _candidate_skills_roots take one or none.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "flagged",
+      "finding": "Threading one new resolution option required edits at five parallel sites: verify_explorer, verify_commander, verify_admiral_prelaunch, the argparse declaration, and all three main() dispatch arms. The three verify_* functions are structurally identical -- read an artifact, resolve a root, load a verifier, translate the error -- and any further resolution option will have to be added to each in lockstep. Mild and localized to one module, so an observation rather than a blocker; a shared options object or a small dispatch table would make the next such change a single edit.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The module still changes for one reason -- how role artifacts are verified. Location resolution is a coherent part of that, and the change did not graft an unrelated axis of variation onto the file.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "Path(__file__).resolve().parents[1] is a pathlib construction chain on one value object, not a navigation chain across collaborators, and it is not new to this diff. No caller is asked to walk an object graph to reach what it needs.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Explicitly checked, because the pre-ruling made over-generalization the trap to avoid here. Nothing is built for a hypothetical caller: --skills-root has a named consumer in g4-integrate.c2 and I proved it is reachable and load-bearing rather than shipped-inert, and _candidate_skills_roots returns exactly the two scopes install_constellation.py already supports -- it mirrors an existing contract instead of inventing an extension point. No unused hook, no abstract base, no parameter without a caller.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "_is_skills_root's docstring opens 'Decided by structure, never by name', but clause 2 does pattern-match a name -- path.glob('constellation-*') -- on the children. The consequence is not cosmetic: because the glob runs on the PARENT, a candidate named constellation-* that carries its own SKILL.md matches ITSELF, so _is_installed_bundle's parent clause is vacuous for exactly the directories the old name test used to accept, and the predicate collapses to 'has SKILL.md'. I confirmed this by building the case (decoy 3 in my k1 repro): a lone constellation-* directory with a SKILL.md in an otherwise ordinary parent is ACCEPTED. No real location is misjudged and the failure mode is a visible downstream refusal, so this is an observation, not a blocker -- but it is precisely the case the repo's rule covers: 'Assert against behaviour, never against text that describes it. Docstrings ... are hand-authored and none is checked against what runs.' The prose is stronger than the predicate.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

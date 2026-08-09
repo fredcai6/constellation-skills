@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g2-review",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "commander-delegated",
+    "refusals": 5,
+    "spine-step": "g2-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-g2-review@2590c0f697b3305d022a8552a769b24772c463ef",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T01:28:30Z"
+  }
+}
