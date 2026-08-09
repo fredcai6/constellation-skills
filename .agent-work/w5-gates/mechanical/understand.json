@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "understand",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 2,
+    "spine-step": "understand",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-understand@a290865cbaed45a8f39d7fa3c5f10ec8575598c4",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-08T22:56:20Z"
+  }
+}

@@ -724,3 +724,37 @@ _Updated: 2026-08-08T07:20:00Z_
 > unfalsifiable — whatever it is, it looks plausible. The 1869 was measured in a throwaway detached
 > worktree that was created, collected, and **removed in the same command** (worktree count back to 16);
 > it was not reconstructed from remembered per-PR deltas, though it happens to confirm them exactly.
+
+> ### LATE ADDITION 2026-08-09 — #477 dispatched, #478 carried. Two issues I dropped from crew 4's order.
+>
+> Tommy asked for **"the 474-480 group"** — seven issues. `LO-w5-c4-engine.md` names **five** of them.
+> **#477 and #478 were never assigned**, so they were never worked, and nothing downstream could catch
+> it: the crew delivered exactly what its order listed, and the order was the only definition of "the
+> group" anyone downstream could see. Found by auditing issue states before the close, not by any gate.
+>
+> - **#477** (gauge read per checklist directory, so a crew inherits its Commander's reading) — the
+>   defect that cost this run **four crew relaunches**. Dispatched as a bounded implementer:
+>   worktree `C:/Programs/constellation-skills-wt/epic418-w5-gauge`, branch `epic-418/w5-gauge-477`.
+>   **Add it to the sweep list once its PR is merged — it is not in `SWEEP_LIST.md`.**
+> - **#478** (crew work areas minted beside the owning plan) — **carried, deliberately.** It relocates
+>   directories the closeout tooling walks and five live crew work areas sit in, with **no forcing
+>   function**. Disposition posted on the issue.
+>
+> **Both dispositions are on the issues themselves, not only here.** An unassigned issue the wave
+> believed it had covered is the same invisible debt as the #503/#495 closed-float reopen.
+>
+> **The reconciliation that would have caught it was trivial:** the user named a contiguous range, and
+> `474..480` has seven members. Deriving the assignment from a command is not enough — **the derived
+> population needs a total to check against.** Same lesson as the sweep list's 14-of-16 the same day.
+
+> ### ` M` IN `git status` IS NOT EVIDENCE OF AN EDIT ON THIS REPO
+>
+> Crew 1's worktree showed my own `transitions/close-to-w5/CURRENT_TRUTH.md` and `WAVE_REVIEW.md` as
+> ` M` — files a crew is forbidden to touch. **Both `git diff --numstat` and
+> `git diff --ignore-cr-at-eol --numstat` returned completely empty.** Zero content change. The
+> verifier rewrites them with LF, git normalises back to CRLF, and the stat cache reports modified.
+>
+> **Check `git diff`, not `git status`, before accusing anyone of a scope violation.** I nearly sent a
+> second false accusation on this exact signal — the first cost a retraction, and crew 1 was the one
+> who diagnosed the cause. It also means **"dirty count" is a weak liveness proxy**: it moves without
+> anyone writing anything.

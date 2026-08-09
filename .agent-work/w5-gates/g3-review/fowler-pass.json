@@ -1,0 +1,89 @@
+{
+  "work_id": "w5-gates",
+  "diff_ref": "commits ff43e883 + 84d1e998 (g3 and its repair) vs 4b8abc12 (g2 baseline) -- skills/commander/templates/COMMANDER_SPINE.template.json (1 line) and tests/test_iterative_planning_doctrine.py (+410 lines: ArchiveReachabilityRuntimeTests, GH_STUB_SOURCE, GIT_STUB_SOURCE; then +12/-6 for the flag whitelist and dead-branch removal). Re-run after the repair; the speculative-generality verdict changed as a result.",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline), docs/agents/GLOSSARY.md, docs/CHECKLIST_SCHEMA.md, .agent-work/w5-gates/crew-handoffs/g3-implement-HANDOFF.md (cold critic F1/F2 remedies)",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "test_archive_mutation_reintroduced_defects_all_drive_the_check_red is ~90 lines: a 6-entry mutation table, a derivation of the pre-#439 boolean form, and one loop asserting control/mutant disagreement.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, Verification Discipline: 'A check that cannot fail is indistinguishable from one that passed... mutate the thing it guards and watch it go red, then restore. If you mutate, assert the mutation actually applied.'",
+        "reason": "The length is the standard being met, not padding. All six legs must run the SAME control-vs-mutant harness on the identical fixture and share the one assertNotEqual that makes a no-op leg impossible -- the exact defect that BLOCKed g2. Splitting into six methods would duplicate that harness six times and let one copy drift out of the paired assertion. The table entries are data, not branching: cyclomatic complexity is low and each leg is one tuple."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "ArchiveReachabilityRuntimeTests holds 6 tests plus setUpClass/tearDownClass/resolved_c2b/run_command over one cohesive subject (the archive.c2b check text). Comparable in size to the file's existing GuardRuntimeTests. Single responsibility is intact.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "The one repeated shape -- writing a python stub plus its /bin/sh shim -- is already factored into a two-iteration loop over (gh, git). The command text is never duplicated: it is read once from the resolved template and every variant is a .replace() on it, which is the whole point of the F2 remedy. No copy of the check text exists anywhere in the test file.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "resolved_c2b reaches into the resolver module and the resolved JSON, and run_command reaches into checklist_engine._run_check_command. Both are deliberate couplings to the artifacts under test, not envy of a collaborator's data: the point is to measure the verdict the ENGINE would record on the text the TEMPLATE ships.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "The mutation table's entries are bare 5-tuples (label, mutated, prs, control_passes, mutant_passes) whose last two fields are unlabelled booleans, repeated six times. Reading leg 5 requires counting positions to see that 'False, True' means the control fails and the mutant wrongly passes. Transposing those two booleans would silently invert a leg's meaning and the suite would still be green for five of six legs. A small namedtuple (or dataclass) with named control_passes/mutant_passes fields would make that class of edit impossible to make by accident. NON-BLOCKING observation: the current legs are correct -- I re-derived all six independently and every one discriminates -- so this is future-edit safety, not a present defect.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "The check under test is handled as a raw string throughout, and every mutation is a str.replace / re.sub on it rather than a structured edit to a parsed command object.",
+      "override": {
+        "repo_standard": "g3-implement-HANDOFF.md cold critic finding F2, and docs/agents/CREW_CONTEXT.md 'Assert against behaviour, never against text that describes it' -- the test must read the shipped command OUT of the template, never restate it.",
+        "reason": "A command-object abstraction would require parsing and re-serialising the shipped text, and any round-trip through such a model is a place the tested string can stop being byte-identical to the one that ships. Keeping it an opaque string is what guarantees the thing measured is the thing shipped. I verified this empirically: five template-level mutations all drove the suite RED, which a parsed-and-rebuilt copy could not guarantee."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "The widest signature added is run_command(self, command, prs, branch=None) -- three parameters, one defaulted. Nothing approaches a parameter-object threshold.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The behaviour change is one line in one template. scripts/init_work_area.py took a zero-line diff and no other production file was touched, so the change did not scatter.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "flagged",
+      "finding": "tests/test_iterative_planning_doctrine.py has grown roughly 1000 lines across g1, g2 and g3 and now hosts at least three unrelated subjects: iterative-planning doctrine assertions, guard runtime behaviour, and now archive.c2b reachability with its own embedded gh/git stubs. It is acquiring the classic divergent-change signature -- a file that changes for several independent reasons. The handoff's own operational fact #3 ('every line number in the plan is stale') is a symptom already being paid for. NON-BLOCKING and explicitly NOT a rename request: the gate's close criteria are -k selectors pinned to this file and the naming contract is load-bearing, so splitting it is out of scope here. TRIAGE CANDIDATE for after wave 5 closes: split the runtime/stub-based suites out of the doctrine file.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "The deepest navigation is json.loads(resolved)['tasks']['archive'] followed by an explicit loop over postconditions -- two hops into a document the test legitimately owns knowledge of, not a train wreck of delegated calls.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "CLEARED BY THE REPAIR. At ff43e883 this was FLAGGED: the gh stub modelled three branches nothing exercised (--state closed, --state merged, bare 'length'), and unused modelled branches are exactly where a stub answers instead of refusing -- the same family as the c7 blocker. Commit 84d1e998 deletes all three. Re-verified at that ref: each of the three now REFUSES (exit 3), while the two forms the legs genuinely need still answer (--state open for leg 3, 'length > 0' for leg 6). The stub now models only what the shipped check and its mutation legs actually call. One branch remains technically unexercised -- --jq is still optional, with an else-branch printing raw JSON -- but I measured that drift at the shell rather than assuming: stripping --jq makes the command exit 2 in all three fixtures ('integer expression expected'), so it fails closed and is not the same hazard as a branch that answers a consumable count. Not flagged.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The diff is unusually comment-dense: a ~30-line header block before the class and a multi-line comment above every one of the six mutation legs.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, Verification Discipline (demonstrate a check can reach a failing state) plus the g3 gate contract requiring a per-leg no-op analysis -- the g2 BLOCK was caused by a leg whose no-op condition was never stated.",
+        "reason": "These comments are not covering for unclear code; they carry required evidence that has nowhere else to live. Each leg's comment states the condition under which THAT leg would be a no-op, which is the artifact the gate exists to produce, and I used those statements as the checklist for my own independent no-op audit -- they were falsifiable and I falsified none of them. The header block records the scoped null (no jq on PATH) in the file that depends on it. Deleting them would delete evidence, not noise."
+      }
+    }
+  ],
+  "rail_exception": null
+}

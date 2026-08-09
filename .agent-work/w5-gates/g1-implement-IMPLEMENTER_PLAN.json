@@ -1,0 +1,365 @@
+{
+  "work_id": "w5-gates-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-predicate",
+    "m2-resolution",
+    "m3-mutation",
+    "m4-suite",
+    "m5-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus the g1-implement handoff. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-predicate": {
+      "id": "m1-predicate",
+      "title": "Structural installed-bundle predicate replaces the name test",
+      "imperative": "In scripts/verify_iterative_role_artifacts.py add _is_skills_root(path) (parent carries CORPUS.json, or holds at least one constellation-*/ with its own SKILL.md) and _is_installed_bundle(path) (own SKILL.md AND parent is a skills root). Add tests named test_guard_location_predicate_* in tests/test_iterative_planning_doctrine.py that build the three location shapes as real directory trees under tempfile -- a real installed bundle, a main-checkout shape, a worktree shape -- plus a name-only decoy directory named constellation-* carrying no SKILL.md. Assert the predicate separates them and record the three observed columns (own SKILL.md, parent CORPUS.json, sibling count).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "predicate decides by structure, not by name; three-location matrix and name-only decoy pass",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k guard_location_predicate"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-predicate-1"
+        }
+      ],
+      "constraints": [
+        "Allowed scope is scripts/verify_iterative_role_artifacts.py and tests/test_iterative_planning_doctrine.py only",
+        "The guard must not become permissive (launch-order pre-ruling 4)",
+        "Fixtures are real directory trees, not monkeypatches",
+        "Windows: pass encoding='utf-8', newline='\\n' on every write"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-predicate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k guard_location_predicate",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-resolution": {
+      "id": "m2-resolution",
+      "title": "Resolution order, --skills-root flag, visible note, enumerating refusal",
+      "imperative": "Implement the four-step resolution order in _installed_skills_root(skills_root=None): explicit --skills-root wins (refuse if not a directory); else own bundle; else probe <cwd>/.claude/skills then ~/.claude/skills with a visible stderr note naming the root resolved; else REFUSE naming the real problem and every root tried. Add the --skills-root argparse flag and thread it through verify_explorer / verify_commander / verify_admiral_prelaunch. Add tests test_guard_location_resolution_* and test_guard_location_flag_* that shell out with an isolated HOME/USERPROFILE, assert the flag is reachable from all three modes, and assert the refusal enumerates the roots tried BY COUNT, not by eyeballing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "structural predicate landed and green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "--skills-root wins when given and is reachable from all three modes; probe emits a visible stderr note; refusal names the real problem and every root tried (count asserted)",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k 'guard_location_resolution or guard_location_flag'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-resolution-1"
+        }
+      ],
+      "constraints": [
+        "No silent fallback: a probe hit must say so on stderr",
+        "Never make a checklist check depend on stdout/stderr text -- the engine's verdict is the exit code",
+        "--skills-root validates is_dir only, per handoff step 1"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-resolution-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k 'guard_location_resolution or guard_location_flag'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-mutation": {
+      "id": "m3-mutation",
+      "title": "Wrong-root mutation drives the acceptance check RED",
+      "imperative": "Add a test named test_guard_mutation_* that takes a run which passes with the correct skills root and points the resolver at a plausible-but-wrong root (a directory that satisfies the skills-root test but lacks constellation-replan), then asserts the acceptance check goes RED and the refusal names the missing verifier under that wrong root. Paste both the green run and the red run as evidence. This is a non-overridable floor: if it cannot be made to fail on a broken input, STOP.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "resolution order and --skills-root landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mutation test observed RED on the wrong root and green on the right one -- manual attest of the paired runs",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "guard_mutation selector collects a nonzero count and passes",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k guard_mutation"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-mutation-1"
+        }
+      ],
+      "constraints": [
+        "Do not widen the guard to make a check pass",
+        "A check that cannot fail is indistinguishable from one that passed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-mutation-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k guard_mutation",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-suite": {
+      "id": "m4-suite",
+      "title": "Coupled suite green, gate selectors collect, red repros re-run",
+      "imperative": "Run the two gate selectors exactly as the close criteria write them (unpiped, reading the real exit code) and confirm each reports a nonzero collected count. Run the eight-file coupled suite. Re-run both red repros from the main checkout and from this worktree and record the new output. Run the wiring grep and state the call-site count for each new symbol; a helper referenced only by its own definition is a stop condition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "implementation and targeted tests complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both gate selectors collect nonzero and pass; red repros re-run and recorded; wiring grep call-site counts stated -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the eight-file coupled suite is green",
+          "check": {
+            "kind": "command",
+            "command": "cd C:/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-suite-1"
+        }
+      ],
+      "constraints": [
+        "Never pipe a pytest command into tail or head -- $? would belong to tail and a zero-match exit 5 would read as 0",
+        "Use python, never py",
+        "The main checkout is not in allowed scope for edits; only run a command there"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd C:/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-result": {
+      "id": "m5-result",
+      "title": "Write the IMPLEMENTER_RESULT",
+      "imperative": "Write the IMPLEMENTER_RESULT to .agent-work/w5-gates/crew-handoffs/g1-implement-RESULT.md from the implementer result template: completed slice, files changed, test mode satisfied, all five load-bearing evidence items with pasted command output, map impact, assumptions, stop conditions, out-of-scope observations, workflow feedback, and a plain statement of whether any blocker is unresolved.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all evidence produced",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT exists at the handoff's return path and is nonempty",
+          "check": {
+            "kind": "command",
+            "command": "test -s C:/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/crew-handoffs/g1-implement-RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-result-1"
+        }
+      ],
+      "constraints": [
+        "The result file IS the deliverable"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-result-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s C:/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/crew-handoffs/g1-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "g1-impl-w5gates",
+    "status": "released",
+    "claimed_at": "2026-08-09T00:21:04.668498+00:00",
+    "last_heartbeat": "2026-08-09T00:33:08.260065+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T00:33:13.779479+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "handoff complete: task, protected intent, allowed scope, exclusions, required evidence, test mode (test-after allowed, tests required), test naming contract, close criteria, stop conditions, return format all present",
+      "mechanical": false,
+      "ts": "2026-08-09T00:21:15.435493+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-predicate",
+      "why": "structural predicate _is_skills_root/_is_installed_bundle replaces the name test; 3 tests + 5 subtests green; matrix separates installed bundle (True) from main-checkout and worktree shapes (False), decoy named constellation-* with no SKILL.md rejected",
+      "mechanical": false,
+      "ts": "2026-08-09T00:23:17.603192+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-resolution",
+      "why": "four-step resolution order landed; --skills-root threaded through all three modes; 7 tests + 6 subtests green; refusal enumerates exactly 3 roots (bundle parent, project scope, user scope) with the stated count asserted equal to the parsed count",
+      "mechanical": false,
+      "ts": "2026-08-09T00:26:03.043226+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-mutation",
+      "why": "paired by-hand runs: correct root exit 0 'iterative role artifact ok: commander'; wrong root exit 1 'REFUSED: installed public verifier is missing: ...wrong-root/constellation-replan/scripts/verify_replan.py'. Test covers all three modes (6 subtests). Proved the test itself can fail: substituting the correct root into the wrong-root slot made it RED, restored green.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:27:40.993414+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-suite",
+      "why": "guard_location selector: 10 passed/13 deselected exit 0; guard_mutation: 1 passed/22 deselected exit 0; both nonzero collected. Coupled suite 386 passed/480 subtests exit 0 (base 375/463, delta +11/+17 = exactly my additions). Repro fixed-script runs: main checkout cwd exit 0 with probe note (polarity a fixed, work area byte-identical, git clean); worktree exit 0 (polarity b fixed). Wiring: _is_skills_root 2 production call sites, _is_installed_bundle 1, _candidate_skills_roots 1, skills_root param 3 (one per mode) -- none inert.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:31:01.611728+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-result",
+      "why": "IMPLEMENTER_RESULT written to .agent-work/w5-gates/crew-handoffs/g1-implement-RESULT.md with all five load-bearing evidence items pasted, wiring counts, map impact, three triage candidates, workflow feedback, and return status complete with no unresolved blockers",
+      "mechanical": false,
+      "ts": "2026-08-09T00:33:08.260043+00:00"
+    }
+  ]
+}

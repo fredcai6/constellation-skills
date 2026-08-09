@@ -5858,3 +5858,250 @@ epic has spent five waves establishing that tidiness is not a reason to touch li
 
 **Both dispositions go on the issues themselves**, not only here — an unassigned issue that a wave
 believed it had covered is exactly the invisible debt the #503/#495 reopen was about.
+
+### Crew 1 tripped at g4-review, filed a refresh-request, released the lease. Relaunched as `-f`. Sixth instance.
+
+**g4 is implemented and closed** (`f959b391`); only `g4-review`, archive, and the PR remain. The trip is
+the reach-up mechanism working: `REFRESH REQUESTED: g4-review`, `CONTEXT 18% (>= hard)`, gate closed
+carrying a handoff, lease **released** cleanly. Nothing to recover, nothing to stop.
+
+**The DIGEST is the best handoff any instance has produced in this run**, and two lines in it are the
+wave's strongest evidence:
+
+- *"reverting the guard to a name test makes the decoy leg return exit 0 against the REAL installed
+  bundle"* — **#501 reproduced live against the installed artifact**, not against a repo-side fixture.
+  That is the difference between a test that models the defect and one that exhibits it.
+- *"no reserved selector moved by a single test, so nothing added here can satisfy an earlier gate's
+  floor"* — it checked that its own new tests could not retroactively close an **earlier** gate. That
+  is the `-k`-selector attack surface the cold critic found, and the Commander audited it unprompted.
+
+**And the honest one:** *"The implementer tripped before writing its result and correctly refused to
+attest what it had not run; I ran the one remaining command and transcribed the report with provenance
+marked in the file."* An agent out of context **declining to attest** rather than writing the
+plausible sentence, and a Commander that ran the command itself and **marked whose evidence it was**.
+That is the behaviour this epic's whole census argues for, appearing without anyone asking for it.
+
+**Relaunch: cold from `execute.json current` alone**, per job-file-not-agent-file. No separate handoff
+document, no re-briefing from my memory of the run — the DIGEST is the briefing.
+
+**I pre-empted the gauge trap in the launch, because it is live in this exact relaunch.** The
+predecessor's **18%** is still in `gauge.json` with no owner on it, and the fresh agent reads that
+number until its own first tool call lands. Told explicitly: the first reading is not yours, make a
+tool call and re-read, do not file a refresh-request against a reading you did not produce.
+
+**This is #477 — the issue I dropped from crew 4's order and dispatched a fix for forty minutes ago —
+biting again, live, in the same hour.** Four crews were relaunched into that loop earlier in this
+wave. The fix is in flight on `epic-418/w5-gauge-477`; until it lands, a warning in the launch order
+is the entire defence, and it only works because I happened to be the one writing the order.
+
+### g4-review APPROVE — the last gate of the last crew of the epic. No blockers, and it looked hard for one.
+
+19 checks, 19 pass. **All six broken inputs reproduced by the reviewer itself**, at byte level, with a
+discipline worth copying: the literal asserted **unique** before mutating, the mutation asserted
+**present on disk in bytes** before any red was believed, restore from saved original bytes, and the
+restore verified with `read_bytes()` **and** `git status` — never `read_text()`. That last detail is
+the CRLF trap that nearly fooled the g3 reviewer, now standard practice one gate later.
+
+**The decoy row is the sharpest evidence in the wave.** Under a name-only revert of the guard, the
+decoy leg returns exit **0** from the **real installed bundle** — a `constellation-`-named directory
+carrying no `SKILL.md`, sitting in the real skills root beside genuine bundles. **#501 reproduced live
+against the artifact a user installs**, not against a repo-side fixture. The opposite polarity landed
+in the same run and **went red for the wrong reason**, which the reviewer caught and said so.
+
+### Its delta derivation independently reproduces mine, from a different direction
+
+It refused to take the base count on trust, cut its own throwaway detached worktree at `aa2038d9`, ran
+the full suite there, and removed the worktree afterwards — **the same move I made an hour earlier at
+`ea854471` without either of us knowing about the other.** Two independent measurements:
+
+| | mine | reviewer's |
+|---|---|---|
+| base | `ea854471` → **1869 collected** | `aa2038d9` → **1867 passed + 2 skipped** |
+| crew 1 tree | **1893 collected** | `764a2728` → **1891 passed + 2 skipped** |
+
+`1867 + 2 = 1869` and `1891 + 2 = 1893`. **Identical, derived independently.** My collect ran while
+g4's tests were already written but uncommitted — `--collect-only` reads the working tree, not HEAD —
+which is why a mid-g4 count matches a post-g4 one rather than being three short. Worth knowing before
+anyone treats that as a discrepancy.
+
+**Its attribution goes further than mine did:** an AST count of `test_*` methods per class at every
+commit in the range — base 12, g1 +12, g2 +3, g3 +6, g4 +3 = **36**, cross-validated against pytest's
+own `1 selected + 35 deselected`. **Zero removed**; every pre-existing class holds or grows.
+
+**So the post-merge prediction is now pinned from two sources: `1898 + 24 = 1922` collected — 1920
+passed, 2 skipped.** Anything else means something was lost in the merge.
+
+### One correction it demanded, and it is right
+
+The implementer's RESULT says *"Only `tests/test_iterative_planning_doctrine.py` differs from
+`aa2038d9` outside `.agent-work/`."* **False** — three paths differ (`verify_iterative_role_artifacts.py`
+143/22, `COMMANDER_SPINE.template.json` 1/1, the test file 1370/2). The two extras are the wave's own
+g1–g3 fixes, already reviewed at their gates, neither changing a collected test, **so the +24 stands
+and nothing is hidden.**
+
+The reviewer's reason for raising it anyway is the part I want kept: *"it is exactly the kind of
+premise a later reader would use to skip checking whether other files changed."* **A false premise
+that supports a true conclusion is still load-bearing for the next reader** — and this document
+carries a provenance note saying parts of it were transcribed by the Commander after the implementer
+tripped, which is precisely when a transcription-level error is most likely and least visible.
+Non-blocking; correct the sentence.
+
+### Four floats, none blocking
+
+`tc1` the last repo-side script inside a composition test; `tc2` a mirrored `CORPUS_MARKER` literal
+with no test asserting the two copies agree; `tc3` the doctrine file is now ~1838 lines / eight
+classes / four reasons to change; `tc4` the template → top-level-script → installed-bundle seam has no
+map id, and the only record that the three wave-5 fixes compose across it lives inside one test class.
+**`tc4` goes to the Cartographer at closeout** — that is durable architecture context, not a tidy-up.
+
+**No-op analysis:** *"This run has been BLOCKed twice for checks that could not fail. I looked for a
+third and did not find one."* A stated, bounded negative from a reviewer that had every incentive to
+find a third and said plainly that it did not. **That is what an honest null looks like**, and it is
+worth more here than a fifth finding would have been.
+
+### RULING — `archive.c2b` waived for crew 1, pre-emptively. The crew that fixed the check is blocked by the un-upgraded copy in its own spine.
+
+Inspected crew 1's instantiated `spine.json` before it reached its archive gate. Its `archive.c2b` is
+the **pre-fix** text:
+
+```
+gh pr list --head <branch> --state open --json number --jq 'length > 0'
+```
+
+**Its spine was instantiated before g3 landed, so it never received its own repair.** Both defects the
+wave documented are live in it: the unsubstituted `<branch>` makes `sh -c` read an unquoted `<` as
+**input redirection**, so bash fails to open a file named `branch`, exits 1, and `gh` is never invoked
+— **always red**; and the `--jq 'length > 0'` form would print `false` and **exit 0**, so the obvious
+repair converts a check that cannot pass into one that cannot fail.
+
+**The crew that spent the wave fixing this check is blocked at its final gate by the version of it
+that shipped before the fix.** That is #344 corpus-drift in miniature, and it is the third time this
+epic that a fix has been unable to protect the run that produced it.
+
+**Ruling — waived on my authority, substance first, four conditions**, the same shape I used for crew
+2's `execute.c2`:
+
+1. **Push the branch, then open the PR** — `origin/epic-418/w5-bookend-gates` is still at the fork
+   point `aa2038d9`, **13 commits behind**. Nothing crew 1 did is on the remote.
+2. **Then** waive, with: authority naming me and citing **#439/#484/#446**; the reason carrying the
+   **command text verbatim** and the measured exit; **nothing may state or imply c2b passed**; and the
+   waiver **evidence-only**.
+3. **No hand-editing `spine.json`, no hand-substituting the branch name to force green, no changing
+   the verdict.**
+4. **I verify the PR on the forge myself before merging.** The waiver covers the broken check, not the
+   requirement — if the PR is not actually open, the waiver is void.
+
+**Why pre-emptively rather than on a float:** a crew that meets an unpassable gate at the very end of a
+long run has three exits available, and two of them are bad — hand-edit the spine, or quietly restate
+the verdict. Both are cheaper than asking. **The cost of waiting for the float is that the crew picks
+first and asks second.** I would rather grant the sanctioned path before the pressure arrives than
+adjudicate a falsification afterwards.
+
+**Also relayed:** correct the g4 RESULT's false premise per its reviewer's float 1 (three paths differ
+from `aa2038d9` outside `.agent-work/`, not one — the `+24` conclusion is unaffected), and report final
+suite numbers in the PR body against the pinned prediction of **1922 collected**.
+
+### PR #516 CI RED — three failures, all of which pass locally and fail only on the runner
+
+`2d9d2313`: **3 failed, 1918 passed, 1 skipped, 872 subtests.** Held the merge and sent crew 1 the
+specifics. None of its later commits touch either cause.
+
+**Two: crew 1's own episodes trip the strict guard** —
+`RealStoreTests::test_the_real_store_is_clean_under_strict`, *"episodes/ carries a statement that reads
+as an instruction and is not on the exception list."* The failure is at `2d9d2313`, **before**
+`a843ea94` added episodes 006–009, so the offender is in the earlier ones and the four new ones may
+have added more. Told the crew to fix **every** offender via `apply_episode_delta.py restate-assertion`
+with `--store-root episodes`, never by hand-editing the store. **I hit this same guard on my own
+Admiral episodes earlier in this epic** and had to restate one — it is a good guard and it catches
+everybody.
+
+**One: an environment-fragile path assertion in crew 1's own g1 test** —
+
+```
+['C:\Users\RUNNER~1\AppData\Local\Temp\...'] != ['C:\Users\runneradmin\AppData\Local\Temp\...']
+```
+
+**`RUNNER~1` vs `runneradmin` — the same directory in two spellings.** The runner's `%TEMP%` resolves
+through a Windows **8.3 short name**; this box's does not. The test asserts **string** equality on
+paths that are equal as paths. Ruled: fix by normalising/resolving, **not** by loosening to a substring
+match — the assertion's job is to prove the refusal names *every root tried*, and that property must
+survive the repair. That is the #506 lesson applied to a test: repair the check, do not weaken it into
+one that cannot fail.
+
+**The general finding, and it is the one worth carrying.** All three are **green in the worktree and
+red on the runner**. Every verification discipline this wave built — mutation, red-before-green,
+byte-identical restore, delta reconciliation — runs *in the worktree*, and **none of it can see a
+difference between the worktree and the runner.** CI is the only instrument in the whole apparatus
+that samples the second environment, and it is the last one consulted.
+
+Concretely visible in the numbers: the runner reports **1918 passed / 1 skipped** where this box
+reports **1896 passed / 2 skipped** — a different pass/skip split on the same tree. **A crew deriving
+its expected counts from my local baseline would mis-reconcile on the runner**, so I told crew 1 to
+derive its expectation on the runner instead. My own pinned post-merge prediction of 1922 collected is
+a **local** figure and must not be checked against a runner number.
+
+**Merge order unchanged and now enforced by a red:** #516 does not merge until its own commit is green.
+
+### #517 reviewed by me (it had no review gate), and smoke-tested against my own live spine BEFORE merging
+
+#477 was a bounded implementer dispatch, not a Commander run, so there was no reviewer crew. That
+review is mine and I did it rather than merging on the PR body.
+
+**Scope claim verified by command, not accepted:** `scripts/checklist_engine.py` (124/2) and
+`tests/test_checklist_engine.py` (259/0). **`gauge_writer_hook.py` and `gauge_reader.py` untouched**,
+as promised. (The `.agent-work/*` rows in the numstat show `0/142` and `0/22` — that is *main* ahead of
+the branch, my own log commits, read as removal by the two-dot direction. Same trap I documented this
+morning; I checked the added column rather than the shape of the line.)
+
+**The mechanism is sound and the insight is the right one.** There is no predicate over the bare number
+that separates my reading from yours — the record carries no owner, and adding one is the *writer's*
+job. So the fix uses the only who-and-when fact available on the read side: **`engine_session.claimed_at`.
+A sample from strictly before the acting session claimed the checklist cannot be that session's.**
+Ownership is decided in **one place**, consulted by both the advisory and the hard-band read, so what an
+agent is *shown* and what it is *judged against* cannot disagree about whose reading it is.
+
+**The fail-open matrix is complete** — I ran the class rather than reading the list: **13 passed**, and
+the names cover every direction that matters: `_no_lease_at_all_behaves_exactly_as_today`,
+`_a_released_lease_...`, `_an_unparseable_claimed_at_...`, `_predicate_fails_open_on_a_missing_reading_or_lease`,
+the boundary `_a_reading_sampled_exactly_at_the_claim_is_owned`, and critically
+**`_a_self_measured_reading_over_hard_still_refuses`** — the guard cannot be used to switch the governor
+off. Its own mutation table confirms this from the other side: forcing the predicate to `True` fails
+**8** tests.
+
+**Then the check the implementer could not run: I pointed the 517 engine at my own live Admiral spine.**
+
+| | exit | LEASE | ACTIVE | CONTEXT |
+|---|---|---|---|---|
+| 517 engine | **0** | active, same | `execute [in-progress]` | **23% (>= hard)** |
+| main engine | **0** | active, same | `execute [in-progress]` | **23% (>= hard)** |
+
+**Byte-identical behaviour, and zero mutation** — `git status --porcelain` on my spine directory was 0
+before and 0 after both runs. It also **correctly did not fire**: my 23% was sampled after I claimed at
+22:46, so it is mine, and the guard left it alone. A fix for over-firing that over-fires would be worse
+than the bug.
+
+**This is the post-merge smoke test moved before the merge**, which is strictly better: if it had
+broken my spine I would have learned it from a branch I can simply not merge, rather than from a main I
+would have to revert while holding the only live lease.
+
+**Verdict: APPROVE.** Merges in the engine-last slot per the standing order, not now.
+
+**Its three adjudication items, ruled:**
+
+1. **The residual is real and correctly stated.** Where a crew's plan sits inside its Commander's work
+   directory, both hooks write the *same* `gauge.json`; once the crew has claimed, the Commander's
+   *subsequent* writes carry `observed_at` after that claim and are indistinguishable from the crew's
+   own. **#477 is fixed for the case it was filed from — the relaunch loop, which cost this wave six
+   relaunches — and the general property "this reading is mine" remains uncheckable without the writer
+   side (#452).** Accepted as stated; the implementer volunteered this rather than letting the fix read
+   as total, which is the right instinct.
+2. **#481 is materially resolved and I will close it after the merge, not before.** Its filed scenario
+   is a relaunched dispatch inheriting its predecessor's exhaustion and having every `advance` refused;
+   a relaunched agent claims a **fresh** lease (confirmed against three live spines with distinct ids),
+   so that reading now predates the claim and is declined. Its own suggested fix — "the reader discounts
+   a record whose writing session is demonstrably gone" — is what shipped, anchored on the lease rather
+   than a writer-supplied session id. **Closing it before the merge would be a closed float**, which is
+   the exact debt I reopened #503 and #495 over.
+3. **The fail-open cost is accepted on the record:** an agent that reads `current` without ever claiming
+   has no provenance anchor and is unprotected. That is the deliberate trade against a gauge that
+   refuses readings, and it is the correct side to err on.
