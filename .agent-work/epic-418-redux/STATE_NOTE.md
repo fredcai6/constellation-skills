@@ -79,6 +79,23 @@
 > **DO NOT re-poke a quiet crew.** Twice today disk silence looked like death and was reading. The
 > authoritative channel is the harness **idle notification**. Ask; never relaunch on an inference.
 >
+> ## LIVENESS — three signals, each blind to something. Know which, before you act on one.
+>
+> I got this wrong twice in one hour. **All three are proxies; none is authoritative.**
+>
+> | signal | blind to |
+> |---|---|
+> | **worktree file writes** | an agent reading (`gh issue view` x9 writes nothing) — nearly cost a relaunch |
+> | **`gauge.json` mtime** (PostToolUse hook) | **an agent the hook never fires for.** Crew 2 ran **9 engine verbs over 40 min with ZERO gauge writes** while being the most active agent in the wave. A frozen gauge and a dead agent are byte-identical. Live instance on **#452**. |
+> | **`*.json.journal` mtime** (written by the engine itself, no hook) | activity that is not an engine verb — reading, editing, composing a return. Fires for **every** crew, which the gauge does not. |
+>
+> **Best available: journal mtime, cross-checked against the others, and NEVER acted on alone.**
+>
+> **THE ONLY AUTHORITATIVE SIGNAL IS THE HARNESS IDLE NOTIFICATION.** Everything above is for deciding
+> *whether to ask*. **Ask-then-act is four-for-four today** and it is the only reason a healthy
+> Commander mid-`execute` was not relaunched on a frozen gauge, destroying 40 minutes of context in a
+> way that would have left **no trace at all** in the replacement run.
+>
 > ## MERGING CREW 4 CHANGES THE ENGINE UNDER YOUR OWN LIVE SPINE
 >
 > Crew 4 edits `scripts/checklist_engine.py` — **the engine driving this Admiral spine right now**,
