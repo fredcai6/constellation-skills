@@ -236,6 +236,30 @@ three-way collapse; the crew refuted it.
 crew 4 (engine — nine issues, m0-m4 complete). Crews 1 and 4 are on their second relaunch each, every
 one a clean designed handoff after a HARD trip, none a failure.
 
+## Wave 5 — issue closures, re-derived from the forge 2026-08-09 02:30Z
+
+**Closed and correct (12):** #507 #370 (PR #511) · #496 #411 (PR #509) · #458 (PR #513) ·
+#474 #475 #476 #427 #479 #480 #493 (crew 4, pending PR #514).
+
+**REOPENED — closed against work that was not done (2):**
+
+| issue | what the crew actually did | state now |
+|---|---|---|
+| **#503** | **floated larger-than-filed** — `--authority` still validated only as non-empty; a real fix breaks a test file the crew did not own | **OPEN** |
+| **#495** | **floated entirely** — all six writer sites confirmed by grep to be outside owned files, untouched | **OPEN** |
+
+**Both floats were correct and were accepted rulings. Only the closing was wrong.** An issue left open
+after its work lands is a visible debt; an issue closed over an unfixed defect is an invisible one, and
+`CLOSED` reads identically whether the fix shipped or was declined.
+
+**Still deliberately open, not an oversight:** **#413** — a different defect from #507/#370
+(never-valid-from-the-start, not valid-then-stale), refuted against the bodies by the crew after the
+Admiral asserted a three-way collapse.
+
+**Running total: 12 of 21 wave-5 issues closed.** Four PRs: #511, #509, #513 merged; #514 green and
+queued behind crew 1 by the merge-order ruling. Crew 1 has #506 #501 #468 #439 #484 outstanding in its
+branch and #446 still to implement.
+
 ## Summary of routing
 
 | Disposition | Count |
