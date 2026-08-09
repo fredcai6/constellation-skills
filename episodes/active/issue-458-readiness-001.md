@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: File the refresh-request at the gate about to be started (same session, immediately) rather than waiting for a relaunch, since the underlying reading was never going to refresh on its own in this environment.
+- statement: Filed the refresh-request at the gate about to be started (same session, immediately) instead of waiting for a relaunch, since the underlying reading was never going to refresh on its own in this environment. This let `start` proceed (begin-released) each time rather than being refused, so no gate was ever actually blocked despite the frozen reading.
+- history: restated — Original wording opened with an imperative ('File the refresh-request...'), which #460's strict guard correctly reads as an instruction to a future agent rather than a record of what happened. Restated as an observation of the action taken and its outcome. — original statement was: File the refresh-request at the gate about to be started (same session, immediately) rather than waiting for a relaunch, since the underlying reading was never going to refresh on its own in this environment.
 
 ## Diagnosis (optional)
 
