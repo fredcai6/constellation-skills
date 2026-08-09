@@ -1,21 +1,21 @@
 {
   "contract": 1,
-  "step": "r0-context",
+  "step": "r4-quality",
   "mechanical": {
     "run": "issue-456-gs-review",
     "project": "constellation-skills",
     "role": "gs-reviewer-2",
     "refusals": 0,
-    "spine-step": "r0-context",
+    "spine-step": "r4-quality",
     "rework-count": 0,
     "failed-commands": 0,
     "reopens": 0,
-    "context-manifest-ref": "ctx-issue-456-gs-review-r0-context@8dec3f2e27516bc31e7cf7bf50b2bb18ead25d84",
+    "context-manifest-ref": "ctx-issue-456-gs-review-r4-quality@e860a5801cc51cd76892616b6f2b8e052232ae4c",
     "artifact-ref": []
   },
   "refused": [],
   "run": {
     "work_id": "issue-456-gs-review",
-    "generated_at": "2026-08-09T05:00:09Z"
+    "generated_at": "2026-08-09T05:07:55Z"
   }
 }

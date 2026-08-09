@@ -2743,7 +2743,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-gs-review-1",
+          "attested": {
+            "evidence": "e-gs-review-1",
+            "note": "REVIEW_RESULT returned: APPROVE, no blockers, return status complete, on attempt 2 -- attempt 1 died mid-pass after 75 minutes without writing a result, was abandoned in the registry, its stale survey discarded, and relaunched against the same unmodified handoff.\n\nThe pass did what it was asked and one thing better. It ran a mutation the implementer had not chosen, confirmed the landing zone resolves, and checked the gitignore rule in both directions with git check-ignore -- that it can neither silently start tracking body pages nor silently start ignoring the two files that must ship.\n\nIt also REFUTED my tc20, and it was right to. I had recorded the ids.jsonl half of the freshness test as a check that cannot fail because it compares empty to empty in this corpus. The reviewer went and authored a real anchor, and the assertion went RED; it also went RED under direct file corruption. So the test can fail; what is true is narrower and less interesting than what I claimed: no repo history has ever exercised it, because zero anchors have ever been authored here, and neither of the implementer's two mutations touched the anchor axis. That is a gap in which mutations were demonstrated, not a defect in the test. My original framing was the stronger claim and the wrong one, and the correction came from someone doing the experiment I did not do.\n\nFowler pass 10 of 12 clean. duplicated-code flagged non-blocking: the two freshness tests share a shape, and any future parameterization must preserve independent per-file pass/fail attribution -- which this review's own anchor probe depended on to tell the two halves apart. comments-as-deodorant overridden with a logged reason, the reviewer having re-verified independently that the long comments carry non-obvious facts rather than covering weak code."
+          }
         }
       ],
       "constraints": [],
@@ -2752,11 +2757,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-gs-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/gs-review-RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "gs-integrate": {
@@ -2768,7 +2785,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT returned: APPROVE, no blockers, return status complete, on attempt 2 -- attempt 1 died mid-pass after 75 minutes without writing a result, was abandoned in the registry, its stale survey discarded, and relaunched against the same unmodified handoff.\n\nThe pass did what it was asked and one thing better. It ran a mutation the implementer had not chosen, confirmed the landing zone resolves, and checked the gitignore rule in both directions with git check-ignore -- that it can neither silently start tracking body pages nor silently start ignoring the two files that must ship.\n\nIt also REFUTED my tc20, and it was right to. I had recorded the ids.jsonl half of the freshness test as a check that cannot fail because it compares empty to empty in this corpus. The reviewer went and authored a real anchor, and the assertion went RED; it also went RED under direct file corruption. So the test can fail; what is true is narrower and less interesting than what I claimed: no repo history has ever exercised it, because zero anchors have ever been authored here, and neither of the implementer's two mutations touched the anchor axis. That is a gap in which mutations were demonstrated, not a defect in the test. My original framing was the stronger claim and the wrong one, and the correction came from someone doing the experiment I did not do.\n\nFowler pass 10 of 12 clean. duplicated-code flagged non-blocking: the two freshness tests share a shape, and any future parameterization must preserve independent per-file pass/fail attribution -- which this review's own anchor probe depended on to tell the two halves apart. comments-as-deodorant overridden with a logged reason, the reviewer having re-verified independently that the long comments carry non-obvious facts rather than covering weak code."
         }
       ],
       "postconditions": [
@@ -2784,7 +2802,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-gs-integrate-3"
         },
         {
           "id": "c2",
@@ -2796,17 +2815,55 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-gs-integrate-2",
+          "attested": {
+            "evidence": "e-gs-integrate-2",
+            "note": "REVIEW_RESULT returned: APPROVE, no blockers, return status complete, on attempt 2 -- attempt 1 died mid-pass after 75 minutes without writing a result, was abandoned in the registry, its stale survey discarded, and relaunched against the same unmodified handoff.\n\nThe pass did what it was asked and one thing better. It ran a mutation the implementer had not chosen, confirmed the landing zone resolves, and checked the gitignore rule in both directions with git check-ignore -- that it can neither silently start tracking body pages nor silently start ignoring the two files that must ship.\n\nIt also REFUTED my tc20, and it was right to. I had recorded the ids.jsonl half of the freshness test as a check that cannot fail because it compares empty to empty in this corpus. The reviewer went and authored a real anchor, and the assertion went RED; it also went RED under direct file corruption. So the test can fail; what is true is narrower and less interesting than what I claimed: no repo history has ever exercised it, because zero anchors have ever been authored here, and neither of the implementer's two mutations touched the anchor axis. That is a gap in which mutations were demonstrated, not a defect in the test. My original framing was the stronger claim and the wrong one, and the correction came from someone doing the experiment I did not do.\n\nFowler pass 10 of 12 clean. duplicated-code flagged non-blocking: the two freshness tests share a shape, and any future parameterization must preserve independent per-file pass/fail attribution -- which this review's own anchor probe depended on to tell the two halves apart. comments-as-deodorant overridden with a logged reason, the reviewer having re-verified independently that the long comments carry non-obvious facts rather than covering weak code."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-gs-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "gs-integrate",
+            "why_ref": "w-33"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-gs-integrate-2",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/gs-review-RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-gs-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'map_tree_freshness' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -3138,6 +3195,20 @@
       "why": "The cherry-pick landed scoped and clean, and the map entry point now resolves as a tracked file rather than a dangling instruction. That closes critic F3's file-ownership gap without shipping the very rule d102c05 adds while breaking it on its own four files.\n\nThe gate's evidence is the freshness test, which did not exist when the gate opened -- its closing selector collected zero tests and would have exited 5, a check that could only ever fail. It now exists and has been shown RED under two different mutations: a staled committed index, and a real shape edit to a mapped module left un-rebuilt. The second is the one that matters, because it is the exact root-index movement the landing-zone measurement's negative control predicted, so the test and the measurement corroborate each other rather than resting on the same assumption.\n\nTwo tracked files ship instead of 3,975. The 116-file landing zone the plan assumed is not stable -- one reworded docstring rewrites its module index -- and I measured that rather than assuming it, with a negative control so the measurement itself could fail. Critic F9's repo-doubling objection retires outright. The honest cost, stated: the committed entry point's links do not resolve until a build runs, so crews get a starting page plus one command, not a browsable tree.\n\nAdvancing on numbers re-run by the crew: suite 1840 passed / 2 skipped / 701 subtests / 0 failed, exactly +2 over the 1838 baseline for the two new tests; build then check 7/7 exit 0; git ls-files map/ returns two paths.\n\nCarried into review: my close criterion was literally unsatisfiable -- `git diff d102c05 -- skills/` can never be empty again now that later gates moved other files under skills/ -- and the crew caught it, amended in-engine with logged authority, and told me instead of quietly reinterpreting it. Also carried: tc20, the ids.jsonl half of the new test cannot presently fail in this corpus.",
       "mechanical": false,
       "ts": "2026-08-09T03:43:23.832581+00:00"
+    },
+    {
+      "id": "w-33",
+      "gate": "gs-review",
+      "why": "REVIEW_RESULT returned: APPROVE, no blockers, return status complete, on attempt 2 -- attempt 1 died mid-pass after 75 minutes without writing a result, was abandoned in the registry, its stale survey discarded, and relaunched against the same unmodified handoff.\n\nThe pass did what it was asked and one thing better. It ran a mutation the implementer had not chosen, confirmed the landing zone resolves, and checked the gitignore rule in both directions with git check-ignore -- that it can neither silently start tracking body pages nor silently start ignoring the two files that must ship.\n\nIt also REFUTED my tc20, and it was right to. I had recorded the ids.jsonl half of the freshness test as a check that cannot fail because it compares empty to empty in this corpus. The reviewer went and authored a real anchor, and the assertion went RED; it also went RED under direct file corruption. So the test can fail; what is true is narrower and less interesting than what I claimed: no repo history has ever exercised it, because zero anchors have ever been authored here, and neither of the implementer's two mutations touched the anchor axis. That is a gap in which mutations were demonstrated, not a defect in the test. My original framing was the stronger claim and the wrong one, and the correction came from someone doing the experiment I did not do.\n\nFowler pass 10 of 12 clean. duplicated-code flagged non-blocking: the two freshness tests share a shape, and any future parameterization must preserve independent per-file pass/fail attribution -- which this review's own anchor probe depended on to tell the two halves apart. comments-as-deodorant overridden with a logged reason, the reviewer having re-verified independently that the long comments carry non-obvious facts rather than covering weak code.",
+      "mechanical": false,
+      "ts": "2026-08-09T05:11:48.992745+00:00"
+    },
+    {
+      "id": "w-34",
+      "gate": "gs-integrate",
+      "why": "The last gate closes. Reviewer APPROVE, no blockers, and the command postcondition is satisfied by this advance re-running the check rather than by my word. I ran it first myself: suite 1840 passed / 2 skipped / 701 subtests / 0 failed, exit 0; map_tree_freshness 2 passed, exit 0.\n\nThree things this gate settles.\n\nThe four skills files finally have an owning gate, which is what critic F3 found missing, and they got it without shipping the rule d102c05 adds while breaking it on d102c05's own files.\n\nThe map entry point resolves as a tracked file instead of a dangling instruction, and it ships as TWO tracked files rather than 3,975 because the landing zone was measured instead of assumed. The 116-file zone the plan assumed is not stable: one reworded docstring rewrites its module index. The 2-file zone is, and the measurement carried a negative control so it could have come back the other way. Critic F9's repo-doubling objection retires outright. The cost is named rather than smoothed: the entry point's links do not resolve until a build runs, so crews get a starting page plus one command, not a browsable tree.\n\nThe freshness test did not exist when this gate opened -- its closing selector collected zero tests, a criterion that could only ever fail, which is the same disease as the checks that cannot fail this run kept turning up. It now exists and has been shown RED under four distinct mutations across two agents: a staled committed index, an un-rebuilt shape edit, an authored anchor, and direct corruption. The un-rebuilt shape edit is the one that matters most, because it is exactly the root-index movement the landing-zone measurement's negative control predicted, so the test and the measurement corroborate each other rather than resting on a shared assumption.\n\nTwo corrections I own. My close criterion for this gate was literally unsatisfiable -- `git diff d102c05 -- skills/` can never be empty again now that later gates moved other files there -- and the implementer caught it, amended in-engine with logged authority, and told me rather than reinterpreting it quietly. And my tc20 was the stronger claim and the wrong one: the reviewer authored a real anchor and took the assertion RED, so the ids.jsonl half is not a check that cannot fail; the true and narrower fact is only that no repo history has ever exercised it.",
+      "mechanical": false,
+      "ts": "2026-08-09T05:28:50.844309+00:00"
     }
   ],
   "amendments": [
@@ -3242,6 +3313,28 @@
       "model": "claude-opus-5",
       "why_ref": "w-27",
       "ts": "2026-08-09T00:02:55.436297+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "gs-integrate",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1709,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-33",
+      "ts": "2026-08-09T05:12:14.465588+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "gs-integrate",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1724,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-33",
+      "ts": "2026-08-09T05:12:29.048538+00:00"
     }
   ]
 }

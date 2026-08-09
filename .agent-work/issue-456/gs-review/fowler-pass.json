@@ -1,20 +1,20 @@
 {
   "work_id": "issue-456-gs-review",
-  "diff_ref": "gs gate diff: skills/commander/references/commander-core.md, skills/commander/templates/IMPLEMENTER_HANDOFF.template.md, skills/implementer/SKILL.md, skills/scout/SKILL.md (cherry-picked from d102c05), .gitignore, map/INDEX.md, map/ids.jsonl, tests/test_code_map.py (MapTreeFreshnessTests)",
+  "diff_ref": "commit df54417f -- tests/test_code_map.py (MapTreeFreshnessTests), .gitignore, map/INDEX.md, map/ids.jsonl; plus the d102c05 cherry-pick onto skills/commander/references/commander-core.md, skills/commander/templates/IMPLEMENTER_HANDOFF.template.md, skills/implementer/SKILL.md, skills/scout/SKILL.md",
   "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
   "smells": [
     {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
     {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
-    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "The two MapTreeFreshnessTests methods are structurally identical (call _fresh_build(), read one committed file, assertEqual against the fresh copy, custom message) differing only in the target filename and message text. Small (5 lines each) and low churn-risk -- not blocking. Worth a follow-up parameterization (e.g. subTest over [\"INDEX.md\", \"ids.jsonl\"]), but any consolidation must preserve INDEPENDENT per-file pass/fail attribution: this review's own tc20 probe relied on the two tests being separately named to show root-index and ids.jsonl diverge under different mutations (docstring reword and symbol rename left both green; an authored-anchor add turned only the ids.jsonl test red).", "override": null},
     {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
     {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
     {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
-    {"smell": "long-parameter-list", "verdict": "flagged", "finding": "<example: build_report() takes 7 positional args — introduce a parameter object>", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
     {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
     {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
     {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
-    {"smell": "speculative-generality", "verdict": "overridden", "finding": "", "override": {"repo_standard": "<the documented standard that wins, e.g. GLOSSARY: ports-and-adapters seam is a required extension point>", "reason": "<why the standard subordinates the smell: the seam is a stated requirement, not speculative>"}},
-    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "", "override": {"repo_standard": "CREW_CONTEXT.md 'Verification Discipline': a check's evidence must explain WHY it is trustworthy (mutation-proof, not text-matched), and this repo's own convention (seen throughout d102c05, gs-implement-RESULT.md, landing-zone-measurement.md) is dense class/comment docstrings that carry the reasoning a reviewer needs to re-verify the check, not prose covering for weak code.", "reason": "MapTreeFreshnessTests' class docstring and the .gitignore block comment are long, but each sentence carries a fact a reviewer needs and cannot get from the code alone (why 2 files not 116, why text-mode not raw bytes, why map/* + two negations not a narrower rule) -- I independently verified every one of those facts this pass (the CRLF/text-mode claim, the 2-file measurement, the check-ignore behavior) and each held. This is documentation of non-obvious invariants, not a code smell masking bad structure -- the underlying code (a 6-line test, a 3-line gitignore stanza) is simple on its own merits."}}
   ],
   "rail_exception": null
 }

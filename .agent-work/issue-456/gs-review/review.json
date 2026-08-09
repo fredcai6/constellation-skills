@@ -21,10 +21,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "PASS. Loaded references/global-crew.md and references/global-everyone.md (engine-drive compliance, verify-claimed-side-effects, scoped-nulls). Loaded docs/agents/CREW_CONTEXT.md (check-that-cannot-fail rule, Windows text-mode comparison rule, record-stores-never-hand-edited) and docs/agents/GLOSSARY.md. Read the handoff (.agent-work/issue-456/crew-handoffs/gs-review.md) in full, gs-implement-RESULT.md, and landing-zone-measurement.md.",
       "evidence": [],
       "rework_count": 0
     },
@@ -37,10 +37,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "PASS. Both handoff tasks done, within scope, independently confirmed. (1) Cherry-pick: git diff d102c05 -- <4 skills paths> is empty (exit 0); .agent-work/explore-code-map/cycle-3.json untouched (git diff --quiet, exit 0). (2) Map entry point: git ls-files map/ returns exactly map/INDEX.md + map/ids.jsonl; both resolve (git check-ignore exits 1 on both -- not ignored), and a fresh build+check is 7/7 (team-lead-measured, reused per budget). The freshness test has real teeth, confirmed by 4 independent mutations I ran myself (see r3-evidence) plus independent reproduction of the implementer's own staled-index claim (appended a marker line to committed map/INDEX.md, reran selector: root-index test went RED with the exact diff-length AssertionError expected; reverted, git diff --quiet clean).",
       "evidence": [],
       "rework_count": 0
     },
@@ -53,26 +53,26 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "PASS. Scoped diff (git diff d102c05 -- <4 cherry-picked paths>) is empty; the whole-tree form (git diff d102c05 -- skills/) is NOT empty, but I confirmed directly the non-empty part is exactly the four unrelated later-gate touches the handoff's own Known Handoff Defect section names (skills/cartographer/references/map-model.md, skills/commander/templates/COMMANDER_SPINE.template.json, skills/interrogator/templates/INTERROGATION.template.json, skills/reviewer/templates/REVIEW_SURVEY.template.json) -- none touched by this gate. No new file outside the declared change set (4 skills paths, .gitignore, map/INDEX.md, map/ids.jsonl, tests/test_code_map.py, .agent-work bookkeeping) is touched per git show --stat on the relevant commits. No git add -A used; map/ stays ~4,010 files untracked (git ls-files map/ = exactly 2). No source under scripts/code_map/*.py carries any net diff (confirmed clean at HEAD for scripts/, map/, tests/ before I began probing).",
       "evidence": [],
       "rework_count": 0
     },
     "r3-evidence": {
       "id": "r3-evidence",
       "title": "Required evidence",
-      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Priority order per handoff: (1) one mutation the implementer did not choose, run against -k 'map_tree_freshness'; (2) tc20 -- confirm or refute whether the ids.jsonl half of the test is a check that cannot fail; (3) does the 2-file landing zone as shipped actually resolve. Record pass/fail with a finding.",
       "preconditions": [],
       "postconditions": [],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "PASS. All three priority items addressed with direct, reverted-and-verified probes.\n\n=== Priority 1: an untried mutation against -k 'map_tree_freshness' ===\n\nRan THREE mutations the implementer did not choose (their two were: staling the\ncommitted index directly, and a shape edit -- new top-level function -- to\nscripts/agent_work_root.py left un-rebuilt):\n\n(a) Docstring reword, scripts/code_map/discovery.py:is_mappable -- reworded the\none-line docstring, no signature/shape/count change. Result: BOTH tests stayed\nGREEN. This is CORRECT, not blind: landing-zone-measurement.md's Arm A already\npredicted a body-only edit must not move the root index (root INDEX.md carries\nonly per-module entity counts and each module's own docstring first line, not\nper-function summaries), and the implementer's own shape-edit mutation (already\nin evidence) proves the same selector CAN go RED when the corpus genuinely\nchanges shape. So this is a true negative, not an untested blind spot.\n\n(b) Symbol rename, scripts/agent_work_root.py: `_normalize` -> `_normalize_renamed_probe`\n(def line only). Result: BOTH tests stayed GREEN. Confirms root INDEX.md's\ncommitted scope is aggregate counts only, not per-symbol names -- a rename does\nnot change any number the root index carries, so this is in-scope behavior\n(the root page never claimed per-symbol accuracy; a crew regenerates the body\nlocally before trusting per-symbol content). Worth naming as a scope boundary,\nnot a defect -- see Out-of-scope observations.\n\n(c) Added a genuine authored anchor comment (`# [gs-review-probe-anchor]`) above\nscripts/code_map/discovery.py:is_mappable -- the actual `ANCHOR` regex this tool\nextracts ids from (extract.py's `anchors_in`), not a synthetic file edit. Result:\ntest_map_tree_freshness_ids_jsonl_matches_a_fresh_build went RED\n(committed '' != fresh '{\"id\": \"gs-review-probe-anchor\", \"s\":\n\"scripts.code_map.discovery:is_mappable\"}\\n'); the root-index sibling stayed\nGREEN (an id addition doesn't move aggregate counts). This is priority 2's\ndirect answer -- see below.\n\nAll three mutations reverted via `git checkout --`, each confirmed byte-clean\nvia `git diff --quiet -- <path>` (not `git status --porcelain`, per the\nhandoff's own CRLF warning). I also independently reproduced the implementer's\nOWN claimed staled-index mutation (appended a marker line to committed\nmap/INDEX.md; selector went RED with the exact diff-length AssertionError shape\nclaimed in gs-implement-RESULT.md; reverted, byte-clean) rather than accepting\ntheir report on its own word, per this repo's verify-claimed-side-effects\ndoctrine.\n\n=== Priority 2: tc20 -- confirm or refute ===\n\nREFUTED as stated, confirmed with a real counter-example: the ids.jsonl half is\nNOT a check that cannot fail. Mutation (c) above shows it goes RED on the one\naxis it actually exists to guard -- an authored anchor id landing in the corpus\nwithout the committed ids.jsonl being rebuilt. I also directly corrupted the\ncommitted file (wrote a fake JSON line into map/ids.jsonl, no source change) and\nconfirmed RED that way too (both reverted, byte-clean).\n\nThe narrower, true observation behind tc20 stands and is worth keeping precise:\nit has never yet been EXERCISED by real history, because zero anchors have ever\nbeen authored in this repo (a fact g6 already established), and neither of the\nimplementer's own two chosen mutations happened to touch the anchor axis --\nthat is a coverage gap in which mutations were DEMONSTRATED, not a defect in\nthe test's design. The test correctly discriminates when given the input class\nit exists for; this repo has simply never produced that input class yet.\n\n=== Priority 3: does the 2-file landing zone as shipped resolve? ===\n\nYes. `git ls-files map/` returns exactly `map/INDEX.md` + `map/ids.jsonl`.\n`git check-ignore -v` exits 1 (NOT ignored) on both; exits 0 (ignored, matched\nby `map/*`) on a sampled body page (`map/scripts.code_map/INDEX.md`) -- the\n.gitignore rule (priority 4) does exactly what it claims: never silently tracks\nbody pages, never silently ignores the two shipped files. map/INDEX.md itself\nis well-formed (147 lines, package/module sections, working relative links into\n`<module>/INDEX.md`). Those per-module links do not resolve until a build runs\n-- confirmed as the accepted, pre-named limitation, not a new finding.\n",
       "evidence": [],
       "rework_count": 0
     },
@@ -85,10 +85,10 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "PASS on both named constraints. Stdlib-only: git show df54417f -- tests/test_code_map.py has zero added import lines (grep for '^+.*import' is empty); the new MapTreeFreshnessTests class uses tempfile/subprocess/sys/Path/json, all already imported at the top of the file for other test classes -- confirmed by reading the file header. Full suite green at this gate boundary (critic F6): NOT independently re-run by me, per the handoff's explicit budget instruction (team-lead already measured 1840 passed / 2 skipped / 701 subtests / 0 failed and asked reviewers to reuse it, not re-run the ~8-9 minute suite). I did independently run the narrower map_tree_freshness selector 8 times across this pass (baseline clean x2, 3 of my own mutations, 1 reproduction of the implementer's claim, 1 ids.jsonl corruption, 1 anchor-add) -- every unmutated run was 2 passed, every mutated run failed exactly the test whose invariant I broke, never the other. Windows text-mode comparison rule (CREW_CONTEXT.md) honored: the test itself reads via .read_text(encoding='utf-8'), not raw bytes -- confirmed by reading tests/test_code_map.py:4668/4679 directly.",
       "evidence": [],
       "rework_count": 0
     },
@@ -101,17 +101,17 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
+      "result": "pass",
+      "finding": "PASS. No architecture divergence Commander must reconcile: the map landing-zone decision was already resolved by measurement (landing-zone-measurement.md) before this gate executed it, and this gate closes the exact 'one gate per file/decision-class in scope' rule d102c05 itself introduces (the four cherry-picked skills files now have an owning gate, closing critic F3's gap). The new tracked-file convention (2-file map/ landing zone + .gitignore negation pattern) is additive and locally contained; no interface/contract elsewhere changes. Flagged two triage candidates (tc1, tc2) for design questions this gate's own evidence surfaced but that are out of this gate's scope to resolve: (1) the ids.jsonl freshness branch has real teeth but has never been exercised by real repo history; (2) the root index's freshness guarantee does not cover per-symbol names, which is fine today but is an implicit boundary.",
       "evidence": [],
       "rework_count": 0
     },
     "r6-fowler": {
       "id": "r6-fowler",
       "title": "Refactoring pass (Fowler code smells)",
-      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
       "preconditions": [],
       "postconditions": [
         {
@@ -119,9 +119,10 @@
           "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
           "check": {
             "kind": "command",
-            "command": "python \"C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py\" .agent-work/issue-456/gs-review/fowler-pass.json"
+            "command": "python \"C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py\" \".agent-work/issue-456/gs-review/fowler-pass.json\""
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
         }
       ],
       "constraints": [
@@ -130,26 +131,54 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
+      "result": "pass",
+      "finding": "PASS. Fowler pass recorded to .agent-work/issue-456/gs-review/fowler-pass.json; verify_fowler_pass.py exits 0 (smells=12, flagged=['duplicated-code'], overridden=['comments-as-deodorant']). One smell flagged (duplicated-code): the two MapTreeFreshnessTests methods share an identical shape, small and low-risk, not blocking -- flagged with a note that any future consolidation must preserve independent per-file pass/fail attribution, which this review's own tc20 probe relied on. One smell overridden (comments-as-deodorant): the class docstring and .gitignore block comment are long but carry non-obvious facts I independently re-verified this pass (2-file measurement, text-mode comparison, check-ignore behavior), not prose masking weak code -- logged standard + reason in the record. All other ten baseline smells judged absent, cross-checked directly against the diff.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python \"C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py\" \".agent-work/issue-456/gs-review/fowler-pass.json\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
-  "consolidation": null,
-  "triage_candidates": [],
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. Both handoff tasks (skills cherry-pick scoped correctly; map entry point tracked with a freshness test that has real teeth) confirmed independently. tc20 REFUTED with a real counter-example: the ids.jsonl freshness test is not a check that cannot fail -- it correctly goes RED when a genuine authored anchor is added or the committed file is corrupted; it has simply never been exercised by real repo history since zero anchors have ever been authored here. An untried mutation (docstring reword) correctly stays green, matching the measured landing-zone prediction, not a blind spot. Two non-blocking triage candidates flagged (tc1, tc2)."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "gs reviewer candidate: map_tree_freshness's ids.jsonl half is proven able to fail (confirmed this pass by adding a genuine authored anchor comment and by direct file corruption, both reverted) but has never been EXERCISED by any real commit in this repo's history -- zero anchors have ever been authored here. Consider adding one fixture module carrying a single authored anchor solely so the ids.jsonl branch is exercised by ordinary CI, rather than relying on an ad hoc reviewer mutation to ever prove it live."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "gs reviewer candidate: map/INDEX.md's committed freshness guarantee covers only aggregate module/entity counts plus each module's own docstring first line -- confirmed this pass that renaming a symbol inside a mapped module does not move it (root index carries no per-symbol names). Fine today since a crew regenerates the body tree locally before trusting per-symbol content, but if a future consumer ever reads symbol names directly off the root index without regenerating, this boundary should be stated explicitly rather than left implicit."
+    }
+  ],
   "blockers": [],
-  "refusals": 0,
+  "refusals": 1,
   "engine_session": {
-    "session_id": "gs-reviewer-1",
-    "status": "active",
-    "claimed_at": "2026-08-09T03:45:40.654587+00:00",
-    "last_heartbeat": "2026-08-09T03:46:00.964687+00:00",
-    "claimed_by": "gs-reviewer",
+    "session_id": "gs-reviewer-2",
+    "status": "released",
+    "claimed_at": "2026-08-09T04:59:46.690464+00:00",
+    "last_heartbeat": "2026-08-09T05:10:10.641094+00:00",
+    "claimed_by": "gs-reviewer-2",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T05:10:52.532643+00:00"
   }
 }

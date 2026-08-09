@@ -1,15 +1,15 @@
 {
   "contract": 1,
-  "step": "r0-context",
+  "step": "gs-integrate",
   "files": [],
   "repo_rev": {
     "commit": "4f6dcd30d6df7a52afccdae6f1624b0279f8b404"
   },
   "run": {
-    "work_id": "issue-456-gs-review",
-    "generated_at": "2026-08-09T05:00:09Z",
+    "work_id": "issue-456",
+    "generated_at": "2026-08-09T05:12:29Z",
     "roots": {
-      "skill": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
       "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
       "durable": "C:/Programs/constellation-skills"
     },
