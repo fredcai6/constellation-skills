@@ -1,0 +1,10 @@
+PASS. `git diff --name-only 1f5c8a6e..588d5419 -- scripts/ tests/` (my own run): exactly `scripts/code_map/checks.py`, `scripts/code_map/render.py`, `tests/test_code_map.py`. The wider commit also touches `.agent-work/issue-456/evidence/measure_split.py` (explicitly in scope per the handoff) and workbench bookkeeping (spine.json, execute.json, crew-handoffs, context/mechanical gauge tracking) -- all expected scratch, not shipped source.
+
+Every DO-NOT-TOUCH item independently re-verified this run, by grep against the actual diff, not by reading the RESULT's claim:
+- `is_test_module`'s predicate body: grepped the diff for `_make_collision_repo`, `OWN_MODULE_NAMED_MUTATION`, `LEGEND_DROPPED_MUTATION`, `entity_symbol_join`, `page_location_matches_content` across the full source/test diff -- zero hits for all five. None of these anchors are touched.
+- Page headers `path, N lines`, no `:<line>`: scanned all 3865 built pages this run for a `.py:<digits>` pattern in the header region -- zero hits (script: `.agent-work/issue-456/evidence/g5_rereview_header_scan.py`).
+- The 386 non-ASCII pages: not touched by this diff (the remediation's own new strings -- the reworded legend, the new test's docstring -- are pure ASCII; unrelated pre-existing docstring prose elsewhere is out of this gate's scope, consistent with attempt-1's finding).
+
+map/ tree: `git ls-tree -r HEAD -- map/` returns 0 -- still untracked. `git status --porcelain` shows only this review's own scratch (evidence scripts, the untracked map/ build from my own fresh build, engine bookkeeping under g5-rereview/) -- nothing staged, no `git add -A` residue.
+
+No scope drift.

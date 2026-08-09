@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "g8-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 1,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g8-implement-m0-context@222b78091936f880be875c1fb0d95812df6e53ff",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g8-implement",
+    "generated_at": "2026-08-09T00:16:17Z"
+  }
+}

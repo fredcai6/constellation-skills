@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1",
+  "files": [],
+  "repo_rev": {
+    "commit": "ba17bfa1f584825862cfad9b35e1b50ee5edb57a"
+  },
+  "run": {
+    "work_id": "issue-456-g6-remediate",
+    "generated_at": "2026-08-08T20:47:07Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-workbench",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

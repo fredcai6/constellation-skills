@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-values-window",
+  "files": [],
+  "repo_rev": {
+    "commit": "22d255310510245e27cdbe400e931508db5c702e"
+  },
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T07:02:43Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

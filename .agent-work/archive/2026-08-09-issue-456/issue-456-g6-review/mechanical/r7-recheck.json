@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r7-recheck",
+  "mechanical": {
+    "run": "issue-456-g6-review",
+    "project": "constellation-skills",
+    "role": "g6-reviewer",
+    "refusals": 0,
+    "spine-step": "r7-recheck",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g6-review-r7-recheck@af8dd68dcc8088990386125c20934150350ea7f8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g6-review",
+    "generated_at": "2026-08-08T21:27:57Z"
+  }
+}

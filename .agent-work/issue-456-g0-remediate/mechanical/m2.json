@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2",
+  "mechanical": {
+    "run": "issue-456-g0-remediate",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g0-remediate-m2@450c49e5c4be6521f4d73f33c58a47dfcd27055f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g0-remediate",
+    "generated_at": "2026-08-07T22:50:14Z"
+  }
+}

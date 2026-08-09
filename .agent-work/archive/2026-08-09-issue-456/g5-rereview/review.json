@@ -1,0 +1,258 @@
+{
+  "work_id": "issue-456-g5-rereview",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-pin-attack",
+    "r8-independence-attack",
+    "r9-plus-one-verify",
+    "r10-legend-truth"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded reviewer global-crew.md + global-everyone.md (verification discipline, engine-drive compliance, reach-up/trip, deep-module vocabulary), docs/agents/CREW_CONTEXT.md (python-not-py, record-stores-never-hand-edited, check-cannot-fail, assert-against-behaviour-not-text) and GLOSSARY.md. Read g5-rereview.md handoff in full, g5-remediate-RESULT.md in full, attempt-1's g5-review/review.json (Finding A blocking / Finding B evidence-only), and the remediation commit 588d5419 diff over render.py, checks.py, tests/test_code_map.py, measure_split.py.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Reproduced directly, not taken on trust. Commit 588d5419 does exactly the three things the handoff describes.\n\n1. LEGEND reworded in both hand-independent copies. Diffed render.py:361 and checks.py:301 directly: both now read \"...test_*.py / *_test.py naming, or a tests package anywhere on the module path. a module matching neither is counted production.\" -- byte-identical between the two files, dropping \"top-level\" entirely. is_test_module's predicate body is untouched in both (grepped the diff hunks for the function body -- zero hits inside either function).\n\n2. Pinning test added: ProductionTestCallerSplitTests.test_the_legend_states_the_rule_the_predicate_actually_applies, with a behavioural half (nested pkg.sub.tests.helper classifies as a test module in both copies) and a wording half (assertNotIn \"top-level\" against both legends).\n\n3. measure_split.py fixed to cross-tabulate by definer. Reran it myself against a fresh build: 88/2341/2/449/873/0, exact match to the claim, headline \"genuinely unused production code: 88 (not the naive 2429...)\".\n\nBoundary verification reproduced independently this run:\n- Fresh build: 111 modules, 3753 entities, 3865 pages -- exact match.\n- Fresh check: 7/7 ok (no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, page-location-matches-content, inbound-attribution, deterministic-rebuild).\n- Gate selector (tc38, run by hand with FORCE_COLOR/PYTHONIOENCODING cleared): 20 passed, 0 failed, exit 0 -- baseline 19 + the new test.\n- Full suite: backgrounded to completion this run (see r3-evidence for the exact figures).\n\nAttacked all four \"where to spend your budget\" items named in the handoff (full detail under r7-r10):\n1. Pinning-test mutation attack: mutated SPLIT_LEGEND to four DIFFERENT top-level-only overclaims that avoid the literal string \"top-level\" (\"at the front of the module path\", \"as the first segment\", \"root-level\", \"outermost\"). All four survived (mutant GREEN, test still passes) -- the wording half is a pin against the ONE literal string from the one real defect, not a semantic pin against the overclaim CLASS. Graded honestly at r7: this is real but narrow, and the test's own docstring only ever claims to guard against reverting to \"TOP-LEVEL-only scope\" wording -- it does not overclaim broader coverage than it has. Not a blocker; filed as a triage candidate for a more robust check.\n2. Independence: grepped checks.py for any import of render -- none. Reran the attempt-1 divergence attack (mutate ONLY checks.py's copy to also classify a module literally named \"helpers\" as a test module) against a real fixture: check goes red on refs-line-self-consistent AND inbound-attribution, same two independent checks as attempt-1 found. Still load-bearing.\n3. The +1 explanation: built the pre-remediation tree (1f5c8a6e) in a throwaway worktree and diffed the exact page filename lists against HEAD. The ONLY difference across all 3864/3865 pages is exactly one new file -- the new test's own page. Spot-checked an existing entity's page (render.is_test_module) before/after: its own inbound-caller counts gained one new TEST-side reference (the new test calling it) but its BUCKET (production, since production sites already >0) is unchanged. No existing entity reclassified.\n4. Legend truthfulness: read is_test_module's body (byte-identical in both files: `if last.startswith(\"test_\") or last.endswith(\"_test\"): return True` then `return \"tests\" in parts`) against the reworded legend text. Both halves (filename convention, \"tests\" package anywhere on the path) are now literally true statements about the code, in both files.\n\nNo scope drift beyond what r2-scope covers in full.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. `git diff --name-only 1f5c8a6e..588d5419 -- scripts/ tests/` (my own run): exactly `scripts/code_map/checks.py`, `scripts/code_map/render.py`, `tests/test_code_map.py`. The wider commit also touches `.agent-work/issue-456/evidence/measure_split.py` (explicitly in scope per the handoff) and workbench bookkeeping (spine.json, execute.json, crew-handoffs, context/mechanical gauge tracking) -- all expected scratch, not shipped source.\n\nEvery DO-NOT-TOUCH item independently re-verified this run, by grep against the actual diff, not by reading the RESULT's claim:\n- `is_test_module`'s predicate body: grepped the diff for `_make_collision_repo`, `OWN_MODULE_NAMED_MUTATION`, `LEGEND_DROPPED_MUTATION`, `entity_symbol_join`, `page_location_matches_content` across the full source/test diff -- zero hits for all five. None of these anchors are touched.\n- Page headers `path, N lines`, no `:<line>`: scanned all 3865 built pages this run for a `.py:<digits>` pattern in the header region -- zero hits (script: `.agent-work/issue-456/evidence/g5_rereview_header_scan.py`).\n- The 386 non-ASCII pages: not touched by this diff (the remediation's own new strings -- the reworded legend, the new test's docstring -- are pure ASCII; unrelated pre-existing docstring prose elsewhere is out of this gate's scope, consistent with attempt-1's finding).\n\nmap/ tree: `git ls-tree -r HEAD -- map/` returns 0 -- still untracked. `git status --porcelain` shows only this review's own scratch (evidence scripts, the untracked map/ build from my own fresh build, engine bookkeeping under g5-rereview/) -- nothing staged, no `git add -A` residue.\n\nNo scope drift.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. All required evidence present and independently reproduced this run -- not taken on trust.\n\nFull suite (backgrounded per the handoff's own instruction, awaited to completion via the\nnotification, output at `.agent-work/issue-456/evidence/g5_rereview_fullsuite.txt`, never polled\nas a buffered file mid-run): `python -m pytest tests -q --color=no` -> 1781 passed, 2 skipped, 672\nsubtests passed in 413.71s, 0 occurrences of FAILED/ERROR/failed in the output. Exact match to the\nremediate-RESULT's claim (baseline 1780 + 1 for the new test).\n\nGate selector (tc38), run by hand with FORCE_COLOR/PYTHONIOENCODING cleared: `python -m pytest\ntests/test_code_map.py -k 'refs or caller or legend' -q --color=no` -> 20 passed, 0 failed. Exact\nmatch: 19 baseline + the new test, and the selector genuinely discriminates (it was RED before the\nreword per the RESULT's own red-before-green evidence, reproduced structurally by my own r7 attack\nwhich put a still-overclaiming legend back and watched the exact same test go GREEN when the\noverclaim avoided the literal string it checks for -- i.e., the selector is not a check that can\nonly ever pass).\n\nFresh build then check on the tracked tree: build -> 111 modules, 3753 entities, 3865 pages\n(exact match). check -> 7/7 ok (no-empty-pages, page-accounting, refs-line-self-consistent,\nentity-symbol-join, page-location-matches-content, inbound-attribution, deterministic-rebuild).\n\nmeasure_split.py's corrected headline: reran it myself against my own fresh build -- 88 / 2341 / 2\n/ 449 / 873 / 0, byte-for-byte match to the claim, \"genuinely unused production code: 88 (not the\nnaive 2429...)\".\n\nDoes the evidence actually DEMONSTRATE the behavior, not just reproduce a number? Yes, on both\nfronts this gate closes:\n- The LEGEND now matches the predicate (r10): read side by side, both halves of the reworded\n  sentence are literally true statements about `is_test_module`'s real code, in both files.\n- The +1 is exactly the new test, nothing reclassified (r9): built the pre-remediation tree in a\n  throwaway worktree and diffed the exact page-filename SETS -- the only difference across 3864\n  vs 3865 pages is the one new page. Spot-checked an existing page's bucket is unchanged despite\n  gaining a new caller reference.\n\nThe one required-evidence gap, honestly graded rather than smoothed over: the pinning test's\nwording assertion demonstrates less than its surrounding prose might suggest at a skim -- it is a\nliteral-string pin, not a semantic one (r7, mutation-proved). This does not fail the item on its\nown: the test's own docstring is honestly scoped to what it actually catches, and the behavioural\nhalf (the part doing the real regression-guarding work) is a full pin, not narrowed at all. Filed\nas a triage candidate (tc1) under r5, not a required-evidence failure.\n\nCREW_CONTEXT's \"assert against behaviour, never against text that describes it\" is worth naming\nexplicitly here rather than leaving implicit: the wording assertion IS an assertion against\ndescriptive text, by necessity -- SPLIT_LEGEND's whole subject matter is the text itself, there is\nno separate \"behavior\" to assert against for a claim about what a docstring-adjacent string says.\nThe behavioural half of the same test is what supplies the actual behavior-level guard (a nested\ntests package still classifying correctly), which is the doctrine's real target and is unaffected\nby the wording assertion's narrowness.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Checked every constraint the handoff names, against the remediation diff and my own actions this run.\n\nSTDLIB ONLY: grepped 1f5c8a6e..588d5419 for new `import`/`from` lines in render.py, checks.py, tests/test_code_map.py -- zero. measure_split.py's diff adds no new import either (still argparse/json/pathlib/sys plus the repo-internal `scripts.code_map.checks`). My own two new evidence scripts (`g5_rereview_pin_attack.py`, `g5_rereview_header_scan.py`) import only `subprocess`, `sys`, `pathlib`, `re` -- all stdlib.\n\nNO TIMINGS IN RUN REPORTS: measure_split.py's report dict (unused_prod_defined / unused_test_defined / test_only_prod_defined / test_only_test_defined / production_prod_defined / production_test_defined / headline / unreadable_refs_lines) carries no time/duration field, checked by reading the diff directly.\n\nNO `git add -A`: never ran it. `git status --porcelain` this run shows only untracked scratch (this review's own evidence scripts/findings, engine bookkeeping under g5-rereview/, the untracked map/ build, and pre-existing untracked scratch from earlier gates) -- nothing staged.\n\nF1BRAINZ / SUPERCOOLSPACESIM READ-ONLY: never pointed a command at either path this review.\n\nWORK CONFINED TO THE WORKTREE: every path built/read was under this worktree, an OS temp dir (the pin-attack script's own restore-verified in-place edits), or the throwaway `issue-456-g5-baseline` worktree I created and removed via `git worktree remove --force` for the +1 page-diff check (r9) -- confirmed removed via `git worktree list` after.\n\nPYTHON NOT PY: every command this run used `python`, never `py`.\n\nFULL SUITE FOREGROUND-TO-COMPLETION: backgrounded per the handoff's own instruction (`run_in_background`), not polled as a buffered file -- awaited the completion notification (see r3-evidence for the landed figures).\n\nNo blocker.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. No new architecture divergence Commander must reconcile. The remediation is exactly the narrow fix the ruling called for -- reword the page's own claim to match the predicate it has always applied, add a regression guard, correct one evidence script's headline -- not a design change.\n\nReconciles attempt-1's two named triage candidates (g5-review/review.json tc1, tc2 -- referenced in spine.json's STATE_NOTE as tc45/tc46): both are now FULFILLED by this remediation, not merely proposed. tc1 asked for a regression check pinning SPLIT_LEGEND's stated basis to `is_test_module`'s real predicate, parallel to the existing REFS_LEGEND precedent -- `test_the_legend_states_the_rule_the_predicate_actually_applies` is exactly that check. tc2 asked for `measure_split.py` to add the definer dimension before its headline propagates further -- done, reproduced by me this run (88/2341/2/449/873/0). Commander/Triage should mark both closed against this commit (588d5419) rather than leave them open as still-pending asks.\n\nOne new triage candidate from this run's own attack (r7): the pinning test's wording half (`assertNotIn(\"top-level\", legend)`) is a pin against the ONE literal string from the ONE past defect, not a semantic pin against the overclaim CLASS -- four differently-worded top-level-only overclaims that avoid the literal substring all survive undetected (mutation-proved, r7). Not a blocker (the test's own docstring does not overclaim broader coverage than it has), but worth strengthening later -- e.g. deriving SPLIT_LEGEND's prose from the predicate's own literal values, or widening the assertion to a short list of known overclaim phrasings. Filed as tc1 below.\n\nNo architecture doc outside the generated map/ tree exists in this repo to reconcile against (no docs/architecture/ directory) -- consistent with every prior gate's reviewer finding.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g5-rereview/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Fowler pass at `.agent-work/issue-456/g5-rereview/fowler-pass.json`; rail exits 0: \"fowler pass ok (smells=12, flagged=[], overridden=['duplicated-code'])\".\n\nAll 12 baseline smells rendered a verdict against the remediation diff (render.py/checks.py legend\nreword, the new pinning test, measure_split.py's definer cross-tab). 11 absent, 1 overridden with a\nlogged reason, 0 flagged -- this is a small, targeted diff (4 lines x2 legend reword, one 35-line\ntest method, ~68-line evidence-script cross-tab) and it reads that way.\n\nOVERRIDDEN (logged reason, not a silent dismissal): duplicated-code on the SPLIT_LEGEND reword\nbeing applied identically to both render.py and checks.py. Subordinated to checks.py's own\npre-existing module doctrine (\"declared here, not imported from the renderer... a check that reads\nits expected text out of the code under test can only ever agree with it\") -- the same override\nattempt-1's reviewer already logged for this exact pair of constants, re-earned this run by r8's\nown divergence attack: diverging only checks.py's copy still makes two independent checks go red.\n\nABSENT (11): long-method (measure_split.py's measure()/main() both stay small linear functions\nafter the cross-tab addition -- see fowler-pass.json for line counts), large-class, feature-envy,\ndata-clumps, primitive-obsession, long-parameter-list, shotgun-surgery, divergent-change,\nmessage-chains, speculative-generality (the definer cross-tab targets the one conflation actually\nfound, not a generalized framework), comments-as-deodorant (the new docstrings describe code\nverified true against is_test_module's real body at r10, not standing in for a fix).\n\nNo blocker.\n",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g5-rereview/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g5-rereview/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-pin-attack": {
+      "id": "r7-pin-attack",
+      "title": "Attack the pinning test with mutations its author did not choose",
+      "imperative": "The new test test_the_legend_states_the_rule_the_predicate_actually_applies is the whole point of the remediation. Mutate the legend with overclaims that do NOT contain the literal string 'top-level' and confirm whether the wording half (assertNotIn) still catches them. Decide honestly: is this a real semantic pin, or a pin against one exact past mistake? Record pass/fail with a finding either way -- a narrow-but-honestly-scoped pin is not automatically a blocker.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS (non-blocking), with a real narrowness found and graded honestly per the handoff's own\ninstruction not to just reproduce the author's own probe.\n\nWrote `.agent-work/issue-456/evidence/g5_rereview_pin_attack.py`: mutates SPLIT_LEGEND in BOTH\nrender.py and checks.py to four DIFFERENT overclaiming wordings the implementer did not choose,\neach restating the same false \"top-level-only\" rule without containing the literal substring\n\"top-level\":\n  front-of-path    \"a tests package at the front of the module path\"      -> GREEN (SURVIVED)\n  first-segment    \"a tests package as the first segment of the module path\" -> GREEN (SURVIVED)\n  root-level       \"a root-level tests package\"                           -> GREEN (SURVIVED)\n  outermost        \"an outermost tests package\"                           -> GREEN (SURVIVED)\nEvery mutation asserted applied (`assert render_mut != ORIGINAL_RENDER`, `assert checks_mut !=\nORIGINAL_CHECKS`) before the test ran; both files restored byte-identical and verified by\nread-back after every trial and again at the end.\n\nVERDICT: this is a pin against ONE literal string from the ONE real defect, not a semantic pin\nagainst the overclaim CLASS. `assertNotIn(\"top-level\", legend)` catches only a legend that spells\nits overclaim with that exact substring. All four differently-worded overclaims -- which describe\nthe identical false rule a reader would be equally misled by -- pass straight through undetected.\n\nIs that a blocker? No, graded on what the test actually CLAIMS, not what a skim might assume:\n- The docstring is honestly scoped: \"the wording assertion fails if the legend is ever worded back\n  to overclaim TOP-LEVEL-only scope\" -- it says \"worded back\" (a reversion of THIS wording), not\n  \"any future overclaim of any shape.\" It does not overclaim its own coverage.\n- The BEHAVIOURAL half of the same test (nested `pkg.sub.tests.helper` classifies as a test module\n  in both copies) is a full, general pin on the actual code path -- untouched by this narrowness.\n  If the predicate itself regresses to top-level-only matching, the behavioural assertion catches\n  it regardless of what the legend then says.\n- CREW_CONTEXT's \"assert against behaviour, never against text that describes it\" is the doctrine\n  this brushes against -- but there genuinely is no behavior to assert against for \"does the\n  legend's OWN TEXT say something false,\" since the legend's subject matter is the text itself.\n  A fully general fix (derive the prose from the predicate's literal values) is a larger scope\n  change than this remediation's mandate (\"fix the LEGEND, keep the PREDICATE, add A pinning\n  check\" -- singular, narrow).\n\nFiled as tc1 (see r5-reconciliation) for a future strengthening, not as a blocker here.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-independence-attack": {
+      "id": "r8-independence-attack",
+      "title": "Independence of the two SPLIT_LEGEND/is_test_module copies still holds",
+      "imperative": "g2 established checks.py restates the grammar by hand rather than importing it. Confirm the copies are still genuinely independent (no import introduced) AND still load-bearing after this edit -- reproduce attempt-1's divergence attack (diverge only checks.py's copy) and confirm at least two checks go red, same as before.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Independence and load-bearingness both re-verified this run, not just re-grepped.\n\nTEXTUAL INDEPENDENCE: `grep -n \"^import render\\|^from .render\\|^from \\. import render\\|^import scripts.code_map.render\" scripts/code_map/checks.py` -> no match (grep exit 1). The one hit for a bare \"render\" substring is a docstring comment (\"than borrowed from `render.load_stores`\"), not an import statement. checks.py's `is_test_module` and `SPLIT_LEGEND` remain independently hand-written, not imported.\n\nLOAD-BEARING: re-ran attempt-1's own divergence attack\n(`.agent-work/issue-456/evidence/g5_reviewer_independence_divergence.py`) against the remediated\ncode, unmodified. It mutates ONLY checks.py's copy (adds `if last == \"helpers\": return True`),\nconfirms render.py's copy in the same mutated host is untouched, builds a real fixture where a\nproduction-looking module named `pkg.helpers` calls `pkg.callee.target`, and runs `check`.\n\nResult, reproduced this run: `check` exits 1 with TWO independent checks catching the divergence,\nsame as attempt-1 found --\n  FAIL refs-line-self-consistent: 1 (page titled in a test module but carries no test-defined note)\n  FAIL inbound-attribution: 6 (page says 1 production site / 0 test sites; store says the opposite)\nTwo unrelated FAILs also appear (entity-symbol-join, deterministic-rebuild) -- both traced to the\nthrowaway fixture's own minimal shape (no source lines to speak of; a scratch `git ls-files` call\nthat isn't set up the way the real repo is), not to the divergence attack -- consistent with\nattempt-1's own note on the identical fixture artifacts. Confirmed absent from the real fresh-build\n`check` (7/7 clean, see r3-evidence).\n\nThe second copy remains a real, load-bearing independent reading after this edit -- the legend\nreword touched only the two SPLIT_LEGEND string literals, never `is_test_module`'s body in either\nfile (confirmed by diff in r1-handoff/r2-scope), so this result was expected rather than assumed,\nand re-running it rather than trusting that expectation is what this item asked for.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-plus-one-verify": {
+      "id": "r9-plus-one-verify",
+      "title": "The +1 entity/page is the new test, no existing entity reclassified",
+      "imperative": "Directly confirm the single new entity (3752->3753) and page (3864->3865) is the new test method, and that none of the pre-existing 88/2/449/873/0 split-by-definer cells moved. If any existing entity changed bucket, that is a BLOCK.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Confirmed directly, at the level of the actual page set, not by cell-count matching alone.\n\nBuilt the pre-remediation tree for real: `git worktree add\nC:/Programs/constellation-skills/.claude/worktrees/issue-456-g5-baseline 1f5c8a6e`, then\n`python -m scripts.code_map build --root .` there -> 111 modules, 3752 entities, 3864 pages (the\nhandoff's own baseline). Then diffed the exact page-filename SETS between that tree and HEAD's\nfresh build:\n\n  find map -name \"*.md\" | sed 's|^map/||' | sort > pages_before.txt   (pre-remediation)\n  find map -name \"*.md\" | sed 's|^map/||' | sort > pages_after.txt    (HEAD, post-remediation)\n  diff pages_before.txt pages_after.txt\n  ->  1750a1751\n      > tests.test_code_map/ProductionTestCallerSplitTests.test_the_legend_states_the_rule_the_\n        predicate_actually_applies.md\n\nThat is the ENTIRE diff across all 3864/3865 filenames -- one line added, nothing removed, nothing\nrenamed. No existing page disappeared or reappeared under a different name.\n\nConfirmed the new page itself is test-defined with zero callers (its own rendered content):\n\"this entity is defined in a test module... zero callers here is the normal, expected state, not\na finding\" / \"referenced by (production): none found\" / \"referenced by (tests): none found\" --\nexactly the unused + test-defined cell that moved by +1.\n\nSpot-checked that an EXISTING entity's bucket did not move despite gaining a new caller reference\nfrom the new test: diffed `scripts.code_map.render/is_test_module.md` before vs after. The only\nchanges are \"referenced by (tests): none found\" -> \"1 sites in 1 modules\" (the new test now calls\nit -- a genuine new reference, not a defect) and the legend wording. Its bucket is unchanged:\nproduction sites were already 3 (>0) before and after, so it was and remains in the \"production\"\nbucket regardless of the tests-count change (bucket logic: production if prod>0, else test-only if\ntest>0, else unused).\n\nTwo independently-written measurement tools (measure_split.py, and the attempt-1 reviewer's own\nfrom-scratch `g5_reviewer_split_by_definer.py`) both give 88 / 2341 / 2 / 449 / 873 / 0 against my\nown fresh build -- the five cells NOT involving the new test (88, 2, 449, 873, 0) are byte-for-byte\nidentical to the pre-remediation table, and the sixth (unused_test_defined) moved by exactly +1.\n\nNo existing entity reclassified. The +1 is exactly, and only, the new pinning test.\n",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-legend-truth": {
+      "id": "r10-legend-truth",
+      "title": "Reworded legend is actually TRUE of is_test_module, both halves",
+      "imperative": "Read is_test_module and the new SPLIT_LEGEND side by side in both render.py and checks.py. Decide whether the sentence is now TRUE, not merely different -- cover both the filename half (test_*.py / *_test.py) and the package half (tests segment anywhere on the path). If the legend is wrong in some other respect, that is the same defect class and blocks again.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Read `is_test_module` and the reworded `SPLIT_LEGEND` side by side in both files; the\nsentence is now TRUE of the code, not merely different, on both halves.\n\n`is_test_module`'s body (byte-identical in render.py and checks.py):\n    parts = mod.split(\".\")\n    last = parts[-1]\n    if last.startswith(\"test_\") or last.endswith(\"_test\"):\n        return True\n    return \"tests\" in parts\n\nReworded legend (byte-identical in both files):\n    \"split: production vs test caller module, by pytest's default discovery convention --\n    test_*.py / *_test.py naming, or a tests package anywhere on the module path. a module\n    matching neither is counted production.\"\n\nFILENAME HALF: legend says \"test_*.py / *_test.py naming\" -> predicate's first branch is exactly\n`last.startswith(\"test_\") or last.endswith(\"_test\")` on the module's last dotted segment (which\nrender.py's docstring separately justifies as the correct restatement of the file-path convention\non the dotted name -- \"the two agree by construction\"). Matches.\n\nPACKAGE HALF: legend says \"a tests package anywhere on the module path\" -> predicate's fallthrough\nis exactly `\"tests\" in parts`, a membership test over every dotted segment, not just the first.\n\"Anywhere\" is the correct word for that; \"tests package\" is a fair paraphrase of \"a path segment\nliterally named tests\". Matches -- this is the exact half that was WRONG before (it said\n\"top-level\", i.e. `parts[0] == \"tests\"`, a claim the code never made).\n\nFALLTHROUGH: legend says \"a module matching neither is counted production\" -> the function returns\nTrue on both branches above and `\"tests\" in parts` (a bool) otherwise, so False (i.e. neither\nfilename nor package match) is exactly \"not a test module\" = production by construction elsewhere\nin the split logic. Matches.\n\nNo third respect in which the legend overclaims or underclaims: it names exactly the two halves\nthe docstring itself calls \"two independent halves of pytest's documented default `python_files`\nconvention\" and no more. True in both files, both halves, no third gap found.\n",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. Attempt-1's blocking finding (SPLIT_LEGEND overclaiming \"a top-level tests package\" while\n`is_test_module` matches \"tests\" anywhere on the dotted path) is genuinely closed by commit\n588d5419, and closing it broke nothing.\n\nVERIFIED DIRECTLY, THIS RUN (not taken on the RESULT's word):\n- Reword applied identically to both hand-independent copies (render.py:361, checks.py:301);\n  `is_test_module`'s predicate body untouched in either file.\n- Legend is now literally TRUE of the predicate in both halves (filename convention, \"tests\"\n  package anywhere on the path) -- read side by side, r10.\n- Fresh build 111/3753/3865, fresh check 7/7, gate selector (tc38, run by hand) 20 passed, full\n  suite (backgrounded to completion, not polled) 1781 passed / 2 skipped / 672 subtests / 0 failed\n  -- baseline+1 throughout, exact matches.\n- The +1 entity/page is exactly the new test and nothing else: built the pre-remediation tree\n  (1f5c8a6e) in a throwaway worktree and diffed the exact page-filename SETS against HEAD -- the\n  only difference across 3864/3865 pages is the one new file. Spot-checked an existing entity's\n  bucket is unchanged despite gaining a new caller reference from the new test.\n- Independence survived and stays load-bearing: no import introduced; re-ran attempt-1's own\n  divergence attack (diverge only checks.py's copy) against the remediated code and confirmed the\n  same two independent checks (refs-line-self-consistent, inbound-attribution) still go red.\n- Commit contains explicit paths only; `map/` still has 0 tracked files.\n\nATTACKED, NOT JUST REPRODUCED (the handoff's central ask): mutated SPLIT_LEGEND to four DIFFERENT\ntop-level-only overclaims that avoid the literal substring \"top-level\" the pinning test's wording\nhalf checks for -- all four survive undetected. Graded honestly rather than smoothed over: this is\na pin against ONE literal string from the ONE real defect, not a semantic pin against the overclaim\nCLASS. Not a blocker, because the test's own docstring only ever claims to guard against reverting\nto that specific wording -- it does not overclaim its own coverage -- and the test's BEHAVIOURAL\nhalf (a nested tests package still classifies correctly in both copies) is a full, unaffected pin\non the actual code path. Filed as tc1, a real triage candidate for a future strengthening (e.g.\nderiving the legend's prose from the predicate's own literal values), not a rework of this gate.\n\nFowler pass: 12/12 rendered a verdict, rail exit 0. Zero flagged, one overridden with a logged and\nre-earned reason (duplicated-code on the two SPLIT_LEGEND copies).\n\nOne triage candidate filed this run (tc1, the narrow wording pin). Two of attempt-1's own triage\ncandidates (legend-pinning check, measure_split.py definer fix) are now FULFILLED by this\nremediation and should be marked closed against 588d5419, not left open as still-pending asks.\n\nFull detail, evidence, and the mutation scripts backing every claim above are in each item's own\nfinding in this survey file and in `.agent-work/issue-456/evidence/g5_rereview_*`.\n"
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r7-pin-attack",
+      "statement": "tc(g5-rereview-1): the new pinning test's wording half is a pin against ONE literal\nstring, not a semantic pin against the overclaim CLASS. `test_the_legend_states_the_\nrule_the_predicate_actually_applies` asserts `assertNotIn(\"top-level\", legend)`.\nMutation-proved this run (`.agent-work/issue-456/evidence/g5_rereview_pin_attack.py`):\nfour DIFFERENT top-level-only overclaims that avoid the literal substring \"top-level\"\n(\"a tests package at the front of the module path\", \"as the first segment of the\nmodule path\", \"a root-level tests package\", \"an outermost tests package\") all leave\nthe test GREEN -- the mutant survives every time. The behavioural half (a nested tests\npackage still classifies as a test module) is unaffected by this gap since it targets\nthe predicate, not the wording.\n\nNot a blocker: the test's own docstring only ever claims to guard \"the legend...\nworded back to overclaim TOP-LEVEL-only scope\" -- an honestly narrow claim, not an\noverclaim of its own coverage. But it is worth strengthening the next time\n`SPLIT_LEGEND` is touched: either derive the legend's prose from the predicate's own\nliteral values (`\"tests\"`, `test_`, `_test`) so wording and code cannot diverge by\nconstruction, or widen the assertion to a short list of known overclaim phrasings\nbeyond the one substring. Evidence: `.agent-work/issue-456/g5-rereview/review.json`\nr7-pin-attack finding.\n"
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "g5-rereview-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T16:53:37.566560+00:00",
+    "last_heartbeat": "2026-08-08T17:07:23.851502+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T17:07:31.410172+00:00"
+  }
+}

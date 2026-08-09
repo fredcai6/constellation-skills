@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-full-suite",
+  "mechanical": {
+    "run": "issue-456-g7-remediate",
+    "project": "constellation-skills",
+    "role": "g7-remediator",
+    "refusals": 2,
+    "spine-step": "m5-full-suite",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g7-remediate-m5-full-suite@783d865d21213462b39ad5c6bb55e4331aa7a882",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g7-remediate",
+    "generated_at": "2026-08-08T23:22:20Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "mechanical": {
+    "run": "issue-456-gb-review",
+    "project": "constellation-skills",
+    "role": "gb-reviewer",
+    "refusals": 0,
+    "spine-step": "r0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-gb-review-r0-context@f2ea09337c45df7e2370250ed915a244e2369b5b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-gb-review",
+    "generated_at": "2026-08-08T18:17:16Z"
+  }
+}

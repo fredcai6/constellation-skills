@@ -1,0 +1,40 @@
+APPROVE. Attempt-1's blocking finding (SPLIT_LEGEND overclaiming "a top-level tests package" while
+`is_test_module` matches "tests" anywhere on the dotted path) is genuinely closed by commit
+588d5419, and closing it broke nothing.
+
+VERIFIED DIRECTLY, THIS RUN (not taken on the RESULT's word):
+- Reword applied identically to both hand-independent copies (render.py:361, checks.py:301);
+  `is_test_module`'s predicate body untouched in either file.
+- Legend is now literally TRUE of the predicate in both halves (filename convention, "tests"
+  package anywhere on the path) -- read side by side, r10.
+- Fresh build 111/3753/3865, fresh check 7/7, gate selector (tc38, run by hand) 20 passed, full
+  suite (backgrounded to completion, not polled) 1781 passed / 2 skipped / 672 subtests / 0 failed
+  -- baseline+1 throughout, exact matches.
+- The +1 entity/page is exactly the new test and nothing else: built the pre-remediation tree
+  (1f5c8a6e) in a throwaway worktree and diffed the exact page-filename SETS against HEAD -- the
+  only difference across 3864/3865 pages is the one new file. Spot-checked an existing entity's
+  bucket is unchanged despite gaining a new caller reference from the new test.
+- Independence survived and stays load-bearing: no import introduced; re-ran attempt-1's own
+  divergence attack (diverge only checks.py's copy) against the remediated code and confirmed the
+  same two independent checks (refs-line-self-consistent, inbound-attribution) still go red.
+- Commit contains explicit paths only; `map/` still has 0 tracked files.
+
+ATTACKED, NOT JUST REPRODUCED (the handoff's central ask): mutated SPLIT_LEGEND to four DIFFERENT
+top-level-only overclaims that avoid the literal substring "top-level" the pinning test's wording
+half checks for -- all four survive undetected. Graded honestly rather than smoothed over: this is
+a pin against ONE literal string from the ONE real defect, not a semantic pin against the overclaim
+CLASS. Not a blocker, because the test's own docstring only ever claims to guard against reverting
+to that specific wording -- it does not overclaim its own coverage -- and the test's BEHAVIOURAL
+half (a nested tests package still classifies correctly in both copies) is a full, unaffected pin
+on the actual code path. Filed as tc1, a real triage candidate for a future strengthening (e.g.
+deriving the legend's prose from the predicate's own literal values), not a rework of this gate.
+
+Fowler pass: 12/12 rendered a verdict, rail exit 0. Zero flagged, one overridden with a logged and
+re-earned reason (duplicated-code on the two SPLIT_LEGEND copies).
+
+One triage candidate filed this run (tc1, the narrow wording pin). Two of attempt-1's own triage
+candidates (legend-pinning check, measure_split.py definer fix) are now FULFILLED by this
+remediation and should be marked closed against 588d5419, not left open as still-pending asks.
+
+Full detail, evidence, and the mutation scripts backing every claim above are in each item's own
+finding in this survey file and in `.agent-work/issue-456/evidence/g5_rereview_*`.

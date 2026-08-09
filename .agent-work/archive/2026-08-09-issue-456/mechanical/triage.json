@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 9,
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-triage@e6c521160512f6eed10708fed94592504edfd00a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-09T10:57:18Z"
+  }
+}

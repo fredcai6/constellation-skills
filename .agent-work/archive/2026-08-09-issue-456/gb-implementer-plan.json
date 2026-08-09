@@ -1,0 +1,448 @@
+{
+  "work_id": "issue-456-gb-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-hole-ratio",
+    "m2-ascii-provenance",
+    "m3-recall-floor",
+    "m4-churn-ratio",
+    "m5-verify-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (already loaded this session), plus docs/agents/CREW_CONTEXT.md and the handoff at .agent-work/issue-456/crew-handoffs/gb-implement.md (already read in full). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context",
+            "why_ref": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-hole-ratio": {
+      "id": "m1-hole-ratio",
+      "title": "Family 1: hole ratio ceiling, as a run-time ratio, with a mutation proof and a one-line action",
+      "imperative": "Commit holes/entities as a generous ceiling ratio (a canary for a catastrophic docstring-extraction regression, not a documentation-completeness gate -- ordinary content edits must never trip it). Measure the real ratio on this repo AND on f1Brainz (read-only, different scale) to confirm the ceiling holds at both. Add a pytest test (name containing 'baseline') asserting the ratio on a fresh build of this repo. Prove the check can fail: mutate a copy of render.py so docstring extraction breaks (e.g. summary_of always returns None) and show the ratio blows past the ceiling (red), then restore and show the real corpus passes (green). State in the test/module docstring what a human does when this fires (open render.py's docs/doc_body wiring first). Attest c1 with the mutation-proof evidence, then advance c2 (the new test passes standalone).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mutation proof: ceiling trips on a broken-extraction mutant (red), holds on the real corpus (green) -- manual attest with evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Mutation-proof: HoleRatioBaselineFalsifierTests.test_baseline_ceiling_holds_on_an_intact_map (positive control, ratio 0.0) and test_baseline_ceiling_trips_when_docstring_extraction_breaks (render.summary_of mutated to always return None via mutated_package -- ratio goes to 1.0, crosses the 0.90 ceiling, assertGreater passes). Real corpus (HoleRatioBaselineTests): fresh scratch build of this repo, holes 2525 / entities 3753 = 0.673, under 0.90. f1Brainz (read-only, manual check): holes 8603 / entities 15037 = 0.572, under 0.90. python -m pytest tests/test_code_map.py -k baseline -q --color=no -> 4 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "new baseline hole-ratio test passes standalone",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k baseline -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-hole-ratio-2"
+        }
+      ],
+      "constraints": [
+        "ratio only, never an absolute count",
+        "state the action line in code",
+        "do not touch is_test_module/SPLIT_LEGEND/checks.py-render.py independence"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-hole-ratio-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-hole-ratio",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-hole-ratio-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k baseline -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-ascii-provenance": {
+      "id": "m2-ascii-provenance",
+      "title": "Family 2: template-ASCII by exact-line provenance (never substring matching)",
+      "imperative": "Statically scan render.py's own AST for every literal string segment the module authors itself (Constant string nodes, and the literal segments of f-strings -- excluding interpolated {expr} parts, which carry source content and must NOT be censored). Assert every such literal is ASCII. This is exact-line provenance by construction: a literal render.py writes itself is template text; anything reaching a page through an f-string substitution is source content and is out of scope. Add a pytest test (name containing 'ascii'). Prove it can fail: a mutated copy of render.py with one non-ASCII character spliced into a literal (e.g. an em-dash in REFS_LEGEND) must be caught; the real render.py must pass. State the one-line action (open render.py, find the literal, replace the character) next to the check. Attest c1 with the mutation-proof, advance c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mutation proof: a spliced non-ASCII literal in a mutated render.py copy is caught; the real render.py passes -- manual attest with evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Mutation-proof: TemplateAsciiProvenanceFalsifierTests.test_ascii_scan_catches_a_non_ascii_character_spliced_into_a_template_literal (em-dash spliced into REFS_LEGEND's own literal text -- caught) and test_ascii_scan_stays_blind_to_non_ascii_text_reaching_a_page_through_interpolation (non-ASCII EXTERNAL value threaded through an f-string {expr} part -- zero offenders, proving the scan is exact-provenance not substring matching). Real render.py: TemplateAsciiProvenanceTests passes, zero offenders among 322 non-docstring literal string Constants. python -m pytest tests/test_code_map.py -k ascii -q --color=no -> 3 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "new ascii-provenance test passes standalone",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k ascii -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-ascii-provenance-2"
+        }
+      ],
+      "constraints": [
+        "exact-line/token provenance derived from render.py's own AST, never a hand-maintained list, never a substring match against rendered pages",
+        "the 386 existing non-ASCII pages (source-reproduced prose) must NOT be touched or newly flagged"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-ascii-provenance-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-ascii-provenance",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-ascii-provenance-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k ascii -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-recall-floor": {
+      "id": "m3-recall-floor",
+      "title": "Family 3: edge recall per predicate (calls/reads/writes), hand-labeled sample, floor stated with its derivation",
+      "imperative": "Build a small, hand-authored fixture module exercising real-shaped calls, reads and writes (module-level constant reads, cross-module calls, self.attr writes, subscript writes) with every edge enumerated by hand as ground truth (no SCIP oracle available -- stdlib only, and SCIP is blind to writes anyway per DESIGN_SPEC TS7, so every predicate including writes is derived the SAME way: this hand count). Run the real extractor over the fixture and compute recall = matched/total per predicate. Commit a floor per predicate as a pytest test (name containing 'recall'), stating the derivation (small hand-labeled fixture, N edges per predicate) and its confidence plainly in the test docstring. Prove it can fail: a mutated extractor copy that drops one predicate's emission (e.g. writes) must push that predicate's recall below its floor; the real extractor must pass. Attest c1, advance c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mutation proof: a predicate-dropping extractor mutant fails its floor; the real extractor passes all three floors -- manual attest with evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Mutation-proof: RecallFloorFalsifierTests.test_recall_floor_trips_when_the_extractor_drops_a_predicate (extract._store's self._ref(t,\"writes\") anchor mutated to \"reads\" -- writes recall drops to 1/3=0.333, under the 1.0 floor; calls/reads recall unaffected, proving the falsifier is scoped). Real extractor: RecallFloorTests passes, 4/4 calls, 4/4 reads, 3/3 writes = 1.0 recall on the 11-edge hand-labeled fixture (RECALL_GROUND_TRUTH, verified by hand-trace against extract.py's own resolution rules R1-R8). python -m pytest tests/test_code_map.py -k recall -q --color=no -> 3 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "new recall-floor test passes standalone",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k recall -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-recall-floor-2"
+        }
+      ],
+      "constraints": [
+        "a floor for EVERY predicate including writes",
+        "state plainly that the floor is derived from a small hand sample, never an unstated one",
+        "do not lean on an oracle that is blind to writes to justify the writes floor"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-recall-floor-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-recall-floor",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-recall-floor-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k recall -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-churn-ratio": {
+      "id": "m4-churn-ratio",
+      "title": "Family 4: churn ratio (map diff lines / source diff lines), 3x ceiling, measured on a local edit AND the never-before-measured widely-referenced-symbol rename",
+      "imperative": "Measure churn = map-tree diff lines / source diff lines on TWO real edits against this actual repo, via an isolated git worktree (never the main worktree): (a) an ordinary local edit to a low-fan-in function, (b) an actual rename of the real corpus's highest-fan-in internal symbol (identify it by inbound edge count from a fresh build; do not guess). Report BOTH measured ratios honestly. Treat the 3x ceiling as a hypothesis under test, not a foregone conclusion -- do NOT widen it to force the rename to pass, and do NOT drop the rename measurement if it is inconvenient. Add pytest test(s) (name containing 'churn'): assert the ceiling for whichever edit(s) the real measurement actually supports; if the rename measurement exceeds 3x, encode that as a stated, honest finding (not a silently-passing or silently-dropped assertion) and say so plainly in the RESULT. Attest c1 with both measured ratios, advance c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both ratios measured and reported (local edit, widely-referenced rename); 3x ceiling confirmed or falsified per case, stated honestly -- manual attest with evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both ratios measured honestly on the real corpus via isolated git worktrees (never the main worktree), commit bd932921. LOCAL EDIT: discovery.is_mappable docstring edit -- 14 map diff lines / 11 source diff lines = 1.27x, under 3x. RENAME (never measured before this gate): highest-fan-in internal symbol identified by inbound scan (not guessed) -- tests.test_checklist_engine:gated, 212 distinct caller entities all within that one file, renamed to gated_plan -- 466 map diff lines / 458 source diff lines = 1.02x, under 3x. Ceiling CONFIRMED on both, not falsified; not widened, not dropped. Structural reason stated in thresholds.py: a pure rename changes ~1 line per call site on both source and map sides, so the ratio stays near 1x regardless of caller count even though PAGE count touched (217/3865) looks large in isolation. ChurnRatioTests/ChurnRatioFalsifierTests (fast synthetic fixture, same unit) added to tests/test_code_map.py as the CI-committed mechanism test; the expensive real-corpus worktree measurement is evidence in this RESULT, following g5's measure_split.py precedent, not a re-run-every-time test. python -m pytest tests/test_code_map.py -k churn -q --color=no -> 3 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "new churn test(s) pass standalone",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k churn -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-churn-ratio-2"
+        }
+      ],
+      "constraints": [
+        "ratio of diff LINES, matching the cycle-4 trial's own unit (map diff lines / source diff lines), never an absolute page or line count",
+        "never widen the ceiling to force a measured finding to pass",
+        "never drop the rename case because it is inconvenient",
+        "isolated git worktree only, never edit the main worktree's tracked files"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-churn-ratio-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-churn-ratio",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-churn-ratio-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k churn -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-verify-close": {
+      "id": "m5-verify-close",
+      "title": "Full suite green, fresh build+check 7/7, closing selector verified, IMPLEMENTER_RESULT written",
+      "imperative": "Run the closing selector by hand and confirm it collects a non-zero count of tests matching every new test's name (tc47/tc38 discipline). Run the full suite (background, poll, do not idle-wait) and confirm it is green. Run a fresh build then check and confirm 7/7 exit 0. Write IMPLEMENTER_RESULT to .agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md per the template, including which of the four families were shipped as-specified, widened, or dropped, and why. Attest c1, advance c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "closing selector collects the new tests by name; full suite green; fresh build+check 7/7 exit 0 -- manual attest with evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Attested by the Commander on first-hand evidence, not on the crew's report. The gb implementer crew completed every deliverable m5 asks for and then ended without closing its own bookkeeping, leaving this item in-progress and its lease dangling; the underlying work is done and independently verified, so the honest close is to attest what was actually measured rather than leave a completed gate looking abandoned.\n\nClosing selector, run by hand against tests/test_code_map.py (the file the gate's own command targets, NOT the whole tests/ directory): -k 'baseline or churn or recall or ascii' collects 13 and all 13 pass, exit 0. That is the pre-gb baseline of 1 plus exactly the 12 new test methods, so every new test is caught by the selector by name -- the tc47/tc38 discipline this item exists to enforce. Note the crew was right and my handoff was wrong: I claimed the baseline collected 17; it collected 1, because my scan had run the selector against the whole tests/ directory instead of the single file. Commander error, caught by the crew.\n\nFull suite: 1793 passed, 2 skipped, 672 subtests passed, 0 failed at the gb boundary. Re-verified green again after g6 landed on top: 1805 passed, 2 skipped, 683 subtests, 0 failed.\n\nFresh build then check, in that order because check reads a stale tree otherwise: build exit 0, check 7/7 all ok, exit 0, deterministic-rebuild included.\n\nIMPLEMENTER_RESULT exists at .agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md and carries the four-family disposition: all four shipped as-specified, none dropped and none widened to force a measurement to pass. Hole ratio ceiling 0.90 against a measured 0.673 here and 0.572 on f1Brainz; both churn ceilings 3.0 against measured 1.27x local edit and 1.02x rename; recall floors 1.0 per predicate including writes; template-ASCII as an AST-scanned invariant over render.py's own literals rather than the explicitly rejected substring match against rendered pages.\n\nDownstream state confirming this gate genuinely closed: the gb review returned APPROVE after an initial correct BLOCK on a missing action line, which was fixed and independently re-verified by that same reviewer rather than self-graded, and gb-integrate is complete on the Commander spine."
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written with the four-family disposition, evidence, and workflow feedback",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-verify-close-2"
+        }
+      ],
+      "constraints": [
+        "no git add -A",
+        "explicit paths only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-verify-close-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-verify-close",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-verify-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/issue-456/crew-handoffs/gb-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "gb-implementer-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T17:40:35.080959+00:00",
+    "last_heartbeat": "2026-08-08T19:43:44.397320+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T19:43:56.485037+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "m0 context loaded: read gb handoff in full, CREW_CONTEXT.md, checklist-engine.md, global-everyone.md. Repo baseline: commit c1fccdd8, modules 111, entities 3753, pages 3865, holes 2525 (67.3pct, fresh build). PLAN for the 4 threshold families, as pytest tests in tests/test_code_map.py, closing selector -k baseline-or-churn-or-recall-or-ascii: (1) HOLE RATIO: holes/entities, generous canary ceiling well above the measured 67.3pct baseline, catches a catastrophic doc-extraction regression not ordinary content drift; mutation-proof via a render.py copy whose summary_of always returns None; cross-check against f1Brainz for a different scale. (2) ASCII PROVENANCE: AST-scan render.py's own literal string segments (Constant nodes + f-string literal parts only, excluding interpolated {expr} source content) and assert ASCII; mutation-proof via a spliced non-ASCII literal in a copy; never touches the 386 pre-existing non-ASCII pages (source-reproduced prose). (3) RECALL FLOOR: hand-authored fixture with hand-enumerated ground truth edges per predicate (calls/reads/writes) -- no SCIP wired into this stdlib-only pipeline, so every predicate incl writes is derived the SAME hand-count way, stated plainly; mutation-proof via a predicate-dropping extractor copy. (4) CHURN RATIO: map-diff-lines / source-diff-lines (matches cycle-4 trial unit), 3x ceiling, via an isolated git worktree, on (a) a local edit and (b) an actual rename of the corpus's highest-fan-in internal symbol -- identified by inbound scan of .code-map/statements.jsonl: tests.test_checklist_engine:gated, 212 distinct caller entities, all in that one test module. Report both ratios honestly; never widen the ceiling to force a pass, never drop the rename. Do-not-touch list honored throughout.",
+      "mechanical": false,
+      "ts": "2026-08-08T17:42:51.263074+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-hole-ratio",
+      "why": "m1 done: thresholds.HOLE_RATIO_CEILING=0.90 committed with WHEN-THIS-FIRES action line in scripts/code_map/thresholds.py. HoleRatioBaselineTests (real corpus, scratch build) + HoleRatioBaselineFalsifierTests (mutation proof) added to tests/test_code_map.py. Selector -k baseline: 4 passed. Next up m2: AST-scan render.py literal strings for ASCII by exact provenance.",
+      "mechanical": false,
+      "ts": "2026-08-08T17:46:58.018061+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-ascii-provenance",
+      "why": "m2 done: thresholds.TEMPLATE_ASCII_INVARIANT documented. _template_literal_constants(source) in tests/test_code_map.py: AST-scan render.py's own Constant string nodes minus its own docstrings; TemplateAsciiProvenanceTests (real render.py, 0 offenders) + TemplateAsciiProvenanceFalsifierTests (mutation catches a spliced em-dash; stays blind to non-ASCII reaching a page via f-string interpolation). Selector -k ascii: 3 passed; -k 'baseline or ascii': 7 passed. Next up m3: recall floor per predicate via a hand-labeled fixture (no SCIP, stdlib only).",
+      "mechanical": false,
+      "ts": "2026-08-08T17:49:57.561116+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-recall-floor",
+      "why": "m3 done: thresholds.RECALL_FLOORS committed at 1.0 for calls/reads/writes, all derived the same hand-count way (no SCIP wired into this stdlib-only pipeline). RECALL_GROUND_TRUTH (11 edges, hand-traced against extract.py resolution rules R1-R8) + RecallFloorTests + RecallFloorFalsifierTests added to tests/test_code_map.py. Selector -k recall: 3 passed; -k 'baseline or ascii or recall': 10 passed. REMAINING: m4 churn ratio (local edit + rename of tests.test_checklist_engine:gated, 212 distinct caller entities all within that one file, identified via inbound scan of .code-map/statements.jsonl -- plan: isolated git worktree, word-boundary rename of the identifier within that one file, rebuild, diff map tree lines vs source diff lines, 3x ceiling per thresholds.CHURN_RATIO_CEILING_LOCAL_EDIT/_RENAME; report both ratios honestly, do not force a pass), then m5 (closing selector -k 'baseline or churn or recall or ascii', full suite green, fresh build+check 7/7, write gb-implement-RESULT.md). CONTEXT HARD at 28pct after this advance -- reach-up in progress, reporting to team-lead and going idle per doctrine; a fresh/resumed agent should cold-start from this DIGEST + the plan file's current, not re-derive the above.",
+      "mechanical": false,
+      "ts": "2026-08-08T17:54:32.581141+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-churn-ratio",
+      "why": "m4 done: both churn ratios measured on the real corpus (local edit 1.27x, rename 1.02x, both under 3x, ceiling confirmed not falsified). thresholds.py updated with the real numbers and the structural explanation for why rename churn stays near 1x. ChurnRatioTests + ChurnRatioFalsifierTests added (fast synthetic mechanism tests). Isolated worktrees cleaned up (git worktree remove). Selector -k churn: 3 passed; full gate selector -k 'baseline or churn or recall or ascii': 13 passed (verified pre-gb baseline was 1, not the 17 the handoff claimed -- a real handoff discrepancy to flag in workflow feedback, not fatal since the selector demonstrably collects and passes a non-zero, verified count). REMAINING: m5 -- run the closing selector by hand once more, run the FULL suite (background+poll), fresh build+check 7/7, write gb-implement-RESULT.md with the four-family disposition (all four shipped as-specified, none dropped/widened) plus workflow feedback (context governor hit 4x, the 17-vs-1 selector discrepancy).",
+      "mechanical": false,
+      "ts": "2026-08-08T18:02:47.224826+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-verify-close",
+      "why": "Closing out the gb implementer's own plan on first-hand Commander evidence. The crew delivered everything m5 requires and then ended without finishing its bookkeeping, leaving this item in-progress and its lease dangling on a gate that is in fact complete and approved. Leaving it open would misreport a finished gate as abandoned, so the honest resolution is to attest what was actually measured and advance.\n\nVerified directly rather than accepted from the crew's report: the closing selector, run by hand against tests/test_code_map.py rather than the whole tests/ directory, collects 13 and all 13 pass at exit 0 -- the pre-gb baseline of 1 plus exactly the 12 new methods, so every new test is caught by name, which is the tc47/tc38 discipline this item exists to enforce. Full suite 1793 passed 2 skipped 672 subtests 0 failed at the gb boundary, and still green at 1805 passed 2 skipped 683 subtests 0 failed after g6 landed on top. Fresh build then check, in that order because check reads a stale tree otherwise: 7/7 ok, exit 0, deterministic-rebuild included. IMPLEMENTER_RESULT exists and carries the four-family disposition -- all four shipped as-specified, none dropped and none widened to force a measurement to pass.\n\nThe gate this plan serves is already closed downstream on the Commander spine: the review returned APPROVE after a correct and narrow BLOCK on a missing action line, which I fixed and the same reviewer independently re-verified rather than my self-grading it, and gb-integrate is complete.\n\nOne correction belongs in this record because the crew earned it: my handoff claimed the closing selector collected 17 at baseline. It collected 1. My scan had run the selector against the whole tests/ directory instead of the single file the gate's command targets. The crew checked rather than trusted and was right.",
+      "mechanical": false,
+      "ts": "2026-08-08T19:43:44.397301+00:00"
+    }
+  ]
+}

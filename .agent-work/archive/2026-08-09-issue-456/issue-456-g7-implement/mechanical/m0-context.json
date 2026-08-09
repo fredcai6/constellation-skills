@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "issue-456-g7-implement",
+    "project": "constellation-skills",
+    "role": "g7-implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g7-implement-m0-context@43a5192da3abd4c39b61598f5a13e33a280d7021",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g7-implement",
+    "generated_at": "2026-08-08T21:54:59Z"
+  }
+}

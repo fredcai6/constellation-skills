@@ -1,0 +1,18 @@
+PASS. Map Impact notes check out against the diff and the evidence; no unreconciled divergence.
+
+Structural anchors named (extract.py schema owner, render.py one-store, checks.py SourceScan + re-based join, supplement.py removed, cli.py, __init__.py, .gitignore) are exactly the files r2-scope's own file list confirms -- nothing claimed that the diff does not show, nothing in the diff left unclaimed.
+
+Two decisions are correctly promoted: line base = 0, declared (I read LINE_BASE and the extraction-window statement directly in extract.py, and confirmed via r1's evidence that it is genuinely consumed by two production read sites plus the join's position match, not merely declared and ignored); statement-line schema shape (folded facts under a `d` key on `contains`, a `declares` statement for values that deliberately does NOT create a page -- I read this distinction directly in extract.py and it matches the RESULT's framing exactly).
+
+The claim/evidence line ("the map now agrees with an independent read of the source on every definition's qualified name and position, over 3711 definitions") is the entity_symbol_join claim, and r1-handoff's independence attack is a direct, harder test of exactly this claim -- it held under two mutations the implementer did not choose, on the real 3711-entity corpus.
+
+The stated trust limitation (StoreScan and the renderer read the SAME store, so inbound_attribution audits the renderer against the store but not the store against the source) is accurate -- read directly in StoreScan's own docstring, unchanged framing from before this gate.
+
+No architecture doc outside the generated map/ tree exists in this repo to reconcile against (no docs/architecture/ directory) -- the map IS the architecture record this issue is building, so there is nothing external for this change to have drifted from.
+
+TRIAGE CANDIDATES filed by this review:
+- tc41 (new, from r1-handoff): the extraction-window statement's own docstring claims a reader can distinguish "absent from the code" from "never looked at," but that distinction is legible only to a consumer of the raw statement store (checks.py, or a future script) -- nothing in the rendered map/ tree surfaces a parse failure to a human page reader; extract_report.json is gitignored and unlinked from any page. Worth a later gate deciding whether the top INDEX should note "N files could not be read."
+- tc40 (Commander-filed, b0575640): this review's judgement is the answer it asked for -- see r1-handoff's finding, "EXTRACTION-WINDOW STATEMENT judged against intent." Not decorative; serves its named purpose (the declared line base) fully; the coverage-boundary framing overclaims relative to what a page reader actually sees (folded into tc41 above).
+- Carried forward from the implementer's own out-of-scope list, not mine to fix: the HARD context-band governor firing at ~16% fill (tc39, already filed); page_accounting's COUNT arm and entity_symbol_join's COVERAGE arm now overlapping (honest redundancy, a later gate's call); the `d` block's effect on statements.jsonl size (93,991 statements over 111 files, gitignored/rebuilt, a build-time observation not a defect).
+
+No blocker.

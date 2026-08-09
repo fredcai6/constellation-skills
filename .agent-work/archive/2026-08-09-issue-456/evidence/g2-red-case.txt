@@ -1,0 +1,18 @@
+F...                                                                     [100%]
+================================== FAILURES ===================================
+_ CaseOnlyPageIdentityTests.test_every_entity_the_map_claims_is_an_entity_the_map_has_a_page_for _
+tests\test_code_map.py:1292: in test_every_entity_the_map_claims_is_an_entity_the_map_has_a_page_for
+    self.assertEqual(checks.page_accounting(self.m), [])
+E   AssertionError: Lists differ: ['pkg.book:Ledger: an entity the map claim[114 chars]es)'] != []
+E   
+E   First list contains 2 additional elements.
+E   First extra element 0:
+E   'pkg.book:Ledger: an entity the map claims and does not have'
+E   
+E   + []
+E   - ['pkg.book:Ledger: an entity the map claims and does not have',
+E   -  'the tree holds 5 pages; the store accounts for 6 (1 top index + 2 module '
+E   -  'indexes + 3 entities)']
+=========================== short test summary info ===========================
+FAILED tests/test_code_map.py::CaseOnlyPageIdentityTests::test_every_entity_the_map_claims_is_an_entity_the_map_has_a_page_for
+1 failed, 3 passed, 48 deselected in 1.11s

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-discovery",
+  "files": [],
+  "repo_rev": {
+    "commit": "203e7ea151f33b0e8ecee9eebbb83d17e241b5fe"
+  },
+  "run": {
+    "work_id": "g0-implement",
+    "generated_at": "2026-08-07T20:49:31Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "issue-456-g3-review",
+    "project": "constellation-skills",
+    "role": "constellation/issue-456/g3/reviewer/attempt-1",
+    "refusals": 0,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g3-review-r3-evidence@91ef4372ee3cec0cbd1a4ea7f10d3edce1885c74",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g3-review",
+    "generated_at": "2026-08-08T09:49:17Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-values-window",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "role": "constellation/issue-456/g3/implementer/attempt-1",
+    "refusals": 3,
+    "spine-step": "m3-values-window",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-m3-values-window@4a687343a727b060e3ec7d9ac37e991cb4e62340",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T07:02:43Z"
+  }
+}

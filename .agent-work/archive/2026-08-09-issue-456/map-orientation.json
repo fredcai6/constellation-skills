@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "work_id": "issue-456",
+  "root": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+  "mode": "DEGRADED-NO-MAP",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": ".agent-work/issue-456/reference/DESIGN_SPEC.md",
+      "content_hash": "1200bbede758f6d554cd41c203ed13e4e520ea36c16ef5743968ac6d3e42d1ed",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "2f79929ecb85851bd54ebf71145b2043547d6cdedc9eea9a91cb1c0786b1b496",
+      "source": "agent-declared"
+    },
+    {
+      "path": "README.md",
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7",
+      "source": "known-fallback"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "2aaf57a2652fd1bfaa40967a3bf3b26c5bc9628b8c94b8ec93fda7a8fcd109a7"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "constellation-skills carries no docs/architecture map at all: no generated map.json, no index.md, no packets dir. So there are no structural anchors, capability packets or decision anchors for the area this issue touches (scripts/ tooling + skills/ doctrine). The relationship between the new code-map tool and the existing scripts/ family is unmapped, as is which skills consume it."
+  ],
+  "escalation": "To Tommy at the plan checkpoint: this repo has no architecture map, which is exactly the gap issue #456 builds a tool to close -- the run is bootstrapping. Two consequences to accept explicitly: (1) the mission frame is built from the CONFIRMED DESIGN_SPEC rather than from a map, and (2) the spine's reconcile step will find no packet map to reconcile against, so per commander-core.md it records a reasoned no-op into the design doc the change actually touches.",
+  "emitted_at": "2026-08-07T17:30:19.642557+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

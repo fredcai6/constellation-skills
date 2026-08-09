@@ -1,0 +1,292 @@
+{
+  "work_id": "issue-456-g0-rereview",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-cannot-fail-sweep",
+    "r8-mutation-independence",
+    "r9-consumer-sweep",
+    "r10-d1-survives"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-everyone.md, global-crew.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the re-review handoff, g0-review-RESULT.md (B1/B2), g0-remediate-RESULT.md, and the delta diff b14ff3ff~1..HEAD over scripts/ and tests/ (2 files, +191/-7).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Both blockers do what was ruled. B1: render.py:184 loc() now emits the bare file path; the :line is gone, path and ', N lines' stay. Verified over a full rebuild at HEAD - 0 of 3535 entity-page headers carry a .py:<line>, 3535/3535 kept the path, 3535/3535 kept ', N lines'. B2: render.py:436 npages = sum(1 for _ in out.rglob('*.md')) read off the tree after writing; report pages=3648 against 3648 .md on disk. The implementer was right to reject the handoff's claim about render.py:306 - module_index at render.py:317 emits file + loc lines only and was already compliant; loc() was the sole position emitter.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diff b14ff3ff~1..HEAD over scripts/ and tests/ is exactly two files, +191/-7: scripts/code_map/render.py and tests/test_code_map.py. Every stated exclusion held. The Verdict/verdict collision is NOT fixed - the fresh build still puts the FUNCTION page in map/scripts.run_skill_eval/Verdict.md and the class is still unreachable, which is the required outcome (tc17). No position cache was built. D1 is untouched: the end_line - line + 1 arithmetic at render.py:186 is byte-identical to before. No schema change, no timings added. map/ is still untracked (git ls-files map = 0) and the real map/ and .code-map/ were not written by this pass. No git add -A anywhere in the delta.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Every required figure reproduced in my own hands with a byte-exact-restore mutation harness that asserts each probe matched exactly once and that the mutant is readable back out of the file. M1 (line number put back) -> RED on RenderedPageFormatTests::test_no_rendered_page_carries_a_source_line_number. M2 (write-call count restored) -> RED on RenderReportTests::test_render_report_page_count_equals_the_files_on_disk. Restored: 17 passed, 13 subtests, render.py sha256 identical, 0 MUTATION PROBE strings. Full suite in a cleared environment (PYTHONIOENCODING and FORCE_COLOR unset, --color=no, python not py): 1709 passed, 2 skipped, 651 subtests passed in 416.44s, exit 0 - exact match to the claim. One volunteered out-of-scope figure does not reproduce: tc21 says a blunt position grep of the tree returns 2 hits; a fresh build returns 3, and the on-disk map/ returns 3524. Recorded as an observation, not a required-evidence failure.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraint table, each checked by command. STDLIB ONLY: the delta adds only json and re to tests/test_code_map.py; render.py's import list is unchanged (collections, json, os, pathlib, shutil, subprocess, sys) - PASS. NO TIMINGS IN ANY RUN REPORT: render_report.json key-set is modules, entities, pages, entity_pages, holes, alias_missing, median_entity_page_lines, largest_5 - no time field - PASS. FULL SUITE GREEN AT THE BOUNDARY: 1709 passed, 2 skipped, 0 failed, reproduced - PASS. NO git add -A: the delta commit b14ff3ff stages explicit paths and map/ is still untracked - PASS. f1Brainz and superCoolSpaceSim READ-ONLY: I performed no write of any kind to either - PASS. NOTHING COMMITTED CARRIES A POSITION: the renderer now complies and gs-implement's imperative does say to GENERATE the map tree before committing it, so the stale on-disk tree is not what ships - PASS. The inherited CREW_CONTEXT rule 'a check that cannot fail is indistinguishable from one that passed' is assessed separately at r7-cannot-fail-sweep.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence. render.py's documented output layout (render.py:22-26) is unchanged; the page-header shape narrowed from 'file:line, N lines' to 'file, N lines', which is the confirmed ruling in ISSUE_456.md line 42 and DESIGN_SPEC.md:88-89, so the artifact moved TOWARD the recorded design, not away. The gate that commits the tree, gs-implement, says 'Generate and commit the map tree for this repo', so the position-free renderer is what produces the committed artifact. tc17 and tc18 are genuinely filed - not in the empty .agent-work/issue-456/triage-candidates/ directory but as triage_candidates in .agent-work/issue-456/spine.json:790 and :795, with full statements and Commander rulings. Out-of-scope finds routed at r7 and in the result.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2",
+          "waived": {
+            "authority": "reviewer",
+            "reason": "NOT an accepted risk: the rail RAN and PASSED. The template ships c1's command as the literal placeholder 'python scripts/verify_fowler_pass.py <fowler-pass-record-path>', which a POSIX shell parses as an input redirection from a nonexistent file, so it fails regardless of the record. The path cannot be substituted on a survey controller: amend is gated-only ('amend applies to gated checklists') and attest is refused for an engine-checked command condition, leaving waive --force as the only legal route. The real check was executed twice, with the repo's own copy and the installed skill's copy: 'python scripts/verify_fowler_pass.py .agent-work/issue-456/g0-rereview/fowler-pass.json' -> 'fowler pass ok (smells=12, flagged=[duplicated-code, feature-envy, primitive-obsession, comments-as-deodorant], overridden=[long-method])', EXIT=0. Same engine gap the g0 attempt-1 reviewer reported; refiled in this result's Workflow Feedback.",
+            "evidence": "e-r6-fowler-2",
+            "forced": true
+          }
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass at .agent-work/issue-456/g0-rereview/fowler-pass.json; verify_fowler_pass.py exit 0, 12 of 12 baseline smells visited. Flagged 4: duplicated-code, feature-envy, primitive-obsession, comments-as-deodorant. Overridden 1 with a logged standard: long-method on render.run(), subordinated to g0-remediate.md's no-refactors exclusion plus the port-baseline argument. Absent 7. The pass earned its place twice: comments-as-deodorant is what surfaced the r7 blocker - the RenderReportTests class docstring claims 'pages has to be a number that can be WRONG' and after the fix it cannot be - and duplicated-code names the mechanism, the test computing its expected value with the same rglob expression as the implementation under test.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "reviewer",
+            "reason": "NOT an accepted risk: the rail RAN and PASSED. The template ships c1's command as the literal placeholder 'python scripts/verify_fowler_pass.py <fowler-pass-record-path>', which a POSIX shell parses as an input redirection from a nonexistent file, so it fails regardless of the record. The path cannot be substituted on a survey controller: amend is gated-only ('amend applies to gated checklists') and attest is refused for an engine-checked command condition, leaving waive --force as the only legal route. The real check was executed twice, with the repo's own copy and the installed skill's copy: 'python scripts/verify_fowler_pass.py .agent-work/issue-456/g0-rereview/fowler-pass.json' -> 'fowler pass ok (smells=12, flagged=[duplicated-code, feature-envy, primitive-obsession, comments-as-deodorant], overridden=[long-method])', EXIT=0. Same engine gap the g0 attempt-1 reviewer reported; refiled in this result's Workflow Feedback.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-cannot-fail-sweep": {
+      "id": "r7-cannot-fail-sweep",
+      "title": "Sweep for a THIRD check-that-cannot-fail",
+      "imperative": "The handoff commissions this: sweep render.py's reported fields and the three new tests for a count, flag or assertion whose value is identical in the healthy and the defective world. Prove any candidate by mutation, not by reading.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "FOUND, with a mutation proof. The third instance is the FIXED FIELD ITSELF. render.py:436 defines pages as sum(1 for _ in out.rglob('*.md')) over the very tree it describes, so the number is now tautologically true of that tree and can therefore reveal nothing about it. Proved by mutation, not by reading: N8 (delete every second entity page immediately after writing it) leaves all 17 tests in tests/test_code_map.py GREEN, including test_render_report_page_count_equals_the_files_on_disk; N4 (never write any module INDEX.md - 112 pages in the real corpus) also leaves all 17 GREEN. Every mutation was asserted applied and render.py was restored byte-identical (sha256 match, 0 MUTATION PROBE strings). So B2's original complaint - 'a page is silently lost and the count that would reveal it cannot fail' - is NOT closed; the tautology moved from the writes to the tree. Two things make this a blocker rather than an observation. (1) tests/test_code_map.py:127-131 SHIPS the opposite claim: 'pages in the render report has to be a number that can be WRONG'. (2) tc18 tells g1 that entity_pages is 'a one-line fix in the same function', and the one-line fix matching g0's own precedent is to count the tree again - which would produce a second tautological field while g1 believes the family is closed. CONSTRUCTIVE: the report already carries a check that CAN fail and nobody runs it. Measured on a fresh build at HEAD: modules=112, pages=3648, entity_pages=3536, entity pages on disk=3535. pages - 1 - modules = 3535, which contradicts entity_pages=3536 by exactly the lost Verdict page. The falsifiable invariant is already in the artifact.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-mutation-independence": {
+      "id": "r8-mutation-independence",
+      "title": "Do the new tests hold under a NEIGHBOURING mutation",
+      "imperative": "Mutate behaviour adjacent to the one each new test was built against and record whether anything goes red. A test tuned to one probe is narrow.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Nine neighbouring mutations run, each asserted applied, each restored byte-identical. The two tests are NOT pure change-detectors, but each is narrower than its docstring. RED (something noticed): M1 line number restored; M2 write-call count restored; N6b two modules forced into one directory (caught by the PRE-EXISTING CliBuildCommandTests, not by the new tests); N7 entity-key prefix bug so no entity page is ever emitted (caught by RenderedPageFormatTests' own input precondition 'the tree must contain entity pages' - that precondition genuinely earns its keep). GREEN, nothing noticed: N1 the position re-added in any spelling other than a colon, e.g. pkg/thing.py#L12 - the guard is POSITION = re.compile(r'\\.py:\\d+') and is tied to one spelling, and the keeps-the-path test still passes because the path is a prefix; N4 module index pages never written; N5 every entity page written flat into map/ instead of its module directory, so the documented output layout at render.py:22-26 has no guard at all; N8 half the entity pages deleted after writing. One mutation was INCONCLUSIVE and I am recording it as such rather than claiming from it: N6 (d = out / mod.lower()) applied to the text but was a behavioural no-op because the fixture's module names are already lowercase - a mutation that cannot change behaviour is the same shape I am hunting, so N6b was authored to replace it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-consumer-sweep": {
+      "id": "r9-consumer-sweep",
+      "title": "Did stripping the position break a consumer",
+      "imperative": "Enumerate by command every reader of the page-header format and of render_report.json across scripts/ and tests/. Confirm none consumed the removed position.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Nothing consumed the removed position. Enumerated by command, not by memory. loc() has exactly one definition (render.py:171) and exactly one call site (render.py:273). grep for '.py:' across scripts/code_map/ and tests/test_code_map.py returns two hits, both introduced by this delta (the POSITION regex at tests/test_code_map.py:123 and a docstring at :181). grep for readers of render_report.json across scripts/ and tests/ returns only the writers (extract.py:782, supplement.py:203, render.py:453) and the one new test at tests/test_code_map.py:140 - scripts/collect_feedback.py's render_report() is an unrelated same-named function. checks.py does not read the page header: its only page-tree pass is non_ascii_provenance(), which reads lines for non-ASCII characters and counts pages with its own honest per-file increment over rglob (checks.py:67-69). module_index (render.py:317) emits file + loc lines and never carried a position. The blast radius of the format change was zero callers, and that was verified rather than assumed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-d1-survives": {
+      "id": "r10-d1-survives",
+      "title": "', N lines' intact and D1 preserved for g3",
+      "imperative": "Confirm the end_line - line + 1 arithmetic is unchanged, that the size is neither broken nor silently fixed, and that no new test freezes its VALUE in a way that would fight g3's D1 fix.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "', N lines' is intact and D1 is preserved for g3, neither broken nor silently fixed. The arithmetic at render.py:186 is byte-identical to its pre-delta form: head += f\", {e['end_line'] - e['line'] + 1} lines\". The diff touches only the line above it. Over a full rebuild at HEAD, 3535 of 3535 entity-page headers carry ', N lines'. loc() no longer reads e['line'] for the header but still reads it for the size, which is the correct outcome - the size is a span, not a position. The two D1 compensation sites elsewhere (render.py:97 and checks.py:98,:138, all '+1' on q.line) are untouched. Crucially for g3: mutation N2 changed the arithmetic to end_line - line + 7 and ALL 17 tests stayed GREEN, so no new test freezes the VALUE. test_page_header_keeps_the_file_path_and_the_entity_size asserts only the shape, assertRegex(header, r', \\d+ lines\\b'). g3 can change the line base without fighting a test written at g0.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r7-cannot-fail-sweep: FOUND, with a mutation proof. The third instance is the FIXED FIELD ITSELF. render.py:436 defines pages as sum(1 for _ in out.rglob('*.md')) over the very tree it describes, so the number is now tautologically true of that tree and can therefore reveal nothing about it. Proved by mutation, not by reading: N8 (delete every second entity page immediately after writing it) leaves all 17 tests in tests/test_code_map.py GREEN, including test_render_report_page_count_equals_the_files_on_disk; N4 (never write any module INDEX.md - 112 pages in the real corpus) also leaves all 17 GREEN. Every mutation was asserted applied and render.py was restored byte-identical (sha256 match, 0 MUTATION PROBE strings). So B2's original complaint - 'a page is silently lost and the count that would reveal it cannot fail' - is NOT closed; the tautology moved from the writes to the tree. Two things make this a blocker rather than an observation. (1) tests/test_code_map.py:127-131 SHIPS the opposite claim: 'pages in the render report has to be a number that can be WRONG'. (2) tc18 tells g1 that entity_pages is 'a one-line fix in the same function', and the one-line fix matching g0's own precedent is to count the tree again - which would produce a second tautological field while g1 believes the family is closed. CONSTRUCTIVE: the report already carries a check that CAN fail and nobody runs it. Measured on a fresh build at HEAD: modules=112, pages=3648, entity_pages=3536, entity pages on disk=3535. pages - 1 - modules = 3535, which contradicts entity_pages=3536 by exactly the lost Verdict page. The falsifiable invariant is already in the artifact."
+    ],
+    "summary": "BLOCK on one finding, B3. B1 and B2 are both genuinely closed and every figure in the handoff's evidence table reproduced in my own hands: M1 and M2 mutation proofs both RED then restored byte-identical, 0 of 3535 entity-page headers carry a position over a full rebuild at HEAD, report pages=3648 against 3648 .md on disk, and the full suite 1709 passed / 2 skipped / 0 failed in a cleared environment. Every constraint held. B3 is the third cannot-fail sibling the handoff asked me to hunt: render.py:436 defines pages as a count of the tree it describes, so the tautology moved from the writes to the tree rather than being removed - mutation N8 deletes a quarter of the page tree and N4 deletes every module index page, and all 17 tests stay GREEN both times. It blocks for two reasons, neither requiring a render.py change: tests/test_code_map.py:127-131 ships the claim that pages 'has to be a number that can be WRONG', which is now false; and tc18 tells g1 that entity_pages is a one-line fix in the same function, inviting g1 to count the tree again and record the family as closed. The constructive close is already in the artifact - pages - 1 - modules = 3535 contradicts entity_pages = 3536 by exactly the lost Verdict page, a falsifiable invariant the report carries and nothing asserts. Six triage candidates flagged. REVIEW_RESULT at .agent-work/issue-456/crew-handoffs/g0-rereview-RESULT.md."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r8-mutation-independence",
+      "statement": "The rendered map's OUTPUT LAYOUT has no guard at all. render.py:22-26 documents map/<dotted.module>/<Entity>.md, map/<dotted.module>/INDEX.md and map/INDEX.md as the committed contract every consumer navigates by. Mutation N5 rewrote render.py:414 to write every entity page flat into map/ instead of its module directory and all 17 tests in tests/test_code_map.py stayed GREEN, including both new ones - because 'pages' counts .md files anywhere under the tree and the format tests read whatever pages they find. The two-tier index (g4) and the skills' Map-entry-point instruction (gs) both depend on this layout. Route to g1, whose charter is a check stage that can fail: assert the RELATIVE PATH of each page, not just its existence."
+    },
+    {
+      "id": "tc2",
+      "from": "r7-cannot-fail-sweep",
+      "statement": "tc18 as filed is scoped narrower than the defect it names. It says entity_pages carries the identical cannot-fail shape and calls it 'a one-line fix in the same function'. But the root is the 'sizes' list, which is appended once per emit() CALL, and sizes feeds THREE report fields, not one: entity_pages (len(sizes)), median_entity_page_lines (sizes[len(sizes)//2][0]) and largest_5 (sizes[:5]). A one-line fix to entity_pages leaves the other two describing pages that may not exist on disk - largest_5 can name a key whose page was overwritten. Widen tc18 to name the list rather than the field, and record the invariant that CAN fail: pages - 1 - modules == distinct entity pages. Measured at HEAD that invariant already FAILS by exactly the lost Verdict page (3648 - 1 - 112 = 3535 vs entity_pages 3536)."
+    },
+    {
+      "id": "tc3",
+      "from": "r8-mutation-independence",
+      "statement": "The position guard is tied to ONE SPELLING of a position. tests/test_code_map.py:123 defines POSITION = re.compile(r'\\.py:\\d+'). Mutation N1 re-emitted the position as 'pkg/thing.py#L12' and all 17 tests stayed GREEN, because the regex needs a colon and test_page_header_keeps_the_file_path_and_the_entity_size passes on the path prefix. The confirmed ruling is 'nothing committed carries a position', not 'nothing carries a colon-form position'. Route to g1 or gb: express the guard as the property the consumer computes - a page header must be derivable from data that does not move when unrelated source moves - or at minimum widen the pattern to the position spellings a renderer would plausibly emit."
+    },
+    {
+      "id": "tc4",
+      "from": "r3-evidence",
+      "statement": "A count of the map, written into a file the map maps, changes the count it states - and this has already bitten once. tc21 and the shipped docstring at tests/test_code_map.py:180-184 both say a blunt position scan of the page tree returns TWO hits. A fresh build at HEAD returns THREE: the two real ones from test_checklist_engine.py's docstring, plus that very docstring, echoed onto map/tests.test_code_map/RenderedPageFormatTests.md:26. The claim falsified itself by being written. This repo maps its own tests, so the general rule for the remaining ten gates is: never state a corpus figure inside a mapped source file, and pin every figure in prose to the revision it was measured at (global-everyone.md 'Pin a claim to the revision you read it at'). gb, which commits every threshold, is where this needs to be doctrine."
+    },
+    {
+      "id": "tc5",
+      "from": "r5-reconciliation",
+      "statement": "Triage-id collision: 'tc17' currently names TWO different findings. spine.json:790 tc17 is the Verdict/verdict page collision routed to g1. execute.json:223 and :244 say the r6-fowler survey-postcondition engine defect was 'Refiled as tc17'. g1's residual risk from BOTH g0 blockers is routed by that id, so a reader who resolves it to the wrong record loses the collision finding. Also worth noting: .agent-work/issue-456/triage-candidates/ is EMPTY - every candidate actually lives in spine.json's triage_candidates array. A reviewer or a later gate looking in the directory named for them finds nothing and could reasonably conclude none were filed. I nearly did."
+    },
+    {
+      "id": "tc6",
+      "from": "r4-quality",
+      "statement": "Heads-up for gs, not a defect: the untracked map/ tree sitting on disk right now was built by the PRE-FIX renderer and 3523 of its 3635 pages still carry a .py:<line> (grep -rlE '\\.py:[0-9]+' map/ | wc -l = 3523; 3524 total hits). gs-implement's imperative does say 'Generate and commit the map tree', so a rebuild is obliged and B1 will not ship - but anyone who greps the on-disk tree before that rebuild will read B1 as unfixed, and a gs implementer who stages the existing tree instead of regenerating it would commit 3523 positions against a human-confirmed ruling. Worth one explicit line in the gs handoff: rebuild first, then stage."
+    }
+  ],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g0-rereview-1",
+    "status": "released",
+    "claimed_at": "2026-08-07T23:24:47.606310+00:00",
+    "last_heartbeat": "2026-08-07T23:47:02.219584+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T23:47:14.058442+00:00"
+  }
+}

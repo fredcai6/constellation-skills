@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r6-fowler",
+  "mechanical": {
+    "run": "issue-456-g8-review",
+    "project": "constellation-skills",
+    "role": "g8-reviewer",
+    "refusals": 0,
+    "spine-step": "r6-fowler",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g8-review-r6-fowler@d36310391e3d201dbe45c90c392f4f79fc2b48fc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g8-review",
+    "generated_at": "2026-08-09T01:22:30Z"
+  }
+}

@@ -1,0 +1,19 @@
+tc(g5-rereview-1): the new pinning test's wording half is a pin against ONE literal
+string, not a semantic pin against the overclaim CLASS. `test_the_legend_states_the_
+rule_the_predicate_actually_applies` asserts `assertNotIn("top-level", legend)`.
+Mutation-proved this run (`.agent-work/issue-456/evidence/g5_rereview_pin_attack.py`):
+four DIFFERENT top-level-only overclaims that avoid the literal substring "top-level"
+("a tests package at the front of the module path", "as the first segment of the
+module path", "a root-level tests package", "an outermost tests package") all leave
+the test GREEN -- the mutant survives every time. The behavioural half (a nested tests
+package still classifies as a test module) is unaffected by this gap since it targets
+the predicate, not the wording.
+
+Not a blocker: the test's own docstring only ever claims to guard "the legend...
+worded back to overclaim TOP-LEVEL-only scope" -- an honestly narrow claim, not an
+overclaim of its own coverage. But it is worth strengthening the next time
+`SPLIT_LEGEND` is touched: either derive the legend's prose from the predicate's own
+literal values (`"tests"`, `test_`, `_test`) so wording and code cannot diverge by
+construction, or widen the assertion to a short list of known overclaim phrasings
+beyond the one substring. Evidence: `.agent-work/issue-456/g5-rereview/review.json`
+r7-pin-attack finding.

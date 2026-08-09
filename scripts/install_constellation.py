@@ -121,6 +121,22 @@ SCRIPT_SOURCE_SUBDIRS: dict[str, str] = {
     "spine_rail.py": "hooks",
 }
 
+# NON-INSTALLABLE PACKAGES: directories under scripts/ that are real Python
+# packages -- they carry an __init__.py and their modules import each other with
+# intra-package relative imports (`from .discovery import ...`). Because the
+# install destination is FLAT (above), copying such a package's modules out
+# strips the package that those relative imports resolve against, and every one
+# of them raises at import. So these are not bundled at all: they are run from a
+# checkout as `python -m scripts.<package>`, and no skill declares them.
+#
+# scripts/hooks/ is NOT one of these. It is a plain source subdirectory of
+# standalone modules that import nothing from each other, so flattening it is
+# safe and SCRIPT_SOURCE_SUBDIRS handles it.
+#
+# tests/test_install_constellation.py holds every directory under scripts/ to
+# one of these two declarations, so a new package cannot arrive undeclared.
+NON_INSTALLABLE_PACKAGES: frozenset[str] = frozenset({"code_map"})
+
 
 def script_source_path(script: str, scripts_root: Path) -> Path:
     """Where a bundled script is READ from. Single resolver so validation and the

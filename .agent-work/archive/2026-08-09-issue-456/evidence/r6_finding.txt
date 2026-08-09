@@ -1,0 +1,22 @@
+PASS. Fowler pass at `.agent-work/issue-456/g5-rereview/fowler-pass.json`; rail exits 0: "fowler pass ok (smells=12, flagged=[], overridden=['duplicated-code'])".
+
+All 12 baseline smells rendered a verdict against the remediation diff (render.py/checks.py legend
+reword, the new pinning test, measure_split.py's definer cross-tab). 11 absent, 1 overridden with a
+logged reason, 0 flagged -- this is a small, targeted diff (4 lines x2 legend reword, one 35-line
+test method, ~68-line evidence-script cross-tab) and it reads that way.
+
+OVERRIDDEN (logged reason, not a silent dismissal): duplicated-code on the SPLIT_LEGEND reword
+being applied identically to both render.py and checks.py. Subordinated to checks.py's own
+pre-existing module doctrine ("declared here, not imported from the renderer... a check that reads
+its expected text out of the code under test can only ever agree with it") -- the same override
+attempt-1's reviewer already logged for this exact pair of constants, re-earned this run by r8's
+own divergence attack: diverging only checks.py's copy still makes two independent checks go red.
+
+ABSENT (11): long-method (measure_split.py's measure()/main() both stay small linear functions
+after the cross-tab addition -- see fowler-pass.json for line counts), large-class, feature-envy,
+data-clumps, primitive-obsession, long-parameter-list, shotgun-surgery, divergent-change,
+message-chains, speculative-generality (the definer cross-tab targets the one conflation actually
+found, not a generalized framework), comments-as-deodorant (the new docstrings describe code
+verified true against is_test_module's real body at r10, not standing in for a fix).
+
+No blocker.

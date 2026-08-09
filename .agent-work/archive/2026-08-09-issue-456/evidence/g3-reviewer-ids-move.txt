@@ -1,0 +1,17 @@
+warning: in the working copy of 'pkg3/anchors.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pkg3/anchors.py', LF will be replaced by CRLF the next time Git touches it
+build BEFORE exit: 0
+ids.jsonl BEFORE:
+{"id": "holder-hold", "s": "pkg3.anchors:Holder.hold"}
+{"id": "widget-spin", "s": "pkg3.anchors:spin"}
+
+store line for spin BEFORE the move: 6
+
+build AFTER exit: 0
+ids.jsonl AFTER:
+{"id": "holder-hold", "s": "pkg3.anchors:Holder.hold"}
+{"id": "widget-spin", "s": "pkg3.anchors:spin"}
+
+store line for spin AFTER the move: 30
+
+ids.jsonl BYTE-IDENTICAL before/after the move: True

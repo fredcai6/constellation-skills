@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-docstring-fix",
+  "mechanical": {
+    "run": "g8-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 5,
+    "spine-step": "m3-docstring-fix",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g8-implement-m3-docstring-fix@e6ce215a5703e0bae841d7756c6674a116fa08dd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g8-implement",
+    "generated_at": "2026-08-09T00:24:48Z"
+  }
+}

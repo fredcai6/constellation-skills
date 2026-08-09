@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m5-full-suite",
+  "files": [],
+  "repo_rev": {
+    "commit": "9ac8b74cef2edb2f9ea25b70e3dbefa81f9d7944"
+  },
+  "run": {
+    "work_id": "issue-456-g7-remediate",
+    "generated_at": "2026-08-08T23:22:20Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.12.13",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

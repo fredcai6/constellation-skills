@@ -1,0 +1,17 @@
+PASS. Checked every constraint the handoff names, against the remediation diff and my own actions this run.
+
+STDLIB ONLY: grepped 1f5c8a6e..588d5419 for new `import`/`from` lines in render.py, checks.py, tests/test_code_map.py -- zero. measure_split.py's diff adds no new import either (still argparse/json/pathlib/sys plus the repo-internal `scripts.code_map.checks`). My own two new evidence scripts (`g5_rereview_pin_attack.py`, `g5_rereview_header_scan.py`) import only `subprocess`, `sys`, `pathlib`, `re` -- all stdlib.
+
+NO TIMINGS IN RUN REPORTS: measure_split.py's report dict (unused_prod_defined / unused_test_defined / test_only_prod_defined / test_only_test_defined / production_prod_defined / production_test_defined / headline / unreadable_refs_lines) carries no time/duration field, checked by reading the diff directly.
+
+NO `git add -A`: never ran it. `git status --porcelain` this run shows only untracked scratch (this review's own evidence scripts/findings, engine bookkeeping under g5-rereview/, the untracked map/ build, and pre-existing untracked scratch from earlier gates) -- nothing staged.
+
+F1BRAINZ / SUPERCOOLSPACESIM READ-ONLY: never pointed a command at either path this review.
+
+WORK CONFINED TO THE WORKTREE: every path built/read was under this worktree, an OS temp dir (the pin-attack script's own restore-verified in-place edits), or the throwaway `issue-456-g5-baseline` worktree I created and removed via `git worktree remove --force` for the +1 page-diff check (r9) -- confirmed removed via `git worktree list` after.
+
+PYTHON NOT PY: every command this run used `python`, never `py`.
+
+FULL SUITE FOREGROUND-TO-COMPLETION: backgrounded per the handoff's own instruction (`run_in_background`), not polled as a buffered file -- awaited the completion notification (see r3-evidence for the landed figures).
+
+No blocker.

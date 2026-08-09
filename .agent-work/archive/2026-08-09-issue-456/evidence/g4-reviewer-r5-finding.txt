@@ -1,0 +1,46 @@
+PASS. Map Impact notes check out against the diff and the evidence; no unreconciled divergence,
+one triage candidate filed.
+
+Structural anchors named (render.py: top_index, module_group_key, _module_line;
+checks.py: page_location_matches_content, registered in CHECKS) are exactly what r2-scope's
+file list confirms -- nothing claimed that the diff does not show, nothing in the diff left
+unclaimed.
+
+Capabilities-changed claim ("the top index is now a two-tier routing surface... check gained a
+7th invariant") is accurate for the corpora it was measured on (this repo's evals/scripts
+sections, f1Brainz's src/) but OVERSTATES generality -- see r1-handoff's finding: the two-tier
+claim degenerates to a no-op for a flat dominant package (this repo's own tests/, 74% of
+entities) and for a loose-top-level-module corpus (tier 1 itself). The Map Impact section does
+not name this limitation; it should, since a later gate or a Cartographer reconcile reading
+this note alone would believe the routing property holds uniformly. Filed as a triage candidate
+below rather than a blocker -- the underlying mechanism is honestly derived, not a
+misrepresentation, just an incomplete claim of generality.
+
+The "tier granularity" and "tc31 closure route" decisions are correctly promoted: read the
+disposition section in g4-implement-RESULT.md and confirmed the alternative (a link-following
+graph walk / new group-page tier) was genuinely rejected with reasoning, not silently dropped --
+consistent with gate-spec.json's superseded framing being flagged, not silently diverged from.
+
+Trust limitation stated ("does not verify a page's FILENAME within a correct directory") is
+accurate -- read directly in the check's own docstring and confirmed by attack: my own two
+attacks both relocated pages to a wrong DIRECTORY, which the check catches; a same-directory
+filename swap was not attempted this review (out of scope for tc31 as scoped) and remains
+correctly named as unverified.
+
+No architecture doc outside the generated map/ tree exists in this repo to reconcile against
+(no docs/architecture/ directory) -- consistent with g3's reviewer's same finding.
+
+TRIAGE CANDIDATES filed by this review:
+- (new) The routing/two-tier claim does not hold uniformly across corpus shapes: a flat
+  dominant package (this repo's own tests/, 74% of entities -- real, not synthetic) and a
+  loose-top-level-module repo (synthetic, but a common real layout) both leave the index no
+  more useful than a flat list for the affected section. A later gate could explore an
+  alternate grouping signal for flat packages (e.g. filename-prefix clustering, already
+  gestured at by the implementer's own triage note #2 about tests.unit) or could explicitly
+  document the limitation in the top_index docstring so its "bounded by package count" claim is
+  scoped correctly.
+- Carried forward from the implementer's own out-of-scope list, not mine to re-litigate:
+  filename-within-directory not checked by tc31's check; tests.unit still 92% of its package
+  after tier-2 grouping on f1Brainz; gate-spec.json vs the handoff reconciliation.
+
+No blocker.

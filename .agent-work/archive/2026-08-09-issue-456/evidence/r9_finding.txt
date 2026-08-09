@@ -1,0 +1,37 @@
+PASS. Confirmed directly, at the level of the actual page set, not by cell-count matching alone.
+
+Built the pre-remediation tree for real: `git worktree add
+C:/Programs/constellation-skills/.claude/worktrees/issue-456-g5-baseline 1f5c8a6e`, then
+`python -m scripts.code_map build --root .` there -> 111 modules, 3752 entities, 3864 pages (the
+handoff's own baseline). Then diffed the exact page-filename SETS between that tree and HEAD's
+fresh build:
+
+  find map -name "*.md" | sed 's|^map/||' | sort > pages_before.txt   (pre-remediation)
+  find map -name "*.md" | sed 's|^map/||' | sort > pages_after.txt    (HEAD, post-remediation)
+  diff pages_before.txt pages_after.txt
+  ->  1750a1751
+      > tests.test_code_map/ProductionTestCallerSplitTests.test_the_legend_states_the_rule_the_
+        predicate_actually_applies.md
+
+That is the ENTIRE diff across all 3864/3865 filenames -- one line added, nothing removed, nothing
+renamed. No existing page disappeared or reappeared under a different name.
+
+Confirmed the new page itself is test-defined with zero callers (its own rendered content):
+"this entity is defined in a test module... zero callers here is the normal, expected state, not
+a finding" / "referenced by (production): none found" / "referenced by (tests): none found" --
+exactly the unused + test-defined cell that moved by +1.
+
+Spot-checked that an EXISTING entity's bucket did not move despite gaining a new caller reference
+from the new test: diffed `scripts.code_map.render/is_test_module.md` before vs after. The only
+changes are "referenced by (tests): none found" -> "1 sites in 1 modules" (the new test now calls
+it -- a genuine new reference, not a defect) and the legend wording. Its bucket is unchanged:
+production sites were already 3 (>0) before and after, so it was and remains in the "production"
+bucket regardless of the tests-count change (bucket logic: production if prod>0, else test-only if
+test>0, else unused).
+
+Two independently-written measurement tools (measure_split.py, and the attempt-1 reviewer's own
+from-scratch `g5_reviewer_split_by_definer.py`) both give 88 / 2341 / 2 / 449 / 873 / 0 against my
+own fresh build -- the five cells NOT involving the new test (88, 2, 449, 873, 0) are byte-for-byte
+identical to the pre-remediation table, and the sixth (unused_test_defined) moved by exactly +1.
+
+No existing entity reclassified. The +1 is exactly, and only, the new pinning test.

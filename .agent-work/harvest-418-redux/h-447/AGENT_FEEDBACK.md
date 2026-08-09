@@ -2137,3 +2137,104 @@ each result verified fresh before integration.
 - **The authoring side of blast radius is where this run kept bleeding.** Adding one optional field to
   a record stranded six documents and comments asserting the old shape, in four files, and each was
   found by a different pass. → disposition: `filed as #444 (the mechanical link that would close it)`
+
+## 2026-08-09 — issue-456-code-map (live Commander, human principal)
+
+**How closely the skills, handoffs and checklists were followed:** the spine was driven end to end
+through the engine — eleven gates, every one implementer-then-reviewer through `run_crew.py`, no work
+done around the spine. Four gates took rework rounds; g8 took five passes. Every gate closed on its
+criteria **re-run by me at the gate boundary**, never on the crew's report, and that single habit is
+what produced most of what follows.
+
+**What went well, and why it is worth repeating:**
+- **Re-running the criterion instead of reading the report found six checks that could not fail.** A
+  selector matching zero tests; negative tests green under whole-feature disable; a staleness test
+  firing off the wrong mechanism; an invariant test gated behind the condition it asserts; a gate whose
+  own closing selector collected zero at gate open; and a plan-level postcondition naming a test that
+  has never existed in this repo. Each looked green from the report. None of them was.
+- **Measuring the landing zone instead of assuming it overturned the plan of record.** The plan assumed
+  a ~116-file committed zone. Two arms plus a negative control showed it is not stable — one reworded
+  docstring rewrites the module index that quotes it — and that the 2-file zone is. The control fired,
+  so the measurement could have come back the other way. Two tracked files ship instead of 3,975, and
+  a critic's repo-doubling objection retired outright. This cost about an hour and replaced an
+  argument that would have run all run.
+- **Telling reviewers to find a mutation the author did NOT choose.** Written into two re-review briefs
+  deliberately, because reproducing a falsifier its author designed proves only that the probe works.
+  Both bit. The gs reviewer went further and used it against *me*: it authored a genuine anchor and
+  refuted a triage candidate I had filed.
+- **Supplying already-measured numbers in a relaunch brief.** After a crew died, the replacement brief
+  carried my measurements so it would not re-run an 8.5-minute suite to rediscover them. It finished
+  fast and spent its budget on the actual attack.
+
+**Friction / unclear:** (where I had to improvise, and what fought me)
+- **Three consecutive reviewers were handed a build command that does not exist.** The Commander's
+  stock close-criteria phrasing says `python scripts/code_map/build.py`; the real entry point is the
+  package CLI `python -m scripts.code_map build --root .`. Each reviewer rediscovered it silently
+  because from inside one gate it reads as the Commander knowing something they don't. Worse, the same
+  wrong path had already propagated into my own measurement script, where it would have invalidated a
+  measurement a human ruling depended on. → disposition: `filed as #526`
+- **`git status --porcelain` false-negatives in this repo** under `core.autocrlf=true` plus
+  `.gitattributes` `text=auto`, and it reported a byte-perfect revert as dirty. Reproduced
+  independently by a re-reviewer. Every later handoff carried "verify reverts with
+  `git diff --quiet -- <path>`". It also forced the freshness test to compare newline-normalized text
+  rather than raw bytes. → disposition: `filed as #524`
+- **A crew died silently and nothing surfaced it.** `gs/reviewer/attempt-1` wrote its survey once, then
+  nothing for 75 minutes; a nudge produced nothing. I found it by comparing file mtimes against a stale
+  lease heartbeat. There is no liveness signal for a dispatched crew, so the default failure mode is
+  "the run waits forever and nobody is told." → disposition: `filed as #525`
+- **Concurrent crews share one job temp directory** with generic file names. The g8 reviewer found an
+  earlier gate's `r0`–`r6` finding files already sitting where it was about to write. It noticed; the
+  next crew might not. → disposition: `filed as #525`
+- **Nothing documents how to reuse a survey across rounds of the same gate.** The attempt-4 reviewer
+  reconstructed the append-recheck-then-re-consolidate-with-`--override-reason` convention by reading
+  the survey's own history. → disposition: `filed as #526`
+- **The context governor tripped at orientation cost, not runaway work.** It refused `start` on
+  `gs-integrate` at 17%, on a step that was pure bookkeeping. The refresh-request unblocked it in one
+  move, so it behaved as the designed speed bump rather than a wall — recording it as a calibration
+  observation, not a defect. → disposition: `observed once; not filed`
+- **Worktree isolation refuses compound Bash** — loops, heredocs, `$(...)`, variable-assignment
+  chaining. Every multi-step engine call had to become a small script file. Workable, but it means the
+  natural one-liner is never the available one. → disposition: `worked around throughout; recorded here`
+
+**What I got wrong, stated because the pattern matters more than the instances:**
+- **My gs close criterion was literally unsatisfiable.** `git diff d102c05 -- skills/` can never be
+  empty again, because later gates legitimately moved other files under `skills/`. The implementer
+  caught it, scoped the check to the four cherry-picked paths, amended in-engine with logged authority,
+  and **told me** rather than quietly reinterpreting it. That is the behaviour I want and it should be
+  said out loud.
+- **A triage candidate I filed was refuted by a reviewer who ran the experiment I hadn't.** I claimed
+  the `ids.jsonl` half of the freshness test could not fail. The reviewer authored a real anchor and
+  took it RED, and RED again under direct corruption. The true fact is narrower and less interesting:
+  no repo history has ever exercised it. I recorded the refutation rather than the claim.
+- **Specifying the case invites a fix to the case.** Three consecutive g8 remediations each fixed
+  exactly what its brief named and left the same defect standing elsewhere — and in all three the
+  narrowing was mine. The rule that finally closed it: *branch on the SHAPE, which is fixed and known
+  when the case is written, never on the MEASURED output, which is the thing under test.*
+- **I used the same defective verification method a reviewer disclosed and corrected.** It reconstructed
+  text and compared by splitting on whitespace, which false-positives on strings with no whitespace,
+  then redid it character-exact. I had done the same thing in my own four-shape check.
+- **I polled the wrong result file** and read "RESULT PRESENT" off a different crew's artifact. Caught
+  it by recognising the byte size.
+
+**Crew-reported friction:** (Workflow Feedback harvested at each `gN-integrate`)
+- Present at every gate and folded into the triage candidates rather than duplicated here; the
+  reviewer-side items that were not run-local became #518–#526.
+- The stock close-criteria build path was the single most-repeated crew friction — three reviewers, one
+  gate, each losing time to the same wrong command and none reporting it until the fourth attempt.
+- Crews repeatedly had to rediscover that `git worktree`-style revert isolation is unreliable here and
+  that `git status --porcelain` lies under this repo's line-ending config. Each rediscovered it alone.
+- The most valuable crew-side observation was not a defect at all: the gs reviewer checked the
+  `.gitignore` rule in **both** directions with `git check-ignore` — can it silently start tracking body
+  pages, and can it silently start ignoring the two files that must ship. Neither direction was asked
+  for, and the second one is the one nobody would have missed until it mattered.
+
+**Improvement signals:**
+- **A plan-freeze `--collect-only` check.** Run it on every `pytest -k` postcondition and refuse a
+  zero-collecting selector. Two of this run's six unfailable checks were mechanical and would have died
+  before their gate ever opened. Filed as #518.
+- **Put "find a mutation the author did not choose" in the reviewer template**, not just in briefs a
+  commander remembers to write it into. It bit every time it was used, including against me.
+- **A liveness signal for dispatched crews.** The current floor is "a human notices the mtimes stopped."
+- **Namespace crew scratch paths** by work-id + gate + role instead of relying on whoever notices the
+  collision.
+- **Resolve the entry point from the repo in stock close criteria** rather than assuming a file layout.

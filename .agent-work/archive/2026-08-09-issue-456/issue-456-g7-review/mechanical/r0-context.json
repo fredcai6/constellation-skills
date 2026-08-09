@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r0-context",
+  "mechanical": {
+    "run": "issue-456-g7-review",
+    "project": "constellation-skills",
+    "role": "g7-reviewer",
+    "refusals": 0,
+    "spine-step": "r0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g7-review-r0-context@9abd4640ff5e72657f9231c1b4658921a2c5ad70",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g7-review",
+    "generated_at": "2026-08-08T22:41:52Z"
+  }
+}

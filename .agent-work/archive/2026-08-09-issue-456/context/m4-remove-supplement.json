@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4-remove-supplement",
+  "files": [],
+  "repo_rev": {
+    "commit": "0782ff2b416bd5575992295b2183c91cb5199dab"
+  },
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T07:04:50Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

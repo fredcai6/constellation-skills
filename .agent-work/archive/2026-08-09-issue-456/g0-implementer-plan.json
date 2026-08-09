@@ -1,0 +1,693 @@
+{
+  "work_id": "g0-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-discovery",
+    "m2-cli",
+    "m3-extract",
+    "m4-supplement",
+    "m5-render",
+    "m6-checks",
+    "m7-gitignore-bundling",
+    "m8-falsifiable",
+    "m9-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, then the handoff at .agent-work/issue-456/crew-handoffs/g0-implement.md and the reference prototype. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + prototype loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g0 handoff, gate-spec.json g0, DESIGN_SPEC storage section, and all seven prototype modules. Handoff verified complete: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints, map anchors, required evidence, wiring grep, verification commands, authority, stop conditions and return format are all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-discovery": {
+      "id": "m1-discovery",
+      "title": "Discovery layer: enumerate the mappable corpus, .agent-work/ excluded (TDD)",
+      "imperative": "TDD REQUIRED. Write tests/test_code_map.py first with discovery tests that fail: discover_corpus() returns tracked *.py paths from git ls-files with .agent-work/ excluded, and a test that goes red if the exclusion is removed. Observe them failing (attest c1), then create scripts/code_map/__init__.py and scripts/code_map/discovery.py to make them green. Stdlib only. Do not pin the literal corpus count -- assert the exclusion rule.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: discovery tests written and observed failing before the module exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Two reds observed. (1) Tests written before the module: ModuleNotFoundError: No module named 'scripts.code_map'. (2) Behavioral red: discovery.py implemented with EXCLUDED_PREFIXES = () -- '2 failed, 3 passed', AssertionError listing 141 .agent-work paths leaking into the corpus. Adding the exclusion turned it green: 5 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "discovery tests green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k discovery -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-discovery-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "no defect fixes",
+        "no schema changes",
+        "assert the exclusion rule, never a pinned corpus count"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-discovery-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k discovery -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-cli": {
+      "id": "m2-cli",
+      "title": "argparse CLI: build_parser and main (TDD)",
+      "imperative": "TDD REQUIRED. Write the CLI argument-handling tests first and observe them failing (attest c1): build_parser() accepts the stage subcommands, --root defaults to the repo root, an unknown subcommand exits 2. Then add scripts/code_map/cli.py and scripts/code_map/__main__.py to make them green. The discover subcommand must call discover_corpus so the discovery layer has a real external caller.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "discovery layer green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-discovery complete, 5 tests green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: CLI argument-handling tests written and observed failing before cli.py exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TDD red observed before cli.py existed: 'ImportError: cannot import name cli from scripts.code_map', 1 error during collection. After adding cli.py and __main__.py: 7 passed, 6 subtests passed."
+        },
+        {
+          "id": "c2",
+          "statement": "CLI tests green and `python -m scripts.code_map discover` exits 0",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k cli -q --color=no && python -m scripts.code_map discover --root . > /dev/null"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-cli-2"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "argparse only -- no third-party CLI library"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-cli-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-cli",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-cli-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k cli -q --color=no && python -m scripts.code_map discover --root . > /dev/null",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-extract": {
+      "id": "m3-extract",
+      "title": "Port the extract stage (astx.py) behind the CLI",
+      "imperative": "Test-after allowed. Port .agent-work/issue-456/reference/prototype/astx.py to scripts/code_map/extract.py: replace the hardcoded f1Brainz ROOT and INDEX_DIRS with the discovered mappable corpus, and replace the slice_manifest.json dependency with discover_corpus(). Port the extraction logic verbatim -- do NOT fix D1/D2/D3 and do NOT change the statement schema. Drop the timing fields from the run report. Wire it to the CLI extract subcommand.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "CLI exists",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-cli complete: scripts/code_map/cli.py and __main__.py exist, 7 CLI tests green, discover exits 0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "the extract stage runs over this repo and writes a non-empty statement store",
+          "check": {
+            "kind": "command",
+            "command": "python -m scripts.code_map extract --root . && test -s .code-map/statements.jsonl"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-extract-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "no defect fixes",
+        "no schema changes",
+        "the run report carries no timings"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-extract-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map extract --root . && test -s .code-map/statements.jsonl",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-supplement": {
+      "id": "m4-supplement",
+      "title": "Port the supplement stage behind the CLI",
+      "imperative": "Test-after allowed. Port .agent-work/issue-456/reference/prototype/supplement.py to scripts/code_map/supplement.py, root-parameterized and driven by discover_corpus(). Port it, do not improve it -- gate g3 removes this stage entirely. Drop the timing fields from the run report. Wire it to the CLI supplement subcommand.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "extract stage runs",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-extract complete: extract stage writes 85321 statements over this repo, 0 failures."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "the supplement stage runs over this repo and writes a non-empty supplement",
+          "check": {
+            "kind": "command",
+            "command": "python -m scripts.code_map supplement --root . && test -s .code-map/supplement.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-supplement-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "port it, do not improve it",
+        "the run report carries no timings"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-supplement-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map supplement --root . && test -s .code-map/supplement.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-render": {
+      "id": "m5-render",
+      "title": "Port the render stage and close the end-to-end build",
+      "imperative": "Test-after allowed. Port .agent-work/issue-456/reference/prototype/render_map.py to scripts/code_map/render.py, moving its import-time store loading into a function so importing the module has no side effects. Root-parameterized; title the top index from the repo. Drop the timing fields from the run report. Wire the render subcommand and a build subcommand that runs extract -> supplement -> render end to end and exits 0.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "supplement stage runs",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-supplement complete: supplement stage writes 3489 entities over 110 modules."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "the CLI runs extract -> render end to end on this repo, exits 0, and produces the page tree",
+          "check": {
+            "kind": "command",
+            "command": "python -m scripts.code_map build --root . && test -f map/INDEX.md && test -f map/ids.jsonl"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-render-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "no defect fixes",
+        "no schema changes",
+        "the run report carries no timings",
+        "do NOT commit the map/ page tree -- it is staged at gs"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-render-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map build --root . && test -f map/INDEX.md && test -f map/ids.jsonl",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-checks": {
+      "id": "m6-checks",
+      "title": "Port the print-only diagnostics only as far as keeping the CLI wired",
+      "imperative": "Port checks.py and checks2.py to scripts/code_map/checks.py as one module, only as far as keeping the CLI wired. They are print-only -- no assertions, no exit code -- and gate g1 REWRITES them; do not start that rewrite. Drop the sections whose target is a hardcoded f1Brainz file that does not exist in this repo, and say so in the module docstring. Wire the check subcommand.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "render stage runs",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5-render complete: build runs extract -> supplement -> render end to end, 3600 pages, exit 0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "the check subcommand runs against this repo's stores and exits 0",
+          "check": {
+            "kind": "command",
+            "command": "python -m scripts.code_map check --root . > /dev/null"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-checks-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "do NOT rewrite the checks -- that is g1",
+        "print-only, no assertions, no exit code"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-checks-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map check --root . > /dev/null",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-gitignore-bundling": {
+      "id": "m7-gitignore-bundling",
+      "title": ".gitignore narrow entries and the bundling question resolved on the record",
+      "imperative": "Add three narrow, explicit .gitignore entries -- one each for the statement store, the supplement and the position cache. No blanket scratch rule: .agent-work/ is deliberately TRACKED here. Then resolve the bundling question: scripts/install_constellation.py keeps the install destination FLAT, so a multi-module package with intra-package imports cannot survive bundling. Add the declaration and a guard test that every Python package under scripts/ is declared either installable or non-installable, and that no skill bundle names a module inside a non-installable package. Record the resolution as a written statement in the result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the package exists and the pipeline runs",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "scripts/code_map/ exists as a package and build runs extract -> supplement -> render end to end over this repo."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "the bundling guard test passes and the deliverable paths are not ignored",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -q --color=no && ! git check-ignore -q scripts/code_map/__init__.py tests/test_code_map.py .gitignore"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-gitignore-bundling-1"
+        }
+      ],
+      "constraints": [
+        ".gitignore entries must be narrow and explicit -- one each, no blanket rule",
+        "touch nothing else in install_constellation.py or its test"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-gitignore-bundling-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -q --color=no && ! git check-ignore -q scripts/code_map/__init__.py tests/test_code_map.py .gitignore",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-falsifiable": {
+      "id": "m8-falsifiable",
+      "title": "Prove the exclusion test can go red",
+      "imperative": "Load-bearing evidence. Delete the .agent-work/ exclusion from the discovery layer, run the discovery tests and capture the RED output, assert the mutation actually applied, then restore the exclusion and capture the GREEN output. Paste both runs in the result. Attest c1 with the red run; c2 re-runs green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "discovery layer and its tests are in place",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "discovery layer and its tests are in place: scripts/code_map/discovery.py plus 5 discovery tests in tests/test_code_map.py."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the exclusion test observed RED with the exclusion removed, with the mutation confirmed applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Re-run first-hand this pass, not inherited. Mutation confirmed applied by git diff: -EXCLUDED_PREFIXES = ('.agent-work/',) / +EXCLUDED_PREFIXES = (). RED, whole file: 4 failed, 10 passed, 10 subtests passed -- DiscoveryTests.test_discovery_excludes_agent_work, DiscoveryOnThisRepoTests.test_discovery_on_this_repo_excludes_agent_work, CliDiscoverCommandTests.test_cli_discover_prints_the_mappable_corpus_and_exits_zero, CliBuildCommandTests.test_cli_build_maps_the_corpus_and_not_the_scratch. That is FOUR, not the three the addendum predicted: both CLI tests catch it, discover and build, not just discover. RED on -k discovery alone: 2 failed, 3 passed, 9 deselected; the on-this-repo test listed 141 leaked .agent-work paths, first '.agent-work/archive/2026-08-02-issue-304/evidence/g4_assert_closeout.py'."
+        },
+        {
+          "id": "c2",
+          "statement": "the exclusion test green with the exclusion restored",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k discovery -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-falsifiable-2"
+        }
+      ],
+      "constraints": [
+        "a check that cannot fail is indistinguishable from one that passed",
+        "assert the mutation actually applied"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m8-falsifiable-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m8-falsifiable",
+            "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m8-falsifiable-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k discovery -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m9-close": {
+      "id": "m9-close",
+      "title": "Full suite green, wiring grep, result artifact, local commit",
+      "imperative": "Run the full suite and derive any failure distribution mechanically with --color=no. Run the wiring grep naming every symbol this slice adds, each with a call site outside its own definition, and state the count of external call sites. Re-derive the mappable-corpus number and record what you got. Write the IMPLEMENTER_RESULT to .agent-work/issue-456/crew-handoffs/g0-implement-RESULT.md, commit locally (no push, no PR, no merge), and send the verdict to the commander.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "every implementation slice is closed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0 through m8-falsifiable all read 'complete' in the plan. m8, the last one, closed this pass on a first-hand red/green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "the full suite is green at this gate boundary",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-close-2"
+        },
+        {
+          "id": "c3",
+          "statement": "every new symbol has at least one call site outside its own definition",
+          "check": {
+            "kind": "command",
+            "command": "grep -rn 'discover_corpus\\|build_parser' --include=*.py scripts/code_map/ tests/test_code_map.py | grep -v 'def discover_corpus' | grep -v 'def build_parser' | grep -q ."
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-close-3"
+        },
+        {
+          "id": "c4",
+          "statement": "the IMPLEMENTER_RESULT artifact is written",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/issue-456/crew-handoffs/g0-implement-RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-close-4"
+        }
+      ],
+      "constraints": [
+        "do not push, do not open a PR, do not merge to main",
+        "do not commit the map/ page tree"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m9-close-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m9-close",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-close-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -rn 'discover_corpus\\|build_parser' --include=*.py scripts/code_map/ tests/test_code_map.py | grep -v 'def discover_corpus' | grep -v 'def build_parser' | grep -q .",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m9-close-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/issue-456/crew-handoffs/g0-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m2-cli",
+      "statement": "No gate in gate-spec.json produces a position cache, yet g0 must add a .gitignore entry for one; either a later gate produces it or the line should be dropped before it becomes a stale ignore line."
+    },
+    {
+      "id": "tc2",
+      "from": "m2-cli",
+      "statement": "docs/agents/GLOSSARY.md defines 'corpus' as the installed skills corpus; issue #456 uses it for the mapped source files. A glossary row for 'mappable corpus' would settle the collision."
+    }
+  ],
+  "blockers": [],
+  "refusals": 6,
+  "engine_session": {
+    "session_id": "g0-impl-9febe0be",
+    "status": "released",
+    "claimed_at": "2026-08-07T20:48:13.953663+00:00",
+    "last_heartbeat": "2026-08-07T21:53:00.120250+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-07T21:53:20.880798+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Context loaded; handoff complete. Proceeding to the discovery layer under TDD.",
+      "mechanical": false,
+      "ts": "2026-08-07T20:48:41.985922+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-discovery",
+      "why": "Discovery layer green: corpus = tracked *.py minus .agent-work/. Hermetic synthetic-repo tests plus one rule-asserting integration test; no pinned count.",
+      "mechanical": false,
+      "ts": "2026-08-07T20:51:13.721318+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-cli",
+      "why": "CLI is one argparse entrypoint over six stage subcommands; --root defaults to this repo and resolves the artifact/map dirs at parse time so callers cannot drift. Stage imports are deferred into handlers so parsing does not pay for the extractor. 7 CLI tests green and discover exits 0 against this repo.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:03:32.613990+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-extract",
+      "why": "astx.py ported verbatim to extract.py: the two AST passes, the resolver and every visitor are unchanged, so D1/D2/D3 survive for the gates that own them. Only the edges moved -- the hardcoded f1Brainz ROOT is now a run() parameter, INDEX_DIRS and slice_manifest.json are both replaced by discover_corpus, and the report lost its timing fields. 108 modules indexed, 85321 statements, 0 failures over this repo.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:06:15.082757+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-supplement",
+      "why": "supplement.py ported unimproved -- same eight gap ids, same fields, same walk; g3 deletes this stage by folding the gaps into the statement schema, so improving it now would be work thrown away. Root and file list come from run(root) and discover_corpus; the report lost its timings. 3482 entities over 109 modules, 0 failures.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:07:23.675707+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-render",
+      "why": "render_map.py ported to render.py with its import-time store loading moved into load_stores(), so importing the module costs nothing and a second run against a different root is possible at all. The top index is titled from the git common dir's parent, not the directory name, because a worktree directory is named for the branch. build wires extract -> supplement -> render and exits 0: 3600 pages, 3489 entities, alias_missing 0 over this repo. Two hermetic tests now cover the wiring -- one that every stage produces its artifact, one that scratch never reaches the page tree -- without pinning page content g2/g3 will change.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:09:53.043346+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-checks",
+      "why": "checks.py and checks2.py folded into one module and wired to the check subcommand, print-only and returning 0 -- they assert nothing, so g1 still has its rewrite to do. The prototype's fourth section is dropped and the docstring says why: it spot-checked one hardcoded file of another repo, and the real rule it demonstrated (every top-level def gets a page) belongs in g1 as a corpus-wide check, not as one file's probe.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:11:32.627862+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-gitignore-bundling",
+      "why": "TWO .gitignore entries per the addendum's ruling, not the item's three -- no gate produces a position cache, so that line would be the stale rule this plan exists to remove. Bundling resolved as (b): NON_INSTALLABLE_PACKAGES declares code_map unbundlable because the install destination is flat and flattening strips the package its relative imports resolve against; scripts/hooks/ stays flattenable because its modules import nothing from each other. Four guard tests hold every scripts/ subdirectory to one declaration or the other, and the declaration is falsifiable -- emptying it turned 3 of the 4 red.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:14:46.972471+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-falsifiable",
+      "why": "The exclusion is load-bearing and the test that guards it can fail. Removing it turned 4 tests red, not the 3 predicted -- both CLI tests catch the leak as well as the two discovery tests -- and the mutation was confirmed applied by git diff before the run, so the red is the exclusion's absence and not a broken import. Restoring it returned a clean git status and 5 passed on -k discovery, 14 passed on the whole file.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:26:56.786496+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m9-close",
+      "why": "Gate g0 closes green. Full suite 1706 passed / 2 skipped / 0 failed against a 1688/2/0 baseline -- 18 tests up, nothing red. The one failure in the first run was tests/test_crew_launcher.py asserting PYTHONIOENCODING=='utf-8' while run_crew.py:271 deliberately setdefault-preserves an ambient value; this crew's shell exports utf-8:surrogateescape. Proved by removing the var (74 passed) and restoring it (1 failed). Not this gate's code and filed as a triage candidate. Wiring: 76 new symbols, 178 call sites outside their own definition and outside any self-test, resolved through imports with the AST because a bare-name grep is meaningless here (run/main/_check are defined in dozens of scripts and matched 4535 times). 75 of 76 are wired into production code; NON_INSTALLABLE_PACKAGES has zero non-test consumers, which is the stop condition -- reported for the Commander's confirmation rather than ruled by me, because a non-installable package's correct runtime behavior is to do nothing, so the guard tests are its enforcement point by design. Corpus re-derives to 112 files. The three .gitignore run-report entries were already landed at 5aa4170 and were verified against the ruling, not redone.",
+      "mechanical": false,
+      "ts": "2026-08-07T21:53:00.120223+00:00"
+    }
+  ]
+}

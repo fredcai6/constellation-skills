@@ -1,0 +1,24 @@
+PASS. Independence and load-bearingness both re-verified this run, not just re-grepped.
+
+TEXTUAL INDEPENDENCE: `grep -n "^import render\|^from .render\|^from \. import render\|^import scripts.code_map.render" scripts/code_map/checks.py` -> no match (grep exit 1). The one hit for a bare "render" substring is a docstring comment ("than borrowed from `render.load_stores`"), not an import statement. checks.py's `is_test_module` and `SPLIT_LEGEND` remain independently hand-written, not imported.
+
+LOAD-BEARING: re-ran attempt-1's own divergence attack
+(`.agent-work/issue-456/evidence/g5_reviewer_independence_divergence.py`) against the remediated
+code, unmodified. It mutates ONLY checks.py's copy (adds `if last == "helpers": return True`),
+confirms render.py's copy in the same mutated host is untouched, builds a real fixture where a
+production-looking module named `pkg.helpers` calls `pkg.callee.target`, and runs `check`.
+
+Result, reproduced this run: `check` exits 1 with TWO independent checks catching the divergence,
+same as attempt-1 found --
+  FAIL refs-line-self-consistent: 1 (page titled in a test module but carries no test-defined note)
+  FAIL inbound-attribution: 6 (page says 1 production site / 0 test sites; store says the opposite)
+Two unrelated FAILs also appear (entity-symbol-join, deterministic-rebuild) -- both traced to the
+throwaway fixture's own minimal shape (no source lines to speak of; a scratch `git ls-files` call
+that isn't set up the way the real repo is), not to the divergence attack -- consistent with
+attempt-1's own note on the identical fixture artifacts. Confirmed absent from the real fresh-build
+`check` (7/7 clean, see r3-evidence).
+
+The second copy remains a real, load-bearing independent reading after this edit -- the legend
+reword touched only the two SPLIT_LEGEND string literals, never `is_test_module`'s body in either
+file (confirmed by diff in r1-handoff/r2-scope), so this result was expected rather than assumed,
+and re-running it rather than trusting that expectation is what this item asked for.

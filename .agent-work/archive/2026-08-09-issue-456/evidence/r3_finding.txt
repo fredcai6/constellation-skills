@@ -1,0 +1,47 @@
+PASS. All required evidence present and independently reproduced this run -- not taken on trust.
+
+Full suite (backgrounded per the handoff's own instruction, awaited to completion via the
+notification, output at `.agent-work/issue-456/evidence/g5_rereview_fullsuite.txt`, never polled
+as a buffered file mid-run): `python -m pytest tests -q --color=no` -> 1781 passed, 2 skipped, 672
+subtests passed in 413.71s, 0 occurrences of FAILED/ERROR/failed in the output. Exact match to the
+remediate-RESULT's claim (baseline 1780 + 1 for the new test).
+
+Gate selector (tc38), run by hand with FORCE_COLOR/PYTHONIOENCODING cleared: `python -m pytest
+tests/test_code_map.py -k 'refs or caller or legend' -q --color=no` -> 20 passed, 0 failed. Exact
+match: 19 baseline + the new test, and the selector genuinely discriminates (it was RED before the
+reword per the RESULT's own red-before-green evidence, reproduced structurally by my own r7 attack
+which put a still-overclaiming legend back and watched the exact same test go GREEN when the
+overclaim avoided the literal string it checks for -- i.e., the selector is not a check that can
+only ever pass).
+
+Fresh build then check on the tracked tree: build -> 111 modules, 3753 entities, 3865 pages
+(exact match). check -> 7/7 ok (no-empty-pages, page-accounting, refs-line-self-consistent,
+entity-symbol-join, page-location-matches-content, inbound-attribution, deterministic-rebuild).
+
+measure_split.py's corrected headline: reran it myself against my own fresh build -- 88 / 2341 / 2
+/ 449 / 873 / 0, byte-for-byte match to the claim, "genuinely unused production code: 88 (not the
+naive 2429...)".
+
+Does the evidence actually DEMONSTRATE the behavior, not just reproduce a number? Yes, on both
+fronts this gate closes:
+- The LEGEND now matches the predicate (r10): read side by side, both halves of the reworded
+  sentence are literally true statements about `is_test_module`'s real code, in both files.
+- The +1 is exactly the new test, nothing reclassified (r9): built the pre-remediation tree in a
+  throwaway worktree and diffed the exact page-filename SETS -- the only difference across 3864
+  vs 3865 pages is the one new page. Spot-checked an existing page's bucket is unchanged despite
+  gaining a new caller reference.
+
+The one required-evidence gap, honestly graded rather than smoothed over: the pinning test's
+wording assertion demonstrates less than its surrounding prose might suggest at a skim -- it is a
+literal-string pin, not a semantic one (r7, mutation-proved). This does not fail the item on its
+own: the test's own docstring is honestly scoped to what it actually catches, and the behavioural
+half (the part doing the real regression-guarding work) is a full pin, not narrowed at all. Filed
+as a triage candidate (tc1) under r5, not a required-evidence failure.
+
+CREW_CONTEXT's "assert against behaviour, never against text that describes it" is worth naming
+explicitly here rather than leaving implicit: the wording assertion IS an assertion against
+descriptive text, by necessity -- SPLIT_LEGEND's whole subject matter is the text itself, there is
+no separate "behavior" to assert against for a claim about what a docstring-adjacent string says.
+The behavioural half of the same test is what supplies the actual behavior-level guard (a nested
+tests package still classifying correctly), which is the doctrine's real target and is unaffected
+by the wording assertion's narrowness.

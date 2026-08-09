@@ -1,0 +1,33 @@
+PASS. `git diff --name-only 0e63f208..HEAD` (my own run): exactly `scripts/code_map/checks.py`,
+`scripts/code_map/render.py`, `tests/test_code_map.py` (275 insertions / 6 deletions across the
+three), plus `.agent-work/issue-456/` workbench artifacts (crew-handoffs, evidence scripts,
+execute.json, the implementer's own plan/journal) and `crew-runs.json`. No file outside those
+three source/test files plus workbench scratch was touched -- confirmed by the file list, not
+taken from the RESULT.
+
+checks.py is outside the handoff's literal "render module" wording, but the handoff itself
+assigns tc31 to this gate and predicts closing it may require exactly this file (the handoff's
+own text: "Either close it with a check..."). This is the same class of narrow, named exception
+g3 took for the same module (checks.py owns every check in CHECKS). The diff itself is narrow:
+one new function (`page_location_matches_content`) plus its CHECKS registration -- nothing else
+in checks.py touched.
+
+Specific exclusions, all independently re-verified this run, not taken from the RESULT:
+- `_make_collision_repo`'s INDEX collision (g1's only cross-platform page-accounting
+  falsifier): ran `test_the_invariant_goes_red_when_two_pages_resolve_to_one_file` directly --
+  passes; read the test body -- asserts a nonzero exit, "FAIL page-accounting", and the
+  "pkg.thing" collision text specifically; not vacuous. `assign_page_filenames` / the case-fold
+  naming scheme is untouched by this diff (confirmed by the diff's added/removed lines, which
+  cover none of that code).
+- `OWN_MODULE_NAMED_MUTATION` / `test_refs_lines_are_self_consistent_on_an_intact_map`: ran
+  directly -- passes, green.
+- `entity_symbol_join`'s two independent derivations (`extract.child_sym` vs
+  `checks.SourceScan`): untouched by this diff (checks.py's only new lines are the new
+  function + its registration; render.py's changes are confined to the top-index/tier region,
+  nowhere near entity_symbol_join or the extractor). Ran the check directly against a fresh
+  build -- ok entity-symbol-join, 7/7.
+- Page headers: `loc()` untouched by the diff (confirmed by the diff hunks). Scanned every page
+  under a fresh `map/` build (3840 files) for a `.py:<digits>` pattern in the header region --
+  zero hits.
+
+No scope drift. No blocker.

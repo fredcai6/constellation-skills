@@ -1,0 +1,14 @@
+﻿=== reviewer undesigned attacks: gate g1 ===
+A5 refs-line: renderer emits NO refs line          exit=1 CAUGHT   by=['inbound-attribution']
+A6 refs-line: counts 3 modules, names 1            exit=1 CAUGHT   by=['refs-line-self-consistent', 'inbound-attribution']
+A7 refs-line: names 2 modules, counts 0            exit=1 CAUGHT   by=['refs-line-self-consistent', 'inbound-attribution']
+A8 join: EXTRACT pass mangles the leaf name        exit=1 CAUGHT   by=['entity-symbol-join']
+A9 inbound: every edge counted twice               exit=1 CAUGHT   by=['inbound-attribution']
+A10 inbound: one caller name dropped, count kept   exit=1 CAUGHT   by=['inbound-attribution']
+A11 determinism: artifact stamped with hash('x')   exit=1 CAUGHT   by=['deterministic-rebuild']
+
+--- vacuity isolations ---
+  refs lines in the whole tree: 0
+  refs_line_self_consistent(m) -> []
+  inbound_attribution(m)       -> 3 failures
+  tree_diff(empty, empty) -> []

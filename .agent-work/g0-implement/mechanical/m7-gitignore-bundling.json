@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m7-gitignore-bundling",
+  "mechanical": {
+    "run": "g0-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m7-gitignore-bundling",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g0-implement-m7-gitignore-bundling@de6e9c9594ac09fd1eec6d78079f46d1d67a01ce",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g0-implement",
+    "generated_at": "2026-08-07T21:14:20Z"
+  }
+}

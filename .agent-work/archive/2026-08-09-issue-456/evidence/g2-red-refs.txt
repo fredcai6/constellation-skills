@@ -1,0 +1,20 @@
+FFF                                                                      [100%]
+================================== FAILURES ===================================
+_ RefsAccountingTests.test_a_reader_can_account_for_every_counted_site_from_the_line_alone _
+tests\test_code_map.py:864: in test_a_reader_can_account_for_every_counted_site_from_the_line_alone
+    self.assertIn(
+E   AssertionError: '2 in this module' not found in 'referenced by: 5 sites in 2 modules (pkg.far)' : the line 'referenced by: 5 sites in 2 modules (pkg.far)' counts 5 sites across 2 modules but names 1; a reader cannot tell how many of those sites the unnamed module holds
+_ RefsAccountingTests.test_every_inbound_line_states_what_the_count_includes_and_excludes _
+tests\test_code_map.py:889: in test_every_inbound_line_states_what_the_count_includes_and_excludes
+    self.assertTrue(
+E   AssertionError: False is not true : pkg.callee/near.md: the inbound line 'referenced by: none found' is not followed by a statement of what the count counted, so a reader whose own grep disagrees cannot tell which number is wrong; got ''
+_ RefsAccountingTests.test_the_legend_names_the_predicates_the_count_actually_counts _
+tests\test_code_map.py:914: in test_the_legend_names_the_predicates_the_count_actually_counts
+    self.assertIn(predicate, checks.REFS_LEGEND)
+                             ^^^^^^^^^^^^^^^^^^
+E   AttributeError: module 'scripts.code_map.checks' has no attribute 'REFS_LEGEND'
+=========================== short test summary info ===========================
+FAILED tests/test_code_map.py::RefsAccountingTests::test_a_reader_can_account_for_every_counted_site_from_the_line_alone
+FAILED tests/test_code_map.py::RefsAccountingTests::test_every_inbound_line_states_what_the_count_includes_and_excludes
+FAILED tests/test_code_map.py::RefsAccountingTests::test_the_legend_names_the_predicates_the_count_actually_counts
+3 failed, 43 deselected in 0.82s

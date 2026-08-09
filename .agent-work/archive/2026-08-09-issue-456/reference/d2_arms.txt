@@ -1,0 +1,8 @@
+method in a class                               1776
+module-level function                           1228
+class at module/class level                      334
+closure inside a module-level function            42
+closure inside a method                           31
+
+D2 arm 1 (closure-in-method, symbol drops the method) : 31 occurrences
+D2 arm 2 (class-in-function, named as module-level)   : 0 occurrences  <- fixture-only if 0

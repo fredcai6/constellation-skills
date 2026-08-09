@@ -1,0 +1,83 @@
+{
+  "work_id": "issue-456-g7-review",
+  "diff_ref": "git show 0d1af801 -- scripts/code_map/extract.py scripts/code_map/render.py tests/test_code_map.py (gate g7: authored comment-tag extraction + render, cull test)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, scripts/code_map module docstrings (statement-line shape: {s,p,o,q,ref,hash} plus a plain-dict d payload), skills/constellation-reviewer/references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "tags_in (extract.py) is the longest new function at ~35 lines with a nested while loop, but it holds exactly one responsibility (parse Word: paragraphs from source text into a line->tags map) and is not meaningfully longer or more tangled than anchors_in, the sibling function it mirrors. tag_check, tag_lines, and the load_stores 'tag' interception block are all short (5-15 lines), single-purpose.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "Extractor gains one field (self.tags) and one method (tag_check); no meaningful growth in the class's responsibility count.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "Two real duplications, both self-disclosed by the crew's own comments rather than hidden: (1) tags_in's forward-scan-to-next-real-line loop (`for j in range(i, n): if lines[j].strip() and not lines[j].lstrip().startswith(\"#\"): ...`) is structurally identical to anchors_in's own forward-scan (extract.py, same predicate, same break-on-first-match shape) -- confirmed by reading both functions side by side. (2) tag_check's decorator-aware two-line lookup (`lines = [node.lineno]; if getattr(node, 'decorator_list', None): lines.insert(0, ...)`) is line-for-line identical in structure to anchor()'s existing decorator-aware lookup, and tag_check's own docstring says so explicitly ('Same decorator-aware two-line check as anchor(), for the same reason'). Neither duplication is large (3-6 lines each) or currently error-prone, but both are real, extractable shared logic (e.g. a `_decorator_aware_lines(node)` helper and a `_bind_next_real_line(lines, i)` helper) that a future third caller would otherwise triplicate. Not blocking -- small, self-aware, and each copy is easy to read in place -- but worth extracting the next time either family of function gains a third member.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "tags_in/tag_lines operate on their own parameters and local state. tag_check and the two new visit_Assign/visit_AnnAssign call sites operate on self's own state (self.tags, self.here()), matching the existing anchor()/declare() pattern exactly -- no method reaches into another object's internals more than its own.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "",
+      "override": {
+        "repo_standard": "extract.py's own module docstring, 'Statement line shape: {\"s\",\"p\",\"o\",\"q\":{...},\"ref\",\"hash\"} plus two measurement-only fields', establishes that every statement's payload is carried as a plain dict (the `d` field), never a named type -- confirmed as the pre-existing, repo-wide convention by every other predicate in extract.py (e.g. anchor()'s d={\"span_hash\": h}, described()'s much larger payload dict).",
+        "reason": "The new {\"kind\": ..., \"text\": ...} tag dict is a direct, unremarkable instance of this already-documented, already-universal convention -- it is serialized straight into the statement store's own `d` field and read back the same way in render.py's load_stores. Unlike a genuinely new in-memory shape (e.g. a bare positional tuple invented ad hoc, the kind of thing g6-review flagged in the immediately preceding gate), this is the codebase's one standard way of carrying a statement payload, applied to a new predicate exactly as every other predicate already does it. Flagging it as a smell would penalize following the established convention, not deviating from it."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "`kind` is a bare string ('Rationale'/'Rejected'/'See'), consistent with how every other predicate/object value in this store (p, o, res) is already a bare string throughout extract.py and render.py -- a carried-forward convention, not a new instance of the smell.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "tag_check(self, sym, node) takes exactly the same two parameters as the existing anchor(self, sym, node) it mirrors. tags_in(src) and tag_lines(key) each take one parameter.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The whole diff is one cohesive feature (authored comment-tag extraction and render) touching exactly the three files that shape requires: extractor, renderer, tests -- confirmed by the file list in `git show 0d1af801 --name-only`, no incidental edits scattered elsewhere.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "extract.py changes for one reason (recognize and bind tag paragraphs); render.py changes for one reason (surface bound tags on entity/module pages). Confirmed by reading each diff hunk directly -- neither file mixes an unrelated second reason to change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "All new dict/attribute access is single-level (t['kind'], t['text'], self.tags.get(line), tags.get(key)) -- no chained traversal through multiple intermediate objects.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "The one genuinely broader wiring choice in this diff -- tag_check firing at Assign/AnnAssign in ANY scope, unlike declare()'s existing module/class-only gate -- is justified directly by measured real-corpus evidence stated in the diff's own comment (5 of 6 f1Brainz PR #733 tags sit above function-local assignments), not spec-anticipation of a hypothetical future need. Every new code path is exercised by this gate's own 18 tests -- no unused hook, stub, or dead branch.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "New docstrings and inline comments explain design decisions and their reasoning (the convention-gap resolution for where a tag binds; why the render loop is deliberately branch-free as the cull test's own evidence; why Assign's tag_check call is unconditional on scope unlike declare()) rather than restating what the adjacent code already says in code form. Checked each comment against its adjacent code directly -- none narrates the obvious.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

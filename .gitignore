@@ -30,3 +30,24 @@ junit*.xml
 # Defensive: eval run-dirs are fabricated under the system temp dir (never the
 # repo tree); this only fires if a run is ever redirected into evals/ (#106).
 evals/**/_runs/
+# Rebuilt intermediates of the derived code map (issue #456). Both are
+# regenerated from source by `python -m scripts.code_map build`, so committing
+# them would commit a second copy of the repo that goes stale on the next edit.
+# Narrow by file, not a blanket .code-map/ rule: a later gate may add a store
+# that has to be reviewed.
+.code-map/statements.jsonl
+# The run reports are rebuilt beside the store on every run. Listed one per
+# line for the same reason: a blanket rule would also swallow a store a later
+# gate wants reviewed.
+.code-map/extract_report.json
+.code-map/render_report.json
+# The page tree under map/ is regenerated the same way and mostly stays
+# untracked for the same reason -- committing 4,000+ generated pages doubles
+# the repo and goes stale on every edit. Only the 2-file entry point ships:
+# map/INDEX.md + map/ids.jsonl, measured stable under a body-edit/shape-edit
+# arm pair (.agent-work/issue-456/landing-zone-measurement.md). The
+# `map_tree_freshness` test in tests/test_code_map.py is what keeps those two
+# tracked files honest against the untracked rest.
+map/*
+!map/INDEX.md
+!map/ids.jsonl

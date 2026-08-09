@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "mechanical": {
+    "run": "issue-456-gs-review",
+    "project": "constellation-skills",
+    "role": "gs-reviewer-2",
+    "refusals": 0,
+    "spine-step": "r3-evidence",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-gs-review-r3-evidence@c4f68f4d3e5ac275f9a89d8a8d358b114ef3299f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-gs-review",
+    "generated_at": "2026-08-09T05:06:07Z"
+  }
+}

@@ -1,0 +1,18 @@
+fresh build exit: 0
+body-only descent (re-derived from git history) : 3703 definitions
+fresh one-schema store                            : 3711 definitions
+gained (removed stage could not see)              : 8
+   + scripts.checklist_engine:emit_step_manifest
+   + scripts.code_map.render:run.emit
+   + tests.test_context_manifest:EpisodeContextFieldShape.test_produced_manifest_is_assignable_to_episode_context_field_untransformed.assert_json_native
+   + tests.test_context_manifest:ProducerGuards.test_no_globs_or_filesystem_enumeration_anywhere_in_the_producer.counting_reader
+   + tests.test_context_manifest:ProducerGuards.test_no_globs_or_filesystem_enumeration_anywhere_in_the_producer.explode
+   + tests.test_episode_fields:SnapshotIsFailSoftTests.test_a_throwing_composer_neither_raises_nor_corrupts_the_manifest.boom
+   + tests.test_explorer_templates:CycleSurveyConfiglessRuntime.test_engine_drives_cycle_survey_without_engine_config_file.run
+   + tests.test_install_constellation:InstallConstellationTests.test_global_doctrine_buckets_bundled_per_audience.refs
+lost (store misses what the old rule found)       : 0 []
+
+checking scripts.checklist_engine:emit_step_manifest: recorded at scripts/checklist_engine.py store-line 38
+source text at that line: '    def emit_step_manifest(*_args, **_kwargs):  # type: ignore[misc]'
+nearest shallower enclosing line: 'except ImportError:  # pragma: no cover — only reachable from a partial install'
+page(s) titled exactly this symbol: ['scripts.checklist_engine/emit_step_manifest.md']

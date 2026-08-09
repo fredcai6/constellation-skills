@@ -123,6 +123,14 @@ RECORD_ONLY_ROOTS: dict[str, str] = {
     "tests/fixtures/": "recorded transcripts; editing them would falsify a recording",
     ".agent-work/": "run records and archives",
     "episodes/": "the store itself",
+    "map/": (
+        "derived code map (#456): every line is generated from source by "
+        "`python -m scripts.code_map build`, so it has no authored content and no honest "
+        "fix site of its own — a retired name reaches it only by being quoted out of a "
+        "docstring, and the surface to fix is that docstring. It is also unapprovable by "
+        "the census on its own terms: the census keys on (path, exact line), and these "
+        "lines are rewritten on every build"
+    ),
 }
 
 #: Scope choices rather than record-only roots — a different rationale, so a different

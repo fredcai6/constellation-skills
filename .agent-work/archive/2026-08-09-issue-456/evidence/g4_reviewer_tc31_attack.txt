@@ -1,0 +1,36 @@
+build exit: 0
+BASELINE check exit: 0
+ok   no-empty-pages
+ok   page-accounting
+ok   refs-line-self-consistent
+ok   entity-symbol-join
+ok   page-location-matches-content
+ok   inbound-attribution
+ok   deterministic-rebuild
+passed 7 checks
+
+======================================================================
+ATTACK 1: moved scripts.code_map.discovery/INDEX.md -> scripts.code_map.cli\discovery-relocated-INDEX.md
+check exit: 1
+ok   no-empty-pages
+ok   page-accounting
+ok   refs-line-self-consistent
+ok   entity-symbol-join
+FAIL page-location-matches-content: 1
+      scripts.code_map.cli/discovery-relocated-INDEX.md: titled module 'scripts.code_map.discovery', expected at scripts.code_map.discovery/INDEX.md
+ok   inbound-attribution
+ok   deterministic-rebuild
+FAILED 1 of 7 checks: page-location-matches-content
+
+======================================================================
+ATTACK 2: moved scripts.code_map.discovery\discover_corpus.md -> scripts.code_map.discovery\nested\discover_corpus.md (same module, wrong parent dir)
+check exit: 1
+ok   no-empty-pages
+ok   page-accounting
+ok   refs-line-self-consistent
+ok   entity-symbol-join
+FAIL page-location-matches-content: 1
+      scripts.code_map.discovery/nested/discover_corpus.md: titled entity 'scripts.code_map.discovery:discover_corpus', expected under scripts.code_map.discovery/, found under nested/
+ok   inbound-attribution
+ok   deterministic-rebuild
+FAILED 1 of 7 checks: page-location-matches-content

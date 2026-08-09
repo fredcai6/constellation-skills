@@ -1,0 +1,92 @@
+{
+  "work_id": "g8-remediate",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-remediate"
+  ],
+  "tasks": {
+    "r0-remediate": {
+      "id": "r0-remediate",
+      "title": "Fix defect 2 (D3) \u2014 wrapped docstring summaries",
+      "imperative": "Implement paragraph-based docstring extraction for summaries. Factor _first_paragraph() helper and use at all three summary emission sites. Add break-tests for boundary cases. Verify fix: closing selector passes with increased count, code map checks 7/7, full suite green, work committed.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Wrapped summary fix implemented and tested",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "Closing selector: 8 passing (was 6)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'bom or docstring' -q --color=no"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "Code map checks 7/7 pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m scripts.code_map check --root ."
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "Full suite passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -q --color=no"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c5",
+          "statement": "Work committed; result document written",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Commit 06fbc138 ships remediate fixes; IMPLEMENTER_RESULT written at g8-remediate-RESULT.md"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "no git add -A",
+        "explicit paths only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "completed_at": "2026-08-08T17:00:00Z"
+      },
+      "result": "Defect 2 fixed via paragraph-based extraction helper; break-tests confirm fix; code map checks pass",
+      "finding": null,
+      "evidence": [
+        "06fbc138 commit",
+        "8 passing for bom or docstring selector",
+        "7/7 code map checks"
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "constellation/issue-456/g8/remediate/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-09T00:56:32.673637+00:00",
+    "last_heartbeat": "2026-08-09T00:56:52.453273+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T00:57:13.965868+00:00"
+  }
+}

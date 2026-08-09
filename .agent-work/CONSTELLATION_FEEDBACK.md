@@ -257,3 +257,43 @@ disposition row);
 `.agent-work/issue-419-governor-identity/execute.json` `g1-integrate.c1`, `g2-integrate.c1`,
 `g6-closeout.c1` as finally authored, each of which now names its new tests and, at closeout, its
 required delta; `.agent-work/AGENT_FEEDBACK.md` 2026-08-05 entry for issue-419-governor-identity.
+
+## 2026-08-09 — issue-456-code-map — third recurrence of the vacuous-check family, and the first with a mechanical fix that is cheap enough to just ship
+
+**Lesson:** `lesson:falsify-a-check-against-a-decoy-before-trusting-it`
+
+**What recurred.** Six checks that could not fail, across one run, from a **third** commander working
+from the same templates. Two were selector-shaped and would have been caught by a machine:
+
+- `g5-integrate` c1 selected `-k 'caller_split'` — **no test in this repo has ever carried that name.**
+  Zero collected.
+- `gs-integrate` c1 selected `-k 'map_tree_freshness'` at a gate where that test **did not yet exist**.
+  Zero collected, so the criterion could only ever exit 5.
+
+Four were semantic and would not: g6's negative tests stayed green under whole-feature disable; g7's
+staleness test fired off the wrong mechanism; g8 pass 4's invariant test was gated behind the very
+condition it asserts; and g6's staleness path is unreachable from the routine pipeline at all
+(`check` never calls `render.py`, and deterministic-rebuild builds into fresh scratch dirs so the
+previous-store read always sees nothing).
+
+**What is new, and why it is worse than the #419 recurrence.** `tc4` sat in the **frozen plan's own
+postcondition**, not in a crew's work. Every prior instance had a reviewer looking at it from at least
+one angle. Nobody reviews the plan's postconditions, so it survived until the gate tried to close.
+
+**The mirror form, which the family has not previously recorded.** The same blindness produces criteria
+that can never **pass**. This run shipped one: `git diff d102c05 -- skills/` is empty — unsatisfiable
+the moment later gates legitimately moved other files under `skills/`. It was caught by the
+*implementer*, who scoped the check to the four intended paths, amended in-engine with logged
+authority, and reported it rather than reinterpreting it quietly. Worth naming because the family has
+so far been framed as "checks that cannot fail", and half the defect is the other direction.
+
+**Concrete upstream fix, unchanged in shape from the #419 export and now filed.** Run
+`pytest --collect-only` against every `pytest -k` postcondition at plan-freeze time and refuse to
+freeze any selector that collects **zero** tests. That is a handful of lines, needs no semantics, and
+would have killed two of this run's six before either gate opened. Filed as **#518**.
+
+The four semantic instances are not addressed by that check and are not claimed to be. What caught
+them was a discipline rather than a mechanism, and it is worth writing into reviewer briefs directly:
+**reproducing a falsifier its author designed proves only that the probe works — attack with a mutation
+the author did NOT choose.** Written into two re-review briefs on this run deliberately; both bit. One
+of them was turned against the Commander, refuting a triage candidate he had filed.

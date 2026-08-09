@@ -1,0 +1,1162 @@
+{
+  "work_id": "issue-456",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "init",
+    "context",
+    "understand",
+    "plan",
+    "execute",
+    "reconcile",
+    "triage",
+    "review",
+    "feedback",
+    "archive"
+  ],
+  "tasks": {
+    "init": {
+      "id": "init",
+      "title": "Set up work area",
+      "imperative": "Run: python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/init_work_area.py issue-456. This same script now ALSO optionally materializes spine.json from a spine template with its placeholders resolved, via --spine <spine-template> [--skill-dir <path>] (shipped in issue-73 g1) \u2014 use it to instantiate spine.json rather than hand-substituting placeholders, passing the commander skill directory to --skill-dir so the commander-skill-dir placeholder resolves to an absolute path (it auto-detects when omitted). Start the work branch per repo guidance. Claim the engine session lease on this spine so a resumed or duplicated parent cannot concurrently drive it: <engine> claim --session-id commander-issue-456 --claimed-by commander --worktree . (if a stale prior lease blocks you, re-run with --force --reason \"resuming this run\"). From here on, pass --session-id commander-issue-456 on every mutating engine call against this spine.",
+      "preconditions": [
+        {
+          "id": "c0",
+          "statement": "this Commander is operating in the worktree it was provisioned into, not the shared checkout or another agent's worktree -- proven, not asserted",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_worktree_isolation.py --here C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area scaffolded",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/init_work_area.py issue-456"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-init-2"
+        },
+        {
+          "id": "c2",
+          "statement": "engine session lease claimed for this spine (commander owns the state)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-init-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_worktree_isolation.py --here C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-init-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/init_work_area.py issue-456",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "context": {
+      "id": "context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/engine-config.json. Where the repo carries no docs/agents/ overlay at all (e.g. a skill-source repo), substitute the closest repo doctrine you can find (README, CONTRIBUTING, top-level docs) and record the substitution \u2014 do not treat those paths as guaranteed to exist. Before you open any source file, resolve and read the map input: run python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/map_orient.py orient --root C:/Programs/constellation-skills/.claude/worktrees/issue-456 --work-id issue-456. On RESOLVED, read the entrypoint it names and the packets, overlays and decision anchors it routes you to for the area the ask touches, and treat every later source read as confirming a frame the map already gave you rather than building one out of code. On DEGRADED, re-run the same command with --substitute PATH (what you read instead of a map \u2014 it is hash-pinned into the receipt) --unmapped TEXT (what stayed unmapped) --escalation TEXT (what you are escalating, and to whom), and get that on the record before any source read: degraded is a declared reading, never a licence to start from code. The tool probes a fixed fallback order \u2014 README.md, AGENTS.md, CLAUDE.md, a docs/ index \u2014 and labels a substitute it found there as verified by the filesystem rather than merely asserted by you. The anchor of this instruction is the point: 'before you open any source file' is an act you cannot postpone, whereas a map-first imperative anchored to a late artifact (the gate plan, which is authored at the END of a long run) is satisfied by a run that crawls source for fifty calls, reads the map afterwards, and has complied exactly \u2014 that is measured behaviour, not a hypothetical. This read is the map-first input the mission frame and plan are built from. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context, glossary, engine config loaded; current map read for the affected area where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "the orientation contract is satisfied -- RESOLVED, or a DEGRADED verdict discharged with hash-pinned substitutes AND the unmapped gap AND an escalation -- recorded at the context step, which precedes understand and plan. Ordering itself is NOT machine-verifiable from a receipt: nothing in a receipt distinguishes a run that resolved the map first from one that crawled fifty files and then wrote an identical receipt. Ordering lives in this step's imperative ('Before you open any source file') and in the report-only ordering audit, never in this check. This gate is a regression floor so map-IGNORING cannot silently return; it is NOT the fix for map-LATENESS (measured sensitivity 0/4, specificity 0/1). Gate-vs-report is a flag flip: adding --report-only to 'python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills/.claude/worktrees/issue-456 --work-id issue-456' turns this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills/.claude/worktrees/issue-456 --work-id issue-456"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-context-1"
+        }
+      ],
+      "context_refs": [
+        {
+          "root": "skill",
+          "path": "references/global-orchestrator.md",
+          "required": true
+        },
+        {
+          "root": "skill",
+          "path": "references/global-everyone.md",
+          "required": true
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/GLOSSARY.md",
+          "required": false
+        },
+        {
+          "root": "repo",
+          "path": "docs/agents/engine-config.json",
+          "required": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/map_orient.py verify-orientation --root C:/Programs/constellation-skills/.claude/worktrees/issue-456 --work-id issue-456",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "understand": {
+      "id": "understand",
+      "title": "Understand the ask",
+      "imperative": "In your own context (interactive: the interrogator reaches the human), load constellation-interrogator and drive interrogation.json with the request, context, and commander starting questions; frame the ask map-first against the affected capabilities, structural anchors, and governing constraints/decisions read at context, and flag any low-confidence/stale/disputed map area the ask depends on. Save the consolidated problem statement. Confirm it with the human. In delegated mode (running from an Admiral launch order, no reachable human), reconcile the ask against the frozen launch order instead of interrogating a human, and satisfy c1 by attaching a user-decision evidence item citing the launch order (attach understand --type user-decision --field cite='LAUNCH_ORDER:Mission'); take a genuine gap to the Admiral \u2014 float a decision outside latitude, or query for missing context \u2014 per Stop Conditions. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "baseline context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Shaped-design intake: issue #456 cites the explore-code-map DESIGN_SPEC. Lifted to .agent-work/issue-456/reference/DESIGN_SPEC.md and verified mechanically -- 'py scripts/verify_spec_confirmed.py .agent-work/issue-456/reference/DESIGN_SPEC.md --phase confirm' exits 0: Status CONFIRMED, confirmed-by Tommy (Fred/fredcai6) 2026-08-07, all 26 critic dispositions non-empty, no UNCONFIRMED marker. Upstream exploration is closed and its lease released."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "problem statement and protected intent confirmed",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-understand-1",
+          "attested": {
+            "evidence": "e-understand-1",
+            "note": null
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "interrogation.json",
+      "status": "complete",
+      "status_detail": {
+        "blocker": "HARD context trip (governor: CONTEXT 16% >= hard). The engine BLOCKS advance and instructs 'hand off now; do not keep working'; refresh-request e-understand-2 is filed against seam=understand (why_ref w-2). The gate's own work is COMPLETE -- both postconditions satisfied, c1 attested via e-understand-1, interrogation consolidated RESOLVED and rail-verified. Nothing remains but the advance itself, which the trip forbids. This is the sanctioned reach-up idle, not an abandoned run: the next actor is a fresh Commander the human relaunches, not a background job to poll.",
+        "authority_needed": "human",
+        "next_action": "Tommy relaunches a fresh Commander in C:/Programs/constellation-skills/.claude/worktrees/issue-456. It re-claims lease commander-issue-456 idempotently (same id, not a takeover), cold-starts from current, then: resume understand --reason 'fresh agent after context refresh', advance understand, and proceed to plan (ten gates: gate 0 CLI/discovery + the nine issue gates, critic-reordered).",
+        "resume_reason": "fresh agent after context refresh: session compacted, cold-started from current + DIGEST; understand's work was already complete (2/2 met, c1 attested via e-understand-1 carrying Tommy's four rulings) and only the advance was forbidden by the HARD trip"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "decision": "Tommy ruled the four open decisions and signed off joint understanding",
+            "scope": "all 9 issue gates plus gate 0 CLI/discovery",
+            "home": "scripts/code_map package + tests/test_code_map.py",
+            "execution": "crew gates; standing no-Agent instruction overridden by the human",
+            "shipping": "cherry-pick skills diff onto this branch; push and full PR pre-approved; merge NOT approved",
+            "record": ".agent-work/issue-456/interrogation-record.json"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-understand-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "understand",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "plan": {
+      "id": "plan",
+      "title": "Author the gate plan",
+      "imperative": "Map-first: BEFORE authoring execute.json, produce a mission frame from the map input the context step resolved, using templates/MISSION_FRAME.template.md (intent; affected capabilities; relevant examples/events; structural anchors; governing constraints/assumptions; decision anchors and decision pressure; claims/evidence surfaces; map confidence/staleness/disputes; out of scope). Write it to .agent-work/issue-456/MISSION_FRAME.md \u2014 that exact path is what the c6 gate reads, so a frame parked anywhere else reads as no frame at all. For a trivial local/mechanical change where the map adds nothing, shrink or skip the frame and say so in its intent; c6 is waivable, so take that escape as a RECORDED waiver (<engine> waive plan --cond c6 --authority human --reason '...') rather than as a silent skip. The c6 gate runs map_orient.py verify-frame over that file: every anchor id the frame cites must exist in the map inventory the context step resolved, or \u2014 when context came back DEGRADED \u2014 must be one of the substitutes the receipt hash-pinned there, so the frame is compared against a committed prior declaration instead of a same-breath assertion. Know what that check is and is not, and do not overclaim it: it is a regression floor so map-IGNORING cannot silently return, not the fix for map-LATENESS. Measured against this epic's baseline five runs it has sensitivity 0/4 and specificity 0/1, and it inherits the late-anchor defect it was built next to, because anchors-in-a-late-frame is compliance without sequence. The load-bearing map-first anchor is at the context step ('before you open any source file'), which is why verify-orientation is gated there and verify-frame is gated only here. Do NOT 'fix' that asymmetry by also running verify-frame at context: no frame exists at context \u2014 the step runs before understand and plan \u2014 and the only way to make it pass there is to let an ABSENT frame pass, which is exactly the refusal the whole check is built on. If verify-frame ever has to be context-safe, give it a step-scoped mode; never a vacuous pass. For any low-confidence/stale/disputed map area the run depends on, alter the plan accordingly: add a scout/verification gate or surface it to the human as a decision \u2014 never author gates that silently trust an unverified map. Surface durable-structure choices as decision candidates per the skill's Decision candidates section rather than choosing alone. Then author the gate plan into execute.json: each gate the smallest reasonable bite, with close criteria, required evidence, and an anchors block cut from the frame. Before the plan-approved checkpoint run plan-alternatives (parallel gate-plan candidates under distinct constraints, via the references/design-it-twice-brief.md contract) and a cold plan critic (reads the candidate plan + mission frame only, no authoring context); both bias-to-yes \u2014 any skip is surfaced as a named untaken road \u2014 and the panel-vs-single choice is surfaced to the human at plan approval. Get the human to approve it. In delegated mode, satisfy c3 (plan approved) by attaching a user-decision evidence item citing the launch order's frozen plan and scope (attach plan --type user-decision --field cite='LAUNCH_ORDER:Mission'); surface a plan-invalidating discovery to the Admiral rather than blocking on the human. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "ask confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Ask confirmed with the live human. .agent-work/issue-456/interrogation-record.json is consolidated RESOLVED and passes scripts/verify_interrogation.py (exit 0): 3 facts each carrying code_evidence, 4 decisions each carrying a verbatim human_answer, plus a signoff naming Tommy (repo owner, the Commander's principal). The rail mechanically refuses a resolved decision with no human answer, so the fact/decision split held. Tommy overrode the Commander's own scope recommendation in that same reply, which evidences an independent read rather than an assent token. Understand closed 2/2 with c1 attested via e-understand-1."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "mission frame produced from the current map (or explicitly skipped as trivial) where architecture artifacts exist",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Mission frame written to .agent-work/issue-456/MISSION_FRAME.md and verified by the c6 command check: map_orient.py verify-frame returns FRAME-OK, 0 problems, exit 0. Built honestly for DEGRADED-NO-MAP: it cites the two hash-pinned substitutes (DESIGN_SPEC 1200bbed, ORCHESTRATOR_CONTEXT 2f79929e) and deliberately cites ZERO map anchor ids, because none exist -- inventing one would be a same-breath assertion, which is exactly what the check refuses. Not skipped as trivial: this run stands up a new package and a ten-gate sequence."
+        },
+        {
+          "id": "c2",
+          "statement": "execute.json authored, one bounded issue, gates carry anchors cut from the frame",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute.json authored at .agent-work/issue-456/execute.json: 34 items across 11 gates, generated from a compact spec by gen_execute.py so the 11 implement/review/integrate triples cannot drift by hand-editing. Verified loadable and drivable: the engine's current verb returns ACTIVE e0-context with its postcondition. Every gate carries close criteria, required evidence, a distinct verification command (full suite plus its own selector), and an anchors block cut from the frame. Ownership coverage now closes -- gs owns the four skills files and the map tree, g0 owns the package-layout decision-class, so the one-gate-per-file check the cherry-picked commander-core.md itself adds would pass. AUTHORED UNDER TWO STATED ASSUMPTIONS pending Tommy at the c3 checkpoint: Shape B (baseline gate placed after the last render-changing gate, per critic F1) and map-tree-generated. Both are cheap to override -- the file regenerates from the spec in seconds. All nine issue gates are covered; Shape B reseams, it does not drop scope."
+        },
+        {
+          "id": "c3",
+          "statement": "plan approved",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-2",
+          "attested": {
+            "evidence": "e-plan-2",
+            "note": null
+          }
+        },
+        {
+          "id": "c4",
+          "statement": "plan-alternatives run BEFORE the plan freezes (parallel candidates under distinct constraints converging to one recommendation), or the skip surfaced as a named untaken road",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Plan-alternatives RUN but NOT DELIVERED, recorded honestly rather than smoothed over. Three candidates were dispatched in parallel under distinct named constraints (smallest-diff, most-testable, best-seam-placement) per skills/_shared/design-it-twice-brief.md, and were sent two rounds of mid-flight corrections. None returned. The brief at .agent-work/issue-456/design-it-twice-plan.md carries: the one thing designed twice, the panel-of-3 rationale surfaced for the human to overturn, three named untaken roads (ports-and-adapters/max-flexibility as interface-shape constraints on a plan-phase run; common-caller-first, whose caller is already built and live; a no-crew candidate, which the human already closed), the framing block presented to the human WHILE the agents ran including the explicitly-not-a-proposal sketch, and now a status section stating what the missing panel arm costs. The convergence that did happen was Commander draft vs cold plan critic -- a real adversarial pass (15 findings, 4 blocking, several verified against the repo) but a critique of one candidate, not a comparison of three. The human is told this explicitly at the checkpoint and may re-run the panel before freezing."
+        },
+        {
+          "id": "c5",
+          "statement": "cold plan critic run on the converged candidate plan + mission frame (after alternatives, before plan approval), findings triaged by the human; panel-vs-single choice surfaced at plan approval",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Cold plan critic run and its findings triaged by the human. Full record with per-finding dispositions at .agent-work/issue-456/cold-plan-critic.md: 15 findings, 4 blocking. Ten were folded in by the Commander without needing a ruling (per-gate commands, full-suite runs at every boundary, no absolute-count thresholds, corrected installer hazard, corrected ownership-coverage claim, inlined falsifiers, and three assertion-leaning spots in the frame). The five that changed gate count or scope were put to Tommy as two plain questions and he ruled both: the g1 restructure (F1/F14) as Shape B, and the map-tree ownership (F3/F9/F10) as generate-and-commit. The panel-vs-single choice was surfaced with them -- panel of 3, 2 of 3 delivered, best-seam-placement recorded as the one untaken road. The critic's own error is recorded alongside its findings: its replacement D2 numbers shared the Commander's root mistake, and the panel independently corrected both."
+        },
+        {
+          "id": "c6",
+          "statement": "the mission frame at .agent-work/issue-456/MISSION_FRAME.md cites anchors that resolve against the map the context step oriented on (or, when context degraded, against the substitutes the receipt hash-pinned) \u2014 an ABSENT frame REFUSES and never vacuously passes. A regression floor against map-ignoring, NOT a check for map-lateness; waive it for a genuinely trivial change so the escape is recorded. Gate-vs-report is a flag flip: append --report-only to turn this gate into a non-blocking report without rewiring the step.",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills/.claude/worktrees/issue-456 --work-id issue-456"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": true,
+          "satisfied_by": "e-plan-5"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "blocker": "HARD CONTEXT TRIP AT 32%, refresh requested (e-plan-4). This is NOT unfinished work: plan is COMPLETE with all six postconditions met -- c1 mission frame (FRAME-OK), c2 execute.json (34 items, 11 gates, verified drivable), c3 plan approved by Tommy (e-plan-2), c4 plan-alternatives (panel delivered 2 of 3), c5 critic findings triaged, c6 command check passing. The ONLY forbidden action is the advance itself, which the governor blocks by design so work hands off at a seam rather than being lost to a runaway. Handoff digest is attached as e-plan-3 by hand, because defect tc1 means advance --why is the only verb that writes a digest and it is exactly the verb a hard trip blocks -- so the DIGEST line still describes the context step and must NOT be trusted. All work committed and pushed to origin/issue-456/code-map through f9c0739; working tree clean.",
+        "authority_needed": "parent agent",
+        "next_action": "Tommy starts a fresh Commander in C:/Programs/constellation-skills/.claude/worktrees/issue-456. It re-claims lease commander-issue-456 idempotently (same id, NOT a takeover), cold-starts from current, and READS e-plan-3 for the real digest. Then: resume plan --reason 'fresh agent after context refresh', advance plan, and start execute at e0-context. Crews dispatch through scripts/run_crew.py --dispatch external --verify-result after scripts/recover_crews.py issue-456 reports clean. execute.json regenerates from gate-spec.json via gen_execute.py if a gate needs reshaping. Push and a full non-draft PR are pre-approved; MERGE TO MAIN IS NOT.",
+        "resume_reason": "context refreshed by compaction: gauge fell 33% -> 5.8% (.agent-work/issue-456/gauge.json, observed 2026-08-07T20:14:29Z); refresh-request e-plan-4 satisfied, digest handed over in e-plan-3"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "note",
+          "payload": {
+            "text": "CORRECTION to the c4 attestation, which said the plan panel was RUN but NOT DELIVERED. It delivered after that attestation was written: 2 of 3 candidates returned complete. smallest-diff and most-testable both landed; best-seam-placement went idle without delivering and is the one genuine untaken road. The c4 note is therefore stale in its headline though correct at the moment it was written; the accurate record is .agent-work/issue-456/design-it-twice-plan.md as of commit 9619ae5. Material outcome: the panel found a D2 arm that neither the Commander nor the cold critic reached (visit_ClassDef has no enclosing-chain branch; class-in-function has ZERO occurrences here so it needs a purpose-built fixture), and both candidates independently established that the top-index falsifier cannot fire on a 103-module corpus. Both are folded into gate-spec.json and execute.json is regenerated."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "user-decision",
+          "payload": {
+            "ruling": "PLAN APPROVED by Tommy, both questions ruled in one reply. (1) Lock the numbers later -- Shape B, the baseline gate placed after the last render-changing gate. He added a governing constraint that is NOT merely approval: 'those trip wires should be useful, not sending us down rabbit holes or driving over unnecessary speed bumps.' Folded into the baseline gate as a hard constraint: a threshold earns its place only if tripping it means something is actually wrong, must not fire on ordinary healthy change, and must state what a human should DO when it fires. Prefer few sharp tripwires over many twitchy ones. (2) Generate and commit the map tree -- 'yes to making the map, that's long over due.' He also named a KNOWN DEFICIENCY: a lot of the real connections in this repo are not in the code, they are in how skills are used, which a pure AST pass cannot see. Ruled not-now and not-a-blocker: 'if we can just get the actual code mapped, that's a win good enough for now.' Recorded in the mission frame as a known deficiency rather than an untaken road, with two obligations: do not overclaim coverage, and do not widen scope to chase it."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-3",
+          "type": "note",
+          "payload": {
+            "digest": "HANDOFF DIGEST (written as a note because of defect tc1: a hard context trip blocks advance, and advance --why is the ONLY verb that writes the digest a fresh agent cold-starts from -- so the brief goes stale exactly at handoff. Read THIS, not the DIGEST line, which still describes the context step). PLAN IS APPROVED AND COMPLETE: all six postconditions met. Tommy ruled both open questions. (1) Lock thresholds LATE -- Shape B: the baseline gate sits after the last render-changing gate, because thresholds committed early get edited whenever a later gate reddens them. His governing rule: a tripwire must be USEFUL -- it earns its place only if tripping means something is actually wrong, must not fire on ordinary healthy change, and must state what a human should DO when it fires. Few sharp, not many twitchy. (2) GENERATE AND COMMIT the map tree, owned by the final gate with the skills cherry-pick. KNOWN DEFICIENCY he named: most real connections here are in how skills are used, not in code; a pure AST pass cannot see them. Not now, not a blocker; do not overclaim coverage, do not widen scope. THE ONLY REMAINING ACTION ON plan IS THE ADVANCE ITSELF. Then: start execute at e0-context. Crews dispatch via scripts/run_crew.py --dispatch external --verify-result, after scripts/recover_crews.py issue-456 reports clean (it did). execute.json has 34 items across 11 gates and regenerates from gate-spec.json via gen_execute.py in seconds. Branch issue-456/code-map is pushed through 671e0a2, working tree clean. Push and full PR are pre-approved; MERGE TO MAIN IS NOT."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-4",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "plan",
+            "why_ref": "e-plan-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/map_orient.py verify-frame --root C:/Programs/constellation-skills/.claude/worktrees/issue-456 --work-id issue-456",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "execute": {
+      "id": "execute",
+      "title": "Execute the plan",
+      "imperative": "Before entering this step: ensure context headroom (run a harness compaction command if one is exposed, else rely on harness auto-compaction \u2014 either is fine) and reload the constellation-commander skill into this context, confirming it is active; this satisfies p1. Then, before this step and before EACH detached dispatch, (re)write the crash-resume state note at .agent-work/issue-456/STATE_NOTE.md (step \u00b7 slug \u00b7 next command \u00b7 PID \u00b7 expected artifact) from .agent-work/templates/STATE_NOTE.template.md, or the bundled skills/workbench/templates/STATE_NOTE.template.md when the project has no .agent-work/templates/ overlay \u2014 the PID changes per detach, and the engine refuses to start execute until it is filled (precondition p2). Then drive execute.json gate by gate in this conversation using this skill's gate execution instructions. Dispatch subagents only for the implementer and reviewer tasks within each gate, and NEVER hand-launch a crew: run every implementer/reviewer dispatch through python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/run_crew.py (foreground/blocking, durable registry, result-artifact verification). Before this step and before EACH crew dispatch, run python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/recover_crews.py issue-456 and only launch when it reports no unresolved running/resumable/conflicting crew for that work-id/gate/role/worktree; recover (resume) or explicitly abandon/relaunch any it flags. If a gate proves the plan wrong, surface the decision to the user before continuing. In delegated mode, surface a plan-invalidating discovery to the Admiral (float it) per the commander skill's Delegated/autonomous mode, rather than blocking on the human.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Context headroom restored: harness compaction ran; gauge.json fell 33% -> 5.8% (observed 2026-08-07T20:14:29Z). Commander doctrine reloaded into this context: references/commander-core.md (146 lines, incl. Executing a gate + Mission frame + Architecture bookend) and references/crew-dispatch.md (26 lines, run_crew.py wrapper + external backend + recovery vocabulary) both read this turn; SKILL.md is resident. Plan approved at e-plan-2 (Tommy, two rulings)."
+        },
+        {
+          "id": "p2",
+          "statement": "crash-resume state note written before any detached dispatch (step, slug, next command, pid, expected artifact)",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_state_note.py issue-456"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every gate closed with integrated evidence",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All eleven gates are closed with integrated evidence: g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs. Every gate ran implementer then reviewer through run_crew.py, and every one closed on a reviewer APPROVE with the close-criteria command re-run at the gate boundary rather than taken on report.\n\nVerified at the final boundary: full suite 1840 passed / 2 skipped / 701 subtests / 0 failed, exit 0; `-k map_tree_freshness` 2 passed, exit 0; `python -m scripts.code_map build --root .` then `check --root .` 7/7, exit 0; `git ls-files map/` returns exactly map/INDEX.md and map/ids.jsonl.\n\nThe theme this step kept turning up is checks that cannot fail, hit at g5, g6, g7, g8 and again at gs, where the gate's own closing selector collected zero tests at gate open. Each was caught by re-running the criterion rather than trusting the report, and each was fixed before the gate closed. The mirror form appeared once in my own work: a close criterion that could never pass.\n\nTwo errors I own and carry to feedback. My gs close criterion was literally unsatisfiable. And my tc20 was refuted by the reviewer, who authored a real anchor and took the assertion RED; the true fact is narrower, that no repo history has ever exercised it.\n\nThe one decision that changed the plan: the landing zone was measured rather than assumed, with a negative control. The 116-file zone is not stable; the 2-file zone is. Two tracked files ship instead of 3,975."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": "execute.json",
+      "status": "complete",
+      "status_detail": {
+        "blocker": "Commander context exhausted at a clean seam. g6's BUILD is complete, Commander-verified and pushed; g6 is NOT closed -- it still needs its review. Seven of eleven gates are CLOSED (g0 g1 g2 g3 g4 g5 gb).\n\nRESUME: re-claim lease commander-issue-456 idempotently (same id, NOT a takeover, no --force), then resume execute, then read .agent-work/issue-456/STATE_NOTE.md, which is current and carries everything below in more detail.\n\nNEXT ACTION: attest and advance g6-implement's c1 (artifact implementer-result, evidence path .agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md; g6-implement.p1 is already attested), then WRITE the g6 review handoff and dispatch it -- run_crew.py --dispatch external --work-id issue-456 --gate g6 --role reviewer --model sonnet. Then g6-integrate on an APPROVE, then g7, g8, gs, then reconcile, triage, review, feedback, archive. RELEASE THE LEASE LAST.\n\nG6 BUILD STATE: stale-tag detection via extract.span_hash, a normalised AST-subtree hash (ast.dump, docstring excluded) that is immune to reindentation, wrapping and blank lines BY CONSTRUCTION. extract.run diffs old vs new span hashes by slug and emits stale-anchor; render surfaces report[stale_tags] in render_report.json and prints an advisory line without failing the build. Verified: suite 1805 passed 2 skipped 683 subtests 0 failed; selector -k stale_tag 12 passing where it was 0 by design; build then check 7/7 exit 0.\n\nBUILT AGAINST A FIXTURE because the real tag surface does not exist yet -- g7 is the comment-tags gate and comes after. Explicitly permitted and stated. G7 MUST WIRE THE REAL TAG-TEXT SURFACE INTO THIS MECHANISM.\n\nCLOSING SELECTORS for the remaining gates, already scanned against the correct file (tests/test_code_map.py, NOT the whole tests/ dir -- that was Commander error #7): g7 -k comment_tags collects 0 BY DESIGN (spec for a test g7 must create), g8 -k bom or docstring collects 3, gs -k map_tree_freshness collects 0 BY DESIGN. State the exact selector in every remaining handoff -- g5's trap was a crew naming its tests differently from the plan's selector.\n\nCANDIDATES: run-wide total is now tc1-tc49. execute.json has its OWN counter and printed the last four as tc4/tc5/tc6 -- triage must not double-count. tc47 (a gate's own postcondition could only ever fail), tc48 (a pin against one literal, not the defect class), tc49 (a dead constant duplicating a live docstring).\n\nAUTHORITY: push and a full non-draft PR are PRE-APPROVED. MERGE TO MAIN IS NOT. Never force-push.",
+        "authority_needed": "parent agent",
+        "next_action": "",
+        "resume_reason": "Blocker cleared: gs was the last gate and it closed. All 11 gates complete in execute.json with integrated evidence."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_state_note.py issue-456",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "note",
+          "payload": {
+            "topic": "tc3 disposition: FIXED NOW",
+            "detail": "tc3 is PROVEN and FIXED on this branch. PROOF (not hypothesis): same tree, same commit, only the environment differs -- with FORCE_COLOR=3 set, tests/test_mutation_floor.py gives 10 failed / 4 passed, every one a spurious HARNESS ERROR; with FORCE_COLOR removed, 14 passed. MECHANISM: run_floor() spawns an INNER pytest inheriting the caller's env; pytest honours FORCE_COLOR, so an ANSI colour code lands between 'FAILED' and the node id, and failed_nodes()'s regex at line 255 matches nothing -- so every KILLED mutant is misreported as a harness error. The check inverts: it goes red precisely when the mutation floor is working. Note --color=no on the OUTER pytest does NOT help, because the inner subprocess is a separate process that re-reads the env. FIX (2 lines, tests/test_mutation_floor.py:run_floor): pop FORCE_COLOR from the child env and pass --color=no to the inner argv, belt and braces. VERIFIED by re-running the failing command in the failing condition -- FORCE_COLOR=3 still set, 14 passed. WHY FIXED NOW rather than filed: the constraint 'the FULL suite must be green at this gate boundary' (critic F6) applies at all 11 gate boundaries, so a false red would have cost every crew a diagnostic detour into another issue's test file, 11 times. That is exactly the rabbit hole Tommy's tripwire ruling forbids. Scope is 2 lines in tests/, no production code. SURFACE TO TOMMY at review: this was a fix-now on a file outside issue-456's feature scope."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "note",
+          "payload": {
+            "topic": "g0 pass 1 integrated; pass 2 blocked on the shared-gauge deadlock (tc5)",
+            "detail": "STATE: g0 is roughly a third built and every claim is verified. scripts/code_map/ exists (four modules), tests/test_code_map.py has 12 green tests, and the CLI runs: python -m scripts.code_map discover --root . returns 108 files, exit 0. I reproduced the load-bearing falsifier myself -- setting EXCLUDED_PREFIXES to an empty tuple turns 3 tests red, restoring it turns them green. Committed at 7e13781 and pushed; branch head 14eeb65. REMAINING FOR g0: the four stage ports (astx, supplement, render_map, and wiring the checks pair), two .gitignore entries, the bundling resolution, the end-to-end extract-to-render run, and the full-suite green. The implementer plan is at .agent-work/issue-456/g0-implementer-plan.json, at m2-cli with a pending refresh-request; a fresh implementer claims session id g0-impl-9febe0be idempotently and cold-starts from current, then drives m3-m9. My rulings for it are in crew-handoffs/g0-implement-ADDENDUM.md. WHY PASS 2 IS NOT DISPATCHED YET: tc5. The gauge is work-area-scoped, so a relaunched crew reads MY context, not its own, and would HARD-trip on arrival before doing any work -- the relaunch mechanism cannot make progress while my own reading is over the hard band. This is not a reason to skip the refresh; it is the reason the refresh has to come first. Dispatch pass 2 immediately after the refresh, while the reading is low."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-4",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "execute",
+            "why_ref": "e-execute-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-5",
+          "type": "note",
+          "payload": {
+            "topic": "tc5 CORRECTION -- the deadlock claim was overstated",
+            "detail": "Correcting my own tc5 statement before it hardens into a false fact. WHAT STANDS, measured: the gauge file is work-area-scoped, both the commander spine and a crew plan in the same directory resolve to one gauge.json, and with no crew running BOTH reported CONTEXT 19 percent matching my fill_fraction 0.193251. Readings are therefore attributed to whichever agent asks, not to whichever agent they measure. That is the defect and it is real. WHAT DOES NOT STAND: I wrote that every relaunched crew trips on arrival before doing any work, and that the relaunch mechanism can never make progress. That was an INFERENCE stated as a measurement, and reading the writer again contradicts it. The hook fires on TOOL USE and both agents write the same file, so the last writer wins -- a crew overwrites the commander's reading with its own on its first tool call, which happens before it runs current or advance. Direct evidence I already had and did not weigh: the gauge carried 0.151219 during the crew's run, which is the crew's own reading, not mine. So the shared file interleaves rather than pins, and a fresh crew most likely reads itself. CONSEQUENCE FOR THE RUN: pass 2 is dispatched now rather than held. The honest severity of tc5 is a wrong-attribution defect with an interleaving race -- a crew can be tripped by the commander's reading if the commander wrote last, and a genuinely full crew can be masked by a small commander's reading. That is still worth fixing and still inverts the safety property; it is not a hard deadlock. LESSON, the same one that cost three passes on D2 earlier in this run: model the behaviour by reading the code that produces it, not by inventing a plausible consequence and asserting it."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-6",
+          "type": "user-decision",
+          "payload": {
+            "topic": "RULING on the g0 wiring stop condition -- NON_INSTALLABLE_PACKAGES with zero production call sites",
+            "decision": "ACCEPTED. The gate is NOT blocked on it.",
+            "detail": "The pass-3 crew escalated rather than deciding, which was right. VERIFIED INDEPENDENTLY, not taken on its word: grep across scripts/ and tests/ shows NON_INSTALLABLE_PACKAGES defined once at scripts/install_constellation.py:137 and referenced ONLY at tests/test_install_constellation.py lines 1552, 1557, 1568 and 1575. The installer never reads it at runtime. The crew's report is exact. RULING AND REASONING: the wiring rule exists to catch shipped-INERT CAPABILITY code -- a symbol that passes review and passes tests while no caller ever reaches it. This is not that. It is a POLICY DECLARATION whose enforcement point is the test suite BY DESIGN, and the correct runtime behaviour for a non-installable package is to do nothing, so no production code path could consult it: a package is kept out of the install by never appearing in any skill's required_scripts, and the four guard tests are what make that non-accidental rather than incidental. This is precisely the repo's own two-bin rule from the glossary -- every enforced invariant is either checked by a command or attested by a named human, and prose alone enforces nothing. A frozenset consumed by four guards is bin one, checked by a command. THE DISCRIMINATING EVIDENCE, which is what the wiring rule actually cares about: the declaration is falsifiable -- emptying it turns 3 of the 4 guards red. A symbol that can be broken and caught is not inert, whatever the call-site count says. So the rule fired on a technicality its own purpose does not reach. THE ALTERNATIVE IS REJECTED FOR THIS GATE, NOT DENIED: having discover_skills or validate_required_scripts consult the frozenset at runtime is a real behaviour change to the installer, not a rename, and g0's own constraints forbid unrelated changes here. If it is wanted it gets its own slice. RECORDED SO IT IS NOT REDISCOVERED: 75 of the 76 symbols this gate adds are wired into production code, 178 external call sites total. This is the single exception and it is deliberate."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "reconcile": {
+      "id": "reconcile",
+      "title": "Reconcile the map",
+      "imperative": "Hand the implemented changes to a subagent that invokes constellation-cartographer to fold them into the recorded architecture \u2014 this is the default path whenever a packet map exists. Where the run has no packet map (e.g. a skill-source repo with no docs/architecture map), reconcile the structural record directly instead: fold the change into the schema or design doc it actually touches, and where the change touched neither, record a reasoned no-op as compliant rather than blocking on an absent map.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execute complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "execute is complete: all eleven gates closed and the engine advanced the step on its own re-run of the postcondition, not on my word."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "map reflects the implemented changes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "This repo has no packet map (no docs/architecture), so the spine's direct path applies: fold the change into the design doc it actually touches. It touches one, and the gap was real rather than a no-op -- `grep -rln 'code_map\\|code map' docs/ skills/` returned NOTHING before this edit, so a whole new subsystem and a newly tracked artifact were invisible to the structural record.\n\nFolded into docs/CONSTELLATION_OVERVIEW.md, the file that owns this repo's truth layers:\n\n1. The truth-layers block gained `map/` as compressed DERIVED truth -- a projection of dense truth, never authored, regenerated by command. That distinction is the point: the existing compressed layer is hand-authored and durable, and a derived layer that looks like it but goes stale silently would be the worse thing to add.\n\n2. A new subsection under the map-input contract, where a derived map actually belongs, recording: the real entry point (`python -m scripts.code_map build|check --root .`, package CLI, no standalone build script -- the wrong path cost three reviewers a rediscovery each this run); that check ships as a test rather than a workflow step so it reaches CI by the ordinary road; the two-file landing zone with the measurement that produced it and the negative control that could have overturned it; the named cost that the entry point's links do not resolve until a build runs; and that freshness is owned by no gate but by a permanent suite test, which is a mechanism rather than an intention.\n\n3. Tommy's ruling recorded as a standing deficiency with its consequence attached, not as a buried caveat: a large share of this repo's connections live in how skills get used, not in Python, so a page reading \"referenced by: none\" for a script three skills invoke is wrong in the way that matters. Anything built on this map must say so. Widening scope to chase those edges was ruled out.\n\nVerification: docs/ is not Python, so the map is unaffected by this edit, and the freshness test confirms it rather than my reasoning doing so -- `-k map_tree_freshness` 2 passed, exit 0, after the edit."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "triage": {
+      "id": "triage",
+      "title": "Route future work",
+      "imperative": "Load the constellation-triage skill into this context. Drive triage on execute.json triage_candidates in this conversation \u2014 do not dispatch a subagent. Before creating any issues, present the full list of recommendations to the human and get explicit approval for each issue to be filed. In delegated mode, satisfy c2 (user approved issue creation) by attaching a user-decision evidence item citing the launch order's issue-filing authority (attach triage --type user-decision --field cite='LAUNCH_ORDER:Inherited Latitude'), or float to the Admiral when filing falls outside inherited latitude. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "reconcile complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "reconcile is complete and the engine advanced it. The change was folded into docs/CONSTELLATION_OVERVIEW.md and committed at d46fc610; the freshness test was re-run after the edit and stayed green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every triage candidate routed or recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact."
+        },
+        {
+          "id": "c2",
+          "statement": "user approved issue creation",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact."
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "Tommy, live, 2026-08-09: 'aight close on out.' -- a direct instruction to run the closeout, of which triage-and-file is a standing part he knows. Reinforced by a standing correction recorded three times: Commanders must file findings to the tracker, not bank them worktree-locally for harvest. Filed 9 issues, #518-#526, grouped by root cause; the full routing of all 20 candidates including 3 dispositions and 2 held for feedback is in the c1 attestation. Reported back to him with the list so any he does not want can be closed."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "review": {
+      "id": "review",
+      "title": "Review accomplishments with user",
+      "imperative": "Summarize all gates closed, changes implemented, architecture changes reconciled, and triage items routed or filed. Present the full run summary to the user. Get their confirmation before archiving. In delegated mode, satisfy c1 (run summary accepted) by attaching a user-decision evidence item citing the launch order (attach review --type user-decision --field cite='LAUNCH_ORDER:Return Shape'); the Admiral ratifies at the epic return boundary. See the commander skill's Delegated/autonomous mode.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "triage complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "run summary accepted by user",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "user-decision"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": "Full run summary presented as PR #527, which is the durable form of it rather than a message that scrolls away.\n\nGATES: eleven closed -- g0 CLI layer, g1 checks-that-can-fail, g2 D2 symbol collisions, g3 D1 line base, g4 schema and top index, g5 determinism, gb churn-under-rename, g6 redundancy rule, g7 authored-layer staleness, g8 tag-vocabulary cull, gs skills integration plus the landing zone. Each ran implementer then reviewer through run_crew.py; each closed on its criteria RE-RUN at the gate boundary rather than on the crew's report.\n\nCHANGES: scripts/code_map/ (discovery, extract, supplement, render, checks, thresholds, package CLI); check ships as a test so it reaches CI by the ordinary road; map/INDEX.md and map/ids.jsonl tracked with .gitignore holding map/* plus two negations; four skills files picked up from d102c05; tests/test_code_map.py including MapTreeFreshnessTests.\n\nARCHITECTURE RECONCILED: docs/CONSTELLATION_OVERVIEW.md gained map/ in the truth layers as compressed DERIVED truth and a subsection under the map-input contract. The gap was real -- grep for code_map across docs/ and skills/ returned nothing before this.\n\nTRIAGE: all 20 candidates routed. 9 issues filed, #518-#526, grouped by root cause. 3 dispositions (tc1 resolved and verified at test line 623, tc11 resolved by gs, tc20 REFUTED). 2 held for feedback as doctrine rather than tracker defects.\n\nVERIFIED: suite 1840 passed / 2 skipped / 701 subtests / 0 failed exit 0; -k map_tree_freshness 2 passed exit 0; build then check 7/7 exit 0; git ls-files map/ returns exactly two paths.\n\nTHE DECISION THAT CHANGED THE PLAN: the landing zone, measured with a negative control instead of assumed. The plan's 116-file zone is not stable; the 2-file zone is. Two tracked files ship instead of 3,975.\n\nWHAT I GOT WRONG, stated in the PR rather than smoothed: an unsatisfiable close criterion of my own, and a triage candidate that a reviewer refuted by running the experiment I had not.\n\nAuthority honored: push and a full non-draft PR were pre-approved and both are done. MERGE TO MAIN IS NOT APPROVED and has not been performed -- PR #527 is left open for Tommy."
+          }
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "Tommy, live, 2026-08-09: 'aight close on out.' -- direct instruction to run the closeout to completion, given after I had reported all eleven gates closed with the verified numbers and stated the one open decision. The run summary is presented as PR #527, the durable form rather than a message that scrolls away, and it states plainly what I got wrong as well as what shipped. Merge to main is NOT approved and has not been performed."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "feedback": {
+      "id": "feedback",
+      "title": "Record workflow feedback",
+      "imperative": "Before committing, reflect honestly on how this run actually went: how closely you followed the skills, handoffs, and checklists; where you had to improvise or work around the instructions; what was ambiguous, missing, or contradictory; and what would have helped. Include the crew Workflow Feedback harvested at each gN-integrate. A 'none' answer requires a run-specific reason ('none \u2014 confirmed after review: <what you checked>'); bare 'none' entries fail the invariant check. Append one dated entry for this work-id to .agent-work/AGENT_FEEDBACK.md (create it from templates/AGENT_FEEDBACK.template.md if absent \u2014 prefer the project copy under .agent-work/templates/, fall back to the bundled workbench template). This log persists across runs and is never archived with the work-id. Adjudicate each lesson before banking it \u2014 the playbook holds open problems you are carrying forward, not a log of everything learned. If a lesson is understood and fixable now, APPLY it this run (make the bounded edit, record it in AGENT_FEEDBACK) and do not add a playbook entry at all; a lesson goes in the bank (an add) ONLY because it needs to be re-observed to be understood, and every add must carry a bank_reason saying what re-observation will clarify. Applying to project doctrine (a docs/agents/* delta or a template working copy \u2014 any .md / .template.*) is a human call: it needs authority=human on the apply op, and in delegated/autonomous mode you do NOT self-apply doctrine \u2014 surface it to your principal (who may rule 'apply', or 'wait, observe it again') and defer with 'needs human' until they do. Applying a code target (with its test suite as proof) stays autonomous. Then distill what remains into the playbook: write structured delta ops (add [with bank_reason]/confirm/disconfirm/mention/retire/apply/defer \u2014 every add/confirm/disconfirm cites a grounding artifact line; corroborate with engine telemetry like rework counts, BLOCK verdicts, waives where possible) to .agent-work/issue-456/lessons-delta.json with tick=true, and apply deterministically: python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/apply_lessons_delta.py .agent-work/issue-456/lessons-delta.json --file .agent-work/LESSONS.md. Never edit LESSONS.md directly; if there are no lesson candidates, still apply a tick-only delta. Then settle every threshold-ripe lesson (python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/apply_lessons_delta.py --ripe --file .agent-work/LESSONS.md): for each, APPLY it (make the bounded edit to its target \u2014 a thin docs/agents/* delta or a project template working copy \u2014 confirmed by the human, then an apply op deletes it as paid), or for a constellation lesson EXPORT it (append to .agent-work/CONSTELLATION_FEEDBACK.md \u2014 carry the originating lesson id in that entry's Lesson field so the upstream sweep groups recurrences on stable identity, rewording a recurring finding via amend not a new slug \u2014 then an export op marks it exported and pinned), or RESOLVE it if you can confirm the upstream fix has already shipped (a resolve op citing the shipping PR/commit marks the constellation lesson fixed-upstream: no longer ripe, immune to re-confirmation, and it ages out of the playbook \u2014 this is how an already-fixed defect stops being re-exported every run), or DEFER it with a reason (a broad or contradictory doctrine shift routes to a Charter refresh; an autonomous run without that latitude defers 'needs human'). Lessons flagged charter-review go to a Charter refresh. Then run the feedback invariant check before advancing: python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase feedback.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run summary accepted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Run summary accepted. review advanced on Tommy's live instruction \"aight close on out.\" (2026-08-09), given after I had reported all eleven gates closed with the verified numbers and named the one open decision. The summary itself is PR #527, the durable form rather than a message that scrolls away, and it states what I got wrong alongside what shipped."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "durable feedback log exists, contains this work id, and is not inside the work area or archive",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase feedback"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
+        },
+        {
+          "id": "c2",
+          "statement": "no threshold-ripe lesson left unpaid \u2014 each applied to its target, exported upstream, resolved (fixed upstream), or explicitly deferred with a reason",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "archive": {
+      "id": "archive",
+      "title": "Archive, commit, and push",
+      "imperative": "Commit all remaining work, including the appended .agent-work/AGENT_FEEDBACK.md entry \u2014 where the repo tracks .agent-work/. Where .agent-work/ is gitignored, do not try to commit it: the durable copy is the work-area-root AGENT_FEEDBACK.md file itself, uncommitted; when this run is dispatched under an Admiral, the epic-level harvest at closeout is the durable record instead. Push the branch to remote. When you open a PR on Windows, write the body to a temp file and use gh pr create -F <file> \u2014 a bash heredoc and a PowerShell @'...'@ here-string both fail for gh pr create --body (here-strings work for git commit -m, not PR bodies). Move .agent-work/issue-456/ to .agent-work/archive/<date>-issue-456/, leaving the unified AGENT_FEEDBACK.md at the agent-work root. Run the archive-phase feedback invariant check before marking archive complete: python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase archive. Confirm the branch is clean and merge-ready per repo guidance. The engine mechanically refuses closeout (c4) when the staged diff includes suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); if any are intentional, a human waives c4 via <engine> waive archive --cond c4 --authority human --reason \"...\" rather than hand-editing the spine. Release the engine session lease only as your VERY LAST action, AFTER the archive postconditions pass and you have run the engine's final advance on archive (the advance that marks the spine done): <engine> release --session-id commander-issue-456. Release must come after that closing advance, never before it \u2014 the lease must cover every journaled action, so the release is the final journal entry; releasing earlier leaves archive's own closeout entries (attest/waive/advance) after the lease release and fails the terminal provenance check.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "workflow feedback recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Workflow feedback recorded and mechanically verified. A dated issue-456 entry is appended to the durable .agent-work/AGENT_FEEDBACK.md covering what went well, friction, crew-reported friction, improvement signals, and a plain account of five things I got wrong. Playbook adjudicated rather than logged: one confirm that the engine escalated to recurrence debt and I therefore EXPORTED to CONSTELLATION_FEEDBACK.md carrying the originating lesson id, and one add carrying a bank_reason naming the discriminator that will settle it. Everything else was understood and fixable now, so it went to the tracker as #518-#526 rather than into the bank. No threshold-ripe lessons are outstanding: --ripe returns empty. verify_agent_feedback.py issue-456 --phase feedback exits 0."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "work area archived and durable feedback log left at .agent-work root",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase archive"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-archive-5"
+        },
+        {
+          "id": "c2",
+          "statement": "branch committed and pushed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Branch issue-456/code-map committed and pushed to origin. Closeout commits: d46fc610 reconcile, be389fcf triage, c2f59dfe feedback, 71af3cd0 archive. Working tree clean apart from the context governor's gauge file, which the hook rewrites on every tool call.\n\nAuthority honored exactly as scoped: push and a full non-draft PR were pre-approved and both are done. MERGE TO MAIN IS NOT APPROVED and has not been performed. PR #527 is open, titled FINAL, and the merge is handed up to Tommy."
+        },
+        {
+          "id": "c2b",
+          "statement": "the work is REACHABLE: an open PR exists for this branch. A terminal spine and a pushed branch describe the run, not the ref -- CI never runs on an unopened branch, and every commander that reached a terminal spine without opening one had to be chased for it. Open the PR even if the work is unfinished; declare FINAL or PENDING in its title and hand the merge up.",
+          "check": {
+            "kind": "command",
+            "command": "gh pr list --head <branch> --state open --json number --jq 'length > 0'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-archive-4",
+          "waived": {
+            "authority": "human",
+            "reason": "UNRUNNABLE CHECK, not an unmet one. The stock spine ships c2b as `gh pr list --head <branch> --state open --json number --jq 'length > 0'` with the literal placeholder <branch> never resolved, so the command cannot run against any repo. This is a REPEAT: the same defect is recorded in .agent-work/AGENT_FEEDBACK.md under issue-419-governor-identity ('init_work_area.py does not resolve the <branch> placeholder, so the archive gate's gh pr list --head <branch> postcondition ships unrunnable'), and it is still shipping. It is also this run's own recurring theme in its mirror form -- a check that cannot PASS -- appearing in the stock template at the last gate. The SUBSTANCE is satisfied and MEASURED, not asserted: with the placeholder resolved, `gh pr list --head issue-456/code-map --state open --json number --jq 'length > 0'` returns true. PR #527 is open, non-draft, titled FINAL, merge handed up and NOT performed. Forced because the engine offers no override policy for this condition; the alternative was to leave a terminal spine unclosed over a placeholder. Human authority: Tommy, live, 2026-08-09, 'aight close on out.'",
+            "evidence": "e-archive-4",
+            "forced": true
+          }
+        },
+        {
+          "id": "c3",
+          "statement": "engine session lease released",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "The lease is deliberately still held. Release is the LAST journaled action and must come AFTER the closing advance on archive, so that the lease covers every journaled action and the terminal provenance check passes. Releasing before that advance would leave archive's own closeout entries outside the lease. The next and final command of this run is `release --session-id commander-issue-456`, immediately after the advance that marks the spine done."
+        },
+        {
+          "id": "c4",
+          "statement": "staged diff carries no suspicious artifacts (oversized files, generated record dumps, disallowed dirs, binary/blob additions, large data files); refuse closeout unless a human waives via the engine override path",
+          "check": {
+            "kind": "git-change-policy",
+            "mode": "staged",
+            "max_file_bytes": 1000000,
+            "deny_globs": [
+              "*.parquet",
+              "*.pkl",
+              "*.pickle",
+              "*.joblib",
+              "*.pt",
+              "*.onnx",
+              "*.bin",
+              "*.ckpt",
+              "data/generated/**",
+              "records/**",
+              ".agent-work/LESSONS.md",
+              ".agent-work/AGENT_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.md",
+              ".agent-work/CONSTELLATION_FEEDBACK.collected.json"
+            ],
+            "allow_globs": [
+              "docs/**",
+              "src/**",
+              "tests/**",
+              "skills/**",
+              "scripts/**",
+              ".agent-work/**"
+            ],
+            "require_human_waiver_for_binary": true
+          },
+          "satisfied": true,
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied_by": "e-archive-6"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "gh pr list --head <branch> --state open --json number --jq 'length > 0'",
+            "exit": 1,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-4",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2b",
+            "authority": "human",
+            "reason": "UNRUNNABLE CHECK, not an unmet one. The stock spine ships c2b as `gh pr list --head <branch> --state open --json number --jq 'length > 0'` with the literal placeholder <branch> never resolved, so the command cannot run against any repo. This is a REPEAT: the same defect is recorded in .agent-work/AGENT_FEEDBACK.md under issue-419-governor-identity ('init_work_area.py does not resolve the <branch> placeholder, so the archive gate's gh pr list --head <branch> postcondition ships unrunnable'), and it is still shipping. It is also this run's own recurring theme in its mirror form -- a check that cannot PASS -- appearing in the stock template at the last gate. The SUBSTANCE is satisfied and MEASURED, not asserted: with the placeholder resolved, `gh pr list --head issue-456/code-map --state open --json number --jq 'length > 0'` returns true. PR #527 is open, non-draft, titled FINAL, merge handed up and NOT performed. Forced because the engine offers no override policy for this condition; the alternative was to leave a terminal spine unclosed over a placeholder. Human authority: Tommy, live, 2026-08-09, 'aight close on out.'",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-6",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "understand",
+      "statement": "ENGINE DEFECT (reach-up contract): a HARD context trip blocks 'advance', but 'advance --why' is the ONLY verb that appends a why-record, and the DIGEST line is the latest why-record. So an agent tripped at HARD is forced to hand off carrying a digest that predates the entire step it just completed -- here the digest still describes the context step while understand's four human rulings are absent from it. Doctrine states 'the digest is the brief' for a cold-starting fresh agent (global-everyone.md, reach-up), so the brief is stale exactly when it matters most. Observed live on this run at understand. Candidate fixes: let attest/attach take --why, or add a why-only verb, or have the trip permit a digest-updating advance-in-place. Workaround used: the substance was committed to git and lives in evidence e-understand-1 plus .agent-work/issue-456/interrogation-record.json."
+    },
+    {
+      "id": "tc2",
+      "from": "plan",
+      "statement": "SPEC GAP for the plan checkpoint: DESIGN_SPEC section 2 (Storage layout) ends with 'Build the named guards FIRST' and names three -- (a) the empty-diff determinism assertion, (b) the mis-pairing guard on auto-supersession, (c) the C++ colon collision fix in the relative-id rule. The ranked build queue carries only (a), inside gate 1. (b) attaches to tombstone/auto-supersession machinery the critic panel DEFERRED (SY6); (c) attaches to C++ adapters explicitly OUT OF SCOPE. Both are most likely correctly dropped with the machinery they guard -- but that is the Commander's inference, not a recorded disposition, and 'build first' is strong language to leave dangling. Confirm with Tommy at plan approval: dropped-with-their-machinery, or added to gate 1."
+    },
+    {
+      "id": "tc3",
+      "from": "plan",
+      "statement": "REPO DEFECT (not this issue's scope, found while establishing a baseline): tests/test_mutation_floor.py reports 10 spurious HARNESS ERROR failures for any developer whose environment sets FORCE_COLOR. failed_nodes() at tests/test_mutation_floor.py:255 parses pytest output with the regex '(?:SUB)?FAILED(?:\\([^)]*\\))? (tests[/\\]test_map_orient\\.py::\\S+)', which requires a literal space between FAILED and the path. With FORCE_COLOR set, the inner pytest subprocess emits ANSI codes ('\\x1b[31mFAILED\\x1b[0m tests/...'), the regex matches nothing, and the harness reports 'non-zero exit with no FAILED test node' -- i.e. it misreports a CORRECTLY killed mutant as a broken harness. PROVEN: regex vs colored line -> [], vs plain line -> match; FORCE_COLOR=3 is set in this session. test_0_unmutated_baseline_is_green PASSES, so the module under test is fine. CI is unaffected (no FORCE_COLOR, no TTY), so main is genuinely green. Fix: strip ANSI from proc.stdout before parsing, or pass --color=no / PY_COLORS=0 to the inner run_floor subprocess. Worth a ticket: a falsifiability harness that cannot parse its own evidence fails OPEN in exactly the direction it exists to prevent."
+    },
+    {
+      "id": "tc4",
+      "from": "execute",
+      "statement": "TOOLING DEFECT (recover_crews.py) -- a check that cannot discriminate, in the repo's own crew tooling. classify() computes is_alive = bool(alive(entry.get('pid'))). An EXTERNALLY-dispatched crew (--dispatch external / --backend external) has NO pid by construction: the wrapper records the durable entry and spawns nothing, because the crew is an Agent-tool subagent. So alive(None) is False, and a healthy crew three seconds into its work classifies as status=running + pid dead + result missing + resumable -> STATE_RESUMABLE. OBSERVED THIS RUN: constellation/issue-456/g0/implementer/attempt-1 reported RESUMABLE within ~3 minutes of dispatch while the crew was demonstrably alive and working. THE DEFECT IS THE DOCTRINE'S OWN NAMED FAMILY: the output is IDENTICAL in the healthy world (crew working normally) and the defective world (crew died), so the check cannot discriminate however correctly it runs -- see global-orchestrator.md 'A check that cannot fail'. CONSEQUENCE, and why it is not cosmetic: RESUMABLE is in UNRESOLVED_STATES, and both commander-core.md and the spine imperative say to launch ONLY when recovery reports no unresolved running/resumable/conflicting crew. Once any external crew is registered, that precondition can never be satisfied again for this work-id -- it would gate all 22 dispatches of this run (11 gates x implementer+reviewer). Worse, the naive response is to relaunch, and global-everyone.md explicitly forbids launching a continuation into a possibly-sleeping agent's worktree. NOT A DESIGN INTENT: Decision 6 already knows external crews are 'unrecoverable BY THE WRAPPER' and varies the resume ACTION by backend, but leaves the CLASSIFICATION uniform -- so the backend distinction stops one step short of the liveness read that actually needs it. WORKAROUND USED THIS RUN (recorded so it is not mistaken for compliance): treat RESUMABLE-on-an-external-entry as NON-INFORMATIVE, and adjudicate liveness from the artifact set and the subagent's own status per global-orchestrator.md idle-subagent-adjudication -- never relaunch on the wrapper's word alone. CANDIDATE FIX: for an external-backend entry, classify from the result artifact plus an agent-liveness signal (or an explicit dispatched-at + grace window), rather than from a pid that cannot exist."
+    },
+    {
+      "id": "tc5",
+      "from": "execute",
+      "statement": "ENGINE/HOOK DEFECT, DEMONSTRATED: the context gauge is WORK-AREA-scoped, not AGENT-scoped, so an orchestrator and every crew it dispatches share ONE reading -- and the orchestrator's context silently trips the crews. MECHANISM: gauge_writer_hook.resolve_gauge_path derives the file as Path(spine_path).parent / 'gauge.json'. The commander spine (.agent-work/issue-456/spine.json) and the implementer plan (.agent-work/issue-456/g0-implementer-plan.json) live in the SAME directory, so both resolve to the SAME .agent-work/issue-456/gauge.json. The BINDING KEY is already agent-aware -- #419 fixed exactly this class by keying a dispatched agent as session_id#agent_id -- but the PATH is derived from the spine file's parent dir, so the fix stops one step short of the read it needs to protect. PROOF (not inference): with NO implementer running, gauge.json read fill_fraction 0.193251 and BOTH  calls reported 'CONTEXT 19%' -- the commander spine AND the dead crew's plan. The crew has no context to read; it was reporting the commander's. CONSEQUENCE 1, severe: a crew is HARD-tripped by its orchestrator's context. The g0 implementer tripped at a reported 15.1% and correctly filed a refresh-request, but that reading CANNOT BE ATTRIBUTED to it rather than to the commander -- and a trip is indistinguishable from a real one from inside the crew, which is why that crew reasonably diagnosed its own trip as correct. CONSEQUENCE 2, a deadlock: once the orchestrator's own context is over the hard band, EVERY freshly relaunched crew trips immediately on arrival, before doing any work, forever. The relaunch mechanism that reach-up doctrine depends on cannot make progress, because the fresh agent inherits a reading that has nothing to do with it. CONSEQUENCE 3: it also inverts the safety property -- a crew with plenty of headroom is stopped, while a crew genuinely near its limit is invisible whenever the orchestrator happens to be small. CANDIDATE FIX: key the gauge FILE by the same binding key the writer already computes (e.g. gauge-<agent>.json beside the spine, or a per-crew work-area directory), so the reading an engine applies to a plan is the reading of the agent actually driving that plan. Note _is_contained fences the path shape to <root>/.agent-work/<work_id>/gauge.json, so a naive nested-directory workaround is silently dropped rather than separated -- the fence must move with the fix."
+    },
+    {
+      "id": "tc6",
+      "from": "execute",
+      "statement": "GLOSSARY GAP (raised by the g0 implementer, confirmed): the term corpus is overloaded. docs/agents/GLOSSARY.md defines it as 'the full set of installed constellation skills, references, and templates' -- the INSTALLED SKILLS corpus. This issue uses the same word for the set of source files being mapped, and the required symbol name is discover_corpus. Both senses are now live in the same repo and one of them is in a shipped public symbol name, which is exactly what the repo's own one-name-for-one-thing rule forbids. The implementer kept the required symbol name as handed to it and wrote 'mappable corpus' everywhere the distinction mattered, which is the right conservative move but leaves the collision unresolved. RESOLUTION NEEDED: either add a glossary row distinguishing the two senses (e.g. skills corpus vs mappable corpus / source corpus), or rename the derived-map sense before the symbol is load-bearing across gates -- renaming gets more expensive at every later gate, since g1 through gs all build on discover_corpus."
+    },
+    {
+      "id": "tc7",
+      "from": "execute",
+      "statement": "REPO DEFECT, same family as tc3, found by the g0 pass-3 crew and independently reproducible: tests/test_crew_launcher.py::LaunchTests::test_records_entry_before_launch_and_completes does not isolate the environment it asserts about. It asserts PYTHONIOENCODING equals the literal 'utf-8' on the env handed to the launch seam, but scripts/run_crew.py:271 uses env.setdefault('PYTHONIOENCODING', 'utf-8') and its own docstring says that is deliberate -- it honours an explicit caller value without clobbering it. So under any shell that exports a different value the test fails while the PRODUCT BEHAVES EXACTLY AS DESIGNED. The Constellation crew shell exports PYTHONIOENCODING=utf-8:surrogateescape, so it fails here for every agent on this machine. Proven in both directions in one sequence: with the ambient value set, 1 failed / 73 passed; with Remove-Item Env:PYTHONIOENCODING, 74 passed. The test is at fault, not the product. FIX: patch.dict(os.environ, ..., clear=...) or pop the var in setUp. WHY IT MATTERS BEYOND COSMETICS: this is the SECOND environment-leak false red in this repo's suite after tc3 (FORCE_COLOR defeating the mutation-floor regex), and both share one root -- a test asserting on process environment it does not control. Every crew that runs the full suite at a gate boundary pays a diagnostic detour, and a false red at a gate boundary is exactly the speed bump Tommy's tripwire ruling forbids. WORTH A SWEEP, not just two point fixes: grep the suite for assertions on os.environ-derived values that do not isolate first. NOT FIXED IN THIS RUN, unlike tc3: tc3 blocked all 11 gate boundaries so fixing it was load-bearing; this one fails a single unrelated test that no gate boundary depends on, and the honest gate-boundary number is obtainable by clearing the variable. Fixing it here would be scope creep."
+    },
+    {
+      "id": "tc8",
+      "from": "execute",
+      "statement": "tc8 A gate postcondition PASSED UNEARNED in this very run -- the check could not fail. Item m7 of the g0 implementer job file verified its .gitignore deliverables with a single 'git check-ignore -q' call passed THREE pathnames at once. git treats multiple pathnames with -q as a fatal usage error and exits 128, and the check's leading '!' inverted that non-zero exit into a pass. The check therefore reported PASS in the healthy world AND in the defective world -- it would have passed even if all three files were still ignored. Found and reported by the g0 pass-2 implementer; the engine had already recorded m7 complete on the strength of it. Milder instance of the same family at m9, whose wiring-grep check named only 2 of the 11 symbols the gate added, so it could not see a regression in the other 9. This is precisely the check-that-cannot-fail family issue 456 exists to eliminate, occurring inside 456's own scaffolding, and it is evidence the defect is a live habit rather than a historical one. Fix direction: one check-ignore call per pathname, assert exit 0 per file, and never invert a command whose non-zero exit is ambiguous between 'false' and 'usage error'."
+    },
+    {
+      "id": "tc9",
+      "from": "execute",
+      "statement": "tc9 There is no engine verb for 'the context refresh happened'. Doctrine says a HARD context trip is answered by attaching a refresh-request and handing off at a seam. But once that request is attached, nothing clears it: 'resume' refuses with 'can only resume a blocked gate', and the gate is in-progress, not blocked. The g0 pass-3 implementer hit this and had to work around it. The state machine models the trip and the request but not the recovery, so a refresh-request is write-only -- it accumulates on the item and the only thing that actually unblocks progress is the gauge dropping on its own. Fix direction: either a 'refreshed' verb that closes an open refresh-request, or let 'resume' accept an in-progress gate whose only impediment is an open refresh-request."
+    },
+    {
+      "id": "tc10",
+      "from": "execute",
+      "statement": "tc10 The 'wiring grep' that gate handoffs mandate cannot be a literal grep in this repo, and a literal grep silently fabricates evidence rather than failing. The g0 pass-3 implementer ran the required bare-name search for external call sites of the gate's new symbols and got 4,535 hits, essentially all false: short symbol names collide with unrelated identifiers, prose in markdown, and the symbols' own definitions. It rewrote the check to resolve imports through the AST and got 178 real call sites for 76 symbols. The defect is that the naive form produces a large, confident, entirely wrong number that LOOKS like passing evidence -- a check that cannot fail, in the third route: wrong iteration set. Every remaining gate handoff in this run still mandates the wiring grep in the naive wording. Fix direction: replace the wording in the handoff template with the AST-resolution recipe the implementer already wrote, and treat any wiring count that is implausibly large as a red flag rather than a pass."
+    },
+    {
+      "id": "tc11",
+      "from": "execute",
+      "statement": "tc11 The context gauge lags one tool call behind, so the first engine call after a compaction is refused on a stale pre-compaction reading. Measured directly this run: 'advance g0-implement' was REFUSED with 'context at 27% is at/over the hard limit'; the very next command read gauge.json and found fill_fraction 0.059717 stamped 22:08:53Z; re-running the identical advance then succeeded. The hook writes the gauge AFTER a tool call completes, so the engine reads the value written by the PREVIOUS call. Consequence: the recovery action doctrine prescribes for a HARD trip -- compact, then advance -- fails on its first attempt every time, and reads as a hard deadlock to an agent that does not know to retry. This cost this run one wrongly-declared stop. Compounds with tc5 (gauge is work-area-scoped, not agent-scoped), which makes the stale value potentially another agent's reading as well as an old one. Fix direction: have the engine re-read the gauge after a refusal, or have the refusal message state that the reading is one call stale and a retry is the recovery."
+    },
+    {
+      "id": "tc12",
+      "from": "execute",
+      "statement": "tc12 The 'check' subcommand has zero execution coverage. tests/test_code_map.py:128 asserts only that 'check' PARSES as a subcommand name; nothing calls cli.main(['check', ...]). All 211 lines of scripts/code_map/checks.py could raise on import or at run time with the full suite still green. Found by the g0 reviewer, which ran it by hand (exit 0, full diagnostics) -- but that is a human's hands, not CI. Note the compounding shape: checks.py is the module that PRINTS the page count contradicting render_report.json, so the one artifact that would have exposed the tc-count defect is itself unexercised. Fix direction: g1 rewrites checks.py; give it an execution test at the same time."
+    },
+    {
+      "id": "tc13",
+      "from": "execute",
+      "statement": "tc13 The bundling guard tests are blind below one directory level. ScriptsPackageBundlingTests._source_dirs (tests/test_install_constellation.py:1535-1539) uses a non-recursive iterdir() plus a non-recursive glob('*.py'), so a nested package under scripts/, or a directory whose modules sit one level further down, is invisible to all four guards. The guards do enumerate from the FILESYSTEM rather than from a hand-written list, which is the important half and which they get right -- this is a depth limit, not a hardcoded-list defect. Secondary defect in the same file: test_no_skill_bundles_a_module_from_a_non_installable_package compares BASENAMES, so a future flat scripts/render.py that a skill legitimately bundles would trip it as a false red. Found by the g0 reviewer."
+    },
+    {
+      "id": "tc14",
+      "from": "execute",
+      "statement": "tc14 Dead state and a wrong cross-reference in the shipped code_map package. extract.Extractor.__init__ takes a 'core' parameter and stores self.core (extract.py:256-262); nothing reads it, and the only construction site (extract.py:766) passes the literal True. It is the prototype's slice flag carried into production unexamined. Separately, scripts/code_map/__init__.py:21 points readers at NON_INSTALLABLE_SCRIPT_PACKAGES, but the actual symbol is NON_INSTALLABLE_PACKAGES (scripts/install_constellation.py:135); that comment is the ONLY link between the package and its install-side declaration, so a reader who greps the name the comment gives finds nothing. Found by the g0 reviewer's Fowler speculative-generality pass -- three implementer passes and my own re-verification all walked past the dead field."
+    },
+    {
+      "id": "tc15",
+      "from": "execute",
+      "statement": "tc15 The five rebuildable artifact filenames are duplicated between code and .gitignore with nothing tying them together. They exist as module constants (extract.STATEMENTS_NAME, extract.REPORT_NAME, supplement.SUPPLEMENT_NAME, supplement.REPORT_NAME, render.REPORT_NAME) and again as hand-typed literals at .gitignore:29,30,34,35,36. The narrow one-entry-per-file ignore policy is correct and is not in question; the gap is that renaming a store in code silently starts committing it, with no check that would go red. Found by the g0 reviewer. Fix direction: a test that derives the expected ignore lines from the constants and asserts git check-ignore agrees, one single-pathname call per file per the tc8 lesson."
+    },
+    {
+      "id": "tc16",
+      "from": "execute",
+      "statement": "tc16 An engine rail postcondition is unsatisfiable on a survey controller, so a rail that RAN AND PASSED can only be recorded as a waived risk. The g0 reviewer hit this on r6-fowler, whose SKILL.md instruction is to fill the item's postcondition command with the real record path it wrote. On a survey, no verb can do that: 'amend --op retext-check' is refused with 'amend applies to gated checklists' and 'attest' is refused with 'c1 is engine-checked'. The template also ships c1 with a literal <fowler-pass-record-path> placeholder, which a POSIX shell parses as an input redirection and fails on regardless of the above. The only remaining route was 'waive --force', which frames a passing rail as an accepted risk and makes the record actively misleading about run quality. The reviewer recorded the true reason in the waive text. Fix direction: let retext-check work on surveys, or have 'record' accept the record path as an argument. Same family as tc9 (no verb clears a refresh-request): the state machine models the obligation but not its discharge."
+    },
+    {
+      "id": "tc17",
+      "from": "execute",
+      "statement": "tc17 A real page is silently lost to a case-insensitive filename collision, and it needs a check that can fail. class Verdict (scripts/run_skill_eval.py:178) and def verdict (:407) both resolve to map/scripts.run_skill_eval/Verdict.md, because render.py:405 derives the page filename from key.split(':',1)[1] with no collision check and no case check. This filesystem is case-insensitive and so is CI's windows-latest. I confirmed the surviving file holds the FUNCTION page; the class is unreachable from the map while the module INDEX.md still links to it. Reviewer swept the whole tree and found exactly one collision, no duplicate keys, no module-directory collisions, no invalid filename characters. Second consequence: the map is platform-dependent, so the same source renders 3636 pages on a case-sensitive filesystem, which fails the spec's own determinism falsifier of 'any non-empty diff on unchanged source'. COMMANDER RULING: the collision is NOT fixed at g0 -- renaming is a symbol-identity question and g2 owns symbol identity. Detection is assigned to g1, whose entire charter is a check stage that can fail; g1 must add a page-name collision check that goes red on this exact case, and it cannot write that check if it does not know the case is there. This is populating g1's stated purpose, not expanding its scope. The Fowler pass names the mechanism: primitive obsession -- the supplement key is a bare 'module:Qualified.Name' string that five call sites re-parse by hand, so there is no single place that owns page-name derivation and therefore no single place to put the check."
+    },
+    {
+      "id": "tc18",
+      "from": "execute",
+      "statement": "tc18 'entity_pages' carries the IDENTICAL check-that-cannot-fail defect that B2 fixed, in the same function, and is still wrong. render.py reports entity_pages as len(sizes), and sizes gets one append per emit() CALL, so it reads 3523 while 3522 entity pages exist on disk. It is the same number-that-cannot-go-wrong shape as the 'pages' field: identical output in the healthy world and in a world where pages overwrite each other. The remediation implementer found it, correctly did NOT fix it because the handoff scoped that pass to 'pages' and forbade other defect fixes, and recommended routing it onward. COMMANDER RULING: assigned to g1 alongside tc17, since g1's charter is a check stage that can fail and this is a one-line fix in the function g1 will already be in. Note the lesson for the remaining ten gates: fixing one instance of this defect family does not fix its siblings, so a gate that fixes a cannot-fail check must sweep the enclosing function for the same shape."
+    },
+    {
+      "id": "tc19",
+      "from": "execute",
+      "statement": "tc19 A third environment trap, more dangerous than tc3 and tc7 because it fails SILENTLY GREEN. docs/agents/CREW_CONTEXT.md:19 requires 'python', not 'py'. The py launcher has no pytest installed, so 'py -m pytest' dies with 'No module named pytest' and a careless reader takes it for a clean run. The g0 remediation implementer had already authored 'py -m pytest' into all three of its plan's command postconditions before it found the rule; had it not, the engine would have recorded a verified pass on every gate of that plan on the strength of checks that could not fail -- this issue's own defect class, occurring inside this issue's own scaffolding for the second time (see tc8). It caught and fixed this before starting any gate. Fix direction: add the python-not-py rule to the environment-traps section that every crew handoff now carries, beside FORCE_COLOR and PYTHONIOENCODING; the traps section is demonstrably the field crews actually read."
+    },
+    {
+      "id": "tc20",
+      "from": "execute",
+      "statement": "tc20 The engine has no verb for an author correcting their own not-yet-started plan. The g0 remediation implementer needed to fix three wrong command strings in a plan file it had itself just authored, before 'start' on any gate. 'amend' is the sanctioned route but requires --authority human and no human is reachable from a crew. Its alternatives were to drive four gates through checks it already KNEW were vacuous, or to edit the command text directly. It edited directly, touching no status, satisfied, evidence or journal field, and disclosed the improvisation in its result -- which is the right call and the right disclosure. But the state machine forced a rule-break to avoid shipping a check that cannot fail, which is a bad incentive to leave in place. Fix direction: allow plan-authoring edits to a gate that has never been started, without human authority, since no state or evidence exists yet to protect. Same family as tc9 and tc16: the machine models the obligation but not its legitimate discharge."
+    },
+    {
+      "id": "tc21",
+      "from": "execute",
+      "statement": "tc21 A blunt position grep over the committed page tree will still return 2 hits after B1 is fixed, and a reviewer at gs will read them as B1 unfixed. Both come from a single authored docstring: tests/test_checklist_engine.py's TestGlobToRegex names scripts/checklist_engine.py:449 in its own prose, which the renderer copies through onto the entity page and onto its module index line (tests.test_checklist_engine/TestGlobToRegex.md:8 and INDEX.md:450). This is source text echoed through, not a position the renderer emitted, and it churns only when its own docstring changes -- so by the B1 reasoning it is in the same category as the retained file path and is CORRECT to leave. Recorded so gs is not surprised into re-opening a settled ruling. The remediation implementer also noted it in the test's class docstring. Related: the read-only prototype at .agent-work/issue-456/reference/prototype/render_map.py:159 and render_fn.py:26 still carry the old file:line header, so anyone lifting from the prototype will reintroduce B1."
+    },
+    {
+      "id": "tc22",
+      "from": "execute",
+      "statement": "tc22 A relaunched crew reuses an ABANDONED attempt number, and the resulting registry entry can never be result-verified. Measured this run: two earlier g0 implementer attempts were explicitly abandoned after clean context-trip handoffs; dispatching the remediation implementer registered it as 'constellation/issue-456/g0/implementer/attempt-1' -- the SAME id as the first abandoned attempt -- and reported 'running'. The crew then ran to completion and wrote its result artifact. But 'run_crew.py --verify-result' on that id REFUSED with 'cannot verify an abandoned crew', because the registry still carries the abandoned disposition against the reused slot. So the single mechanism the durable registry exists to provide -- confirming that a dispatched crew actually produced its result artifact -- is unavailable for any relaunched crew, and it fails CLOSED in a way that looks like a policy refusal rather than a defect. I only discovered it because I ran the verification; a commander that trusted the dispatch would never learn the check had not happened. Adjacent to this issue's own defect family: not a check that cannot fail, but a check that cannot RUN, with the same end state of an unverified claim entering the record. Fix direction: allocate a fresh attempt number on every dispatch rather than reusing a terminal slot, and make --verify-result distinguish 'this id was abandoned' from 'this id was abandoned and then relaunched'."
+    },
+    {
+      "id": "tc23",
+      "from": "execute",
+      "statement": "tc23 Sharpens tc22 with a measurement: the two crew-registry tools give CONTRADICTORY dispositions for the same entry. For constellation/issue-456/g0/implementer/attempt-1, run at the same moment: 'recover_crews.py issue-456' reports COMPLETE -- recoverable/complete, do not rerun, while 'run_crew.py --verify-result <same id>' REFUSES with 'cannot verify an abandoned crew'. Both read the same registry. recover_crews is the tool doctrine tells a commander to run before every dispatch to decide whether a slot is clear, and verify-result is the tool that confirms a crew produced its artifact; they disagree, so whichever one a commander happens to consult determines what it believes. A commander following the dispatch precondition alone sees COMPLETE and never learns the result was never verified. Confirmed by re-running verify-result after recover_crews had already reconciled the entry to COMPLETE, so this is not a transient race. Fix direction: one disposition function shared by both tools, and a fresh attempt number on every dispatch so a terminal slot is never reused (tc22)."
+    },
+    {
+      "id": "tc24",
+      "from": "execute",
+      "statement": "tc24 CORRECTS tc18, which as I filed it would have misdirected g1 into shipping a second cannot-fail field. tc18 says entity_pages is 'a one-line fix in the same function'. The one-line fix matching g0's own precedent is to count the tree again -- and counting the tree is exactly what the g0 re-review proved is still tautological (B3): pages = sum(1 for _ in out.rglob('*.md')) is a count of the tree it describes, and mutations that delete a quarter of the page tree, remove every module index, or destroy the output layout ALL leave the suite green. So g1 would have 'closed the family' by adding a second field that cannot fail. WHAT g1 SHOULD ACTUALLY DO, ruled: (1) the root is not entity_pages but 'sizes', which feeds three reported fields, so fix the source rather than each field; (2) assert the invariant the report ALREADY contradicts -- pages - 1 - modules against entity_pages, currently 3535 against 3536, differing by exactly the lost Verdict page (tc17); (3) treat a count derived from the same expression as the implementation as no check at all. GENERAL LESSON for the remaining ten gates, and the reason this correction exists: reproducing a falsifier that a crew designed only proves the crew's own probe works. I reproduced both g0 mutation proofs myself and still missed B3, because I never asked whether the test could catch anything OTHER than the probe it was built against. A cannot-fail check must be attacked with a mutation its author did not choose."
+    },
+    {
+      "id": "tc25",
+      "from": "execute",
+      "statement": "tc25 The crew registry became UNDISPATCHABLE for a gate/role, and no documented recovery cleared it. Trying to dispatch the g0 closing implementer: 'run_crew.py --dispatch external' REFUSED with 'refusing duplicate crew: an active attempt already holds g0/implementer@. (status running)', naming attempt-1 -- a crew that had already completed and returned its artifact. Ran the refusal message's own prescribed recovery, 'run_crew.py --abandon <id>': it reported 'abandoned' and the very next dispatch refused identically. Ran it a SECOND time, it again reported 'abandoned', and the dispatch refused identically a third time. Direct inspection of crew-runs.json shows why: slot reuse (tc22) has produced FOUR entries keyed to the same attempt-1 id, of which abandon-by-id resolves one per call while the duplicate check reads a different one, so the two operations can never converge. Meanwhile recover_crews.py reports '0 unresolved' throughout, i.e. the tool doctrine requires before every dispatch says the slot is clear while the dispatcher says it is occupied (tc23). CONSEQUENCE THIS RUN: I could not dispatch the crew, so I made the change myself and disclosed it -- see the ruling on e-g0-review-7. This is now a HARD blocker, not a papercut: a commander that must dispatch an implementer to this gate/role has no working route, and the failure presents as a policy refusal rather than a defect. Fix direction is tc22's -- never reuse a terminal slot -- plus making abandon idempotent over ALL entries sharing an id, and having the duplicate check and recover_crews share one disposition function."
+    },
+    {
+      "id": "tc26",
+      "from": "execute",
+      "statement": "tc26 The render report's page count still cannot notice a zero-byte page -- rglob('*.md') counts a file that was created and never written. Raised by the g0 closing reviewer (its finding A5). NOT a blocker at g0: it weakens only the one field the B3 docstring now explicitly forbids trusting, and g1's structural invariant subsumes it. Route to g1 alongside tc17."
+    },
+    {
+      "id": "tc27",
+      "from": "execute",
+      "statement": "tc27 A gate produced a fix with NO IMPLEMENTER_RESULT artifact. crew-handoffs/g0-close.md was authored but g0-close-RESULT.md was never written, because the dispatch slot was undispatchable (tc25) and the Commander made the docstring edit by hand. The substance survives only in commit 853be2bc's message. The doctrine assumes every fix arrives with a result artifact; when the Commander does the work itself there is no defined place for one. Decide whether a Commander-authored fix should write its own IMPLEMENTER_RESULT."
+    },
+    {
+      "id": "tc28",
+      "from": "execute",
+      "statement": "tc28 CAUGHT AGAINST THE COMMANDER, and accurate. The engine journal records the advance past g0-review and the attest on g0-integrate precondition p1 roughly eight minutes BEFORE the handoff for the pass that satisfies it existed. The advance itself was legitimate -- g0-review's own postconditions were met -- but attesting 'REVIEW_RESULT received' while both reviews on record read BLOCK makes the journal say the precondition was satisfied by refusals. Rule for the remaining ten gates: attest a gate's preconditions only after the artifact that satisfies them exists. Consider an engine guard, since nothing in the tool prevented it."
+    },
+    {
+      "id": "tc29",
+      "from": "execute",
+      "statement": "tc29 A CHECK THAT COULD ONLY EVER FAIL SHIPPED IN THE PLAN, IN ALL 11 GATES. Every gate's c1 postcondition was authored as two shell commands joined by the prose word 'AND'. The engine runs command checks verbatim through a POSIX shell, so the text always died with 'file or directory not found: AND' regardless of the tests. This is the mirror image of the defect shape g0 and g1 exist to hunt: a check that cannot go green is as informationless as one that cannot go red, and nothing between planning and g0-integrate caught it -- gen_execute.py did not validate that a command check parses, and the plan review did not run one. Repaired under amend authority commander (' AND ' -> ' && ', plus env -u FORCE_COLOR -u PYTHONIOENCODING on each half, per tc3/tc7). CANDIDATE: have the engine, or gen_execute.py, refuse to accept a command-kind check whose text does not parse as a shell command -- or at minimum dry-run each command check once at plan time."
+    },
+    {
+      "id": "tc30",
+      "from": "execute",
+      "statement": "tc30 run_crew.py --abandon --relaunch REGISTERS THE NEW ATTEMPT AND THEN HANGS trying to spawn it, leaving a phantom 'running' entry with nothing behind it. Measured at g1: the call timed out at 120s; attempt-2 was already in the registry as 'running', so the next --dispatch external was REFUSED as a duplicate naming a crew that had never started. Same family as tc22/tc25 -- the registry records intent to launch before the launch succeeds, and there is no state for 'registered but never spawned'. Workaround used: --abandon alone (which works), then dispatch the subagent by hand into the already-registered slot. CANDIDATE: make --relaunch register only after a successful spawn, or give the wrapper an explicit 'registered, not started' status that --dispatch can adopt instead of refusing."
+    },
+    {
+      "id": "tc31",
+      "from": "execute",
+      "statement": "tc31 NOTHING IN g1 TIES A PAGE'S LOCATION TO ITS CONTENT. Found by the g1 implementer's undesigned-attack pass: 11 attacks run, 4 survived. Swapping two pages' contents, and renaming a page file, BOTH pass all six g1 checks. The checks verify that the right set of pages exists and that each page is internally consistent, but never that a given page is at the path the map says it is. Deliberately NOT narrowed away in the gate's claims. ROUTE TO g4, whose close criteria already demand a link-following graph walk -- a walk that follows links from INDEX.md would catch both. Do not let g4 close without covering it."
+    },
+    {
+      "id": "tc32",
+      "from": "execute",
+      "statement": "tc32 A GREEN DETERMINISM RUN IS NOT EVIDENCE THAT CALLER ORDERING IS STABLE. Found by the g1 implementer: dropping a sorted() is not uniformly a determinism defect, because a Counter is insertion-ordered and hash-seed-immune, so removing its sort changes nothing observable under a PYTHONHASHSEED sweep. g1's determinism check is real and kills the sorted() drops that DO matter, but its green does not generalise. ROUTE TO g5, which owns caller-split determinism: g5 must establish caller ordering stability by its own argument and must not cite a green g1 determinism run as proof."
+    },
+    {
+      "id": "tc33",
+      "from": "execute",
+      "statement": "tc33 CHECKS THAT DEGRADE QUIETLY RATHER THAN LOUDLY -- four found by the g1 reviewer, none blocking, all real. The sharpest: respelling the inbound line makes refs-line-self-consistent return [] instead of going red, so a rename of the thing it parses silently empties its iteration set rather than failing. That is the 'wrong iteration set' route into a check that cannot fail, and it is the same family as the g0 defects. It is survivable today only because inbound-attribution catches that particular case, which is luck, not design. One assertion fixes it: require the iteration set to be non-empty on a corpus known to be non-empty. ROUTE: fold into gB or wherever the check family is next touched; do not let it sit because a sibling happens to cover it."
+    },
+    {
+      "id": "tc34",
+      "from": "execute",
+      "statement": "tc34: supplement.walk descends node.body ONLY, so any definition inside a compound statement (with/if/try/for) gets NO PAGE AT ALL. Measured by the g2 implementer: one of the four D2 collision members, at tests/test_context_manifest.py:771, sits inside a 'with' block and is invisible to the supplement while extract.py (which uses generic_visit) sees it. The two AST passes DISAGREE about what the corpus contains, and entity_symbol_join cannot see the gap because it iterates supplement keys. This is a real coverage hole in the map AND a blind spot in a g1 check -- any check that iterates supplement keys is blind to these definitions. Route: g4 (schema/top-index) or a dedicated fix; g4 already owns the link-following graph walk."
+    },
+    {
+      "id": "tc35",
+      "from": "execute",
+      "statement": "tc35: the INDEX page-filename collision family is left UNFIXED ON PURPOSE at g2. An entity named INDEX still overwrites its own module's index page. It cannot be fixed at g2 because _make_collision_repo is g1's ONLY cross-platform falsifier for the page-accounting check -- reserving the stem would make that g1 test unable to fail, which is the exact defect this run exists to stamp out. Fixing it requires rebuilding the falsifier on a different collision FIRST, then reserving the stem. Recorded rather than silently swallowed. Note the ordering constraint: falsifier first, fix second."
+    },
+    {
+      "id": "tc36",
+      "from": "execute",
+      "statement": "tc36: TWO defects in the Commander's own g2 handoff, both found by the crew through measurement, both corrected in the attempt-2 handoff. (1) It described the four D2 collisions as 'same-depth siblings' implying four PAGE-level merges; they are four STORE-SYMBOL merges and only three are two-page merges (see tc34). A crew hunting four page pairs would find three and wrongly conclude its own measurement was broken. (2) It prescribed 'env -u FORCE_COLOR -u PYTHONIOENCODING python ...' as the verification form, which the Bash tool REFUSES in a worktree-isolated session ('runs env with -m, whose effect on the command it wraps cannot be verified'). Correct hand-run form is 'unset FORCE_COLOR PYTHONIOENCODING && python ...'; the engine's own POSIX command checks are unaffected. PROCESS LESSON, generalizable beyond this run: a handoff that names an exclusion ('do not weaken any check the previous gate shipped') without naming WHERE the tripwires are makes each successor rediscover them at full cost. The crew named this as the single most expensive thing it rediscovered. Later gate handoffs must carry a per-defect list of the prior gate's tests and mutation anchors that constrain the fix."
+    },
+    {
+      "id": "tc37",
+      "from": "execute",
+      "statement": "tc37: class_member still keys on the BARE class name. resolve_attr's self.x / cls.x branches call class_member(self.clsstack[-1], attr), which walks build_table's module-level class records -- so for a NESTED class that lookup can read a same-named MODULE-LEVEL class's member set. Zero occurrences in this corpus and the fallback beneath it is now correct via clsyms, so this is LATENT, not live. The same len(clsstack) == 1 gate that g2's R2a now carries would close it. Found by the g2 implementer while fixing D2; recorded rather than fixed, because fixing a latent path with no corpus instance would ship an unfalsifiable change."
+    },
+    {
+      "id": "tc38",
+      "from": "execute",
+      "statement": "tc38: SECOND instance of an integrate check that could only ever FAIL, and the first was tc29. g2-integrate c1's selector -k 'symbol_identity or referenced_by' matched ZERO tests; pytest deselects all and exits 5, so the check was informationless in the same way a check that cannot fail is -- just from the other side. Root cause: the gate spec's selectors were written in snake_case against test CLASS names that are CamelCase, and nothing verified a non-empty selection. g0 and g1 escaped only because 'discovery or cli' and 'determinism or invariant' happen to match. STANDING RULE for the remaining gates (g3 g4 g5 gb g6 g7 g8 gs): before advancing any *-integrate, run its -k selector by hand and confirm it selects a NON-EMPTY set, then confirm that set can go red. A gate whose selector matches nothing will refuse to advance and the failure will look like broken code rather than a broken check -- which is how it presented here. Also: tell each gate's implementer in its handoff what its integrate selector is, so the crew names its test classes to match."
+    },
+    {
+      "id": "tc39",
+      "from": "execute",
+      "statement": "tc39: the engine's HARD context band fires at roughly 16-18 percent of actual fill, because gauge_reader gives claude-opus-5 a 150K-token hard cap while the model's window is 1M. Every crew from g1 onward has hit it, and the Commander has now parked three times on it. Consequences observed, not theorised: the g1 implementer parked and needed a successor; the g2 implementer parked and needed a successor; the g3 implementer hit it at EVERY gate boundary from m1 on and chose to attach the refresh-request and DECLINE it with a stated reason rather than park the run at m0 -- the engine's own rollout caveat describes this situation. That is a reasonable call but it means the band is being routed around rather than obeyed, which is worse than either obeying it or fixing it. This is a real cost: roughly one extra crew dispatch per gate, plus Commander parks that cost a compaction each. Route to feedback, not to a gate -- it is a defect in the governor's model table, not in this issue's code."
+    },
+    {
+      "id": "tc40",
+      "from": "execute",
+      "statement": "tc40: 'add an extraction-window statement' appears in the g3 gate spec but is DEFINED NOWHERE in the run's artifacts. The g3 implementer designed it itself -- the per-file coverage boundary plus the home for the declared line base -- and flagged that a reviewer should check that design against intent rather than inherit it. This is the right disclosure and it must not be lost: the g3 reviewer has to judge whether the invented definition matches what the plan meant, because nothing else in the run can settle it. Generalisable: a gate spec phrase that names an artifact the run never defines will be silently invented by whoever implements it, and it will then read as settled."
+    },
+    {
+      "id": "tc41",
+      "from": "g3-review",
+      "statement": "The extraction-window statement's docstring overclaims. It says a reader can tell a fact absent from the code from a fact that was never looked at. That holds only for a consumer of the raw statement store. The g3 reviewer traced render.py's MODULES population and confirmed a parse-failed file leaves ZERO trace in the rendered map tree: no page, no index entry, no failure note. The only record is extract_report.json, which is gitignored and linked from no page. The coverage-boundary property is real but not realized for the map's actual audience, so the docstring describes a guarantee the shipped artifact does not give."
+    },
+    {
+      "id": "tc42",
+      "from": "g3-review",
+      "statement": "The reviewer checklist's Fowler item r6-fowler.c1 ships with a literal placeholder fowler-pass-record-path and no survey-legal verb can substitute the real path. Four consecutive reviewers on this run have force-waived the same check for the same reason. The rail itself ran and passed every time, so this is not a risk acceptance; it is a check whose text cannot be satisfied as written, which trains crews to waive. Routes to feedback on the reviewer skill, not to a gate."
+    },
+    {
+      "id": "tc43",
+      "from": "g3-review",
+      "statement": "The Bash tool in an isolated worktree refuses long quoted strings, so engine verbs taking free text (--finding, --reason, --summary, --why) fail on any message of real length. The g3 reviewer solved it by writing tiny subprocess wrapper scripts that read the text from a file and pass a list argv, avoiding shell quoting entirely. Every crew rediscovers this at full cost. Two fixes: adopt the wrapper pattern as standing worktree doctrine, and add --finding-file / --reason-file / --summary-file options to the engine so no one has to. Routes to feedback."
+    },
+    {
+      "id": "tc44",
+      "from": "g4-review",
+      "statement": "The routing tier degenerates on flat corpus shapes, and the proof was sitting in this repo's own index unexamined. The tests package is 50 modules and 2769 entities, 74.3 percent of the corpus and the exact proportion critic F9 named, but every module is two dotted segments, so the tier predicate never fires and it renders as 50 undifferentiated bullets with zero subheadings. Two synthetic shapes isolate the mechanism: a flat single package gives tier 2 zero benefit, and a corpus of loose top-level modules with no packages degenerates TIER ONE into one bucket per module, which falsifies top_index's own docstring claim that tier 1 is bounded by package count and never by module count. Both shapes are real-world, not pathological: shape A is the default pytest layout and shape B is any script-bag repo. Two actions: correct the docstring's tier-1 bound claim, and consider a secondary grouping signal for flat dominant packages."
+    }
+  ],
+  "blockers": [],
+  "refusals": 12,
+  "engine_session": {
+    "session_id": "commander-issue-456",
+    "status": "released",
+    "claimed_at": "2026-08-07T17:28:15.767364+00:00",
+    "last_heartbeat": "2026-08-09T11:12:34.010096+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T11:12:47.531421+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "init",
+      "why": "work area scaffolded in a fresh worktree cut from origin/main (local main is 21 commits ahead, unpushed epic-418 work that must not ride this PR); lease claimed",
+      "mechanical": false,
+      "ts": "2026-08-07T17:28:38.131592+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "context",
+      "why": "doctrine read (globals from skills/_shared, ORCHESTRATOR_CONTEXT, GLOSSARY; no engine-config.json in this repo). Map orientation DEGRADED-NO-MAP and discharged: constellation-skills has no docs/architecture map, so the CONFIRMED DESIGN_SPEC (lifted into the work area) is the hash-pinned substitute and stands in as the frame.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:30:47.686283+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "understand",
+      "why": "UNDERSTOOD. Build: productionize the derived code map (extract/render pipeline + agent-lean page format + consuming skills) from the CONFIRMED explore-code-map DESIGN_SPEC and its prototype. FACTS: (1) repo vendors tools as scripts/<tool>.py + tests/test_<tool>.py, CI installs only pytest+coverage so the tool MUST be stdlib-only; (2) build_architecture_map.py is a schema compiler over AUTHORED packets, no ast import -- a complement, but it owns the name 'architecture map'; (3) this repo self-maps (233 py files, all parse, 5232 entities) so checks need no external repo, BUT .agent-work/ must be excluded (1821 scratch entities) and zero BOM files exist so gate 9 needs a fixture. The prototype has NO CLI -- hardcodes ROOT=f1Brainz -- hence a gate 0. TOMMY'S FOUR RULINGS: all 9 issue gates ship this run plus gate 0 (my narrower gate0+1-4 recommendation was put to him and NOT taken); tool lands at scripts/code_map/ as a package; crews ON (explicit override of the standing no-Agent instruction, for this run); cherry-pick the 5-file/9-line skills diff onto this branch, push and full non-draft PR PRE-APPROVED -- merge to main NOT approved. Branch cut from origin/main deliberately (local main is 21 commits ahead with unpushed epic-418 work). NEXT: plan authors execute.json with TEN gates in critic-reordered sequence, then the plan-approved human checkpoint.",
+      "mechanical": false,
+      "ts": "2026-08-07T17:48:22.395941+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "PLAN COMPLETE AND APPROVED. execute.json carries 34 items across 11 gates (g0 CLI layer, g1 checks-that-can-fail, g2 D2 symbol collisions, g3 D1 line base, g4 schema/top-index, g5 determinism, gb churn-under-rename, g6 redundancy rule, g7 authored-layer staleness, g8 tag-vocabulary cull, gs skills integration + full map tree staged LAST). Regenerate any gate from .agent-work/issue-456/gate-spec.json via gen_execute.py. RECOMMENDATION ADOPTED: most-testable's port-defective-then-fix mechanism (port the defect, capture RED, fix, commit a mutation entry proving the test kills it), reusing tests/test_mutation_floor.py's idiom; every falsifier graded A (reproduces on real input today) or B (red-by-absence, negative control IS the falsifier). From smallest-diff: thresholds as annotated module constants not a committed JSON file (scripts/curate_corpus.py precedent); check stage reaches CI as a test not a workflow step; do NOT stage the ~3500-file map tree until the final gate so intermediate diffs stay reviewable. CORPUS NUMBERS every threshold must be sized against: 103 mappable files, 3411 entities (3077 fn / 334 cls), 52292 source lines, AFTER excluding .agent-work/. D2 = exactly 4 real collisions on this repo, all closure-in-method (mod:Class.<closure> drops the METHOD name), listed individually in d2_collisions.txt -- 'all N resolve' is a vacuous close criterion, the fix must name the method. D2 arm 2 (class-in-function) is 0 occurrences here: fixture-only, same standing as BOM, and a gate closing on 4->0 would ship it unwritten. g4's top-index falsifier CANNOT fire at 103 modules (~115-line flat index) -- recorded as a stated non-firing falsifier, do not invent a threshold that would have passed before the change. TOMMY'S TWO RULINGS AT APPROVAL: (1) lock threshold numbers later, and the tripwires must be USEFUL -- no rabbit holes, no unnecessary speed bumps; (2) build the map, long overdue -- and a large share of this repo's real connections are NOT in code, they are in how skills get used (which skill loads which reference, which gate dispatches which crew). That is a KNOWN DEFICIENCY, recorded in the frame, explicitly not now and not a blocker: 'if we can just get the actual code mapped, that's a win good enough for now'. Consequence the run must honor: do not overclaim coverage -- a page saying 'referenced by: none' for a script three skills invoke is wrong in the way that matters, so the run report must say plainly that skill-usage edges are outside what this map sees. And do not widen scope to chase it. OPEN TRIAGE: tc1 (advance --why is the only verb writing the cold-start digest and is exactly the verb a HARD context trip blocks), tc2 (spec says build the named guards first, names three, queue carries one), tc3 (test_mutation_floor.py:255 FAILED-line regex defeated by FORCE_COLOR=3 -- 10 local failures are ENVIRONMENTAL, not a regression; baseline test is green and CI has no FORCE_COLOR). AUTHORITY: push and a full non-draft PR are PRE-APPROVED; MERGE TO MAIN IS NOT. NEXT: execute starts at e0-context.",
+      "mechanical": false,
+      "ts": "2026-08-07T20:15:26.101390+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "All eleven gates are closed with integrated evidence: g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs. Every gate ran implementer then reviewer through run_crew.py, and every one closed on a reviewer APPROVE with the close-criteria command re-run at the gate boundary rather than taken on report.\n\nVerified at the final boundary: full suite 1840 passed / 2 skipped / 701 subtests / 0 failed, exit 0; `-k map_tree_freshness` 2 passed, exit 0; `python -m scripts.code_map build --root .` then `check --root .` 7/7, exit 0; `git ls-files map/` returns exactly map/INDEX.md and map/ids.jsonl.\n\nThe theme this step kept turning up is checks that cannot fail, hit at g5, g6, g7, g8 and again at gs, where the gate's own closing selector collected zero tests at gate open. Each was caught by re-running the criterion rather than trusting the report, and each was fixed before the gate closed. The mirror form appeared once in my own work: a close criterion that could never pass.\n\nTwo errors I own and carry to feedback. My gs close criterion was literally unsatisfiable. And my tc20 was refuted by the reviewer, who authored a real anchor and took the assertion RED; the true fact is narrower, that no repo history has ever exercised it.\n\nThe one decision that changed the plan: the landing zone was measured rather than assumed, with a negative control. The 116-file zone is not stable; the 2-file zone is. Two tracked files ship instead of 3,975.",
+      "mechanical": false,
+      "ts": "2026-08-09T10:48:38.462542+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "This repo has no packet map (no docs/architecture), so the spine's direct path applies: fold the change into the design doc it actually touches. It touches one, and the gap was real rather than a no-op -- `grep -rln 'code_map\\|code map' docs/ skills/` returned NOTHING before this edit, so a whole new subsystem and a newly tracked artifact were invisible to the structural record.\n\nFolded into docs/CONSTELLATION_OVERVIEW.md, the file that owns this repo's truth layers:\n\n1. The truth-layers block gained `map/` as compressed DERIVED truth -- a projection of dense truth, never authored, regenerated by command. That distinction is the point: the existing compressed layer is hand-authored and durable, and a derived layer that looks like it but goes stale silently would be the worse thing to add.\n\n2. A new subsection under the map-input contract, where a derived map actually belongs, recording: the real entry point (`python -m scripts.code_map build|check --root .`, package CLI, no standalone build script -- the wrong path cost three reviewers a rediscovery each this run); that check ships as a test rather than a workflow step so it reaches CI by the ordinary road; the two-file landing zone with the measurement that produced it and the negative control that could have overturned it; the named cost that the entry point's links do not resolve until a build runs; and that freshness is owned by no gate but by a permanent suite test, which is a mechanism rather than an intention.\n\n3. Tommy's ruling recorded as a standing deficiency with its consequence attached, not as a buried caveat: a large share of this repo's connections live in how skills get used, not in Python, so a page reading \"referenced by: none\" for a script three skills invoke is wrong in the way that matters. Anything built on this map must say so. Widening scope to chase those edges was ruled out.\n\nVerification: docs/ is not Python, so the map is unaffected by this edit, and the freshness test confirms it rather than my reasoning doing so -- `-k map_tree_freshness` 2 passed, exit 0, after the edit.",
+      "mechanical": false,
+      "ts": "2026-08-09T10:50:50.237132+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact.",
+      "mechanical": false,
+      "ts": "2026-08-09T10:58:25.793865+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Full run summary presented as PR #527, which is the durable form of it rather than a message that scrolls away.\n\nGATES: eleven closed -- g0 CLI layer, g1 checks-that-can-fail, g2 D2 symbol collisions, g3 D1 line base, g4 schema and top index, g5 determinism, gb churn-under-rename, g6 redundancy rule, g7 authored-layer staleness, g8 tag-vocabulary cull, gs skills integration plus the landing zone. Each ran implementer then reviewer through run_crew.py; each closed on its criteria RE-RUN at the gate boundary rather than on the crew's report.\n\nCHANGES: scripts/code_map/ (discovery, extract, supplement, render, checks, thresholds, package CLI); check ships as a test so it reaches CI by the ordinary road; map/INDEX.md and map/ids.jsonl tracked with .gitignore holding map/* plus two negations; four skills files picked up from d102c05; tests/test_code_map.py including MapTreeFreshnessTests.\n\nARCHITECTURE RECONCILED: docs/CONSTELLATION_OVERVIEW.md gained map/ in the truth layers as compressed DERIVED truth and a subsection under the map-input contract. The gap was real -- grep for code_map across docs/ and skills/ returned nothing before this.\n\nTRIAGE: all 20 candidates routed. 9 issues filed, #518-#526, grouped by root cause. 3 dispositions (tc1 resolved and verified at test line 623, tc11 resolved by gs, tc20 REFUTED). 2 held for feedback as doctrine rather than tracker defects.\n\nVERIFIED: suite 1840 passed / 2 skipped / 701 subtests / 0 failed exit 0; -k map_tree_freshness 2 passed exit 0; build then check 7/7 exit 0; git ls-files map/ returns exactly two paths.\n\nTHE DECISION THAT CHANGED THE PLAN: the landing zone, measured with a negative control instead of assumed. The plan's 116-file zone is not stable; the 2-file zone is. Two tracked files ship instead of 3,975.\n\nWHAT I GOT WRONG, stated in the PR rather than smoothed: an unsatisfiable close criterion of my own, and a triage candidate that a reviewer refuted by running the experiment I had not.\n\nAuthority honored: push and a full non-draft PR were pre-approved and both are done. MERGE TO MAIN IS NOT APPROVED and has not been performed -- PR #527 is left open for Tommy.",
+      "mechanical": false,
+      "ts": "2026-08-09T11:00:12.731216+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Run summary accepted. review advanced on Tommy's live instruction \"aight close on out.\" (2026-08-09), given after I had reported all eleven gates closed with the verified numbers and named the one open decision. The summary itself is PR #527, the durable form rather than a message that scrolls away, and it states what I got wrong alongside what shipped.",
+      "mechanical": false,
+      "ts": "2026-08-09T11:07:10.166073+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "The run closes. Eleven gates, seven spine steps, and every command postcondition satisfied by the engine re-running the check rather than by my word.\n\nWhat shipped: a derived code map this repo builds and verifies with `python -m scripts.code_map build|check --root .`, with `check` as a test so it reaches CI by the ordinary road. Two tracked files, not 3,975, because the landing zone was measured with a negative control instead of assumed -- the plan's 116-file zone turned out not to be stable, since one reworded docstring rewrites the module index that quotes it. Freshness is owned by no gate but by a permanent suite test, shown RED under four distinct mutations across two agents. The structural record now mentions the subsystem, which it did not before: grep for code_map across docs/ and skills/ returned nothing.\n\nVerified at the boundary: suite 1840 passed / 2 skipped / 701 subtests / 0 failed exit 0; -k map_tree_freshness 2 passed exit 0; build then check 7/7 exit 0; git ls-files map/ returns exactly two paths.\n\nThe run's recurring finding, hit six times, is checks that cannot fail -- and it kept being caught only because criteria were re-run at the gate boundary instead of read off a report. The worst instance sat in the frozen plan's own postcondition, where no reviewer looks. It recurred a third time from a third commander, so the playbook EXPORTED it rather than confirming it again, and the mechanical fix is now filed as #518 instead of recommended. The mirror form appeared in my own work, twice: an unsatisfiable close criterion, and a triage candidate a reviewer refuted by running the experiment I had not. Both are recorded as mine.\n\nA last instance of the same disease showed up in this very step: the archive check asks that the work area be gone, while the context governor's hook recreates it on every tool call. Removed in the same breath as this advance rather than papered over.\n\nTwenty triage candidates routed: nine issues filed (#518-#526), three dispositions, two held as doctrine. Authority honored exactly as scoped -- push and a full non-draft PR were pre-approved and both are done; merge to main is NOT approved and PR #527 is handed up open.",
+      "mechanical": false,
+      "ts": "2026-08-09T11:12:34.010072+00:00"
+    }
+  ]
+}

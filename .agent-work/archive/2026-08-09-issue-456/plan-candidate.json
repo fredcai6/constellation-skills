@@ -1,0 +1,338 @@
+{
+  "_note": "Commander's own draft, authored BEFORE the panel candidates landed so the panel lands against something concrete. Convergence is the human's; this is not the recommendation.",
+  "gates": [
+    {
+      "id": "g0",
+      "title": "Package, CLI and discovery -- port the prototype behind a real entrypoint",
+      "mode": "crew",
+      "depends": "none -- first gate",
+      "task": "Stand up scripts/code_map/ as the repo's FIRST Python package under scripts/ and move the prototype (astx.py, supplement.py, render_map.py) behind a real CLI with argparse. This is a PORT in the checkable sense: NO defect fixes and NO schema changes (those are g2/g3/g4). Do NOT claim 'no behavior change' -- it is unfalsifiable here, because the prototype hardcodes ROOT to an external repo and has no argparse, so there is no prior behavior to diff against (critic F7). The prototype is SIX modules, not three: astx.py, supplement.py, render_map.py, render.py, render_fn.py, and the checks pair. render_fn.py imports `render as R`; render.py was recovered from evidence/x11 and is now present, so the import graph closes. The prototype hardcodes ROOT to an external repo and has no argparse at all, so nothing downstream can run until this exists. Add a discovery layer that enumerates the corpus from git ls-files and EXCLUDES .agent-work/. Add the narrow .gitignore entries for the statement store, supplement and position cache -- .agent-work/ is deliberately TRACKED in this repo so a blanket scratch rule is wrong. Verify the installer's runtime-closure tests still pass: _direct_runtime_siblings resolves siblings as scripts/<name>.py and is blind to a package directory, so confirm this package does not silently fall outside the bundling machinery.",
+      "close": "python scripts/code_map/cli.py --root <repo> enumerates exactly the 103-file corpus and runs extract->supplement->render end to end; full existing suite still green",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map or install_constellation' -q",
+      "constraints": [
+        "stdlib only -- CI installs pytest and coverage and nothing else",
+        "PORT only: any behavior change here is out of scope and belongs to a later gate",
+        "the discovery layer MUST exclude .agent-work/ (130 of 233 tracked .py files)",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ -- new package, the repo's first under scripts/",
+          ".gitignore -- narrow entries for rebuilt artifacts"
+        ],
+        "capability": [
+          "derive structure from source",
+          "render an agent-lean page tree"
+        ],
+        "constraint": [
+          "stdlib-only",
+          "nothing committed carries a position",
+          "the run report carries no timings"
+        ],
+        "decision": [
+          "package layout vs 42 flat scripts -- RULED by the human; carried to reconcile as a decision candidate because it governs future structure"
+        ],
+        "evidence": [
+          "the 103-file / 3411-entity corpus baseline at .agent-work/issue-456/reference/corpus_baseline.txt"
+        ],
+        "confidence_flags": [
+          "CORRECTED (critic F8): the earlier flag pointed at _direct_runtime_siblings in tests/test_install_constellation.py, which is a TEST HELPER called with a hardcoded entry of 'checklist_engine.py' -- it never walks near scripts/code_map/ and would pass vacuously. The real hazard is scripts/install_constellation.py: SCRIPT_SOURCE_SUBDIRS (~line 118) exists because the install DESTINATION STAYS FLAT ('<installed skill>/scripts/<name>'), so a multi-module package with intra-package imports cannot survive bundling. Resolve explicitly: either state that no skill bundles code_map, or add a real check that a package under scripts/ is declared installable or explicitly excluded."
+        ]
+      }
+    },
+    {
+      "id": "g1",
+      "title": "A check stage that can fail",
+      "mode": "crew",
+      "depends": "g0 -- there must be a pipeline to check",
+      "task": "REWRITE the prototype's checks; do not port them. They are print-only today: no assertions, no exit code, so they read as measurements and never as a passing suite. Deliver assertions with nonzero exit and thresholds committed against THIS corpus (103 files / 3,411 entities / 52,292 lines), never the prototype's 1,224-file numbers -- otherwise the first CI run is the experiment. Cover: determinism (rebuild twice, byte-identical, no non-empty diff on unchanged source); referenced-by semantics (count AND module list against an independent source scan); edge recall per predicate with a floor, including `writes` where the independent oracle is blind; hole count against a committed baseline; template-ASCII by exact-line provenance; and the CHURN RATIO with its 3x ceiling (critic TS6's disposition attaches a re-measurement gate to the build queue, because g4/g5/g6 move that number in opposite directions -- this gate owns the threshold, g9 owns the re-run).",
+      "close": "each of these six falsifiers has a test that FAILS when its property is broken, proven by deliberate mutation, with a nonzero exit: (1) determinism -- any non-empty diff on unchanged source; (2) inbound-edge attribution -- any page whose caller set differs from an independent full scan; (3) extraction correctness -- a symbol an independent scan resolves that the AST pass misses, outside the named inference-rule gaps, plus a hand-labelled edge sample per predicate below its recall floor; (4) churn boundedness -- ratio above 3x; (5) redundancy rule -- a page whose non-recoverable lines are a minority; (6) authored-layer staleness -- a tag whose anchor body changed while its text did not, going unflagged",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_checks' -q",
+      "constraints": [
+        "thresholds are measured against this repo's corpus and committed, not inherited",
+        "a check that cannot go red is not a check -- prove each one fails under mutation",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else",
+        "NO absolute-count thresholds (critic F4): this run itself adds .py files to the corpus it measures, so 3,411 entities / 52,292 lines / any hole integer is stale before g2 finishes. Express every threshold as a ratio or as an invariant recomputed from the corpus at run time -- 'zero collisions remain', not 'all 4 resolve'; 'holes <= X% of entities', not a committed integer"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ checks module",
+          "tests/test_code_map.py"
+        ],
+        "capability": [
+          "derive structure from source"
+        ],
+        "constraint": [
+          "checks must be able to fail",
+          "stdlib-only"
+        ],
+        "decision": [
+          "committed thresholds -- sized to this corpus; durable, every later gate is measured against them"
+        ],
+        "evidence": [
+          "determinism",
+          "inbound-edge attribution",
+          "extraction correctness",
+          "redundancy rule"
+        ],
+        "confidence_flags": [
+          "prototype measurements come from a different repo and do NOT transfer"
+        ]
+      }
+    },
+    {
+      "id": "g2",
+      "title": "D2 -- function-nested definitions drop the method from their symbol",
+      "mode": "crew",
+      "depends": "g1 -- the regression must be able to go red before it is fixed",
+      "task": "astx.py:_func emits mod:{clsstack[-1]}.{name} whenever ANY class is on the stack, regardless of how deep inside a method the definition sits. So a closure defined inside Class.test_x is emitted as mod:Class.<closure> -- the METHOD name is dropped, not the class. Two same-named closures in two methods of one class therefore collide, merge their caller sets, and both pages show the union. A class defined inside a function is separately named as if module-level. MEASURED ON THIS REPO: exactly 4 real collisions, all of the closure-folded-onto-its-class shape, listed in .agent-work/issue-456/reference/d2_collisions.txt (probe: reference/probe_d2.py, which simulates the extractor's actual rule rather than a model of it). Write the failing test against those 4 named collisions FIRST -- no external repo and no fixture needed. Then put the enclosing METHOD into the symbol for function-nested definitions.",
+      "close": "each of the 4 named collisions in d2_collisions.txt resolves to a distinct symbol that CARRIES THE METHOD NAME, and the reproducer goes red-then-green. NOT sufficient: any fix that merely makes collisions distinct without naming the method -- a class qualifier satisfies 'collisions resolve' without touching the defect (critic F2)",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_symbol_identity' -q",
+      "constraints": [
+        "red before green -- the reproducer must be committed failing first",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ name-resolution and store modules"
+        ],
+        "capability": [
+          "derive structure from source",
+          "answer cross-file questions cheaply"
+        ],
+        "constraint": [
+          "checks must be able to fail"
+        ],
+        "decision": [
+          "symbol identity for function-nested definitions -- the enclosing method must appear; durable, every consumer inherits it"
+        ],
+        "evidence": [
+          "inbound-edge attribution -- any page whose caller set differs from an independent full scan"
+        ],
+        "confidence_flags": []
+      }
+    },
+    {
+      "id": "g3",
+      "title": "Referenced-by trust fix",
+      "mode": "crew",
+      "depends": "g2 -- same line of code",
+      "task": "The name list omits the defining module while the count includes it, and nothing states that the count already excludes definition, import and docstring mentions -- so the map says 3 where grep says 7 and the reader cannot tell which is wrong. Make count and list agree, and state the semantics on the page.",
+      "close": "count and module list agree on every page; the semantics are stated; a page's caller set matches an independent full scan",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_referenced_by' -q",
+      "constraints": [
+        "ships on the same line as g2 -- do not re-litigate symbol identity here",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ render module"
+        ],
+        "capability": [
+          "answer cross-file questions cheaply"
+        ],
+        "constraint": [
+          "page register is agent-first and aggressively minimal"
+        ],
+        "decision": [
+          "referenced-by semantics -- what the count includes vs what the list shows"
+        ],
+        "evidence": [
+          "inbound-edge attribution"
+        ],
+        "confidence_flags": []
+      }
+    },
+    {
+      "id": "g4",
+      "title": "Statement-schema merge + declare the line base (D1)",
+      "mode": "crew",
+      "depends": "g3 -- do this BEFORE productionizing the supplement, so a stage is removed rather than shipped-to-deprecate",
+      "task": "Fold kind, signature, span, docstring body, values and decorators into the statement-line schema, and add an extraction-window statement. DECLARE the line base: the store is 0-based today and the schema is silent, which is defect D1. Doing this now REMOVES the separate supplement stage instead of productionizing one that a later gate would deprecate.",
+      "close": "one schema carries all six fields; the supplement stage is gone, not deprecated; the line base is declared in the schema and asserted by a test; ids.jsonl lines are {id,s} with NO q, exercised by minting two anchors and renaming one (critic TS3); and the now-dead supplement entry is REMOVED from .gitignore -- g0 added it, this gate deletes the stage, and a stale ignore line tells the next reader a supplement still exists (critic F12)",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_schema' -q",
+      "constraints": [
+        "removing the stage is the point -- shipping the supplement as its own stage fails this gate",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ store schema and extractor"
+        ],
+        "capability": [
+          "derive structure from source"
+        ],
+        "constraint": [
+          "nothing committed carries a position"
+        ],
+        "decision": [
+          "line base -- 0-based vs 1-based, declared not implied; durable, every consumer inherits it",
+          "statement-line schema shape"
+        ],
+        "evidence": [
+          "extraction correctness"
+        ],
+        "confidence_flags": []
+      }
+    },
+    {
+      "id": "g5",
+      "title": "Top index second tier",
+      "mode": "crew",
+      "depends": "g4 -- schema settled before the routing surface is cut",
+      "task": "1,233 lines over 1,223 modules is not a routing surface -- the trial agent read 60 lines of it and learned nothing. Add a second tier so the top index routes instead of listing.",
+      "close": "the top index routes a reader to the right module group without listing every module; measured against this repo's module count",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_top_index' -q",
+      "constraints": [
+        "page register: agent-first, aggressively minimal, template text pure ASCII",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ render module -- top INDEX.md"
+        ],
+        "capability": [
+          "render an agent-lean page tree"
+        ],
+        "constraint": [
+          "page register is agent-first and aggressively minimal"
+        ],
+        "decision": [
+          "top-index routing tier"
+        ],
+        "evidence": [
+          "redundancy rule -- a page whose non-recoverable lines are a minority"
+        ],
+        "confidence_flags": []
+      }
+    },
+    {
+      "id": "g6",
+      "title": "Split referenced-by into production vs test callers",
+      "mode": "crew",
+      "depends": "g3 -- referenced-by semantics must be trustworthy first",
+      "task": "De-conflate the zero-inbound src entities: unused and untested look identical today. Split the caller list into production and test callers, and fix the useless 'referenced by: none' line on test pages. Do NOT delete test pages.",
+      "close": "production and test callers are distinguished on every page; no page shows a bare 'referenced by: none' where test callers exist; test pages still render",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_caller_split' -q",
+      "constraints": [
+        "test pages are NOT deleted -- explicit ruling",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ render module"
+        ],
+        "capability": [
+          "answer cross-file questions cheaply"
+        ],
+        "constraint": [
+          "page register is agent-first and aggressively minimal"
+        ],
+        "decision": [
+          "production vs test caller split"
+        ],
+        "evidence": [
+          "inbound-edge attribution"
+        ],
+        "confidence_flags": []
+      }
+    },
+    {
+      "id": "g7",
+      "title": "Stale-tag detector",
+      "mode": "crew",
+      "depends": "g4 -- needs the span in the schema to hash an anchor body",
+      "task": "Hash each tag's enclosing entity span at extraction. On rebuild, flag any tag whose anchor body changed while its text did not, in the run report. Without this the design ships the predecessor's failure mode in a smaller box.",
+      "close": "a tag whose anchor body changed while its text did not is flagged in the run report; proven by a fixture that mutates a body and leaves the tag text alone",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_stale_tag' -q",
+      "constraints": [
+        "the run report carries no timings, so the determinism diff can cover it",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ extractor -- span hashing"
+        ],
+        "capability": [
+          "derive structure from source"
+        ],
+        "constraint": [
+          "the run report carries no timings"
+        ],
+        "decision": [
+          "what constitutes a tag's anchor body"
+        ],
+        "evidence": [
+          "authored-layer staleness -- a tag whose anchor body changed while its text did not, going unflagged"
+        ],
+        "confidence_flags": [
+          "staleness detection is designed but unbuilt and was human-signed as accepted-untested at confirm -- this gate is the first build of it"
+        ]
+      }
+    },
+    {
+      "id": "g8",
+      "title": "Comment-extraction pass, with the cull test",
+      "mode": "crew",
+      "depends": "g2 and g7 -- needs correct symbol identity and the staleness hook",
+      "task": "Extract authored comment tags. On first render apply the CULL TEST: if the consumer treats Assumption/Constraint/Rationale identically, collapse them into one. Six real tags already wait in f1Brainz main as the first corpus, but f1Brainz is READ-ONLY for this run -- build against a fixture here and note the external corpus as future validation.",
+      "close": "tags extract and render; the cull test is APPLIED and its verdict recorded, not deferred",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_comment_tags' -q",
+      "constraints": [
+        "f1Brainz is READ-ONLY -- do not write to it",
+        "the cull test must be applied in this gate, not deferred",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ extractor -- comment pass"
+        ],
+        "capability": [
+          "derive structure from source"
+        ],
+        "constraint": [
+          "one name for one thing"
+        ],
+        "decision": [
+          "tag vocabulary and the cull test -- vocabulary reach beyond this run; surface as a decision candidate if it collapses"
+        ],
+        "evidence": [
+          "authored-layer staleness"
+        ],
+        "confidence_flags": []
+      }
+    },
+    {
+      "id": "g9",
+      "title": "Small items: BOM, wrapped-docstring split (D3), handoff practice",
+      "mode": "crew",
+      "depends": "g8 -- last",
+      "task": "Three small items. (1) BOM-prefixed files are rejected by ast.parse -- THIS REPO HAS ZERO BOM FILES, so a purpose-built fixture under tests/fixtures/ is the only way this check can go red; tests/fixtures/overread_corpus/ is the precedent for a fixture corpus directory. (2) D3 wrapped-docstring render split. (3) Record the handoff practice: name which caller holds the value being plumbed, absolute interpreter paths in verification commands, and cut trial branches from origin/<default> never the local default branch -- an unpushed commit underneath silently widened a PR from 3 files to 179 during the trial. That last lesson was already applied to THIS run's branch, which was cut from origin/main while local main sat 21 commits ahead.",
+      "close": "a BOM fixture exists and its test goes red without the fix; D3 renders correctly; the practice items are recorded where the next run will read them; AND the churn ratio is RE-MEASURED against g1's 3x ceiling now that g4/g5/g6 have moved it (critic TS6's required re-measurement gate)",
+      "command": "python -m pytest tests/ -q  AND  python -m pytest tests/test_code_map.py -k 'code_map_bom or code_map_docstring' -q",
+      "constraints": [
+        "the BOM fixture is REQUIRED -- there is no BOM file in this repo to exercise",
+        "the FULL suite must be green at this gate boundary, not just this gate's own tests (critic F6) -- the targeted selector proves this gate added a test that can fail, the full run proves it broke nothing else"
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/code_map/ extractor",
+          "tests/fixtures/ -- BOM fixture"
+        ],
+        "capability": [
+          "derive structure from source"
+        ],
+        "constraint": [
+          "stdlib-only"
+        ],
+        "decision": [
+          "branch-base practice -- cut from origin/<default>, already applied to this run"
+        ],
+        "evidence": [
+          "extraction correctness"
+        ],
+        "confidence_flags": []
+      }
+    }
+  ]
+}

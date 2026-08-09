@@ -1658,6 +1658,70 @@ class HookScriptBundleTests(unittest.TestCase):
         installer.validate_required_scripts(owner)  # must not raise
 
 
+class ScriptsPackageBundlingTests(unittest.TestCase):
+    """Issue #456 g0: scripts/ gained its first real Python package, and the
+    install destination is flat. A package whose modules import each other
+    relatively cannot survive that flattening, so every directory under scripts/
+    has to be on the record as one thing or the other."""
+
+    SCRIPTS = ROOT / "scripts"
+
+    def _source_dirs(self):
+        """Directories under scripts/ that hold Python modules."""
+        return sorted(d for d in self.SCRIPTS.iterdir()
+                      if d.is_dir() and d.name != "__pycache__"
+                      and any(d.glob("*.py")))
+
+    def test_every_scripts_subdirectory_is_declared_one_way_or_the_other(self):
+        """The gate this test exists for: a new package under scripts/ fails here
+        until somebody decides whether it bundles, instead of failing at install
+        time in someone else's run."""
+        installer = load_installer()
+        self.assertTrue(self._source_dirs(), "input precondition: scripts/ must "
+                        "have at least one module subdirectory, or this declares nothing")
+        for d in self._source_dirs():
+            with self.subTest(directory=d.name):
+                non_installable = d.name in installer.NON_INSTALLABLE_PACKAGES
+                flattened = [p.name for p in d.glob("*.py")
+                             if installer.SCRIPT_SOURCE_SUBDIRS.get(p.name) == d.name]
+                self.assertTrue(
+                    non_installable or len(flattened) == len(list(d.glob("*.py"))),
+                    f"scripts/{d.name}/ is neither in NON_INSTALLABLE_PACKAGES nor "
+                    f"fully declared in SCRIPT_SOURCE_SUBDIRS")
+
+    def test_a_non_installable_package_is_a_package_and_a_flattened_dir_is_not(self):
+        """The declaration has to match reality: __init__.py is what makes the
+        relative imports that flattening breaks."""
+        installer = load_installer()
+        for d in self._source_dirs():
+            with self.subTest(directory=d.name):
+                is_package = (d / "__init__.py").is_file()
+                self.assertEqual(is_package,
+                                 d.name in installer.NON_INSTALLABLE_PACKAGES)
+
+    def test_no_skill_bundles_a_module_from_a_non_installable_package(self):
+        """Bundling one of these copies it flat and every relative import in it
+        raises on the installed side, where nothing here would catch it."""
+        installer = load_installer()
+        forbidden = set()
+        for pkg in installer.NON_INSTALLABLE_PACKAGES:
+            forbidden |= {p.name for p in (self.SCRIPTS / pkg).glob("*.py")}
+        self.assertTrue(forbidden, "input precondition: the non-installable "
+                        "packages must actually contain modules to forbid")
+        for skill in installer.discover_skills():
+            for script in skill.required_scripts:
+                with self.subTest(skill=skill.install_name, script=script):
+                    self.assertNotIn(script, forbidden)
+
+    def test_the_declared_package_is_runnable_from_a_checkout(self):
+        """The stated alternative to bundling has to actually work, or the
+        declaration is just a refusal."""
+        result = subprocess.run(
+            [sys.executable, "-m", "scripts.code_map", "--help"],
+            cwd=str(ROOT), capture_output=True, text=True)
+        self.assertEqual(0, result.returncode, result.stderr)
+
+
 class TemplateBaselineTests(unittest.TestCase):
     def test_project_install_seeds_baseline_and_manifest(self):
         installer = load_installer()

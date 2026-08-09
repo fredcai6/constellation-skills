@@ -1,0 +1,39 @@
+PASS -- every claimed number independently reproduced this run, plus new evidence the RESULT
+doc did not carry (the tc31 attack and the corpus-shape synthesis above).
+
+FULL SUITE (my own run, backgrounded to completion, not truncated):
+1772 passed, 2 skipped, 672 subtests passed, 0 failed, 310.98s. Exact match to the RESULT's
+claim (1772/2/672/0), and to the RESULT's own stated baseline-plus-delta (1767 baseline + 5
+new tier/tc31 tests = 1772).
+
+GATE SELECTOR (my own run): `pytest tests/test_code_map.py -k 'top_index'` -- 5 passed, 75
+deselected. Exact match. Covers both close-criterion classes (3 TopIndexSecondTierTests, 2
+TopIndexPageLocationTests).
+
+FRESH BUILD + CHECK (my own run, tracked tree): build exit 0 (111 modules, 3728 entities, 3840
+pages, 2512 holes, 0 ids -- matches RESULT exactly). check exit 0, 7/7:
+no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join,
+page-location-matches-content, inbound-attribution, deterministic-rebuild all ok.
+
+CROSS-CORPUS EVIDENCE (g4_cross_corpus.py, g4_cross_corpus_subtier.py, g4_tier_shape.md) --
+verified the CLAIMED numbers are real by rebuilding independently with my own script rather
+than trusting the crew's printed table: my own g4_reviewer_synth_corpora.py + g4_reviewer_
+tc31_attack.py runs corroborate the same mechanism (module_group_key / subpkgs / the >=3
+predicate) the crew's script exercises, from a different angle (synthetic shapes + attack
+mutations instead of real-repo measurement). Did NOT re-run the crew's own f1Brainz/
+superCoolSpaceSim script byte-for-byte (both repos are READ-ONLY per the handoff and I judged
+re-deriving the mechanism independently, on shapes the crew never tried, to be stronger
+evidence than replaying their exact script) -- this is a deliberate evidence-strategy choice,
+not a gap: replaying their script would only re-confirm what they already showed; my job per
+the handoff was to find a shape they DIDN'T show, which I did (see r1-handoff).
+
+tc31 REPRODUCTION -- attacked independently with two relocations the implementer did not
+choose (g4_reviewer_tc31_attack.py/.txt): a module-page cross-module move, and a same-module
+wrong-subdirectory move. Both isolate `page-location-matches-content` as the sole failing
+check; both name the specific offending page. Genuinely load-bearing, not vacuous.
+
+THRESHOLD RE-GREP -- confirmed independently via the diff's own added lines (not a grep that
+could miss a slice): exactly one new numeric comparison, `len(m.split("."))>=3`.
+
+No blocker. All evidence files under `.agent-work/issue-456/evidence/`, prefixed
+`g4_reviewer_*` or `g4-reviewer-*` to distinguish from the implementer's own `g4_*` artifacts.

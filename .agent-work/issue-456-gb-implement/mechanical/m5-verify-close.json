@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-verify-close",
+  "mechanical": {
+    "run": "issue-456-gb-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 4,
+    "spine-step": "m5-verify-close",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-gb-implement-m5-verify-close@83eaa337cca5ad734485577d5c16ef3a809d5537",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-gb-implement",
+    "generated_at": "2026-08-08T18:02:56Z"
+  }
+}

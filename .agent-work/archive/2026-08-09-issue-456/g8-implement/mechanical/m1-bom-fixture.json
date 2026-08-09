@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-bom-fixture",
+  "mechanical": {
+    "run": "g8-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m1-bom-fixture",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g8-implement-m1-bom-fixture@da284f35d512d0413e639a6a3fc97c9e1d1687dd",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g8-implement",
+    "generated_at": "2026-08-09T00:19:40Z"
+  }
+}

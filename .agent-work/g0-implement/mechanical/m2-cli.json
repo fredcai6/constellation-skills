@@ -1,0 +1,25 @@
+{
+  "contract": 1,
+  "step": "m2-cli",
+  "mechanical": {
+    "run": "g0-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m2-cli",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g0-implement-m2-cli@06435b92c6847b4c298edb9d652dc3edefbacda8",
+    "artifact-ref": [
+      "scripts/code_map/__init__.py",
+      "scripts/code_map/discovery.py",
+      "tests/test_code_map.py"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g0-implement",
+    "generated_at": "2026-08-07T20:51:24Z"
+  }
+}

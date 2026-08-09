@@ -1,0 +1,384 @@
+{
+  "work_id": "issue-456-g7-remediate",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-tag-staleness",
+    "m2-alias",
+    "m3-pin-widen",
+    "m4-wording-and-verdict",
+    "m5-full-suite",
+    "m6-commit"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), the remediation brief (.agent-work/issue-456/crew-handoffs/g7-remediate.md), the review that blocked (g7-review-RESULT.md), and what shipped (g7-implement-RESULT.md). Read the actual code: extract.py's run()/anchor()/tag_check()/span_hash(), render.py's load_stores()/tag_lines(), the join test CommentTagStaleAnchorJoinTests, cull-verdict.json, and CullVerdictArtifactTests. Confirm the defect directly: the join test's fixture carries BOTH an anchor and a tag, and the flag it checks is p==\"stale-anchor\", not a tag mechanism. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "brief + prior review/implement results + actual extract.py/render.py code read; the tag-staleness defect independently confirmed in the code, not taken on the review's word",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md/global-everyone.md, g7-remediate.md brief in full, g7-review-RESULT.md (BLOCK, alias-vs-retire recommendation, no-timings-on-render_report-only overrule), g7-implement-RESULT.md. Read extract.py run() lines 1112-1210 (anchor diff reads only p==anchored, span_hash persisted only in anchor()), tag_check()/tags_in()/TAG_START/anchor() around lines 130-230 and 756-905, Extractor.__init__ (no encl_nodes stack exists yet). Read render.py load_stores() 130-200 and tag_lines() 294-310 and the report/ADVISORY block 700-763. Read CommentTagStaleAnchorJoinTests (line 3142) directly: its fixture _STALE_TAG_SOURCE gives one function BOTH a [rate-double] anchor and a Rationale: tag, and its assertion checks p==stale-anchor, not any tag-specific predicate -- confirms independently that the shipped test proves anchor staleness coexisting with a tag, not tag staleness itself. Read cull-verdict.json and all 5 CullVerdictArtifactTests; confirmed 2 of 5 re-derive from code (keyword-pattern match against extract.TAG_START.pattern; render-dependency AST walk against render.tag_lines), 3 check only the artifact's own internal fields."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-tag-staleness": {
+      "id": "m1-tag-staleness",
+      "title": "Fix 1: watch tags for staleness independent of anchors",
+      "imperative": "Extend extract.py so the staleness mechanism covers tag statements as first-class subjects, without touching span_hash's body, anchor(), or the anchored diff (extend alongside). Persist a span_hash on tag emission (track an enclosing-node stack alongside self.encl so a statement-level tag hashes its ENCLOSING entity's span, matching the whole-entity case where the tag's own node already is that span). Identity for a tag across two extractions is (owning symbol, tag text) -- no slug exists for a tag. Diff old-vs-new tag hashes the same way anchors are diffed (read previous 'tag' rows before this run's write overwrites the store), emit a new 'stale-tag' statement when the enclosing body hash changed while the (sym, text) key matched, and wire render.py's load_stores() to intercept p=='stale-tag' into the SAME stale_tags list/ADVISORY channel g6 established (report.get('stale_tags') and the 'ADVISORY stale tag' print) -- no second reporting channel. Add a fixture entity carrying a tag and NO anchor at all; write the test RED first (it must fail because the mechanism does not exist yet), then make it pass. Fix or split CommentTagStaleAnchorJoinTests so its docstring stops claiming a join it does not demonstrate (its fixture has both an anchor and a tag, so it proves coexistence, not the tag mechanism alone). Then attack your own work: temporarily delete the new tag-flag emission and confirm the new tag-only test goes red; report exactly which test(s) failed; revert and confirm green again.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded, defect confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; defect confirmed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the tag-only staleness test written and observed failing before the mechanism exists -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed: python -m pytest -k CommentTagOnlyStaleTag -> 2 failed, 2 passed (the 2 failures are the flag-firing assertions -- 0 stale-tag rows found where 1 expected; the 2 passes are negative-control tests that pass vacuously with no mechanism, as expected before implementation)."
+        },
+        {
+          "id": "c2",
+          "statement": "tag staleness fires on an entity with a tag and no anchor; stale_tag selector green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-tag-staleness-1"
+        },
+        {
+          "id": "c3",
+          "statement": "disable-attack performed: tag-flag emission deleted, the new test observed red, change reverted, green re-confirmed -- manual attest with the exact test name(s) that failed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Disable-attack: replaced stale_real_tags's real computation with an empty list in extract.py run(), ran -k stale_tag -> 3 failed, 16 passed (failures: CommentTagStaleAnchorJoinTests::test_comment_tags_stale_tag_flags_a_real_body_change_under_a_live_tag [coexistence assertion], CommentTagOnlyStaleTagTests::test_comment_tags_stale_tag_flags_a_real_body_change_with_zero_anchors_present, CommentTagOnlyStaleTagRenderReportTests::test_comment_tags_stale_tag_lands_in_the_same_render_report_field). All 3 failures name the exact mechanism this fix builds. Reverted; re-ran -k stale_tag -> 19 passed again, confirming clean revert."
+        }
+      ],
+      "constraints": [
+        "do not modify span_hash's body, anchor(), or the anchored diff in extract.py's run()",
+        "no second reporting channel for stale tags"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-tag-staleness-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'stale_tag' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-alias": {
+      "id": "m2-alias",
+      "title": "Fix 2: alias Assumption:/Constraint: onto Rationale instead of retiring them",
+      "imperative": "Widen TAG_START's alternation to recognize Assumption and Constraint again. Normalize their kind to Rationale at the emission site (extract.py tag_check, one dict lookup) -- render.py's tag_lines must stay exactly as branch-free as it is now (do not touch it). Update the negative-test fixture (tests/fixtures/comment_tags_corpus/corpus.py's retired_words -> aliased_words) and its test to assert the aliased keywords now DO extract, normalized to Rationale. Add an alias round-trip case to the tag repo fixture (_TAG_SOURCE): a function tagged with the retired Constraint: keyword, asserted in CommentTagExtractionTests to extract with kind=='Rationale', and in CommentTagRenderTests to render as 'Rationale: ...' with no literal 'Constraint:' surviving to the page. Update .agent-work/issue-456/cull-verdict.json: verdict stays 'collapse', but shipped_keywords, the per-kind notes, and the consequence field must describe aliasing (comments using the retired words still extract and render, normalized -- no silent breakage), not retirement. Update CullVerdictArtifactTests' keyword-matching test for the widened TAG_START pattern and add a re-deriving check of the alias mapping against the actual code (not just the artifact's own prose).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "alias round-trip proven (extraction normalizes kind, render shows Rationale not Constraint, tag_lines still carries no branch); cull-verdict.json matches the code; comment_tags selector green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-alias-1"
+        }
+      ],
+      "constraints": [
+        "tag_lines stays branch-free on kind",
+        "the cull verdict itself (collapse) does not change, only how it is implemented"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-alias-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'comment_tags' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-pin-widen": {
+      "id": "m3-pin-widen",
+      "title": "Fix 3: widen the AST pin test to catch dispatch-by-lookup and match, not just an explicit compare",
+      "imperative": "Build a shared AST-walk helper that flags an explicit if/elif compare on kind (as today), a dict/mapping lookup keyed by kind that dispatches to something OTHER than the tag's own fields (not a bare read like t['kind']), and a match statement on kind. Use it in both test_comment_tags_render_path_carries_no_branch_on_kind and test_comment_tags_cull_verdict_collapse_kinds_have_no_render_dependency. Verify by writing a real evading mutation (a dict-lookup dispatch in a scratch copy of tag_lines) and watching the OLD Compare-only check pass it and the NEW widened check catch it -- do not reason about it, run it. Revert any temporary mutation; tag_lines itself must not change (fix 2's constraint).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "widened check lands in both pin tests; both still pass against the real (non-dispatching) tag_lines",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k 'no_branch_on_kind or collapse_kinds_have_no_render_dependency' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-pin-widen-1"
+        },
+        {
+          "id": "c2",
+          "statement": "live mutation attack run: a dict-lookup dispatch mutation was applied to a scratch copy, confirmed to evade the OLD Compare-only check and get caught by the NEW widened check, then reverted -- manual attest with the observed result",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Live mutation attack (scratch script, not committed, tag_lines itself untouched): a dict-lookup-dispatch mutant and a match-statement mutant of tag_lines were built. OLD Compare-only check: clean (false negative) on BOTH mutants. NEW widened _kind_dispatch_nodes: CAUGHT both mutants, and stayed clean on the real shipped tag_lines (no false positive on the legitimate t['kind'] read). Confirms the widening catches exactly the two shapes the review named and does not regress on real code."
+        }
+      ],
+      "constraints": [
+        "tag_lines itself is not modified by this fix"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-pin-widen-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k 'no_branch_on_kind or collapse_kinds_have_no_render_dependency' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-wording-and-verdict": {
+      "id": "m4-wording-and-verdict",
+      "title": "Fix 4: correct the overstated claims",
+      "imperative": "In this run's own RESULT doc and commit message (not the prior crew's), state the CullVerdictArtifactTests re-derivation count accurately: 2 of 5 original tests re-derive from the code (keyword-pattern match, render-dependency AST walk); 3 check the artifact's own internal consistency. Note that the new alias round-trip tests (m2) and the tag-only staleness tests (m1) are additional genuinely-behavioral re-derivations outside that class. Correct the staleness test's 'join' framing now that fix 1 makes a real join true. Do not edit the prior crew's g7-implement-RESULT.md.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "wording corrections identified and will be applied verbatim in this gate's own RESULT doc and commit message",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Wording corrections identified: (1) CullVerdictArtifactTests -- 2 of the ORIGINAL 5 re-derive from code (keyword-pattern match, render-dependency AST walk), 3 check the artifact's own internal fields; this remediation's new alias round-trip tests (m2) and tag-only staleness tests (m1) are additional genuinely-behavioral re-derivations outside that class, strengthening the overall evidence base without editing the 3 internal-consistency tests themselves (a judgment call, not required). (2) The staleness join test's docstring: CommentTagStaleAnchorJoinTests now correctly says it proves anchor+tag COEXISTENCE, not the tag mechanism alone; CommentTagOnlyStaleTagTests is the real tag-only join. Both will be stated verbatim in this gate's own RESULT doc and commit message; g7-implement-RESULT.md (the prior crew's doc) is left untouched."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-full-suite": {
+      "id": "m5-full-suite",
+      "title": "Full suite green; fresh build+check",
+      "imperative": "Run the full test suite in the background (it takes ~7 minutes) and poll for completion yourself -- do not end the turn to wait. Report the exact pass/skip/subtest/fail counts against the baseline (1825 passed, 2 skipped, 692 subtests, 0 failed). Then run a fresh `build` then `check` in that order and report the check's pass ratio (baseline 7/7 exit 0).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite run to completion by this crew and its exact numbers reported (not left blank)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Full suite run by this crew (backgrounded, polled to completion, not left blank): python -m pytest tests/ -q --color=no -> 1831 passed, 2 skipped, 697 subtests passed, 0 failed, 606.05s (0:10:06). Baseline was 1825 passed, 2 skipped, 692 subtests, 0 failed. Growth +6 passed matches net new tests added across fix 1/2 (comment_tags selector grew 18->24), 0 regressions."
+        },
+        {
+          "id": "c2",
+          "statement": "fresh build then check both exit 0, check ratio reported",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Fresh build then check, in that order: build -> exit 0, pass1: 113 modules indexed, statements: 98109 over 113 files (0 failures), 3881 entities, 3995 pages, ids: 0. check -> 7/7 checks passed, exit 0 (no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, page-location-matches-content, inbound-attribution, deterministic-rebuild)."
+        }
+      ],
+      "constraints": [
+        "poll actively; never end the turn to wait on a backgrounded command"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6-commit": {
+      "id": "m6-commit",
+      "title": "Commit with explicit paths; clean tree; write RESULT doc",
+      "imperative": "Stage only the files this gate touched (scripts/code_map/extract.py, scripts/code_map/render.py, tests/test_code_map.py, tests/fixtures/comment_tags_corpus/corpus.py, .agent-work/issue-456/cull-verdict.json) -- never git add -A, and never disturb the untracked map/ tree. Commit with explicit paths and a message that states the 4 fixes and the corrected re-derivation wording. Write IMPLEMENTER_RESULT to .agent-work/issue-456/crew-handoffs/g7-remediate-RESULT.md per the brief's required evidence list.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 complete, full suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 complete, full suite green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "commit created with explicit paths; tree clean for this gate's own scope; RESULT doc written at the named path",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Committed ffa959c5 (8 files, explicit paths) + fcc05946 (RESULT doc hash fill-in). Scoped files confirmed clean via git diff --quiet (not git status --porcelain, per this run's autocrlf constraint). RESULT doc written at .agent-work/issue-456/crew-handoffs/g7-remediate-RESULT.md."
+        }
+      ],
+      "constraints": [
+        "no git add -A",
+        "do not push/merge"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g7-remediate-attempt2",
+    "status": "released",
+    "claimed_at": "2026-08-08T23:10:48.446625+00:00",
+    "last_heartbeat": "2026-08-08T23:36:41.093437+00:00",
+    "claimed_by": "g7-remediator",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T23:37:09.628916+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Confirmed defect: join test fixture carries both anchor+tag, checks p==stale-anchor only. Design: enclosing-node stack alongside self.encl, (sym,text) identity key for tags, span_hash reused unchanged, alias via dict lookup at emission site, widen AST check for dispatch shapes.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:11:54.026136+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-tag-staleness",
+      "why": "Tag staleness now watches tags independent of anchors: encl_nodes stack hashes the enclosing entity's span for statement-level tags; (sym,text) identity diffed across extractions; stale-tag rows surface through render.py's existing stale_tags/ADVISORY channel. Disable-attack confirmed the new tests catch removal of the emission; reverted and re-confirmed green.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:16:43.000295+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-alias",
+      "why": "TAG_START widened to recognize all 5 words; TAG_KIND_ALIAS normalizes Assumption/Constraint to Rationale at emission (extract.py tag_check), tag_lines untouched. cull-verdict.json rewritten to describe aliasing; CullVerdictArtifactTests' keyword test now re-derives both the widened pattern AND the normalization dict against the real code. corpus.py's retired_words renamed aliased_words, asserts both extract normalized. Alias round-trip proven end to end via _TAG_SOURCE's new budget() case (extraction + render). comment_tags selector 24 passed (was 18 baseline, was 22 after fix1).",
+      "mechanical": false,
+      "ts": "2026-08-08T23:20:13.513232+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-pin-widen",
+      "why": "Shared _kind_dispatch_nodes helper added to test file, used by both pin tests; catches an explicit compare, a dict-lookup dispatch, and a match statement, while not false-positiving on the legitimate t['kind'] read. Live mutation attack confirmed old check missed both new shapes, new check caught both. tag_lines itself untouched.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:21:49.628879+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-wording-and-verdict",
+      "why": "Wording corrections identified for the RESULT doc/commit message: accurate re-derivation count (2/5 original + new behavioral tests), corrected join-test framing. Will be written verbatim in m6.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:22:12.957029+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-full-suite",
+      "why": "Full suite 1831 passed/2 skipped/697 subtests/0 failed (+6 from baseline 1825, matching net new tests). Fresh build+check both exit 0, check 7/7.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:33:19.826243+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-commit",
+      "why": "Committed ffa959c5 + fcc05946 with explicit paths, no git add -A. Tree clean for this gate's scope (git diff --quiet). RESULT doc written per required-evidence list. All 4 fixes landed and verified: tag staleness independent of anchors (disable-attack: 3/3 named tests catch removal, 0 survivors), alias not retire (round-trip proven end to end), widened AST pin test (live mutation attack: old check missed both new dispatch shapes, new check caught both), wording corrected in this crew's own docs.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:36:41.093437+00:00"
+    }
+  ]
+}

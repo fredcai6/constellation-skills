@@ -1,0 +1,11 @@
+{
+  "work_id": "issue-456",
+  "tick": false,
+  "ops": [
+    {
+      "op": "export",
+      "id": "falsify-a-check-against-a-decoy-before-trusting-it",
+      "grounding": ".agent-work/CONSTELLATION_FEEDBACK.md 2026-08-09 entry for issue-456-code-map, carrying the originating lesson id - 'third recurrence of the vacuous-check family, and the first with a mechanical fix that is cheap enough to just ship'. Exported rather than confirmed again because confirming a constellation defect a third time logs debt, not trust. The export carries two things the prior #419 export did not: (1) the family's MIRROR form, a criterion that can never PASS, shipped this run as an unsatisfiable git diff check and caught by the implementer rather than the commander; (2) the upstream shape is now a filed issue, #518, rather than a recommendation - run pytest --collect-only on every -k postcondition at plan freeze and refuse a zero-collecting selector, which would have killed two of this run's six instances before their gate opened."
+    }
+  ]
+}

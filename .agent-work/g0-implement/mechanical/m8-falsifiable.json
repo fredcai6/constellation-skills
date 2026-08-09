@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m8-falsifiable",
+  "mechanical": {
+    "run": "g0-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "m8-falsifiable",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g0-implement-m8-falsifiable@4f560d20da1246157ddfb857b9b87eb76534e437",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g0-implement",
+    "generated_at": "2026-08-07T21:15:19Z"
+  }
+}

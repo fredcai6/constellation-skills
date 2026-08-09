@@ -1,0 +1,45 @@
+run(456): g0 review returns BLOCK; two blockers, one goes to the human
+
+The reviewer passed all five close criteria and every constraint but one,
+reproduced every number in the evidence table independently, and returned
+BLOCK on two findings. Both confirmed in my own hands before recording.
+
+B2 -- a check that cannot fail, in shipped code. render.py:397-419 counts
+write_text() calls rather than distinct output paths, so the report's
+"pages" field is identical in the healthy and the defective world. It is
+wrong right now: render_report.json says 3636, the tree holds 3635, and
+this gate's own checks.py prints 3635 beside it. The lost page is real --
+class Verdict and def verdict both resolve to Verdict.md on a
+case-insensitive filesystem, which is this platform and CI's. The function
+won; the class is unreachable while INDEX.md still links it. No test reads
+any run report.
+
+B1 -- every rendered page carries a source position, against the ruling
+"nothing committed carries a position". That ruling is the disposition of
+SY1, a BLOCKING critic finding settled by the human at the confirm gate.
+My own ruling 4 dropped the position-cache ignore entry on the premise
+that no gate produces one. The reviewer verified the premise is true and
+showed the conclusion I drew was the wrong one of two readings: the right
+one is that a confirmed deliverable lost its owning gate when the queue
+was cut to nine. Provenance is settled/human, so it goes up rather than
+being settled here.
+
+I established one fact the reviewer did not: statements.jsonl already
+carries per-statement file/line/col and is already gitignored. The
+rebuildable position store the ruling asks for substantially exists, so
+assigning the work costs a suffix removal and a test, not a new cache.
+
+g0-review is blocked pending that answer. The Verdict/verdict collision is
+filed as tc17 and assigned to g1, whose charter is a check stage that can
+fail; g2 owns any renaming.
+
+Triage candidates filed from the review: tc12 no execution coverage for
+the check subcommand, tc13 guard tests blind below one directory level,
+tc14 dead self.core and a wrong cross-reference, tc15 store filenames
+duplicated between code and .gitignore, tc16 a passing rail recordable
+only as a waived risk, tc17 the lost page.
+
+map/ remains deliberately untracked; it is staged at gs, last.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LCboWKhoAR3bNK3ixfbdgs

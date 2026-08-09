@@ -1,0 +1,83 @@
+{
+  "work_id": "issue-456-g1-review",
+  "diff_ref": "git diff dbb8b6e3..HEAD -- scripts/code_map/checks.py tests/test_code_map.py (commits ba8e78aa + 44eeb740; 1292 insertions, 193 deletions)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "Measured with an AST pass over checks.py rather than eyeballed: the longest function body is refs_line_self_consistent at 31 code lines (docstrings excluded), then inbound_attribution at 27 and run at 25. Every other function is 14 code lines or fewer. refs_line_self_consistent's 31 lines are one flat loop with six independent arithmetic rules, one branch each; splitting them into helpers would scatter arithmetic that has to be read together. No long method.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "MapUnderCheck spans 98 lines but holds 12 members, none longer than 7 code lines, all of one responsibility: read the built map the way a reader gets it. StoreScan is one __init__ of 10 code lines. Neither is a god class.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "refs_line_self_consistent and inbound_attribution each carry the same unparsable-line branch, including the message text verbatim: f\"{where}: cannot read the inbound line: {line!r}\". Minor and low-risk -- the FORMAT knowledge itself is correctly centralised in the REFS_* constants and parse_refs, which the module documents as 'the ONE place that knows how a page spells its inbound references'. Raised as an observation, not a blocker: two copies of a one-line failure message do not threaten the gate's property.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The six check functions read almost exclusively off the MapUnderCheck they are handed, which reads like envy at a glance. It is not: MapUnderCheck is a data holder built for exactly this, and the checks are free functions precisely so the CHECKS registry can enumerate them by name and run() can report per-check. Making them methods would couple the registry to the class and lose the per-check naming the failure output depends on.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "flagged",
+      "finding": "(root, artifacts, out) travels together through cli -> run() -> MapUnderCheck.__init__ and again through _build_into. MapUnderCheck is the object that already collapses that clump, so run() re-expands a triple it immediately re-packs on its first line. Cosmetic; the CLI boundary legitimately deals in three separate paths. Observation only.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "flagged",
+      "finding": "The supplement key is a 'module:name' string and checks.py picks it apart with .split(\":\", 1) in six places, twice welded to a further .rsplit(\".\", 1)[-1] to reach the leaf. The module/name/leaf decomposition is a real domain concept with no type. A small Key namedtuple with .module/.name/.leaf would remove six ad-hoc splits and make entity_symbol_join's leaf-only comparison self-documenting rather than a comment. Raised as an observation and an out-of-scope candidate: the store schema is strings and gate g3 owns it, so changing it here would widen scope.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "Widest signature is three parameters (run, MapUnderCheck.__init__, _build_into). Nothing near a parameter-object threshold.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "Tested by attack rather than by reading. A5 respelled the rendered inbound line and the blast radius was exactly the four REFS_* constants plus parse_refs -- the module's stated design goal ('a later gate that respells it updates this and nothing else') held under a real mutation. The one genuinely cross-cutting change a later gate makes, an added index tier, lands on the single named constant TOP_INDEX_PAGES.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "checks.py has two axes of change -- what is checked, and how a page is spelled -- but the second is confined to the REFS_* block and title_key, so the two axes do not tangle. No evidence a later gate has to touch unrelated parts of the file to move one of them.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "flagged",
+      "finding": "entity_symbol_join builds both sides of its comparison with chains over primitives: key.split(\":\", 1)[1].rsplit(\".\", 1)[-1] and symbol.split(\":\", 1)[-1].rsplit(\".\", 1)[-1]. This is the same defect as primitive-obsession above and the same fix removes both; recorded separately because Fowler treats them separately. Observation, folded into the same out-of-scope candidate.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "Nothing unused ships. The CHECKS registry has six real members and run() is its only consumer. MAX_REPORTED and TOP_INDEX_PAGES are both read. tree_diff's three-way classification is not speculative: the DeterminismTests case asserts all three arms, and the classification is what makes a determinism failure actionable rather than a boolean.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "checks.py is roughly half docstring -- page_accounting carries 42 documentation lines over 13 code lines, entity_symbol_join 23 over 14. On any ordinary reading that is prose compensating for code, and it would normally be flagged.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, 'Verification Discipline' and 'Evidence You Owe Back', which require a guard's demonstrated failure mode and its measured limits to be recorded, together with the g1 handoff's own requirement that 'what these checks do NOT prove is recorded honestly beside each check'.",
+        "reason": "The prose is not describing what the code does -- the code is short and plain enough not to need that. It records what the check CANNOT catch and who owns the gap: StoreScan states that an extractor which never recorded an edge agrees with itself and passes; entity_symbol_join states why it compares leaf names only and that g2 owns D2; page_accounting states why counting the tree a second time is not the fix. Every one of those is a measured limit that would otherwise live only in a run report a later gate never reads, and I verified two of them by attack (A5, and the implementer's own extractor-drops-reads survivor). Deleting this prose would delete the gate's findings, not its deodorant. The standard subordinates the smell."
+      }
+    }
+  ],
+  "rail_exception": null
+}

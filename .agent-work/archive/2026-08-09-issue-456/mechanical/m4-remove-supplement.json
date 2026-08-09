@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-remove-supplement",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "role": "constellation/issue-456/g3/implementer/attempt-1",
+    "refusals": 3,
+    "spine-step": "m4-remove-supplement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-m4-remove-supplement@4fa3867d13748be51b00cf1c0a335c1dbf0c31eb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T07:04:50Z"
+  }
+}

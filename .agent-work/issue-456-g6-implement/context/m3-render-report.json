@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-render-report",
+  "files": [],
+  "repo_rev": {
+    "commit": "3083a6e7b779d5d780f4084818e9636cd3aa06d1"
+  },
+  "run": {
+    "work_id": "issue-456-g6-implement",
+    "generated_at": "2026-08-08T19:23:50Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

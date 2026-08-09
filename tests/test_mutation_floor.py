@@ -282,6 +282,12 @@ def run_floor(module_path: Path) -> subprocess.CompletedProcess:
     # the authoritative switch for pytest itself; the two env vars cover any
     # other colour-capable library the child imports. Belt and braces here is
     # cheap, and the alternative is output nobody can parse OR read.
+    #
+    # #456 arrived at the same fix independently -- `failed_nodes` parses the
+    # inner run's FAILED lines by regex, and a colour code landing between
+    # "FAILED" and the node id turns every killed mutant into a false
+    # "HARNESS ERROR". Same defect, same day, two runs: worth knowing it is
+    # reachable from more than one direction.
     env.pop("FORCE_COLOR", None)
     env["NO_COLOR"] = "1"
     return subprocess.run(

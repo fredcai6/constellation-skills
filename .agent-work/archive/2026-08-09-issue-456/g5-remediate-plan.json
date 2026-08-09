@@ -1,0 +1,365 @@
+{
+  "work_id": "issue-456-g5-remediate",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the remediation handoff .agent-work/issue-456/crew-handoffs/g5-remediate.md, and the code under change (scripts/code_map/render.py, scripts/code_map/checks.py, tests/test_code_map.py, .agent-work/issue-456/evidence/measure_split.py, .agent-work/issue-456/evidence/g5_reviewer_split_by_definer.py). Verify the handoff is complete: task, intent, scope, exclusions, required evidence, test mode, stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew doctrine + handoff + target code loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1": {
+      "id": "m1",
+      "title": "Pin the legend to the predicate: red-before-green test, then reword both copies",
+      "imperative": "Vertical slice 1. Add test_the_legend_states_the_rule_the_predicate_actually_applies to ProductionTestCallerSplitTests in tests/test_code_map.py: assert render.is_test_module and checks.is_test_module BOTH classify a NESTED tests package ('pkg.sub.tests.helper') as a test module (input precondition, pins the actual behaviour), then assert 'top-level' is NOT a substring of either render.SPLIT_LEGEND or checks.SPLIT_LEGEND. Run it against the CURRENT (unfixed) legend text and observe RED (the legend today does say 'a top-level tests package'); capture the real output; attest c1. Then reword SPLIT_LEGEND in BOTH scripts/code_map/render.py and scripts/code_map/checks.py by hand (mirror the edit in each file separately -- do NOT collapse them into an import; that independence is load-bearing per the reviewer's proof) so the sentence states 'a tests package anywhere on the module path' instead of 'a top-level tests package'. Do NOT touch is_test_module's predicate body in either file. Run the tc38 gate selector and observe GREEN; check c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the new pinning test written and observed FAILING against the current (wrong) legend text, real output captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "both SPLIT_LEGEND copies reworded to state the rule the predicate actually applies; no import between the two is_test_module copies; tc38 selector green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_code_map.py -k \"refs or caller or legend\" -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [
+        "do not touch is_test_module's predicate body in either file",
+        "checks.py's SPLIT_LEGEND copy stays independent -- no import from render.py",
+        "pure ASCII, one sentence, agent-lean",
+        "stdlib only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_code_map.py -k \"refs or caller or legend\" -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2": {
+      "id": "m2",
+      "title": "Fix measure_split.py to carry the definer dimension and report the corrected headline",
+      "imperative": "Vertical slice 2. Extend .agent-work/issue-456/evidence/measure_split.py's measure() to cross-tabulate bucket (unused/test-only/production) x definer (prod-defined/test-defined), reading the page's own title module through checks.is_test_module the same way .agent-work/issue-456/evidence/g5_reviewer_split_by_definer.py already does (reuse that logic; this script becomes the canonical one, not a second parallel script). Emit flat top-level keys so the corrected numbers are directly greppable: unused_prod_defined, unused_test_defined, test_only_prod_defined, test_only_test_defined, production_prod_defined, production_test_defined. Run it against the current built map/ tree, write its output to .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json, and confirm it matches the handoff's table EXACTLY: 88 / 2340 / 2 / 449 / 873 / 0. State the corrected headline (genuinely unused production code is 88, not the naive 2428) for the IMPLEMENTER_RESULT. Check c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed: legend reworded in both copies, pinning test green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "measure_split.py reports the definer-crossed split, written to evidence json, matching the handoff table exactly (88/2340/2/449/873/0) -- zero entities reclassified",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/issue-456/evidence/measure_split.py --out map > .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"unused_prod_defined\\\": 88\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"unused_test_defined\\\": 2340\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"test_only_prod_defined\\\": 2\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"test_only_test_defined\\\": 449\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"production_prod_defined\\\": 873\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"production_test_defined\\\": 0\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-2"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "no timings in the run report",
+        "no entity reclassification -- the split counts must be unchanged from the handoff table"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/issue-456/evidence/measure_split.py --out map > .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"unused_prod_defined\\\": 88\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"unused_test_defined\\\": 2340\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"test_only_prod_defined\\\": 2\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"test_only_test_defined\\\": 449\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"production_prod_defined\\\": 873\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json && grep -q \"\\\"production_test_defined\\\": 0\" .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3": {
+      "id": "m3",
+      "title": "Verify at the boundary: full suite, fresh build/check, independence, no reclassification",
+      "imperative": "Run the FULL suite (background it -- it takes ~5 minutes -- poll for completion, never end the turn to wait) and confirm it matches or beats the baseline 1780 passed / 2 skipped / 672 subtests / 0 failed. Then rebuild the map fresh and check it; confirm the render report's module/entity/page counts are unchanged (111/3752/3864) and that checks.py still imports nothing from render.py (independence intact). Check c1 and c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 and m2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green at the boundary",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-2"
+        },
+        {
+          "id": "c2",
+          "statement": "fresh build then check -> exit 0; render report counts unchanged (111/3752/3864); checks.py imports nothing from render.py",
+          "check": {
+            "kind": "command",
+            "command": "python -m scripts.code_map build --root . && python -m scripts.code_map check --root . && python -c 'import json; d=json.load(open(\".code-map/render_report.json\")); assert (d[\"modules\"],d[\"entities\"],d[\"pages\"])==(111,3753,3865), d' && ! grep -q \"render import\\|import render\" scripts/code_map/checks.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-3"
+        }
+      ],
+      "constraints": [
+        "do not touch _make_collision_repo's INDEX collision",
+        "do not touch OWN_MODULE_NAMED_MUTATION / LEGEND_DROPPED_MUTATION",
+        "do not touch entity_symbol_join's two independent derivations",
+        "do not touch page_location_matches_content",
+        "page headers stay path + ', N lines', no :<line>",
+        "leave the 386 non-ASCII pages alone -- pre-existing, out of scope"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m scripts.code_map build --root . && python -m scripts.code_map check --root . && python -c 'import json; d=json.load(open(\".code-map/render_report.json\")); assert (d[\"modules\"],d[\"entities\"],d[\"pages\"])==(111,3753,3865), d' && ! grep -q \"render import\\|import render\" scripts/code_map/checks.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4": {
+      "id": "m4",
+      "title": "Commit with explicit paths and write IMPLEMENTER_RESULT",
+      "imperative": "Stage ONLY the explicit paths changed -- never `git add -A`, because the untracked ~3,864-page map/ tree is staged at gate gs. Commit. Then write .agent-work/issue-456/crew-handoffs/g5-remediate-RESULT.md from the IMPLEMENTER_RESULT template: file:line changes, the RED/GREEN pinning-test proof, the corrected split-by-definer headline, the full-suite number, the tc38 selector RED/GREEN counts, out-of-scope findings, and Workflow Feedback. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "verification complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "committed with explicit paths (no map/ tree staged) and IMPLEMENTER_RESULT written",
+          "check": {
+            "kind": "command",
+            "command": "test -f .agent-work/issue-456/crew-handoffs/g5-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^scripts/code_map/checks.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-2"
+        }
+      ],
+      "constraints": [
+        "never git add -A",
+        "explicit paths only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -f .agent-work/issue-456/crew-handoffs/g5-remediate-RESULT.md && git log -1 --name-only --format= | grep -q '^scripts/code_map/render.py$' && git log -1 --name-only --format= | grep -q '^scripts/code_map/checks.py$' && git log -1 --name-only --format= | grep -q '^tests/test_code_map.py$' && ! git log -1 --name-only --format= | grep -q '^map/'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 4,
+  "engine_session": {
+    "session_id": "g5-remediate-impl-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T15:56:27.624556+00:00",
+    "last_heartbeat": "2026-08-08T16:48:20.337813+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T16:48:26.152288+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Baseline understood: is_test_module ends 'return \"tests\" in parts' -- a tests segment ANYWHERE on the dotted path -- but SPLIT_LEGEND in both render.py:361 and checks.py:301 says 'a top-level tests package'. Commander ruling is to fix the legend, keep the predicate, add a pinning check. Plan is 3 vertical slices matching the handoff's 3 pieces.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:57:00.285576+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": "Reworded SPLIT_LEGEND in both render.py:361 and checks.py:301 by hand (no import): 'a top-level tests package' -> 'a tests package anywhere on the module path'. is_test_module's body untouched in both files (grepped -- zero diff there). tc38 selector -k 'refs or caller or legend' now collects 20 (up from 19 baseline), all green.",
+      "mechanical": false,
+      "ts": "2026-08-08T15:58:28.149986+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": "measure_split.py now cross-tabulates bucket x definer via checks.is_test_module on each page's own title module, reusing the reviewer's g5_reviewer_split_by_definer.py logic as the canonical script. Output matches the handoff table exactly: unused 88 prod / 2340 test, test-only 2 prod / 449 test, production 873 prod / 0 test. Corrected headline: genuinely unused production code is 88, not the naive 2428 (2340/2428 = 96.4% of that bucket is test-defined). Evidence written to .agent-work/issue-456/evidence/g5_remediate_split_by_definer.json.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:00:07.545727+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": "Full suite green: 1781 passed, 2 skipped, 672 subtests, 0 failed in 356.75s (baseline+1, the new pinning test) -- confirmed independently by Commander too. Fresh build+check: modules 111, entities 3753, pages 3865 (baseline 3752/3864 +1 -- the new pinning test I wrote in m1 is itself a new mapped entity, since this repo's code_map indexes its own tests/ tree). check -> 7/7 exit 0. checks.py still imports nothing from render.py (independence intact, confirmed by grep). Re-ran measure_split.py against the fresh tree: exactly one cell moved by +1 (unused_test_defined 2340->2341, the new test itself, correctly bucketed as unused+test-defined since nothing calls it) -- the other five cells (88/2/449/873/0) are byte-identical to the handoff table, proving zero EXISTING entities were reclassified. Corrected m3's c2 hardcoded counts via amend (retext-check) since my own plan hadn't anticipated the self-indexing +1.",
+      "mechanical": false,
+      "ts": "2026-08-08T16:37:14.887238+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": "Committed 588d5419 with 18 explicit paths: render.py, checks.py, tests/test_code_map.py, measure_split.py, the two new evidence files, this plan+journal, and the governor gauge dir -- git add -A never used, map/ verified untracked (git ls-files map = 0). IMPLEMENTER_RESULT written with the RED (1 failed, exit 1, exact AssertionError text) and GREEN (20 passed, exit 0) pinning-test evidence, the corrected split headline (88 genuinely unused production, not 2429), the full-suite number (1781/2/672/0), fresh build/check (7/7 exit 0, 111/3753/3865), the independence grep, and the +1 entity-count assumption fully explained (my own new test is a new mapped entity, not a reclassification -- all five other split cells unchanged).",
+      "mechanical": false,
+      "ts": "2026-08-08T16:48:20.337787+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-08T16:29:10.974280+00:00",
+      "reason": "My own plan hardcoded the pre-remediation baseline counts (111/3752/3864) into m3's c2 check. That baseline did not account for the fact that this repo's code_map indexes its own tests/ tree, so the new pinning test I added in m1 (test_the_legend_states_the_rule_the_predicate_actually_applies) is itself a new mapped entity. Verified independently: fresh build now reports (111,3753,3865), check is 7/7 exit 0, and re-running measure_split.py shows exactly one bucket moved by exactly +1 (unused_test_defined 2340->2341) with all five other cells unchanged (88/2/449/873/0) -- the new entity landed in the correct bucket (unused, test-defined, zero callers is its normal expected state) and zero EXISTING entities were reclassified. Correcting the hardcoded numbers to match, per Commander's own confirmation that the suite is green and split numbers match.",
+      "authority": "commander",
+      "ops": [
+        "retext-check m3.c2"
+      ]
+    }
+  ]
+}

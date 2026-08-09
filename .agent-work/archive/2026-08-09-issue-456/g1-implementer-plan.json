@@ -1,0 +1,571 @@
+{
+  "work_id": "g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-harness",
+    "m2-determinism",
+    "m3-inbound",
+    "m4-selfconsistency",
+    "m5-accounting",
+    "m6-undesigned-attacks",
+    "m7-close"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the inherited global doctrine (references/global-crew.md, references/global-everyone.md), the project deltas if present (docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md), the handoff .agent-work/issue-456/crew-handoffs/g1-implement.md, and the code under test (scripts/code_map/*.py, tests/test_code_map.py, tests/test_mutation_floor.py for the port-defective-then-fix idiom). Verify the handoff is complete; block if not. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + handoff + code under test loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md + global-everyone.md, the g1 handoff in full, checks.py (211 lines, print-only, literal return 0), cli.py, render.py, supplement.py, discovery.py, tests/test_code_map.py, tests/test_mutation_floor.py (prove-it-applied mutation idiom). Handoff complete: task, intent, in/out scope, exclusions, evidence, constraints, env traps, verification commands, return format all present."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-harness": {
+      "id": "m1-harness",
+      "title": "check exits non-zero on failure, with the first real check (empty page, tc26)",
+      "imperative": "TDD REQUIRED. Rewrite scripts/code_map/checks.py so every check returns failures rather than printing, and run() returns 1 when any check fails. First real check: no rendered page may be empty (tc26 -- rglob counts a file that was created and never written). Write the test first (synthetic repo, truncate a page to zero bytes, assert checks.run/cli.main returns non-zero) and observe it red against the print-only module; then implement. Attest c1 with the observed red.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; handoff verified complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the empty-page test written and observed failing against the print-only checks.py -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TDD red observed before implementing: 'FAILED tests/test_code_map.py::CheckExitCodeTests::test_check_exits_non_zero_when_a_page_is_empty' -- 1 failed, 2 passed. The assertion message was 'an empty page passed check' followed by the whole print-only diagnostic dump, which is the defect exactly: run() printed four sections and returned a literal 0 over a map with a zero-byte page. After the rewrite: 3 passed."
+        },
+        {
+          "id": "c2",
+          "statement": "check exits non-zero on an empty page and zero on an intact synthetic map",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'exit or empty' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-harness-1"
+        }
+      ],
+      "constraints": [
+        "stdlib only",
+        "no timings in any run report",
+        "do not rename anything to fix the Verdict/verdict collision (g2)",
+        "no corpus-count thresholds, no render-shape baselines (gB)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-harness-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'exit or empty' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-determinism": {
+      "id": "m2-determinism",
+      "title": "Determinism: two builds from unchanged source are byte-identical",
+      "imperative": "Add a determinism check: build twice from unchanged source into two fresh trees and require the two trees to be byte-identical; any non-empty diff is the failure (report every differing path, not a boolean). Add a test named for determinism over a synthetic repo. Prove it red by making the renderer non-deterministic (a set-ordered listing) and observing a non-empty diff with a non-zero exit. Restore the renderer byte-exact.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 harness landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-harness complete: CHECKS registry + non-zero exit landed."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: determinism check observed failing under a deliberately non-deterministic renderer -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed end to end. Mutation applied to a COPY of scripts/code_map (render.py): 'ext = sorted({...})' -> 'ext = list({...})', a set of import names printed in hash order. Rebuilt through the copy, then 'python -m scripts.code_map check --root <fixture>' -> exit 1, 'FAIL deterministic-rebuild: 1 / pkg.wide/INDEX.md: same length, different bytes'. Positive control in the same shape: the UNMUTATED copy exits 0, so the red is attributable to the mutation and not to running from a copy. The two builds run in separate processes with PYTHONHASHSEED pinned to 0 and 1 -- a single process shares one seed, so an in-process double build cannot see this class of defect at all."
+        },
+        {
+          "id": "c2",
+          "statement": "determinism check green on unchanged source",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k determinism -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-determinism-1"
+        }
+      ],
+      "constraints": [
+        "no timings may enter any run report -- they would break this diff"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-determinism-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k determinism -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-inbound": {
+      "id": "m3-inbound",
+      "title": "Inbound attribution: a page's caller set matches an independent full scan",
+      "imperative": "Add a check that re-derives every page's inbound callers a second way -- a separate pass over the raw statement store, not render.load_stores -- and requires the rendered `referenced by:` line to agree: total sites, distinct caller-module count, and the named modules. Add a test; prove it red by mutating the renderer's inbound accumulation (drop `reads`, or attribute to the wrong module). Restore byte-exact. State plainly in the module docstring what this check does NOT prove.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-determinism complete."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: inbound check observed failing under a mutated renderer -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Two silent mutations of render.py, each killed with a non-zero exit. (1) drop-reads: 'if p in (\"calls\", \"reads\")' -> 'if p in (\"calls\",)'. check -> exit 1, 'FAIL inbound-attribution: 1 / pkg.callee/target.md: page says 4 inbound sites, the store has 5'. (2) wrong-caller: 'inbound[o][intern(modof(s))] += 1' -> 'modof(o)'. check -> exit 1, 'page says 1 calling modules, the store has 2' + 'page names [] as callers, the store has [pkg.far]'. Both mutants still build and still render a plausible number -- only the second derivation tells them from the truth. Green on the real corpus too: 3535 entity pages, 0 failures."
+        },
+        {
+          "id": "c2",
+          "statement": "inbound-attribution check green on an unmutated build",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'inbound or caller' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-inbound-2"
+        }
+      ],
+      "constraints": [
+        "the second derivation must not call the code under test"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-inbound-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-inbound",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-inbound-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'inbound or caller' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-selfconsistency": {
+      "id": "m4-selfconsistency",
+      "title": "A page's referenced-by count agrees with its own list; the entity/symbol join is sane",
+      "imperative": "Add two page-local checks that need no store: (a) a `referenced by: N sites in M modules (...)` line must not name more modules than it counts, must name distinct modules, and M may exceed the named list by at most one (the page's own module, which the renderer omits from the list); (b) every entity page's title key must agree with the store symbol the renderer joined it to on its leaf name -- a mis-join is then visible without trusting the join. Prove each red by mutation.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-inbound is complete: inbound-attribution ships in CHECKS, is green on the real corpus and on the cross-module fixture, and is killed by both DROP_READS and WRONG_CALLER mutations with an unmutated positive control."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: each self-consistency check observed failing under its own mutation -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Both m4 checks proven red by mutation, each against a COPIED package so the shipped tree was never touched, each with an unmutated positive control. (a) refs-line-self-consistent: killed by render.py 'ext = sorted(m for m in callers if m != mod)' -> 'sorted(m for m in callers)', so a page names its own module in a list whose count already accounts for it; check exits 1 with 'FAIL refs-line-self-consistent'. Its independent SCOPE is measured, not argued: a self-inconsistent refs line written onto map/INDEX.md is invisible to inbound-attribution (which only walks pages whose title names a known entity) and is caught here. (b) entity-symbol-join: killed by supplement.py '\"line\": child.lineno' -> '+ 1', which desynchronises the two independent AST passes the (file,line) join welds. Its independence is measured too: supplement.py lowercasing every entity name leaves every position correct, so no-empty-pages, page-accounting, refs-line-self-consistent, inbound-attribution and deterministic-rebuild all pass while the map titles pages after entities that do not exist -- and the test asserts entity-symbol-join is the ONLY failing check, so the claim cannot quietly rot."
+        },
+        {
+          "id": "c2",
+          "statement": "self-consistency checks green",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'consistent or join' -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-selfconsistency-1"
+        }
+      ],
+      "constraints": [
+        "relational only -- no pinned counts, no rendered-shape baseline"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-selfconsistency-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'consistent or join' -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-accounting": {
+      "id": "m5-accounting",
+      "title": "The RED invariant: pages - 1 - modules == entity_pages, xfail(strict=True)",
+      "imperative": "Assert the page-accounting invariant in checks.py (a lost page is a page the map claims and does not have). Add the test over the REAL repo and mark it xfail(strict=True) with a reason naming the Verdict/verdict collision and g2 as its owner, so g2's rename forces the marker off. Verify the marker behaves: confirm the test reports xfail today and that pytest turns an XPASS into a failure under strict.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4 complete: refs-line-self-consistent and entity-symbol-join both ship in CHECKS, both green on the real corpus, both killed by mutation with positive controls."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "strict xfail verified: reports xfail today, and an XPASS is proven to fail the run -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Verified END TO END, not by reading pytest docs. TODAY: 'XFAIL tests/test_code_map.py::RealCorpusPageAccountingInvariantTests::test_every_page_this_repo_claims_is_a_page_this_repo_has' with the g2-owned reason, run exits 0. XPASS PROVEN RED BY SIMULATING g2's FIX: renamed 'def verdict(' -> 'def verdict_of(' in scripts/run_skill_eval.py, reran the single test -- pytest reported '[XPASS(strict)] ...' and '1 failed', exit code 1. Restored with git checkout; git status --porcelain shows only checks.py and test_code_map.py modified. A SECOND forcing function fires at the same moment: the sibling precondition test that asserts the collision set is exactly {Verdict, verdict} also went red under the rename, so g2 cannot remove the marker without also updating the recorded collision. FINDING THE PLAN DID NOT ANTICIPATE, and the marker is CONDITIONAL because of it: the ONLY page-path collision on this corpus is a case collision (measured -- 0 case-sensitive collisions, 1 case-insensitive), so on a case-sensitive filesystem the invariant is GREEN today and a bare xfail(strict=True) would XPASS and turn the suite red on Linux CI. The marker is therefore xfail(CASE_INSENSITIVE_FS, strict=True), with case sensitivity MEASURED by probing a temp directory rather than inferred from sys.platform. Strictness is preserved where the defect exists; where it does not exist the test simply passes."
+        },
+        {
+          "id": "c2",
+          "statement": "the invariant test runs and is not red",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k invariant -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-accounting-1"
+        }
+      ],
+      "constraints": [
+        "do NOT fix the collision (g2)",
+        "do NOT re-count the tree to make entity_pages agree (tc24)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-accounting-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k invariant -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-undesigned-attacks": {
+      "id": "m6-undesigned-attacks",
+      "title": "Attack every check once more with a mutation it was NOT designed for",
+      "imperative": "For each shipped check, apply at least one mutation it was not designed to catch (delete a page, write pages flat, drop every module INDEX.md, swap two pages' contents, reorder a caller list). Record which checks caught it and which SURVIVED. Report survivors plainly; do not narrow what a check claims to hide one. Restore every mutated file byte-exact and confirm git status is clean on scripts/ and tests/ except the intended changes.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5 complete: page-accounting ships with a coverage arm and a count arm, the real-corpus assertion is xfail(CASE_INSENSITIVE_FS, strict=True), and the XPASS-turns-red mechanism was proven end to end by simulating g2 rename."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "undesigned attacks run and their outcomes recorded, survivors named -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "11 undesigned attacks run through one harness against a green positive control; full transcript at .agent-work/issue-456/evidence/g1-undesigned-attacks.txt, harness at evidence/g1_attack_harness.py. CAUGHT: delete-a-page (page-accounting), stray-extra-page (page-accounting), empty-a-page (no-empty-pages AND page-accounting coverage arm), drop-every-module-index (page-accounting), flat-page-tree (page-accounting), timestamp-on-a-page (deterministic-rebuild -- an undesigned attack on the predecessors check, which was designed against hash order, not clock). FOUR SURVIVORS, reported not narrowed: (1) swap-two-pages contents and (2) rename helper.md to Helper.md both pass ALL SIX checks with exit 0 -- nothing in g1 ties a page location to its content, because every content check classifies a page by its TITLE by design; filed as tc1 and routed to g4, whose close criteria already demand a link-following graph walk. (3) reversed-caller-list survives because inbound-attribution compares SETS of caller modules; presentation order is a render shape and belongs to gB. (4) extractor-never-records-reads survives, which is the limit StoreScan already declares in its docstring, now MEASURED rather than asserted: the second derivation shares the store, so an extractor that never recorded an edge agrees with itself and both derivations are wrong together. Filed as tc3 (superseding a garbled tc2): dropping a sorted() is not uniformly a determinism defect -- a Counter iterates in insertion order and is hash-seed-immune, so the caller-list case is correctly NOT caught. No check claim was narrowed to hide any of this."
+        },
+        {
+          "id": "c2",
+          "statement": "working tree restored: no unintended modification under scripts/",
+          "check": {
+            "kind": "command",
+            "command": "test -z \"$(git status --porcelain scripts/code_map/render.py scripts/code_map/extract.py scripts/code_map/supplement.py scripts/code_map/discovery.py scripts/code_map/cli.py)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-undesigned-attacks-2"
+        }
+      ],
+      "constraints": [
+        "restore byte-exact anything mutated"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-undesigned-attacks-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m6-undesigned-attacks",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-undesigned-attacks-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -z \"$(git status --porcelain scripts/code_map/render.py scripts/code_map/extract.py scripts/code_map/supplement.py scripts/code_map/discovery.py scripts/code_map/cli.py)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-close": {
+      "id": "m7-close",
+      "title": "Full suite green at the boundary; write IMPLEMENTER_RESULT; commit explicit paths",
+      "imperative": "Run the whole suite with FORCE_COLOR and PYTHONIOENCODING cleared and confirm no regression below the 1709 passed / 2 skipped / 0 failed baseline (xfail is not red). Write .agent-work/issue-456/crew-handoffs/g1-implement-RESULT.md from the IMPLEMENTER_RESULT template with every mutation, command and exit code, the determinism diff evidence, the move-invariant-vs-baseline rule, and the treatment of the RED invariant. Commit with explicit paths only -- never git add -A, the untracked map/ tree is staged at the final gate. Do not merge to main.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m6 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m6 complete: 11 undesigned attacks run, 4 survivors named and routed, working tree restored."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite at or above baseline, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q --color=no"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-close-2"
+        },
+        {
+          "id": "c2",
+          "statement": "IMPLEMENTER_RESULT written",
+          "check": {
+            "kind": "command",
+            "command": "test -s .agent-work/issue-456/crew-handoffs/g1-implement-RESULT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-close-3"
+        }
+      ],
+      "constraints": [
+        "do NOT git add -A",
+        "do not merge to main, never force-push"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-close-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m7-close",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-close-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m7-close-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test -s .agent-work/issue-456/crew-handoffs/g1-implement-RESULT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m6-undesigned-attacks",
+      "statement": "NOTHING IN g1 TIES A PAGE'S LOCATION TO ITS CONTENT. Measured, not argued (.agent-work/issue-456/evidence/g1-undesigned-attacks.txt): swapping the CONTENTS of two entity pages, and renaming helper.md to Helper.md while leaving its title alone, each pass all six checks with exit 0. Both produce a map whose module-index links send a reader to the wrong page or to a 404. Every content check in this gate classifies a page by its TITLE, deliberately, so none of them can see it. The natural owner is g4, whose close criteria already require 'a GRAPH WALK that follows links rather than trusting layout' -- that walk should assert both that every link resolves and that the target page's title matches the link text. NOT built here because a link-format assertion is a render-shape assertion and g1 carries none."
+    },
+    {
+      "id": "tc2",
+      "from": "m6-undesigned-attacks",
+      "statement": "'DROP A sorted()' IS NOT UNIFORMLY A DETERMINISM DEFECT, and the g1 determinism check should not be read as if it were. The designed mutation drops sorted() around a SET comprehension in module_index, which is hash-ordered and correctly caught. Dropping the sorted() around the CALLER list is not caught, and that is right:  is a Counter, so list(callers) yields insertion order, which is fixed by the statement order in the store and identical under every hash seed. The rendered caller list simply stops being alphabetical. Consequence for later gates: a determinism check can only see orderings that come from a hash, so g5 (caller split) must not treat a green determinism run as evidence that its ordering is stable or sensible -- ordering-of-presentation belongs to gB."
+    },
+    {
+      "id": "tc3",
+      "from": "m6-undesigned-attacks",
+      "statement": "SUPERSEDES tc2, which lost one word to shell backtick expansion when it was filed -- read this one instead. DROPPING A sorted() IS NOT UNIFORMLY A DETERMINISM DEFECT, and the g1 determinism check must not be read as if it were. The designed mutation drops sorted() around a SET comprehension in module_index; a set is hash-ordered, so it is correctly caught. Dropping the sorted() around the CALLER list is NOT caught, and that is correct: the caller map is a collections.Counter, so iterating it yields insertion order, which is fixed by the statement order in the store and identical under every hash seed. The rendered caller list merely stops being alphabetical. Consequence for later gates: a determinism check can only see orderings that come from a hash, so g5 (the caller split) must not treat a green determinism run as evidence that its ordering is stable or sensible. Ordering-of-presentation is a render shape and belongs to gB."
+    }
+  ],
+  "blockers": [],
+  "refusals": 7,
+  "engine_session": {
+    "session_id": "g1-implementer-01",
+    "status": "released",
+    "claimed_at": "2026-08-08T00:51:05.055659+00:00",
+    "last_heartbeat": "2026-08-08T01:49:07.535204+00:00",
+    "claimed_by": "implementer",
+    "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T01:49:23.042382+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Context loaded and ground truth measured before writing anything: a fresh full build of this repo takes 7.5s and reports pages=3648 modules=112 entities=3536 entity_pages=3536, so pages-1-modules=3535 != 3536 -- the handoff's RED invariant reproduces exactly, and map/scripts.run_skill_eval/ holds Verdict.md with no verdict.md beside it. checks.py today prints and returns a literal 0.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:51:47.079046+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-harness",
+      "why": "checks.py rewritten around a MapUnderCheck that reads the stores and the page tree directly rather than through render.load_stores, plus a CHECKS registry whose run() returns 1 when any check fails. A missing page tree or missing store is now a FAILURE, not a skip -- the vacuous-pass shape test_mutation_floor pins for map_orient. First real check: no-empty-pages (tc26).",
+      "mechanical": false,
+      "ts": "2026-08-08T00:55:35.318919+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-determinism",
+      "why": "Determinism lands as two builds in SEPARATE processes with different hash seeds, compared byte-for-byte; tree_diff names every differing path rather than returning a boolean. The separate-process detail is load-bearing: a string hash seed is fixed for a process's life, so two builds inside one process share it and a hash-ordered listing looks perfectly stable. Nothing in the shipped tree was mutated -- the attack runs against a copied package, which also gives every later check a red proof harness.",
+      "mechanical": false,
+      "ts": "2026-08-08T00:59:28.951257+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-inbound",
+      "why": "The inbound check re-derives every page's caller set from a second, independently-written pass over the raw statement store (checks.StoreScan) and compares it to the RENDERED page text, not to the renderer's own inbound dict -- so a check whose expected value came from the code under test is structurally impossible here. Proven red two ways against a copied package: dropping 'reads' from the inbound predicates (under-reported sites) and attributing an edge to the callee's module instead of the caller's (every cross-module dependency hidden). Both mutations still build and still render plausible numbers; only the second derivation tells them from the truth. Positive control: the unmutated copy passes. Green on the real corpus and on the synthetic cross-module fixture, which is deliberately wide enough (5 sites, 2 modules, one of them the page's own) that a check dropping half the edges would still be caught.",
+      "mechanical": false,
+      "ts": "2026-08-08T01:10:00.944283+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-selfconsistency",
+      "why": "Two page-local checks land. refs-line-self-consistent asserts the arithmetic the rendered line must satisfy at any numbers (no module named twice, never more named than counted, at most ONE counted module unnamed -- the page's own, sites >= modules, zero-and-zero arriving together) and it scans EVERY page in the tree, which is the scope inbound-attribution cannot reach. entity-symbol-join cross-checks the (file,line) join's OUTPUT against a third fact neither AST pass shares -- the entity's own leaf name -- and compares leaves only, so D2's truncated chains do not make it red at g2 for the wrong reason. Both relational; neither pins a count or a rendered shape.",
+      "mechanical": false,
+      "ts": "2026-08-08T01:24:12.537122+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-accounting",
+      "why": "page-accounting ships with TWO arms. COVERAGE (shape-free): every module and every entity the store declares must be the title of some page; it never says where a page lives or what it is called, so no later gate moves it. COUNT: pages == 1 + modules + entities, the identity the render report contradicts, and the one that is red today. Coverage is asserted on its own rather than only reported when the count is off -- attacking my own count arm found the hole: delete one page and add one stray page and the arithmetic balances while an advertised page is gone; there is now a test for exactly that. The named constant TOP_INDEX_PAGES is the single place a later index tier has to update, deliberately rather than silently. Nothing here re-counts the tree to make entity_pages agree (tc24) and nothing renames anything (g2).",
+      "mechanical": false,
+      "ts": "2026-08-08T01:24:56.971681+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-undesigned-attacks",
+      "why": "Every check in the gate has now been attacked by something its author did not design for it, including the three inherited ones. The pass paid for itself twice: it exposed a hole in my own count arm (delete one page, add one stray page, the books balance) which is now closed by a separate coverage arm with its own test, and it turned two of StoreScan's declared limits from prose into measurements. Four survivors named plainly, two of them real gaps, routed to g4 as tc1 and recorded as tc3 rather than papered over by narrowing any check's claim. Working tree restored: only checks.py and test_code_map.py are modified; every mutation ran against a COPY of the package.",
+      "mechanical": false,
+      "ts": "2026-08-08T01:37:40.436671+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-close",
+      "why": "Full suite green at the boundary: 1729 passed, 2 skipped, 1 xfailed, 0 failed against a 1709/2/0 baseline -- +20 tests, no regression, xfail is not red. Both gate selectors reach the new work. IMPLEMENTER_RESULT written covering all six checks, every mutation with its command and observed exit code, the determinism-diff evidence, the move-invariant-vs-baseline rule and its three corollaries, the treatment of the RED invariant including the conditional-strict marker, and five findings not asked about. Committed at 44eeb740 with explicit paths only; git add -A never used, the untracked map/ tree untouched for the final gate. Not merged, not force-pushed.",
+      "mechanical": false,
+      "ts": "2026-08-08T01:49:07.535177+00:00"
+    }
+  ]
+}

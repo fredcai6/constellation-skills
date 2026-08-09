@@ -1,0 +1,11 @@
+PASS. Files touched 80cfc5c5~1..HEAD (git diff --name-only, run myself): exactly scripts/code_map/{extract,render,checks,cli,__init__,supplement}.py + .gitignore + tests/test_code_map.py, plus workbench artifacts under .agent-work/issue-456/. supplement.py shows as deleted. scripts/run_skill_eval.py has an EMPTY diff (git diff --stat over that path prints nothing) -- confirmed untouched, byte-identical.
+
+checks.py and cli.py are outside the handoff's narrow "store-schema and extractor modules" wording, but the touch is forced by the merge itself: checks.py owned entity_symbol_join and read the supplement directly (it cannot keep doing either once supplement.py is gone), cli.py wired the now-deleted third stage. This is the same justification the implementer gave and it holds up against the diff -- nothing in either file changed beyond what removing the supplement stage requires (checks.py: SourceScan added, entity_symbol_join re-based, StoreScan.line_base plumbing for the declared base; cli.py: the supplement subcommand and stage wiring removed).
+
+All named exclusions independently re-verified, not taken from the RESULT:
+- INDEX collision (g1's only cross-platform page-accounting falsifier): ran PageAccountingInvariantTests::test_the_invariant_goes_red_when_two_pages_resolve_to_one_file myself -- passes, and reading the test body confirms it asserts a NONZERO exit, 'FAIL page-accounting', and the specific 'pkg.thing' collision text; not vacuous.
+- OWN_MODULE_NAMED_MUTATION / test_refs_lines_are_self_consistent_on_an_intact_map: grepped both names verbatim in tests/test_code_map.py (lines 802, 830) and ran them -- green.
+- No ':<line>' in any page header: wrote a direct scan of every page in a fresh map/ build, checked the first three lines of each of 3823+ pages for a `.py:<digits>` pattern in the header region -- zero hits.
+- All 6 checks still registered in CHECKS: no-empty-pages, page-accounting, refs-line-self-consistent, entity-symbol-join, inbound-attribution, deterministic-rebuild -- read the tuple directly, nothing dropped. entity_symbol_join is RE-BASED (its second derivation moved from supplement.py to checks.SourceScan) but not weakened -- see r1-handoff's independence proof; if anything it gained a COVERAGE arm the old version did not have.
+
+No scope drift beyond the two justified files. No blocker.

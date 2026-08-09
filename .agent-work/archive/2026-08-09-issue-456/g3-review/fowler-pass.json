@@ -1,0 +1,86 @@
+{
+  "work_id": "issue-456-g3-review",
+  "diff_ref": "git diff 80cfc5c5~1..HEAD -- scripts/code_map/{extract,render,checks,cli,__init__}.py scripts/code_map/supplement.py(deleted) tests/test_code_map.py .gitignore (gate g3: one statement schema, line base declared, supplement removed)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline, Evidence You Owe Back), docs/agents/GLOSSARY.md, scripts/code_map/checks.py module docstring (What these checks read), skills/constellation-reviewer/references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "entity_symbol_join's body (excluding its docstring) is ~22 lines with two clearly separated arms (NAMING, COVERAGE); SourceScan._walk and StoreScan.__init__ are both short. refs_line_self_consistent, the function g2's own pass overrode for this smell, is UNCHANGED by this diff (confirmed: the diff hunk touching that region is entirely inside entity_symbol_join, the preceding function is just the hunk-header's context line) -- its g2 override carries forward, not re-earned or re-flagged here.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "SourceScan is new and small: __init__, a static module_of, and _walk -- three methods, none long. StoreScan gained fields but its __init__ is one loop over three predicate branches, ~15 lines. MapUnderCheck gained one property (source) and one method (position_of), still a thin facade.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "overridden",
+      "finding": "Two real instances, both deliberate. (1) checks.SourceScan.module_of and extract.mod_of implement the identical path-to-module-name algorithm in two places, with a docstring saying so explicitly ('Written out rather than imported: half of a comparison that borrows the other half's code is not a comparison'). (2) checks.StoreScan.__init__ and render.load_stores both parse statements.jsonl and both branch on WINDOW/contains, a second reading of the same file with an overlapping shape.",
+      "override": {
+        "repo_standard": "scripts/code_map/checks.py module docstring: 'The store DIRECTLY, never through render.load_stores... So the store scan below is written a second time on purpose'; and the SourceScan docstring: 'Nothing is imported from extract; the module name comes from the file path, the qualified name from this recursion.'",
+        "reason": "This is the same override g2's pass already granted for the store-vs-renderer duplication, extended to the new source-vs-store pair this gate adds. I verified the risk this override accepts is real and currently paid off in r1-handoff: importing module_of from extract.py, or reading the store through render.load_stores, would make entity_symbol_join agree with the code under test by construction. Both duplications are exercised: r1-handoff's real-corpus mutation attack broke each side independently and the check caught both, which is what a documented-but-unverified override would not be able to show."
+      }
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "SourceScan reads only its own root/files parameters and the source text it is handed; it reaches into no other module's internals. entity_symbol_join and position_of use MapUnderCheck's published interface (entity_pages, position_of, source.qualified_at) exactly as designed.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No new tuple of parameters travels together outside the existing (file, line) position pair, which is already named (position_of returns it as one value, qualified_at is keyed by it as one tuple) rather than passed as two loose parameters anywhere in the diff.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "Store symbols and source-derived qualified names are both bare strings, and entity_symbol_join's central assertion is a string equality between them (found != key).",
+      "override": {
+        "repo_standard": "scripts/code_map/checks.py's SourceScan docstring: 'Nothing is imported from extract; the module name comes from the file path, the qualified name from this recursion, and the two are compared only on the position.'",
+        "reason": "Carries forward g2's override with the same reasoning, now more directly load-bearing: a shared Symbol type would have to live in a module both extract.py and checks.py import, and that shared construction path is exactly what r1-handoff's independence attack proves would make the check unable to fail. I re-verified the risk is currently absent by breaking each string-producing side independently on the real corpus (3896 and 4367 failures respectively) with a clean control (exit 0) in between."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "flagged",
+      "finding": "extract.Extractor.emit grew from 8 to 9 parameters this gate (self, s, p, o, line, col, res, why=None, extra=None, d=None) -- the new d=None is this diff's own addition. Every call site is positional and the schema being written is exactly this row shape, so a parameter object is defensible, but the signature crossed further into long-parameter-list territory in this diff specifically rather than being pre-existing and untouched. Non-blocking: no call site is hard to read (each passes d= as a keyword), and no repo standard was found that already accepts this signature, unlike the two overridden smells above.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The diff removes a pipeline stage and its four consumer sites (cli.py wiring, __init__.py stage list, render.py's join, checks.py's supplement read) in one coherent change, not an ongoing pattern where unrelated future edits will keep touching all four. No new fact is spread across independent modules that a single future change would have to chase.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "Every file changes for exactly one axis this gate names: extract.py for the statement-schema merge (kind/signature/span/doc/decorators/bases, the window, declares, anchored), render.py for one-store consumption, checks.py for the second derivation moving in, cli.py/__init__.py for stage removal. No file mixes two unrelated reasons to change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "st['s'].split(':', 1)[0] and key.split(':', 1)[0] each appear as single operations at their call sites, not chained navigation. No new chain introduced.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "flagged",
+      "finding": "checks.SourceScan.unreadable is populated on a parse failure (self.unreadable.append((rel, str(error)))) but is never read anywhere -- not in checks.run, not in any test, not printed, not asserted (grepped the whole repo, zero consumers outside its own assignment). State collected for a case nothing acts on yet. Non-blocking: it costs nothing at runtime and documents a real edge case, but per CREW_CONTEXT's own 'any guard that loops must assert what it looped over,' collected-and-unused state is the same shape of defect in miniature -- worth wiring into a check (e.g. entity_symbol_join or a new arm) or deleting.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "The diff's docstrings carry decisions and measurements (why SourceScan re-derives module_of, what the window statement's coverage-boundary property is and is not, why declares is deliberately not an entity), consistent with the module's established standard. No new naming ambiguity like g2's still-open 'own' observation was introduced by this diff's own code -- I read every new/changed identifier (position_of, qualified_at, titled, WINDOW-branch locals) and none carries two meanings.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}

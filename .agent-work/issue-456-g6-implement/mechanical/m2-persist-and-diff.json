@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-persist-and-diff",
+  "mechanical": {
+    "run": "issue-456-g6-implement",
+    "project": "constellation-skills",
+    "role": "g6-implementer",
+    "refusals": 4,
+    "spine-step": "m2-persist-and-diff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g6-implement-m2-persist-and-diff@760f50f0ac5afda60b7235ff4630c749bd9c449c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g6-implement",
+    "generated_at": "2026-08-08T19:20:42Z"
+  }
+}

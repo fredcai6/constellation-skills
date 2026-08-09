@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g5-implement",
+  "files": [],
+  "repo_rev": {
+    "commit": "1f5c8a6e8725d0e0e318da7ec63e53e4f3a34d23"
+  },
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T15:10:51Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

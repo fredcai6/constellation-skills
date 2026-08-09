@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "mechanical": {
+    "run": "issue-456-g8-review",
+    "project": "constellation-skills",
+    "role": "g8-reviewer",
+    "refusals": 0,
+    "spine-step": "r1-handoff",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g8-review-r1-handoff@703159f1f2bbb64b26fa951d7fd1aeb2d90ecf0a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g8-review",
+    "generated_at": "2026-08-09T01:18:43Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "role": "constellation/issue-456/g3/implementer/attempt-1",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-m0-context@da70f8c0ec0ad1450e2b11b65e3799ded0f78170",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T06:48:45Z"
+  }
+}

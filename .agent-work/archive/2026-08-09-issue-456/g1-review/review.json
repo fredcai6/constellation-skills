@@ -1,0 +1,207 @@
+{
+  "work_id": "issue-456-g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md + global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1 review handoff, the implementer RESULT, and the full diff dbb8b6e3..HEAD over scripts/code_map/checks.py and tests/test_code_map.py. CREW_CONTEXT 'Verification Discipline' is the governing local standard: a check that cannot fail is indistinguishable from one that passed; any guard that loops must assert what it looped over; assert against behaviour not text.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The handoff asked for six checks that can fail with a nonzero exit, a byte-identical double build, and no dependence on a corpus count or rendered shape baseline. All delivered. Verified by running, not reading: (1) missing tree/store is a FAILURE not a skip -- 'FAIL cannot check: nothing built at ... -- run build first', EXIT=1. (2) On this repository a scratch build + check exits 1 naming exactly one check, page-accounting, off by exactly one page: 'scripts.run_skill_eval:Verdict: an entity the map claims and does not have' / 'the tree holds 3726 pages; the store accounts for 3727'. The other five report ok, so it is exit 1 for the RIGHT reason. (3) deterministic-rebuild is green on the real corpus, which is the close criterion's byte-identical double build. My corpus numbers (112/3614/3726) differ from the implementer's (112/3581/3693) because the corpus grows while the run works on it; the INVARIANT is identical in both -- off by exactly one -- which corroborates the implementer's own no-absolute-numbers-across-sessions finding.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Scope held. Diff is exactly scripts/code_map/checks.py and tests/test_code_map.py. Nothing renamed (git status on scripts/ tests/ is clean; scripts/run_skill_eval.py still declares class Verdict at 178 and def verdict at 407). entity_pages was NOT 'fixed' by counting the tree a second time -- page_accounting derives its right-hand side from the supplement store, never from the tree. Line base and page header format untouched. No absolute corpus threshold anywhere in checks.py: the only numeric constants are MAX_REPORTED=10 (a reporting cap, not an assertion) and TOP_INDEX_PAGES=1. MOVE-INVARIANT-VS-BASELINE RULE, quoted verbatim from the implementer: 'A check is a move-invariant if its expected value is recomputed from the map on every run. It is a baseline if its expected value comes from a memory of this corpus.' JUDGEMENT: operational and correct -- it classifies every one of the six correctly, and it is testable rather than a matter of taste. One real weakness: corollary 3 ('a structural constant fixed by the layout rather than by the corpus is allowed, and must be named') is an exception carved out of the rule rather than derived from it, and 'fixed by the layout' is not defined. TOP_INDEX_PAGES=1 is a legitimate instance, but a later gate could smuggle a remembered number in under the same heading. The containment -- it must live in one named constant that a gate has to change deliberately -- is real but is process, not mechanism. Recorded as an observation for gB, not a blocker.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "ELEVEN UNDESIGNED ATTACKS, my own harness (.agent-work/issue-456/evidence/g1-reviewer-attacks.py), transcript in g1-reviewer-attacks.txt. Green control first: unmutated package + undamaged map = exit 0. Every mutation ran through tests.test_code_map.mutated_package, which raises HarnessError unless the anchor occurs exactly once and the replacement count rises by exactly one -- it fired twice on my own malformed mutations, so a silently-unapplied mutation cannot read as a surviving check. RESULTS. A1 whitespace-only page: exit 1, no-empty-pages + page-accounting. A2 BOM-only page: exit 1, page-accounting ONLY -- no-empty-pages MISSES it (U+FEFF is not str.strip whitespace). A3 header-only stub page: exit 1, inbound-attribution. A4 duplicate page with the same title: exit 1, page-accounting (count arm). A5 renderer respells the inbound line so the prefix no longer matches: exit 1, inbound-attribution ONLY -- refs-line-self-consistent goes VACUOUS (0 refs lines in the tree, refs_line_self_consistent(m) -> []). A6 line counts 3 modules and names 1: exit 1, refs-line-self-consistent + inbound-attribution. A7 names 2 modules and counts 0: exit 1, both. A8 the EXTRACT AST pass mangles the leaf name (the implementer only ever mutated supplement.py): exit 1, entity-symbol-join ALONE -- genuine independence on the pass they did not attack. A9 every inbound edge counted twice: exit 1, inbound-attribution. A10 one caller name dropped while the count is kept: exit 1, inbound-attribution alone (refs-line-self-consistent is blind, as its docstring says). A11 THE DECISIVE ONE: renderer stamps str(hash('x')) into a built artifact. hash of a str is fixed for a process's life, so this differs between the two builds ONLY if they really are separate processes under different PYTHONHASHSEED values. Result: exit 1, FAIL deterministic-rebuild. Same-process or same-seed would have SURVIVED. The separate-process claim is proven empirically, not read out of the source. NO CHECK IS SELF-AGREEING. page-accounting reads page TITLES off disk against the supplement, never the renderer's filename expression, and it is red on the real corpus right now -- the strongest possible proof it is not a tautology. entity-symbol-join compares two independent AST passes and A8 kills it from the side never attacked. inbound-attribution compares the RENDERED page against a hand-written second scan and A9/A10 kill it. deterministic-rebuild is two subprocesses, proven by A11. SUITE, cleared environment (unset FORCE_COLOR PYTHONIOENCODING; python -m pytest tests/ -q --color=no): 1729 passed, 2 skipped, 1 xfailed, 651 subtests passed, EXIT=0. Exactly the expected number against the 1709/2/0 baseline: +20 passed, 0 failed, xfail is not red.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "XFAIL GUARD -- verified end to end, and the implementer's reasoning is not only right, it is stronger than they claimed. Today: pytest -k RealCorpus = 1 passed, 1 xfailed, exit 0. Simulated g2 (def verdict -> def verdict_of in scripts/run_skill_eval.py): [XPASS(strict)] on the accounting test AND the collision-set test went red too -- 2 failed, exit 1. Both forcing functions fire together, so g2 cannot drop the marker without updating the recorded collision and cannot update the collision without confronting the marker. Restored byte-exact: SHA256 ECFBC02C... before and after, git status on scripts/ tests/ clean. THE CONDITIONAL IS CORRECT. I measured the corpus myself: case-INSENSITIVE collisions 1 (Verdict/verdict), case-SENSITIVE collisions 0. So on Linux the accounting is genuinely green today and a bare strict=True WOULD have XPASSed and turned CI red -- the implementer was right to overrule the handoff. I then probed pytest's own semantics rather than trusting the docs: xfail(False, strict=True) on a passing body reports 'passed', on a failing body reports 'failed'. That means the marker is a complete no-op on a case-sensitive filesystem -- the assertion stays LIVE there, so a new NON-case collision appearing on Linux would go red rather than be silently swallowed. Strictness is preserved exactly where the defect exists and the check is not disabled where it does not. INHERITED RULES. Stdlib only: checks.py imports collections, json, os, pathlib, re, shutil, subprocess, sys, tempfile -- nothing else. No timings: grep for time./datetime/timestamp/perf_counter/elapsed/utcnow across scripts/code_map/ returns one docstring line and nothing executable. python never py, in both run_code_map and _build_into (sys.executable). Windows write discipline: every write in the new tests passes encoding='utf-8', newline='\\\\n'. Fail-visibly: a missing tree or store prints FAIL and returns 1; no check swallows an exception into a pass -- run() lets a raise through rather than counting it green. THREE OBSERVATIONS, none a blocker, each a place a check degrades QUIETLY rather than loudly. (a) refs-line-self-consistent returns [] when no page carries a recognisable inbound line (A5) -- it iterates a set it does not assert is non-empty, which is exactly what CREW_CONTEXT's 'any guard that loops must assert what it looped over' forbids. The implementer put that assertion in the positive-control TEST but not in the CHECK. It is not a blocker because the property the check guards still fails loudly under mutation (A6, A7), and the render change that would silence it makes inbound-attribution red in the same run. One line -- assert the tree carries at least one parsed line -- would make it loud. (b) no-empty-pages misses a BOM-only page because U+FEFF is not str.strip whitespace (A2); page-accounting catches it. (c) tree_diff(empty, empty) -> [] with no assertion that either build produced a page; unreachable through run() because page-accounting reads the same tree, but the same 'assert what you looped over' standard applies.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architectural divergence needing Commander reconciliation. checks.py stays a leaf of scripts/code_map/ and adds no new dependency: it deliberately does NOT import render, which is the point -- it imports only the two store-name constants (STATEMENTS_NAME, SUPPLEMENT_NAME) from extract and supplement, so the check stage reads the stores directly instead of through the code under test. That is a genuine graph change (checks no longer depends on render) and it is the right direction. The implementer's own Map Impact notes match the diff: six checks in a CHECKS registry over MapUnderCheck, run() returns 1 on any failure, missing tree or store is a failure not a skip -- all three confirmed by running. One durable consequence every later gate must carry, stated in the module docstring and confirmed by me: any gate command that runs python -m scripts.code_map check on THIS repository must expect exit 1 until g2 lands the rename. Nothing here needs a decision from Commander.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u00e2\u20ac\u201d an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. Before recording pass, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py <fowler-pass-record-path>"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2",
+          "waived": {
+            "authority": "reviewer",
+            "reason": "NOT a risk acceptance -- the rail was RUN and PASSED. 'python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g1-review/fowler-pass.json' exits 0 with 'fowler pass ok (smells=12, flagged=[duplicated-code, data-clumps, primitive-obsession, message-chains], overridden=[comments-as-deodorant])'; evidence e-r6-fowler-1. The waive is forced only because the template ships c1 with a literal <fowler-pass-record-path> placeholder and no engine verb can replace it on a SURVEY controller: amend is refused ('amend applies to gated checklists') and attest is refused for an engine-checked condition. Identical rail defect hit by the g0 reviewer at .agent-work/issue-456/g0-review/review.json; reported again in Workflow Feedback because it is still unfixed.",
+            "evidence": "e-r6-fowler-2",
+            "forced": true
+          }
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded at .agent-work/issue-456/g1-review/fowler-pass.json; verify_fowler_pass.py exits 0 (12 smells, none skipped). FLAGGED, all observations, none a blocker: duplicated-code (the 'cannot read the inbound line' branch and its message are verbatim in both refs_line_self_consistent and inbound_attribution); data-clumps ((root, artifacts, out) travels as a triple through run() which immediately repacks it into MapUnderCheck); primitive-obsession (the 'module:name' key is split with .split(':', 1) in six places, twice welded to .rsplit('.', 1)[-1] to reach the leaf); message-chains (the same chains in entity_symbol_join, same fix). OVERRIDDEN: comments-as-deodorant -- checks.py is about half docstring and page_accounting carries 42 documentation lines over 13 code lines, which would normally be flagged. Standard that wins: CREW_CONTEXT 'Verification Discipline' + 'Evidence You Owe Back' plus the g1 handoff's own requirement that what a check does NOT prove is recorded beside it. The prose records measured limits and their owners (StoreScan's extractor blindness, entity_symbol_join's leaf-only comparison and D2, page_accounting's tc24 ruling), not restatements of short plain code, and I confirmed two of those limits by attack. Deleting it would delete the gate's findings. ABSENT: long-method (longest body 31 code lines, AST-measured), large-class, feature-envy, long-parameter-list, shotgun-surgery (tested by attack A5 -- the blast radius of respelling the inbound line was exactly the REFS_* block, as designed), divergent-change, speculative-generality.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command",
+          "payload": {
+            "command": "python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g1-review/fowler-pass.json",
+            "exit_code": "0",
+            "output": "fowler pass ok: .agent-work/issue-456/g1-review/fowler-pass.json (smells=12, flagged=['duplicated-code', 'data-clumps', 'primitive-obsession', 'message-chains'], overridden=['comments-as-deodorant'])"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "waiver",
+          "payload": {
+            "cond": "c1",
+            "authority": "reviewer",
+            "reason": "NOT a risk acceptance -- the rail was RUN and PASSED. 'python C:/Users/fredc/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py .agent-work/issue-456/g1-review/fowler-pass.json' exits 0 with 'fowler pass ok (smells=12, flagged=[duplicated-code, data-clumps, primitive-obsession, message-chains], overridden=[comments-as-deodorant])'; evidence e-r6-fowler-1. The waive is forced only because the template ships c1 with a literal <fowler-pass-record-path> placeholder and no engine verb can replace it on a SURVEY controller: amend is refused ('amend applies to gated checklists') and attest is refused for an engine-checked condition. Identical rail defect hit by the g0 reviewer at .agent-work/issue-456/g0-review/review.json; reported again in Workflow Feedback because it is still unfixed.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "All 7 checks pass, no open fail. The gate's close criteria are met and verified by running. Eleven undesigned attacks, each against a mutation the implementer did not design for, with a green control first and a loud harness: every one of the six checks went red under an attack on the property it guards, with exit 1. The decisive result is A11 -- stamping str(hash('x')) into a built artifact makes deterministic-rebuild red, which is only possible if the two builds really are separate processes under different PYTHONHASHSEED values; a same-process or same-seed comparison would have survived. A8 killed entity-symbol-join from the extract.py side the implementer never attacked, proving its independence rather than asserting it. No check is self-agreeing: page-accounting is red on the real corpus right now, off by exactly one page, naming scripts.run_skill_eval:Verdict, with the other five green -- exit 1 for the right reason. Suite in a cleared environment is exactly 1729 passed, 2 skipped, 1 xfailed, exit 0, against the 1709/2/0 baseline. The conditional xfail is right and its reasoning is stronger than claimed: I measured 1 case-insensitive and 0 case-sensitive collisions on this corpus, confirmed [XPASS(strict)] fires under a simulated g2 rename together with the collision-set test, and probed pytest's own semantics to confirm that a false condition leaves the assertion LIVE rather than suppressed. Four observations, none blocking, all about checks that degrade quietly rather than loudly; three filed as triage candidates."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r4-quality",
+      "statement": "refs_line_self_consistent iterates the tree's inbound lines without asserting it found any: a render change that respells the prefix makes it return [] silently (reviewer attack A5). One assertion -- the tree must carry at least one parsed inbound line -- makes the degradation loud. Same class: tree_diff(empty, empty) -> [] with no assertion that either build produced a page. Owner: gB or g4."
+    },
+    {
+      "id": "tc2",
+      "from": "r4-quality",
+      "statement": "no_empty_pages misses a page whose only content is U+FEFF, because a BOM is not str.strip whitespace (reviewer attack A2). page_accounting catches it today, so this is a narrowing not a hole. Fix is one call to .strip('\\ufeff').strip() or reading with utf-8-sig."
+    },
+    {
+      "id": "tc3",
+      "from": "r6-fowler",
+      "statement": "The 'module:name' supplement key has no type: checks.py splits it six times and twice chains a further rsplit to reach the leaf. A Key namedtuple with .module/.name/.leaf would remove all six and make entity_symbol_join's leaf-only comparison self-documenting. Deliberately NOT done here -- the store schema is strings and gate g3 owns it."
+    }
+  ],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "constellation-issue-456-g1-reviewer-attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-08T01:41:21.708618+00:00",
+    "last_heartbeat": "2026-08-08T01:55:04.140398+00:00",
+    "claimed_by": "reviewer",
+    "worktree": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T01:56:40.793232+00:00"
+  }
+}
