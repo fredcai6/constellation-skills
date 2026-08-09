@@ -340,7 +340,8 @@
           "id": "c1",
           "statement": "committed; IMPLEMENTER_RESULT.md written with all required sections",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "committed 696caaea (tests/test_mcp_imperative_equivalence.py + map/INDEX.md + my own plan/journal/context/mechanical) and afc89ffd (IMPLEMENTER_RESULT.md); result written with exact commands/output/exit codes, gate count (61), full red-state demonstration (negative result + corrected live demo + permanent PositiveControlTests), Map Impact, and Workflow Feedback"
         }
       ],
       "constraints": [
@@ -349,7 +350,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -363,13 +364,14 @@
   "refusals": 0,
   "engine_session": {
     "session_id": "g2-impl-424-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T22:35:56.460658+00:00",
-    "last_heartbeat": "2026-08-09T22:47:12.848903+00:00",
+    "last_heartbeat": "2026-08-09T22:53:10.810774+00:00",
     "claimed_by": "g2-implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T22:53:20.733379+00:00"
   },
   "why_trail": [
     {
@@ -413,6 +415,13 @@
       "why": "map rebuilt fresh (test_code_map.py 148 passed, 63 subtests); full suite 2177 passed, 1 skipped, 1061 subtests passed, 0 failed -- exactly baseline (2172) + my 5 new tests, skip count and subtest count both match baseline exactly, confirming no regression anywhere else",
       "mechanical": false,
       "ts": "2026-08-09T22:47:07.664948+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-closeout",
+      "why": "deliverable committed across two commits (test file + map + plan artifacts, then the result file); IMPLEMENTER_RESULT written with all required sections including the corrected red-state demonstration story (negative result on source-mutation, corrected scratch-only manufactured-divergence demo, and the permanent in-suite positive control), Map Impact, and a blunt Workflow Feedback naming the handoff's rule-1 wording gap and the code_map stage-before-rebuild ordering",
+      "mechanical": false,
+      "ts": "2026-08-09T22:53:10.810767+00:00"
     }
   ]
 }
