@@ -408,7 +408,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g2",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received at .agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md, verdict COMPLETE, no unresolved blockers, attached as e-g2-implement-1. Reproduced in my own hands before dispatch: stop_boundary 2 passed exit 0, stop_mutation 1 passed / 7 subtests exit 0, scope exactly the two allowed files. Committed at 57048457 so the reviewer gets a resolvable ref."
         }
       ],
       "postconditions": [
@@ -419,7 +420,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-review-1"
         }
       ],
       "constraints": [],
@@ -428,11 +430,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "path": ".agent-work/w5-gates/crew-handoffs/g2-review-RESULT.md",
+            "crew": "constellation/w5-gates/g2/reviewer/attempt-1",
+            "finding": "Criterion 1 third leg: a stop-shortcut that skips the RENDER leaves -k stop_mutation GREEN at exit 0. The shipped code does run the render, so this is a test hole, not a code defect -- but nothing would notice if a future edit removed it, while the mutation docstring claims every requirement that must survive a stop is broken here in turn. 7 of 8 criteria pass.",
+            "remedy": "Reviewer proved the fix discriminates: degrading the installed replan renderer to return empty makes the stop path refuse today (both selectors RED), and with the render shortcut also applied it passes. An eighth mutation doing exactly that closes the hole, needs no new machinery, and touches only the allowed test file."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-integrate": {
@@ -444,7 +460,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g2",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received and now reads verdict: APPROVE. It arrived as a BLOCK on criterion 1's render leg; I implemented the remedy the reviewer had already proved discriminates, and the same reviewer re-ran its own three shortcuts at bd56ac8a and confirmed all three now go red."
         }
       ],
       "postconditions": [
@@ -510,7 +527,31 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w5-gates/crew-handoffs/g2-review-RESULT.md",
+            "crew": "constellation/w5-gates/g2/reviewer/attempt-1",
+            "history": "BLOCK -> rework -> re-verified APPROVE. Original findings preserved unchanged in the result; the re-verification section records what was re-run."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g2-integrate",
+            "why_ref": "w-6",
+            "note": "Tripped HARD at 19% while trying to START g2-integrate. All three of its postcondition commands already pass in my hands (stop_boundary exit 0 / 2 passed; stop_mutation exit 0 / 1 passed / 8 subtests; coupled 390 passed / 488 subtests exit 0), the APPROVE verdict is attached as e-g2-integrate-1, and p1 is attested -- so the successor's g2-integrate is a start + advance, not a re-derivation."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-implement": {
@@ -874,6 +915,16 @@
       "id": "tc5",
       "from": "g1-integrate",
       "statement": "Corpus-level: config_ref points at docs/agents/engine-config.json, which does not exist anywhere in the repo; load_config falls back to {} silently and nobody is told. Inherited from the shipped template. (cold critic C2 aside)"
+    },
+    {
+      "id": "tc6",
+      "from": "g2-integrate",
+      "statement": "repair is still unverifiable at the Admiral boundary -- same defect class as #506, which this wave only fixed for stop. A repair transition cannot be verified, only refused. (g2 reviewer)"
+    },
+    {
+      "id": "tc7",
+      "from": "g2-integrate",
+      "statement": "render_replan_markdown contains a redundant internal verify_replan_result call, already run by the caller. It makes the render unfalsifiable by packet data -- which is why the render leg of the stop mutation test needed code degradation rather than a data mutation to discriminate. (g2 reviewer)"
     }
   ],
   "blockers": [],
@@ -912,6 +963,13 @@
       "why": "Implementer returned COMPLETE with the honest null tested and not fired: it measured the seam first and found verify_replan.py already treats stop as first-class, so the refusal was local to the two named clauses. It split verification from authorization rather than bolting on a condition, which is what the ordering wrinkle demanded, and it proved the mutation test has teeth by over-relaxing to the plausible wrong shape and watching the test catch it.",
       "mechanical": false,
       "ts": "2026-08-09T01:27:05.375714+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g2-review",
+      "why": "Reviewer returned BLOCK with proof, which is the gate working as designed. It built all three stop-shortcuts itself; two go red and the render one stays green, so the mutation test does not cover the render leg it claims to. Criterion 2, the likeliest failure mode, passes: the launch_id relaxation is genuinely conditional. Criterion 6 reasoned on the record -- the inversion is the fix.",
+      "mechanical": false,
+      "ts": "2026-08-09T01:45:54.032175+00:00"
     }
   ],
   "trip_ledger": [
@@ -925,14 +983,25 @@
       "model": "claude-opus-5",
       "why_ref": "w-2",
       "ts": "2026-08-09T00:36:43.800761+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g2-integrate",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1892,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-09T01:57:45.454118+00:00"
     }
   ],
-  "refusals": 4,
+  "refusals": 6,
   "engine_session": {
     "session_id": "commander-w5-gates-d-20260808",
     "status": "active",
     "claimed_at": "2026-08-09T00:40:25.832835+00:00",
-    "last_heartbeat": "2026-08-09T01:27:05.375727+00:00",
+    "last_heartbeat": "2026-08-09T01:58:17.496989+00:00",
     "claimed_by": "commander-delegated",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
     "previous_session_id": null,
