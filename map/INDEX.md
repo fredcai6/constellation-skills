@@ -3,7 +3,7 @@
 ## packages
 evals: 12 modules, 54 entities
 scripts: 50 modules, 915 entities
-tests: 52 modules, 2928 entities
+tests: 52 modules, 2929 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -87,7 +87,7 @@ tests: 52 modules, 2928 entities
 - [scripts.verify_worktree_isolation](scripts.verify_worktree_isolation/INDEX.md) (10 entities, 4 holes): Verify git worktree isolation is real before — and inside — a parallel wave.
 - [scripts.verify_worktree_precondition_coverage](scripts.verify_worktree_precondition_coverage/INDEX.md) (6 entities, 3 holes): Verify every worktree-entering role's spine wires the worktree-isolation gate.
 
-## tests (52 modules, 2928 entities)
+## tests (52 modules, 2929 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -100,7 +100,7 @@ tests: 52 modules, 2928 entities
 - [tests.test_check_corpus_freshness](tests.test_check_corpus_freshness/INDEX.md) (15 entities, 14 holes): HOLE: no docstring
 - [tests.test_checklist_engine](tests.test_checklist_engine/INDEX.md) (442 entities, 391 holes): HOLE: no docstring
 - [tests.test_clamp_presence](tests.test_clamp_presence/INDEX.md) (3 entities, 3 holes): Presence test for issue #142 clamp restoration.
-- [tests.test_code_map](tests.test_code_map/INDEX.md) (346 entities, 189 holes): Tests for scripts/code_map/ — the derived code map (issue #456, gate g0).
+- [tests.test_code_map](tests.test_code_map/INDEX.md) (347 entities, 190 holes): Tests for scripts/code_map/ — the derived code map (issue #456, gate g0).
 - [tests.test_context_declaration_lint](tests.test_context_declaration_lint/INDEX.md) (22 entities, 18 holes): Tests for `scripts/verify_context_declaration.py` -- the mechanical lint pinning every declared `context_refs` path against the step's own imperative prose.
 - [tests.test_context_determinism](tests.test_context_determinism/INDEX.md) (25 entities, 21 holes): The acceptance test for issue #300: the projection manifest's *content* is identical across environments.
 - [tests.test_context_manifest](tests.test_context_manifest/INDEX.md) (97 entities, 85 holes): Tests for `scripts/context_manifest.py` — the deterministic projection substrate.

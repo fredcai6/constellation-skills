@@ -3127,13 +3127,28 @@ class CullVerdictArtifactTests(unittest.TestCase):
     keywords and render.py's actual tag-rendering code path -- rather than
     trusting the file's own prose."""
 
-    VERDICT_PATH = ROOT / ".agent-work" / "issue-456" / "cull-verdict.json"
+    # The verdict is a run artifact, so it MOVES: the commander's archive step
+    # relocates .agent-work/<work-id>/ into .agent-work/archive/<date>-<work-id>/.
+    # Pinning the live path alone made these tests go red the moment the run that
+    # wrote them closed -- caught by re-running the suite after archiving. Search
+    # both, and keep the live path first so a re-opened run still wins.
+    _VERDICT_CANDIDATES = (
+        ROOT / ".agent-work" / "issue-456" / "cull-verdict.json",
+        *sorted((ROOT / ".agent-work" / "archive").glob("*issue-456/cull-verdict.json")),
+    )
+
+    @classmethod
+    def _verdict_path(cls):
+        return next((p for p in cls._VERDICT_CANDIDATES if p.exists()), None)
 
     def _verdict(self):
-        self.assertTrue(self.VERDICT_PATH.exists(),
-                        "cull-verdict.json must exist at the path the "
-                        "handoff names, or there is nothing to check")
-        return json.loads(self.VERDICT_PATH.read_text(encoding="utf-8"))
+        path = self._verdict_path()
+        self.assertIsNotNone(
+            path,
+            "cull-verdict.json must exist at the path the handoff names, or in "
+            "the archived work area, or there is nothing to check. Searched: "
+            + ", ".join(str(p) for p in self._VERDICT_CANDIDATES))
+        return json.loads(path.read_text(encoding="utf-8"))
 
     def test_comment_tags_cull_verdict_file_exists_and_parses(self):
         v = self._verdict()
