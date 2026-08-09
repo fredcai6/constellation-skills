@@ -1274,6 +1274,84 @@ def _read_gauge(base_dir: Path | None):
     return _gauge_reader.read(path)
 
 
+# --- #477: a reading has an OWNER, and only the lease can name it ------------ #
+#
+# The gauge is written per checklist DIRECTORY, so the number a fresh agent finds
+# on its first `current` was sampled by whoever drove that directory before it —
+# its predecessor after a relaunch, or the Commander whose work area its own plan
+# sits in. Measured live 2026-08-08 (epic 418): a crew read `fill_fraction
+# 0.190464, observed_at 23:18:53Z`, NINE MINUTES before that agent existed, and
+# was over the hard line on turn one having done nothing. The failure that
+# follows is a LOOP — relaunch, inherit, trip, hand off, relaunch — and every
+# cycle looks like correct doctrine being followed. It cost that epic four crew
+# relaunches in one wave.
+#
+# There is NO predicate over the bare number that separates a reading I took from
+# one you took; that is exactly why the bug exists. The record itself carries no
+# owner (adding one is the WRITER's job, and the writer is not this module's to
+# change), so the only WHO-and-WHEN fact available on the read side is the
+# engine's own lease: `engine_session.claimed_at` is the moment the session
+# currently driving this checklist took it. A sample from strictly before that
+# moment cannot be that session's, whatever number it carries.
+#
+# FAIL OPEN, deliberately and in every direction. No lease, a released lease, a
+# missing or unparseable `claimed_at`, no reading at all — every one of them
+# means "no provenance to judge", and the engine then behaves EXACTLY as it did
+# before this guard existed. A gauge subsystem that started refusing readings
+# would stop every run in the fleet; the point is to stop a FOREIGN reading being
+# obeyed, not to stop readings. Every `gauge.json` already on disk carries no
+# provenance field and keeps working untouched.
+def _lease_claimed_at(cl: dict) -> datetime | None:
+    """When the session currently driving this checklist claimed it, or None.
+
+    None means "no usable provenance anchor", and every caller must read that as
+    fail-open. Only an ACTIVE lease qualifies: a released one names nobody
+    currently driving, so it cannot say whose reading a sample is."""
+    if not isinstance(cl, dict):
+        return None
+    lease = _active_lease(cl)
+    if lease is None:
+        return None
+    raw = lease.get("claimed_at")
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    try:
+        return _parse_ts(raw)
+    except (ValueError, TypeError):
+        return None
+
+
+def _reading_predates_claim(cl: dict, reading) -> bool:
+    """True only when `reading` was sampled STRICTLY BEFORE the acting session
+    claimed this checklist — i.e. it is provably not that session's own reading.
+
+    THE SINGLE PLACE this decision is made, so the advisory an agent is SHOWN and
+    the band it is JUDGED against can never disagree about whose reading it is
+    (the same one-place rule `_trip_hard_band_reading` already keeps for the hard
+    line itself).
+
+    STRICTLY before: an equal timestamp is owned. The engine's `claimed_at` and
+    the writer's `observed_at` come from two different clocks at second-ish
+    resolution, so treating coincidence as foreign would silence real readings
+    for no gain — and the cost of that boundary going the other way is one turn
+    of silence, not a wrong number.
+
+    Returns False — fail open — for a missing reading, a missing/released lease,
+    or a `claimed_at` that will not parse. Never raises."""
+    if reading is None:
+        return False
+    claimed_at = _lease_claimed_at(cl)
+    if claimed_at is None:
+        return False
+    observed_at = getattr(reading, "observed_at", None)
+    if not isinstance(observed_at, datetime):
+        return False
+    try:
+        return observed_at < claimed_at
+    except TypeError:
+        return False
+
+
 def _gate_headroom_tokens(cl: dict, gate: str | None) -> int:
     """The absolute-token context reserve `gate` declares for itself, or 0 (#467).
 
@@ -1431,6 +1509,38 @@ def _stale_record_advisory(gauge_path: Path | None) -> str:
             f"Watch your own context and hand off on judgement.")
 
 
+def _declined_reading_advisory(cl: dict, reading) -> str:
+    """Why the gauge is quiet when a perfectly good reading is sitting at this
+    path: it was sampled before the acting session got here, so it belongs to
+    somebody else (#477).
+
+    Declining SILENTLY would reproduce the exact failure this subsystem has
+    already been burned by twice — an unexplained quiet governor is how #252's
+    miscalibration and #271's ambiguous binding both survived unnoticed. So this
+    says which of the four quiet causes it is, names the session the reading is
+    being measured against, and gives the one-line remedy.
+
+    The gap is rendered against `claimed_at`, not against now: "this sample is
+    older than your claim by X" is the fact that decides ownership, and it does
+    not drift while the agent reads it. Raw facts only, explicitly NOT a
+    soft/hard verdict — the same posture as `_stale_record_advisory`, for the
+    same reason: a number shown without a judgment cannot be mistaken for one."""
+    claimed_at = _lease_claimed_at(cl)
+    if reading is None or claimed_at is None:
+        return ""
+    lease = _active_lease(cl) or {}
+    gap = _format_age(claimed_at - reading.observed_at)
+    return (f"\nCONTEXT GAUGE DECLINED: the reading at this path "
+            f"({reading.fill_fraction:.0%} on {reading.model!r}) was sampled "
+            f"{gap} BEFORE session {lease.get('session_id')!r} claimed this "
+            f"checklist, so it is NOT this session's reading — the gauge is "
+            f"written per work directory, and a fresh agent finds its "
+            f"predecessor's number there until its own first tool call lands. "
+            f"No soft/hard trip fires on a reading you did not produce. Make any "
+            f"tool call, then re-read `current` for your own number; do NOT file "
+            f"a refresh-request against this one.")
+
+
 def _no_reading_advisory(base_dir: Path | None) -> str:
     """Dispatch across every localizable "why is there no reading" cause, in
     order, returning the FIRST non-empty result — exactly one signal reaches
@@ -1470,6 +1580,13 @@ def _trip_advisory(cl: dict, base_dir: Path | None) -> str:
     if gate is None:
         return ""
     reading = _read_gauge(base_dir)
+    if _reading_predates_claim(cl, reading):
+        # #477: a real, fresh, well-formed reading that belongs to somebody else.
+        # Checked BEFORE the None branch below because it is a different question
+        # — not "why is there no reading" but "why am I not using the one that is
+        # here" — and `_reading_predates_claim` is False for a None reading, so
+        # the two branches cannot both fire.
+        return _declined_reading_advisory(cl, reading)
     if reading is None:
         # No reading is normally silent (absent/stale gauge is routine). Three
         # causes are NOT routine and must be said out loud, in priority order:
@@ -1566,11 +1683,16 @@ def _trip_hard_band_reading(cl: dict, base_dir: Path | None, gate: str | None = 
     the number the agent is SHOWN and the number it is JUDGED against come from
     the same resolver on the same gate and cannot diverge. A reserve can only
     TIGHTEN (the clamps live in `thresholds_for`), so an override can never turn
-    a Reading in the hard band into a None."""
+    a Reading in the hard band into a None.
+
+    #477: a reading sampled before the acting session claimed this checklist is
+    its predecessor's, and yields None here — the SAME `_reading_predates_claim`
+    the advisory consults, so what the agent is shown and what it is judged
+    against agree about ownership too, not just about the line."""
     if cl.get("type") != GATED:
         return None
     reading = _read_gauge(base_dir)
-    if reading is None:
+    if reading is None or _reading_predates_claim(cl, reading):
         return None
     _, hard = _gauge_reader.thresholds_for(
         reading.model, _gate_headroom_tokens(cl, gate or active_id(cl)))
