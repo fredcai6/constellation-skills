@@ -5858,3 +5858,38 @@ epic has spent five waves establishing that tidiness is not a reason to touch li
 
 **Both dispositions go on the issues themselves**, not only here — an unassigned issue that a wave
 believed it had covered is exactly the invisible debt the #503/#495 reopen was about.
+
+### Crew 1 tripped at g4-review, filed a refresh-request, released the lease. Relaunched as `-f`. Sixth instance.
+
+**g4 is implemented and closed** (`f959b391`); only `g4-review`, archive, and the PR remain. The trip is
+the reach-up mechanism working: `REFRESH REQUESTED: g4-review`, `CONTEXT 18% (>= hard)`, gate closed
+carrying a handoff, lease **released** cleanly. Nothing to recover, nothing to stop.
+
+**The DIGEST is the best handoff any instance has produced in this run**, and two lines in it are the
+wave's strongest evidence:
+
+- *"reverting the guard to a name test makes the decoy leg return exit 0 against the REAL installed
+  bundle"* — **#501 reproduced live against the installed artifact**, not against a repo-side fixture.
+  That is the difference between a test that models the defect and one that exhibits it.
+- *"no reserved selector moved by a single test, so nothing added here can satisfy an earlier gate's
+  floor"* — it checked that its own new tests could not retroactively close an **earlier** gate. That
+  is the `-k`-selector attack surface the cold critic found, and the Commander audited it unprompted.
+
+**And the honest one:** *"The implementer tripped before writing its result and correctly refused to
+attest what it had not run; I ran the one remaining command and transcribed the report with provenance
+marked in the file."* An agent out of context **declining to attest** rather than writing the
+plausible sentence, and a Commander that ran the command itself and **marked whose evidence it was**.
+That is the behaviour this epic's whole census argues for, appearing without anyone asking for it.
+
+**Relaunch: cold from `execute.json current` alone**, per job-file-not-agent-file. No separate handoff
+document, no re-briefing from my memory of the run — the DIGEST is the briefing.
+
+**I pre-empted the gauge trap in the launch, because it is live in this exact relaunch.** The
+predecessor's **18%** is still in `gauge.json` with no owner on it, and the fresh agent reads that
+number until its own first tool call lands. Told explicitly: the first reading is not yours, make a
+tool call and re-read, do not file a refresh-request against a reading you did not produce.
+
+**This is #477 — the issue I dropped from crew 4's order and dispatched a fix for forty minutes ago —
+biting again, live, in the same hour.** Four crews were relaunched into that loop earlier in this
+wave. The fix is in flight on `epic-418/w5-gauge-477`; until it lands, a warning in the launch order
+is the entire defence, and it only works because I happened to be the one writing the order.
