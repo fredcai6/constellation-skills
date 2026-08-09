@@ -4883,3 +4883,29 @@ honest path unprompted.
 rather than accepted**, `settings.json` confirmed unwritten by **reading every new function** rather
 than grepping, and a **fresh clone from GitHub refused with named per-item reasons** — Pre-Ruling 3
 satisfied exactly as written, a guard **observed refusing something real**.
+
+### REVIEW — PR #513 (crew 2, #458): scope and hard constraints verified by command
+
+**Scope is exactly the two owned files**, nothing else:
+
+```
+scripts/install_constellation.py
+tests/test_install_constellation.py            (+356 insertions)
+```
+
+**Every constraint I imposed, checked rather than accepted on report:**
+
+| constraint | how I checked | result |
+|---|---|---|
+| no other crew's files | diff vs `checklist_engine`, `test_checklist_engine`, `commander-core`, `crew-dispatch`, `CREW_CONTEXT`, `TREND_SNAPSHOT`, `verify_iterative_role` | **clean** |
+| **`settings.json` never touched, any scope** — the epic's hard constraint | diff name-only for any `settings` path | **clean, no settings file in the diff** |
+| **the check reports and never repairs** (#458's own Fixed section) | grepped every **added** line for `open(`, `write_text`, `.write(`, `mkdir`, `json.dump` | **no write path added at all** |
+
+That third one is the one worth having done properly. #458's Fixed section says *"the check reports;
+it does not silently repair"* — a readiness checker that quietly fixes what it finds is a worse defect
+than the gap it was built for, because the next run's "ready" would be caused by the checker rather
+than observed by it. **Verified against the added lines specifically**, not the file as a whole, so a
+pre-existing writer elsewhere in the installer could not mask the answer.
+
+**Held pending its crew closing out** — the `execute.c2` waive I authorized has to land with its four
+conditions first, and I do not merge under a live crew. Crews 1 and 4 still driving.
