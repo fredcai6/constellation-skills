@@ -4459,6 +4459,265 @@ class TripRealGaugeFileWiring(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------- #
+# #477 — a reading has an OWNER, and the engine can name it.
+#
+# The gauge is written per checklist DIRECTORY by a PostToolUse hook, so the
+# number a fresh agent finds on its first `current` was sampled by whoever drove
+# that directory before it — its predecessor after a relaunch, or the Commander
+# whose work area its own plan sits in. Measured live on 2026-08-08 during epic
+# 418: `.agent-work/issue-458-readiness/gauge.json` read `fill_fraction 0.190464,
+# observed_at 23:18:53Z` — NINE MINUTES before the agent reading it existed. That
+# agent was over the hard line on turn one, having done nothing.
+#
+# There is NO predicate over the bare number `0.190464` that separates a reading
+# I took from one you took. The only fact on this side of the seam that carries
+# WHO and WHEN is the engine's own lease: `engine_session.claimed_at` is the
+# moment the acting session took this checklist. A sample taken strictly BEFORE
+# that moment cannot be this session's, whatever it says.
+#
+# The failure this closes is a LOOP, which is why it is worth a guard: relaunch ->
+# inherit the number -> trip HARD -> file a refresh-request -> stand down ->
+# relaunch, indefinitely, with every cycle looking like correct doctrine being
+# followed. It cost epic 418 four crew relaunches in one wave.
+# --------------------------------------------------------------------------- #
+class TripGaugeReadingOwnership(unittest.TestCase):
+    """#477 — the engine DECLINES a gauge reading sampled before the acting
+    session claimed this checklist, and says so instead of going quiet.
+
+    Every test here drives the REAL reader over a REAL gauge.json sibling of a
+    REAL spine through `main()`, because the defect is entirely in the pairing of
+    a real file with a real lease; a patched `_read_gauge` would prove nothing.
+
+    Timestamps are derived from the lease's own recorded `claimed_at` rather than
+    from a second wall-clock read, so `before` and `after` are exact rather than
+    racing the test's own runtime."""
+
+    def _write_gauge(self, d, fill, observed_at):
+        (Path(d) / "gauge.json").write_text(json.dumps({
+            "schema_version": 1, "fill_fraction": fill,
+            "model": "claude-opus-4-8", "observed_at": observed_at,
+        }), encoding="utf-8")
+
+    def _over_hard(self):
+        _, hard = E._gauge_reader.thresholds_for("claude-opus-4-8")
+        return min(hard + 0.05, 1.0)
+
+    def _spine(self):
+        # g1 complete / g2 pending: `start g2` is the BEGIN-work verb HARD guards,
+        # so a trip is directly observable as a refusal.
+        return gated(
+            g1=gate("g1", "complete", command=PASS_COMMAND, why_exempt=True),
+            g2=gate("g2", "pending", command=PASS_COMMAND, why_exempt=True),
+        )
+
+    SESSION = "successor-session"
+
+    def _claim(self, f, cl=None, session_id=None):
+        """Save `cl` under a real active lease and return its `claimed_at`."""
+        cl = self._spine() if cl is None else cl
+        E.claim(cl, session_id or self.SESSION, "agent", ".", {})
+        E.save(f, cl)
+        return E._parse_ts(cl["engine_session"]["claimed_at"])
+
+    # --- the defect: an inherited reading must not be obeyed ---------------- #
+    def test_reading_sampled_before_the_claim_does_not_refuse_begin_work(self):
+        """THE #477 CASE. Fill over the hard line, sampled nine minutes before
+        this session claimed the checklist — the live epic-418 scenario, to the
+        minute. It is the predecessor's exhaustion, so it must not stop this
+        session beginning its first gate."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            rc = E.main(["--file", str(f), "start", "g2",
+                         "--session-id", self.SESSION])
+            self.assertEqual(rc, 0)
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "in-progress")
+
+    def test_reading_sampled_before_the_claim_is_not_rendered_as_a_band(self):
+        """`current` must not present an inherited number as this session's
+        soft/hard verdict. The band words are the whole payload an agent acts
+        on — an inherited `>= hard` is what starts the relaunch loop."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertEqual(rc, 0)
+            self.assertNotIn(">= hard", out)
+            self.assertNotIn(">= soft", out)
+
+    def test_declined_reading_is_announced_not_silent(self):
+        """Declining silently would reproduce the silent-governor failure this
+        subsystem has already been burned by twice (#252, #271): the agent sees
+        no number and cannot tell whether the gauge is broken, absent, or
+        withheld. Say which one, name the session, and name the remedy."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            import contextlib, io
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                E.main(["--file", str(f), "current"])
+            out = buf.getvalue()
+            self.assertIn("CONTEXT GAUGE", out)
+            # the age, so an agent can see how far back the sample is
+            self.assertIn("9m00s", out)
+            # the session it is being measured against
+            self.assertIn(self.SESSION, out)
+            # the remedy: land your own tool call, don't file against this
+            self.assertIn("refresh-request", out)
+
+    def test_an_inherited_reading_never_suspends_the_mechanical_close(self):
+        """At/over hard the engine bans a SILENT close (#431): `advance
+        --mechanical` is refused and `why_exempt` is suspended. Riding that off
+        an inherited number would force a fresh agent to write a handoff for
+        work it has not done."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            cl = gated(g1=gate("g1", "in-progress", command=PASS_COMMAND,
+                               why_exempt=True))
+            claimed_at = self._claim(f, cl)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            rc = E.main(["--file", str(f), "advance", "g1", "--mechanical",
+                         "--session-id", self.SESSION])
+            self.assertEqual(rc, 0)
+            self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "complete")
+
+    # --- the other half: the governor must still work --------------------- #
+    # Without these, "decline every reading" would pass the four tests above,
+    # and the fix would be a way to switch the governor off.
+    def test_a_self_measured_reading_over_hard_still_refuses(self):
+        """Same file, same lease, one second the OTHER side of `claimed_at`."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at + timedelta(seconds=1)).isoformat())
+            import contextlib, io
+            err = io.StringIO()
+            with contextlib.redirect_stderr(err):
+                rc = E.main(["--file", str(f), "start", "g2",
+                             "--session-id", self.SESSION])
+            self.assertEqual(rc, 1)
+            self.assertIn("REFUSED:", err.getvalue())
+            self.assertEqual(E.load(f)["tasks"]["g2"]["status"], "pending")
+
+    def test_a_reading_sampled_exactly_at_the_claim_is_owned(self):
+        """The boundary is STRICTLY before. An equal timestamp is kept, so
+        second-resolution coincidence never silences a real reading."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            claimed_at = self._claim(f)
+            self._write_gauge(d, self._over_hard(), claimed_at.isoformat())
+            rc = E.main(["--file", str(f), "start", "g2",
+                         "--session-id", self.SESSION])
+            self.assertEqual(rc, 1)
+
+    # --- fail OPEN: no provenance means today's behaviour, exactly --------- #
+    def test_no_lease_at_all_behaves_exactly_as_today(self):
+        """Every gauge.json in the wild predates this guard and most checklists
+        are driven with no lease at all. With nothing to measure ownership
+        against, the reading is used — a gauge that starts refusing readings
+        would stop every run in the fleet."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            E.save(f, self._spine())
+            self._write_gauge(d, self._over_hard(),
+                              (datetime.now(timezone.utc)
+                               - timedelta(minutes=9)).isoformat())
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
+
+    def test_a_released_lease_behaves_exactly_as_today(self):
+        """A released lease names nobody currently driving, so it cannot be the
+        anchor for whose reading this is."""
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            cl = self._spine()
+            E.claim(cl, self.SESSION, "agent", ".", {})
+            claimed_at = E._parse_ts(cl["engine_session"]["claimed_at"])
+            cl["engine_session"]["status"] = "released"
+            E.save(f, cl)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            self.assertEqual(E.main(["--file", str(f), "start", "g2"]), 1)
+
+    def test_an_unparseable_claimed_at_behaves_exactly_as_today(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "spine.json"
+            cl = self._spine()
+            E.claim(cl, self.SESSION, "agent", ".", {})
+            claimed_at = E._parse_ts(cl["engine_session"]["claimed_at"])
+            cl["engine_session"]["claimed_at"] = "not-a-timestamp"
+            E.save(f, cl)
+            self._write_gauge(d, self._over_hard(),
+                              (claimed_at - timedelta(minutes=9)).isoformat())
+            self.assertEqual(E.main(["--file", str(f), "start", "g2",
+                                     "--session-id", self.SESSION]), 1)
+
+    # --- the predicate itself, unit-level --------------------------------- #
+    def _r(self, observed_at):
+        return E._gauge_reader.Reading(
+            schema_version=1, fill_fraction=0.5, model="claude-opus-4-8",
+            observed_at=observed_at)
+
+    def _leased(self, **overrides):
+        cl = {"engine_session": {
+            "session_id": self.SESSION, "status": "active",
+            "claimed_at": "2026-08-08T23:28:00+00:00"}}
+        cl["engine_session"].update(overrides)
+        return cl
+
+    def test_lease_claimed_at_reads_the_active_lease(self):
+        self.assertEqual(
+            E._lease_claimed_at(self._leased()),
+            datetime(2026, 8, 8, 23, 28, tzinfo=timezone.utc))
+
+    def test_lease_claimed_at_is_none_for_every_absent_or_unusable_shape(self):
+        for label, cl in (
+            ("no key", {}),
+            ("not a dict", {"engine_session": "nope"}),
+            ("released", self._leased(status="released")),
+            ("no status", self._leased(status=None)),
+            ("missing claimed_at", self._leased(claimed_at=None)),
+            ("empty claimed_at", self._leased(claimed_at="")),
+            ("unparseable claimed_at", self._leased(claimed_at="whenever")),
+            ("non-string claimed_at", self._leased(claimed_at=17)),
+        ):
+            with self.subTest(label):
+                self.assertIsNone(E._lease_claimed_at(cl))
+
+    def test_predicate_is_true_only_strictly_before_the_claim(self):
+        claimed = datetime(2026, 8, 8, 23, 28, tzinfo=timezone.utc)
+        cl = self._leased()
+        for label, observed, expected in (
+            ("nine minutes before", claimed - timedelta(minutes=9), True),
+            ("one microsecond before", claimed - timedelta(microseconds=1), True),
+            ("exactly at", claimed, False),
+            ("one second after", claimed + timedelta(seconds=1), False),
+        ):
+            with self.subTest(label):
+                self.assertIs(E._reading_predates_claim(cl, self._r(observed)),
+                              expected)
+
+    def test_predicate_fails_open_on_a_missing_reading_or_lease(self):
+        claimed = datetime(2026, 8, 8, 23, 28, tzinfo=timezone.utc)
+        self.assertIs(E._reading_predates_claim(self._leased(), None), False)
+        self.assertIs(
+            E._reading_predates_claim({}, self._r(claimed - timedelta(days=1))),
+            False)
+
+
+# --------------------------------------------------------------------------- #
 # #227 gate g2 — state()/render_human() port-and-adapter, current() as a
 # complete gate briefing. See dit-I1-ports-RESULT.md (constellation-skills,
 # archive/2026-07-24-explore-design-thrust) for the ratified StateView shape;
