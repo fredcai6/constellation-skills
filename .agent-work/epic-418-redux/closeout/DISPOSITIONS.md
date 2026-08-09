@@ -212,12 +212,37 @@ obligation doing exactly what it was written to do.
 belong with it), #409 (cheap only once the working-notes location is ruled), #429, #500/#502/#504
 (each needs design thought). #504 in particular stays deferred and is what keeps DC6 partial.
 
+## Wave 5 — merges landed (updated 2026-08-09 00:16Z, verified on the forge)
+
+| PR | crew | merge commit | issues | verified |
+|---|---|---|---|---|
+| **#511** | 3 addressing | `39fb542a` | **#507 CLOSED, #370 CLOSED**, #413 left OPEN | `gh pr view` state=MERGED; issue states re-read after merge |
+| **#509** | 5 docs | `4bde569e` | **#496 CLOSED** (by merge), **#411 CLOSED** (by hand) | same |
+
+**4 of 21 wave-5 issues closed. Main green at 1871 passed / 2 skipped / 829 subtests, real exit 0** —
+the delta from the 1867 baseline is **+4 and nothing else**, exactly crew 3's four new tests.
+
+**#411 required a manual close, and the reason is a finding.** PR #509's body said `Closes #496, #411.`
+GitHub honours only the **first** issue in a comma-list. #496 closed; #411 did not. Caught by verifying
+issue state on the forge after the merge rather than trusting the merge — routed as a third instance to
+**#354**, which already owns this defect, rather than filed as a new issue.
+
+**#413 is deliberately open and must not be swept up in a closeout count.** Crew 3 re-derived all three
+bodies independently and found it a *different* defect: never-valid-from-the-start (a spawned subagent
+has no addressable name to its own children) rather than valid-then-stale. The Admiral had asserted a
+three-way collapse; the crew refuted it.
+
+**Still in flight:** crew 1 (gates — #506, #501+#468, #439+#484, #446), crew 2 (readiness — #458),
+crew 4 (engine — nine issues, m0-m4 complete). Crews 1 and 4 are on their second relaunch each, every
+one a clean designed handoff after a HARD trip, none a failure.
+
 ## Summary of routing
 
 | Disposition | Count |
 |---|---|
 | Merged / closed | 19 (+4 from waves 0-1) |
-| In flight — wave 5 | 21 |
+| Wave 5 — closed | 4 (#507 #370 #496 #411) |
+| Wave 5 — in flight | 17 |
 | Deferred to their own efforts by ruling | 3 workstreams (F #424, C #421, E #423) + #264 |
 | Dissolved with #467 — closed | 1 |
 | Deferred with ruling | 30 |
