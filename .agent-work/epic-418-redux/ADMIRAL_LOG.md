@@ -4529,3 +4529,32 @@ a partial was the true answer.**
 
 **Wave 5 running total: 2 of 21 issues closed.** Merge order holds — crew 4 (engine) last, with the
 mandatory `current`-against-my-own-spine check immediately after it.
+
+### RULING — do NOT re-install mid-wave, even though merge 1 just made the corpus stale again
+
+Checked immediately after #511 landed, because #344 has already bitten this run once:
+
+```
+STALE references/commander-core.md
+STALE references/crew-dispatch.md
+STALE templates/IMPLEMENTER_HANDOFF.template.md
+```
+
+**One merge, three installed files stale.** The corpus drifts on *every* merge, which is the general
+shape of #344 and worth having measured twice in one day rather than argued once.
+
+**Ruling: do not re-sync now.** Four crews are mid-run. An install rewrites the doctrine and templates
+**underneath a running agent**, which is exactly the failure I filed as **#508** this morning — an
+agent's loaded copy silently diverging from disk — and re-syncing mid-wave would be me *causing* it to
+four agents at once rather than merely suffering it. The changed files are crew-dispatch doctrine, and
+**none of the four running crews dispatches a crew**, so the staleness is inert for the rest of this
+wave.
+
+**Where the re-sync belongs is already written down:** the close sequence, after crew 1's merge, with
+its own verification step that hashes the installed file against the repo blob rather than trusting
+the installer's report. That single re-install picks up #511's files too.
+
+**Recorded because the tempting action and the correct action point opposite ways here.** The reflex
+after finding drift is to fix the drift. With live crews, fixing it is the more damaging move — and the
+reason I can say that with any confidence is that I filed the exact failure mode eight hours ago and
+would otherwise have walked into it from the other side.
