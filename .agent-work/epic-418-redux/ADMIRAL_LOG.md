@@ -4954,3 +4954,32 @@ agent.**
 today to contain the defect it was built against. The pattern is now unambiguous: **I do not catch
 these by reading, and neither does anyone else. Only running them against a case that should make them
 fail works.**
+
+### ERROR (mine) — raised a data-loss alarm from an absence, one command short of the answer
+
+Crew 2's `.agent-work/issue-458-readiness/` vanished from its path. I sent it an **urgent** message
+asking whether it had lost its spine, journals and evidence trail, and whether it could still close out.
+
+**It had archived it.** `ae0c52d0 archive(#458): close out issue-458-readiness work area` — a pure
+rename into `.agent-work/archive/2026-08-09-issue-458-readiness/`, **83 tracked files** including
+`spine.json`, `execute.json`, both journals, `MISSION_FRAME.md`, `STATE_NOTE.md`, `REPLAN_INPUT.json`
+and the crew-handoffs. **The provenance is now MORE durable than before** — untracked local directory
+to committed and tracked. Exactly what the archive step is for.
+
+**`git log main..HEAD` had the answer in the commit subject line.** I ran the alarm instead of the
+command.
+
+**The shape, which is the part worth keeping:** I saw an **absence** and reached for the alarming
+explanation before checking the adjacent benign one. That is the same failure I have corrected in
+myself twice already tonight — acting on an inference from disk state instead of deriving the fact —
+and this was the cheapest of the three to have avoided. **An absence is not evidence of destruction;
+it is evidence that the thing is not where you looked.**
+
+**Retracted to the crew immediately and explicitly**, told it not to spend any time answering, and
+named my own error rather than softening it into "just checking." It had done nothing wrong and should
+not carry a minute of doubt from my mistake.
+
+**Asking was still right; the framing was not.** The distinction matters for the retrospective: the
+ask-then-act rule is four-for-four and I am not weakening it. What failed here was *what I asked* —
+an alarmed question built on an unchecked premise, when a one-line derivation would have turned it
+into no question at all.
