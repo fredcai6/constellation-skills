@@ -696,3 +696,25 @@ from the forge.**
   CI runs on main, all mine**, starving a PR's check ~25 minutes.
 
 _Updated: 2026-08-08T07:20:00Z_
+
+> ### POST-MERGE TEST COUNT — predict it before you merge, don't rationalise it after
+>
+> Measured 2026-08-09 by `pytest --collect-only`, three revisions:
+>
+> | revision | collected |
+> |---|---|
+> | fork point `ea854471` | **1869** |
+> | `main` @ `57b1748b` | **1898** (= 1869 + 29, the three merged wave-5 PRs) |
+> | crew 1 branch, mid-g4 | **1893** (= 1869 + 24, its own g1–g3 work) |
+>
+> **The formula:** after merging crew 1, collected should be `1898 + (crew1_final − 1869)`. Re-collect
+> on crew 1's branch at its final commit to get `crew1_final`; g4 will add to the 24.
+>
+> Main's full suite at `57b1748b`: **1896 passed, 2 skipped, 829 subtests, real exit 0**, 461s,
+> unpiped. `1896 + 2 = 1898` reconciles with the collect count.
+>
+> **Why bother:** the merged total is the sum of two disjoint additions to a common base, and any other
+> number means something was lost in the merge. Without the fork-point figure the post-merge count is
+> unfalsifiable — whatever it is, it looks plausible. The 1869 was measured in a throwaway detached
+> worktree that was created, collected, and **removed in the same command** (worktree count back to 16);
+> it was not reconstructed from remembered per-PR deltas, though it happens to confirm them exactly.
