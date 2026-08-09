@@ -4675,3 +4675,27 @@ that cannot fail, landing in the wave about checks that cannot fail.
 **Merge baseline for the remaining wave-5 merges is now 1871 / 2 / 829, real exit 0**, run with
 `python -m pytest`, exit read unpiped. Recorded so the next merge is compared against the current
 tree rather than against a figure I remember from an hour ago.
+
+### #509 gate check — CI verified against the HEAD SHA, not against "a run passed"
+
+```
+gh pr view 509 --json headRefOid   ->  8f3a6f54
+gh run list --branch epic-418/w5-docs ->  run on 8f3a6f54: completed success
+```
+
+**`gh pr checks` reporting `pass` is not sufficient on its own** — it can report a green from an
+earlier run while the branch head has moved, which is exactly the situation here: crew 5 pushed a
+rework (`8f3a6f54`) on top of an already-green commit (`da1e7b87`). Both runs are green, but only the
+first fact matters, and only comparing the SHAs establishes it.
+
+**This is the merge-gating invariant the fleet doctrine states as "gate on the check exit code" applied
+one level more carefully: gate on the check *for the commit you are merging*.** A green attached to a
+superseded commit is a check that cannot fail — it stays green no matter what the rework did.
+
+**So #509 is fully ready on every substantive gate:** review finding resolved, rework verified by
+byte-comparison on both sides, CI green **on the head commit**. It is held on exactly one thing —
+`m3-artifact-and-pr` still open in the crew's own spine — and the fallback for that is already decided
+and written down.
+
+**Crew 5 is working:** journal mtime 00:05, five minutes ago. Crews 1 and 4 remain quiet on the engine
+channel at 15 and 23 minutes; both have been asked and neither has been acted on.
