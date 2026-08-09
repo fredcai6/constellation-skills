@@ -6,6 +6,7 @@ import copy
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -1077,6 +1078,415 @@ class GuardRuntimeTests(unittest.TestCase):
         self.assertEqual(1, run.returncode, run.stdout)
         self.assertIn("--skills-root is not a directory", run.stderr)
         self.assertIn(str(missing), run.stderr)
+
+
+# --- archive.c2b reachability (#439, #484) -----------------------------------
+#
+# The Commander spine's `archive` step asserts the run is REACHABLE. Its check is
+# a `command` condition, so per docs/CHECKLIST_SCHEMA.md the ENGINE'S VERDICT IS
+# THE EXIT CODE and stdout is discarded. Three properties therefore have to hold
+# at once, and the tests below exercise all three against the SHIPPED text:
+#
+#   1. the branch is derived at check time (no unsubstituted placeholder can ship;
+#      `<branch>` is not a resolver-owned token, so instantiation cannot catch it),
+#   2. a MERGED pull request counts as reachable, a CLOSED-unmerged one does not,
+#   3. the count comparison happens IN THE SHELL, because `gh --jq 'length > 0'`
+#      prints `true`/`false` while `gh` exits 0 either way.
+#
+# No test in this repo may reach the network, so `gh` is stubbed. The stub models
+# gh's observable contract for this one call and REFUSES (nonzero, loudly) any
+# flag, field or `--jq` expression it does not model — so a future edit to the
+# check text cannot silently drift into a shape the stub waves through. Note in
+# particular that the stub derives its filtering FROM the `--jq` text it is
+# handed, rather than hardcoding the expected answer: that is what keeps the jq
+# expression itself load-bearing here.
+#
+# NOT proven by these tests, stated plainly: the `--jq` expression's behaviour
+# under gh's real embedded gojq. There is no `jq` on PATH to delegate to and
+# `gh` cannot evaluate a filter offline, so the expression is exercised against
+# the stub's modelled subset (`.field == "literal"` atoms joined by ` or `/` and `,
+# wrapped in `[.[] | select(...)] | length`, plus the bare `length` and
+# `length > N` forms). Anything outside that subset refuses rather than passes.
+
+GH_STUB_SOURCE = r'''"""Offline stand-in for `gh pr list` (archive.c2b reachability tests).
+
+Models only what the shipped check calls and refuses everything else, so the
+check text cannot drift into a shape this stub silently accepts.
+"""
+import json
+import os
+import re
+import sys
+
+ATOM = re.compile(r'^\.([A-Za-z_][A-Za-z0-9_]*)\s*==\s*"([^"]*)"$')
+SELECT_LENGTH = re.compile(r'^\[\s*\.\[\]\s*\|\s*select\((.*)\)\s*\]\s*\|\s*length$', re.S)
+LENGTH_GT = re.compile(r'^length\s*>\s*(\d+)$')
+
+
+def refuse(message):
+    sys.stderr.write("gh-stub refuses: " + message + "\n")
+    raise SystemExit(3)
+
+
+def compile_condition(text):
+    """Compile a jq select() body into a predicate over one PR dict."""
+    def atom(part):
+        match = ATOM.match(part.strip())
+        if not match:
+            refuse("unmodelled jq select atom: " + part.strip())
+        field, value = match.group(1), match.group(2)
+        return lambda pr: pr.get(field) == value
+
+    clauses = [
+        [atom(piece) for piece in or_part.split(" and ")]
+        for or_part in text.split(" or ")
+    ]
+    return lambda pr: any(all(f(pr) for f in clause) for clause in clauses)
+
+
+def apply_jq(expr, rows):
+    expr = expr.strip()
+    match = SELECT_LENGTH.match(expr)
+    if match:
+        keep = compile_condition(match.group(1))
+        return str(sum(1 for pr in rows if keep(pr)))
+    if expr == "length":
+        return str(len(rows))
+    match = LENGTH_GT.match(expr)
+    if match:
+        return "true" if len(rows) > int(match.group(1)) else "false"
+    refuse("unmodelled --jq expression: " + expr)
+
+
+def main(argv):
+    if argv[:2] != ["pr", "list"]:
+        refuse("only `gh pr list` is modelled, got: " + " ".join(argv))
+    opts = {}
+    index = 2
+    while index < len(argv):
+        flag = argv[index]
+        if not flag.startswith("--"):
+            refuse("unexpected positional argument: " + flag)
+        if index + 1 >= len(argv):
+            refuse("flag with no value: " + flag)
+        opts[flag] = argv[index + 1]
+        index += 2
+    for required in ("--head", "--state", "--json"):
+        if required not in opts:
+            refuse("missing required flag " + required)
+
+    fixture = json.loads(os.environ["GH_STUB_PRS"])
+    rows = [{"state": state} for state in fixture.get(opts["--head"], [])]
+
+    wanted = opts["--state"]
+    if wanted == "all":
+        pass
+    elif wanted == "open":
+        rows = [row for row in rows if row["state"] == "OPEN"]
+    elif wanted == "closed":
+        rows = [row for row in rows if row["state"] in ("CLOSED", "MERGED")]
+    elif wanted == "merged":
+        rows = [row for row in rows if row["state"] == "MERGED"]
+    else:
+        refuse("unmodelled --state: " + wanted)
+
+    if opts["--json"].split(",") != ["state"]:
+        refuse("only `--json state` is modelled, got: " + opts["--json"])
+
+    if "--jq" in opts:
+        sys.stdout.write(apply_jq(opts["--jq"], rows) + "\n")
+    else:
+        sys.stdout.write(json.dumps(rows) + "\n")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
+'''
+
+GIT_STUB_SOURCE = r'''"""Offline stand-in for the one `git` call the archive.c2b check makes."""
+import os
+import sys
+
+argv = sys.argv[1:]
+if not (argv[:1] == ["-C"] and argv[2:] == ["rev-parse", "--abbrev-ref", "HEAD"]):
+    sys.stderr.write("git-stub refuses: unmodelled invocation: " + " ".join(argv) + "\n")
+    raise SystemExit(3)
+if not os.path.isdir(argv[1]):
+    sys.stderr.write("git-stub refuses: -C path is not a directory: " + argv[1] + "\n")
+    raise SystemExit(3)
+sys.stdout.write(os.environ["GIT_STUB_BRANCH"] + "\n")
+'''
+
+
+class ArchiveReachabilityRuntimeTests(unittest.TestCase):
+    """Exit-code behaviour of the shipped `archive.c2b` check text.
+
+    The class name deliberately carries neither gate token, so `-k archive_c2b`
+    and `-k archive_mutation` select on method names alone.
+
+    The check text is never retyped here: every run resolves the real template
+    through the real resolver and reads the command out of the resolved JSON, so
+    a byte-identical template cannot close these tests green.
+    """
+
+    STUB_BRANCH = "epic-418/reachability-probe"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.engine = load_module("checklist_engine_for_archive_c2b", ROOT / "scripts" / "checklist_engine.py")
+        cls.resolver = load_module("init_work_area_for_archive_c2b", ROOT / "scripts" / "init_work_area.py")
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.stub_dir = Path(cls.tmp.name) / "bin"
+        cls.stub_dir.mkdir(parents=True)
+        gh_stub = Path(cls.tmp.name) / "gh_stub.py"
+        git_stub = Path(cls.tmp.name) / "git_stub.py"
+        gh_stub.write_text(GH_STUB_SOURCE, encoding="utf-8", newline="\n")
+        git_stub.write_text(GIT_STUB_SOURCE, encoding="utf-8", newline="\n")
+        interpreter = Path(sys.executable).as_posix()
+        for name, script in (("gh", gh_stub), ("git", git_stub)):
+            shim = cls.stub_dir / name
+            shim.write_text(
+                f'#!/bin/sh\nexec "{interpreter}" "{script.as_posix()}" "$@"\n',
+                encoding="utf-8",
+                newline="\n",
+            )
+            os.chmod(shim, 0o755)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    @classmethod
+    def resolved_c2b(cls) -> str:
+        """The archive.c2b check command, read out of the real resolved template."""
+        resolved = cls.resolver.resolve_spine(
+            COMMANDER_SPINE.read_text(encoding="utf-8"),
+            "archive-c2b-probe",
+            None,
+            ROOT,
+        )
+        archive = json.loads(resolved)["tasks"]["archive"]
+        for cond in archive["postconditions"]:
+            if cond["id"] == "c2b":
+                return cond["check"]["command"]
+        raise AssertionError("archive has no c2b postcondition")
+
+    def run_command(self, command: str, prs: dict, branch: str | None = None):
+        """Run `command` through the ENGINE'S OWN POSIX-shell runner, with the
+        stubs early on PATH. Using the engine's runner rather than a private
+        subprocess call is the point: the verdict measured here is the verdict
+        the engine would record."""
+        saved = dict(os.environ)
+        try:
+            os.environ["PATH"] = str(self.stub_dir) + os.pathsep + os.environ.get("PATH", "")
+            os.environ["GH_STUB_PRS"] = json.dumps(prs)
+            os.environ["GIT_STUB_BRANCH"] = branch or self.STUB_BRANCH
+            proc, marker = self.engine._run_check_command(command)
+        finally:
+            os.environ.clear()
+            os.environ.update(saved)
+        # A missing POSIX shell would make every check "fail" for a reason that
+        # has nothing to do with reachability; refuse to read that as evidence.
+        self.assertEqual("posix", marker, "these tests require the engine's POSIX shell")
+        return proc
+
+    def test_archive_c2b_ships_no_unresolved_placeholder(self):
+        """Defect 1: `<branch>` is not resolver-owned, so nothing else catches it.
+
+        `_assert_no_resolver_placeholders` only guards the token families the
+        resolver owns, so a `<branch>` left in a check command instantiates
+        cleanly and fails at run time. This is the regression floor for that.
+        """
+        command = self.resolved_c2b()
+        leftovers = re.findall(r"<[a-zA-Z][a-zA-Z0-9_-]*>", command)
+        self.assertEqual([], leftovers, f"archive.c2b ships an unsubstituted token: {command}")
+
+    def test_archive_c2b_derives_the_branch_from_the_real_repository(self):
+        """The derivation is real: run it here, against this checkout, no stub.
+
+        Proves the `git -C <repo-root> rev-parse` fragment inside the shipped
+        command actually yields this worktree's branch — the thing the literal
+        `<branch>` never did.
+        """
+        command = self.resolved_c2b()
+        match = re.search(r'\$\((git -C [^)]+ rev-parse --abbrev-ref HEAD)\)', command)
+        self.assertIsNotNone(match, f"archive.c2b derives no branch: {command}")
+        derived = subprocess.run(
+            [self.engine._find_posix_shell(), "-c", match.group(1)],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(0, derived.returncode, derived.stderr)
+        expected = subprocess.run(
+            ["git", "-C", str(ROOT), "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(0, expected.returncode, expected.stderr)
+        self.assertEqual(expected.stdout.strip(), derived.stdout.strip())
+        self.assertTrue(derived.stdout.strip(), "the derivation returned an empty branch")
+
+    def test_archive_c2b_four_pr_states_decide_reachability_by_exit_code(self):
+        """no-PR and CLOSED-unmerged must FAIL; OPEN and MERGED must PASS.
+
+        Defect 2 is the MERGED leg: a merged pull request is reachable work, and
+        the shipped `--state open` check called it unreachable. The no-PR leg is
+        the one the old `--jq 'length > 0'` form could never fail, because `gh`
+        exits 0 whether it printed `true` or `false`.
+        """
+        command = self.resolved_c2b()
+        branch = self.STUB_BRANCH
+        cases = (
+            ("no-PR", {}, False),
+            ("OPEN", {branch: ["OPEN"]}, True),
+            ("MERGED", {branch: ["MERGED"]}, True),
+            ("CLOSED-unmerged", {branch: ["CLOSED"]}, False),
+        )
+        for label, prs, reachable in cases:
+            with self.subTest(state=label):
+                proc = self.run_command(command, prs)
+                if reachable:
+                    self.assertEqual(
+                        0, proc.returncode, f"{label} is reachable: {proc.stdout}{proc.stderr}"
+                    )
+                else:
+                    self.assertNotEqual(
+                        0, proc.returncode, f"{label} is NOT reachable: {proc.stdout}{proc.stderr}"
+                    )
+
+    def test_archive_c2b_a_merged_pr_alone_satisfies_the_check(self):
+        """The narrow statement of defect 2, isolated from the rest of the matrix.
+
+        A branch whose ONLY pull request is merged is reachable. Kept separate
+        because it is the single behaviour change #439 asks for, and a matrix
+        subtest that silently stopped running would not be noticed here.
+        """
+        proc = self.run_command(self.resolved_c2b(), {self.STUB_BRANCH: ["MERGED"]})
+        self.assertEqual(0, proc.returncode, f"{proc.stdout}{proc.stderr}")
+
+    def test_archive_mutation_reintroduced_defects_all_drive_the_check_red(self):
+        """Each reintroduced defect must break the check, and each leg is paired.
+
+        Every leg asserts three things: the mutation really applied to the text,
+        the mutated command gives the wrong verdict, and THE UNMUTATED COMMAND
+        GIVES THE RIGHT ONE ON THE IDENTICAL FIXTURE. The third assertion is what
+        stops a leg being a no-op — a mutation that "fails" on a fixture where
+        the real command also fails proves nothing. Each leg's own no-op
+        condition is named in its comment.
+        """
+        command = self.resolved_c2b()
+        branch = self.STUB_BRANCH
+        merged = {branch: ["MERGED"]}
+        opened = {branch: ["OPEN"]}
+        closed = {branch: ["CLOSED"]}
+        no_pr: dict = {}
+
+        derivation = re.search(r'"\$\(git -C [^)]+ rev-parse --abbrev-ref HEAD\)"', command)
+        self.assertIsNotNone(derivation, f"archive.c2b derives no branch: {command}")
+        derivation_text = derivation.group(0)
+
+        # The pre-#439 shape, DERIVED from the shipped text rather than retyped:
+        # unwrap the shell comparison and put the boolean filter back. Retyping it
+        # would test a string this repo does not ship.
+        unwrapped = re.match(r'^test "\$\((?P<inner>.+)\)" -gt 0$', command)
+        self.assertIsNotNone(unwrapped, f"archive.c2b does not compare in the shell: {command}")
+        boolean_form, swaps = re.subn(
+            r"--jq '.*'$", "--jq 'length > 0'", unwrapped.group("inner")
+        )
+        self.assertEqual(1, swaps, "could not derive the stdout-verdict form")
+
+        # (label, mutated text, fixture, control exits 0?, mutant exits 0?)
+        legs = (
+            # No-op if: the unmutated command also failed on an OPEN pull request
+            # -- i.e. if the check were broken for every state. The control leg
+            # rules that out. `<branch>` unquoted is ALSO a shell redirection, so
+            # this leg fails before `gh` is ever reached; the quoted leg below is
+            # the one that proves the branch VALUE is load-bearing.
+            ("literal <branch> token, exactly as shipped",
+             command.replace(derivation_text, "<branch>"), opened, True, False),
+            # No-op if: the stub ignored `--head`, or the fixture answered for
+            # every branch. The stub keys strictly on `--head`, and the control
+            # leg passes on the same fixture, so neither holds.
+            ("quoted literal branch that matches nothing",
+             command.replace(derivation_text, '"<branch>"'), opened, True, False),
+            # No-op if: run on a fixture holding an OPEN pull request, where
+            # `--state open` and `--state all` agree. MERGED is the fixture that
+            # separates them.
+            ("--state narrowed back to open",
+             command.replace("--state all", "--state open"), merged, True, False),
+            # No-op if: the stub ignored the `--jq` text. It does not -- it
+            # compiles the select() body into its predicate, so dropping the
+            # MERGED arm really changes the count.
+            ("MERGED dropped from the selector",
+             command.replace(' or .state == "MERGED"', ""), merged, True, False),
+            # The inverse: widening the selector must not make a closed-unmerged
+            # branch look reachable. No-op if: run on any fixture without a
+            # CLOSED pull request.
+            ("CLOSED widened into the selector",
+             command.replace('.state == "MERGED"', '.state == "MERGED" or .state == "CLOSED"'),
+             closed, False, True),
+            # The exit-code property, and the reason the whole shape is a shell
+            # comparison. No-op if: run on a fixture WITH a reachable pull request
+            # -- there the real command exits 0 too and the leg shows nothing. It
+            # must run on a fixture with nothing reachable.
+            ("verdict carried by stdout instead of the exit code",
+             boolean_form, no_pr, False, True),
+        )
+
+        for label, mutated, prs, control_passes, mutant_passes in legs:
+            with self.subTest(mutation=label):
+                self.assertNotEqual(command, mutated, "the mutation did not apply")
+                control = self.run_command(command, prs)
+                mutant = self.run_command(mutated, prs)
+                # The control leg is what stops this being a no-op: without it a
+                # mutation could "fail" for a reason the real command shares.
+                if control_passes:
+                    self.assertEqual(
+                        0, control.returncode,
+                        f"control must pass on {prs}: {control.stdout}{control.stderr}",
+                    )
+                else:
+                    self.assertNotEqual(
+                        0, control.returncode,
+                        f"control must fail on {prs}: {control.stdout}{control.stderr}",
+                    )
+                if mutant_passes:
+                    self.assertEqual(
+                        0, mutant.returncode,
+                        f"{label} must WRONGLY pass: {mutant.stdout}{mutant.stderr}",
+                    )
+                else:
+                    self.assertNotEqual(
+                        0, mutant.returncode,
+                        f"{label} must drive the check RED: {mutant.stdout}{mutant.stderr}",
+                    )
+                # Belt and braces: control and mutant must DISAGREE, or the leg
+                # measured nothing at all.
+                self.assertNotEqual(
+                    control.returncode == 0, mutant.returncode == 0,
+                    f"{label} is a no-op: it agrees with the real check",
+                )
+
+    def test_archive_mutation_the_stub_refuses_an_unmodelled_check_shape(self):
+        """The stub cannot silently wave through a check text it does not model.
+
+        Without this, every test above would be worth only as much as the stub's
+        coverage, and a future edit to the check could drift into an unmodelled
+        shape that the stub answered for anyway. Refusal is nonzero, which reads
+        as an unreachable verdict -- fail visibly, never a quiet pass.
+        """
+        command = self.resolved_c2b()
+        unmodelled = (
+            command.replace("--json state", "--json number,state"),
+            command.replace('select(.state == "OPEN"', "select(.state | test(\"OPEN\")"),
+            command.replace("--state all", "--state draft"),
+        )
+        for mutated in unmodelled:
+            with self.subTest(text=mutated[:60]):
+                self.assertNotEqual(command, mutated, "the mutation did not apply")
+                proc = self.run_command(mutated, {self.STUB_BRANCH: ["OPEN"]})
+                self.assertNotEqual(0, proc.returncode, proc.stdout)
 
 
 if __name__ == "__main__":
