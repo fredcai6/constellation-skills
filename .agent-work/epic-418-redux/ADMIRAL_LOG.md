@@ -5379,3 +5379,24 @@ Two reviewer triage candidates sit outside the reviewed pair, and **one is mine 
 same gap seen from two sides:** the template asserts `repair` is enforced, and the verifier cannot
 verify it. Neither is knowable as *wrong* until #506 lands; both go into the closeout check with the
 verification named rather than as a reminder to think about it.
+
+### Crew 1 relaunched as `-e` — g1 and g2 CLOSED, two gates remain
+
+`3f73b0f1 chore(w5-gates): g1 and g2 closed, g2-integrate refresh requested`. **Fifth clean handoff of
+this wave**, all five designed rather than failures.
+
+**Two of four gates are done and verified:**
+- **g1 (#501 + #468)** — APPROVE, 0 findings, tested with **decoys**.
+- **g2 (#506)** — BLOCKed, reworked, **APPROVED on independent re-verification**.
+
+**The relaunch prompt carries what the successor must not re-derive**, which is now the main cost of a
+refresh and the main thing I can reduce: that `archive.c2b` does not fail the way #439/#484 say (the
+`<` is an `sh` input redirection, `gh` is never invoked), that **their suggested fix converts a check
+that cannot pass into one that cannot fail** (returncode-only verdict; I verified `--jq 'length > 0'`
+prints `false` and exits **0** myself), and that **#446 is a separate defect** — my own three-way
+collapse claim, refuted by a crew against the bodies.
+
+**That last one is worth noting as a pattern in these prompts:** three of the five facts I hand a
+successor are **corrections to something an Admiral or an issue asserted**, not new information. The
+launch order was right about the work; the corrections are what the run learned by doing it, and they
+would be lost at every refresh without being carried explicitly.
