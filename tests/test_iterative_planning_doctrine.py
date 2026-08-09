@@ -987,7 +987,16 @@ class GuardRuntimeTests(unittest.TestCase):
             project / ".claude" / "skills",
             self.bare_home / ".claude" / "skills",
         ]
-        self.assertEqual([str(path) for path in expected], roots)
+        # Compared as paths, not as strings. On some Windows hosts %TEMP% resolves
+        # through an 8.3 short name, so this side can hold `RUNNER~1` while the
+        # subprocess prints `runneradmin` for the same directory. `resolve()`
+        # canonicalises both, including the `.claude/skills` tails that do not exist
+        # here. The property under test is untouched: this is still an exact, ordered
+        # comparison of all three roots.
+        self.assertEqual(
+            [path.resolve() for path in expected],
+            [Path(root).resolve() for root in roots],
+        )
 
     def test_guard_location_flag_wins_and_is_reachable_from_all_three_modes(self):
         modes = ["explorer", "commander", "admiral-prelaunch"]

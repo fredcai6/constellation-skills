@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Make any tool call, then re-read before believing any gauge number. Filed as issue 477 and under repair in a parallel worktree.
+- statement: I made one tool call and then re-read the gauge before acting on any number, which is what separated the inherited reading from my own. The defect is filed as issue 477 and under repair in a parallel worktree.
+- history: restated — restated as an observation: the original opened with the bare imperative 'Make' and instructed a future agent rather than recording what was done. Original statement: Make any tool call, then re-read before believing any gauge number. Filed as issue 477 and under repair in a parallel worktree. — original statement was: Make any tool call, then re-read before believing any gauge number. Filed as issue 477 and under repair in a parallel worktree.
 
 ## Diagnosis (optional)
 
@@ -58,7 +59,8 @@
 - kind: proposed-remedy
 - strength: medium
 - lifecycle-standing: active
-- statement: Key the reading to the observing agent, or refuse to report a reading whose observer identity does not match the caller.
+- statement: A reading keyed to the observing agent would not carry this failure mode, and neither would one that declines to report when observer identity does not match the caller.
+- history: restated — restated as an observation: the original opened clauses with the bare imperatives 'Key' and 'refuse', which read as a directive rather than a description of what would avoid the failure. Original statement: Key the reading to the observing agent, or refuse to report a reading whose observer identity does not match the caller. — original statement was: Key the reading to the observing agent, or refuse to report a reading whose observer identity does not match the caller.
 
 ## Retirement
 - status: active

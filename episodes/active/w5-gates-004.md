@@ -58,7 +58,8 @@
 - kind: proposed-remedy
 - strength: medium
 - lifecycle-standing: active
-- statement: Reconcile the two tables, or make the contract state which one wins when they conflict.
+- statement: The two tables reconciled, or a contract naming which one wins when they disagree, would each have closed this gap.
+- history: restated — restated as an observation: the original opened clauses with the bare imperatives 'Reconcile' and 'make', which read as a directive rather than a description of what would have closed the gap. Original statement: Reconcile the two tables, or make the contract state which one wins when they conflict. — original statement was: Reconcile the two tables, or make the contract state which one wins when they conflict.
 
 ## Retirement
 - status: active

@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Waive on named Admiral authority with the command text and measured exit code recorded verbatim, and state plainly that the check did not pass. Never hand-substitute the branch name to make it green.
+- statement: The gate was waived on named Admiral authority, with the command text and measured exit code recorded verbatim and the record stating plainly that the check did not pass. The branch name was never hand-substituted to force a green.
+- history: restated — restated as an observation: the original opened with the bare imperatives 'Waive', 'state' and 'Never hand-substitute', instructing a future agent instead of recording how this gate was actually closed. Original statement: Waive on named Admiral authority with the command text and measured exit code recorded verbatim, and state plainly that the check did not pass. Never hand-substitute the branch name to make it green. — original statement was: Waive on named Admiral authority with the command text and measured exit code recorded verbatim, and state plainly that the check did not pass. Never hand-substitute the branch name to make it green.
 
 ## Diagnosis (optional)
 

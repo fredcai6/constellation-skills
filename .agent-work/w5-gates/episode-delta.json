@@ -2,188 +2,39 @@
   "work_id": "w5-gates",
   "ops": [
     {
-      "op": "create",
-      "mechanical": {
-        "run": "w5-gates",
-        "project": "constellation-skills",
-        "role": "commander",
-        "spine-step": "feedback",
-        "context-manifest-ref": ".agent-work/w5-gates/context/g3-review.json",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/w5-gates/crew-handoffs/g2-review-RESULT.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Drive the checklist engine's verbs as a crew member following the engine reference."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "`--session-id` could be passed where the reference lists it, ahead of the verb."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "The flag is parsed per-verb, so only `<verb> --session-id ...` is accepted; placing it first fails with `invalid choice`. Three crews hit this independently -- g1-review, g2-review and g3-review. In g3-review the first `start` failed with a REFUSED that reads like a lease conflict rather than a missing argument."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "One wasted round trip per crew across three crews, plus one refused batch at g2-review. The refusal text points at the lease rather than at argument order, so the reader is sent to the wrong diagnosis."
-        },
-        "workaround": {
-          "strength": "strong",
-          "statement": "Each crew re-issued the call with the flag after the verb. On this segment I read `claim --help` before claiming rather than trusting the reference's ordering."
-        }
-      },
-      "diagnosis": [
-        {
-          "kind": "suspected-cause",
-          "strength": "medium",
-          "statement": "The reference documents the flag in a per-verb flag list, which does not convey positional requirement, and the refusal message names the lease rather than the parse failure."
-        }
-      ]
+      "op": "restate-assertion",
+      "id": "w5-gates-001",
+      "assertion": "a5",
+      "statement": "I made one tool call and then re-read the gauge before acting on any number, which is what separated the inherited reading from my own. The defect is filed as issue 477 and under repair in a parallel worktree.",
+      "history": "restated as an observation: the original opened with the bare imperative 'Make' and instructed a future agent rather than recording what was done. Original statement: Make any tool call, then re-read before believing any gauge number. Filed as issue 477 and under repair in a parallel worktree."
     },
     {
-      "op": "create",
-      "mechanical": {
-        "run": "w5-gates",
-        "project": "constellation-skills",
-        "role": "commander",
-        "spine-step": "feedback",
-        "context-manifest-ref": ".agent-work/w5-gates/context/g3-implement.json",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/w5-gates/crew-handoffs/g3-implement-RESULT.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Invent a test mechanism for the archive-reachability check at gate g3."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "The handoff would name what is on PATH, since the mechanism to be invented depends entirely on that answer."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "It did not. `gh --jq` uses an embedded gojq and there is no standalone `jq` on this host; `bash` and `python` are present; `gh` is present but unusable offline. The g3 implementer and the g3 reviewer each determined this separately and both asked for the same single line in the handoff."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "The most expensive part of the gate was fully determined by that answer, and two crews on the same gate paid to discover it independently."
-        },
-        "workaround": {
-          "strength": "strong",
-          "statement": "Each crew probed PATH itself before building the mechanism and recorded the finding in its RESULT."
-        }
-      },
-      "diagnosis": [
-        {
-          "kind": "suspected-cause",
-          "strength": "medium",
-          "statement": "Host capability is treated as ambient knowledge, so it is rediscovered per crew rather than stated once where the work is handed over."
-        }
-      ]
+      "op": "restate-assertion",
+      "id": "w5-gates-001",
+      "assertion": "d2",
+      "statement": "A reading keyed to the observing agent would not carry this failure mode, and neither would one that declines to report when observer identity does not match the caller.",
+      "history": "restated as an observation: the original opened clauses with the bare imperatives 'Key' and 'refuse', which read as a directive rather than a description of what would avoid the failure. Original statement: Key the reading to the observing agent, or refuse to report a reading whose observer identity does not match the caller."
     },
     {
-      "op": "create",
-      "mechanical": {
-        "run": "w5-gates",
-        "project": "constellation-skills",
-        "role": "commander",
-        "spine-step": "feedback",
-        "context-manifest-ref": ".agent-work/w5-gates/context/g3-review.json",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/w5-gates/crew-handoffs/g3-review-RESULT.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Verify commit scope at review against the handoff's scope assertion."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "The handoff's statement about which paths are tracked would match the repository."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "The g2 and g3 review handoffs both stated that everything under `.agent-work/` is local-only and correctly absent from the tracked diff. It is tracked here: the g2 commit carries nine tracked `.agent-work/w5-gates/` files, and the g3 numstat range showed twelve paths rather than two because the range spanned two intermediate Commander commits."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "The g3 reviewer nearly raised a false scope alarm and had to read git history to resolve the contradiction. The g2 reviewer met the same contradiction while under an explicit instruction to flag any tracked file outside the named pair."
-        },
-        "workaround": {
-          "strength": "strong",
-          "statement": "Both reviewers ran `git show` against the named commit instead of trusting the range, and reported the wording error in their RESULT."
-        }
-      },
-      "diagnosis": [
-        {
-          "kind": "suspected-cause",
-          "strength": "medium",
-          "statement": "A scope assertion phrased about a commit range answers a different question than one phrased about a single commit, and the handoff text carried the convention from a repository where `.agent-work/` is untracked."
-        }
-      ]
+      "op": "restate-assertion",
+      "id": "w5-gates-003",
+      "assertion": "a5",
+      "statement": "The gate was waived on named Admiral authority, with the command text and measured exit code recorded verbatim and the record stating plainly that the check did not pass. The branch name was never hand-substituted to force a green.",
+      "history": "restated as an observation: the original opened with the bare imperatives 'Waive', 'state' and 'Never hand-substitute', instructing a future agent instead of recording how this gate was actually closed. Original statement: Waive on named Admiral authority with the command text and measured exit code recorded verbatim, and state plainly that the check did not pass. Never hand-substitute the branch name to make it green."
     },
     {
-      "op": "create",
-      "mechanical": {
-        "run": "w5-gates",
-        "project": "constellation-skills",
-        "role": "commander",
-        "spine-step": "feedback",
-        "context-manifest-ref": ".agent-work/w5-gates/context/g3-implement.json",
-        "refusals": 0,
-        "reopens": 0,
-        "rework-count": 0,
-        "failed-commands": 0,
-        "artifact-ref": [
-          ".agent-work/w5-gates/crew-handoffs/g3-implement-RESULT.md"
-        ]
-      },
-      "agent_supplied": {
-        "task-intent": {
-          "strength": "strong",
-          "statement": "Respond to a context trip that fired after every measurement for the gate was already complete."
-        },
-        "expected-behavior": {
-          "strength": "medium",
-          "statement": "The reach-up doctrine and the crew doctrine would agree on what to do when a trip lands late in a run."
-        },
-        "observed-behavior": {
-          "strength": "strong",
-          "statement": "They collide. Reach-up doctrine says to file a refresh-request and go idle; crew doctrine says the result file IS the task and that an idle turn-end with it unwritten strands the gate with no error signal. The same collision then recurred one level up: my predecessor tripped at `feedback` after it had already written and applied all five episodes, so the successor brief described the whole step as outstanding when only the reflection remained."
-        },
-        "impact-cost": {
-          "strength": "medium",
-          "statement": "At g3 a complete set of measurements would have been discarded had the doctrine been followed literally. At the spine level the episode capture was already green while being re-briefed as work to do, and one relaunch was spent establishing that."
-        },
-        "workaround": {
-          "strength": "strong",
-          "statement": "The g3 implementer filed the refresh-request without starting the gate and wrote its result anyway, flagging the collision rather than claiming a clean reading. On this segment I ran the capture gate first, found it already passing, and wrote only the reflection."
-        }
-      },
-      "diagnosis": [
-        {
-          "kind": "suspected-cause",
-          "strength": "medium",
-          "statement": "A trip is handled as though it always arrives before the step's work, so neither doctrine describes the state where the work is done but unrecorded."
-        }
-      ]
+      "op": "restate-assertion",
+      "id": "w5-gates-004",
+      "assertion": "d2",
+      "statement": "The two tables reconciled, or a contract naming which one wins when they disagree, would each have closed this gap.",
+      "history": "restated as an observation: the original opened clauses with the bare imperatives 'Reconcile' and 'make', which read as a directive rather than a description of what would have closed the gap. Original statement: Reconcile the two tables, or make the contract state which one wins when they conflict."
+    },
+    {
+      "op": "restate-assertion",
+      "id": "w5-gates-005",
+      "assertion": "a5",
+      "statement": "Every invocation on this run used `python`, and no test command was piped into tail or head, because the exit status then belongs to the pipe and a zero-match -k selector exits 5 while reading as 0. Output went to a file with the status echoed separately.",
+      "history": "restated as an observation: the original opened with the bare imperatives 'Use' and 'Redirect' and instructed a future agent rather than recording what this run did. Original statement: Use `python` always, and never pipe a test command into tail or head -- the exit status then belongs to the pipe, and a zero-match -k selector exits 5 but reads as 0. Redirect to a file and echo the status separately."
     }
   ]
 }

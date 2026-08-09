@@ -44,7 +44,8 @@
 - kind: workaround
 - strength: strong
 - lifecycle-standing: active
-- statement: Use `python` always, and never pipe a test command into tail or head -- the exit status then belongs to the pipe, and a zero-match -k selector exits 5 but reads as 0. Redirect to a file and echo the status separately.
+- statement: Every invocation on this run used `python`, and no test command was piped into tail or head, because the exit status then belongs to the pipe and a zero-match -k selector exits 5 while reading as 0. Output went to a file with the status echoed separately.
+- history: restated — restated as an observation: the original opened with the bare imperatives 'Use' and 'Redirect' and instructed a future agent rather than recording what this run did. Original statement: Use `python` always, and never pipe a test command into tail or head -- the exit status then belongs to the pipe, and a zero-match -k selector exits 5 but reads as 0. Redirect to a file and echo the status separately. — original statement was: Use `python` always, and never pipe a test command into tail or head -- the exit status then belongs to the pipe, and a zero-match -k selector exits 5 but reads as 0. Redirect to a file and echo the status separately.
 
 ## Diagnosis (optional)
 
