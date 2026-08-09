@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "diff_ref": "tests/test_mcp_identity.py, net state vs origin/main (commits 50fb7987 + fda35ec0)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "test_overlapping_execution_windows_via_threads (~48 lines) and test_collision_would_have_been_caught_if_the_two_instances_shared_one_file (~48 lines) are long, each driving a full red-then-green or barrier/thread scenario inline. Non-blocking: real subprocess-level integration tests naturally run long, and each method stays about one scenario.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "flagged", "finding": "The 'assert the process crashed for the intended reason' pattern (proc.wait(timeout=10); assertNotEqual(0, returncode); stderr = proc.stderr.read(); assertIn(...) x2) repeats near-identically in test_control_is_red_when_the_server_never_started, test_control_is_red_when_the_config_never_delivered, and test_subagent_with_no_special_configuration_gets_no_identity_never_the_parents. A small helper (e.g. assert_process_crashed_with(proc, *substrings)) would remove ~10-15 duplicated lines. Non-blocking.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "SPINE_ENV_KEYS already centralizes the recurring env-var-name group.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "Markers/session ids are intentionally opaque strings, matching the door's own documented contract (SPINE_SESSION is free-text/opaque to the server).", "override": null},
+    {"smell": "long-parameter-list", "verdict": "flagged", "finding": "ServerInstance.__init__ takes 7 parameters (spine_file, session_id, base_dir, engine, server, base_env, extra_env). Most carry defaults so call sites stay short, but it is a real, borderline-long list, compounded by extra_env being unused (see speculative-generality below). Non-blocking.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "New, isolated test file; every fenced file and scripts/checklist_engine.py show zero diff.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "DC2 and DC3 are cleanly separated into their own classes, each with exactly one reason to change.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "flagged", "finding": "ServerInstance.__init__'s extra_env parameter (line 101, applied at lines 115-116) is defined and wired up but never passed by any caller in this file -- unexercised generality added ahead of any present need. Worth removing until a real caller needs it, or exercising it in a test. Non-blocking.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "Docstrings are exceptionally precise and load-bearing (the module docstring's mechanism-disambiguation section, class docstrings naming exact scope boundaries), matching the repo's dense-doctrine convention rather than papering over unclear code -- the code itself is also clear.", "override": null}
+  ],
+  "rail_exception": null
+}

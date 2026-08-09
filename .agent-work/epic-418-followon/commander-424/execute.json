@@ -7,12 +7,12 @@
     "g1-implement",
     "g1-review",
     "g1-integrate",
-    "g2-implement",
-    "g2-review",
-    "g2-integrate",
     "g3-implement",
     "g3-review",
     "g3-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
     "g4-measure",
     "g4-review",
     "g4-integrate"
@@ -203,7 +203,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-3"
         },
         {
           "id": "c2",
@@ -215,165 +216,62 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-integrate-1",
+          "attested": {
+            "evidence": "e-g1-integrate-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "Reviewer verdict is BLOCK and I am not overriding it. The BLOCK is on the JUSTIFICATION for scripts/gen_mcp_config.py, not on the code: every protected-intent item was independently verified and holds. The reviewer proved a single project-scope .mcp.json can key identity per agent through documented ${VAR} environment expansion, which I reproduced (two headless dispatches, one directory, one committed config, two different spines, imperatives verbatim) and then shipped as the fix. What remains open is whether per-dispatch config generation is NECESSARY, and that turns on one unmeasured fact: whether an in-session Task-tool subagent shares its parent's already-launched MCP server. If it does, ${VAR} cannot reach it and per-dispatch generation is required; if it spawns its own process, generation is redundant. That fact IS DC3 -- 'a subagent dispatched with no special configuration gets a refusal or no identity, never the parent's lease' -- whose evidence this plan places at gate g3. PLAN DEFECT, surfaced rather than worked around: I ordered the claim at g1 and its evidence at g3, so this gate cannot legitimately close on its own evidence. Floating to the Admiral per the launch order's delegated-mode instruction to surface a plan-invalidating discovery rather than block on an unreachable human.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "prior_status": "in-progress"
+        "resume_reason": "Blocker cleared on measured evidence, not by override. The BLOCK targeted the JUSTIFICATION for scripts/gen_mcp_config.py. Two reproduced measurements resolved it: M1 -- a committed project-scope .mcp.json with ${VAR} expansion gives per-dispatch identity from the caller's environment (two claude -p dispatches, one directory, no generated file, each returned its own unguessable nonce, corroborated by each spine's own server-side call log; evidence/g1-resolve-varexp/); M2 (gate g3, reproduced twice) -- an in-session Task-tool subagent inherits its dispatching process's MCP scope wholesale, which was the last hypothesis for keeping generation and does not survive, because a generated config is also bound at server launch per process and so cannot give an in-session subagent its own identity either. M2 names a case NEITHER mechanism solves, so it does not distinguish them. Conclusion: per-dispatch generation is redundant. scripts/gen_mcp_config.py was REMOVED (commit fda35ec0) through this gate's own rework path, and the same reviewer that blocked re-reviewed attempt 2 and returned APPROVE after re-reproducing M1 itself and mutation-testing the DC3 positive control. The reviewer was never overridden and nothing was waived."
       },
       "result": null,
       "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
-    "g2-implement": {
-      "id": "g2-implement",
-      "title": "DC4: same-gate equivalence as a property over every gate",
-      "imperative": "Fill the implementer handoff and dispatch. Build a mechanical check proving the CLI projection and the MCP tool result carry the SAME imperative text for EVERY gate that has one \u2014 across all shipped spine/plan templates, not one sampled gate. The check must assert what it looped over (print or assert the gate count) and must be demonstrated able to fail: mutate one imperative, watch it go red, assert the mutation applied, restore. Wait for and integrate the IMPLEMENTER_RESULT.",
-      "preconditions": [
+      "evidence": [
         {
-          "id": "p1",
-          "statement": "the door exists and serves",
-          "check": null,
-          "satisfied": true,
-          "satisfied_by": "The door exists and serves: 24 tests green, a throwaway spine driven to DONE through the tools, live tool call returning genuine engine output."
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "implementer-result"
+          "id": "e-g1-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/epic-418-followon/commander-424/crew-handoffs/g1-reviewer-result-rework.md",
+            "attempt": "2",
+            "reviewer_session": "constellation/epic-418-followon/commander-424/g1/reviewer/attempt-2"
           },
-          "satisfied": false
-        }
-      ],
-      "constraints": [
-        "DC4 is a PROPERTY, not a sample (decision:dc4-is-a-property). One gate matching once establishes nothing about drift, which by definition happens later and at a gate nobody sampled.",
-        "A check that cannot fail is indistinguishable from one that passed \u2014 demonstrate the red state and assert the mutation applied.",
-        "A guard that loops must assert what it looped over; an empty set reports clean without examining anything."
-      ],
-      "anchors": {
-        "structural": [
-          "skills/*/templates/*.json \u2014 the spine and plan templates carrying imperatives",
-          "scripts/mcp_spine_server.py"
-        ],
-        "capability": [
-          "imperative text delivery through two doors"
-        ],
-        "constraint": [
-          "constraint:imperative-verbatim \u2014 spine templates are the single source of instruction text"
-        ],
-        "decision": [
-          "decision:dc4-is-a-property \u2014 checked mechanically over every gate carrying an imperative @grade: settled/spec"
-        ],
-        "evidence": [
-          "claim:no-second-rendering-path"
-        ],
-        "confidence_flags": []
-      },
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
-    "g2-review": {
-      "id": "g2-review",
-      "title": "DC4: review",
-      "imperative": "Dispatch constellation-reviewer. Verify the check is a genuine property over all gates (count asserted, not a sample), and that its ability to fail was demonstrated rather than asserted. Integrate the REVIEW_RESULT.",
-      "preconditions": [
-        {
-          "id": "p1",
-          "statement": "IMPLEMENTER_RESULT received for this gate",
-          "check": null,
-          "satisfied": false
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "REVIEW_RESULT returned",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "review-result"
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [],
-      "anchors": {
-        "inherits": "g2-implement anchors"
-      },
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
-    "g2-integrate": {
-      "id": "g2-integrate",
-      "title": "DC4: integrate",
-      "imperative": "Check the verdict, re-run the verification yourself, advance.",
-      "preconditions": [
-        {
-          "id": "p1",
-          "statement": "REVIEW_RESULT received for this gate",
-          "check": null,
-          "satisfied": false
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "the equivalence property holds over every gate carrying an imperative",
-          "check": {
-            "kind": "command",
-            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_imperative_equivalence.py"
-          },
-          "override_policy": {
-            "allowed": true,
-            "authority": "human",
-            "reason_required": true
-          },
-          "satisfied": false
+          "produced_by": "engine",
+          "ts": ""
         },
         {
-          "id": "c2",
-          "statement": "reviewer verdict is APPROVE",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "review-result",
-            "match": {
-              "verdict": "APPROVE"
-            }
+          "id": "e-g1-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
           },
-          "satisfied": false
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g1-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
-      "constraints": [],
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
       "rework_count": 0
     },
     "g3-implement": {
@@ -385,7 +283,8 @@
           "id": "p1",
           "statement": "the door exists and serves",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Verified in my own hands on this tree: the door exists and serves. tests/test_mcp_spine_server.py 21 passed and tests/test_mcp_identity.py 12 passed, both driving a real server subprocess over newline-delimited JSON-RPC, not a mock. Live serving re-confirmed end to end by two claude -p dispatches through the committed project-scope .mcp.json (no --mcp-config, no generated file): each returned its own spine's unguessable nonce and each spine directory's own mcp_calls.jsonl recorded exactly one matching engine call. Evidence: .agent-work/epic-418-followon/commander-424/evidence/g1-resolve-varexp/. Note the anchor 'scripts/gen_mcp_config.py -- session_id#agentId keying' is now stale: that file was removed at g1-integrate as redundant, and the identity seam it fed is the caller-set environment the committed .mcp.json expands."
         }
       ],
       "postconditions": [
@@ -396,7 +295,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
         }
       ],
       "constraints": [
@@ -430,11 +330,24 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic-418-followon/commander-424/crew-handoffs/g3-implementer-result.md",
+            "status": "complete",
+            "blockers": "none",
+            "crew": "constellation/epic-418-followon/commander-424/g3/implementer/attempt-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-review": {
@@ -446,7 +359,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream verified in my own hands: the g3 IMPLEMENTER_RESULT is on disk, verified fresh via run_crew.py --verify-result (attempt-1, status completed), and its claims reproduce -- tests/test_mcp_identity.py 12 passed, tests/test_mcp_spine_server.py 21 passed, full suite 2172 passed / 1 skipped / 1061 subtests, 0 failed. Its live-experiment evidence exists and checks out: the nonces in dispatch_stdout.json and dispatch2_stdout.json match nonce.txt and nonce2.txt and the spine imperatives, and each spine dir's mcp_calls.jsonl corroborates the call count independently of the model's self-report. scripts/checklist_engine.py diff is empty and no fenced file was touched."
         }
       ],
       "postconditions": [
@@ -457,7 +371,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
         }
       ],
       "constraints": [],
@@ -466,11 +381,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/epic-418-followon/commander-424/crew-handoffs/g3-reviewer-result.md",
+            "crew": "constellation/epic-418-followon/commander-424/g3/reviewer/attempt-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -482,7 +409,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received and verified fresh (run_crew.py --verify-result, attempt-1 completed). Verdict APPROVE on line 11. The reviewer mutated scripts/mcp_spine_server.py itself twice and reported selective reds: a hardcoded fallback identity turned exactly the two DC3 tests whose premise is 'no SPINE_FILE' red with the other ten green, and forcing all instances onto one shared spine file turned all five DC2 tests red including the collision control's green-contrast half. Tree restored: git status on scripts/ and tests/ is empty."
         }
       ],
       "postconditions": [
@@ -498,7 +426,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-2"
         },
         {
           "id": "c2",
@@ -510,17 +439,45 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-1",
+          "attested": {
+            "evidence": "e-g3-integrate-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/epic-418-followon/commander-424/crew-handoffs/g3-reviewer-result.md",
+            "crew": "constellation/epic-418-followon/commander-424/g3/reviewer/attempt-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-measure": {
@@ -682,29 +639,142 @@
       "finding": null,
       "evidence": [],
       "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "DC4: same-gate equivalence as a property over every gate",
+      "imperative": "Fill the implementer handoff and dispatch. Build a mechanical check proving the CLI projection and the MCP tool result carry the SAME imperative text for EVERY gate that has one \u2014 across all shipped spine/plan templates, not one sampled gate. The check must assert what it looped over (print or assert the gate count) and must be demonstrated able to fail: mutate one imperative, watch it go red, assert the mutation applied, restore. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the door exists and serves",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "The door exists and serves: 24 tests green, a throwaway spine driven to DONE through the tools, live tool call returning genuine engine output."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "DC4 is a PROPERTY, not a sample (decision:dc4-is-a-property). One gate matching once establishes nothing about drift, which by definition happens later and at a gate nobody sampled.",
+        "A check that cannot fail is indistinguishable from one that passed \u2014 demonstrate the red state and assert the mutation applied.",
+        "A guard that loops must assert what it looped over; an empty set reports clean without examining anything."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "DC4: review",
+      "imperative": "Dispatch constellation-reviewer. Verify the check is a genuine property over all gates (count asserted, not a sample), and that its ability to fail was demonstrated rather than asserted. Integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "DC4: integrate",
+      "imperative": "Check the verdict, re-run the verification yourself, advance.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the equivalence property holds over every gate carrying an imperative",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_imperative_equivalence.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "g1-integrate",
-      "blocker": "Reviewer verdict is BLOCK and I am not overriding it. The BLOCK is on the JUSTIFICATION for scripts/gen_mcp_config.py, not on the code: every protected-intent item was independently verified and holds. The reviewer proved a single project-scope .mcp.json can key identity per agent through documented ${VAR} environment expansion, which I reproduced (two headless dispatches, one directory, one committed config, two different spines, imperatives verbatim) and then shipped as the fix. What remains open is whether per-dispatch config generation is NECESSARY, and that turns on one unmeasured fact: whether an in-session Task-tool subagent shares its parent's already-launched MCP server. If it does, ${VAR} cannot reach it and per-dispatch generation is required; if it spawns its own process, generation is redundant. That fact IS DC3 -- 'a subagent dispatched with no special configuration gets a refusal or no identity, never the parent's lease' -- whose evidence this plan places at gate g3. PLAN DEFECT, surfaced rather than worked around: I ordered the claim at g1 and its evidence at g3, so this gate cannot legitimately close on its own evidence. Floating to the Admiral per the launch order's delegated-mode instruction to surface a plan-invalidating discovery rather than block on an unreachable human.",
-      "authority_needed": "parent agent",
-      "next_action": ""
-    }
-  ],
-  "refusals": 2,
+  "blockers": [],
+  "refusals": 5,
   "engine_session": {
     "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
-    "status": "released",
-    "claimed_at": "2026-08-09T16:48:03.872759+00:00",
-    "last_heartbeat": "2026-08-09T18:04:51.227724+00:00",
-    "claimed_by": "commander-424 execute plan",
+    "status": "active",
+    "claimed_at": "2026-08-09T20:42:22.258396+00:00",
+    "last_heartbeat": "2026-08-09T22:27:08.903461+00:00",
+    "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-09T18:07:52.102517+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -727,6 +797,49 @@
       "why": "The review did its job twice over and both findings were real. It falsified my probe conclusion (project-scope .mcp.json DOES serve a cold headless agent when --allowedTools is passed; my arm omitted that flag and I attributed a permission-gate result to the MCP approval gate), and then falsified my replacement justification (a single shared .mcp.json CAN key identity per agent through documented ${VAR} expansion). I reproduced both myself rather than taking them on report. The gate's code is sound; what is unresolved is whether per-dispatch config generation is NECESSARY, and that question's evidence lives at g3.",
       "mechanical": false,
       "ts": "2026-08-09T18:04:36.690746+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "g1-integrate",
+      "why": "The gate's own reviewer blocked it and the block held until evidence, not authority, resolved it. What I got wrong as a plan was the ordering -- I put the claim at g1 and its evidence at g3 -- and the repair ran g3 first. What I got wrong as an inference was subtler and matters more: the blocker reasoned that if an in-session subagent shares its parent's server then ${VAR} cannot reach it and per-dispatch generation is REQUIRED. g3 measured the antecedent true, and the consequent still does not follow -- a generated config binds at server launch per process exactly as ${VAR} does, so it cannot reach an in-session subagent either. The measurement that looked like it would justify gen_mcp_config.py instead named a case neither mechanism solves, which left generation redundant and the file removed. Door tests re-run in my own hands: 21 passed (test_mcp_spine_server.py), 12 passed (test_mcp_identity.py).",
+      "mechanical": false,
+      "ts": "2026-08-09T22:06:53.032372+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g3-implement",
+      "why": "The crew's own DC3 verdict came back YES measured -- an in-session Task-tool subagent reaches its parent's exact identity with no configuration of its own, reproduced twice with unguessable nonces and corroborated by the server's own call log. What makes this gate worth its cost is not the tests but that verdict, and specifically that it did NOT do what everyone expected it to do: it was supposed to justify gen_mcp_config.py and instead it removed the last reason to keep it, because generation binds at server launch per process exactly as ${VAR} does. The crew also held the line I most wanted held -- it stated the limit of its own YES (it cannot distinguish a shared connection from an independently re-resolved identical config) rather than over-reading it, and kept the CLI/engine-lease session-id fact explicitly separate from DC3 instead of banking it as a finding.",
+      "mechanical": false,
+      "ts": "2026-08-09T22:07:52.558514+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "g3-review",
+      "why": "The reviewer did the one thing that separates a real verification from a reading: it mutated the door itself and watched what went red. Hardcoding a fallback identity turned exactly the two tests whose premise is 'no SPINE_FILE' red and left the other ten green; forcing every instance onto one shared spine file turned all five DC2 tests red, including the collision control's own green-contrast half. That selectivity is the evidence -- an indiscriminate red would have told me the tests were coupled, and no red at all would have told me they were decorative. It also caught something I would not have: MISSION_FRAME.md still carries a decision anchor saying gen_mcp_config.py earns its place, which the removal contradicts and nobody regraded.",
+      "mechanical": false,
+      "ts": "2026-08-09T22:26:02.915388+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g3-integrate",
+      "why": "DC2 and DC3 both carry a verdict now, each behind a control that was demonstrated able to fail, and the gate's real output is not the tests -- it is the answer that unblocked g1. I flagged the reviewer's tc1 and fixed it here rather than deferring it: MISSION_FRAME.md still asserted gen_mcp_config.py earns its place on a premise the removal contradicts, and a falsified decision anchor left standing is exactly what a later agent rediscovers as fact. The anchor is now struck through with the measurement that killed it and regraded in place. tc2 (run 1 of the live experiment kept no call-log snapshot, only run 2) I am carrying as a real limit on that evidence rather than papering over it: the YES rests on run 2's server-side corroboration plus both runs' nonce round-trips.",
+      "mechanical": false,
+      "ts": "2026-08-09T22:27:08.903439+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-09T22:07:14.136333+00:00",
+      "reason": "Reorder the pending tail to g3 -> g2, per the repair's stated gate order. The original plan put a claim at g1-integrate and that claim's evidence at g3, an inversion the predecessor named as its own defect; the repair runs g3 first so g1-integrate can close on measured evidence. g3's implementer has already returned under that order. Same three g2 gates, same titles, imperatives and postconditions -- dropped and re-added after g3-integrate purely to move them; nothing is rescoped, added or removed.",
+      "authority": "Admiral (LAUNCH_ORDER-424-continuation.md section 2)",
+      "ops": [
+        "dropped g2-implement",
+        "dropped g2-review",
+        "dropped g2-integrate",
+        "added g2-implement",
+        "added g2-review",
+        "added g2-integrate"
+      ]
     }
   ]
 }

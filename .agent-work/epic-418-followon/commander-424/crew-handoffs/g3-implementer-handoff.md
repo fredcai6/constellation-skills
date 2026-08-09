@@ -95,8 +95,18 @@ cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1
 cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
 ```
 
-Current suite state: **6 failed, 2157 passed, 1061 subtests passed** — a pre-existing pinned set
-owned by a concurrent agent, listed in `g2-implementer-handoff.md`. It may shrink; it must not grow.
+**BASELINE CORRECTED — the pinned red set is retired.** An earlier draft of this handoff named a
+pre-existing set of six failures owned by a concurrent agent. That pin is gone: #531 merged to main
+and this branch has merged origin/main at `05b35a2e`. Measured by the Commander on this exact tree
+immediately before dispatching you:
+
+```
+$ cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
+2163 passed, 1 skipped, 1061 subtests passed in 95.34s (0:01:35)
+```
+
+**Your gate is `0 failed`, not "the set has not grown."** If you see any failure, it is either yours
+or a real regression — do not wave it through as pre-existing.
 
 **Watch for hangs.** A previous gate on this branch lost real time to a deadlock: `assertTrue(line,
 f"...{proc.stderr.read()}")` evaluates its f-string message **unconditionally**, so a blocking pipe
@@ -109,13 +119,38 @@ read runs even on the success path. Never put a blocking read inside an eager as
 2. DC3 proven, with a positive control **in the assertion path** that has been demonstrated red when
    the server is unreachable and green when it responds.
 3. The two mechanisms above are kept distinct, explicitly.
-4. Tests pass; the pinned red set has not grown.
+4. `python -m pytest -q tests` ends **`0 failed`**. (Superseded: the old "pinned red set has not
+   grown" bar — see the corrected baseline above.)
 
 ## Required evidence to return
 
 Exact commands and real output including exit codes; the concurrency evidence for DC2 (how you know
 it was simultaneous); the red/green demonstration for DC3's positive control with proof the
-manipulation applied; the full pytest tail; whether the pinned red set grew.
+manipulation applied; the full pytest tail (must read `0 failed`).
+
+**Plus one named answer the Commander needs to resolve a blocked gate. Report it under a heading
+`## DC3 verdict: does an in-session subagent share its parent's server?`:**
+
+> Does an in-session Task-tool subagent share its parent's already-launched MCP server?
+
+Answer it **as measured**, in one of exactly three forms, and label which:
+
+- **YES, measured** — a subagent dispatched with no MCP configuration reached the parent's server
+  instance (and through it the parent's lease/reading). Show the reaching.
+- **NO, measured** — it demonstrably could not, *with the positive control green* proving the door
+  was up and serving at the time. A no-identity result without a green control is **not** a
+  measured no.
+- **UNMEASURED** — you could not put the question in a state where either answer would have shown.
+  Say exactly what stopped you.
+
+**A measured negative is a complete, successful deliverable here. An UNMEASURED condition is not a
+negative — never dress one up as the other.** If the honest answer is UNMEASURED, say UNMEASURED;
+that is the answer I will act on, and reporting it accurately is worth more to me than a green gate.
+
+Why it matters (context, not a thumb on the scale): if YES, `${VAR}` expansion in a shared
+`.mcp.json` cannot reach that case and `scripts/gen_mcp_config.py` is necessary. If NO, per-dispatch
+generation is redundant and the committed `${VAR}` path is the whole answer, and the script may be
+removed. **Both outcomes are fine.** Do not shade the measurement toward either.
 
 ## Specific exclusions
 

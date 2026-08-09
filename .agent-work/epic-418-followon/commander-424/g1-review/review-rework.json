@@ -1,0 +1,252 @@
+{
+  "work_id": "epic-418-followon/commander-424/g1-review-rework",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r4a",
+    "r4b",
+    "r4c",
+    "r4d"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded references/global-crew.md + global-everyone.md (this skill), docs/agents/CREW_CONTEXT.md + GLOSSARY.md, the rework handoff, attempt-1's own review.json result, the implementer's rework result, commit fda35ec0's full diff, and the M1 evidence directory (g1-resolve-varexp/).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "All 5 numbered tasks done, independently verified: (1) scripts/gen_mcp_config.py gone (git rm, commit fda35ec0). (2) tests/test_mcp_spine_server.py rewired: GenMcpConfigTests+load_module dropped, McpJsonVarExpansionLaunchTests added; 21 passed (was 24). (3) tests/test_mcp_identity.py DC3InheritanceMechanismTests.setUp rewired onto ServerInstance; 12 passed (was 12, no delta). (4) mcp_spine_server.py SPINE_SESSION docstring re-pointed to caller env, true half kept verbatim. (5) map/INDEX.md rebuilt, no gen_mcp_config references (confirmed by grep). Full suite reproduced by me independently: 2172 passed, 1 skipped, 1061 subtests, 0 failed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff HEAD~1 HEAD --name-only shows exactly 5 files: map/INDEX.md, scripts/gen_mcp_config.py, scripts/mcp_spine_server.py, tests/test_mcp_identity.py, tests/test_mcp_spine_server.py -- matching the handoff's own task list exactly. Every fenced-exclusion file (install_constellation.py, test_feedback_tooling.py, test_install_constellation.py, test_run_skill_eval.py, test_spine_rail.py, checklist_engine.py, episodes/) shows an empty diff, confirmed directly. settings.json untouched (git diff --stat has no settings.json entry; only ./.claude/settings.json exists on disk, pre-existing, unmodified). No issue closed, nothing promoted into docs/agents/*.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "M1 independently re-reproduced by me (third independent reproduction, after attempt-1 review and the Commander): two claude -p dispatches from the worktree, same directory, no --mcp-config, no generated file, differing only in SPINE_FILE/SPINE_SESSION env vars, plain committed .mcp.json -- each returned its own fresh nonce (RVWR-A/RVWR-B), corroborated server-side by each spine dir's own mcp_calls.jsonl showing exactly one current call against its own --file. Mutation test on scripts/mcp_spine_server.py (hardcoded SESSION, reverted after) drove DC3 positive-control tests and the new McpJsonVarExpansionLaunchTests genuinely red (6 failures), then reverted to green (33 passed) -- proves DC3 positive control and the new var-expansion test are not vacuous. Ran all three handoff verification commands myself: test_mcp_spine_server.py 21 passed, test_mcp_identity.py 12 passed, full suite 2172 passed/1 skipped/1061 subtests/0 failed, matching the implementer's reported numbers exactly.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Umbrella item: per-rule checks appended as r4a-r4d (coverage carried over, DC2/DC3 not weakened, new test exercises real .mcp.json, arithmetic/no-padding) -- driven individually next.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence needing Commander reconciliation: this removal resolves, not creates, a divergence (the file's stated justification had already been falsified in attempt 1). map/INDEX.md reconciles cleanly (no gen_mcp_config references). Two carry-forward items already flagged by the implementer as triage candidates (not mine to fix): MISSION_FRAME.md and crew-plans/scratch-mcp/prove_headless_dispatch.py still narrate the old generation mechanism and read as living docs, not history -- logging as triage below, not blocking.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a .agent-work/epic-418-followon/commander-424/g1-review/fowler-pass-rework.json placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-424/g1-review/fowler-pass-rework.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "12/12 baseline smells rendered a verdict; verify_fowler_pass.py exits 0. 11 absent, 1 overridden (duplicated-code: McpJsonVarExpansionLaunchTests hand-rolls its own JSON-RPC read/write instead of reusing McpRpcClient, justified by matching the exact same hand-rolled shape the deleted test it replaces already used, and by McpRpcClient's launch command being hardcoded in a way that would defeat this test's purpose of exercising .mcp.json's own command/args).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-424/g1-review/fowler-pass-rework.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r4a": {
+      "id": "r4a",
+      "title": "Coverage carried over, not silently deleted",
+      "imperative": "Check the 4-dropped/1-added split against the actual diff; confirm the env-seam assertions (SPINE_FILE/SPINE_ENGINE/SPINE_SESSION binding; SPINE_SESSION as opaque string) survive somewhere.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Verified against git show fda35ec0 directly. 4 dropped, all genuinely generation-only: test_build_config_keys_session_id_and_agent_id (build_config's own compose logic -- no code left to test), test_build_config_rejects_hash_in_identity_components (a generator-input validation guard that was never on the actual delivery path -- run_crew.py has no MCP wiring, nothing else called build_config), test_cli_writes_a_valid_config_file (CLI --out flag, no CLI left), test_generated_config_server_actually_answers_a_real_tool_call (e2e proof of a launchable config -- superseded by the new test). 1 added: McpJsonVarExpansionLaunchTests, an e2e proof against the real .mcp.json PLUS a claim on SPINE_SESSION reaching the engine verbatim ('LEASE active: varexp-sess#varexp-agent') that the old e2e test never asserted at all. SPINE_FILE/SPINE_ENGINE/SPINE_SESSION binding-at-launch and SPINE_SESSION-as-opaque-string are also independently covered pre-existing in tests/test_mcp_identity.py's DC2/DC3 classes (session composed 'parent-session#parent-agent', asserted verbatim in LEASE text) -- confirmed unweakened in r4b below. No coverage silently lost.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4b": {
+      "id": "r4b",
+      "title": "DC2/DC3 guarantees not weakened",
+      "imperative": "Diff DC3InheritanceMechanismTests.setUp against attempt 1; confirm positive control still in assertion path, still demonstrated red/green; ambient-leak counterfactual still proves no-leak assertion is not vacuous.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Diffed DC3InheritanceMechanismTests.setUp against attempt-1's version directly. Only setUp's parent-construction changed: gen_mcp_config.py subprocess call + parent_entry dict replaced by ServerInstance(self.parent_spine, 'parent-session#parent-agent', self.root/parent) -- the exact pattern every other class in the file already uses. This is not just equivalent but arguably MORE faithful: the old generated-config parent replaced base_env wholesale with only the generator's 3 keys (SPINE_FILE/ENGINE/SESSION, no inherited PATH etc.); the new parent inherits the real process env with only SPINE_* stripped and re-set, which is what a real .mcp.json  launch actually does (inherit env, override named vars). Positive control (assert_door_is_up_and_serving, called in setUp before any no-identity assertion) untouched -- still in the assertion path. I independently re-demonstrated red/green myself: mutated SESSION to a hardcoded constant in mcp_spine_server.py, reran tests/test_mcp_identity.py + test_mcp_spine_server.py -> 6 failed including both DC3 tests (test_subagent_with_no_special_configuration_gets_no_identity_never_the_parents, test_ambient_leak_counterfactual_would_have_been_caught) and the new McpJsonVarExpansionLaunchTests; reverted -> 33 passed. The ambient-leak counterfactual's only change is reading self.parent.env[...] instead of self.parent_entry['env'][...] -- same real env dict Popen actually used, not weakened.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4c": {
+      "id": "r4c",
+      "title": "New var-expansion test exercises real .mcp.json",
+      "imperative": "Confirm McpJsonVarExpansionLaunchTests reads command/args from the committed .mcp.json itself, not a hand-rolled copy.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Confirmed by reading the test source directly: config = json.loads(MCP_JSON.read_text(...)); entry = config[\"mcpServers\"][\"spine\"]; proc = subprocess.Popen([entry[\"command\"], *entry[\"args\"]], ..., cwd=str(ROOT)) -- command and args are read live from the committed .mcp.json file on disk, not hand-typed literals; a corruption of .mcp.json (wrong command, wrong args) would break this test. env values (SPINE_FILE/ENGINE/SESSION) are necessarily hand-supplied by the test since .mcp.json stores them as shell dollar-brace-VAR-colon-dash-default template strings and Python has no shell to expand that syntax -- the test docstring is explicit about this substitution and it matches what M1 verified separately (real claude -p dispatch performs the actual dollar-brace expansion). This is not a hand-rolled COPY of command/args (those come from the real file); it is a necessary substitution only for the env values that the file itself cannot supply pre-expanded.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4d": {
+      "id": "r4d",
+      "title": "Arithmetic and no padding/skip/xfail",
+      "imperative": "Confirm 2175->2172 delta is exactly the 4 dropped + 1 added in test_mcp_spine_server.py, test_mcp_identity.py flat at 12, no new skip/xfail markers, 0 failed.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reproduced independently, not taken on report. tests/test_mcp_spine_server.py alone: 21 passed (was 24, confirmed via git diff -4 tests +1 test). tests/test_mcp_identity.py alone: 12 passed (was 12, flat, confirmed no test methods added/removed in the diff besides the setUp/docstring edits already checked in r4b). Full suite: 2172 passed, 1 skipped, 1061 subtests passed, 0 failed -- exit implies 0 failed since pytest -q prints a 'failed' count only when nonzero and none appeared. The 1 skip is pre-existing and platform-conditional (tests/test_spine_rail.py:649, Windows-only normcase test, confirmed via -rs flag showing the same skip reason as baseline) -- not new. Grepped the full diff for skip/xfail/SkipTest markers: none found (the only 'skip' string match is the pre-existing UNCOVERED_VERBS list entry, unrelated). 2175-2172=3, exactly matches -4+1 in test_mcp_spine_server.py with test_mcp_identity.py contributing 0. No padding.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "Attempt-1's BLOCK is resolved by removal, not overridden. M1 independently re-reproduced by me (third reproduction): two claude -p dispatches, plain committed .mcp.json, no --mcp-config, differing only in caller-set SPINE_FILE/SPINE_SESSION, each got its own nonce, server-side-corroborated. Attempt-1's own counter-reasoning (protected-intent item 5 needs generation because a shared static config can't differ per dispatch) does not hold: .mcp.json's env values are ${VAR:-default} shell templates expanded per-launch from the caller's own environment, not static literals -- I had wrongly assumed the latter. M2 (in-session Task-tool subagent inherits parent's MCP scope wholesale) does not distinguish the two mechanisms since a generated config is equally bound at server-launch/per-process. Coverage: 4 dropped tests all genuinely generation-only (verified against the actual diff), 1 added test carries forward the env-seam assertions plus a stronger claim (SPINE_SESSION reaching the engine verbatim) the old e2e test never made. DC2/DC3 unweakened: diffed setUp against attempt 1, positive control still in the assertion path, I independently re-demonstrated red (mutation: 6 failures including both DC3 tests) and green (revert: 33 passed). New test reads real .mcp.json command/args live off disk; env values are necessarily hand-supplied since Python can't do shell ${VAR} expansion (matches M1's separate real-CLI verification). Arithmetic reproduced independently and exactly: 2172 passed/1 skipped/1061 subtests/0 failed (exit code 0 confirmed explicitly), delta -3 = -4+1 in test_mcp_spine_server.py, test_mcp_identity.py flat at 12. No skip/xfail padding found. Scope respected: exactly the 5 handoff-named files changed, all fenced exclusions empty-diffed, checklist_engine.py/settings.json untouched, no issue closed. Fowler pass: 12/12 smells rendered, 1 legitimately overridden (duplicated-code, logged reason), verify_fowler_pass.py exits 0."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "MISSION_FRAME.md and crew-plans/scratch-mcp/prove_headless_dispatch.py still narrate the old per-dispatch generation mechanism; both read as living docs, not point-in-time history, and might warrant a Commander-level pass to note the mechanism change (implementer's own out-of-scope observation, independently confirmed)."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "tests/test_mcp_spine_server.py has a pre-existing unused 'import shutil' (no shutil. call anywhere in the file), predating this change -- noted by the implementer, independently confirmed, unrelated cleanup."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "reviewer-g1-rework-1786312653",
+    "status": "released",
+    "claimed_at": "2026-08-09T21:57:33.754771+00:00",
+    "last_heartbeat": "2026-08-09T22:03:52.958452+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T22:04:01.546352+00:00"
+  }
+}

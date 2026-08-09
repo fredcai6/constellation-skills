@@ -91,11 +91,29 @@ the gates they actually govern, in `execute.json`'s per-gate `anchors.decision` 
   through and that `--allowedTools` opens. Missing `--allowedTools` is what made my original
   no-`--mcp-config` attempt look like non-delivery.
   **Regrade: `settled/measured` → falsified; replaced by the finding above.**
-  **`gen_mcp_config.py` still earns its place, for a different and real reason:** a single shared
+  ~~**`gen_mcp_config.py` still earns its place, for a different and real reason:** a single shared
   project-scope `.mcp.json` binds one `SPINE_FILE` and one `SPINE_SESSION` for every consumer, so it
   cannot give a parent and a subagent *different* spines (DC2) and cannot key identity per agent
   (DC3, protected-intent item 5). Per-dispatch generation is justified by **identity and
-  separation**, not by delivery necessity. Grade: settled/measured, on the corrected basis.
+  separation**, not by delivery necessity. Grade: settled/measured, on the corrected basis.~~
+  **FALSIFIED and superseded at `g1-integrate` (continuation run). `scripts/gen_mcp_config.py` was
+  removed** (commit `fda35ec0`). The replacement premise above was itself wrong: a shared
+  project-scope `.mcp.json` does **not** bind one static `SPINE_FILE`/`SPINE_SESSION` for every
+  consumer, because the committed file uses `${VAR:-default}` expansion — the values come from **each
+  caller's own environment at server launch**, so every dispatch gets its own. Measured: two
+  `claude -p` dispatches, same directory, one committed config, no generated file, each returned its
+  own unguessable nonce, each spine directory's own `mcp_calls.jsonl` recording only its own call
+  (`evidence/g1-resolve-varexp/`); re-reproduced independently by the g1 reviewer.
+  The last standing argument for generation was DC3's open question — whether an in-session Task-tool
+  subagent shares its parent's already-launched server. Gate `g3` measured that **YES** (reproduced
+  twice with independent nonces and server-log corroboration). It does not rescue generation: a
+  generated config binds at server launch **per process**, exactly as `${VAR}` does, so it cannot give
+  an in-session subagent its own identity either. **The measurement names a case neither mechanism
+  solves, so it does not distinguish them** — which leaves generation redundant.
+  **Regrade: `settled/measured` → falsified. Replacement:** the door's identity seam is the caller-set
+  environment that the committed `.mcp.json` expands; there is no generation step. Grade:
+  `settled/measured` (g1 rework: the file was removed, and the same reviewer that blocked the original
+  justification re-reviewed and returned APPROVE after re-reproducing the measurement itself).
 - **MCP is the vehicle, not the destination** — do not gold-plate the grouping; seven-over-eighteen
   is a placeholder. Grade: settled/human.
 - **Count from the call record** — DC5's count never comes from the engine's refusals counter, and
