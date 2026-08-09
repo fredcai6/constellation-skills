@@ -5440,3 +5440,36 @@ will reach for the pipe again.
 synchronous and blocked its turn — *"likely part of why I reached the band at three issues rather than
 more."* That is a concrete, measured cost of the harness constraint on Commander throughput, not a
 guess.
+
+### RULING — the g2 APPROVE predates HEAD by one commit; attach the note, no re-review cycle
+
+A **retired** crew self-reported this after standing down: the g2 APPROVE was recorded against
+`bd56ac8a`, then `4b8abc12` landed. **The record said APPROVE without saying a change landed after it.**
+
+**RULING: attach the note, do not spend a re-review cycle.** Four things make it safe, and I required
+all four in the note rather than in my head:
+
+1. **the change IS the reviewer's own named remedy** for its own finding — *"restore `pristine` after
+   the loop, or in a `finally`"*. Not an unreviewed change of direction; a prescription being filled.
+2. all three postconditions **re-run green against `4b8abc12`**;
+3. `git diff --numstat` over `tests/ scripts/ skills/` shows **only the test file** — the reviewed fix
+   did not move;
+4. the `finally` block **asserts the renderer is clean**, so the change is self-checking.
+
+**Left the override open**: if the successor wants the APPROVE to cover HEAD exactly, attempt-1 still
+holds context and one line would do it. I will not second-guess spending that cycle.
+
+### This is the PR-green defect, one tier down — and a crew found its own instance
+
+**An APPROVE attached to a superseded commit is the same defect as a CI green attached to a superseded
+commit.** I caught the CI form **twice tonight** — #509 and #513 both had an earlier green on a commit
+two behind, and on #513 the head commit's run came back **red**. A verdict that stays valid-looking
+while the thing it judged moves underneath it.
+
+**The crew caught its own instance, unprompted, after it had already stood down**, and noted it had
+been careful about exactly this at g1 and missed it at g2. **Nothing would have surfaced it** — the
+integrate gate reads the verdict, not the verdict's provenance.
+
+**Filing note for closeout:** the checkable form is the one I have been applying by hand all night —
+*gate on the verdict for the commit you are advancing*, exactly as I gate CI on the commit I am
+merging. It belongs with #354's post-merge reconciliation as the same shape at a different layer.
