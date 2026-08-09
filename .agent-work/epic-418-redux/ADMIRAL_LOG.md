@@ -6041,3 +6041,67 @@ derive its expectation on the runner instead. My own pinned post-merge predictio
 a **local** figure and must not be checked against a runner number.
 
 **Merge order unchanged and now enforced by a red:** #516 does not merge until its own commit is green.
+
+### #517 reviewed by me (it had no review gate), and smoke-tested against my own live spine BEFORE merging
+
+#477 was a bounded implementer dispatch, not a Commander run, so there was no reviewer crew. That
+review is mine and I did it rather than merging on the PR body.
+
+**Scope claim verified by command, not accepted:** `scripts/checklist_engine.py` (124/2) and
+`tests/test_checklist_engine.py` (259/0). **`gauge_writer_hook.py` and `gauge_reader.py` untouched**,
+as promised. (The `.agent-work/*` rows in the numstat show `0/142` and `0/22` — that is *main* ahead of
+the branch, my own log commits, read as removal by the two-dot direction. Same trap I documented this
+morning; I checked the added column rather than the shape of the line.)
+
+**The mechanism is sound and the insight is the right one.** There is no predicate over the bare number
+that separates my reading from yours — the record carries no owner, and adding one is the *writer's*
+job. So the fix uses the only who-and-when fact available on the read side: **`engine_session.claimed_at`.
+A sample from strictly before the acting session claimed the checklist cannot be that session's.**
+Ownership is decided in **one place**, consulted by both the advisory and the hard-band read, so what an
+agent is *shown* and what it is *judged against* cannot disagree about whose reading it is.
+
+**The fail-open matrix is complete** — I ran the class rather than reading the list: **13 passed**, and
+the names cover every direction that matters: `_no_lease_at_all_behaves_exactly_as_today`,
+`_a_released_lease_...`, `_an_unparseable_claimed_at_...`, `_predicate_fails_open_on_a_missing_reading_or_lease`,
+the boundary `_a_reading_sampled_exactly_at_the_claim_is_owned`, and critically
+**`_a_self_measured_reading_over_hard_still_refuses`** — the guard cannot be used to switch the governor
+off. Its own mutation table confirms this from the other side: forcing the predicate to `True` fails
+**8** tests.
+
+**Then the check the implementer could not run: I pointed the 517 engine at my own live Admiral spine.**
+
+| | exit | LEASE | ACTIVE | CONTEXT |
+|---|---|---|---|---|
+| 517 engine | **0** | active, same | `execute [in-progress]` | **23% (>= hard)** |
+| main engine | **0** | active, same | `execute [in-progress]` | **23% (>= hard)** |
+
+**Byte-identical behaviour, and zero mutation** — `git status --porcelain` on my spine directory was 0
+before and 0 after both runs. It also **correctly did not fire**: my 23% was sampled after I claimed at
+22:46, so it is mine, and the guard left it alone. A fix for over-firing that over-fires would be worse
+than the bug.
+
+**This is the post-merge smoke test moved before the merge**, which is strictly better: if it had
+broken my spine I would have learned it from a branch I can simply not merge, rather than from a main I
+would have to revert while holding the only live lease.
+
+**Verdict: APPROVE.** Merges in the engine-last slot per the standing order, not now.
+
+**Its three adjudication items, ruled:**
+
+1. **The residual is real and correctly stated.** Where a crew's plan sits inside its Commander's work
+   directory, both hooks write the *same* `gauge.json`; once the crew has claimed, the Commander's
+   *subsequent* writes carry `observed_at` after that claim and are indistinguishable from the crew's
+   own. **#477 is fixed for the case it was filed from — the relaunch loop, which cost this wave six
+   relaunches — and the general property "this reading is mine" remains uncheckable without the writer
+   side (#452).** Accepted as stated; the implementer volunteered this rather than letting the fix read
+   as total, which is the right instinct.
+2. **#481 is materially resolved and I will close it after the merge, not before.** Its filed scenario
+   is a relaunched dispatch inheriting its predecessor's exhaustion and having every `advance` refused;
+   a relaunched agent claims a **fresh** lease (confirmed against three live spines with distinct ids),
+   so that reading now predates the claim and is declined. Its own suggested fix — "the reader discounts
+   a record whose writing session is demonstrably gone" — is what shipped, anchored on the lease rather
+   than a writer-supplied session id. **Closing it before the merge would be a closed float**, which is
+   the exact debt I reopened #503 and #495 over.
+3. **The fail-open cost is accepted on the record:** an agent that reads `current` without ever claiming
+   has no provenance anchor and is unprotected. That is the deliberate trade against a gauge that
+   refuses readings, and it is the correct side to err on.
