@@ -5272,3 +5272,38 @@ own suggested fix, #501's freshness variant).
 **This is the commit the epic's own close depends on.** Once it merges and the installed bundle carries
 it, `execute.c3` can close on a `stop` boundary and the epic ends without a waiver against Tommy's
 name. If it had not landed, the fallback was an honest waive — never flipping the boundary decision.
+
+### g2-review returns BLOCK on #506 — a check that cannot fail, inside the fix for a check that cannot pass
+
+**The fix itself is correct.** Seven of eight close criteria pass on measurement. The block is one
+finding, and it is the sharpest of the wave:
+
+> **B1 — a stop-shortcut around the render survives with green tests**
+
+The reviewer mutated three separate `decision == "stop"` shortcuts into the fix and watched what the
+tests did:
+
+| mutation | result |
+|---|---|
+| skip **G2 validation** when `decision == "stop"` | **RED** — exit 1, `packet_fails_g2` fails |
+| skip the **unique-audit-entry match** when `decision == "stop"` | **RED** — exit 1, 3 audit subtests fail |
+| **skip the RENDER when `decision == "stop"`** | **GREEN — exit 0, 1 passed, 7 subtests passed** |
+
+With the render shortcut in place **the whole file is green: 27 passed, 32 subtests, exit 0.**
+
+**So the fix's own tests cannot tell a correct #506 from one that silently stops rendering on a `stop`
+boundary.** And the render is not incidental — it is what writes `CURRENT_TRUTH.md` and
+`WAVE_REVIEW.md`, the artifacts the epic's public body was generated from tonight.
+
+**This is the epic's thesis proving itself one more time, at the deepest point available:** the fix for
+**a check that cannot pass** contained **a check that cannot fail**, and only *mutating the thing the
+check guards* found it. The reviewer quoted the project's own doctrine back at the gate —
+*"mutate the thing it guards and watch it go red"* — and then did it three times instead of arguing.
+
+**Two of three mutations went red**, which is the part that makes this a real finding rather than a
+blanket complaint: the test file is mostly load-bearing, and exactly one clause is not. A reviewer that
+had only run the suite, or only mutated once, would have reported green.
+
+**No ruling from me is needed.** The Commander owns its rework cycle and the BLOCK is correct on its
+face; I pre-ruled at launch that a verdict must never be reworded to fit a gate, and nothing here asks
+me to adjudicate. **Crew 1 reworks; I do not merge #506 until the render mutation goes red.**
