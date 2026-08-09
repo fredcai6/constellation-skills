@@ -1,0 +1,80 @@
+{
+  "work_id": "issue-456-g8-review",
+  "diff_ref": "git show d727ee2f (BOM + first D3 attempt) and git show 06fbc138 (real D3 fix + checks.py BOM) -- scripts/code_map/extract.py, scripts/code_map/checks.py, tests/test_code_map.py, tests/fixtures/bom_corpus/bom_sample.py (gate g8: BOM + wrapped-docstring render split)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, scripts/code_map/extract.py's own module docstring (statement line shape, resolution rules), skills/constellation-reviewer/references/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "_first_paragraph is the longest new function at ~25 lines with one for-loop over docstring lines and one responsibility (split into first-paragraph + remainder). Shorter than signature_of, an existing function in the same file (~35 lines) that nobody has flagged. doc_summary_of/doc_body_of are thin delegators (3-6 lines each).",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "Extractor gains no new fields and no new methods; its three existing docstring-emission call sites (module/class/function) each swap one line (doc.strip().splitlines()[0][:160]) for two (summary = doc_summary_of(doc); ... summary[:160]) -- no growth in the class's responsibility count.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The BOM-strip line `src = src.lstrip('﻿')  # Strip UTF-8 BOM if present` is now byte-identical across THREE call sites: extract.py:370, extract.py:1281 (both from d727ee2f) and checks.py:245 (added in 06fbc138, the fix under review here). Confirmed by grep -- all three lines match exactly, including the comment. This is small (one line, low churn risk -- BOM handling is unlikely to change) but it is a real, easily-extractable duplication (e.g. a module-level `_strip_bom(src)` helper in extract.py, imported by checks.py) that a future fourth ast.parse call site would otherwise triplicate into quadruplicate. Not blocking on its own -- same size and shape as the duplications the g7 reviewer flagged non-blocking in the immediately preceding gate (tags_in/anchors_in's forward-scan, tag_check/anchor's decorator lookup) -- but worth extracting the next time a fourth parse site appears.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "_first_paragraph/doc_summary_of/doc_body_of all operate purely on their own doc/doc_text parameter, no reach into another object's internals. The three Extractor call sites read self.tree/node and call the module-level helpers with data they already own -- same shape as every other emit() call site in this class.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "_first_paragraph returns a (paragraph, body) 2-tuple, consumed once each by doc_summary_of and doc_body_of via tuple unpacking -- a natural single-purpose pair return, not a clump of primitives that travel together across many call sites. No new clump of parameters or fields introduced.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "Docstrings and their extracted paragraphs/bodies are plain strings throughout extract.py already (doc, summary, body were bare strings before this change too) -- consistent with the file's existing convention, not a new instance of the smell.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "_first_paragraph(doc), doc_summary_of(doc_text) and doc_body_of(node) each take exactly one parameter.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "This fix REMOVES a latent shotgun-surgery risk rather than introducing one: before, summary-extraction logic (doc.strip().splitlines()[0][:160]) was inlined identically at three call sites, so a future rule change would have needed three synchronized edits -- exactly the drift that produced the original D3 defect (summary and body extraction using different splitting logic). Factoring it into _first_paragraph + doc_summary_of, called uniformly from all three sites, is the fix for that risk class, not a new instance of it.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "extract.py changes for one reason (paragraph-based summary/body extraction); checks.py changes for one reason (BOM stripping in its own second ast.parse call, needed so the validator's own check does not choke on the same fixture the extractor now handles). Confirmed by reading both diff hunks directly -- neither file mixes an unrelated second reason to change.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "All new access is single-level: doc_summary_of(doc), self.tags.get(...)-style patterns unchanged, _first_paragraph(doc) unpacked directly into (paragraph, body). No chained traversal through multiple intermediate objects.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "_first_paragraph returns both paragraph and body/remainder, and BOTH are used by real, already-shipped callers (doc_summary_of, doc_body_of) -- no unused branch, no hook built for a hypothetical future caller. Every new code path is exercised by this gate's own 3 new WrappedDocstringTests plus the existing BOM tests.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "absent",
+      "finding": "New docstrings explain non-obvious behavior (doc_summary_of's docstring states the no-blank-line fallback: 'or the whole docstring if there is no blank line', which is exactly the edge case r1-handoff/r3-evidence of this review found under-tested) rather than restating code in prose. The three `# Strip UTF-8 BOM if present` comments label an operation on an INVISIBLE character (U+FEFF does not render in most editors/diffs) -- that is legitimate documentation of non-obvious code, not narration of the obvious. Checked each against its adjacent code directly.",
+      "override": null
+    }
+  ],
+  "rail_exception": null
+}
