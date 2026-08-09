@@ -264,7 +264,8 @@
             "kind": "command",
             "command": "python -m pytest tests/ -q --color=no"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-suite-and-commit-1"
         },
         {
           "id": "c2",
@@ -282,11 +283,23 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-suite-and-commit-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -q --color=no",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -296,13 +309,14 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "constellation/issue-456/gs/implementer/attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T03:21:13.625596+00:00",
-    "last_heartbeat": "2026-08-09T03:42:10.942510+00:00",
+    "last_heartbeat": "2026-08-09T03:49:37.272714+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T03:49:53.583995+00:00"
   },
   "why_trail": [
     {
@@ -339,6 +353,13 @@
       "why": "-k map_tree_freshness collects 2 tests and both pass against the fresh, tracked map/. Mutation-kill proven: added a top-level function _map_tree_freshness_probe to scripts/agent_work_root.py (a mapped module outside scripts/code_map/), did NOT rebuild map/, reran the selector -> test_map_tree_freshness_root_index_matches_a_fresh_build FAILED (916 vs 915 entities in the diff, confirming the mutation moved the root index as predicted by landing-zone-measurement.md's Arm B). Reverted the mutation; git diff --quiet -- scripts/agent_work_root.py exits 0 (byte-clean, not git status --porcelain which false-negatives under this repo's core.autocrlf=true). Reran selector -> both tests PASSED again. Comparison is over text.read_text() normalized content, not raw bytes, per CREW_CONTEXT.md's Windows guidance (git add already warned of CRLF conversion on map/INDEX.md).",
       "mechanical": false,
       "ts": "2026-08-09T03:30:33.568072+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-suite-and-commit",
+      "why": "Full suite green: 1840 passed, 2 skipped, 701 subtests, 0 failed (baseline 1838 + 2 new map_tree_freshness tests). Close criteria re-run: scoped git diff d102c05 empty, cycle-3.json untouched, git ls-files map/ exactly 2 paths, build+check 7/7 exit 0. Committed df54417f with explicit paths only, no push/PR/merge. RESULT.md written.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:49:37.272683+00:00"
     }
   ],
   "amendments": [
