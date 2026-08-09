@@ -2170,7 +2170,8 @@
           "id": "p1",
           "statement": "g2 and g6 -- needs correct symbol identity and the staleness hook",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream verified: this gate depends on g2 for correct symbol identity and on g6 for the staleness hook, and both are closed on the spine. g2-integrate and g6-integrate are complete, each on a reviewer APPROVE, and g6's close was itself a remediation of a correct BLOCK verified at four independent disable points.\n\nBoth dependencies were exercised rather than merely present. g2's symbol identity is what the tag mechanism keys on -- the entity-symbol-join check is green at 7/7 on a fresh build, and the tag diff's identity key is owning symbol plus tag text, so a wrong symbol identity would have shown up as tags losing their history. g6's staleness hook is what this gate extends: span_hash is reused unchanged and g6's anchor path is confirmed byte-identical, verified by diffing 0d1af801 against ffa959c5 and finding no removed line mentioning anchor or span_hash, and independently by the re-reviewer listing all 14 hunk headers and confirming none falls inside span_hash's or anchor()'s body.\n\nA Commander error belongs in this record, the ninth this run. I dispatched this gate's implementer, drove the build, the review, the remediation and the re-review to an APPROVE, and verified every number myself -- but never opened g7-implement in the engine before doing any of it. The work is real and the evidence is real; the bookkeeping ran three items behind the work. The engine is meant to be the record of what happened, and for the duration of this gate it was not. Recorded here rather than quietly caught up, because a spine that only agrees with itself after the fact is the same failure this run keeps naming in tests."
         }
       ],
       "postconditions": [
@@ -2181,7 +2182,12 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g7-implement-2",
+          "attested": {
+            "evidence": "e-g7-implement-2",
+            "note": "IMPLEMENTER_RESULT returned with no unresolved blockers, recorded as e-g7-implement-2 pointing at the remediation result. Two crews produced this gate: the original build at 0d1af801 with its own result document, and the remediation at ffa959c5 after a correct BLOCK. The remediation result is the operative artifact because it supersedes the parts of the first that the review overturned, and it states plainly what changed and why rather than replacing the record.\n\nWhat ships. Bare Word-colon comment tags extract and render on entity and module pages. The grammar recognizes all five words, and Assumption and Constraint normalize to Rationale at the single emission site through TAG_KIND_ALIAS, so the vocabulary collapses to one rendered kind without any already-written tag going dark. Tags now carry their own span hash and their own diff keyed on owning symbol plus tag text, so a tag's staleness is detected with no anchor present -- which is what the only real corpus, holding zero anchors, actually needs. The cull verdict is recorded as a checkable artifact at .agent-work/issue-456/cull-verdict.json and was rewritten during remediation to describe aliasing rather than retirement, which matters because an artifact still describing behavior that no longer exists would have been worse than the original defect.\n\nVerified by me on the committed tree rather than read back from either crew. Full suite 1831 passed 2 skipped 697 subtests 0 failed, matching the crew's own independently-run figure exactly. Closing selector -k comment_tags 24 passing against a designed baseline of zero collected and exit 5. -k stale_tag 19 passing, up from 15. Fresh build then check 7/7 exit 0 with deterministic-rebuild included. g6's anchor path confirmed purely additive by diffing the two commits and finding no removed line mentioning anchor or span_hash.\n\nThe mechanism is attacked from three independent disable points, none of which reproduce another's. The crew disabled emission. I disabled the comparison instead, forcing the previous tag hashes empty right after population so emission still runs while every tag looks permanently brand-new. The re-reviewer disabled persistence into tag_hashes. Three red every time, no survivor anywhere, byte-clean reverts confirmed by git diff --quiet rather than git status, which false-negatives here. The alias round trip was inspected in raw bytes rather than through assertions: zero occurrences of the pre-alias word in the statements store, the rendered page, or either report.\n\nTwo limitations ship named rather than smoothed over, both filed. A symbol rename defeats tag staleness while anchor staleness survives it, because anchors are keyed on a slug and tags on the symbol name -- a necessary consequence of the chosen identity key, whose failure direction is silence. And the dispatch-on-kind pin test, which is the load-bearing evidence for the cull verdict, still misses getattr dispatch and a locally-renamed-variable lookup; no present exploit, but the claim is broader than the coverage."
+          }
         }
       ],
       "constraints": [
@@ -2209,11 +2215,43 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g7-implement-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g7-implement",
+            "why_ref": "w-25"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-implement-2",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g7-remediate-RESULT.md",
+            "blockers": "none",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-implement-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g7-implement",
+            "why_ref": "w-25"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g7-review": {
@@ -2225,7 +2263,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Upstream verified: this gate depends on g2 for correct symbol identity and on g6 for the staleness hook, and both are closed on the spine. g2-integrate and g6-integrate are complete, each on a reviewer APPROVE, and g6's close was itself a remediation of a correct BLOCK verified at four independent disable points.\n\nBoth dependencies were exercised rather than merely present. g2's symbol identity is what the tag mechanism keys on -- the entity-symbol-join check is green at 7/7 on a fresh build, and the tag diff's identity key is owning symbol plus tag text, so a wrong symbol identity would have shown up as tags losing their history. g6's staleness hook is what this gate extends: span_hash is reused unchanged and g6's anchor path is confirmed byte-identical, verified by diffing 0d1af801 against ffa959c5 and finding no removed line mentioning anchor or span_hash, and independently by the re-reviewer listing all 14 hunk headers and confirming none falls inside span_hash's or anchor()'s body.\n\nA Commander error belongs in this record, the ninth this run. I dispatched this gate's implementer, drove the build, the review, the remediation and the re-review to an APPROVE, and verified every number myself -- but never opened g7-implement in the engine before doing any of it. The work is real and the evidence is real; the bookkeeping ran three items behind the work. The engine is meant to be the record of what happened, and for the duration of this gate it was not. Recorded here rather than quietly caught up, because a spine that only agrees with itself after the fact is the same failure this run keeps naming in tests."
         }
       ],
       "postconditions": [
@@ -2236,7 +2275,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g7-review-3",
+          "attested": {
+            "evidence": "e-g7-review-3",
+            "note": "REVIEW_RESULT returned. The postcondition asks only that a review came back, and it did -- twice, in fact: an original verdict of BLOCK at .agent-work/issue-456/crew-handoffs/g7-review-RESULT.md, and after remediation an APPROVE from the same reviewer at .agent-work/issue-456/crew-handoffs/g7-rereview-RESULT.md, with no blockers. A BLOCK is a completed review rather than a failed one, so this condition was met on the first pass and is recorded here with the full arc.\n\nThe review earned the gate. It blocked on the retire-versus-alias reading and recommended alias with an argument rather than a preference: retiring Assumption and Constraint silently converts four of the six real tags in existence into inert prose, no error and no warning, and the spec's own survival law -- a tag survives when a tool visibly consumes it -- is not neutral between the readings once applied to text that already exists. Its sharpest evidence was self-inflicted, that the cull had broken this gate's own worked example and forced a mid-gate substitution in the join test's docstring. I accepted the recommendation.\n\nThe review's third finding was scored as a phrasing correction and was in fact the largest defect in the gate. I read the code rather than the report: run()'s diff saw only statements where p was anchored, tags emit as p tag, span_hash was persisted only on the anchor path, and the join test's fixture gave its function both an anchor and a tag so the flag fired off the anchor. With zero anchors in the only real corpus, not one real tag would ever have been watched. That is critic IF4/TS8's original problem untouched in the corpus it was raised to protect, and a test passing for the wrong reason -- the third variation on this run of a check that could not fail. It became the primary remediation item.\n\nThe re-review was adversarial rather than confirmatory. It ran a third disable point neither the crew nor I had used, breaking persistence into tag_hashes, predicting the outcome first and matching it. It probed the identity key's edges and surfaced a real asymmetry nobody had named. It proved the zero-anchor precondition fails loudly by injecting an anchor and watching the test die at its own precondition. And it inspected the alias round trip in raw bytes rather than through the tests' assertions, confirming zero occurrences of the pre-alias word anywhere in the statements store, the rendered page, or either report.\n\nOne finding I overruled and the reviewer accepted as overruled rather than re-litigating: wall-clock timings in a markdown result document do not violate the no-timings constraint, which exists so the determinism diff can cover render_report.json. My handoff quoted it unscoped, which invited the reading; that was my error rather than the reviewer's."
+          }
         }
       ],
       "constraints": [],
@@ -2245,11 +2289,53 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g7-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g7-review",
+            "why_ref": "w-25"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-review-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g7-review",
+            "why_ref": "w-26"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-review-3",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g7-rereview-RESULT.md",
+            "verdict": "APPROVE",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-review-4",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g7-review",
+            "why_ref": "w-26"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g7-integrate": {
@@ -2261,7 +2347,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT returned. The postcondition asks only that a review came back, and it did -- twice, in fact: an original verdict of BLOCK at .agent-work/issue-456/crew-handoffs/g7-review-RESULT.md, and after remediation an APPROVE from the same reviewer at .agent-work/issue-456/crew-handoffs/g7-rereview-RESULT.md, with no blockers. A BLOCK is a completed review rather than a failed one, so this condition was met on the first pass and is recorded here with the full arc.\n\nThe review earned the gate. It blocked on the retire-versus-alias reading and recommended alias with an argument rather than a preference: retiring Assumption and Constraint silently converts four of the six real tags in existence into inert prose, no error and no warning, and the spec's own survival law -- a tag survives when a tool visibly consumes it -- is not neutral between the readings once applied to text that already exists. Its sharpest evidence was self-inflicted, that the cull had broken this gate's own worked example and forced a mid-gate substitution in the join test's docstring. I accepted the recommendation.\n\nThe review's third finding was scored as a phrasing correction and was in fact the largest defect in the gate. I read the code rather than the report: run()'s diff saw only statements where p was anchored, tags emit as p tag, span_hash was persisted only on the anchor path, and the join test's fixture gave its function both an anchor and a tag so the flag fired off the anchor. With zero anchors in the only real corpus, not one real tag would ever have been watched. That is critic IF4/TS8's original problem untouched in the corpus it was raised to protect, and a test passing for the wrong reason -- the third variation on this run of a check that could not fail. It became the primary remediation item.\n\nThe re-review was adversarial rather than confirmatory. It ran a third disable point neither the crew nor I had used, breaking persistence into tag_hashes, predicting the outcome first and matching it. It probed the identity key's edges and surfaced a real asymmetry nobody had named. It proved the zero-anchor precondition fails loudly by injecting an anchor and watching the test die at its own precondition. And it inspected the alias round trip in raw bytes rather than through the tests' assertions, confirming zero occurrences of the pre-alias word anywhere in the statements store, the rendered page, or either report.\n\nOne finding I overruled and the reviewer accepted as overruled rather than re-litigating: wall-clock timings in a markdown result document do not violate the no-timings constraint, which exists so the determinism diff can cover render_report.json. My handoff quoted it unscoped, which invited the reading; that was my error rather than the reviewer's."
         }
       ],
       "postconditions": [
@@ -2277,7 +2364,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g7-integrate-4"
         },
         {
           "id": "c2",
@@ -2289,17 +2377,65 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g7-integrate-2",
+          "attested": {
+            "evidence": "e-g7-integrate-2",
+            "note": "REVIEW_RESULT returned. The postcondition asks only that a review came back, and it did -- twice, in fact: an original verdict of BLOCK at .agent-work/issue-456/crew-handoffs/g7-review-RESULT.md, and after remediation an APPROVE from the same reviewer at .agent-work/issue-456/crew-handoffs/g7-rereview-RESULT.md, with no blockers. A BLOCK is a completed review rather than a failed one, so this condition was met on the first pass and is recorded here with the full arc.\n\nThe review earned the gate. It blocked on the retire-versus-alias reading and recommended alias with an argument rather than a preference: retiring Assumption and Constraint silently converts four of the six real tags in existence into inert prose, no error and no warning, and the spec's own survival law -- a tag survives when a tool visibly consumes it -- is not neutral between the readings once applied to text that already exists. Its sharpest evidence was self-inflicted, that the cull had broken this gate's own worked example and forced a mid-gate substitution in the join test's docstring. I accepted the recommendation.\n\nThe review's third finding was scored as a phrasing correction and was in fact the largest defect in the gate. I read the code rather than the report: run()'s diff saw only statements where p was anchored, tags emit as p tag, span_hash was persisted only on the anchor path, and the join test's fixture gave its function both an anchor and a tag so the flag fired off the anchor. With zero anchors in the only real corpus, not one real tag would ever have been watched. That is critic IF4/TS8's original problem untouched in the corpus it was raised to protect, and a test passing for the wrong reason -- the third variation on this run of a check that could not fail. It became the primary remediation item.\n\nThe re-review was adversarial rather than confirmatory. It ran a third disable point neither the crew nor I had used, breaking persistence into tag_hashes, predicting the outcome first and matching it. It probed the identity key's edges and surfaced a real asymmetry nobody had named. It proved the zero-anchor precondition fails loudly by injecting an anchor and watching the test die at its own precondition. And it inspected the alias round trip in raw bytes rather than through the tests' assertions, confirming zero occurrences of the pre-alias word anywhere in the statements store, the rendered page, or either report.\n\nOne finding I overruled and the reviewer accepted as overruled rather than re-litigating: wall-clock timings in a markdown result document do not violate the no-timings constraint, which exists so the determinism diff can cover render_report.json. My handoff quoted it unscoped, which invited the reading; that was my error rather than the reviewer's."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g7-integrate-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g7-integrate",
+            "why_ref": "w-27"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-integrate-2",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g7-rereview-RESULT.md",
+            "verdict": "APPROVE",
+            "status": "complete"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-integrate-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g7-integrate",
+            "why_ref": "w-27"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g7-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'comment_tags' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g8-implement": {
@@ -2650,6 +2786,16 @@
       "id": "tc12",
       "from": "g7-integrate",
       "statement": "The cull test is honest but low-information as a decision procedure, and that is a finding about the method rather than about g7. The g7 reviewer graded it directly: the renderer was genuinely built first and nothing was artificially flattened to dodge the question, so it is not circular -- but nothing in a flat kind-colon-text render surface would plausibly have needed a branch on kind whichever words survived, so the KEEP outcome was never realistically reachable. Two of the five words were also categorically exempt by the spec's own wording, never tested and found to differ. The decision that actually got made -- which words the corpus needs -- was settled by author-convergence data, not by render necessity, which is not what the test claims to measure.\n\nThis is the tc38 family in a softer form and worth naming separately, because the two failure modes look different in the wild. A check that cannot fail is usually visible once someone asks the question. A decision procedure whose outcome is fixed by the SHAPE of the thing being measured rather than by the question being asked still reads as rigorous, still produces a defensible artifact, and still gets cited later as though a real test was run. The cull verdict is a good artifact and its conclusion happens to be right; the concern is that it would have read equally convincing had the conclusion been wrong.\n\nWorth deciding at triage what, if anything, this changes. The candidate reform is that a design test written into a spec should state in advance what result would falsify it and what the world would have to look like for the other branch to win -- the same discipline this run already applies to falsifiers and to disable attacks, moved upstream to the point where the test is specified rather than the point where it is run. Not proposed as machinery; a sentence in the spec would do it. Filed rather than acted on because it reaches beyond this issue into how design tests get written."
+    },
+    {
+      "id": "tc13",
+      "from": "g7-integrate",
+      "statement": "Tag staleness does not survive a symbol rename, while anchor staleness does. Found live by the g7 re-reviewer, not reasoned about: it renamed a function and changed its body in the same commit with the tag and anchor comments untouched, and stale-anchor fired while stale-tag did not. The cause is structural rather than a bug -- anchors are keyed on their slug, which survives a rename, and tags are keyed on owning symbol plus tag text, which does not. A renamed symbol therefore looks like a brand-new symbol carrying a brand-new tag, so its history resets and the body change goes unflagged.\n\nThis is a necessary consequence of the identity key the gate chose and it was chosen for good reasons: a tag has no slug of its own, and keying on the text is what makes the rule \"flag when the body changed while the tag text did not\" expressible at all. So this is not rework. It is a real, previously-unnamed asymmetry between the two halves of the same detector, and the failure direction is silence, which is the direction this run has repeatedly found most expensive -- the same shape as the tag mechanism not watching tags at all, which took a Commander code read to catch after a reviewer scored it as phrasing.\n\nWhat triage should weigh: whether to name it in a doc line so a future author is not surprised, or to close it by giving tags a slug-like stable identity, which is a larger design move and would revive the serial-number identity machinery the design spec explicitly rejected on cost grounds while regeneration stays cheap. The cheap option is the doc line. The expensive option should not be taken without evidence that renames under live tags actually happen, which nobody has measured."
+    },
+    {
+      "id": "tc14",
+      "from": "g7-integrate",
+      "statement": "The widened dispatch-on-kind pin test still misses two evasions, and its docstring claims more than it verifies. The g7 re-reviewer confirmed both live with a standalone AST probe rather than by reading the code: getattr(obj, t['kind'], default) evades because the Call branch matches only .get() method calls and not the builtin getattr, and a locally-renamed variable before a lookup -- k = t['kind'] then LABEL[k] -- evades because the Subscript branch recognizes only a literal Name whose id is exactly \"kind\". Both shapes were named as candidate evasions in the original review handoff and neither is closed by the remediation.\n\nNot blocking and correctly not blocked on: the shipped tag_lines contains neither shape, so there is no present exploit. The concern is the claim rather than the code. This test is the load-bearing evidence for the cull verdict -- the argument that the renderer treats every tag kind identically rests on it -- so a pin that reads as exhaustive while catching three shapes out of five is the softer form of the same problem this run keeps hitting: not a check that cannot fail, but a check whose failure coverage is narrower than its reputation. If the verdict is ever challenged, the pin is what gets cited.\n\nCheapest honest fix is to narrow the docstring to state exactly which dispatch shapes are covered. Widening further is possible but chases an open-ended set, and an accurate narrow claim is worth more than a broad one that is false at the edges. Filed rather than fixed because the choice between narrowing the claim and widening the check is a judgement about how much the cull verdict will be leaned on later."
     }
   ],
   "blockers": [],
@@ -2828,6 +2974,27 @@
       "why": "Closing g6. The gate's own command postcondition is satisfied by this advance, which re-runs the check rather than taking my word for it, and the reviewer verdict is APPROVE from the same reviewer that issued the original BLOCK.\n\nThis gate is the first build of a design the human signed accepted-untested at confirm, so the standard it had to clear was higher than working. It works and its evidence can now fail. The route there was a correct BLOCK: the reviewer disabled the whole feature on one code path and 9 of 12 tests stayed green, every dedicated does-not-flag test among them. The feature was never broken; its regression evidence was, which is the same class as tc38 and tc47 on this run and the reason a passing suite was not proof of anything here.\n\nThe remediation is verified at four independent disable points, not one. Emission forced to empty in extract.run(), which was the reviewer's original attack, reproduced by the crew's acceptance script. span_hash forced to a constant, killing the detector at its root while every surrounding path still executes -- my own mutation, chosen precisely because neither the reviewer nor the crew had picked it, since reproducing a falsifier its author designed proves only that the author's probe works. Then render.py's stale-anchor interception, and the persistence of span_hash onto the emitted statement, both added by the re-review with predictions stated in advance and both matching. Five negative tests, red at every point, no survivors anywhere.\n\nTwo real defects were found and fixed along the way, both of which a green suite had been hiding. A truncated leftover statements.jsonl killed every subsequent extract with an uncaught JSONDecodeError -- a new failure mode this gate introduced, and a live one because the writer has no atomic rename, so an interrupted build leaves exactly that state and the natural next action is the run that dies. It now takes the bootstrap path with one actionable line, deliberately not a silent skip, because a silent skip would convert a corrupt store into permanently dead detection with no signal. And the advisory line no longer prints the FAIL prefix that was indistinguishable from a genuine build failure in the same stream.\n\nNumbers at close, all re-run by me and not read back from a crew: full suite 1807 passed 2 skipped 684 subtests 0 failed; closing selector 14 passing against a designed baseline of zero, with all 14 ids confirmed to carry stale_tag so the gate's own command sees every one; fresh build then check 7/7 exit 0 including deterministic-rebuild; working tree clean.\n\nTwo limits ship with this gate, recorded rather than smoothed over. The detector reports nothing stale on this repo, which is correct because zero authored anchors exist yet -- so it has only ever been exercised against a fixture, and validation against real tag text belongs to g7, which joins on the same slug allocator and needs no rework here. And nothing in the routine pipeline exercises the staleness path at all: check never calls render.py, and deterministic-rebuild always builds into fresh directories. That second one is filed as a candidate rather than fixed here, because it is a design question about what check is for, not a defect in what this gate built. Also filed: the evidence scripts' false not-clean self-check under core.autocrlf, which two independent scripts hit in this one gate despite the hazard already being documented.",
       "mechanical": false,
       "ts": "2026-08-08T21:41:19.020576+00:00"
+    },
+    {
+      "id": "w-26",
+      "gate": "g7-implement",
+      "why": "Advancing g7-implement because its postcondition is genuinely met and independently verified: the IMPLEMENTER_RESULT is on disk with no unresolved blockers, and every number in it was re-run by me on the committed tree rather than read back. Suite 1831 passed 2 skipped 697 subtests 0 failed; comment_tags 24 against a designed baseline of zero; stale_tag 19 from 15; fresh build then check 7/7 exit 0.\n\nThe gate task is delivered in full. Tags extract and render. The cull test was applied in this gate rather than deferred, and its verdict is a checkable artifact rather than a claim -- which was the gate's own close criterion and critic F5's specific demand. The verdict is collapse, reached honestly: the renderer was built with no dispatch on kind first, and only then inspected mechanically for whether it needed to tell the kinds apart. Nothing was invented to dodge the test.\n\nThe gate did not close on the first attempt and should not have. The review blocked, correctly, and I accepted its recommendation to alias rather than retire the two collapsed words, because retirement silently converts four of the six real tags in existence into inert prose -- no error, no warning, and invisible to the detector meant to catch tags going wrong. Verifying the review's third finding turned it into the largest one: the staleness mechanism never watched tags at all, and the test that appeared to prove otherwise fired off an anchor its fixture happened to carry. With zero anchors in the real corpus, no real tag would ever have been watched, which is critic IF4/TS8's original problem sitting untouched in the corpus it was raised to protect.\n\nI advance now rather than reworking further because both blockers are closed and re-verified by the same reviewer that raised them, and because the two remaining limitations are recorded rather than hidden: a symbol rename defeats tag staleness, and the dispatch pin test's coverage is narrower than its claim. Neither is a defect in what was asked for; both are filed for triage with the reasoning intact.\n\nOne correction belongs in this record. I dispatched this gate's implementer, drove the build, review, remediation and re-review to an APPROVE, and verified every number myself -- while never opening g7-implement in the engine until now. The work is real; the bookkeeping ran three items behind it. A spine that only agrees with itself after the fact is the same failure this run has spent three gates naming in tests, and it is worth less useful in a Commander than in a crew.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:02:17.928142+00:00"
+    },
+    {
+      "id": "w-27",
+      "gate": "g7-review",
+      "why": "REVIEW_RESULT returned. The postcondition asks only that a review came back, and it did -- twice, in fact: an original verdict of BLOCK at .agent-work/issue-456/crew-handoffs/g7-review-RESULT.md, and after remediation an APPROVE from the same reviewer at .agent-work/issue-456/crew-handoffs/g7-rereview-RESULT.md, with no blockers. A BLOCK is a completed review rather than a failed one, so this condition was met on the first pass and is recorded here with the full arc.\n\nThe review earned the gate. It blocked on the retire-versus-alias reading and recommended alias with an argument rather than a preference: retiring Assumption and Constraint silently converts four of the six real tags in existence into inert prose, no error and no warning, and the spec's own survival law -- a tag survives when a tool visibly consumes it -- is not neutral between the readings once applied to text that already exists. Its sharpest evidence was self-inflicted, that the cull had broken this gate's own worked example and forced a mid-gate substitution in the join test's docstring. I accepted the recommendation.\n\nThe review's third finding was scored as a phrasing correction and was in fact the largest defect in the gate. I read the code rather than the report: run()'s diff saw only statements where p was anchored, tags emit as p tag, span_hash was persisted only on the anchor path, and the join test's fixture gave its function both an anchor and a tag so the flag fired off the anchor. With zero anchors in the only real corpus, not one real tag would ever have been watched. That is critic IF4/TS8's original problem untouched in the corpus it was raised to protect, and a test passing for the wrong reason -- the third variation on this run of a check that could not fail. It became the primary remediation item.\n\nThe re-review was adversarial rather than confirmatory. It ran a third disable point neither the crew nor I had used, breaking persistence into tag_hashes, predicting the outcome first and matching it. It probed the identity key's edges and surfaced a real asymmetry nobody had named. It proved the zero-anchor precondition fails loudly by injecting an anchor and watching the test die at its own precondition. And it inspected the alias round trip in raw bytes rather than through the tests' assertions, confirming zero occurrences of the pre-alias word anywhere in the statements store, the rendered page, or either report.\n\nOne finding I overruled and the reviewer accepted as overruled rather than re-litigating: wall-clock timings in a markdown result document do not violate the no-timings constraint, which exists so the determinism diff can cover render_report.json. My handoff quoted it unscoped, which invited the reading; that was my error rather than the reviewer's.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:02:46.184707+00:00"
+    },
+    {
+      "id": "w-28",
+      "gate": "g7-integrate",
+      "why": "Closing g7. The command postcondition is satisfied by this advance, which re-runs the full suite and the comment_tags selector rather than taking my word, and the reviewer verdict is APPROVE from the same reviewer that issued the BLOCK.\n\nThis gate carried the last real design call on the run and it did not close on the first attempt, correctly. The cull test returned collapse and the verdict stands; what was wrong was what collapse was taken to mean. Retiring Assumption and Constraint silently converts four of the six real authored tags in existence into inert prose, with no error, no warning, and no visibility to the detector meant to catch tags going wrong. The spec's own survival law -- a tag survives when a tool visibly consumes it -- is not neutral between retire and alias once applied to text that already exists, and the sharpest evidence was self-inflicted: the cull broke this gate's own worked example mid-build. Aliasing satisfies the same test at a fraction of the cost, and the render path stays exactly as branch-free as the cull test proved it.\n\nVerifying the review's third finding turned it into the largest defect in the gate. It had been scored as a phrasing correction. Reading the code showed the staleness mechanism never watched tags at all: the diff read only anchored statements, span_hash was persisted only on the anchor path, and the join test's fixture carried both an anchor and a tag so the flag fired off the anchor. Zero anchors exist in the only real corpus, so no real tag would ever have been watched -- critic IF4/TS8's problem untouched in the corpus it was raised to protect, proven by a test passing for the wrong reason. That is the third variation on this run of a check that could not fail, and the third time reading the code rather than the report was what found it.\n\nBoth are fixed and the mechanism is attacked from three independent disable points, none reproducing another: the crew broke emission, I broke the comparison so that emission still runs while every tag looks permanently new, and the re-reviewer broke persistence. Three red every time, no survivor, byte-clean reverts. The alias round trip was inspected in raw bytes rather than through assertions, confirming the pre-alias word appears nowhere in the statements store, the rendered page, or either report -- normalization happens exactly once, at emission.\n\nNumbers at close, all re-run by me: suite 1831 passed 2 skipped 697 subtests 0 failed; comment_tags 24 against a designed baseline of zero collected; stale_tag 19 from 15; fresh build then check 7/7 exit 0. g6's anchor path confirmed purely additive.\n\nFour limitations ship named rather than smoothed over, all filed for triage. A symbol rename defeats tag staleness while anchor staleness survives it, a necessary consequence of keying tags on symbol plus text, and its failure direction is silence. The dispatch-on-kind pin test, which is the load-bearing evidence for the cull verdict, still misses getattr dispatch and a locally-renamed-variable lookup. See tags render as literal text rather than links. And the cull test itself, while honest and non-circular, was low-information: a KEEP outcome was never realistically reachable from a flat render surface, so the decision was really settled by author-convergence data rather than by render necessity. That last one is about how design tests get specified, not about this gate, and it is the one I would most want read at feedback.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:12:29.481264+00:00"
     }
   ],
   "amendments": [
@@ -2864,6 +3031,74 @@
       "ops": [
         "retext-check g5-integrate.c1"
       ]
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g7-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2562,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-25",
+      "ts": "2026-08-09T00:00:19.353381+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "g7-review",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2578,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-25",
+      "ts": "2026-08-09T00:00:27.441831+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g7-implement",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2595,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-25",
+      "ts": "2026-08-09T00:01:02.838061+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "g7-implement",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2605,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-25",
+      "ts": "2026-08-09T00:01:13.467984+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "g7-review",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2629,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-26",
+      "ts": "2026-08-09T00:02:28.439353+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "g7-integrate",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2647,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-27",
+      "ts": "2026-08-09T00:02:55.436297+00:00"
     }
   ]
 }
