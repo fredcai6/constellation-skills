@@ -5400,3 +5400,43 @@ collapse claim, refuted by a crew against the bodies.
 successor are **corrections to something an Admiral or an issue asserted**, not new information. The
 launch order was right about the work; the corrections are what the run learned by doing it, and they
 would be lost at every refresh without being carried explicitly.
+
+### Census specimen 23 — the structural fix that collapses back into the name test it replaced
+
+The g1 reviewer's catch, and the best of the wave. Fix B replaced *"is this directory NAMED
+`constellation-*`"* with a two-clause **structural** test. But `_is_skills_root` globs
+`constellation-*/SKILL.md` children of the **parent** — so a `constellation-*`-named candidate carrying
+its own `SKILL.md` **satisfies clause 2 by being that child.** The structural test **collapses back
+into the name test that caused #501.**
+
+Latent today, live the moment this repo gains a root-level `SKILL.md`. Fixed inside the gate, pinned
+with a regression test.
+
+**This is the repair for specimen 3 containing specimen 3** — correct in intent, correct in shape,
+defect reintroduced through one glob at one directory level up.
+
+**Third instance in one wave of the same recursion** (this, #484's suggested fix, #501's freshness
+variant): **when the fix for a check-that-cannot-X is itself a check, it inherits the whole problem.
+There is no base case.** The only thing that has broken the recursion in this run is **running the new
+check against an input that should make it fail.**
+
+### Correction to my own standing instruction — "never pipe" was incomplete
+
+Crew 1 piped a mutation run into `tail` and read **exit 0 when pytest's real answer was 1** — after I
+had warned it. Its own diagnosis: *"the warning alone did not save me."*
+
+**It was a prohibition with no positive form.** Corrected and sent on: **redirect to a file and echo
+`$?` — a redirect is not a pipe.**
+
+```
+python -m pytest -q tests/... > /tmp/out.txt 2>&1; echo "REAL_EXIT=$?"
+```
+
+**Third distinct exit-code masking in this run, and the first two were mine.** A rule that only says
+what not to do leaves the agent to invent the alternative under time pressure, which is exactly when it
+will reach for the pipe again.
+
+**Also recorded:** crew 1 confirms it **cannot spawn background subagents**, so every crew dispatch was
+synchronous and blocked its turn — *"likely part of why I reached the band at three issues rather than
+more."* That is a concrete, measured cost of the harness constraint on Commander throughput, not a
+guess.

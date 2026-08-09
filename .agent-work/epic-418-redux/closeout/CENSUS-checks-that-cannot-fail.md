@@ -132,6 +132,27 @@ test as a characterization test that passes on unmodified main — which convert
 into an accurate one — plus a judgement call, with a reasoned *"nothing worthwhile"* accepted, on
 whether the prose change can be reached at all.
 
+### H. The structural fix that collapses back into the name test it replaced
+
+| # | Specimen | The identical signal |
+|---|---|---|
+| 23 | **`_is_skills_root` self-certification** (found in g1 review, wave 5) | Fix B replaced *"is this directory NAMED `constellation-*`"* with a two-clause **structural** test: own `SKILL.md` **and** a parent that is a skills root. But `_is_skills_root` globs `constellation-*/SKILL.md` children of the **parent** — so a `constellation-*`-named candidate carrying its own `SKILL.md` **satisfies clause 2 by being that child.** The structural test collapses back into the name test that caused #501. |
+
+**Latent, not live** — it fires the moment `constellation-skills` gains a root-level `SKILL.md`, which is
+an ordinary thing for a repo to acquire. Caught by the reviewer, fixed inside the gate, pinned with a
+`guard_location` regression test.
+
+**Why this belongs at the top of the census rather than the bottom of it.** Specimen 3 is the original
+name-based guard. This is **the structural replacement for specimen 3, containing specimen 3.** The
+repair was correct in intent, correct in shape, and reintroduced the defect through a second-order
+path — one glob, one directory level up.
+
+**The generalisation that has now appeared three times in one wave** (here, #484's suggested fix, and
+#501's freshness variant): **when the fix for a check-that-cannot-X is itself a check, it inherits the
+whole problem.** There is no base case. The only thing that has ever broken the recursion in this run
+is running the new check against an input that should make it fail — never reading it, never reasoning
+about its shape, and never trusting that the author understood the defect they were repairing.
+
 ---
 
 ## What actually finds them
@@ -155,5 +176,5 @@ the argument for why it is load-bearing rather than pedantic.
 ## What this census is not
 
 It is **not** a claim that every check here is worth fixing, nor that the pattern is rare enough to
-enumerate exhaustively. Twenty-two specimens in one epic by actors *looking for them* is a lower bound, not a total. The honest reading is that this is a **base rate in verification code**, and the useful
+enumerate exhaustively. Twenty-three specimens in one epic by actors *looking for them* is a lower bound, not a total. The honest reading is that this is a **base rate in verification code**, and the useful
 response is a habit — run it against a failing case — rather than a list to work through.
