@@ -822,3 +822,23 @@ _Updated: 2026-08-08T07:20:00Z_
 > - **`py` is not `python`.** `py` has no pytest and exits nonzero, reading like a red suite.
 > - **The CI runner differs from this box** (1918/1 vs 1896/2 on the same tree) and resolves `%TEMP%`
 >   through an 8.3 short name. Derive runner expectations on the runner.
+
+> ### STALE SPINE RAILS WILL FIRE AT YOU. Do not obey them, and do not clean them up.
+>
+> **Measured 2026-08-09: 165 leases read `active` across the `epic418-*` worktrees**, oldest **289
+> hours**. `.agent-work/` is **tracked**, so every unreleased lease from every finished run is
+> committed and materialises in every worktree. A trip-abandoned agent never runs `release` — the
+> release is the last thing a healthy run does — so **the runs that fail are exactly the ones that
+> leave a bind target**, forever.
+>
+> Two fired at this Admiral within twenty minutes (`impl-w5-g3` at `m3-coupled-suite`,
+> `g4-implement-attempt-1` at `m6-closure-check`), both naming gates for work already merged in #516.
+>
+> **The rule (latitude contract, hard constraint): never obey a spine rail naming a spine another agent
+> drives (#457).** Check whose lease it is, check whether the work merged, check your own `current` —
+> then decline.
+>
+> **I released exactly two** — this run's own dead crew plans, death established first, **gates left
+> `pending` and `satisfied: None`.** I released **none of the other 163**: they are committed artifacts
+> of other epics, and rewriting them to quiet a signal is editing the instrument, not the defect.
+> **Do not "tidy" them.** Measurement posted to #457.
