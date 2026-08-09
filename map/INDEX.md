@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 53 modules, 1038 entities
 skills: 1 modules, 18 entities
-tests: 60 modules, 3455 entities
+tests: 61 modules, 3466 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -97,7 +97,7 @@ tests: 60 modules, 3455 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (60 modules, 3455 entities)
+## tests (61 modules, 3466 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -136,6 +136,7 @@ tests: 60 modules, 3455 entities
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
 - [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (184 entities, 124 holes): HOLE: no docstring
+- [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (11 entities, 4 holes): HOLE: no docstring
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
