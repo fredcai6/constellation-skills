@@ -4500,3 +4500,32 @@ guard is worse than the problem it fixes.**
 **Behaviour change now, for the rest of this run:** batch log entries where the ruling is already
 settled and push less often, without giving up per-event logging in the file itself. The log is written
 as it happens; only the push is batched.
+
+## MERGE 1 of wave 5 — PR #511 (crew 3): #507 + #370
+
+**MERGED at `39fb542a`, verified on the forge** (`state=MERGED, mergedAt 2026-08-08T23:59:46Z`), not
+by an ancestry test — squash-merge returns the same answer for merged and abandoned, and this repo
+merges with `--merge` precisely to preserve the evidence commits.
+
+**Every gate checked before the merge, none assumed:**
+
+| gate | result |
+|---|---|
+| CI green on the final commit | `test pass 7m10s` — read from `gh pr checks`, not inferred |
+| crew genuinely done | lease released, 5 commits, no uncommitted work |
+| review findings resolved | both — the repo-root notes file moved, and the red-then-green built |
+| red verified independently | **I ran its guard against a clean main checkout myself**: `2 failed, 2 passed, REAL_EXIT=1` |
+| no cross-crew file collision | checked by command across all five worktrees |
+| not the engine PR | crew 4 merges last; this is not it |
+
+**#507 CLOSED. #370 CLOSED. #413 correctly LEFT OPEN.**
+
+That last one is the part worth keeping. I asserted a three-way collapse; the crew re-read all three
+bodies independently — **not from my framing, and it said so** — and found #413 is a *different
+defect*: **never-valid-from-the-start** (a spawned subagent was never registered under an addressable
+name to its own children) rather than **valid-then-stale**. Same presentation, different root cause.
+It closed the two that genuinely collapse and left the third open with a comment. **A partial, because
+a partial was the true answer.**
+
+**Wave 5 running total: 2 of 21 issues closed.** Merge order holds — crew 4 (engine) last, with the
+mandatory `current`-against-my-own-spine check immediately after it.
