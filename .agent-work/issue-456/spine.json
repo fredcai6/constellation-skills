@@ -389,18 +389,19 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All eleven gates are closed with integrated evidence: g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs. Every gate ran implementer then reviewer through run_crew.py, and every one closed on a reviewer APPROVE with the close-criteria command re-run at the gate boundary rather than taken on report.\n\nVerified at the final boundary: full suite 1840 passed / 2 skipped / 701 subtests / 0 failed, exit 0; `-k map_tree_freshness` 2 passed, exit 0; `python -m scripts.code_map build --root .` then `check --root .` 7/7, exit 0; `git ls-files map/` returns exactly map/INDEX.md and map/ids.jsonl.\n\nThe theme this step kept turning up is checks that cannot fail, hit at g5, g6, g7, g8 and again at gs, where the gate's own closing selector collected zero tests at gate open. Each was caught by re-running the criterion rather than trusting the report, and each was fixed before the gate closed. The mirror form appeared once in my own work: a close criterion that could never pass.\n\nTwo errors I own and carry to feedback. My gs close criterion was literally unsatisfiable. And my tc20 was refuted by the reviewer, who authored a real anchor and took the assertion RED; the true fact is narrower, that no repo history has ever exercised it.\n\nThe one decision that changed the plan: the landing zone was measured rather than assumed, with a negative control. The 116-file zone is not stable; the 2-file zone is. Two tracked files ship instead of 3,975."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": "execute.json",
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "Commander context exhausted at a clean seam. g6's BUILD is complete, Commander-verified and pushed; g6 is NOT closed -- it still needs its review. Seven of eleven gates are CLOSED (g0 g1 g2 g3 g4 g5 gb).\n\nRESUME: re-claim lease commander-issue-456 idempotently (same id, NOT a takeover, no --force), then resume execute, then read .agent-work/issue-456/STATE_NOTE.md, which is current and carries everything below in more detail.\n\nNEXT ACTION: attest and advance g6-implement's c1 (artifact implementer-result, evidence path .agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md; g6-implement.p1 is already attested), then WRITE the g6 review handoff and dispatch it -- run_crew.py --dispatch external --work-id issue-456 --gate g6 --role reviewer --model sonnet. Then g6-integrate on an APPROVE, then g7, g8, gs, then reconcile, triage, review, feedback, archive. RELEASE THE LEASE LAST.\n\nG6 BUILD STATE: stale-tag detection via extract.span_hash, a normalised AST-subtree hash (ast.dump, docstring excluded) that is immune to reindentation, wrapping and blank lines BY CONSTRUCTION. extract.run diffs old vs new span hashes by slug and emits stale-anchor; render surfaces report[stale_tags] in render_report.json and prints an advisory line without failing the build. Verified: suite 1805 passed 2 skipped 683 subtests 0 failed; selector -k stale_tag 12 passing where it was 0 by design; build then check 7/7 exit 0.\n\nBUILT AGAINST A FIXTURE because the real tag surface does not exist yet -- g7 is the comment-tags gate and comes after. Explicitly permitted and stated. G7 MUST WIRE THE REAL TAG-TEXT SURFACE INTO THIS MECHANISM.\n\nCLOSING SELECTORS for the remaining gates, already scanned against the correct file (tests/test_code_map.py, NOT the whole tests/ dir -- that was Commander error #7): g7 -k comment_tags collects 0 BY DESIGN (spec for a test g7 must create), g8 -k bom or docstring collects 3, gs -k map_tree_freshness collects 0 BY DESIGN. State the exact selector in every remaining handoff -- g5's trap was a crew naming its tests differently from the plan's selector.\n\nCANDIDATES: run-wide total is now tc1-tc49. execute.json has its OWN counter and printed the last four as tc4/tc5/tc6 -- triage must not double-count. tc47 (a gate's own postcondition could only ever fail), tc48 (a pin against one literal, not the defect class), tc49 (a dead constant duplicating a live docstring).\n\nAUTHORITY: push and a full non-draft PR are PRE-APPROVED. MERGE TO MAIN IS NOT. Never force-push.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "prior_status": "in-progress"
+        "resume_reason": "Blocker cleared: gs was the last gate and it closed. All 11 gates complete in execute.json with integrated evidence."
       },
       "result": null,
       "finding": null,
@@ -479,7 +480,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute is complete: all eleven gates closed and the engine advanced the step on its own re-run of the postcondition, not on my word."
         }
       ],
       "postconditions": [
@@ -487,13 +489,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "This repo has no packet map (no docs/architecture), so the spine's direct path applies: fold the change into the design doc it actually touches. It touches one, and the gap was real rather than a no-op -- `grep -rln 'code_map\\|code map' docs/ skills/` returned NOTHING before this edit, so a whole new subsystem and a newly tracked artifact were invisible to the structural record.\n\nFolded into docs/CONSTELLATION_OVERVIEW.md, the file that owns this repo's truth layers:\n\n1. The truth-layers block gained `map/` as compressed DERIVED truth -- a projection of dense truth, never authored, regenerated by command. That distinction is the point: the existing compressed layer is hand-authored and durable, and a derived layer that looks like it but goes stale silently would be the worse thing to add.\n\n2. A new subsection under the map-input contract, where a derived map actually belongs, recording: the real entry point (`python -m scripts.code_map build|check --root .`, package CLI, no standalone build script -- the wrong path cost three reviewers a rediscovery each this run); that check ships as a test rather than a workflow step so it reaches CI by the ordinary road; the two-file landing zone with the measurement that produced it and the negative control that could have overturned it; the named cost that the entry point's links do not resolve until a build runs; and that freshness is owned by no gate but by a permanent suite test, which is a mechanism rather than an intention.\n\n3. Tommy's ruling recorded as a standing deficiency with its consequence attached, not as a buried caveat: a large share of this repo's connections live in how skills get used, not in Python, so a page reading \"referenced by: none\" for a script three skills invoke is wrong in the way that matters. Anything built on this map must say so. Widening scope to chase those edges was ruled out.\n\nVerification: docs/ is not Python, so the map is unaffected by this edit, and the freshness test confirms it rather than my reasoning doing so -- `-k map_tree_freshness` 2 passed, exit 0, after the edit."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -932,20 +935,13 @@
       "statement": "The routing tier degenerates on flat corpus shapes, and the proof was sitting in this repo's own index unexamined. The tests package is 50 modules and 2769 entities, 74.3 percent of the corpus and the exact proportion critic F9 named, but every module is two dotted segments, so the tier predicate never fires and it renders as 50 undifferentiated bullets with zero subheadings. Two synthetic shapes isolate the mechanism: a flat single package gives tier 2 zero benefit, and a corpus of loose top-level modules with no packages degenerates TIER ONE into one bucket per module, which falsifies top_index's own docstring claim that tier 1 is bounded by package count and never by module count. Both shapes are real-world, not pathological: shape A is the default pytest layout and shape B is any script-bag repo. Two actions: correct the docstring's tier-1 bound claim, and consider a secondary grouping signal for flat dominant packages."
     }
   ],
-  "blockers": [
-    {
-      "item": "execute",
-      "blocker": "Commander context exhausted at a clean seam. g6's BUILD is complete, Commander-verified and pushed; g6 is NOT closed -- it still needs its review. Seven of eleven gates are CLOSED (g0 g1 g2 g3 g4 g5 gb).\n\nRESUME: re-claim lease commander-issue-456 idempotently (same id, NOT a takeover, no --force), then resume execute, then read .agent-work/issue-456/STATE_NOTE.md, which is current and carries everything below in more detail.\n\nNEXT ACTION: attest and advance g6-implement's c1 (artifact implementer-result, evidence path .agent-work/issue-456/crew-handoffs/g6-implement-RESULT.md; g6-implement.p1 is already attested), then WRITE the g6 review handoff and dispatch it -- run_crew.py --dispatch external --work-id issue-456 --gate g6 --role reviewer --model sonnet. Then g6-integrate on an APPROVE, then g7, g8, gs, then reconcile, triage, review, feedback, archive. RELEASE THE LEASE LAST.\n\nG6 BUILD STATE: stale-tag detection via extract.span_hash, a normalised AST-subtree hash (ast.dump, docstring excluded) that is immune to reindentation, wrapping and blank lines BY CONSTRUCTION. extract.run diffs old vs new span hashes by slug and emits stale-anchor; render surfaces report[stale_tags] in render_report.json and prints an advisory line without failing the build. Verified: suite 1805 passed 2 skipped 683 subtests 0 failed; selector -k stale_tag 12 passing where it was 0 by design; build then check 7/7 exit 0.\n\nBUILT AGAINST A FIXTURE because the real tag surface does not exist yet -- g7 is the comment-tags gate and comes after. Explicitly permitted and stated. G7 MUST WIRE THE REAL TAG-TEXT SURFACE INTO THIS MECHANISM.\n\nCLOSING SELECTORS for the remaining gates, already scanned against the correct file (tests/test_code_map.py, NOT the whole tests/ dir -- that was Commander error #7): g7 -k comment_tags collects 0 BY DESIGN (spec for a test g7 must create), g8 -k bom or docstring collects 3, gs -k map_tree_freshness collects 0 BY DESIGN. State the exact selector in every remaining handoff -- g5's trap was a crew naming its tests differently from the plan's selector.\n\nCANDIDATES: run-wide total is now tc1-tc49. execute.json has its OWN counter and printed the last four as tc4/tc5/tc6 -- triage must not double-count. tc47 (a gate's own postcondition could only ever fail), tc48 (a pin against one literal, not the defect class), tc49 (a dead constant duplicating a live docstring).\n\nAUTHORITY: push and a full non-draft PR are PRE-APPROVED. MERGE TO MAIN IS NOT. Never force-push.",
-      "authority_needed": "parent agent",
-      "next_action": ""
-    }
-  ],
-  "refusals": 4,
+  "blockers": [],
+  "refusals": 8,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-08T19:41:29.273747+00:00",
+    "last_heartbeat": "2026-08-09T10:50:50.237141+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -979,6 +975,20 @@
       "why": "PLAN COMPLETE AND APPROVED. execute.json carries 34 items across 11 gates (g0 CLI layer, g1 checks-that-can-fail, g2 D2 symbol collisions, g3 D1 line base, g4 schema/top-index, g5 determinism, gb churn-under-rename, g6 redundancy rule, g7 authored-layer staleness, g8 tag-vocabulary cull, gs skills integration + full map tree staged LAST). Regenerate any gate from .agent-work/issue-456/gate-spec.json via gen_execute.py. RECOMMENDATION ADOPTED: most-testable's port-defective-then-fix mechanism (port the defect, capture RED, fix, commit a mutation entry proving the test kills it), reusing tests/test_mutation_floor.py's idiom; every falsifier graded A (reproduces on real input today) or B (red-by-absence, negative control IS the falsifier). From smallest-diff: thresholds as annotated module constants not a committed JSON file (scripts/curate_corpus.py precedent); check stage reaches CI as a test not a workflow step; do NOT stage the ~3500-file map tree until the final gate so intermediate diffs stay reviewable. CORPUS NUMBERS every threshold must be sized against: 103 mappable files, 3411 entities (3077 fn / 334 cls), 52292 source lines, AFTER excluding .agent-work/. D2 = exactly 4 real collisions on this repo, all closure-in-method (mod:Class.<closure> drops the METHOD name), listed individually in d2_collisions.txt -- 'all N resolve' is a vacuous close criterion, the fix must name the method. D2 arm 2 (class-in-function) is 0 occurrences here: fixture-only, same standing as BOM, and a gate closing on 4->0 would ship it unwritten. g4's top-index falsifier CANNOT fire at 103 modules (~115-line flat index) -- recorded as a stated non-firing falsifier, do not invent a threshold that would have passed before the change. TOMMY'S TWO RULINGS AT APPROVAL: (1) lock threshold numbers later, and the tripwires must be USEFUL -- no rabbit holes, no unnecessary speed bumps; (2) build the map, long overdue -- and a large share of this repo's real connections are NOT in code, they are in how skills get used (which skill loads which reference, which gate dispatches which crew). That is a KNOWN DEFICIENCY, recorded in the frame, explicitly not now and not a blocker: 'if we can just get the actual code mapped, that's a win good enough for now'. Consequence the run must honor: do not overclaim coverage -- a page saying 'referenced by: none' for a script three skills invoke is wrong in the way that matters, so the run report must say plainly that skill-usage edges are outside what this map sees. And do not widen scope to chase it. OPEN TRIAGE: tc1 (advance --why is the only verb writing the cold-start digest and is exactly the verb a HARD context trip blocks), tc2 (spec says build the named guards first, names three, queue carries one), tc3 (test_mutation_floor.py:255 FAILED-line regex defeated by FORCE_COLOR=3 -- 10 local failures are ENVIRONMENTAL, not a regression; baseline test is green and CI has no FORCE_COLOR). AUTHORITY: push and a full non-draft PR are PRE-APPROVED; MERGE TO MAIN IS NOT. NEXT: execute starts at e0-context.",
       "mechanical": false,
       "ts": "2026-08-07T20:15:26.101390+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "All eleven gates are closed with integrated evidence: g0 g1 g2 g3 g4 g5 gb g6 g7 g8 gs. Every gate ran implementer then reviewer through run_crew.py, and every one closed on a reviewer APPROVE with the close-criteria command re-run at the gate boundary rather than taken on report.\n\nVerified at the final boundary: full suite 1840 passed / 2 skipped / 701 subtests / 0 failed, exit 0; `-k map_tree_freshness` 2 passed, exit 0; `python -m scripts.code_map build --root .` then `check --root .` 7/7, exit 0; `git ls-files map/` returns exactly map/INDEX.md and map/ids.jsonl.\n\nThe theme this step kept turning up is checks that cannot fail, hit at g5, g6, g7, g8 and again at gs, where the gate's own closing selector collected zero tests at gate open. Each was caught by re-running the criterion rather than trusting the report, and each was fixed before the gate closed. The mirror form appeared once in my own work: a close criterion that could never pass.\n\nTwo errors I own and carry to feedback. My gs close criterion was literally unsatisfiable. And my tc20 was refuted by the reviewer, who authored a real anchor and took the assertion RED; the true fact is narrower, that no repo history has ever exercised it.\n\nThe one decision that changed the plan: the landing zone was measured rather than assumed, with a negative control. The 116-file zone is not stable; the 2-file zone is. Two tracked files ship instead of 3,975.",
+      "mechanical": false,
+      "ts": "2026-08-09T10:48:38.462542+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "This repo has no packet map (no docs/architecture), so the spine's direct path applies: fold the change into the design doc it actually touches. It touches one, and the gap was real rather than a no-op -- `grep -rln 'code_map\\|code map' docs/ skills/` returned NOTHING before this edit, so a whole new subsystem and a newly tracked artifact were invisible to the structural record.\n\nFolded into docs/CONSTELLATION_OVERVIEW.md, the file that owns this repo's truth layers:\n\n1. The truth-layers block gained `map/` as compressed DERIVED truth -- a projection of dense truth, never authored, regenerated by command. That distinction is the point: the existing compressed layer is hand-authored and durable, and a derived layer that looks like it but goes stale silently would be the worse thing to add.\n\n2. A new subsection under the map-input contract, where a derived map actually belongs, recording: the real entry point (`python -m scripts.code_map build|check --root .`, package CLI, no standalone build script -- the wrong path cost three reviewers a rediscovery each this run); that check ships as a test rather than a workflow step so it reaches CI by the ordinary road; the two-file landing zone with the measurement that produced it and the negative control that could have overturned it; the named cost that the entry point's links do not resolve until a build runs; and that freshness is owned by no gate but by a permanent suite test, which is a mechanism rather than an intention.\n\n3. Tommy's ruling recorded as a standing deficiency with its consequence attached, not as a buried caveat: a large share of this repo's connections live in how skills get used, not in Python, so a page reading \"referenced by: none\" for a script three skills invoke is wrong in the way that matters. Anything built on this map must say so. Widening scope to chase those edges was ruled out.\n\nVerification: docs/ is not Python, so the map is unaffected by this edit, and the freshness test confirms it rather than my reasoning doing so -- `-k map_tree_freshness` 2 passed, exit 0, after the edit.",
+      "mechanical": false,
+      "ts": "2026-08-09T10:50:50.237132+00:00"
     }
   ]
 }
