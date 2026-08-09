@@ -5958,3 +5958,45 @@ map id, and the only record that the three wave-5 fixes compose across it lives 
 third and did not find one."* A stated, bounded negative from a reviewer that had every incentive to
 find a third and said plainly that it did not. **That is what an honest null looks like**, and it is
 worth more here than a fifth finding would have been.
+
+### RULING — `archive.c2b` waived for crew 1, pre-emptively. The crew that fixed the check is blocked by the un-upgraded copy in its own spine.
+
+Inspected crew 1's instantiated `spine.json` before it reached its archive gate. Its `archive.c2b` is
+the **pre-fix** text:
+
+```
+gh pr list --head <branch> --state open --json number --jq 'length > 0'
+```
+
+**Its spine was instantiated before g3 landed, so it never received its own repair.** Both defects the
+wave documented are live in it: the unsubstituted `<branch>` makes `sh -c` read an unquoted `<` as
+**input redirection**, so bash fails to open a file named `branch`, exits 1, and `gh` is never invoked
+— **always red**; and the `--jq 'length > 0'` form would print `false` and **exit 0**, so the obvious
+repair converts a check that cannot pass into one that cannot fail.
+
+**The crew that spent the wave fixing this check is blocked at its final gate by the version of it
+that shipped before the fix.** That is #344 corpus-drift in miniature, and it is the third time this
+epic that a fix has been unable to protect the run that produced it.
+
+**Ruling — waived on my authority, substance first, four conditions**, the same shape I used for crew
+2's `execute.c2`:
+
+1. **Push the branch, then open the PR** — `origin/epic-418/w5-bookend-gates` is still at the fork
+   point `aa2038d9`, **13 commits behind**. Nothing crew 1 did is on the remote.
+2. **Then** waive, with: authority naming me and citing **#439/#484/#446**; the reason carrying the
+   **command text verbatim** and the measured exit; **nothing may state or imply c2b passed**; and the
+   waiver **evidence-only**.
+3. **No hand-editing `spine.json`, no hand-substituting the branch name to force green, no changing
+   the verdict.**
+4. **I verify the PR on the forge myself before merging.** The waiver covers the broken check, not the
+   requirement — if the PR is not actually open, the waiver is void.
+
+**Why pre-emptively rather than on a float:** a crew that meets an unpassable gate at the very end of a
+long run has three exits available, and two of them are bad — hand-edit the spine, or quietly restate
+the verdict. Both are cheaper than asking. **The cost of waiting for the float is that the crew picks
+first and asks second.** I would rather grant the sanctioned path before the pressure arrives than
+adjudicate a falsification afterwards.
+
+**Also relayed:** correct the g4 RESULT's false premise per its reviewer's float 1 (three paths differ
+from `aa2038d9` outside `.agent-work/`, not one — the `+24` conclusion is unaffected), and report final
+suite numbers in the PR body against the pinned prediction of **1922 collected**.
