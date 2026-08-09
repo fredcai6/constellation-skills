@@ -141,7 +141,10 @@ fix, and all 15 tests in `tests/test_episode_negative_control.py` now pass.
 
 ## PR
 
-<!-- filled in after `gh pr create` -->
+**#514**: https://github.com/fredcai6/constellation-skills/pull/514
+
+All nine issues (#474, #475, #476, #427, #503, #479, #480, #493, #495)
+commented with their return-shape line and evidence, then closed.
 
 ## Not done
 
