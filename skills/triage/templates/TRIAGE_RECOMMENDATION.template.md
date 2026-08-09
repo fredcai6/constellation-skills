@@ -70,18 +70,7 @@ A suggested fix is evidence that *a* fix is feasible; it is not the fix. Issue #
 
 *Observations* is the load-bearing half of this template: recorded with a baseline, it is what survives to inform a future reader. *Possible fix* and *Open questions* are thinking out loud for whoever picks this up, and a later reader should feel free to discard them.
 
-## Impact
-`<Why this matters. What future work or correctness does it affect?>`
-
-## Suggested scope
-`<The boundary of the work — what it may touch, not the method for fixing it. The method, if you have one, is a hypothesis and belongs in Possible fix.>`
-
-## Non-goals
-`<What this issue should not include.>`
-
-## Acceptance criteria
-- [ ] `<criterion>`
-- [ ] `<criterion>`
+> **Deliberately absent: impact, scope, non-goals, acceptance criteria.** Those are implementation-side and have to be judged under the conditions of the actual edit, with the real code in front of you. Fixing them in issue space commits a reader to a shape of work that was decided before anyone looked. Record what was seen; let whoever makes the change decide what the change is.
 
 ## Recommended priority
 `low | medium | high | urgent`
