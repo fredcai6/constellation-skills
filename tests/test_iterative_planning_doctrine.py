@@ -568,9 +568,16 @@ class InstalledIterativeRoleRuntimeTests(unittest.TestCase):
         next_wave_path = self.work_area / "NEXT_WAVE.json"
         source_path = transition / "REPLAN_INPUT.json"
         result_path = transition / "REPLAN_RESULT.json"
-        pristine = {path: path.read_text(encoding="utf-8") for path in (next_wave_path, source_path, result_path, log_path)}
+        replan_bundle = self.skills_root / "constellation-replan"
+        # In `pristine` so the per-subtest restore loop resets it like any other
+        # mutated input -- the render mutation degrades code, not packet data.
+        renderer_path = replan_bundle / "scripts" / "verify_replan.py"
+        pristine = {
+            path: path.read_text(encoding="utf-8")
+            for path in (next_wave_path, source_path, result_path, log_path, renderer_path)
+        }
         written = (transition / "CURRENT_TRUTH.md", transition / "WAVE_REVIEW.md")
-        replan_templates = self.skills_root / "constellation-replan" / "templates"
+        replan_templates = replan_bundle / "templates"
 
         control = self.run_role("admiral", "admiral-prelaunch")
         self.assertEqual(0, control.returncode, control.stderr)
@@ -626,6 +633,21 @@ class InstalledIterativeRoleRuntimeTests(unittest.TestCase):
             self.assertEqual("repair", load_json(result_path)["decision"])
             self.assertIsNone(load_json(next_wave_path)["launch_id"])
 
+        def renderer_returns_empty():
+            # The render leg. Without this case a stop-shortcut that skipped the
+            # render entirely left this test GREEN -- found by the g2 reviewer,
+            # which is the one thing the docstring above promised could not happen.
+            # Degrading the INSTALLED renderer is the discriminating probe: the
+            # packet cannot express "the renderer failed", so no data mutation
+            # reaches this clause.
+            source = renderer_path.read_text(encoding="utf-8")
+            marker = "def render_replan_markdown("
+            self.assertIn(marker, source)
+            head, _, tail = source.partition(marker)
+            signature, _, body = tail.partition("\n")
+            write(renderer_path, f'{head}{marker}{signature}\n    return ""\n{body}')
+            self.assertIn('return ""', renderer_path.read_text(encoding="utf-8"))
+
         mutations = {
             "audit_decision_mismatch": (audit_decision_mismatch, "verified TRANSITION audit decision must match"),
             "audit_entry_absent": (audit_entry_absent, "must have exactly one verified TRANSITION audit entry"),
@@ -634,8 +656,9 @@ class InstalledIterativeRoleRuntimeTests(unittest.TestCase):
             "packet_is_inapplicable": (packet_is_inapplicable, "inapplicable transition cannot authorize NEXT_WAVE"),
             "boundary_id_is_unsafe": (boundary_id_is_unsafe, "boundary_id contains unsafe path characters"),
             "repair_names_no_launch": (repair_names_no_launch, "only advance or replan may authorize NEXT_WAVE"),
+            "renderer_returns_empty": (renderer_returns_empty, "Admiral transition renderer returned empty Markdown"),
         }
-        self.assertEqual(7, len(mutations))
+        self.assertEqual(8, len(mutations))
 
         for label, (mutate, expected) in mutations.items():
             with self.subTest(mutation=label):
