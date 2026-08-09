@@ -8,21 +8,28 @@ dispatch.
 - **PID**: crew `constellation/issue-456/g8/implementer/attempt-5` running. All others closed.
 - **expected artifact**: `.agent-work/issue-456/crew-handoffs/g8-remediate-4-RESULT.md`
 
-## 🔴 RESUME HERE — `g8` on its 5th pass. Production code is CORRECT.
+## 🟢 RESUME HERE — `g8` build+tests DONE and Commander-verified. Needs re-review.
 
 **Do not touch `scripts/code_map/`.** Three reviews confirmed the production fix
-at `1f2b57ab` by direct execution. The open defect is **hollow tests**.
+at `1f2b57ab` by direct execution. The hollow-test defect is now **fixed** at
+`8ad32efb` (gate removed) on top of `18dc643e` (overflow assertion).
 
-**The one thing left:** `tests/test_code_map.py:4577` still reads
-`if len(summary) == 160:` — gating the meaningful assertions behind the very
-condition they exist to assert. Its own comment says "assert unconditionally"
-and the code does the opposite. Under a mutation that stops truncation,
-`len(summary)` is 245, the gate is False, both assertions skip, and only
-`assertGreater(len(reconstructed), 0)` runs — passes always. Crew added the
-overflow-text assertion (fix 2, landed at `18dc643e`) but left the gate.
-**Rule to apply: branch on the SHAPE (fixed, known when the case is written),
-never on the MEASURED output (the thing under test).**
-Acceptance: revert truncation → the invariant test must go RED.
+**Commander-verified, the decisive check:** removing the truncation line
+(`paragraph = paragraph[:160]`) now takes **4 tests RED**, including BOTH
+previously-hollow ones (`test_long_first_paragraph_with_blank_line_and_body`,
+`test_dense_paragraph_over_160_chars_no_blank_line`). The identical mutation
+previously left all 11 green. Revert byte-clean; selector back to **11 passed,
+4 subtests**. No `if len(summary) == 160:` remains; 3 unconditional
+`assertEqual(len(summary), 160)` in its place.
+
+**NEXT: dispatch the g8 re-review** (`SendMessage` to the existing `g8-reviewer`,
+context intact, after registering `g8/reviewer/attempt-4`). Ask it to re-run its
+own two mutations — the remediation-2 revert AND the surgical overflow-drop —
+since those are the two it used to prove the tests hollow, and it should confirm
+both now bite. Then close the gate.
+
+**Rule this cost five passes to learn: branch on the SHAPE (fixed, known when
+the case is written), never on the MEASURED output (the thing under test).**
 
 **Engine bookkeeping still owed for g8** (same trap I hit on g7 — the work ran
 ahead of the record): `g8-implement` is still `pending`. Attest `p1`, `start`,
