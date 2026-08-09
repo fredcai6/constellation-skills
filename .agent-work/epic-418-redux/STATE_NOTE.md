@@ -44,20 +44,22 @@
 > **CREW 1 IS NOW `commander-w5-gates-b`.** The first instance tripped at `plan` on a HARD reading,
 > wrote its refresh-request, committed `eff00abf` and stood down — working as designed, not a failure.
 >
-> **LIVE POSITION @ 23:52Z 2026-08-08 — 2 PRs open, 0 merged.**
+> **LIVE POSITION @ 00:01Z 2026-08-09 — 1 MERGED, 1 PR open, 3 crews running.**
 >
-> | crew | state | evidence |
-> |---|---|---|
-> | 1 gates | running as `-b-refresh1` | `plan [in-progress]`; MISSION_FRAME, plan-alternatives, `execute.json` authored |
-> | 2 readiness | running as `-b` | recovered from the stale-gauge trap; steady writes |
-> | 3 addressing | **DONE** | **PR #511**, 4 commits. Real red-then-green after rework. |
-> | 4 engine | running as `-b` | driving a 10-item plan its predecessor authored |
-> | 5 docs | rework on disk, **not pushed** | **PR #509** green; `m3` pending; suite re-run at 23:43 |
+> | crew | state |
+> |---|---|
+> | 1 gates | running as `-b-refresh1`, authoring `execute.json` |
+> | 2 readiness | running as `-b`, heaviest activity in the wave |
+> | 3 addressing | **MERGED — PR #511 at `39fb542a`.** #507, #370 closed. **#413 left OPEN, correctly.** |
+> | 4 engine | running as `-b`, at `m5-503`, 5 of 10 items cleared |
+> | 5 docs | rework pushed, **PR #509 correct but `m3` still open** |
 >
-> **PR #511 rework, verified by ME against clean main, not accepted on report:** its first acceptance
-> test **passed on unmodified main** — a check that cannot fail, in the PR closing an addressing
-> defect. Crew 3 responded by adding real doctrine guards: now `2 failed, 2 passed, REAL_EXIT=1` on
-> main. **Merge only after CI is green on `bd31f69c`.**
+> **Wave-5 score: 2 of 21 issues closed.**
+>
+> **#413 STAYS OPEN and that is not an oversight.** Crew 3 re-read all three bodies independently and
+> found it is a *different defect* — **never-valid-from-the-start** (a spawned subagent was never
+> registered under an addressable name to its own children), not **valid-then-stale**. Same
+> presentation, different root cause. **Do not close it as part of this wave.**
 >
 > **MERGE BASELINE (use this, do not re-guess it):** main is green at **1867 passed / 2 skipped /
 > 829 subtests / real exit 0**, run with `python -m pytest`, exit read **unpiped**. Matches wave 4's
