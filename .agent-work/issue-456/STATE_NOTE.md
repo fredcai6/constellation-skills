@@ -4,11 +4,51 @@ If this session dies, a fresh agent resumes from exactly these lines — no
 forensics. Rewritten before entering `execute` and again before **each** crew
 dispatch.
 
-- **step**: `execute` (in-progress) · **slug**: **`g7` REMEDIATION IN FLIGHT**
-- **PID**: crew `constellation/issue-456/g7/implementer/attempt-2` running (dispatched ~23:05Z). All earlier g6/g7 crews closed via `--verify-result`.
-- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g7-remediate-RESULT.md`
+- **step**: `execute` (in-progress) · **slug**: **`g8-review`** — build done+verified, review NOT yet dispatched
+- **PID**: none in flight. All g6/g7/g8 crews closed via `--verify-result`.
+- **expected artifact**: `.agent-work/issue-456/crew-handoffs/g8-review-RESULT.md`
 
-## 🔴 RESUME HERE — `g7` blocked, rework running
+## 🟢 RESUME HERE — `g7` CLOSED (9/11). `g8` built+verified, needs review.
+
+**Engine:** `g7-integrate -> complete`. `g8-implement` is **still `pending`** — do
+NOT skip it: attest `p1`, `start`, `attach` an `implementer-result`, attest `c1`,
+`advance`. (I made exactly this mistake on g7 — drove the whole gate and only
+opened it in the engine at the close. Ninth Commander error this run.)
+
+**`g8` build state:** committed at `d727ee2f` (BOM) and `06fbc138` (D3).
+Commander-verified: suite **1835 passed, 2 skipped, 697 subtests, 0 failed**
+(baseline 1831); selector `-k 'bom or docstring'` **8** (gate baseline was **4**,
+not the 3 an earlier note claimed — g7 had added a docstring test); fresh `build`
+then `check` **7/7 exit 0**; tree clean.
+
+### What `g8` actually fixed, and the trap it walked into
+Defect 1, BOM: fixed, fixture with real BOM bytes, RED observed before green.
+The crew also found the **same defect in `checks.py`'s `SourceScan`** — the check
+itself couldn't parse the fixture. "The check has the defect."
+
+Defect 2, **D3 — and this is the lesson**: `D3` is **named but never defined**
+anywhere (`DESIGN_SPEC.md` §203, `ISSUE_456.md` §37 both say only
+"wrapped-docstring render split (D3)"). My brief passed the phrase through
+unresolved — **tenth Commander error**. The haiku crew said so plainly and
+shipped "a defensive fix that may not address the actual defect." It was right:
+its `split("\n")`→`splitlines()` change was cosmetic; both still cut at the first
+newline. **I resolved D3 empirically:** a summary sentence wrapped across two
+physical lines is CUT IN HALF — first line becomes the summary, the remainder of
+the same sentence opens the body. Correct rule is PEP 257's: summary ends at the
+first BLANK line. Fixed via a shared `_first_paragraph` helper + `doc_summary_of`,
+all three call sites converted; no `splitlines()[0]` remains in `extract.py`.
+
+### The haiku measurement (Tommy asked for this)
+Handled the mechanical work fine — real fixture, real RED, fast. **Two process
+misses, both needing a nudge:** ran only `tests/test_code_map.py` (141) instead of
+the full suite, and finished its plan with **no RESULT document** twice. Its own
+read: no model-tier friction, the friction was brief specificity — and it was
+right, since the D3 ambiguity was mine. Verdict for feedback: **cheap tier is
+fine for mechanical work IF the defect is precisely specified and the process
+steps are spelled out**; it will not infer an underspecified defect, and a sonnet
+crew probably would have pushed back sooner.
+
+## 🔴 SUPERSEDED — `g7` block history (kept for the record)
 
 **Engine state:** `g7-implement` complete. `g7-review` NOT yet advanced — its
 REVIEW_RESULT (verdict **BLOCK**) is on disk at
