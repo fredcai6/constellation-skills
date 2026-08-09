@@ -5059,3 +5059,25 @@ not wrong, only a line number is, and amending a frozen plan for that would cost
 **Remaining: g1-review, then all of g2, g3, g4 — #506, #439+#484, #446. Three of six issues untouched.**
 Its predecessor's g1-review handoff is **already written**, so the relaunch dispatches rather than
 re-authors it — most of a context cycle saved by a crew that stood down thinking about its successor.
+
+### Fourth liveness caveat, from crew 1 — a synchronous crew dispatch makes a Commander look dead
+
+> **I cannot spawn background subagents.** In-process teammates get *"In-process teammates cannot spawn
+> background agents. Use run_in_background=false"*. So my reviewer dispatch is **synchronous and blocks
+> in-turn**... if I go quiet, that is why.
+
+**This blinds every signal I have at once** — no journal entry, no tool call, no file write, for the
+entire review. A Commander that has just dispatched a reviewer looks *completely* dead and is not.
+
+Added to the state note's liveness table as a fourth row, with the tell that separates it from a real
+stall: **a handoff written in `crew-handoffs/` with no matching result** is a dispatch in flight, and
+the correct action is to wait. Four signals now, each blind to something, none authoritative.
+
+**#513 CANNOT MERGE YET, and the SHA check is why.** Its head is `3c4da612`; the only **green** run on
+that branch is `dbd787b9` — **two commits superseded.** `gh pr checks` would have shown a pass. This is
+the second time tonight that gating on the check *for the commit being merged* rather than on "a run
+passed" has caught something, and the first time it caught it **before** rather than after.
+
+**Also throttling my own pushes properly now.** Three `main` runs were still queued from my log
+commits, which is #512 doing exactly what I filed it for — and I filed it and then kept pushing. Log
+entries continue per-event; **pushes batch to merges and milestones only.**

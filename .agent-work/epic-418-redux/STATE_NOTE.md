@@ -114,7 +114,13 @@
 > | **`gauge.json` mtime** (PostToolUse hook) | **an agent the hook never fires for.** Crew 2 ran **9 engine verbs over 40 min with ZERO gauge writes** while being the most active agent in the wave. A frozen gauge and a dead agent are byte-identical. Live instance on **#452**. |
 > | **`*.json.journal` mtime** (written by the engine itself, no hook) | activity that is not an engine verb — reading, editing, composing a return. Fires for **every** crew, which the gauge does not. |
 >
+> | **a Commander blocked on a SYNCHRONOUS crew dispatch** | everything. It produces **no journal entry, no tool call, no file write** for the entire review — potentially many minutes. Crew 1 reported the cause: *"In-process teammates cannot spawn background agents. Use run_in_background=false"*, so a delegated Commander's crew dispatch **blocks in-turn**. |
+>
 > **Best available: journal mtime, cross-checked against the others, and NEVER acted on alone.**
+>
+> **A Commander that has just dispatched a reviewer will look completely dead and is not.** Check its
+> `crew-handoffs/` for a handoff written with no matching result — that is a dispatch in flight, and
+> the correct action is to wait, not to relaunch.
 >
 > **THE ONLY AUTHORITATIVE SIGNAL IS THE HARNESS IDLE NOTIFICATION.** Everything above is for deciding
 > *whether to ask*. **Ask-then-act is four-for-four today** and it is the only reason a healthy
