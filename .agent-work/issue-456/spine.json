@@ -512,7 +512,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile is complete and the engine advanced it. The change was folded into docs/CONSTELLATION_OVERVIEW.md and committed at d46fc610; the freshness test was re-run after the edit and stayed green."
         }
       ],
       "postconditions": [
@@ -520,7 +521,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact."
         },
         {
           "id": "c2",
@@ -529,17 +531,32 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "Tommy, live, 2026-08-09: 'aight close on out.' -- a direct instruction to run the closeout, of which triage-and-file is a standing part he knows. Reinforced by a standing correction recorded three times: Commanders must file findings to the tracker, not bank them worktree-locally for harvest. Filed 9 issues, #518-#526, grouped by root cause; the full routing of all 20 candidates including 3 dispositions and 2 held for feedback is in the c1 attestation. Reported back to him with the list so any he does not want can be closed."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -936,12 +953,12 @@
     }
   ],
   "blockers": [],
-  "refusals": 8,
+  "refusals": 9,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-09T10:50:50.237141+00:00",
+    "last_heartbeat": "2026-08-09T10:58:25.793877+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -989,6 +1006,13 @@
       "why": "This repo has no packet map (no docs/architecture), so the spine's direct path applies: fold the change into the design doc it actually touches. It touches one, and the gap was real rather than a no-op -- `grep -rln 'code_map\\|code map' docs/ skills/` returned NOTHING before this edit, so a whole new subsystem and a newly tracked artifact were invisible to the structural record.\n\nFolded into docs/CONSTELLATION_OVERVIEW.md, the file that owns this repo's truth layers:\n\n1. The truth-layers block gained `map/` as compressed DERIVED truth -- a projection of dense truth, never authored, regenerated by command. That distinction is the point: the existing compressed layer is hand-authored and durable, and a derived layer that looks like it but goes stale silently would be the worse thing to add.\n\n2. A new subsection under the map-input contract, where a derived map actually belongs, recording: the real entry point (`python -m scripts.code_map build|check --root .`, package CLI, no standalone build script -- the wrong path cost three reviewers a rediscovery each this run); that check ships as a test rather than a workflow step so it reaches CI by the ordinary road; the two-file landing zone with the measurement that produced it and the negative control that could have overturned it; the named cost that the entry point's links do not resolve until a build runs; and that freshness is owned by no gate but by a permanent suite test, which is a mechanism rather than an intention.\n\n3. Tommy's ruling recorded as a standing deficiency with its consequence attached, not as a buried caveat: a large share of this repo's connections live in how skills get used, not in Python, so a page reading \"referenced by: none\" for a script three skills invoke is wrong in the way that matters. Anything built on this map must say so. Widening scope to chase those edges was ruled out.\n\nVerification: docs/ is not Python, so the map is unaffected by this edit, and the freshness test confirms it rather than my reasoning doing so -- `-k map_tree_freshness` 2 passed, exit 0, after the edit.",
       "mechanical": false,
       "ts": "2026-08-09T10:50:50.237132+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact.",
+      "mechanical": false,
+      "ts": "2026-08-09T10:58:25.793865+00:00"
     }
   ]
 }
