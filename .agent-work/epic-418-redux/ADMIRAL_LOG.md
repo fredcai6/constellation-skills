@@ -5255,3 +5255,20 @@ that would be a check that cannot fail sitting in the merge gate itself.
 
 **Running score: 5 of 21 closed, three PRs merged, one green and queued behind the merge-order ruling.**
 Four of five crews complete. Crew 1 is the whole remaining wave — `g1-integrate` now, then g2, g3, g4.
+
+### #506 is implemented — `57048457 fix(#506): verify a stop transition instead of refusing it`
+
++52 lines in `verify_iterative_role_artifacts.py`, +189 in `test_iterative_planning_doctrine.py`.
+Crew 1 is now in `g2-review`. **Two of four gates through implementation** (fix B for #501/#468 already
+merged-ready at `6f48ece4`; #506 now). Remaining: #439+#484 and #446, both `archive.c2b`.
+
+**The commit subject is the fix stated correctly**, which is worth noting because the wrong framing was
+available and cheaper: *verify* a stop transition rather than *refuse* it. The defect was never that
+`stop` should be allowed through unchecked — it was that the closure check asked the launch question.
+A fix that simply skipped verification on `stop` would have gone green and converted a check that
+cannot pass into one that cannot fail, which is the inversion this wave already caught twice (#484's
+own suggested fix, #501's freshness variant).
+
+**This is the commit the epic's own close depends on.** Once it merges and the installed bundle carries
+it, `execute.c3` can close on a `stop` boundary and the epic ends without a waiver against Tommy's
+name. If it had not landed, the fallback was an honest waive — never flipping the boundary decision.
