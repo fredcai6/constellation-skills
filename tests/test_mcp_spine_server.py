@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -481,10 +482,26 @@ class McpJsonTests(unittest.TestCase):
             self.assertFalse(Path(value).is_absolute(), f"{key} is not portable: {value}")
 
     def test_mcp_json_referenced_spine_file_exists_and_loads(self):
+        """The committed default must resolve to a real, loadable spine.
+
+        SPINE_FILE is written as `${SPINE_FILE:-<default>}` so a dispatcher can
+        rebind it per agent through the calling process's environment, while an
+        interactive session with nothing set still lands on a safe demo spine.
+        Both halves of that form are load-bearing, so both are asserted: a
+        literal path here would bind one spine for every consumer and could not
+        serve two agents driving different spines.
+        """
         config = json.loads(MCP_JSON.read_text(encoding="utf-8"))
-        spine_rel = config["mcpServers"]["spine"]["env"]["SPINE_FILE"]
-        spine_path = ROOT / spine_rel
-        self.assertTrue(spine_path.is_file(), f"missing: {spine_path}")
+        raw = config["mcpServers"]["spine"]["env"]["SPINE_FILE"]
+
+        match = re.fullmatch(r"\$\{SPINE_FILE:-(?P<default>[^}]*)\}", raw)
+        self.assertIsNotNone(
+            match,
+            "SPINE_FILE must stay overridable per dispatch via "
+            f"${{SPINE_FILE:-<default>}} expansion; got {raw!r}")
+
+        spine_path = ROOT / match.group("default")
+        self.assertTrue(spine_path.is_file(), f"missing default spine: {spine_path}")
         loaded = json.loads(spine_path.read_text(encoding="utf-8"))
         self.assertIn("type", loaded)
 
