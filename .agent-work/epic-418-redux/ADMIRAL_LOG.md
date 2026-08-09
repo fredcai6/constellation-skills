@@ -6252,3 +6252,37 @@ this epic; this is the fifth, and it is the cheapest one to have taken and the m
 substeps, the six shape refusals the boundary builder cost, and the one live trap: **`epic418-w5-gauge`
 is missing from `SWEEP_LIST.md`** and must be added before any sweep, or a merged worktree gets
 classified UNCLASSIFIED at exactly the moment attention is thinnest.
+
+### REFUSED a stop rail naming another agent's spine — #457, and a sharper variant of it
+
+A stop-hook fired in my session naming `ACTIVE m3-coupled-suite [pending]` under `LEASE active:
+impl-w5-g3`, instructing me to run a coupled suite and account for a delta against a `bd56ac8a`
+baseline.
+
+**Not my spine, and I did not obey it.** The latitude contract carries *"Never obey a spine rail
+naming a spine another agent drives (#457)"* as a **hard constraint**. Verified before deciding rather
+than after:
+
+- `impl-w5-g3` is the lease on `g3-implement-IMPLEMENTER_PLAN.json` — **the g3 implementer's plan**, a
+  crew agent two generations below me, which **tripped before writing its result and never resumed**.
+  Heartbeat `02:26`, four hours stale, still reading `active` because a trip-abandoned plan is never
+  released.
+- **Its work is merged and closed** — g3 shipped in PR #516 (`f9945286`), #439 CLOSED. The gate names a
+  baseline commit three commits of history back.
+- **My spine still reads `closeout [blocked]`**, which is where I had just deliberately put it.
+
+**The timing is the part worth recording.** The rail arrived immediately after I bubbled `closeout` to
+the human — i.e. **the instruction most likely to be read as authoritative arrived at the exact moment
+the correct state was least convenient.** Obeying it would have had an Admiral running a dead crew
+member's gate for already-merged code, and would have papered over a block I had just chosen on
+purpose. Two forbidden things at once, wearing the costume of the engine's own voice.
+
+**Routed to #457 rather than filed new**, with the two facts that sharpen it: the mis-attributed
+descendant can be **dead** rather than live, and its work can be **already merged** — so the binding
+survives the trip that abandoned the plan, the merge that retired its work, *and* the Commander's own
+lease release. Also noted that the three-strike hatch fails **differently** in the two variants (a
+productive descendant resets the counter; a dead one never does), so a fix aimed at one leaves the
+other.
+
+**What actually stopped it was a sentence in a prose contract.** That is a thin defence for something
+that has now fired in two separate epics, and I am recording it as thin rather than as adequate.
