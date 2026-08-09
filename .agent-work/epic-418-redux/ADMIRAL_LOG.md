@@ -4909,3 +4909,48 @@ pre-existing writer elsewhere in the installer could not mask the answer.
 
 **Held pending its crew closing out** — the `execute.c2` waive I authorized has to land with its four
 conditions first, and I do not merge under a live crew. Crews 1 and 4 still driving.
+
+### FINDING (mine, at the entry point) — `truth.sh` reported WAVE 4 while wave 5 ran
+
+I tested the crash-resume note's **own first instruction** by running it rather than reading it. It
+exits 0 and prints:
+
+```
+--- gates (source: execute.json, not any note) ---
+  17/17 complete   amendments: 2
+  lease: released by agent
+```
+
+**Those are wave 4's numbers.** `truth.sh` is hardcoded to `epic418-a2-467` / `issue-467-trip-semantics`
+— the previous wave's worktree. A fresh Admiral executing step 1 of the note would read
+*"17/17 complete, lease released"* and conclude **the run is finished**, while five crews were mid-flight.
+
+**Identical output in the done world and the mid-wave world, at the entry point of the crash-resume
+path** — and the file's own header says *"derive reality. never recall it."* It was deriving reality,
+just the wrong wave's.
+
+**Why it was invisible:** it never breaks. It exits 0, prints 25 lines of well-formed derived state, and
+every figure in it is true — of a wave that ended hours ago. Nothing about the output signals which
+wave it describes. **A script that is right about the wrong thing is the hardest kind to notice**, and
+I have run this file repeatedly today without looking at what it was pointed at.
+
+**Corrected**, with the defect stated in a comment block at the top so the next reader inherits the
+correction rather than just the fix. Wave 5 runs **five** crews, so there is no single work area to
+point at; it now enumerates all five with the one liveness signal that fires for every crew:
+
+```
+gates:      last-engine-verb=00:33 commits=2 dirty=26
+readiness:  last-engine-verb=00:33 commits=1 dirty=12
+addressing: last-engine-verb=23:51 commits=0 dirty=0     (merged)
+engine:     last-engine-verb=00:23 commits=0 dirty=3
+docs:       last-engine-verb=00:05 commits=0 dirty=3     (merged)
+```
+
+plus the open wave-5 PRs asked of the forge, and two carried warnings: **journal mtime is the only
+proxy that fires for every crew; `gauge.json` does not (#452), and file-write counts miss a reading
+agent.**
+
+**This is census specimen territory and it is mine, not a crew's** — the third countermeasure of my own
+today to contain the defect it was built against. The pattern is now unambiguous: **I do not catch
+these by reading, and neither does anyone else. Only running them against a case that should make them
+fail works.**
