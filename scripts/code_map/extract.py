@@ -268,11 +268,14 @@ def span_hash(node):
 def _first_paragraph(doc):
     """Extract the first paragraph from a docstring (text up to first blank line).
 
+    Invariant: no docstring content is ever silently dropped. If the summary
+    (first paragraph) exceeds 160 characters, the overflow is preserved in
+    the body, not discarded at the emit sites.
+
     Returns a tuple (paragraph, remainder) where:
-    - If there's a blank line: paragraph is text before it, remainder is text after
-    - If there's no blank line: paragraph is the joined text, remainder is None
-    - If paragraph would be truncated (>160 chars, no blank line), the overflow
-      goes into remainder to preserve content.
+    - paragraph: the joined first paragraph, truncated to 160 chars if needed
+    - remainder: text after the blank line (if present) or overflow from summary
+                 (if summary > 160 chars), combined if both exist. None if neither.
     Both are None if there is no content."""
     if not doc:
         return None, None
@@ -292,18 +295,27 @@ def _first_paragraph(doc):
     # Join paragraph lines with spaces to handle wrapped lines
     paragraph = " ".join(para_lines).strip() if para_lines else None
 
-    # Body handling depends on whether there's a blank line
-    body = None
+    # Extract post-blank-line content if present
+    post_blank_body = None
     if body_start is not None and body_start < len(lines):
-        # There's a blank line: body is everything after it
         body_lines = lines[body_start:]
-        body = "\n".join(body_lines).strip() or None
-    elif paragraph and len(paragraph) > 160:
-        # No blank line, but paragraph exceeds truncation limit:
-        # split at 160 chars and put overflow in body to avoid silent loss
-        body = paragraph[160:].lstrip()
+        post_blank_body = "\n".join(body_lines).strip() or None
+
+    # Handle overflow: if summary > 160 chars, split and preserve tail
+    body = None
+    if paragraph and len(paragraph) > 160:
+        # Overflow: summary tail that won't fit in the truncation limit
+        summary_overflow = paragraph[160:].lstrip()
         paragraph = paragraph[:160]
-        body = body or None  # body is None if it's just whitespace
+
+        # Combine overflow with any post-blank-line body
+        if post_blank_body:
+            body = summary_overflow + " " + post_blank_body if summary_overflow else post_blank_body
+        else:
+            body = summary_overflow or None
+    else:
+        # No overflow: use post-blank-line body as-is
+        body = post_blank_body
 
     return paragraph, body
 
