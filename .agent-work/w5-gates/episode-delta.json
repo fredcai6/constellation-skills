@@ -1,0 +1,260 @@
+{
+  "work_id": "w5-gates",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w5-gates",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/w5-gates/context/g4-review.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w5-gates/gauge.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Pick up an in-flight run at g4-review as a fresh Commander and read my own context headroom before deciding whether to work or hand off."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The context gauge reported on my first `current` call would describe MY context."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "My first reading was 18 percent (at/over hard) with a TRIP HISTORY of 3, carrying my predecessor's number: gauge.json is written per checklist DIRECTORY, not per agent. After one tool call it read 0.034439 and the trip line vanished."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Four crews in this wave were relaunched into the loop -- read inherited number, trip, hand off, relaunch -- and each cycle was indistinguishable from correct doctrine. I avoided it only because my launch brief carried a hand-written warning."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Make any tool call, then re-read before believing any gauge number. Filed as issue 477 and under repair in a parallel worktree."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The gauge is keyed to the checklist directory, so identity is inherited rather than established per observing agent."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "Key the reading to the observing agent, or refuse to report a reading whose observer identity does not match the caller."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w5-gates",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/w5-gates/context/g4-review.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w5-gates/crew-handoffs/g4-implement-RESULT.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Close g4-implement when its implementer tripped hard before writing its own result file."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A transcribed result would carry the implementer's measurements intact."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The implementer correctly REFUSED to attest what it had not run, which is the doctrine working. The Commander transcribed instead, and one claim changed meaning in transit: 'only the doctrine test file differs from aa2038d9 outside .agent-work/' is true against the g4 baseline 84d1e998 but false against the fork point, where THREE production paths differ."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Caught by the g4 reviewer and corrected before the PR; the +24 conclusion was unaffected. Cost one review float and one Commander re-derivation."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The reviewer was told explicitly it was the first independent eyes on those numbers and treated every measurement as a claim. I re-derived with git diff --numstat rather than reasoning about which baseline was meant."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "A measurement's baseline is implicit in prose, so across a handoff the frame of reference can swap silently while the sentence stays grammatical."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "Transcribed measurements name their baseline ref inline, so a reader can re-run rather than infer it."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w5-gates",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "archive",
+        "context-manifest-ref": ".agent-work/w5-gates/context/g4-review.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w5-gates/spine.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Close the run's own archive gate after fixing the archive-reachability defect."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The spine driving this run would carry the repair the run itself produced."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It does not. This spine was instantiated before g3 landed, so its archive.c2b still holds the pre-fix text with an unsubstituted <branch> placeholder. The engine runs check text through sh -c, where an unquoted < is input redirection: sh tries to open a file named 'branch', exits 1, and gh is never invoked. Always red, in every state of the world."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The final gate of the wave that fixed this defect is blocked BY that defect. Resolved by an Admiral waiver after the substance was real -- branch pushed, PR 516 open -- rather than by improvising."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Waive on named Admiral authority with the command text and measured exit code recorded verbatim, and state plainly that the check did not pass. Never hand-substitute the branch name to make it green."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "A running spine is a snapshot taken at instantiation, so a fix to the template cannot reach instances already in flight."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "weak",
+          "statement": "No remedy proposed -- retrofitting live instances may be worse than the problem. Recorded as an observation, not a rule."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w5-gates",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "triage",
+        "context-manifest-ref": ".agent-work/w5-gates/context/g4-review.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/w5-gates/TRIAGE_RECOMMENDATIONS.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Route 14 triage candidates and file the ones that warrant issues."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The latitude contract classes issue filing as delegated, so filing would be available."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Class-level delegation, but the TOOL gh issue create is listed pre-clear, annotated 'the gh issue create gap has now recurred four times'. This is the fifth. Delegation of a decision class with no cleared tool is not filing authority."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Nothing filed; 14 issue-ready recommendations handed up instead. The findings are preserved but they are not on the tracker, which is the outcome the human has previously objected to."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Routed all 14 as recommend-and-defer -- the triage skill's own recorded form of 'ask' -- with a suggested split, and floated the authority gap itself as worth a ruling rather than absorbing it a fifth time."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Decision-class authority and tool-level pre-clearance are recorded in separate tables and can disagree."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "Reconcile the two tables, or make the contract state which one wins when they conflict."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "w5-gates",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/w5-gates/context/g4-review.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          "references/windows.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "medium",
+          "statement": "Run the test suite as the shipped Windows reference instructs."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "references/windows.md section 4 would describe this host correctly."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "It is wrong on this box: it prefers `py`, but `py` has no pytest here, so `py -m pytest` exits nonzero and reads EXACTLY like a red suite when nothing ran."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Cost three crews in this epic real time. A doc that produces a convincing false red is worse than a doc that is merely absent."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Use `python` always, and never pipe a test command into tail or head -- the exit status then belongs to the pipe, and a zero-match -k selector exits 5 but reads as 0. Redirect to a file and echo the status separately."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The reference generalizes across Windows hosts where the py launcher and the active interpreter differ."
+        },
+        {
+          "kind": "proposed-remedy",
+          "strength": "medium",
+          "statement": "Have the doc tell the reader to verify which interpreter has pytest rather than naming one."
+        }
+      ]
+    }
+  ]
+}

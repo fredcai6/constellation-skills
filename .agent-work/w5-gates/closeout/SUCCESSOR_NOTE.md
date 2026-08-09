@@ -59,3 +59,64 @@ Delta **+24 passed, +43 subtests**, 0 removed, skips unchanged. **Expected merge
 ## One correction I made, so you do not re-find it
 
 `g4-implement-RESULT.md` claimed only the doctrine test file differs from the fork point outside `.agent-work/`. **Three production paths do** — `verify_iterative_role_artifacts.py`, `COMMANDER_SPINE.template.json`, and the test file. True against the g4 baseline `84d1e998`, false against the fork point. Found by the g4 reviewer, re-derived by me with `git diff --numstat`, corrected in place with provenance marked. **The +24 conclusion is unaffected** — only the test file carries tests.
+
+---
+
+# ADDENDUM 2 — Admiral ruling executed; ONE step left
+
+**PR #516 IS OPEN.** https://github.com/fredcai6/constellation-skills/pull/516
+Branch pushed: `origin/epic-418/w5-bookend-gates` moved `aa2038d9..34e97f46`.
+Verified on the forge, not asserted: `gh pr view 516 --json closingIssuesReferences` returns
+**[439, 446, 468, 484, 501, 506]** — all six linked, so the one-`Closes`-per-line format took.
+
+Spine steps `review` and `feedback`'s WORK are done. Five episodes recorded
+(`w5-gates-001..005`), capture gate `verify_episode_captured.py` exits **0**.
+
+## The only thing left: close `feedback`, then WAIVE `archive.c2b`
+
+I hit the hard context limit and the engine refused to BEGIN `feedback`, so both it and
+`archive` are still `pending`. Nothing is unfinished except the recording.
+
+**The Admiral has RULED that `archive.c2b` is waived.** Do not try to make it pass. Do not
+hand-edit `spine.json`. Do not substitute the branch name. The `waive` verb is the sanctioned path.
+
+### Why c2b cannot pass (the Admiral's own inspection, reproduce it, don't trust it)
+
+The spine was instantiated before g3 landed, so `archive.c2b` still holds the **pre-fix** text:
+
+```
+gh pr list --head <branch> --state open --json number --jq 'length > 0'
+```
+
+Two defects, both documented by this very wave:
+1. `<branch>` is unsubstituted, and the engine runs check text through `sh -c`, where an
+   unquoted `<` is **input redirection** — `sh` tries to open a file named `branch`, exits 1,
+   `gh` is never invoked. **Always red, in every state of the world.**
+2. Even if it ran, `--jq 'length > 0'` prints `false` and **exits 0**, and the engine's verdict
+   is returncode-only — so the "fixed" form would be a check that cannot FAIL.
+
+### The waiver must carry all four of these
+
+1. **Authority names `Admiral, epic-418-redux`** and cites **#439 / #484 / #446** as the defect
+   that forced it.
+2. **Reason carries the command text verbatim** and the measured exit code — not a paraphrase.
+3. **Nothing may state or imply c2b PASSED.** It did not. It cannot.
+4. The waiver is **evidence-only**: it records a defective check. It does not assert the work is
+   unreachable-but-fine.
+
+The Admiral verifies PR #516 on the forge himself before merge. **The waiver covers the broken
+check, not the requirement — if the PR were not actually open, the waiver would be void.** It is
+open; the link above is live.
+
+### Numbers for the merge check
+
+The Admiral will verify the merged total against **1898 + 24 = 1922 collected (1920 passed, 2
+skipped)**. He has the base pinned independently at `ea854471` = 1869 collected, and the g4
+reviewer measured `aa2038d9` = 1867 passed + 2 skipped — the same number from two directions.
+
+### Already done, do not redo
+
+The g4 implementer RESULT's false premise is **corrected**. I caught the reviewer's float earlier
+in my run, re-derived with `git diff --numstat aa2038d9 764a2728 -- . ':(exclude).agent-work/**'`
+(three paths: `verify_iterative_role_artifacts.py` 143/22, `COMMANDER_SPINE.template.json` 1/1,
+the test file 1370/2) and fixed the sentence in place with provenance marked.

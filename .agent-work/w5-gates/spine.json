@@ -562,7 +562,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -607,7 +607,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "run summary accepted via e-review-1 (delegated-mode user-decision citing LAUNCH_ORDER:Return Shape); review advanced to complete."
         }
       ],
       "postconditions": [
@@ -729,17 +730,16 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 7,
+  "refusals": 9,
   "engine_session": {
     "session_id": "commander-w5-gates-f-20260808",
-    "status": "released",
-    "claimed_at": "2026-08-09T04:43:03.724616+00:00",
-    "last_heartbeat": "2026-08-09T04:50:30.650073+00:00",
+    "status": "active",
+    "claimed_at": "2026-08-09T04:52:14.711895+00:00",
+    "last_heartbeat": "2026-08-09T04:55:01.101711+00:00",
     "claimed_by": "agent",
     "worktree": ".",
-    "previous_session_id": "commander-w5-gates-c-refresh2",
-    "takeover_reason": "execute.json is DONE with all four gates closed and released; resuming the spine to drive reconcile through archive",
-    "released_at": "2026-08-09T04:50:30.997842+00:00"
+    "previous_session_id": null,
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -790,6 +790,13 @@
       "why": "Triage routed all 14 candidates as recommend-and-defer and filed nothing. The authority is genuinely split and I did not paper over it: the latitude contract DELEGATES issue filing as a decision class but lists the tool gh issue create as PRE-CLEAR, and class delegation with no cleared tool is not filing authority -- so filing would improvise an authorization this run does not hold. That is the fifth recurrence of this exact gap and I have floated it to the Admiral as worth a ruling rather than absorbing it silently a fifth time. No candidate was fixed now either, and the reason is not the ladder -- tc1 is a genuinely one-line test that clears all four rungs -- but that this branch's diff is already reviewed and APPROVED at a scope of the test file only, so any further production edit would slip an unreviewed change into an approved diff. Cheap stops being free once a reviewer has signed. Recommendations are issue-ready at .agent-work/w5-gates/TRIAGE_RECOMMENDATIONS.md with a suggested split, because filing 14 issues would cut against Tommy's stated preference not to clutter the tracker.",
       "mechanical": false,
       "ts": "2026-08-09T04:48:26.416635+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Review closed. Both postconditions were met before my trip via e-review-1, a delegated-mode user-decision citing LAUNCH_ORDER:Return Shape. The Admiral then ruled mid-trip and instructed me to finish, so I am completing the run rather than handing off. Substance first, per the ruling: the branch is PUSHED (origin moved aa2038d9..34e97f46, carrying all production commits plus the full work-area record) and PR #516 is OPEN against main. GitHub itself confirms all six issues as closing references -- 439, 446, 468, 484, 501, 506 -- which verifies the one-Closes-per-line format actually took, rather than my asserting it. The reviewer's float 1 was already discharged earlier in my run: the g4 implementer RESULT's false premise about how many production paths differ from the fork point was re-derived and corrected in place before the Admiral asked.",
+      "mechanical": false,
+      "ts": "2026-08-09T04:52:26.611229+00:00"
     }
   ],
   "trip_ledger": [
@@ -814,6 +821,28 @@
       "model": "claude-opus-5",
       "why_ref": "w-7",
       "ts": "2026-08-09T04:49:02.305295+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "review",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1661,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-7",
+      "ts": "2026-08-09T04:52:14.930522+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "feedback",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1841,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-8",
+      "ts": "2026-08-09T04:55:01.315057+00:00"
     }
   ]
 }
