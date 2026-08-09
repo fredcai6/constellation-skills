@@ -587,6 +587,36 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-6",
+          "type": "note",
+          "payload": {
+            "subject": "the g2 APPROVE was recorded against bd56ac8a, and 4b8abc12 landed after it",
+            "disposition": "Admiral ruling: attach this note, do not spend a re-review cycle. Recorded AFTER g2-integrate advanced -- the ruling reached me post-close, so this is a record correction, not a pre-advance step. The gate closed without it; it does not close on it.",
+            "defect_class": "An APPROVE attached to a superseded commit is the same defect as a CI green attached to a superseded commit: a verdict that stays valid-looking while the thing it judged moves underneath it. The Admiral caught that exact shape twice the same night on PRs 509 and 513, where an earlier green sat on a commit two behind and the head commit came back RED.",
+            "why_safe_1": "4b8abc12 is the reviewer's OWN named remedy for its own finding F1/tc3 -- its words were: One-line fix: restore pristine after the loop, or in a finally. Not an unreviewed change of direction; the reviewer's prescription being filled.",
+            "why_safe_2": "All three postconditions were re-run against 4b8abc12: stop_boundary exit 0 / 2 passed; stop_mutation exit 0 / 1 passed / 8 subtests; coupled 390 passed / 488 subtests exit 0. I re-ran all three again myself at g2-integrate and got the same.",
+            "why_safe_3": "git diff --numstat over tests/ scripts/ skills/ shows only the test file, so the fix under review did not move.",
+            "why_safe_4": "The finally block asserts the renderer is clean, so the change is self-checking.",
+            "provenance": "Composed from the Admiral's four enumerated points. My predecessor's suggested wording was reported to the Admiral directly and is not in the work area, so this is NOT a verbatim copy of it and is not presented as one.",
+            "credit": "My predecessor caught this itself, unprompted, after it had already stood down, and noted it had been careful about exactly this at g1 and missed it at g2."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-7",
+          "type": "note",
+          "payload": {
+            "subject": "I verified the ruling's safety claims rather than relaying them",
+            "claim_3": "CONFIRMED. git diff --numstat bd56ac8a 4b8abc12 -- tests/ scripts/ skills/ returns exactly one line: 23/12 in tests/test_iterative_planning_doctrine.py. No production file moved after the APPROVE.",
+            "claim_4": "CONFIRMED and stronger than stated. The finally block both restores every pristine file AND asserts the renderer is clean afterwards, so the change is self-checking as claimed.",
+            "claim_2": "Mine already -- I re-ran all three postconditions myself at g2-integrate against this head and got stop_boundary exit 0 / 2 passed, stop_mutation exit 0 / 1 passed / 8 subtests, coupled 390 passed / 488 subtests exit 0.",
+            "sharpening": "The diff shows the OLD code restored pristine at the head of the next iteration, so the LAST mutation was never undone -- the mutated renderer survived the test. Its own new comment names the risk: a later test in this class asserting a REFUSAL could have been contaminated by the leftover mutation. So 4b8abc12 was not a tidy; it closed a real leak that could have made a later refusal test pass for the wrong reason. That RAISES the value of the note rather than lowering it, and it does not disturb the ruling: it is still the reviewer's own prescription, the suite was re-run green against it, and no production file moved."
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -1228,10 +1258,10 @@
   ],
   "refusals": 11,
   "engine_session": {
-    "session_id": "commander-w5-gates-e-20260808",
+    "session_id": "commander-w5-gates-e-20260808b",
     "status": "active",
-    "claimed_at": "2026-08-09T01:59:18.973971+00:00",
-    "last_heartbeat": "2026-08-09T03:50:27.362660+00:00",
+    "claimed_at": "2026-08-09T03:52:26.966584+00:00",
+    "last_heartbeat": "2026-08-09T03:53:11.863916+00:00",
     "claimed_by": "commander-w5-gates-e",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
     "previous_session_id": null,

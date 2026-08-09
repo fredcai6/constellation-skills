@@ -103,6 +103,28 @@ at `docs/agents/engine-config.json`, which does not exist.
 6. Leave `.agent-work/epic-418-redux/transitions/**` unstaged — the Admiral's; their `M` status is a
    CRLF stat artifact with empty diffs.
 
+## One record correction already applied — do not redo it
+
+The g2 APPROVE was recorded against `bd56ac8a`, and `4b8abc12` landed after it. The Admiral ruled:
+**attach a note, do not spend a re-review cycle.** The ruling reached me after `g2-integrate` had
+already advanced, so it is a record correction rather than a pre-advance step — the gate closed
+without it and does not close on it.
+
+Two notes are attached to `g2-integrate` (`e-g2-integrate-6`, `e-g2-integrate-7`). I verified the
+ruling's safety claims rather than relaying them: only the test file moved after the APPROVE
+(23/12, no production file), and the `finally` block both restores pristine and asserts the renderer
+is clean, so the change is self-checking.
+
+**One thing I found that sharpens it:** the old code restored `pristine` at the head of the *next*
+iteration, so the **last** mutation was never undone — the mutated renderer survived the test, and
+the new comment names the risk that a later refusal test in the class could have been contaminated.
+`4b8abc12` was therefore not a tidy; it closed a real leak that could have made a later refusal test
+pass for the wrong reason. That raises the value of the note and does not disturb the ruling.
+
+**The same shape is worth one check at `g4-integrate`:** make sure the g4 APPROVE you record names
+the commit it actually judged, and that nothing lands after it. It is the defect the Admiral caught
+twice tonight on PRs #509 and #513.
+
 ## Two process findings worth carrying up with the PR
 
 - **The engine's journal does not preserve a superseded result.** It records *that* a `record` verb
