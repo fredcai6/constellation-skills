@@ -222,13 +222,15 @@
           "id": "c1",
           "statement": "mission frame produced from the current map (or explicitly skipped as trivial) where architecture artifacts exist",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "MISSION_FRAME.md written; verify-frame returns FRAME-OK against the DEGRADED-NO-MAP orientation receipt (citations resolve to the hash-pinned substitutes)."
         },
         {
           "id": "c2",
           "statement": "execute.json authored, one bounded issue, gates carry anchors cut from the frame",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json authored: 13 tasks / 4 gates. g1 the door (server + per-dispatch config generation + project .mcp.json), g2 DC4 equivalence as a property, g3 DC2/DC3 identity with positive control, g4 DC5/DC1/DC6 measurement with independent re-derivation and a closing regression. Every gate carries an anchors block cut from the frame."
         },
         {
           "id": "c3",
@@ -237,19 +239,22 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-1"
         },
         {
           "id": "c4",
           "statement": "plan-alternatives run BEFORE the plan freezes (parallel candidates under distinct constraints converging to one recommendation), or the skip surfaced as a named untaken road",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "NAMED UNTAKEN ROAD: plan-alternatives (design-it-twice) not run. Reason, stated rather than silent: the launch order's float list makes design-it-twice CONVERGENCE human-only, and there is no reachable human. Running parallel candidates would therefore manufacture a convergence I am not permitted to make and would force a mid-plan float on a mission explicitly ruled 'do not gold-plate; MCP is the vehicle, not the destination'. The one genuine plan fork -- project-scope .mcp.json versus per-dispatch config generation -- was not settled by argument but by measurement at the probe, which is stronger than two authored candidates. The bias-to-yes default is overridden here with cause, and the road is recorded as untaken."
         },
         {
           "id": "c5",
           "statement": "cold plan critic run on the converged candidate plan + mission frame (after alternatives, before plan approval), findings triaged by the human; panel-vs-single choice surfaced at plan approval",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Cold plan critic run (single critic, not a panel -- panel-vs-single surfaced here as a scale choice: one critic is proportionate to a 4-gate first-round build the spec calls a deliberate first round). Critic read only MISSION_FRAME.md, execute.json and PROBLEM_STATEMENT.md, with no authoring context. Returned 10 findings: 4 BLOCKER, 4 SHOULD-FIX, 2 NOTE. Triaged by me under inherited latitude, all 8 actionable ones APPLIED before the plan froze: (B2, the sharpest) the server's own JSONL cannot be DC5's numerator because a client-side schema rejection never reaches the server, structurally suppressing exactly the MCP-arm fumbles the door is credited with avoiding -- counting unit redefined to invocation ATTEMPTS from the driving agent's record, identical across arms; (B1) g4 had no independent check of its own conclusion -- g4-review added, and the crew waiver narrowed to cover the crew but not the checking; (B3) single-trial self-graded measurement -- order control across arms added, cold agents both arms; (B4) DC3's live positive control and DC3's test are DIFFERENT mechanisms (engine lease-identity vs door instance reachability) -- disambiguation written into g3 constraints, with an instruction to float rather than force a green if the test cannot separate them; (S5) DC3's control held to DC4's red-then-green demonstration bar; (S6) g3-review now names DC2 explicitly; (S7) g1-review re-verifies the probe conclusion rather than inheriting it, with 'Pending approval is one-time' as an explicit BLOCK condition; (S8) closing regression across all three test files added at g4-integrate, plus a re-derivation of the pinned red set. N9 (DC1 as a machine assertion) folded into g4's imperative. N10 (g1 is the largest bite) accepted as-is: the door is one coherent unit and splitting it would cost a gate boundary for no evidence gain."
         },
         {
           "id": "c6",
@@ -263,17 +268,42 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-plan-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-plan-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Mission + Inherited Latitude",
+            "ratified_by": "Admiral (frozen launch order)",
+            "statement": "Plan approved under inherited latitude: tool grouping, argument shapes, delivery mechanism, call-record capture, tracer protocol and n, and which prototype code is lifted are all explicitly mine to decide. Nothing in this plan changes a load-bearing interface beyond the MCP tool surface, closes an issue, promotes doctrine into docs/agents/*, or sets a production default.",
+            "untaken_road": "plan-alternatives skipped with cause -- convergence is human-only and no human is reachable"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-plan-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-frame --root /home/tommy/projects/constellation-skills-wt/f-424 --work-id epic-418-followon/commander-424",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "execute": {
@@ -285,7 +315,8 @@
           "id": "p1",
           "statement": "plan approved; context headroom ensured and commander skill reloaded into this context",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Context headroom: this context is well within its window and the harness provides auto-compaction; constellation-commander-delegated is loaded and active, with the commander core doctrine read at the context step."
         },
         {
           "id": "p2",
@@ -294,7 +325,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-418-followon/commander-424"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-1"
         }
       ],
       "postconditions": [
@@ -338,11 +370,23 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-execute-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-418-followon/commander-424",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "reconcile": {
@@ -583,7 +627,7 @@
     "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
     "status": "active",
     "claimed_at": "2026-08-09T16:29:41.574648+00:00",
-    "last_heartbeat": "2026-08-09T16:36:55.934306+00:00",
+    "last_heartbeat": "2026-08-09T16:47:48.547276+00:00",
     "claimed_by": "commander-424 (delegated, epic-418 workstream F)",
     "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
     "previous_session_id": null,
@@ -610,6 +654,13 @@
       "why": "Ask reconciled against the frozen order and spec F rather than a human. The order's assumed baseline was checked against the code and corrected in two places that change the build: the two-flavoured advance A2 was predicted to ship does not exist (the line is between verbs), and archive.c2b's #439 placeholder bug is already fixed in the template I am running, so one of the four bugs F must hold constant is already constant. F introduces the first MCP surface in a repo with no architecture map, so the plan gets its anchors from the engine's own verb table and the recovered prototype, both read.",
       "mechanical": false,
       "ts": "2026-08-09T16:34:05.869157+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "plan",
+      "why": "Plan frozen at 4 gates after a cold critic materially changed it. The critic's decisive finding is one I would not have caught by re-reading my own plan: DC5's numerator, as I first wrote it, could not lose. A malformed call rejected by client-side schema validation never reaches the server, so counting from the server's own log would have credited the typed door with avoiding exactly the fumbles the instrument was blind to -- a win regardless of whether the door helps. The counting unit is now an invocation attempt read from the driving agent's record, identical across arms, with the server log demoted to corroboration. Two further changes follow the same shape: the measurement now gets an independent re-derivation it previously self-graded, and DC3's live positive control is disambiguated from DC3's test, which exercise different mechanisms (engine lease identity vs door instance reachability) and would otherwise have deadlocked the gate against a defect outside F's scope.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:47:12.524009+00:00"
     }
   ]
 }
