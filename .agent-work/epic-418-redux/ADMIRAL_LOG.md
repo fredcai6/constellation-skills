@@ -6326,3 +6326,34 @@ dead crew member's abandoned plan** — the tier below the one the drill was wri
 **Uncommitted in crew 1's worktree:** this lease release. **It is not harvestable work** — it is a
 released lease on an abandoned plan whose output already merged. The worktree is a sweep target;
 nothing is lost with it.
+
+### Corrected the bodies of #439, #484 and #446 after closing them. A fixed issue with a wrong body is a trap left behind.
+
+Crew 1's backlogged returns (overtaken by events — all of it merged in #516) carried one item that was
+not overtaken: **all three issues describe the shipped defect incorrectly**, and I closed all three
+without correcting them.
+
+- **#439** calls it an unsubstituted placeholder — true, and it undersells it: the token is a **shell
+  metacharacter** that stops the command running at all.
+- **#484** calls it a check that passes when it should fail. **It never passed.**
+- **#446** says a merged PR fails the gate. True — **and so did an open one.** "Accepts only an OPEN
+  PR" was never a true account of shipped behaviour; it accepted nothing.
+
+The measured fact all three miss: unquoted `<` in `--head <branch>` is **input redirection**, so bash
+tried to open a file named `branch`, exited 1, and **`gh` was never invoked in any of the four states**.
+Every commander that hit that gate read a red carrying **no information about PR reachability at all**.
+Also recorded: #484's own suggested replacement measures **0/0/0/0** — the cannot-pass → cannot-fail
+inversion, measured rather than argued.
+
+**Why this was worth doing while blocked.** The fix is merged and the issues are closed, so nothing is
+broken. But **a closed issue keeps being read** — it is the searchable record of what the defect was —
+and these three would have taught the next reader a wrong mechanism, including one that would have
+sent them straight at the cannot-fail replacement. **Closing an issue does not retire its body.** Same
+family as the closed-float debt that made me reopen #503 and #495, one step further on: there the
+issue was wrong about being *fixed*; here it is wrong about *what was broken*.
+
+This is record correction on issues this wave closed, not a closeout substep. **`closeout` remains
+`blocked`**, bubbled to the human, five substeps unstarted.
+
+**All crews are idle and accounted for:** `commander-w5-gates-e/-f/-g` and `impl-477-gauge` all
+reported idle, their work merged. No agent is running.
