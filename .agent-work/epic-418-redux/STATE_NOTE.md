@@ -24,6 +24,16 @@
 > silence and log it. For the **Admiral**, unchanged. The rule was written by the one tier that can obey
 > it, for a tier that cannot. **Do not let a ritual outlive its hazard.**
 >
+> **3b. THE ADMIRAL LEASE WILL LOOK STALE AND THAT IS NORMAL.** Its heartbeat only advances on a
+> **gated verb**, and this role sits inside `execute` for the entire epic — mine reads `22:46` while I
+> am actively working ninety minutes later. **A successor Admiral will need `claim --force`.** Do not
+> read the stale heartbeat as a crashed predecessor, and do not read a *live* one as proof anybody is
+> there. Same shape as the gauge: it answers a different question than the one you are asking.
+>
+> **Everything of mine is committed and pushed at all times** — check `git status --porcelain` (0) and
+> `git log origin/main..HEAD` (0). If this session dies, **nothing of the Admiral's is lost**; the
+> crews' uncommitted work in their own worktrees is the only exposure, and the harvest probe finds it.
+>
 > **4. Then read the NINE rules.** They are the ones I broke *after writing them down*.
 >
 > **WHERE IT IS RIGHT NOW (2026-08-08, refresh at each launch):** **WAVE 5 — the last wave.** Wave 4
