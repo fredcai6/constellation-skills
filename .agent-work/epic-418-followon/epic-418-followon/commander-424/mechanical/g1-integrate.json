@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "commander-424 execute plan",
+    "refusals": 2,
+    "spine-step": "g1-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-g1-integrate@60a9dde9ce87788704532b2ba80319a532ba36b2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T18:04:51Z"
+  }
+}

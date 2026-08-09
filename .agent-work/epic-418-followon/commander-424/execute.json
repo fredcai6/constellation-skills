@@ -146,7 +146,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-review-1"
         }
       ],
       "constraints": [],
@@ -155,11 +156,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "path": ".agent-work/epic-418-followon/commander-424/crew-handoffs/g1-reviewer-result.md",
+            "scope": "Two passes. Pass 1 BLOCKed the delivery claim; pass 2 (corrected basis) BLOCKed the replacement justification.",
+            "upheld": "All five protected-intent items; the verbatim-imperative negative control (mutated as_result, watched red, reverted clean); enumerated 13+5=18 verb coverage; 6 failed / 2157 passed.",
+            "commander_adjudication": "Both BLOCKs verified by me independently and both were correct. Fix applied: .mcp.json now binds SPINE_FILE/SPINE_ENGINE/SPINE_SESSION via ${VAR:-default} expansion, proven by two headless dispatches in one directory off one committed config returning two different spines. Residual question is not answerable at this gate -- see the blocker on g1-integrate."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-integrate": {
@@ -171,7 +186,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received (verdict BLOCK, evidence e-g1-review-1)."
         }
       ],
       "postconditions": [
@@ -205,8 +221,13 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "Reviewer verdict is BLOCK and I am not overriding it. The BLOCK is on the JUSTIFICATION for scripts/gen_mcp_config.py, not on the code: every protected-intent item was independently verified and holds. The reviewer proved a single project-scope .mcp.json can key identity per agent through documented ${VAR} environment expansion, which I reproduced (two headless dispatches, one directory, one committed config, two different spines, imperatives verbatim) and then shipped as the fix. What remains open is whether per-dispatch config generation is NECESSARY, and that turns on one unmeasured fact: whether an in-session Task-tool subagent shares its parent's already-launched MCP server. If it does, ${VAR} cannot reach it and per-dispatch generation is required; if it spawns its own process, generation is redundant. That fact IS DC3 -- 'a subagent dispatched with no special configuration gets a refusal or no identity, never the parent's lease' -- whose evidence this plan places at gate g3. PLAN DEFECT, surfaced rather than worked around: I ordered the claim at g1 and its evidence at g3, so this gate cannot legitimately close on its own evidence. Floating to the Admiral per the launch order's delegated-mode instruction to surface a plan-invalidating discovery rather than block on an unreachable human.",
+        "authority_needed": "parent agent",
+        "next_action": "",
+        "prior_status": "in-progress"
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -665,13 +686,20 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "g1-integrate",
+      "blocker": "Reviewer verdict is BLOCK and I am not overriding it. The BLOCK is on the JUSTIFICATION for scripts/gen_mcp_config.py, not on the code: every protected-intent item was independently verified and holds. The reviewer proved a single project-scope .mcp.json can key identity per agent through documented ${VAR} environment expansion, which I reproduced (two headless dispatches, one directory, one committed config, two different spines, imperatives verbatim) and then shipped as the fix. What remains open is whether per-dispatch config generation is NECESSARY, and that turns on one unmeasured fact: whether an in-session Task-tool subagent shares its parent's already-launched MCP server. If it does, ${VAR} cannot reach it and per-dispatch generation is required; if it spawns its own process, generation is redundant. That fact IS DC3 -- 'a subagent dispatched with no special configuration gets a refusal or no identity, never the parent's lease' -- whose evidence this plan places at gate g3. PLAN DEFECT, surfaced rather than worked around: I ordered the claim at g1 and its evidence at g3, so this gate cannot legitimately close on its own evidence. Floating to the Admiral per the launch order's delegated-mode instruction to surface a plan-invalidating discovery rather than block on an unreachable human.",
+      "authority_needed": "parent agent",
+      "next_action": ""
+    }
+  ],
   "refusals": 2,
   "engine_session": {
     "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
     "status": "active",
     "claimed_at": "2026-08-09T16:48:03.872759+00:00",
-    "last_heartbeat": "2026-08-09T17:34:59.481871+00:00",
+    "last_heartbeat": "2026-08-09T18:04:51.227724+00:00",
     "claimed_by": "commander-424 execute plan",
     "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
     "previous_session_id": null,
@@ -691,6 +719,13 @@
       "why": "The door exists and was proved by running rather than by inspection: a throwaway spine driven to DONE through the tools alone, a refusal surfacing as isError with the engine's own text, byte-identical imperatives with a demonstrated-failing negative control, and a real headless dispatch round-tripping an unguessable nonce through a generated config. The grouping judgement I flagged as the one that bites came back better than I specified it: rather than spending a tool slot on attach and waive, the crew folded attest/attach/waive into one spine_evidence tool, fixing the load-bearing gap without growing past seven.",
       "mechanical": false,
       "ts": "2026-08-09T17:34:04.709507+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "g1-review",
+      "why": "The review did its job twice over and both findings were real. It falsified my probe conclusion (project-scope .mcp.json DOES serve a cold headless agent when --allowedTools is passed; my arm omitted that flag and I attributed a permission-gate result to the MCP approval gate), and then falsified my replacement justification (a single shared .mcp.json CAN key identity per agent through documented ${VAR} expansion). I reproduced both myself rather than taking them on report. The gate's code is sound; what is unresolved is whether per-dispatch config generation is NECESSARY, and that question's evidence lives at g3.",
+      "mechanical": false,
+      "ts": "2026-08-09T18:04:36.690746+00:00"
     }
   ]
 }

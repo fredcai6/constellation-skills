@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-integrate",
+  "files": [],
+  "repo_rev": {
+    "commit": "2383b75a0e2628e4de79adf6f787bebcedb7552d"
+  },
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T18:04:51Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}
