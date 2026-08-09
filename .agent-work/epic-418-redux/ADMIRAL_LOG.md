@@ -6286,3 +6286,43 @@ other.
 
 **What actually stopped it was a sentence in a prose contract.** That is a thin defence for something
 that has now fired in two separate epics, and I am recording it as thin rather than as adequate.
+
+### The rail re-fired on the dead spine. Released the dead lease; did NOT touch its gate, and did NOT touch the rail.
+
+`impl-w5-g3` fired a second time. It will keep firing: #457's three-strike hatch resets on the watched
+spine's progress, and **a dead descendant makes no progress ever**, so for this variant the counter
+behaves opposite to the filed case and the signal never ages out on its own.
+
+**Two things I refused to do.**
+
+1. **I did not edit `.agent-work/.spine-rail-binding.json`.** Deleting the stale entry would have
+   silenced the rail instantly. It is also **editing the instrument to make it quiet** — the exact act
+   I have refused on behalf of four crews tonight, and the one this epic's census is about. A rail
+   reporting a dead agent's gate has no true positive available, and that is an argument for fixing the
+   rail (#457), not for reaching into its state.
+2. **I did not advance, satisfy or waive `m3-coupled-suite`.** Verified after acting: `status: pending,
+   satisfied: None`. Its work is genuinely unfinished — the implementer tripped before running it —
+   and it stays unfinished on the record.
+
+**What I did do: released a confirmed-dead lease, using the engine's own verb.** The death certificate
+was established *before* acting, not asserted:
+
+| evidence | value |
+|---|---|
+| heartbeat | `02:26Z` against `06:16Z` — **3h50m stale** |
+| its Commander | `LEASE released: commander-w5-gates-g` — finished and gone |
+| its work | **#439 CLOSED**, shipped in **PR #516 MERGED** |
+| the delta this gate asks for | **independently measured by the g3 reviewer: 396 passed / 503 subtests**, reconciled against the 390/488 baseline |
+
+That last row matters: **the gate's substantive question was already answered by someone else, on the
+record, and the answer merged.** Releasing the lease makes the rail's report *accurate* — there is no
+live session driving that plan — without asserting anything false about the work.
+
+**A trip-abandoned plan never releases its own lease.** The agent stops mid-gate, so nothing runs the
+release, and the lease reads `active` forever. Added to #457: the binding survives the trip, the merge,
+and the Commander's own release. **Recovery doctrine covers a dead Commander and has no drill for a
+dead crew member's abandoned plan** — the tier below the one the drill was written for.
+
+**Uncommitted in crew 1's worktree:** this lease release. **It is not harvestable work** — it is a
+released lease on an abandoned plan whose output already merged. The worktree is a sweep target;
+nothing is lost with it.
