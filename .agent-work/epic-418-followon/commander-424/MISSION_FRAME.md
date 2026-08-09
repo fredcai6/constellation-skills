@@ -78,11 +78,24 @@ claimed to be, map anchors. They are named here without map-anchor grammar so th
 assert a map membership that does not exist. Their `decision:` ids and `@grade:` tags are carried on
 the gates they actually govern, in `execute.json`'s per-gate `anchors.decision` blocks.
 
-- **The `.mcp.json` delivery branch point — settled by me, by measurement, and it moved the build.**
-  Not picked up live; and worse, project-scope `.mcp.json` sits in `Pending approval` even on a fresh
-  process, so it cannot serve a cold agent at all. Per-dispatch config generation
-  (`--mcp-config` + `--strict-mcp-config` + `--allowedTools`) is the delivery path, verified end to
-  end against a real server. Grade: settled/measured.
+- **The `.mcp.json` delivery branch point — my first answer was WRONG and was caught at g1-review.**
+  **What survives:** a live interactive session does **not** hot-reload a fresh `.mcp.json`, and
+  `claude mcp list` does show a new project-scope server as `⏸ Pending approval`. Both reproduce.
+  **What was false:** the consequence I drew from it — that project-scope `.mcp.json` therefore
+  "cannot serve a cold agent at all". It can. A headless `claude -p` with `--allowedTools` and **no**
+  `--mcp-config` reaches the server through the plain committed project-scope file; the server
+  launched (its start-marker was written) and returned its output. The reviewer reproduced this
+  twice against server-side artifacts, and I then reproduced it myself in a fresh project directory
+  with no prior approval state. My probe conflated two different gates: MCP server *approval* in the
+  interactive TUI, and the ordinary per-tool *permission* gate that every headless tool call passes
+  through and that `--allowedTools` opens. Missing `--allowedTools` is what made my original
+  no-`--mcp-config` attempt look like non-delivery.
+  **Regrade: `settled/measured` → falsified; replaced by the finding above.**
+  **`gen_mcp_config.py` still earns its place, for a different and real reason:** a single shared
+  project-scope `.mcp.json` binds one `SPINE_FILE` and one `SPINE_SESSION` for every consumer, so it
+  cannot give a parent and a subagent *different* spines (DC2) and cannot key identity per agent
+  (DC3, protected-intent item 5). Per-dispatch generation is justified by **identity and
+  separation**, not by delivery necessity. Grade: settled/measured, on the corrected basis.
 - **MCP is the vehicle, not the destination** — do not gold-plate the grouping; seven-over-eighteen
   is a placeholder. Grade: settled/human.
 - **Count from the call record** — DC5's count never comes from the engine's refusals counter, and

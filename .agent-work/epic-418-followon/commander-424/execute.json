@@ -63,7 +63,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
         }
       ],
       "constraints": [
@@ -104,11 +105,24 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/epic-418-followon/commander-424/crew-handoffs/g1-implementer-result.md",
+            "status": "complete",
+            "verified_by_commander": "Re-ran tests/test_mcp_spine_server.py myself: 24 passed. Confirmed scripts/checklist_engine.py diff is EMPTY (no engine logic duplicated). Confirmed the fenced files are untouched. Found and fixed one regression the crew missed: map/INDEX.md went stale, growing the pinned red set to 7; rebuilt, red set back to exactly the pinned 6 at 2157 passed.",
+            "tool_grouping": "7 tools / 13 of 18 verbs; attest+attach+waive folded into spine_evidence, heartbeat into spine_lease; uncovered skip/reopen/append/amend/flag-candidate documented as CLI fallback."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g1-review": {
@@ -120,7 +134,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and verified against the world at g1-implement (evidence e-g1-implement-1)."
         }
       ],
       "postconditions": [
@@ -140,7 +155,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -206,7 +221,8 @@
           "id": "p1",
           "statement": "the door exists and serves",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "The door exists and serves: 24 tests green, a throwaway spine driven to DONE through the tools, live tool call returning genuine engine output."
         }
       ],
       "postconditions": [
@@ -650,12 +666,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 0,
+  "refusals": 2,
   "engine_session": {
     "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
     "status": "active",
     "claimed_at": "2026-08-09T16:48:03.872759+00:00",
-    "last_heartbeat": "2026-08-09T16:49:16.968904+00:00",
+    "last_heartbeat": "2026-08-09T17:34:59.481871+00:00",
     "claimed_by": "commander-424 execute plan",
     "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
     "previous_session_id": null,
@@ -668,6 +684,13 @@
       "why": null,
       "mechanical": true,
       "ts": "2026-08-09T16:48:04.035174+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "The door exists and was proved by running rather than by inspection: a throwaway spine driven to DONE through the tools alone, a refusal surfacing as isError with the engine's own text, byte-identical imperatives with a demonstrated-failing negative control, and a real headless dispatch round-tripping an unguessable nonce through a generated config. The grouping judgement I flagged as the one that bites came back better than I specified it: rather than spending a tool slot on attach and waive, the crew folded attest/attach/waive into one spine_evidence tool, fixing the load-bearing gap without growing past seven.",
+      "mechanical": false,
+      "ts": "2026-08-09T17:34:04.709507+00:00"
     }
   ]
 }
