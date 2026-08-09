@@ -278,7 +278,8 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills/scripts/verify_episode_captured.py epic-418-redux --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-3"
         },
         {
           "id": "c3",
@@ -301,18 +302,23 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-closeout-2",
+          "attested": {
+            "evidence": "e-closeout-2",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "blocked",
+      "status": "complete",
       "status_detail": {
         "blocker": "AWAITING USER ACCEPTANCE -- not a defect and not a stall. Closeout is complete except c5, which is Tommy's to decide. c1 (episodes), c3 (reconcile), c4 (hygiene) attested with evidence; c2 is engine-checked and its command passes (verify_episode_captured.py real exit 0, 14 episodes). c5's evidence type is user-decision, so no agent authority for it exists by construction -- supplying it would fabricate the human's decision. Summary written at .agent-work/archive/2026-08-09-epic-418-redux/EPIC_SUMMARY.md and presented in session. Main green at c133d8ef: 1943 passed, 2 skipped, 884 subtests, real exit 0, identical to the pre-closeout baseline. Pushed fab5edcd..c133d8ef plus 11 epic-418-baseline/* tags; 0 unpushed. AUTHORITY NEEDED: the human (Tommy). NEXT ACTION on acceptance: attach the decision as evidence, attest closeout c5 against it, advance closeout (which re-runs c2's command), then release --session-id admiral-epic-418-redux LAST. On rejection: reopen what he names and re-drive it before advancing.",
         "authority_needed": "parent agent",
         "next_action": "",
-        "prior_status": "in-progress"
+        "resume_reason": "Tommy read the epic summary rundown and directed the close: 'okay, let's merge everything to main, push it all and reinstall before closing out'. All three prerequisites are done and verified: main fast-forwarded to origin/main at 7e70c807 (PR #527, the code map, 183 commits) with both closeout commits confirmed present in origin/main; 0 unpushed; full suite on the merged tree 2095 passed, 2 skipped, 1031 subtests, real exit 0; bundles reinstalled (exit 0) and verified current by per-bundle comparison."
       },
       "result": null,
       "finding": null,
@@ -326,6 +332,35 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-closeout-2",
+          "type": "user-decision",
+          "payload": {
+            "decision": "close the epic",
+            "verbatim": "okay, lets merge everything to main, push it all and reinstall before closing out",
+            "context": "Epic #418 summary was presented as a rundown in session on 2026-08-09; Tommy then directed the close once merge, push and reinstall were done. Recorded as what he said rather than paraphrased into an approval.",
+            "summary_artifact": ".agent-work/archive/2026-08-09-epic-418-redux/EPIC_SUMMARY.md",
+            "prerequisites_verified": {
+              "main": "7e70c807 (fast-forward to origin/main; PR #527 code map, 183 commits; both closeout commits confirmed present in origin/main)",
+              "unpushed": 0,
+              "suite": "2095 passed, 2 skipped, 1031 subtests, real exit 0",
+              "reinstall": "exit 0; all 20 bundles verified current by per-bundle comparison"
+            }
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-closeout-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/scripts/verify_episode_captured.py epic-418-redux --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -333,24 +368,18 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [
-    {
-      "item": "closeout",
-      "blocker": "AWAITING USER ACCEPTANCE -- not a defect and not a stall. Closeout is complete except c5, which is Tommy's to decide. c1 (episodes), c3 (reconcile), c4 (hygiene) attested with evidence; c2 is engine-checked and its command passes (verify_episode_captured.py real exit 0, 14 episodes). c5's evidence type is user-decision, so no agent authority for it exists by construction -- supplying it would fabricate the human's decision. Summary written at .agent-work/archive/2026-08-09-epic-418-redux/EPIC_SUMMARY.md and presented in session. Main green at c133d8ef: 1943 passed, 2 skipped, 884 subtests, real exit 0, identical to the pre-closeout baseline. Pushed fab5edcd..c133d8ef plus 11 epic-418-baseline/* tags; 0 unpushed. AUTHORITY NEEDED: the human (Tommy). NEXT ACTION on acceptance: attach the decision as evidence, attest closeout c5 against it, advance closeout (which re-runs c2's command), then release --session-id admiral-epic-418-redux LAST. On rejection: reopen what he names and re-drive it before advancing.",
-      "authority_needed": "parent agent",
-      "next_action": ""
-    }
-  ],
+  "blockers": [],
   "refusals": 12,
   "engine_session": {
     "session_id": "admiral-epic-418-redux",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T11:55:32.466503+00:00",
-    "last_heartbeat": "2026-08-09T12:28:23.766888+00:00",
+    "last_heartbeat": "2026-08-09T14:05:36.425823+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T14:05:41.694832+00:00"
   },
   "why_trail": [
     {
@@ -373,6 +402,13 @@
       "why": "Wave 5 merged in full: six PRs, 19 of 22 dispatched issues closed with state verified on the forge, 3 open by ruling (#413 different defect, #503/#495 reopened floats). Main green at c9f894f4 -- 1943 passed, 2 skipped, 884 subtests, real exit 0 -- with the +23/+12 delta attributed to #514 (+10) and #517 (+13/+12) from the squash commits. Post-merge count predicted from a measured fork point before the merge and matched exactly (1922). Boundary w5-to-close exits stop, prelaunch verifier exit 0 -- the very gate #506 fixed, closed honestly by the run that fixed it, with no waiver.",
       "mechanical": false,
       "ts": "2026-08-09T06:10:34.273263+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "closeout",
+      "why": "Epic #418 closed. 22 issues dispatched over five waves, 19 closed with state verified individually on the forge, 3 open by ruling (#413 a different defect, #503/#495 reopened floats), #478 carried with its disposition on the issue. The epic's thesis -- a check must be able to fail -- held under its own weight: this Admiral tripped the HARD band trying to start this gate and did not override it, blocking with a written handoff until a real context refresh cleared it, then running with no waiver. Closeout: 8 epic-level episodes applied through the writer (007-014, 14 total, capture gate real exit 0); architecture reconciled with tc4 ruled as a prose anchor rather than a map node, on the ground that neither install hop is a reference edge so an AST-derived map cannot produce it and #456 landing does not retire it; harvest a real null across all three channels after every probe line was re-checked by content; 7 worktrees swept with the protected set intact; 11 branches dispositioned by forge state with 11 baseline tags minted and pushed before any deletion. Two red-suite failures introduced by this closeout were found and fixed before push. The recurring weakness worth carrying forward is recorded, not ruled on: three separate times this run derived a population with no independently-known total to reconcile against. Main at 7e70c807 after merging PR #527, suite 2095 passed / 2 skipped / 1031 subtests / real exit 0, bundles reinstalled and verified current.",
+      "mechanical": false,
+      "ts": "2026-08-09T14:05:36.425805+00:00"
     }
   ],
   "trip_ledger": [
