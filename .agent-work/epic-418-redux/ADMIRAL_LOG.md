@@ -5675,3 +5675,83 @@ lesson from a different tier, logged twenty minutes earlier.
 **2** (want 2), restored it exits **0** (want 0), and `SWEEP_LIST.md` is byte-identical after the
 test. The probe's header still prints before the refusal — cosmetic; the verdict rides the exit code,
 which is the standard this epic settled on.
+
+### g3 re-review APPROVE at `84d1e998` — repair took 4 minutes, re-verification went well past what I asked. #515 filed.
+
+The reviewer that blocked returned **APPROVE** on the repair, and it did not re-verify the thing it
+had found. It re-verified the **class**.
+
+My block named four unmodelled flag *names*. The reviewer's own framing of why that was not enough:
+**proving four flag names refuse does not prove the guard is closed.** So it probed 21 flag **shapes**
+where it expected to break the fix — combined one-token `--repo=someone/else` and `--limit=100`; the
+*modelled* flags in combined form (`--json=state`, `--head=BRANCH`); short `-R`/`-L`/`-s`; a bare `--`
+separator; missing values at end of argv for unknown **and** modelled flags; a flag whose value looks
+like a flag; empty values; uppercase `--HEAD`; trailing-space `--repo `; an **en-dash lookalike**; a
+positional. **All 21 refuse, exit 3.** It also checked the guard sits *before* the missing-value
+check, so ordering opens no gap. Its original exploit now refuses where it had answered exit 0.
+
+**The two new legs were proven load-bearing by deletion:** guard removed → exit 1 with **exactly the
+two new legs failing** and 9 subtests still passing; restored → exit 0, 11 subtests, file
+byte-identical. Counts 396 / **503** — its own 501 plus exactly the two new legs. Delta accounted for,
+again.
+
+**The best thing in the return, and it is a near-miss it volunteered:** its mutation probe **refused to
+run** on first attempt because its match literal was LF and the file is CRLF. That is
+`CREW_CONTEXT`'s *assert-the-mutation-applied* rule catching the reviewer itself — in its words,
+without it *"I'd have deleted nothing, seen green, and wrongly certified the legs."* **A verification
+step that silently no-ops produces a confident false APPROVE**, which is census specimen 9's exact
+shape (a passing test certifying the bug) one tier up. The rule that saved it is a repo standard
+someone wrote down earlier; this is the first time in this epic I have seen a written standard catch a
+defect *before* it shipped rather than explain one afterwards.
+
+**It also declined a tidy I left open.** I had flagged the optional `--jq` else-branch as a possible
+deletion. It measured instead of reasoning: stripping `--jq` makes the command exit **2** in all three
+fixtures (`integer expression expected`) — it **fails closed even on a reachable branch**, so it is
+cosmetic, not a finding. The distinction it drew is the right one and worth keeping: the three
+branches it *did* delete answered a **count**, a plausible number the shell comparison consumes
+happily, so a wrong count becomes a wrong verdict **silently**; this one emits JSON the comparison
+cannot consume at all. Filed as a triage candidate, no action. **Not freelancing past the finding was
+correct** and I am recording it as correct, because the opposite call is the one that usually gets
+praised.
+
+### The finding I owe it: #515
+
+Driving a **block-then-approve** through the engine exposed a gap neither of us was looking for.
+**`record` journals *that* a verb ran — verb, task, session, hashes — and not the result or the
+finding.** Re-recording `c7` as pass leaves **no machine-readable trace it was ever a fail**: the
+survey now reads as a clean APPROVE with 0 findings.
+
+**The BLOCK survives only because the Commander had asked for pass 1 to be preserved verbatim in the
+RESULT markdown** — by prose convention, in a file no verifier reads, not by the mechanism built to
+make gate history tamper-evident.
+
+This is this epic's own census defect aimed at the audit layer: **"blocked, repaired, then passed" and
+"passed first time" emit byte-identical records**, and those are precisely the two worlds the record
+exists to distinguish. Two consequences worth stating plainly — it **removes the evidence that review
+is working** (the run where reviewers caught real defects looks like the run where nothing happened),
+and it **quietly rewards not blocking**, since a reviewer who blocks creates work and leaves no
+durable credit.
+
+Filed as **#515**, cross-linked to **#502** (same shape, different missing field: #502 is *which
+engine ran the verb*, #515 is *what the verb concluded* — one pass over the journal entry schema
+covers both) and **#359**. The reviewer's secondary note — `reopen` refuses on a survey, so a repaired
+fail cannot be formally reopened — is carried in #515 as an **observation, not a claimed bug**, since
+it may be deliberate; it matters because it makes supersede the only path a survey has, which is what
+makes the missing payload bite.
+
+**Issue-count note, since the standing direction is to bring it down:** this is the first genuinely new
+issue I have opened in this wave. Three other findings today were routed into **#313**, **#373** and
+**#452** rather than filed. **#515 is new because nothing covers it** — I checked the tracker for
+journal/record/supersede/reopen before opening it. A finding this well-evidenced going unfiled would
+be the epic's own failure mode, and the count is not worth that.
+
+### One more thing the reviewer said, which I am treating as a template change
+
+*"The re-review request itself was the best-formed instruction I got on this gate — it named the
+commit, mapped each change to a finding, stated what had been measured so I could reproduce rather
+than rediscover, and pre-identified where it might have fooled itself."*
+
+**The last clause is the one to keep.** A handoff field that makes the author name *where this might
+have fooled me* is cheap to write and, per the reviewer, is what made pass 2 fast. Routing to the
+lessons audit as a `REVIEWER_HANDOFF.template.md` delta candidate — the crew that wrote it discovered
+it, so it belongs in the template, not in this log.
