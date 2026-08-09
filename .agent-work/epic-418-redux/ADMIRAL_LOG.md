@@ -5149,3 +5149,33 @@ Told it explicitly that `Closes #474, #475` closes **only the first** — the sa
 open on #509 tonight, caught only by forge verification, and now a third instance on #354. **That is
 the second PR this wave whose issue-closing would have silently under-delivered**, in opposite
 directions: one keyword covering too little, and no keyword at all.
+
+## MERGE 3 of wave 5 — PR #513 (crew 2): #458, workstream R
+
+**MERGED at `c045ed2f`, verified on the forge. #458 CLOSED — confirmed by re-reading its state, not
+assumed from the merge.** Its body used the correct single-keyword form (`Closes #458.`), so this one
+auto-closed properly, unlike #509's comma-list.
+
+**Gated on the check for the HEAD commit**, which mattered twice on this PR:
+- an earlier green existed on `dbd787b9`, **two commits superseded** — merging on that would have
+  landed a red main, because the head commit's run came back **red**;
+- the red was real (#460: an episode read as an instruction), the crew fixed it at `010de2a8`, and
+  **that** SHA is the one I verified green before merging.
+
+### Workstream R is done, and it is the one that moves a done-condition
+
+**DC1 required the governor to hold on a *shipped* configuration.** #458 does not ship the writer — by
+design, mine and the issue's — it makes the gap **answerable**: one command that reports whether a
+project is set up to run Constellation and **refuses with named per-item reasons** when it is not.
+
+The crew's own acceptance is the part worth keeping: it **cloned constellation-skills fresh from
+GitHub and ran the check against it unconfigured** — refused, exit 1, per-item reasons (skills/hooks
+NOT READY, work_area READY). **A guard observed refusing something real**, which is this project's
+`good_enough` standard stated exactly, and Pre-Ruling 3 satisfied as written rather than reasoned
+about.
+
+It also took my #313 measurement into its design unprompted: *"'engine present and runnable' can't mean
+'an interpreter starts'... I'll define 'runnable' as 'can actually import and run pytest'."*
+
+**Wave 5: 5 of 21 closed** (#507 #370 #496 #411 #458). **Three PRs merged, one open (#514, held for
+closing keywords), one crew still running.**
