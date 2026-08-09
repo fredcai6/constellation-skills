@@ -6000,3 +6000,44 @@ adjudicate a falsification afterwards.
 **Also relayed:** correct the g4 RESULT's false premise per its reviewer's float 1 (three paths differ
 from `aa2038d9` outside `.agent-work/`, not one — the `+24` conclusion is unaffected), and report final
 suite numbers in the PR body against the pinned prediction of **1922 collected**.
+
+### PR #516 CI RED — three failures, all of which pass locally and fail only on the runner
+
+`2d9d2313`: **3 failed, 1918 passed, 1 skipped, 872 subtests.** Held the merge and sent crew 1 the
+specifics. None of its later commits touch either cause.
+
+**Two: crew 1's own episodes trip the strict guard** —
+`RealStoreTests::test_the_real_store_is_clean_under_strict`, *"episodes/ carries a statement that reads
+as an instruction and is not on the exception list."* The failure is at `2d9d2313`, **before**
+`a843ea94` added episodes 006–009, so the offender is in the earlier ones and the four new ones may
+have added more. Told the crew to fix **every** offender via `apply_episode_delta.py restate-assertion`
+with `--store-root episodes`, never by hand-editing the store. **I hit this same guard on my own
+Admiral episodes earlier in this epic** and had to restate one — it is a good guard and it catches
+everybody.
+
+**One: an environment-fragile path assertion in crew 1's own g1 test** —
+
+```
+['C:\Users\RUNNER~1\AppData\Local\Temp\...'] != ['C:\Users\runneradmin\AppData\Local\Temp\...']
+```
+
+**`RUNNER~1` vs `runneradmin` — the same directory in two spellings.** The runner's `%TEMP%` resolves
+through a Windows **8.3 short name**; this box's does not. The test asserts **string** equality on
+paths that are equal as paths. Ruled: fix by normalising/resolving, **not** by loosening to a substring
+match — the assertion's job is to prove the refusal names *every root tried*, and that property must
+survive the repair. That is the #506 lesson applied to a test: repair the check, do not weaken it into
+one that cannot fail.
+
+**The general finding, and it is the one worth carrying.** All three are **green in the worktree and
+red on the runner**. Every verification discipline this wave built — mutation, red-before-green,
+byte-identical restore, delta reconciliation — runs *in the worktree*, and **none of it can see a
+difference between the worktree and the runner.** CI is the only instrument in the whole apparatus
+that samples the second environment, and it is the last one consulted.
+
+Concretely visible in the numbers: the runner reports **1918 passed / 1 skipped** where this box
+reports **1896 passed / 2 skipped** — a different pass/skip split on the same tree. **A crew deriving
+its expected counts from my local baseline would mis-reconcile on the runner**, so I told crew 1 to
+derive its expectation on the runner instead. My own pinned post-merge prediction of 1922 collected is
+a **local** figure and must not be checked against a runner number.
+
+**Merge order unchanged and now enforced by a red:** #516 does not merge until its own commit is green.
