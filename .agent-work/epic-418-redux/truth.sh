@@ -81,14 +81,22 @@ echo "--- WAVE 5: all five crews (the wave that is actually running) ---"
 for d in gates readiness addressing engine docs; do
   WD="$W5/epic418-w5-$d"
   [ -d "$WD" ] || { echo "  $d: WORKTREE GONE (swept?)"; continue; }
+  # v3: print WHICH journal, not just when. The glob matches ~28 journals across every
+  # work area checked out in the worktree, so `ls -t | head -1` can silently return a
+  # STALE one from an older wave -- it did, reporting 22:47 while the crew was live at
+  # 00:33, and I acted on it. Showing the path makes a wrong pick visible instead of
+  # resolving it wrongly: the reader sees the work-id and knows if it is not the crew's.
   J=$(ls -t "$WD"/.agent-work/*/*.json.journal 2>/dev/null | head -1)
+  JN=$([ -n "$J" ] && basename "$(dirname "$J")" || echo "-")
   C=$(git -C "$WD" rev-list --count main..HEAD 2>/dev/null)
   DY=$(git -C "$WD" status --porcelain 2>/dev/null | wc -l)
   LAST=$([ -n "$J" ] && date -u -r "$J" +%H:%M || echo "none")
-  echo "  $d: last-engine-verb=$LAST commits=$C dirty=$DY"
+  echo "  $d: last-engine-verb=$LAST (in work-area: $JN) commits=$C dirty=$DY"
 done
 echo "  ^ journal mtime is the ONLY liveness proxy that fires for every crew."
 echo "  ^ gauge.json does NOT (see #452); file writes miss a reading agent."
+echo "  ^ CHECK THE work-area NAME. If it is not this crew's, the timestamp is a STALE"
+echo "    journal from another wave checked out in the same worktree, not the crew's silence."
 echo "--- wave-5 PRs (ask the forge) ---"
 gh pr list --state open --json number,headRefName --jq '.[]|select(.headRefName|startswith("epic-418/w5"))|"  PR #\(.number) \(.headRefName)"' 2>/dev/null || echo "  (gh unavailable)"
 echo "=============== END DERIVED ==============="
