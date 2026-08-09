@@ -1,0 +1,357 @@
+{
+  "work_id": "epic-418-redux",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-redux",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": ".agent-work/epic-418-redux/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/epic-418-redux/ADMIRAL_LOG.md", ".agent-work/epic-418-redux/closeout/LO-w5-c4-engine.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Dispatch the issue group the human named as 'the 474-480 group' to a wave-5 crew, by writing the assignment into that crew's launch order."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The launch order should carry every issue in the named range, and the crew's return should therefore account for the whole group."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The range 474..480 has seven members. The launch order LO-w5-c4-engine.md named five. #477 and #478 were never assigned, so they were never worked. The crew delivered exactly what its order listed, and nothing downstream could catch the gap: the order was the only definition of 'the group' any later reader could see. The omission was found by auditing issue states one at a time before the close, not by any gate."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "#477 was the defect that cost this run four crew relaunches -- the gauge was read from the run root rather than per checklist directory, so a crew did not inherit its Commander's reading. It sat unassigned through the wave that was supposed to fix it. The wave believed it had covered the group; an unassigned issue a wave believes it covered is invisible debt of the same class as a closed float that was silently reopened."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "#477 was dispatched late as a bounded implementer into its own worktree and merged as PR #517. #478 was carried deliberately with its disposition posted on the issue itself rather than only in the run notes, because it relocates directories the closeout tooling walks and five live crew work areas sat in, with no forcing function to make the move safe mid-run."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The assignment was derived by command from the human's phrasing, but the derived population had no total to check against. A contiguous range carries its own count -- seven -- and nothing compared the five written rows to it. The same shape produced the sweep list's 14-of-16 on the same day."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-redux",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": ".agent-work/epic-418-redux/closeout/SWEEP_LIST.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/epic-418-redux/closeout/harvest_probe.sh", ".agent-work/archive/2026-08-09-epic-418-redux/harvest/HARVEST_RESULT.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Collect anything durable out of the seven epic worktrees before removing them, using the harvest probe's three channels -- uncommitted, on-this-branch-only, and ignored -- as the collection source."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A file the probe reports as on-this-branch-only should be content that removal would destroy, since that is the channel's stated purpose."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The probe reported roughly 240 branch-only files for epic418-w5-gates. Comparing the worktree against the main checkout by filename showed 241 of its 244 files already on main; the only three absent were two __pycache__ .pyc files and gauge.json. The single branch-only file reported for epic418-w5-engine, w5c4-engine/IMPLEMENTER_RESULT.md, was also already on main -- diff called the files different, diff --strip-trailing-cr returned zero lines."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The channel fails safe: over-reporting means declining to sweep, which is the recoverable direction, unlike the under-reporting that would silently destroy a run's learning. The cost was legibility -- one real signal was buried under 240 lines of noise, and the harvest had to be re-derived by content comparison before anything could be removed."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Each reported line was re-checked by content rather than trusted: find | sort plus comm -23 between the worktree and the main checkout, and diff --strip-trailing-cr for the single-file case. The harvest verdict was recorded as a real null naming all three channels, and the only genuinely worktree-exclusive content -- three uncommitted engine-state files in epic418-w5-docs, confirmed as real changes under --ignore-cr-at-eol -- was archived before removal."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "harvest_probe.sh line 80 computes the channel as `git diff --name-only main...HEAD`. The three-dot form diffs against the merge base. PR #516 was squash-merged, so main's copy of those files arrived in a commit that is not an ancestor of the branch, the merge base stays at the old fork point, and every file the branch ever added still reads as branch-only. SWEEP_LIST.md opens by warning in prose that an ancestry test cannot distinguish merged from abandoned under squash-merge; the tool that list gates performs exactly that test in code."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-redux",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-redux/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/epic-418-redux/ADMIRAL_LOG.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive this epic's own spine while other checklists from earlier runs were present on disk in the same tracked directory tree."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A spine rail that fires at an agent should name work that agent is responsible for."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "165 leases read `active` across the epic418-* worktrees, the oldest 289 hours old. Two rails fired at this Admiral within twenty minutes -- impl-w5-g3 at gate m3-coupled-suite and g4-implement-attempt-1 at gate m6-closure-check -- both naming gates for work already merged in PR #516. Because .agent-work/ is tracked, every unreleased lease from every finished run is committed and materialises in every worktree."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The population of stale bind targets is self-selecting in the wrong direction: releasing the lease is the last thing a healthy run does, so a trip-abandoned agent never releases, and the runs that fail are exactly the ones that leave a rail behind -- permanently, once committed. An agent that obeys one resumes a dead run's gate instead of its own."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Each rail was checked three ways before being declined -- whose lease it is, whether that work had merged, and what this run's own `current` says. Exactly two were released, both this run's own dead crew plans with death established first, gates left pending and satisfied null. The other 163 were left untouched as committed artifacts of other epics; the measurement was posted to #457."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "Lease state lives inside a tracked directory, so it is versioned and distributed like content rather than being per-checkout runtime state. Rewriting those files to quiet the signal would edit the instrument rather than the defect."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-redux",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": ".agent-work/epic-418-redux/spine.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/epic-418-redux/STATE_NOTE.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Begin the closeout gate after wave 5 merged, main was green at c9f894f4, and the w5-to-close boundary exited stop with the prelaunch verifier at exit 0."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "With every precondition satisfied and no work outstanding at execute, `start closeout` should open the gate."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The engine refused: context at 29% is at or over the hard limit. The refusal was recorded on the trip ledger as `start closeout -> begin-refused`, a refresh-request was attached to the gate, and the gate was left blocked with a written handoff rather than waived. The block persisted across a further reading at 18%. It cleared only when the session's context was compacted: the gauge measured 0.075289 against a hard band of 150000/1000000, `resume closeout` was accepted, and the gate opened and ran normally with no waiver and no override."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The epic's own thesis is that a check must be able to fail. An Admiral that overrode its own governor to finish would have falsified the instrument the epic exists to defend, so the run stopped with five of six closeout postconditions unmet and no way to progress from inside that session. The cost was a stall of the whole closeout until an out-of-band context refresh arrived; the alternative -- a waiver -- would have asserted the closeout work was fine to skip, which it was not."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The blocker was recorded in the spine with its authority-needed and next-action fields naming a fresh Admiral, claim --force, and the STATE_NOTE handoff. The handoff named all five unstarted substeps, the six shape refusals the boundary builder had cost, and the epic418-w5-gauge omission from SWEEP_LIST.md. After the compaction the same session re-read the gauge, reclaimed the stale lease with --force, and resumed the gate against that record rather than from memory."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The engine's trip guidance at a tripped gate offers `advance <gate> --why` to carry a handoff and stop. At closeout that verb is also the verb that marks the spine done, and closeout is terminal with five unmet postconditions -- so the generic handoff instruction and the gate's actual state point in opposite directions. It was not executed, so whether the postcondition check would have refused it is untested."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-redux",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-redux/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 3,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/epic-418-redux/ADMIRAL_LOG.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Have a reviewer subagent record an approving verdict on a crew's pull request through the forge, so the approval is visible on the PR rather than only in run notes."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "`gh pr review --approve` should record the reviewer's verdict on the pull request."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The forge refused with 'Can not approve your own pull request'. Every agent in this fleet authenticates as the same GitHub identity that authored the PR, so no agent can ever approve any agent's work. The refusal was read as reviewer negligence three separate times -- most visibly on #470 -- before the identity cause was established."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "A structural impossibility presented as a behavioural failure, and it was attributed to the reviewer each time. Two of those readings produced corrective pressure aimed at an agent that had done nothing wrong."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Verdicts were recorded with `gh pr review <PR> --comment -F <file>`, verdict on the first line. Bodies were passed by file rather than as a double-quoted bash string, after a backticked code span in a body was executed as command substitution on #264 -- the comment posted anyway, silently missing that phrase, with every success signal intact."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "One credential shared by author and reviewer collapses a two-party forge check into a self-check. The forge is correct to refuse; the fleet's review evidence therefore cannot live in the approval channel at all."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-redux",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "closeout",
+        "context-manifest-ref": ".agent-work/epic-418-redux/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": ["skills/triage/templates/TRIAGE_RECOMMENDATION.template.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Re-read issues #439, #484 and #446 -- three separately filed defects against the same archive gate postcondition c2b -- against the fix that shipped in PR #516, to confirm the published accounts matched what was actually measured."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A published repro should exercise the command that shipped."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The shipped check text was `gh pr list --head <branch> ...` with no quotes. Both #439 and #484 published repros that quoted the placeholder -- `--head \"<branch>\"` and `--head '<branch>'`. Quoted, the shell passes the literal through and gh runs and returns an empty list. Unquoted, as shipped, the unquoted `<` is input redirection under sh -c: the shell tried to open a file named `branch`, exited 1, and gh was never invoked in any PR state. Measured across four fixtures -- no-PR, OPEN, MERGED, CLOSED-unmerged -- exit 1 every time. #446 claimed the gate 'accepts only an OPEN PR', read off the check text by eye; the gate accepted nothing. #484's own suggested fix measured exit 0 in all four states, which would have converted a check that cannot pass into one that cannot fail."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Three issues reached the correct verdict by the wrong mechanism, and the wrong mechanism was the part a later reader would act on. An unresolved-placeholder bug would still have queried the forge and returned an honest empty list; a shell metacharacter never reaches the network at all. The issue that coined 'a check that cannot pass' for this repo carried the mirror defect as its own remedy."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Each issue's original body was preserved as a comment and the body itself replaced with a corrected account, so the body stays correct rather than accumulating a mix of errors. The triage recommendation template was then reshaped so an issue records observations with baselines -- what's wrong, expected, conditions, type measured-or-inferred with how, and rev -- with possible fix demoted to an optional hypothesis and open questions beside it."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Nothing in the issue format asked how a claim was established, so an inferred claim and a measured one were written in the same voice. The three filings shared a verdict, which made the disagreement between their mechanisms invisible until the fix forced all three to be read against the same shipped text."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-redux",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-redux/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".agent-work/epic-418-redux/ADMIRAL_LOG.md"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Check whether a crew had written outside its assigned scope, by reading `git status` in its worktree."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "A ` M` against a file a crew is forbidden to touch should mean the crew modified it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Crew 1's worktree showed the Admiral's own transitions/close-to-w5/CURRENT_TRUTH.md and WAVE_REVIEW.md as ` M`. Both `git diff --numstat` and `git diff --ignore-cr-at-eol --numstat` returned completely empty -- zero content change. A verifier rewrites those files with LF, git normalises back to CRLF, and the stat cache reports them modified. The same signal recurred at closeout: the same two files showed ` M` again with no numstat line, and w5c4-engine/IMPLEMENTER_RESULT.md read as different under diff and identical under diff --strip-trailing-cr."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The first reading of this signal produced a false scope accusation against a crew and cost a retraction; a second was nearly sent on the same evidence. The crew that was accused is the one who diagnosed the cause. It also makes dirty-file count useless as a liveness proxy, since it moves without anyone writing anything."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Scope questions were re-derived from `git diff` and `git diff --numstat` rather than `git status`, and file-identity questions from `diff --strip-trailing-cr` rather than bare `diff`. At closeout this distinguished three real uncommitted engine-state changes in epic418-w5-docs, which were archived, from two phantom modifications, which were not."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "A repo with CRLF normalisation and tools that write LF puts the stat cache and the content permanently out of step, so the cheapest status signal is also the one that reports changes that do not exist."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-redux",
+        "project": "constellation-skills",
+        "role": "admiral",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-redux/STATE_NOTE.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [".github/workflows/ci.yml"]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Keep the run's audit trail durable during a long wave by committing and pushing each ADMIRAL_LOG entry as it was written."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "A commit touching only .agent-work/ carries no code change, so pushing it should cost nothing."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "ci.yml has no paths-ignore, so every .agent-work-only push ran the full eight-minute suite. Pushing per log entry put six concurrent CI runs on main, all from this run, and starved a crew's pull request check for roughly 25 minutes."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The run's own bookkeeping competed with its crews for the runner pool, and the delay landed on the pull request rather than on the bookkeeping that caused it."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Bookkeeping commits were batched and pushed at wave boundaries instead of per entry."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The workflow triggers on any push to main, and the run area lives inside the repository, so run bookkeeping is indistinguishable from a code change at the trigger level."
+        }
+      ]
+    }
+  ]
+}
