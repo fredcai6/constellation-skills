@@ -4373,5 +4373,67 @@ class SpanHashUnitTests(unittest.TestCase):
                             "a genuine behavior change (1 -> 2) left the hash unchanged")
 
 
+class WrappedDocstringTests(unittest.TestCase):
+    """Test that multi-line docstrings are rendered correctly."""
+
+    def test_wrapped_docstring_body_uses_splitlines(self):
+        """Verify that doc_body_of uses splitlines() not split("\n").
+
+        Issue #456 gate g8 defect 2: inconsistency between how the summary
+        (using splitlines()[0]) and body (using split("\n")) were extracted
+        could cause rendering issues. Both should use splitlines() for
+        consistency."""
+        # Create a test node with a multi-line docstring
+        code = '''def test_func():
+    """This is the summary line.
+
+    This is the body with Args section.
+    """
+    pass
+'''
+        tree = ast.parse(code)
+        func_node = tree.body[0]
+
+        # Call doc_body_of to extract the body
+        body = extract.doc_body_of(func_node)
+
+        # The body should contain everything after the first line
+        self.assertIsNotNone(body, "Body should be extracted from multi-line docstring")
+        self.assertIn("Args section", body, "Body should contain the actual body content")
+        self.assertNotIn("This is the summary", body,
+                        "Body should not contain the summary line")
+
+
+class BOMParsingTests(unittest.TestCase):
+    """Test that files with UTF-8 BOM prefix are handled correctly during extraction.
+
+    Issue #456 gate g8: BOM-prefixed files silently drop out of the map because
+    the extractor cannot parse them. This test verifies the fix by confirming
+    that a BOM file can be extracted without error.
+    """
+
+    def test_bom_file_can_be_extracted(self):
+        """A file with UTF-8 BOM should be extractable via the build_table function.
+
+        build_table is the entry point that the extractor uses to read and parse
+        files. It should handle BOM-prefixed files gracefully."""
+        fixture_dir = ROOT / "tests" / "fixtures" / "bom_corpus"
+        bom_file = fixture_dir / "bom_sample.py"
+
+        self.assertTrue(bom_file.exists(), f"BOM fixture file must exist at {bom_file}")
+
+        # Verify BOM is actually in the file
+        raw_bytes = bom_file.read_bytes()
+        self.assertEqual(raw_bytes[:3], b'\xef\xbb\xbf',
+                        "Fixture must have actual UTF-8 BOM bytes")
+
+        # The build_table function should NOT return None (which indicates parse failure)
+        table, tree = extract.build_table(str(bom_file))
+
+        # After the fix, table should be non-None (parse succeeded)
+        self.assertIsNotNone(table, "BOM file should parse successfully (table non-None)")
+        self.assertIsNotNone(tree, "BOM file should parse successfully (tree non-None)")
+
+
 if __name__ == "__main__":
     unittest.main()

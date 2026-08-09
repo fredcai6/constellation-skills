@@ -274,7 +274,7 @@ def doc_body_of(node):
     doc = ast.get_docstring(node, clean=True)
     if not doc:
         return None
-    return "\n".join(doc.strip().split("\n")[1:]).strip() or None
+    return "\n".join(doc.strip().splitlines()[1:]).strip() or None
 
 
 # ------------------------------------------------------------------ pass 1
@@ -323,6 +323,7 @@ class ModuleTable:
 def build_table(path):
     try:
         src = open(path, encoding="utf-8").read()
+        src = src.lstrip('﻿')  # Strip UTF-8 BOM if present
         tree = ast.parse(src)
     except Exception:
         return None, None
@@ -1227,6 +1228,7 @@ def run(root, artifacts):
             p = os.path.join(ROOT, rel)
             try:
                 src = open(p, encoding="utf-8").read()
+                src = src.lstrip('﻿')  # Strip UTF-8 BOM if present
                 tree = ast.parse(src)
             except Exception as e:
                 failed.append((rel, "parse: " + str(e)))
