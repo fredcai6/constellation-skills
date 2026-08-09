@@ -105,7 +105,7 @@ The generalisation both share: **a value with no provenance cannot be checked.**
 check" — cannot. There is no predicate over `0.190464` that distinguishes mine from yours. The fix is
 never a better check; it is attaching *when* and *by whom* at the point the value is written.
 
-### G. The one that best makes the case — an acceptance test that cannot fail, in the PR fixing an addressing defect
+### G. The clearest single demonstration — an acceptance test that cannot fail, in the PR fixing an addressing defect
 
 | # | Specimen | The identical signal |
 |---|---|---|
@@ -153,38 +153,14 @@ whole problem.** There is no base case. The only thing that has ever broken the 
 is running the new check against an input that should make it fail — never reading it, never reasoning
 about its shape, and never trusting that the author understood the defect they were repairing.
 
----
+### I. The one that settles the argument — a check that cannot fail *inside the harness built to prove a check can fail*
 
-## What actually finds them
-
-Nothing on this list was found by inspection. Every single one was found by one of four things:
-
-1. **Running it against a case that should make it fail.** The cheapest such case is usually already
-   lying around — for the harvest probe it was "a worktree created minutes ago with nothing in it."
-2. **A known-good baseline coming back wrong.** Specimen 2 was invisible until a tree that *had* to
-   be green reported red.
-3. **Output that is too uniform.** Identical findings across inputs that should differ.
-4. **An independent cold reader.** Consistently, across three tiers and both waves.
-
-**Therefore:** a countermeasure is not done when it is written and reads correctly. It is done when it
-has been **observed refusing something real**. That sentence is already the project's `good_enough`
-standard — *"a guard is observed refusing something real, not reasoned about"* — and this census is
-the argument for why it is load-bearing rather than pedantic.
-
----
-
-## What this census is not
-
-It is **not** a claim that every check here is worth fixing, nor that the pattern is rare enough to
-enumerate exhaustively. Twenty-three specimens in one epic by actors *looking for them* is a lower bound, not a total. The honest reading is that this is a **base rate in verification code**, and the useful
-response is a habit — run it against a failing case — rather than a list to work through.
-
----
-
-## Specimen 24 — the `gh` stub built to prove a check is honest, which silently answers any flag it doesn't model
+| # | Specimen | The identical signal |
+|---|---|---|
+| 24 | **The `gh` stub's refusal promise** (found in g3 review, wave 5) | The stub's own shipped docstring promises it refuses every unmodelled shape. Its argv loop whitelists nothing, so four unmodelled **flags** are silently answered from the fixture while the three modelled dimensions correctly refuse. |
 
 **Found by:** crew 1's g3 reviewer, wave 5, reviewing `ff43e883` (#439 + #484).
-**Group:** H — countermeasures that reproduce the defect they target. Third occurrence in this run.
+**Family:** group C — countermeasures that reproduce the defect they target. Third occurrence in this run, and the sharpest.
 
 The g3 change fixes `archive.c2b`, a closeout reachability check that was **always red** — its
 `--head <branch>` contained an unquoted `<`, which bash reads as **input redirection**, so it tried
@@ -213,7 +189,7 @@ which is exactly where the parser is loosest.**
 would ignore it and the whole four-state matrix would stay green **while real `gh` queried the wrong
 repository.** A green suite over a check that no longer measures this repo's reachability.
 
-### Why this specimen matters more than the other 23
+**Why this one settles the argument.** Specimen 22 (group G) is the *clearest demonstration* of the defect; this is the one that rules out the comfortable explanation for it.
 
 Every earlier specimen is a check that cannot fail. **This one is a check that cannot fail inside the
 harness built to prove that a check can fail** — written by an agent whose entire assigned task was
@@ -243,3 +219,30 @@ author's understanding of the defect is what makes the countermeasure unreadable
 uses and refuse the rest; add an added-flag case to the refusal test; delete the three unexercised
 branches. No production code touched. **The reviewer judged and did not fix**, which is why the
 falsified claim is recorded here rather than quietly corrected.
+
+---
+
+## What actually finds them
+
+Nothing on this list was found by inspection. Every single one was found by one of four things:
+
+1. **Running it against a case that should make it fail.** The cheapest such case is usually already
+   lying around — for the harvest probe it was "a worktree created minutes ago with nothing in it."
+2. **A known-good baseline coming back wrong.** Specimen 2 was invisible until a tree that *had* to
+   be green reported red.
+3. **Output that is too uniform.** Identical findings across inputs that should differ.
+4. **An independent cold reader.** Consistently, across three tiers and both waves.
+
+**Therefore:** a countermeasure is not done when it is written and reads correctly. It is done when it
+has been **observed refusing something real**. That sentence is already the project's `good_enough`
+standard — *"a guard is observed refusing something real, not reasoned about"* — and this census is
+the argument for why it is load-bearing rather than pedantic.
+
+---
+
+## What this census is not
+
+It is **not** a claim that every check here is worth fixing, nor that the pattern is rare enough to
+enumerate exhaustively. Twenty-four specimens in one epic by actors *looking for them* is a lower bound, not a total. The honest reading is that this is a **base rate in verification code**, and the useful
+response is a habit — run it against a failing case — rather than a list to work through.
+
