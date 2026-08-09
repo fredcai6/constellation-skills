@@ -5473,3 +5473,20 @@ integrate gate reads the verdict, not the verdict's provenance.
 **Filing note for closeout:** the checkable form is the one I have been applying by hand all night —
 *gate on the verdict for the commit you are advancing*, exactly as I gate CI on the commit I am
 merging. It belongs with #354's post-merge reconciliation as the same shape at a different layer.
+
+### g3-implement COMPLETE — `archive.c2b` measured across four PR states, verdict on the exit code
+
+> Measured directly on the resolved shipped text, printed exit codes, stub `gh` on PATH.
+> CLOSED-unmerged → 1, OPEN → 0. **stdout was empty in all four cases — the verdict rides the exit
+> code.**
+
+**That last clause is the whole fix.** The trap I verified myself is that the engine's command verdict
+is **returncode-only**, so #484's own suggested replacement — keeping `--jq 'length > 0'` — prints
+`false` and exits **0**, converting a check that cannot pass into one that cannot fail. The measurement
+proves the replacement does not do that: **stdout empty, exit code discriminating, across four
+states.**
+
+**Four states, not one.** A single-state check (does it pass on an open PR?) would have gone green on
+both the correct fix and the inverted one. The discrimination only appears when you ask what it does
+on the states that should fail — which is the census's central lesson applied by an implementer
+without being told.
