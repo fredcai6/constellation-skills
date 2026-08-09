@@ -4654,3 +4654,24 @@ runs that need it"*, live.
 
 **And the irony belongs in the retrospective:** the crew that gets no governor reading is the crew
 working on **#458 — ship the gauge writer.**
+
+### Post-merge verification — main green after #511, and the delta is exactly right
+
+```
+1871 passed, 2 skipped, 829 subtests passed in 571.20s   REAL_EXIT=0
+```
+
+**Baseline was 1867 / 2 / 829. Delta: +4 passed, everything else identical.**
+
+**That number is the check, not the green.** Crew 3 added exactly four tests — two characterization
+tests of the existing job-addressed machinery (which pass on unmodified main, correctly) and two
+doctrine guards (which I verified go **red** on unmodified main). **+4 is precisely what should have
+appeared**, and nothing else moved: no test lost, no subtest count change, no skip change.
+
+A green alone would not have told me that. A green **plus the expected delta** rules out the case
+where a new test lands and an old one silently stops running — which on this project would be a check
+that cannot fail, landing in the wave about checks that cannot fail.
+
+**Merge baseline for the remaining wave-5 merges is now 1871 / 2 / 829, real exit 0**, run with
+`python -m pytest`, exit read unpiped. Recorded so the next merge is compared against the current
+tree rather than against a figure I remember from an hour ago.
