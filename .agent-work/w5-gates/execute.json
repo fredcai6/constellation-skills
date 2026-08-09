@@ -330,7 +330,8 @@
           "id": "p1",
           "statement": "g1 closed. HONEST BASIS, corrected after a cold critic measured the original claim FALSE: this is NOT a technical dependency. g2's pytest verification reaches the verifier through InstalledIterativeRoleRuntimeTests.run_role (tests/test_iterative_planning_doctrine.py:289), which installs a real bundle into a tempdir where the guard passes today, unfixed. The real reasons to order g1 first are same-file edit serialization and reviewer locality, plus the fact that the stop path is easier to reason about once the guard is structural. The guard is a genuine dependency only for g4-integrate.c2, which invokes the repo copy directly. If g1 goes to rework, this ordering may be revisited through the engine's amend verb rather than treated as immovable.",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1 closed: g1-implement, g1-review and g1-integrate are all complete, committed at 6f48ece4. Per the corrected honest basis, this is not a technical dependency -- the ordering is same-file edit serialization and reviewer locality. Both real reasons hold: g2 edits the same two files g1 just changed, and the assertion to invert moved from line 461-462 to 466 because of g1's additions."
         }
       ],
       "postconditions": [
@@ -341,7 +342,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-implement-1"
         }
       ],
       "constraints": [
@@ -376,11 +378,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g2-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "COMPLETE",
+            "path": ".agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md",
+            "crew": "constellation/w5-gates/g2/implementer/attempt-1",
+            "blockers": "none",
+            "note": "Verified in my own hands, not on report: -k stop_boundary 2 passed / 25 deselected exit 0; -k stop_mutation 1 passed / 26 deselected / 7 subtests exit 0; both collect nonzero. git diff --numstat shows exactly the two allowed files (+45/-7 and +187/-2). The inversion is at tests line 475 and the restructure puts _require_launch_authorization after REPLAN_RESULT is read, so boundary_id validation stays unconditional."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g2-review": {
@@ -889,6 +905,13 @@
       "why": "Reviewer APPROVEd with its own decoy and its own permissive mutation; I applied its one substantive finding (the predicate could self-certify, returning #501 in original shape) inside the gate under inherited latitude, pinned it with a guard_location regression test, and re-ran the mutation myself against the changed file. All three selectors green and nonzero-collecting; three-location measurement recorded in a REPLAN_INPUT.json that validates against the shipped replan verifier.",
       "mechanical": false,
       "ts": "2026-08-09T01:09:00.410863+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "g2-implement",
+      "why": "Implementer returned COMPLETE with the honest null tested and not fired: it measured the seam first and found verify_replan.py already treats stop as first-class, so the refusal was local to the two named clauses. It split verification from authorization rather than bolting on a condition, which is what the ordering wrinkle demanded, and it proved the mutation test has teeth by over-relaxing to the plausible wrong shape and watching the test catch it.",
+      "mechanical": false,
+      "ts": "2026-08-09T01:27:05.375714+00:00"
     }
   ],
   "trip_ledger": [
@@ -904,12 +927,12 @@
       "ts": "2026-08-09T00:36:43.800761+00:00"
     }
   ],
-  "refusals": 3,
+  "refusals": 4,
   "engine_session": {
     "session_id": "commander-w5-gates-d-20260808",
     "status": "active",
     "claimed_at": "2026-08-09T00:40:25.832835+00:00",
-    "last_heartbeat": "2026-08-09T01:09:00.410895+00:00",
+    "last_heartbeat": "2026-08-09T01:27:05.375727+00:00",
     "claimed_by": "commander-delegated",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
     "previous_session_id": null,

@@ -68,5 +68,29 @@
     "model": "opus",
     "result_present": true,
     "result_fresh": true
+  },
+  {
+    "crew_id": "constellation/w5-gates/g2/implementer/attempt-1",
+    "work_id": "w5-gates",
+    "gate": "g2",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "completed",
+    "session_name": "constellation/w5-gates/g2/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+    "handoff": ".agent-work/w5-gates/crew-handoffs/g2-implement-HANDOFF.md",
+    "result": ".agent-work/w5-gates/crew-handoffs/g2-implement-RESULT.md",
+    "stdout": ".agent-work/w5-gates/crew-runs/g2-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/w5-gates/crew-runs/g2-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-09T01:11:15.778318+00:00",
+    "last_heartbeat": "2026-08-09T01:26:20.402865+00:00",
+    "completed_at": "2026-08-09T01:26:20.402865+00:00",
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "opus",
+    "result_present": true,
+    "result_fresh": true
   }
 ]

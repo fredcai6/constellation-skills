@@ -27,6 +27,10 @@ SHAPED_BRIEF = ROOT / "skills" / "to-initial-issues" / "templates" / "SHAPED_BRI
 REPLAN_INPUT = ROOT / "skills" / "replan" / "templates" / "REPLAN_INPUT.template.json"
 REPLAN_RESULT = ROOT / "skills" / "replan" / "templates" / "REPLAN_RESULT.template.json"
 ROLE_VERIFIER = ROOT / "scripts" / "verify_iterative_role_artifacts.py"
+# The epic's own terminal transition, tracked in git. Copied -- never mutated --
+# so the stop golden path is measured against a packet a real Admiral wrote
+# rather than a template with one field edited.
+LIVE_STOP_TRANSITION = ROOT / ".agent-work" / "epic-418-redux" / "transitions" / "w4-to-close"
 
 
 def load_module(name: str, path: Path):
@@ -461,9 +465,190 @@ class InstalledIterativeRoleRuntimeTests(unittest.TestCase):
             encoding="utf-8",
             newline="\n",
         )
-        refused = self.run_role("admiral", "admiral-prelaunch")
+        verified_stop = self.run_role("admiral", "admiral-prelaunch")
         with self.subTest(launch_authority="stop"):
-            self.assertNotEqual(0, refused.returncode, "stop cannot authorize NEXT_WAVE")
+            # Inverted by #506, and the inversion IS the fix rather than a check
+            # bent to fit it. The old expectation encoded the conflation this
+            # issue removes: that a decision authorizing no launch could not be
+            # verified either. What is asserted now is the corrected contract --
+            # a stop transition passes pre-launch, having authorized nothing.
+            self.assertEqual(0, verified_stop.returncode, verified_stop.stderr)
+
+    def seed_stop_boundary(self, launch_id):
+        """Seed a boundary whose transition is a real, verified `stop`.
+
+        The packet pair is copied from the live epic's own terminal transition,
+        so the golden path below is measured against output a real Admiral
+        produced. `launch_id` is the caller's variable because whether a stop may
+        leave it unset is precisely what is under test.
+        """
+        (self.work_area / "NEXT_WAVE.json").write_text(
+            json.dumps({"boundary_id": "wave-1", "launch_id": launch_id, "trigger": "wave_boundary"}),
+            encoding="utf-8",
+            newline="\n",
+        )
+        transition = self.work_area / "transitions" / "wave-1"
+        transition.mkdir(parents=True)
+        for name in ("REPLAN_INPUT.json", "REPLAN_RESULT.json"):
+            shutil.copy2(LIVE_STOP_TRANSITION / name, transition / name)
+        result = load_json(transition / "REPLAN_RESULT.json")
+        self.assertEqual("stop", result["decision"], "live fixture must really be a stop")
+        self.assertIs(True, result["applicable"], "live fixture must be an applicable stop")
+        log_path = self.work_area / "ADMIRAL_LOG.md"
+        log_path.write_text(
+            "- TRANSITION | boundary=wave-1 | decision=stop | verified\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        return transition, result, log_path
+
+    def test_admiral_prelaunch_stop_boundary_verifies_a_transition_that_authorizes_no_launch(self):
+        """A stop is verified, not merely refused, and may say no launch follows.
+
+        Verification and authorization are different jobs; the old verifier did
+        both in one clause and so could not express "this transition is sound and
+        it ends the epic" (#506). Under stop the authorization clause is skipped,
+        which is what lets `NEXT_WAVE.launch_id` be null. Everything else still
+        has to run -- G2, the unique audit match, the render, and both Markdown
+        writes -- and the writes are asserted here because they are the only
+        observable proof that the run reached the end rather than short-circuiting.
+        """
+        transition, result, _ = self.seed_stop_boundary(None)
+        passed = self.run_role("admiral", "admiral-prelaunch")
+        self.assertEqual(0, passed.returncode, passed.stderr)
+        self.assertEqual(
+            result["revised_epic_body"].strip() + "\n",
+            (transition / "CURRENT_TRUTH.md").read_text(encoding="utf-8"),
+        )
+        self.assertEqual(
+            result["wave_review_comment"].strip() + "\n",
+            (transition / "WAVE_REVIEW.md").read_text(encoding="utf-8"),
+        )
+
+    def test_admiral_prelaunch_stop_boundary_permits_but_does_not_require_a_null_launch_id(self):
+        """"May express no launch authorized" is permission, not obligation.
+
+        Every boundary already on disk carries a populated `launch_id`, so a stop
+        that leaves one there must still verify -- the verifier never reads it for
+        anything but path safety. Path safety is not part of the relaxation,
+        though: an unsafe `launch_id` must still be refused under stop, which is
+        the second half of this test.
+        """
+        transition, _, _ = self.seed_stop_boundary("wave-2")
+        passed = self.run_role("admiral", "admiral-prelaunch")
+        self.assertEqual(0, passed.returncode, passed.stderr)
+        self.assertTrue((transition / "WAVE_REVIEW.md").is_file())
+
+        (self.work_area / "NEXT_WAVE.json").write_text(
+            json.dumps({"boundary_id": "wave-1", "launch_id": "../escape", "trigger": "wave_boundary"}),
+            encoding="utf-8",
+            newline="\n",
+        )
+        refused = self.run_role("admiral", "admiral-prelaunch")
+        self.assertNotEqual(0, refused.returncode, "stop must not smuggle an unsafe launch_id past the guard")
+        self.assertIn("launch_id contains unsafe path characters", refused.stderr)
+
+    def test_admiral_prelaunch_stop_mutation_every_surviving_requirement_still_goes_red(self):
+        """The stop relaxation is narrow: only the authorization clause is skipped.
+
+        A relaxation is worth only what it declined to relax, so every
+        requirement that must survive a stop is broken here in turn and the run
+        has to refuse for that exact reason. Each mutation asserts it really
+        applied before asserting the refusal, because a mutation that never took
+        would leave a red that proves nothing -- and each asserts the two
+        Markdown files were not written, which is where a refusal that arrived
+        too late would show up.
+
+        The last case is the one that guards this change specifically: a `repair`
+        with no launch named must still be refused. A stop skipping the
+        authorization clause must not become "anything with a null launch_id
+        skips it."
+        """
+        transition, _, log_path = self.seed_stop_boundary(None)
+        next_wave_path = self.work_area / "NEXT_WAVE.json"
+        source_path = transition / "REPLAN_INPUT.json"
+        result_path = transition / "REPLAN_RESULT.json"
+        pristine = {path: path.read_text(encoding="utf-8") for path in (next_wave_path, source_path, result_path, log_path)}
+        written = (transition / "CURRENT_TRUTH.md", transition / "WAVE_REVIEW.md")
+        replan_templates = self.skills_root / "constellation-replan" / "templates"
+
+        control = self.run_role("admiral", "admiral-prelaunch")
+        self.assertEqual(0, control.returncode, control.stderr)
+        for path in written:
+            self.assertTrue(path.is_file(), "the control run must reach the writes")
+
+        stop_audit = "- TRANSITION | boundary=wave-1 | decision=stop | verified\n"
+
+        def write(path: Path, text: str) -> None:
+            path.write_text(text, encoding="utf-8", newline="\n")
+
+        def audit_decision_mismatch():
+            write(log_path, "- TRANSITION | boundary=wave-1 | decision=advance | verified\n")
+            self.assertNotIn("decision=stop", log_path.read_text(encoding="utf-8"))
+
+        def audit_entry_absent():
+            write(log_path, "")
+            self.assertEqual("", log_path.read_text(encoding="utf-8"))
+
+        def audit_entry_duplicated():
+            write(log_path, stop_audit * 2)
+            self.assertEqual(2, log_path.read_text(encoding="utf-8").count("TRANSITION"))
+
+        def packet_fails_g2():
+            # Blanking `revised_epic_body` rather than emptying `revised_forecast`:
+            # an empty forecast is legitimate for a stop -- the epic ends, so
+            # nothing is forecast -- and the packet stays G2-valid, which would
+            # have made this mutation a no-op. This field is the one CURRENT_TRUTH.md
+            # is written from, so breaking it is both a real G2 break and the one
+            # a stop cannot shrug off.
+            broken = json.loads(pristine[result_path])
+            broken["revised_epic_body"] = "   "
+            write(result_path, json.dumps(broken))
+            self.assertFalse(load_json(result_path)["revised_epic_body"].strip())
+
+        def packet_is_inapplicable():
+            inapplicable = json.loads(pristine[result_path])
+            inapplicable["applicable"] = False
+            write(result_path, json.dumps(inapplicable))
+            self.assertIs(False, load_json(result_path)["applicable"])
+
+        def boundary_id_is_unsafe():
+            write(
+                next_wave_path,
+                json.dumps({"boundary_id": "../escape", "launch_id": None, "trigger": "wave_boundary"}),
+            )
+            self.assertEqual("../escape", load_json(next_wave_path)["boundary_id"])
+
+        def repair_names_no_launch():
+            shutil.copy2(replan_templates / "REPLAN_INPUT.template.json", source_path)
+            shutil.copy2(replan_templates / "REPLAN_RESULT.template.json", result_path)
+            write(log_path, "- TRANSITION | boundary=wave-1 | decision=repair | verified\n")
+            self.assertEqual("repair", load_json(result_path)["decision"])
+            self.assertIsNone(load_json(next_wave_path)["launch_id"])
+
+        mutations = {
+            "audit_decision_mismatch": (audit_decision_mismatch, "verified TRANSITION audit decision must match"),
+            "audit_entry_absent": (audit_entry_absent, "must have exactly one verified TRANSITION audit entry"),
+            "audit_entry_duplicated": (audit_entry_duplicated, "must have exactly one verified TRANSITION audit entry"),
+            "packet_fails_g2": (packet_fails_g2, "Admiral transition violates G2"),
+            "packet_is_inapplicable": (packet_is_inapplicable, "inapplicable transition cannot authorize NEXT_WAVE"),
+            "boundary_id_is_unsafe": (boundary_id_is_unsafe, "boundary_id contains unsafe path characters"),
+            "repair_names_no_launch": (repair_names_no_launch, "only advance or replan may authorize NEXT_WAVE"),
+        }
+        self.assertEqual(7, len(mutations))
+
+        for label, (mutate, expected) in mutations.items():
+            with self.subTest(mutation=label):
+                for path, text in pristine.items():
+                    write(path, text)
+                for path in written:
+                    path.unlink(missing_ok=True)
+                mutate()
+                red = self.run_role("admiral", "admiral-prelaunch")
+                self.assertEqual(1, red.returncode, red.stdout)
+                self.assertIn(expected, red.stderr)
+                for path in written:
+                    self.assertFalse(path.is_file(), f"{label} must refuse before the transition is written")
 
 
 def make_source_checkout(path: Path) -> Path:

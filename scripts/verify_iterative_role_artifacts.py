@@ -186,14 +186,55 @@ def verify_commander(work_id: str, skills_root: str | Path | None = None) -> Non
 
 
 def _next_wave(work_area: Path) -> dict:
+    """Read NEXT_WAVE and check only what holds regardless of the decision.
+
+    ``boundary_id`` is validated here and unconditionally: it is the path
+    component that locates the transition directory, so its ``SAFE_ID`` check is
+    a path-safety guard, not a launch policy. ``launch_id`` is deliberately left
+    alone -- whether a launch must be named depends on the transition decision,
+    which lives in a file this function's own return value is needed to find.
+    That clause is ``_require_launch_authorization``.
+    """
     value = _read_json(work_area / "NEXT_WAVE.json", "Admiral NEXT_WAVE")
     required = {"boundary_id", "launch_id", "trigger"}
     _require(set(value) == required, "Admiral NEXT_WAVE must contain exactly boundary_id, launch_id, trigger")
-    for field in ("boundary_id", "launch_id"):
-        entry = _string(value[field], f"Admiral NEXT_WAVE.{field}")
-        _require(bool(SAFE_ID.fullmatch(entry)), f"Admiral NEXT_WAVE.{field} contains unsafe path characters")
+    boundary_id = _string(value["boundary_id"], "Admiral NEXT_WAVE.boundary_id")
+    _require(
+        bool(SAFE_ID.fullmatch(boundary_id)),
+        "Admiral NEXT_WAVE.boundary_id contains unsafe path characters",
+    )
     _require(value["trigger"] in {"wave_boundary", "material_exception"}, "Admiral NEXT_WAVE.trigger is invalid")
     return value
+
+
+def _require_launch_authorization(next_wave: dict, decision: str) -> None:
+    """Decide whether this transition may authorize the launch NEXT_WAVE names.
+
+    Verifying a transition and authorizing a launch are different jobs, and
+    conflating them left a ``stop`` unable to be verified at all (#506). A stop
+    is a legitimate terminal outcome: it authorizes no next wave, so it skips
+    the authorization clause and ``launch_id`` may say so by being null.
+    ``repair`` stays refused -- that one is a real authorization question.
+
+    Permitted is not required. A stop may still leave a populated
+    ``launch_id``, because the verifier never reads it for anything else; what
+    it may not do is leave an unsafe one, so path safety is checked on any
+    launch id that is actually present.
+    """
+    launch_id = next_wave["launch_id"]
+    if decision == "stop":
+        if launch_id is None:
+            return
+    else:
+        _require(
+            decision in {"advance", "replan"},
+            "only advance or replan may authorize NEXT_WAVE",
+        )
+    entry = _string(launch_id, "Admiral NEXT_WAVE.launch_id")
+    _require(
+        bool(SAFE_ID.fullmatch(entry)),
+        "Admiral NEXT_WAVE.launch_id contains unsafe path characters",
+    )
 
 
 def _verify_transition_audit(log_path: Path, boundary_id: str, decision: str) -> None:
@@ -220,10 +261,7 @@ def verify_admiral_prelaunch(work_id: str, skills_root: str | Path | None = None
     except verifier.ReplanError as exc:
         raise RoleArtifactError(f"Admiral transition violates G2: {exc}") from exc
     _require(result["applicable"] is True, "inapplicable transition cannot authorize NEXT_WAVE")
-    _require(
-        result["decision"] in {"advance", "replan"},
-        "only advance or replan may authorize NEXT_WAVE",
-    )
+    _require_launch_authorization(next_wave, result["decision"])
     try:
         rendered = verifier.render_replan_markdown(source, result)
     except verifier.ReplanError as exc:
