@@ -64,8 +64,14 @@
 > | 4 engine | DONE. **PR #514 green, HELD by merge order** — it changes the engine driving this live spine, so it goes LAST. |
 > | 5 docs | DONE, **MERGED** — #496, #411 (PR #509 `4bde569e`). |
 >
-> **12 of 21 closed. A WATCHER SUBAGENT (`w5-watcher`) polls crew 1 and returns once on a real event** —
-> PR opened, spine done, a BLOCK verdict, or 25+ min of genuine silence. Do not duplicate its polling.
+> **12 of 21 closed.** **DO NOT DISPATCH A WATCHER SUBAGENT — it does not work.** Tried twice; the
+> second was given an explicit 40-iteration `check; sleep 60` loop *and told about the first one's
+> failure by name*, and **both went idle within ninety seconds with no report.** A subagent does not
+> stay resident across a sleep loop here. Same family as crew 1's finding that in-process teammates
+> cannot spawn background agents: **the supervision primitives an orchestrator would reach for are the
+> ones this harness lacks.** The Admiral cannot end its turn (nothing resumes it), cannot delegate the
+> wait, and cannot foreground-sleep (the tool kills it) — **the only working shape is a poll loop in the
+> Admiral's own context.** Poll, but do not narrate the polls; speak only when something moves.
 >
 > **#513 IS NOT MERGEABLE YET even though `gh pr checks` may say pass.** Its head is `3c4da612`; the
 > only green run is on `dbd787b9`, **two commits superseded**. **Gate on the check for the commit you
