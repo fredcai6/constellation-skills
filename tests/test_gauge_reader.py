@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -514,6 +515,208 @@ class ThresholdsHeadroomOverrideTests(unittest.TestCase):
                 "observed_at": (NOW - timedelta(minutes=5)).isoformat(),
             }), encoding="utf-8")
             self.assertIsNone(self.m.read(path, now=NOW, max_age=MAX_AGE))
+
+
+class ImpliedTokensTests(unittest.TestCase):
+    """#264: the HEADLINE rendering. A fill FRACTION is unfalsifiable on its
+    own -- 0.69875 looks like a perfectly ordinary reading. The same fraction
+    rendered as an ABSOLUTE token count against a window a human knows is wrong
+    on its face (decision:implied-tokens-over-ceiling-predicate).
+
+    It is a derived rendering, never a judgment: nothing in this class asserts
+    anything about how full is acceptable."""
+
+    def setUp(self):
+        self.m = load("gauge_reader")
+
+    def _reading(self, fill, model="claude-opus-4-8"):
+        return self.m.Reading(
+            schema_version=1, fill_fraction=fill, model=model, observed_at=NOW)
+
+    def test_implied_count_is_the_fraction_against_the_readers_own_window(self):
+        window = self.m._PROFILES["claude-opus-4-8"][0]
+        self.assertEqual(
+            round(window * 0.42), self.m.implied_tokens(self._reading(0.42)))
+
+    def test_the_252_divergence_is_rendered_absurd_rather_than_plausible(self):
+        """THE POINT OF THE WHOLE FUNCTION, on the real incident numbers.
+
+        #252: 139,750 real tokens were divided by a wrongly-assumed 200K window
+        and written as fill_fraction 0.69875. As a fraction that reads as an
+        unremarkable ~70%. Rendered against claude-opus-5's REAL window it
+        comes back as ~698,750 tokens -- five times the session that actually
+        happened, and wrong on its face to anyone who knows the model, with no
+        recall of session size required.
+
+        The expected value is computed from the table at test time, not typed:
+        a re-calibration of the window must move this rendering with it."""
+        real_tokens = 139_750
+        wrong_window = 200_000
+        as_written = real_tokens / wrong_window  # what the writer actually emitted
+
+        implied = self.m.implied_tokens(self._reading(as_written, "claude-opus-5"))
+        true_window = self.m._PROFILES["claude-opus-5"][0]
+
+        self.assertEqual(round(true_window * as_written), implied)
+        # The rendering is what makes the divergence legible: the implied count
+        # is nothing like the session that really happened.
+        self.assertNotEqual(real_tokens, implied)
+        self.assertGreater(implied, real_tokens * 4)
+
+    def test_a_reading_that_came_through_read_renders_end_to_end(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        path = Path(tmp.name) / "gauge.json"
+        path.write_text(json.dumps(FRESH_RECORD), encoding="utf-8")
+
+        reading = self.m.read(path, now=NOW, max_age=MAX_AGE)
+        window = self.m._PROFILES[reading.model][0]
+        self.assertEqual(
+            round(window * reading.fill_fraction), self.m.implied_tokens(reading))
+
+    def test_uncalibrated_model_renders_NOTHING_not_a_default_scaled_count(self):
+        """Same rule as read()'s own #252 gate: an uncertain model must yield no
+        number, never a wrong one. _DEFAULT_PROFILE exists to keep
+        thresholds_for total; it must not leak into this rendering."""
+        self.assertIsNone(
+            self.m.implied_tokens(self._reading(0.42, "claude-future-9")))
+        # ...even though thresholds_for still answers for that model.
+        self.assertEqual(
+            self.m.DEFAULT_THRESHOLDS, self.m.thresholds_for("claude-future-9"))
+
+    def test_zero_fill_renders_zero_not_none(self):
+        # 0 is a real reading, not a missing one -- `if implied_tokens(r):`
+        # would be a caller bug, but this function must not manufacture the
+        # ambiguity by returning None for a legitimate zero.
+        self.assertEqual(0, self.m.implied_tokens(self._reading(0.0)))
+
+    def test_every_malformed_input_returns_none_and_never_raises(self):
+        window_model = "claude-opus-4-8"
+        for label, value in (
+            ("no attributes at all", object()),
+            ("None", None),
+            ("a bare string", "0.42"),
+            ("string fill", SimpleNamespace(fill_fraction="0.42", model=window_model)),
+            ("bool fill", SimpleNamespace(fill_fraction=True, model=window_model)),
+            ("None fill", SimpleNamespace(fill_fraction=None, model=window_model)),
+            ("non-str model", SimpleNamespace(fill_fraction=0.42, model=1)),
+            ("None model", SimpleNamespace(fill_fraction=0.42, model=None)),
+            ("nan fill", SimpleNamespace(fill_fraction=float("nan"), model=window_model)),
+            ("inf fill", SimpleNamespace(fill_fraction=float("inf"), model=window_model)),
+        ):
+            with self.subTest(label):
+                self.assertIsNone(self.m.implied_tokens(value))
+
+
+class PinnedAtCeilingTests(unittest.TestCase):
+    """#264 SECONDARY notice. Deliberately not the answer to this issue --
+    implied_tokens is. These tests pin both its reach and its limit."""
+
+    def setUp(self):
+        self.m = load("gauge_reader")
+
+    def test_a_pinned_reading_is_reported(self):
+        self.assertTrue(self.m.pinned_at_ceiling(self.m.FILL_CEILING))
+
+    def test_an_unpinned_reading_is_not(self):
+        self.assertFalse(self.m.pinned_at_ceiling(0.0))
+        self.assertFalse(self.m.pinned_at_ceiling(self.m.FILL_CEILING / 2))
+
+    def test_it_is_SILENT_across_the_range_where_a_wrong_window_actually_hurt(self):
+        """Why it is secondary, asserted rather than asserted-in-prose: both
+        real incident readings are below the ceiling, so this predicate says
+        nothing about either of them."""
+        for label, fill in (("#252", 0.69875), ("#271", 0.126658)):
+            with self.subTest(label):
+                self.assertFalse(self.m.pinned_at_ceiling(fill))
+
+    def test_the_engine_already_blocks_long_before_the_ceiling_is_reachable(self):
+        """The structural reason it fires too late: every shipped profile has
+        hard_cap < window, so HARD is entered at hard_cap tokens while the
+        clamp only saturates at `window` tokens. No value is typed; the gap is
+        read off the table."""
+        for model, (window, _soft_cap, hard_cap) in self.m._PROFILES.items():
+            with self.subTest(model=model):
+                self.assertLess(hard_cap, window)
+
+    def test_a_double_counted_numerator_is_INDISTINGUISHABLE_from_a_small_window(self):
+        """THE EXACT LIMIT. A pinned reading proves the RATIO is wrong -- the
+        window too small OR the token count too large -- and cannot say which.
+        Both causes arrive here as the identical value, so no caller can ever
+        recover the cause from the predicate."""
+        window = self.m._PROFILES["claude-opus-5"][0]
+        tokens = window // 2
+
+        window_too_small = min(self.m.FILL_CEILING, tokens / (window // 5))
+        numerator_doubled_twice = min(self.m.FILL_CEILING, (tokens * 4) / window)
+
+        self.assertEqual(window_too_small, numerator_doubled_twice)
+        self.assertTrue(self.m.pinned_at_ceiling(window_too_small))
+        self.assertTrue(self.m.pinned_at_ceiling(numerator_doubled_twice))
+
+    def test_it_can_never_prove_a_window_RIGHT(self):
+        """The other half of the one-directional falsifier: an UNPINNED reading
+        is consistent with any window large enough not to saturate, so silence
+        here is not evidence of a correct window."""
+        tokens = 100_000
+        for window in (400_000, 1_000_000, 8_000_000):
+            with self.subTest(window=window):
+                self.assertFalse(self.m.pinned_at_ceiling(tokens / window))
+
+    def test_the_docstring_indicts_the_RATIO_not_the_denominator(self):
+        """A wording pin, not decoration (decision:one-directional-falsifier).
+        'Denominator' names one of the two causes and is therefore a false
+        claim about what this predicate can establish; it was corrected once
+        during planning and a regression would be silent."""
+        doc = self.m.pinned_at_ceiling.__doc__
+        self.assertIn("RATIO", doc)
+        self.assertNotIn("denominator", doc.lower())
+
+    def test_non_numeric_fill_is_false_never_an_exception(self):
+        for value in (None, "1.0", object(), True, False):
+            with self.subTest(repr(value)):
+                self.assertFalse(self.m.pinned_at_ceiling(value))
+
+
+class ProfileInvariantTests(unittest.TestCase):
+    """#264 REGRESSION PIN, asserted nowhere in this repo until now. It passes
+    at HEAD on all five shipped profiles by design -- it is not a bug report.
+
+    What it catches is a row whose window is set so low that the gauge is
+    STRUCTURALLY INCAPABLE of tripping before it saturates: with
+    `hard_cap >= window` the clamp pins the reading at the ceiling at or before
+    the moment HARD would have been entered, so the band the whole governor
+    exists to reach can never fire cleanly for that model. Nothing else in the
+    suite would notice -- every threshold test would still pass, because each
+    one only ever looks at a single model's arithmetic in isolation."""
+
+    def setUp(self):
+        self.m = load("gauge_reader")
+
+    def _assert_ordered(self, model, profile):
+        window, soft_cap, hard_cap = profile
+        self.assertLess(
+            0, soft_cap, f"{model}: soft_cap must be a positive token count")
+        self.assertLess(
+            soft_cap, hard_cap,
+            f"{model}: soft_cap {soft_cap} is not below hard_cap {hard_cap}, so "
+            f"the two bands cannot be entered in order")
+        self.assertLess(
+            hard_cap, window,
+            f"{model}: hard_cap {hard_cap} is not below window {window}, so the "
+            f"reading saturates at or before HARD and the band can never fire "
+            f"cleanly for this model")
+
+    def test_every_profile_orders_zero_below_soft_below_hard_below_window(self):
+        self.assertTrue(self.m._PROFILES, "the profile table must not be empty")
+        for model, profile in self.m._PROFILES.items():
+            with self.subTest(model=model):
+                self._assert_ordered(model, profile)
+
+    def test_the_default_profile_holds_the_same_invariant(self):
+        """_DEFAULT_PROFILE is not a row of _PROFILES, but thresholds_for can
+        still hand it out, so the same ordering has to hold for it."""
+        self._assert_ordered("_DEFAULT_PROFILE", self.m._DEFAULT_PROFILE)
 
 
 if __name__ == "__main__":

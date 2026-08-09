@@ -106,6 +106,27 @@ DEFAULT_THRESHOLDS: tuple[float, float] = (
     _DEFAULT_PROFILE[2] / _DEFAULT_PROFILE[0],
 )
 
+# The top of the REPRESENTABLE fill range: the upper bound `_parse_fields`
+# validates against below, and the value the writer's clamp in
+# `gauge_writer_hook.compute_record` saturates at. Hoisted out of that range
+# check so callers, tests and the engine refer to a NAME instead of re-typing
+# the bound in a third place.
+#
+# THIS IS A DRIFT PIN, NOT A DERIVATION -- say it plainly rather than dressing
+# it up. This module does not and must not import `gauge_writer_hook` (the
+# reader ships bundled into every install; the harness-specific writer does
+# not, and that portability seam is the whole point of the file format), so
+# this side stays a TYPED LITERAL. What keeps it honest is a TEST that pins it
+# to a value obtained by EXECUTING `compute_record()` against a saturating
+# transcript -- structurally identical to the bargain `ModelTableSyncTests`
+# already makes between `_PROFILES` and `MODEL_WINDOWS`. Only the test sees
+# both modules.
+#
+# decision:no-threshold-values -- this is the top of the representable range,
+# never a statement about how much context is acceptable. It must not become
+# one.
+FILL_CEILING = 1.0
+
 
 @dataclass(frozen=True)
 class Reading:
@@ -164,6 +185,94 @@ def thresholds_for(model: str, headroom_tokens: float = 0) -> tuple[float, float
     return (max(0, soft_cap - reserve) / window, max(0, hard_cap - reserve) / window)
 
 
+def implied_tokens(reading) -> int | None:
+    """The ABSOLUTE token count `reading` implies, or None.
+
+    `fill_fraction x window`, taking the window from this module's `_PROFILES`
+    row for the reading's model. A DERIVED RENDERING, not a threshold: the
+    precedent is `checklist_engine._format_age`, which renders whatever age it
+    is handed and never decides anything. Nothing here states, or may ever
+    state, how full is acceptable (decision:no-threshold-values).
+
+    THE CONSTRAINT, STATED PLAINLY RATHER THAN PAPERED OVER: this reader
+    CANNOT know the window the writer actually divided by. The gauge record is
+    frozen at four fields and `decision:no-schema-change` forbids a fifth, so
+    the writer's window has nowhere to travel. What comes back is therefore
+
+        fill x READER_window
+
+    -- this module's INTERPRETATION of the writer's fraction, not a
+    measurement it received.
+
+    That gap is not a defect to hide; it is exactly what makes a writer/reader
+    window divergence VISIBLE. A fraction alone is unfalsifiable -- 0.69875
+    looks like a perfectly ordinary reading. The same fraction rendered as an
+    absolute count against a window a human knows is wrong on its face, with
+    no recall of session size required: #252's 139,750 real tokens, divided by
+    a wrongly-assumed 200K window, come back here as ~698,750 tokens on a
+    `claude-opus-5` whose window is 1,000,000. A human noticing that number
+    looked wrong is what ended those eight days.
+
+    TOTAL and FAIL-SAFE, matching every other entry point in this module:
+    anything unknown or malformed -- an object with no `fill_fraction`/`model`,
+    a non-numeric or non-finite fill, a model with no profile -- returns None,
+    and nothing raises. An uncalibrated model yields NO implied count rather
+    than one computed against `_DEFAULT_PROFILE`, for the same reason `read()`
+    rejects it outright (#252): an uncertain model must produce no number, not
+    a wrong one.
+    """
+    fill = getattr(reading, "fill_fraction", None)
+    model = getattr(reading, "model", None)
+    if not isinstance(fill, (int, float)) or isinstance(fill, bool):
+        return None
+    if not isinstance(model, str):
+        return None
+    profile = _PROFILES.get(model)
+    if profile is None:
+        return None
+    try:
+        return round(profile[0] * float(fill))
+    except (ValueError, OverflowError):
+        # NaN/inf can't reach here through `read()` (the range check rejects
+        # both), but this function is total over ANY object handed to it.
+        return None
+
+
+def pinned_at_ceiling(fill) -> bool:
+    """A SECONDARY NOTICE: is this fill pinned at the top of the range?
+
+    Deliberately NOT the headline, and never to be described as the answer to
+    #264 -- `implied_tokens` above is that
+    (decision:implied-tokens-over-ceiling-predicate). This predicate is silent
+    across the entire range where a wrong window actually did its damage: it
+    says nothing at 0.69875 (#252's real reading) or 0.126658 (#271's). And
+    because every shipped profile has `hard_cap < window`, the engine's HARD
+    band is entered at `hard_cap` tokens while this can only fire at `window`
+    tokens -- far too late to prevent the wrongful block it would be reporting.
+
+    EXACT REACH. `fill == FILL_CEILING` iff `tokens >= window`, because that is
+    where the writer's clamp saturates. A live session cannot outgrow its real
+    window -- the harness compacts first -- so a pinned reading is proof that
+    the RATIO is wrong: the window too small OR the token count too large.
+
+    EXACT LIMIT, both halves. (1) It CANNOT SAY WHICH. A double-counted
+    numerator against a correct window arrives here as exactly the same pinned
+    value as a correct numerator against a five-times-small window; the cause
+    is not recoverable from the result. (2) It can NEVER PROVE A WINDOW RIGHT.
+    An unpinned reading is consistent with every window large enough not to
+    saturate, so silence here is not evidence of correct calibration.
+
+    Compares with `>=` rather than `==` because this is total over any float a
+    caller hands it; on a Reading that came through `_parse_fields` the two are
+    identical, since that range check already rejects anything above the
+    ceiling. Fail-safe like the rest of this module: a non-numeric `fill` is
+    False, never an exception.
+    """
+    if not isinstance(fill, (int, float)) or isinstance(fill, bool):
+        return False
+    return float(fill) >= FILL_CEILING
+
+
 def _parse_observed_at(raw_value) -> datetime | None:
     """Parse an `observed_at` value into a tz-aware datetime, or None if it
     isn't a well-formed ISO-8601 string. A naive timestamp is assumed UTC --
@@ -209,7 +318,7 @@ def _parse_fields(record: dict) -> Reading | None:
         return None
     if not isinstance(fill_fraction, (int, float)) or isinstance(fill_fraction, bool):
         return None
-    if not 0.0 <= float(fill_fraction) <= 1.0:
+    if not 0.0 <= float(fill_fraction) <= FILL_CEILING:
         return None
     if not isinstance(model, str):
         return None

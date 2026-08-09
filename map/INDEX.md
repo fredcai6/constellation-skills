@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 52 modules, 1027 entities
+scripts: 53 modules, 1037 entities
 skills: 1 modules, 18 entities
-tests: 58 modules, 3378 entities
+tests: 60 modules, 3454 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 58 modules, 3378 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (52 modules, 1027 entities)
+## scripts (53 modules, 1037 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -59,7 +59,7 @@ tests: 58 modules, 3378 entities
 - [scripts.docent_freshness](scripts.docent_freshness/INDEX.md) (9 entities, 5 holes): docent_freshness — deterministic staleness check for a docent explainer site.
 - [scripts.episode_capture](scripts.episode_capture/INDEX.md) (15 entities): Assembly seam: the context manifest as a **byproduct of starting a step**.
 - [scripts.file_issue_set](scripts.file_issue_set/INDEX.md) (44 entities, 41 holes): File only the runnable current wave from a verified initial issue set.
-- [scripts.gauge_reader](scripts.gauge_reader/INDEX.md) (9 entities): Gauge reader -- fail-safe read of the context-fullness gauge file.
+- [scripts.gauge_reader](scripts.gauge_reader/INDEX.md) (11 entities): Gauge reader -- fail-safe read of the context-fullness gauge file.
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
 - [scripts.install_constellation](scripts.install_constellation/INDEX.md) (62 entities, 25 holes): HOLE: no docstring
@@ -78,6 +78,7 @@ tests: 58 modules, 3378 entities
 - [scripts.verify_episode_captured](scripts.verify_episode_captured/INDEX.md) (6 entities, 2 holes): Capture gate: refuse to advance until THIS run left an episode in the store.
 - [scripts.verify_episode_observations](scripts.verify_episode_observations/INDEX.md) (14 entities, 8 holes): Guard: refuse a store whose records read as instructions instead of observations.
 - [scripts.verify_fowler_pass](scripts.verify_fowler_pass/INDEX.md) (9 entities, 3 holes): Refuse a skipped smell or a silent override — the reviewer Fowler-pass RAIL.
+- [scripts.verify_installed_bundles](scripts.verify_installed_bundles/INDEX.md) (8 entities, 6 holes): Compare every installed skill bundle against the source it was built from.
 - [scripts.verify_interrogation](scripts.verify_interrogation/INDEX.md) (9 entities, 3 holes): Refuse a self-answered or unsigned interrogation — the interrogator RAIL.
 - [scripts.verify_issue_set](scripts.verify_issue_set/INDEX.md) (18 entities, 14 holes): Verify and render the strict v1 initial-cut contract.
 - [scripts.verify_iterative_planning_acceptance](scripts.verify_iterative_planning_acceptance/INDEX.md) (6 entities, 5 holes): Verify all ten frozen iterative-planning acceptance items offline.
@@ -96,7 +97,7 @@ tests: 58 modules, 3378 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (58 modules, 3378 entities)
+## tests (60 modules, 3454 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -127,7 +128,8 @@ tests: 58 modules, 3378 entities
 - [tests.test_explorer_templates](tests.test_explorer_templates/INDEX.md) (43 entities, 42 holes): Verifier<->template cross-check for the constellation-explorer engine artifacts.
 - [tests.test_feedback_tooling](tests.test_feedback_tooling/INDEX.md) (61 entities, 59 holes): HOLE: no docstring
 - [tests.test_fowler_pass](tests.test_fowler_pass/INDEX.md) (37 entities, 31 holes): Tests for the constellation-reviewer sharpening rail (scripts/verify_fowler_pass.py).
-- [tests.test_gauge_reader](tests.test_gauge_reader/INDEX.md) (73 entities, 65 holes): HOLE: no docstring
+- [tests.test_gauge_chain_writer_to_trip](tests.test_gauge_chain_writer_to_trip/INDEX.md) (34 entities, 1 holes): The Context Governor chain, traversed end to end with REAL OS subprocesses:
+- [tests.test_gauge_reader](tests.test_gauge_reader/INDEX.md) (97 entities, 78 holes): HOLE: no docstring
 - [tests.test_gauge_writer](tests.test_gauge_writer/INDEX.md) (89 entities, 21 holes): Unit tests for scripts/hooks/gauge_writer_hook.py.
 - [tests.test_grade_lint](tests.test_grade_lint/INDEX.md) (50 entities, 35 holes): Tests for scripts/grade_lint.py — the @grade: inline-tag linter (issue #230, epic-226).
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
@@ -154,6 +156,7 @@ tests: 58 modules, 3378 entities
 - [tests.test_verify_coverage_ledger](tests.test_verify_coverage_ledger/INDEX.md) (12 entities, 12 holes): HOLE: no docstring
 - [tests.test_verify_cycles](tests.test_verify_cycles/INDEX.md) (11 entities, 11 holes): HOLE: no docstring
 - [tests.test_verify_episode_captured](tests.test_verify_episode_captured/INDEX.md) (32 entities, 17 holes): Tests for scripts/verify_episode_captured.py — the WRITE-side capture gate that replaces the retiring `.agent-work/LESSONS.md` / `.agent-work/AGENT_FEEDBACK.md`
+- [tests.test_verify_installed_bundles](tests.test_verify_installed_bundles/INDEX.md) (18 entities, 11 holes): Tests for scripts/verify_installed_bundles.py -- the copy-vs-source check.
 - [tests.test_verify_spec_confirmed](tests.test_verify_spec_confirmed/INDEX.md) (37 entities, 32 holes): HOLE: no docstring
 - [tests.test_verify_spec_confirmed_cli](tests.test_verify_spec_confirmed_cli/INDEX.md) (7 entities, 6 holes): CLI-level regression coverage for verify_spec_confirmed.py's confirm-gate refusal.
 - [tests.test_verify_worktree_isolation](tests.test_verify_worktree_isolation/INDEX.md) (36 entities, 36 holes): HOLE: no docstring
