@@ -54,17 +54,18 @@
 > **CREW 1 IS NOW `commander-w5-gates-b`.** The first instance tripped at `plan` on a HARD reading,
 > wrote its refresh-request, committed `eff00abf` and stood down — working as designed, not a failure.
 >
-> **LIVE POSITION @ 00:43Z 2026-08-09 — 2 MERGED, 1 PR open, 2 crews running.**
+> **LIVE POSITION @ 02:35Z 2026-08-09 — 3 MERGED, 1 PR queued, 1 crew running.**
 >
 > | crew | state |
 > |---|---|
-> | 1 gates | **on its 3rd instance, `-d`.** g1-implement CLOSED (`c63c2bb0`, fix B for #501+#468). Now in g1-review with a **synchronous** crew dispatch — see the liveness table, it will look dead. |
-> | 2 readiness | **DONE.** Lease released, work area archived to a tracked path (83 files). **PR #513 open.** `execute.c2` WAIVED on my authority, all four conditions verified in the record. |
-> | 3 addressing | **MERGED** — #511 `39fb542a`. #507, #370 closed. #413 open, correctly. |
-> | 4 engine | running as `-c`, at **m10-wrapup**, its final item, in a full-suite run. |
-> | 5 docs | **MERGED** — #509 `4bde569e`. #496 by merge, **#411 by hand.** |
+> | 1 gates | **on its 5th instance `-e`.** g1+g2 CLOSED. g3 committed (`ff43e883`). **g4 (#446) remains.** Its PR triggers the close sequence. |
+> | 2 readiness | DONE, **MERGED** — #458 (PR #513 `c045ed2f`). `execute.c2` waived on my authority, all four conditions verified in the record. |
+> | 3 addressing | DONE, **MERGED** — #507, #370 (PR #511 `39fb542a`). **#413 left OPEN, correctly.** |
+> | 4 engine | DONE. **PR #514 green, HELD by merge order** — it changes the engine driving this live spine, so it goes LAST. |
+> | 5 docs | DONE, **MERGED** — #496, #411 (PR #509 `4bde569e`). |
 >
-> **Wave-5 score: 4 of 21 closed** (#507 #370 #496 #411).
+> **12 of 21 closed. A WATCHER SUBAGENT (`w5-watcher`) polls crew 1 and returns once on a real event** —
+> PR opened, spine done, a BLOCK verdict, or 25+ min of genuine silence. Do not duplicate its polling.
 >
 > **#513 IS NOT MERGEABLE YET even though `gh pr checks` may say pass.** Its head is `3c4da612`; the
 > only green run is on `dbd787b9`, **two commits superseded**. **Gate on the check for the commit you
@@ -73,6 +74,13 @@
 >
 > **CREW 1 REMAINING: g2, g3, g4 — #506, #439+#484, #446. Three of six issues untouched.** It is the
 > long pole and the one whose merge triggers the close sequence.
+>
+> **A CLOSED ISSUE OVER AN UNFIXED DEFECT IS AN INVISIBLE DEBT.** Crew 4 closed all nine of its issues
+> together — but **two were FLOATS** (#503 larger-than-filed, #495 entirely outside its owned files).
+> Closing a float retires an issue whose defect is still there, and **`CLOSED` reads identically
+> whether the fix shipped or was declined.** Both reopened. **After every crew return, re-read the
+> forge and check each issue's state against what the crew said it DID** — not against what it closed.
+> Worse than #354's leave-it-open shape, because that debt at least stays visible.
 >
 > **`Closes #A, #B` CLOSES ONLY #A.** GitHub honours the first issue in a comma-list; each number needs
 > its own keyword. #509's body said `Closes #496, #411.` and left #411 open. **Verify issue state on the
