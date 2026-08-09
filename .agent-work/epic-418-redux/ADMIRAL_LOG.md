@@ -5331,3 +5331,51 @@ enough to know which artifact is at fault, and this one did.
 
 **Four actors, four chances to take the easy green, none taken.** That is the epic's argument
 demonstrated end-to-end on the single issue that gates its own close.
+
+### g2 re-review: APPROVE — the reviewer re-ran its OWN shortcuts rather than accepting the fix report
+
+> The render bypass under stop now gives exit 1 with `SUBFAILED(mutation='renderer_returns_empty')` —
+> **the leg that was green in my hands is red.** G2 and audit bypasses still go red.
+
+`-k stop_boundary` 2 passed exit 0; `-k stop_mutation` 1 passed / 8 subtests exit 0; coupled suite
+**390 passed / 488 subtests / exit 0**. And it checked the *shape* of the change, not just the result:
+**the verifier script is byte-clean between the two commits, so only the guard grew** — the fix was not
+quietly loosened to make the mutation pass.
+
+**It answered the Commander's two questions properly, and the first is a specimen:**
+
+**Is the new mutation a no-op?** *No* — and the decisive check is one line: `grep 'return ""'` on the
+**pristine** renderer **exits 1**. The string does not pre-exist, so the assertion **cannot pass unless
+the surgery took**. That is exactly the property an earlier `revised_forecast` mutation lacked. **A
+mutation test whose planted string already exists in the target is a check that cannot fail**, and this
+one proved it is not, by command.
+
+**Cross-test leakage?** *Yes — real, currently inert, and not downgraded.* `renderer_returns_empty` is
+the last dict entry and the restore runs at the **head** of each iteration, so nothing restores the
+renderer after the final one. **It proved this deterministically rather than guessing at pytest
+ordering** — a probe showing `LEAKED=True` and a later admiral run returning rc=1 — then bounded the
+blast radius (per-class temp install, torn down at teardown, repo file verified untouched) and
+established that the three tests running after it invoke admiral mode **zero** times.
+
+**It recorded that as a preserved `fail` carried through `consolidate` with an explicit override reason
+rather than downgrading it to a note**, and routed it as a triage candidate. *"It didn't bar the gate
+because it produces no incorrect result and isn't a defect in the change under review — but it's worth
+the one-line fix before that class grows, since three of its seven runtime tests assert refusals and
+would pass for the wrong reason under a leaked degraded renderer."* **That is the distinction between
+'not blocking' and 'not real' held correctly**, which is the thing this epic keeps finding collapsed.
+
+### CARRIED — `repair` has #506's defect and nobody has fixed it
+
+Two reviewer triage candidates sit outside the reviewed pair, and **one is mine to carry**:
+
+- **`repair` still cannot be verified at all** — the same defect class #506 just fixed for `stop`. The
+  fix was scoped to `stop` because that is what blocked this epic; `repair` was never in scope and is
+  still broken.
+- the verifier's "cannot render" branch is **dead code** — the renderer re-runs G2 itself and the
+  rendered value is discarded.
+
+**This joins the item crew 1 routed me earlier** — that `ADMIRAL_SPINE.template.json` still describes
+`repair` as an enforced exit in both its prose and its `directives.decisions` block. **Those are the
+same gap seen from two sides:** the template asserts `repair` is enforced, and the verifier cannot
+verify it. Neither is knowable as *wrong* until #506 lands; both go into the closeout check with the
+verification named rather than as a reminder to think about it.
