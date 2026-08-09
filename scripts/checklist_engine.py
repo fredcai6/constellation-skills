@@ -2416,20 +2416,32 @@ def reopen(cl: dict, iid: str, reason: str, cap: int | None = None,
 _AMEND_ID_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 
-def _build_amend_task(op: dict) -> dict:
-    """Build a full pending task from an `add` op, mirroring `append()`'s shape.
-    `preconditions`/`constraints` default to empty; `directives`/`child_checklist`
-    default to None. Deep-copied so the caller's op dict is never aliased into
-    canonical state."""
+def _new_task(
+    task_id: str,
+    title: str,
+    imperative: str,
+    preconditions: list | None = None,
+    postconditions: list | None = None,
+    constraints: list | None = None,
+    directives: dict | None = None,
+    child_checklist: str | None = None,
+) -> dict:
+    """Build a full pending task dict in the one canonical shape shared by
+    `append()` (fresh empty containers, no deepcopy -- there is nothing to
+    alias) and `_build_amend_task()` (caller deep-copies an amend op's fields
+    before passing them in, so the op dict is never aliased into canonical
+    state). This constructor does not copy its arguments; that is each call
+    site's responsibility, since only one of them needs it. A field added to
+    the task shape has exactly one place to add it: here."""
     return {
-        "id": op["id"],
-        "title": op["title"],
-        "imperative": op["imperative"],
-        "preconditions": copy.deepcopy(op.get("preconditions") or []),
-        "postconditions": copy.deepcopy(op["postconditions"]),
-        "constraints": copy.deepcopy(op.get("constraints") or []),
-        "directives": copy.deepcopy(op.get("directives")),
-        "child_checklist": op.get("child_checklist"),
+        "id": task_id,
+        "title": title,
+        "imperative": imperative,
+        "preconditions": preconditions if preconditions is not None else [],
+        "postconditions": postconditions if postconditions is not None else [],
+        "constraints": constraints if constraints is not None else [],
+        "directives": directives,
+        "child_checklist": child_checklist,
         "status": "pending",
         "status_detail": {},
         "result": None,
@@ -2437,6 +2449,23 @@ def _build_amend_task(op: dict) -> dict:
         "evidence": [],
         "rework_count": 0,
     }
+
+
+def _build_amend_task(op: dict) -> dict:
+    """Build a full pending task from an `add` op, mirroring `append()`'s shape.
+    `preconditions`/`constraints` default to empty; `directives`/`child_checklist`
+    default to None. Deep-copied so the caller's op dict is never aliased into
+    canonical state."""
+    return _new_task(
+        op["id"],
+        op["title"],
+        op["imperative"],
+        preconditions=copy.deepcopy(op.get("preconditions") or []),
+        postconditions=copy.deepcopy(op["postconditions"]),
+        constraints=copy.deepcopy(op.get("constraints") or []),
+        directives=copy.deepcopy(op.get("directives")),
+        child_checklist=op.get("child_checklist"),
+    )
 
 
 def amend(cl: dict, delta: dict, reason: str, authority: str, base_dir: Path | None = None) -> str:
@@ -2659,22 +2688,7 @@ def append(cl: dict, iid: str, title: str, imperative: str) -> str:
         raise EngineError("append only on survey checklists")
     if iid in cl.get("tasks", {}):
         raise EngineError(f"item {iid!r} already exists")
-    cl["tasks"][iid] = {
-        "id": iid,
-        "title": title,
-        "imperative": imperative,
-        "preconditions": [],
-        "postconditions": [],
-        "constraints": [],
-        "directives": None,
-        "child_checklist": None,
-        "status": "pending",
-        "status_detail": {},
-        "result": None,
-        "finding": None,
-        "evidence": [],
-        "rework_count": 0,
-    }
+    cl["tasks"][iid] = _new_task(iid, title, imperative)
     cl["items"].append(iid)
     return f"appended {iid}"
 
@@ -3096,7 +3110,12 @@ def append_journal_entry(spine_path: Path, verb: str, task_id: str | None,
     """Append one hash-chained line to the spine's journal for a successful
     mutating verb. Best-effort and non-fatal: a journal write failure must never
     fail the mutation it records (the spine is already the source of truth), so any
-    OSError is swallowed."""
+    OSError is swallowed.
+
+    Byte-faithful, the append-only sibling of `save`'s #465 fix: preserve the
+    journal's OWN line ending (a text-mode append translates every written '\\n'
+    to the platform's, churning an existing file's endings one line at a time),
+    and default a journal that does not exist yet to LF."""
     jp = journal_path(spine_path)
     seq, prev = _read_journal_tail(jp)
     entry = {
@@ -3109,9 +3128,15 @@ def append_journal_entry(spine_path: Path, verb: str, task_id: str | None,
         "prev_hash": prev,
     }
     entry["hash"] = _journal_hash(entry)
+    line = (json.dumps(entry, ensure_ascii=False) + "\n").encode("utf-8")
+    eol = _dominant_newline(jp)
+    if eol != b"\n":
+        # json.dumps escapes any literal CR as \r, so no b"\r" survives in the
+        # serialised bytes and this replace cannot produce b"\r\r\n".
+        line = line.replace(b"\n", eol)
     try:
-        with jp.open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        with jp.open("ab") as fh:
+            fh.write(line)
     except OSError:
         pass
 
@@ -3120,6 +3145,33 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     path = Path(args.file)
     cl = load(path)
+    # #427: arm `refusals` here, on LOAD, but ONLY for the verb that can
+    # itself be the very-first-ever attempt to claim (no `engine_session` at
+    # all, ever -- release() leaves the record in place with status
+    # "released", it never clears the key, so `is None` really does mean
+    # "never claimed"). 0 is a true reading in that case regardless of
+    # whether the counter existed when this checklist was created, so
+    # arming it here -- BEFORE dispatch() runs -- counts even a refusal from
+    # a malformed `claim` call itself. This is deliberately separate from
+    # claim()'s own `cl.setdefault("refusals", 0)` (~1030), which stays as
+    # the arming point for a checklist that HAS been claimed before: that
+    # one must not backdate a pre-counter checklist with a guessed number,
+    # and this one cannot possibly guess wrong because "never claimed" means
+    # the true count is exactly what happened since.
+    #
+    # Gated to `args.verb == "claim"` (#357 g1 review carry-over): a child
+    # gate plan is legitimately driven with `engine_session` staying None
+    # for its ENTIRE life, by design -- start/attest/advance/reopen with no
+    # lease and no `claim` call, ever (the production shape #357 names).
+    # Arming on any refusal while unclaimed, not just a `claim` refusal,
+    # gave that shape a `refusals` key it must never carry -- the negative
+    # control in tests/test_episode_negative_control.py asserts the key's
+    # ABSENCE is structural there, not "zero refusals happened". Since that
+    # checklist never issues a `claim` call at all, this verb-scoped guard
+    # leaves it untouched while still catching the malformed-claim case
+    # #427 was filed for.
+    if cl.get("engine_session") is None and args.verb == "claim":
+        cl.setdefault("refusals", 0)
     ev_before = _all_evidence_ids(cl)
     try:
         message = dispatch(cl, args, base_dir=path.parent)

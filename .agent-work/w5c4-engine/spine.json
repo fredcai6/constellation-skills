@@ -1,0 +1,699 @@
+{
+  "work_id": "w5c4-engine",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-474",
+    "m2-475",
+    "m3-476",
+    "m4-427",
+    "m5-503",
+    "m6-479",
+    "m7-480",
+    "m8-493",
+    "m9-495",
+    "m10-wrapup"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md (project deltas). Confirm the launch order (main checkout, read-only): C:/Programs/constellation-skills/.agent-work/epic-418-redux/launch-orders/LO-w5-c4-engine.md is loaded, all nine issue bodies (#474 #475 #476 #427 #503 #479 #480 #493 #495) have been read with `gh issue view <n> --json body`, and the sole-writer file-ownership constraint (scripts/checklist_engine.py, tests/test_checklist_engine.py) is understood. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "global doctrine + CREW_CONTEXT + all nine issue bodies read; launch order's pre-rulings, ownership boundary, and stop conditions understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "read global-crew.md, global-everyone.md, GLOSSARY.md, CREW_CONTEXT.md; all nine issue bodies read via gh issue view; launch order LO-w5-c4-engine.md read from main checkout; sole-writer ownership (scripts/checklist_engine.py, tests/test_checklist_engine.py) understood"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-474": {
+      "id": "m1-474",
+      "title": "#474 -- one shared Task constructor for append() and _build_amend_task()",
+      "imperative": "In scripts/checklist_engine.py, factor the Task shape append() (~line 2657) and _build_amend_task() (~line 2419) each build by hand into ONE shared constructor (e.g. `_new_task(id, title, imperative, preconditions, postconditions, constraints, directives, child_checklist)` or similar) that both call sites delegate to, so a field added to the shape has exactly one place to add it. Preserve each call site's own semantics exactly (append() defaults preconditions/postconditions/constraints to [] and directives/child_checklist to None with no deepcopy since it's building fresh state; _build_amend_task deep-copies the op's fields so the caller's dict is never aliased) -- do not change either function's observable behavior, only remove the duplication. Do not touch anything in theme 2-4 yet.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; global doctrine, launch order, and all nine issue bodies loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "append() and _build_amend_task() both delegate to one shared Task constructor; no field is hand-listed in more than one place; full targeted suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-474-1"
+        }
+      ],
+      "constraints": [
+        "scripts/checklist_engine.py and tests/test_checklist_engine.py only",
+        "no observable behavior change -- pure dedup"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-474-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-475": {
+      "id": "m2-475",
+      "title": "#475 -- mechanical check: shipped-template task fields the builder never emits",
+      "imperative": "NOT OVERRIDABLE: prove the check can fail on a planted template-only field BEFORE it ships. In tests/test_checklist_engine.py write a negative self-test first: a helper that asserts a set of Task field names is a subset of (shared-builder keys) union (a small, stated, documented allowlist of template-only fields e.g. anchors/context_refs/why_exempt), then feed it a SYNTHETIC field name that is in neither set and confirm the assertion raises/fails. Run it standalone and observe it fail for the right reason (helper doesn't exist yet, or the planted field isn't actually being checked) -- this is c1, red, manual attest. Then implement in scripts/checklist_engine.py or the test file: a walker over the real shipped checklist templates (skills/*/templates/*.template.json, `type` gated/survey, `tasks` dict) collecting every task-dict key across them, and a positive test asserting (shipped fields) minus (shared builder keys from m1-474) minus (the stated allowlist) is empty -- catching a genuinely new template-only field the way the docstring's RESIDUAL LIMIT says nothing currently does. Re-run the negative self-test (still passes, still catching the synthetic plant) plus the new positive test: c2, green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-474's shared constructor exists so this check has one builder key-set to compare against",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-474 complete: _new_task shared constructor exists in scripts/checklist_engine.py"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: negative self-test written (helper + a synthetic planted template-only field) and observed failing/erroring for the right reason before the walker+assertion existed -- manual attest, evidence quotes the actual failure output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Negative self-test written first (test_negative_self_test_catches_a_synthetic_planted_field, referencing not-yet-defined _builder_task_keys/_assert_task_fields_allowed helpers) and run standalone via pytest -k TemplateOnlyFieldAllowlist BEFORE the walker+assertion existed. Observed genuine red: NameError: name '_builder_task_keys' is not defined (and _collect_shipped_task_fields not defined) -- the helper doesn't exist yet, exactly the right reason. Proceeding to implement the walker and assertion helper, then re-run for green."
+        },
+        {
+          "id": "c2",
+          "statement": "template-field walker + superset assertion implemented; negative self-test (planted field) still goes red when driven through the real assertion helper, positive test (real shipped templates, real builder) passes; full targeted suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-475-1"
+        }
+      ],
+      "constraints": [
+        "scripts/checklist_engine.py and tests/test_checklist_engine.py only",
+        "the allowlist of template-only fields must be documented with a stated reason per field, not silently assumed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-475-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-476": {
+      "id": "m3-476",
+      "title": "#476 -- drift check: CHECKLIST_SCHEMA.md's Task table vs the builder's key set",
+      "imperative": "Write a test in tests/test_checklist_engine.py that parses docs/CHECKLIST_SCHEMA.md's `## Task` section field table (the `| field | type | notes |` rows between the `## Task` header and the next `## ` header) into a set of field names, and asserts it reconciles with the shared builder's key set (m1-474) plus m2-475's template-only allowlist -- every builder field must be documented, and every documented field must be either builder-emitted or on the stated allowlist. This makes the doc VERIFIABLE, not authoritative (per #433's g3 constraint quoted in the issue) -- it is a drift check, not a new source of truth. Prove it can fail: a negative self-test driving the same parse-and-compare helper against a synthetic field set with one field removed/added, confirming it goes red. If the doc table needs a correction to pass (e.g. a genuinely undocumented field), that edit is inside 'docs/CHECKLIST_SCHEMA.md's Task table', which the launch order names as yours for #476 -- do not touch any other section of that doc.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-474 and m2-475 landed (builder key-set and allowlist exist to compare against)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-474 (_new_task) and m2-475 (TemplateOnlyFieldAllowlist.ALLOWLIST) landed; builder key-set and allowlist exist to compare against"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "schema-doc-vs-builder drift test added and green against the real doc; negative self-test proves it can fail; any Task-table doc fix is scoped to that table only",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-476-1"
+        }
+      ],
+      "constraints": [
+        "scripts/checklist_engine.py, tests/test_checklist_engine.py, and docs/CHECKLIST_SCHEMA.md's Task table ONLY -- no other doc section"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-476-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-427": {
+      "id": "m4-427",
+      "title": "#427 -- refusals counter blind to refusals before the first-ever claim",
+      "imperative": "In scripts/checklist_engine.py's main() (~line 3119), arm `refusals` (setdefault to 0) as soon as the checklist is loaded IF AND ONLY IF `cl.get('engine_session') is None` -- i.e. this checklist has NEVER been claimed, at any point in its history, so 0 is a true reading regardless of whether the counter existed when it was created. Do this BEFORE dispatch() runs, so even a refusal from a malformed `claim` call itself (or any other refusal before the first successful claim) increments a real counter. Do NOT change claim()'s own `cl.setdefault('refusals', 0)` (~line 1030) or the idempotent-resume early-return -- both stay exactly as-is; this closes only the pre-lease blind spot, not the deliberate non-backdating behavior on a previously-claimed (possibly pre-counter) checklist. First write a test (malformed `claim --session-id \"\"` on a checklist with no engine_session, via E.main) and observe it fail (refusals stays absent/None) against the CURRENT code -- c1, red, manual attest with the actual failure quoted. Then make the fix and re-run -- c2, green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded (m0-context complete)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: test_refusals_counts_a_malformed_claim_before_any_lease_ever_existed (or similar) written and run against unfixed code, observed failing -- manual attest quoting the failure",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Wrote test_refusal_before_the_first_ever_claim_is_counted in Leasing (tests/test_checklist_engine.py): a malformed claim --session-id \"\" against a checklist with no engine_session, run through E.main via _run_at. Run standalone against CURRENT unfixed code and observed genuine red: AssertionError: None != 1 (after.get('refusals') is None, not 0 or 1) -- refusals stays absent exactly as the issue describes. Proceeding to arm the counter in main() and re-run for green."
+        },
+        {
+          "id": "c2",
+          "statement": "refusals armed at load() time for a never-claimed checklist; pre-lease refusal now counted; claim()'s own arming and the idempotent-resume non-backdating behavior are unchanged; full targeted suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-427-1"
+        }
+      ],
+      "constraints": [
+        "scripts/checklist_engine.py and tests/test_checklist_engine.py only",
+        "must not backdate refusals on a checklist that already has engine_session (may predate the counter)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-427-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-503": {
+      "id": "m5-503",
+      "title": "#503 -- investigate authority binding; refute or scope, do not force a breaking fix",
+      "imperative": "Investigate whether `--authority` on amend/waive can be bound to something checkable (why-record id, evidence id) per the issue's acceptance test (an 'obviously bogus' authority like `--authority x` must be refused). Concretely check: does tests/test_engine_survey_retext_and_newlines.py (NOT an owned file) call E.amend(...) with a free-text authority (e.g. `authority=\"Commander w3a-465\"`) that is not itself a resolvable record id? Run `grep -n \"authority=\" tests/test_engine_survey_retext_and_newlines.py` as evidence. If a reference-binding fix would break that file's existing passing calls (which this crew cannot edit -- not in the sole-writer set), and a shape/length heuristic is explicitly insufficient (the issue's own text names 'the agent itself' -- a plausible multi-word phrase -- as equally bad, so a heuristic passes the letter of the acceptance test while failing its spirit), and pre-ruling #4 forbids a cryptographic ratification scheme: do NOT implement a breaking change unilaterally. Instead float the design decision (rename-only / evidence-id-binding / first-class grants) to the Admiral with this evidence, and close #503 as larger-than-filed per the Honest-Null Clause rather than force a soft fix. If investigation instead finds a scoped fix that does NOT break tests/test_engine_survey_retext_and_newlines.py and satisfies the acceptance test, implement it with red/green tests instead of floating.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the grep evidence of the cross-file conflict is attached; a written decision (float-as-larger-than-filed, with reason) or a scoped non-breaking fix (with red/green tests) is recorded -- not a silent no-op and not a forced breaking change",
+          "check": {
+            "kind": "command",
+            "command": "grep -n \"authority=\" tests/test_engine_survey_retext_and_newlines.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-503-2"
+        }
+      ],
+      "constraints": [
+        "scripts/checklist_engine.py and tests/test_checklist_engine.py only if a fix is made",
+        "no cryptographic ratification scheme (pre-ruling #4)",
+        "do not edit tests/test_engine_survey_retext_and_newlines.py -- not owned"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-503-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-503",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-503-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -n \"authority=\" tests/test_engine_survey_retext_and_newlines.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-479": {
+      "id": "m6-479",
+      "title": "#479 -- dead defensive branch in _render_directive_lines: keep-and-guard, don't blind-delete",
+      "imperative": "In scripts/checklist_engine.py's _render_directive_lines (~line 1982), the branch at the `else` (~line 2012-2013) handling a directives dict value that is not itself a dict is proved dead by mutation per #433 and kept deliberately, mirroring _render_anchor_lines's unrecognized-shape posture. Per pre-ruling #3, either delete it with fresh mutation evidence, or make the 'kept deliberately' reason checkable. Add a direct unit test in tests/test_checklist_engine.py constructing a directives dict whose value is a non-dict (e.g. `{'replan_input': 'a bare string'}`) and asserting the exact rendered line (`  replan_input: a bare string`), confirming the corpus has no such shape today (already checked: none found across skills/*/templates/*.template.json) so this is a genuine defensive branch, not dead code to delete. Re-run the mutation check yourself (temporarily replace the branch body with `raise` and confirm the new test now fails, i.e. the branch is no longer invisible to the suite) as evidence, then restore the real code.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded: reading _render_directive_lines and #433 mutation evidence next"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "characterization test added for the non-dict directives-value branch; branch confirmed no longer dead-by-mutation (evidence: replacing it with raise now fails the new test); full targeted suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-479-1"
+        }
+      ],
+      "constraints": [
+        "scripts/checklist_engine.py and tests/test_checklist_engine.py only",
+        "do not delete the branch without independently-verified fresh mutation evidence"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-479-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-480": {
+      "id": "m7-480",
+      "title": "#480 -- verify already-fixed-and-guarded, no code change",
+      "imperative": "Confirm issue #480's own claim: the directives flat-list-drop defect was fixed in #433's g2 and is guarded by tests/test_checklist_engine.py's test_flat_list_with_a_non_string_item_renders_every_item plus the TaskFieldCompleteness property class. Run the targeted tests naming both to confirm they pass today and would fail if the flat-list branch dropped content again (cite the existing test, do not write a new one -- this issue asks for verification, not new coverage). No code change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded: read #480's own claim and the two cited guards"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "test_flat_list_with_a_non_string_item_renders_every_item and TaskFieldCompleteness confirmed passing and guarding the fixed defect; no code change made",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py -k \"test_flat_list_with_a_non_string_item_renders_every_item or TaskFieldCompleteness\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-480-1"
+        }
+      ],
+      "constraints": [
+        "no code change -- verification only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-480-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py -k \"test_flat_list_with_a_non_string_item_renders_every_item or TaskFieldCompleteness\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-493": {
+      "id": "m8-493",
+      "title": "#493 -- journal append must be byte-faithful, mirroring save()'s #465 fix",
+      "imperative": "scripts/checklist_engine.py's append_journal_entry (~line 3094) writes the journal in text mode (`jp.open('a', encoding='utf-8')`), the same defect class #465 fixed in save(). First write red-before-green fixtures in tests/test_checklist_engine.py mirroring tests/test_engine_survey_retext_and_newlines.py's save() pattern (write_bytes fixtures, assert on read_bytes, never write_text/read_text -- universal-newline translation makes those vacuous): a journal pre-seeded with LF endings must stay LF after an append, one pre-seeded CRLF must stay CRLF, and a journal that doesn't exist yet must default to LF. Run them against the CURRENT unfixed code and observe at least one fail for the real reason (churned endings) -- c1, red, quote the actual failure. Then fix append_journal_entry to reuse _dominant_newline(jp) (append-only variant of save()'s pattern: read the existing journal's dominant ending, encode the new line as bytes, translate only if not LF, open in binary append mode) and re-run -- c2, green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded: read append_journal_entry and save()'s #465 pattern (_dominant_newline)"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: LF/CRLF/new-file journal-append fixture tests written and run against unfixed append_journal_entry, at least one observed failing for the real reason (line-ending churn) -- manual attest quoting the failure",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "TDD red confirmed against unfixed append_journal_entry: added AppendJournalEntryLineEndings (tests/test_checklist_engine.py) with three fixtures mirroring test_engine_survey_retext_and_newlines.py's save() pattern (write_bytes/read_bytes only). Ran pytest -k AppendJournalEntryLineEndings against the unfixed code: 2 of 3 failed for the real reason (line-ending churn). test_append_preserves_lf_journal_endings: AssertionError: 1 != 0 : append_journal_entry churned an LF journal to CRLF (1 CRLF endings written). test_append_defaults_new_journal_to_lf: AssertionError: 1 != 0 : a brand-new journal must default to LF. (test_append_preserves_crlf_journal_endings passed even unfixed, as expected on Windows -- platform-default text-mode translation already emits CRLF, so it is the non-discriminating guard case, matching the documented LF/CRLF asymmetry in test_engine_survey_retext_and_newlines.py's own header note.)"
+        },
+        {
+          "id": "c2",
+          "statement": "append_journal_entry made byte-faithful (preserves existing journal's ending, defaults a new journal to LF, writes bytes not text); all three fixtures green; full targeted suite green",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m8-493-1"
+        }
+      ],
+      "constraints": [
+        "scripts/checklist_engine.py and tests/test_checklist_engine.py only",
+        "journal append stays best-effort/non-fatal (OSError still swallowed)"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m8-493-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m9-495": {
+      "id": "m9-495",
+      "title": "#495 -- enumerate the six writers; float, none are inside checklist_engine.py",
+      "imperative": "Enumerate JSON writers passing encoding= without newline= by COMMAND, not memory: `grep -rn \"encoding=.utf-8.\" --include=\"*.py\" scripts/ | grep -v checklist_engine.py` (or equivalent), confirm the six sites the issue names (collect_feedback.py:290,365; install_constellation.py:911,1182,1241; build_architecture_map.py:385) and report which six you found -- including any additional matches the command surfaces, named honestly even if out of the issue's stated six. Since NONE of the six sites are inside scripts/checklist_engine.py (install_constellation.py is explicitly crew 2's; collect_feedback.py and build_architecture_map.py are outside this crew's owned-file list too), float the whole issue per the launch order's file-ownership rule -- do not edit any of the three files. No code change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context loaded: read #495's stated six sites and the launch order's file-ownership rule"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "six writers enumerated by command and confirmed against the issue's list; all sites confirmed outside owned files; issue floated (not fixed) with the enumeration command and its output as evidence",
+          "check": {
+            "kind": "command",
+            "command": "grep -rn \"encoding=.utf-8.\" --include=\"*.py\" scripts/ | grep -v checklist_engine.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m9-495-1"
+        }
+      ],
+      "constraints": [
+        "do not edit collect_feedback.py, install_constellation.py, or build_architecture_map.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m9-495-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -rn \"encoding=.utf-8.\" --include=\"*.py\" scripts/ | grep -v checklist_engine.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m10-wrapup": {
+      "id": "m10-wrapup",
+      "title": "Full suite, PR, issue dispositions",
+      "imperative": "Run the full suite (`python -m pytest -q`) from the worktree root and confirm real exit 0 (never read a piped $?). Push the branch and open a PR titled to reflect the wave-5 engine-internals crew's nine-issue disposition. Comment on and close each of the nine issues (#474 #475 #476 #427 #503 #479 #480 #493 #495) with its fixed/refuted/larger-than-filed/blocked line and evidence per the launch order's Return Shape. Write the IMPLEMENTER_RESULT to .agent-work/w5c4-engine/IMPLEMENTER_RESULT.md, including the per-issue return-shape line, the #475 planted-field red-before-fix evidence, the #495 enumeration command and output, PR number, and anything not done.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all nine issue items (m1 through m9) closed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "all nine issue items (m1-474 through m9-495) closed: m1-474 fixed, m2-475 fixed, m3-476 fixed, m4-427 fixed, m5-503 floated (larger-than-filed), m6-479 kept-and-guarded, m7-480 verified (already fixed/guarded), m8-493 fixed, m9-495 floated entirely"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green at real exit 0; PR opened; all nine issues commented and closed with fixed/refuted/larger/blocked evidence; IMPLEMENTER_RESULT.md written",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 9,
+  "engine_session": {
+    "session_id": "impl-w5-engine-c-1786234427",
+    "status": "active",
+    "claimed_at": "2026-08-09T00:13:47.228647+00:00",
+    "last_heartbeat": "2026-08-09T00:23:33.835263+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": "impl-w5-engine-b",
+    "takeover_reason": "Refresh takeover: predecessor impl-w5-engine-b filed refresh-request at m5-503 and stood down after a fresh-tool-call-verified HARD trip; I am the replacement session resuming per team-lead handoff."
+  },
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m0-context",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2161,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-08T23:08:08.822280+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "m0-context",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2296,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-08T23:28:50.928473+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "m5-503",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1516,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-08T23:46:51.149340+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "m5-503",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1542,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-08T23:47:46.311994+00:00"
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Refresh handoff resumed: launch order LO-w5-c4-engine.md, all nine issue bodies (#474 #475 #476 #427 #503 #479 #480 #493 #495), and the sole-writer ownership boundary (scripts/checklist_engine.py, tests/test_checklist_engine.py) were confirmed read by the predecessor session (c1 satisfied_by). This session inherits that understanding per team-lead's refresh brief, plus rulings on #503 (float, not force), #495 (float entirely), #479 (keep-and-guard w/ characterization test), #480 (verify-only), and #475's NOT OVERRIDABLE red-before-fix requirement. Proceeding to m1-474.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:29:04.361980+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-474",
+      "why": "Introduced _new_task() as the one shared Task constructor; append() and _build_amend_task() both delegate to it now. append() calls it with no explicit list/dict args so it gets fresh empty containers (matches its old no-deepcopy behavior); _build_amend_task() passes deep-copied fields from the op dict (matches its old aliasing-safety behavior). Full targeted suite green: 418 passed, 128 subtests passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:32:11.676794+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-475",
+      "why": "TemplateOnlyFieldAllowlist class added to tests/test_checklist_engine.py: _builder_task_keys()/_collect_shipped_task_fields()/_assert_task_fields_allowed() module-level helpers, an ALLOWLIST of 6 fields each with a stated reason (anchors, context_refs, why_exempt, context_headroom_tokens, context_headroom_note, kind -- the last two genuinely missing from CHECKLIST_SCHEMA.md's Task table, a doc-drift finding for m3-476), a negative self-test proven red before the helpers existed (NameError, quoted in c1 attest), and a positive test walking the real skills/*/templates/*.template.json corpus. Full targeted suite green: 420 passed, 128 subtests passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:38:37.895149+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-476",
+      "why": "Added SchemaDocFieldReconciliation to tests/test_checklist_engine.py: _doc_task_field_table() parses CHECKLIST_SCHEMA.md's Task table between '## Task' and the next '## ' header; _assert_doc_reconciles_with_builder() checks both directions (every builder field documented, every documented field builder-emitted-or-allowlisted). Negative self-test plants a removed 'status' field and confirms it raises naming it. Positive test against the real doc passes with NO doc edit needed -- the current Task table already reconciles with _new_task's key set plus m2-475's allowlist (context_headroom_tokens/context_headroom_note/kind are allowlist members not required to be documented by this check's stated direction; that gap is noted but not a failure of this specific reconciliation). Full targeted suite green: 422 passed, 128 subtests passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:43:04.078652+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-427",
+      "why": "main() now arms refusals=0 on load, before dispatch(), IF AND ONLY IF cl.get('engine_session') is None (never claimed at any point in history -- release() leaves the record with status 'released', never clears the key, so this predicate is exact). claim()'s own setdefault at ~1030 and the idempotent-resume early-return are untouched. TDD: test_refusal_before_the_first_ever_claim_is_counted (Leasing class) observed red first (AssertionError: None != 1) against unfixed code, quoted in the c1 attest; now green after the fix. Full targeted suite green: 423 passed, 128 subtests passed.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:46:43.648809+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-503",
+      "why": "FLOAT AS LARGER-THAN-FILED (#503). Fresh grep re-verified: tests/test_engine_survey_retext_and_newlines.py (not owned, not in sole-writer set) calls E.amend(...) with free-text authority=\"Commander w3a-465\" at 5 call sites (lines 167,181,204,217,224) -- not a resolvable why-record/evidence id. A reference-binding fix satisfying the issue's acceptance test (refuse an 'obviously bogus' authority like --authority x) would break these existing passing calls in a file this crew cannot edit. A shape/length heuristic is explicitly insufficient per the issue's own text, which names 'the agent itself' -- a plausible multi-word phrase -- as equally bogus, so a heuristic would pass the acceptance test's letter while failing its spirit. Pre-ruling #4 forbids a cryptographic ratification scheme, closing the remaining mechanical option. No scoped non-breaking fix exists within this crew's ownership boundary. Per team-lead ruling (already settled, carried into this refresh) and the Honest-Null Clause: closing #503 as a design float to the Admiral -- options are rename-only, evidence-id-binding, or first-class grants -- rather than forcing a breaking or cosmetic fix.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:15:06.590673+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-479",
+      "why": "KEEP-AND-GUARD (#479), per team-lead ruling. Added test_dict_value_that_is_not_a_dict_renders_as_one_leaf_line (RenderDirectives class, tests/test_checklist_engine.py) constructing directives={'replan_input': 'a bare string'} and asserting the exact rendered line '  replan_input: a bare string'. Confirmed green against current code. Mutation check performed: temporarily replaced the else branch body (scripts/checklist_engine.py _render_directive_lines, ~line 2012-2013) with raise RuntimeError('MUTATION-CHECK-m6-479'); re-ran the new test and observed it fail with that RuntimeError, proving the branch is no longer invisible to the suite; then restored the original line exactly, verified by grep finding zero occurrences of the mutation marker. Full targeted suite green: 424 passed (423 baseline + 1 new), 128 subtests passed. Branch kept, not deleted -- its 'kept deliberately' reason (mirrors _render_anchor_lines' unrecognized-shape posture) is now checkable per pre-ruling #3.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:18:08.530584+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-480",
+      "why": "VERIFY-ONLY (#480), per team-lead ruling. Ran the two cited guards: RenderDirectives::test_flat_list_with_a_non_string_item_renders_every_item (the direct regression test for the flat-list-drop defect fixed in #433's g2) and the three TaskFieldCompleteness tests, including test_the_property_fails_when_a_populated_field_is_unrendered -- an in-suite negative self-test proving the property class itself would go red if a populated field (directives included) stopped rendering. All 4 passed. This confirms #480's own claim: the defect is fixed and guarded, and would be caught if the flat-list branch ever dropped content again. No code change made -- verification only, per constraint.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:18:53.604830+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-493",
+      "why": "Fixed append_journal_entry (scripts/checklist_engine.py) to be byte-faithful, reusing save()'s #465 _dominant_newline pattern: read the existing journal's dominant ending, encode the new entry line as UTF-8 bytes, translate '\\n' -> the journal's own ending only if it isn't already LF, then write via binary append ('ab') instead of text-mode append. OSError still swallowed (best-effort/non-fatal preserved). Re-ran the three fixtures: all green. Full targeted suite green: 427 passed (424 baseline + 3 new), 128 subtests passed, no regressions.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:22:14.128742+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m9-495",
+      "why": "FLOAT ENTIRELY (#495). Command `grep -rn \"encoding=.utf-8.\" --include=\"*.py\" scripts/ | grep -v checklist_engine.py` run. All six issue-named sites confirmed present exactly as claimed: collect_feedback.py:290,365 (write_text(json.dumps(...), encoding=\"utf-8\") -- no newline=); install_constellation.py:911,1182,1241 (same pattern); build_architecture_map.py:385 (same pattern). Command surfaced many additional encoding=\"utf-8\" matches across scripts/ (read_text calls, subprocess encoding=, and writers that already pass newline= e.g. context_manifest.py:447, map_orient.py:1137, verify_iterative_role_artifacts.py:49) -- named honestly, none of these are additional instances of the same write_text-without-newline= defect the issue targets; the six named sites are the only ones matching that exact shape. None of the six sites are inside scripts/checklist_engine.py -- install_constellation.py is explicitly crew 2's owned file per the launch order, collect_feedback.py and build_architecture_map.py are outside this crew's sole-writer set (scripts/checklist_engine.py, tests/test_checklist_engine.py) entirely. Per the launch order's file-ownership rule and team-lead ruling: floating #495 whole to the Admiral rather than editing files this crew does not own. No code change made; none of the three named files touched.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:23:10.750712+00:00"
+    }
+  ]
+}

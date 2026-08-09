@@ -861,6 +861,49 @@ class Leasing(unittest.TestCase):
             self.assertEqual(E.main(["--file", str(f), "release", "--session-id", "s1"]), 0)
             self.assertEqual(E.load(f)["engine_session"]["status"], "released")
 
+    def test_refusal_before_the_first_ever_claim_is_counted(self):
+        # #427: claim()'s own `cl.setdefault("refusals", 0)` (~1030) only arms
+        # the counter on a SUCCESSFUL claim. A checklist that has never once
+        # been successfully claimed (no `engine_session`, ever) has no armed
+        # counter, so main()'s persistence-path increment (only bumps an
+        # already-int value, deliberately, to avoid backdating a pre-counter
+        # checklist with a guessed number) silently drops a refusal that
+        # happens BEFORE that first claim -- e.g. this malformed claim call
+        # itself. 0 would be a TRUE reading here (never claimed, ever), not a
+        # guess, so it should be armed and counted.
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        self.assertIsNone(cl.get("engine_session"))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(
+                f, ["claim", "--session-id", "", "--claimed-by", "implementer"])
+            self.assertEqual(code, 1)
+            after = E.load(f)
+        self.assertEqual(after.get("refusals"), 1)
+
+    def test_refusal_on_a_never_claimed_child_gate_plan_does_not_arm_the_counter(self):
+        # #357 g1 review carry-over: a child gate plan is legitimately driven
+        # WITHOUT ever calling `claim` at all -- `engine_session` stays None
+        # for its whole life by design (production shape, not a checklist
+        # mid-way to its first claim). #427's own fix must not conflate the
+        # two: arming on ANY refusal while unclaimed would give this shape a
+        # `refusals` key it is supposed to never carry (episode_capture's
+        # negative control asserts the key's ABSENCE is structural, not "zero
+        # refusals happened"). A refused `start` on an unknown gate id needs
+        # no lease and no `claim` call to reach -- exactly the #357 shape.
+        cl = gated(g1=gate("g1", command=PASS_COMMAND))
+        self.assertIsNone(cl.get("engine_session"))
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "c.json"
+            E.save(f, cl)
+            code, out, err = _run_at(f, ["start", "does-not-exist"])
+            self.assertEqual(code, 1)
+            after = E.load(f)
+        self.assertNotIn("refusals", after,
+                          "a never-claimed child gate plan must not have its "
+                          "refusals key armed by a non-claim refusal")
+
 
 class ShippedTemplates(unittest.TestCase):
     def test_every_template_is_valid_json_and_checklists_walk(self):
@@ -1791,6 +1834,77 @@ class JournalEmission(unittest.TestCase):
             Path(str(f) + ".journal").write_text("not json at all\n", encoding="utf-8")
             self.assertEqual(E.main(["--file", str(f), "start", "g1"]), 0)
             self.assertEqual(E.load(f)["tasks"]["g1"]["status"], "in-progress")
+
+
+class AppendJournalEntryLineEndings(unittest.TestCase):
+    """Issue #493: `append_journal_entry` wrote in text mode
+    (`jp.open('a', encoding='utf-8')`), the same defect class #465 fixed in
+    `save()` -- a platform-default newline translation on write churns an
+    existing journal's endings on every append and ignores the file's own
+    convention. Mirrors tests/test_engine_survey_retext_and_newlines.py's
+    save() pattern: fixtures built with `write_bytes`, assertions on
+    `read_bytes` -- a `write_text` fixture is born CRLF on Windows and a
+    `read_text` assertion is vacuously true forever under universal-newline
+    translation, so neither can prove anything here."""
+
+    def _line_ending_counts(self, raw: bytes) -> tuple[int, int]:
+        crlf = raw.count(b"\r\n")
+        return crlf, raw.count(b"\n") - crlf
+
+    def _append(self, jp: Path) -> None:
+        spine_path = Path(str(jp)[:-len(".journal")])
+        E.append_journal_entry(spine_path, "start", "g1", "s1", [])
+
+    def test_append_preserves_lf_journal_endings(self):
+        # On WINDOWS this is the discriminating case: the old text-mode open
+        # translates every written '\n' to the platform ending ('\r\n'), so
+        # the new line lands CRLF while the rest of the journal stays LF --
+        # a churned, mixed-ending file.
+        with tempfile.TemporaryDirectory() as d:
+            jp = Path(d) / "spine.json.journal"
+            jp.write_bytes(b'{"seq": 1, "hash": "x"}\n')
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertEqual(crlf, 0, "fixture was not born LF")
+
+            self._append(jp)
+
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertEqual(
+                crlf, 0,
+                f"append_journal_entry churned an LF journal to CRLF "
+                f"({crlf} CRLF endings written)")
+            self.assertGreater(lf, 1, "append wrote no new line")
+
+    def test_append_preserves_crlf_journal_endings(self):
+        # Guard against the obvious over-correction of "always write LF" --
+        # on POSIX this is the discriminating case, on Windows it is the one
+        # that must not regress.
+        with tempfile.TemporaryDirectory() as d:
+            jp = Path(d) / "spine.json.journal"
+            jp.write_bytes(b'{"seq": 1, "hash": "x"}\r\n')
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertGreater(crlf, 0, "fixture was not born CRLF")
+            self.assertEqual(lf, 0, "fixture was not born CRLF")
+
+            self._append(jp)
+
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertGreater(crlf, 1, "append wrote no CRLF endings at all")
+            self.assertEqual(
+                lf, 0,
+                f"append_journal_entry churned a CRLF journal to LF "
+                f"({lf} bare LF endings written)")
+
+    def test_append_defaults_new_journal_to_lf(self):
+        with tempfile.TemporaryDirectory() as d:
+            jp = Path(d) / "spine.json.journal"
+            self.assertFalse(jp.exists())
+
+            self._append(jp)
+
+            crlf, lf = self._line_ending_counts(jp.read_bytes())
+            self.assertEqual(crlf, 0, "a brand-new journal must default to LF")
+            self.assertGreater(lf, 0, "append wrote no line endings at all")
 
 
 class DoctrineRail(unittest.TestCase):
@@ -4727,6 +4841,25 @@ class RenderDirectives(unittest.TestCase):
             "next: start g1"
         ))
 
+    def test_dict_value_that_is_not_a_dict_renders_as_one_leaf_line(self):
+        # #479/#433 g1 review carry-over: shape (a)'s `else` branch -- a dict
+        # value that is not itself a dict -- was flagged dead by mutation and
+        # is kept deliberately (mirrors _render_anchor_lines' own
+        # unrecognized-shape posture), not deleted. This characterization
+        # test is the checkable form of that "kept deliberately" reason
+        # (pre-ruling #3): the corpus carries no such shape today (none found
+        # across skills/*/templates/*.template.json), so nothing else in the
+        # suite exercises it.
+        t = gate("g1", "pending")
+        t["directives"] = {"replan_input": "a bare string"}
+        cl = gated(g1=t)
+        self.assertEqual(E.current(cl), (
+            "ACTIVE g1 [pending] — do g1\n"
+            "directives:\n"
+            "  replan_input: a bare string\n"
+            "next: start g1"
+        ))
+
     def test_flat_list_of_strings_shape_renders_one_line_each(self):
         # Shape (b), the one docs/CHECKLIST_SCHEMA.md declares and the `add`
         # amend op accepts unvalidated. Narrowing the renderer to dicts would
@@ -5040,6 +5173,161 @@ class TaskFieldCompleteness(unittest.TestCase):
         with self.assertRaises(AssertionError) as caught:
             self._assert_every_populated_field_renders(t, out)
         self.assertIn("directives", str(caught.exception))
+
+
+def _builder_task_keys():
+    """The engine's own canonical Task-shape key set, asked for rather than
+    re-listed here so the enumeration cannot drift from the builder (same
+    approach as TaskFieldCompleteness.test_fixture_carries_every_field_the_
+    engines_task_builder_builds above). `_build_amend_task` and `append()`
+    both delegate to `_new_task` as of #474, so either call site's output has
+    the identical key set."""
+    built = E._build_amend_task({
+        "id": "x", "title": "t", "imperative": "i",
+        "postconditions": [{"id": "c1", "statement": "s",
+                             "check": None, "satisfied": False}],
+    })
+    return set(built)
+
+
+def _collect_shipped_task_fields():
+    """Walk every shipped gated/survey checklist template
+    (skills/*/templates/*.template.json) and union every key any `tasks`
+    dict entry carries. This is the real corpus TaskFieldCompleteness's own
+    RESIDUAL LIMIT says nothing checks: a field a template carries but
+    neither `_build_amend_task` nor `append()` builds."""
+    fields = set()
+    for path in sorted(ROOT.glob("skills/*/templates/*.template.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if data.get("type") not in ("gated", "survey"):
+            continue
+        tasks = data.get("tasks", {})
+        if not isinstance(tasks, dict):
+            continue
+        for task in tasks.values():
+            if isinstance(task, dict):
+                fields |= set(task.keys())
+    return fields
+
+
+def _assert_task_fields_allowed(fields, allowlist, label):
+    """The shared assertion both the negative self-test and the positive
+    corpus test drive -- not a copy of it -- so a bug in one is a bug in
+    both. Anything in `fields` that is neither engine-built nor on the
+    stated `allowlist` is unaccounted for and fails loudly, naming it."""
+    unaccounted = fields - (_builder_task_keys() | allowlist)
+    assert not unaccounted, (
+        f"{label}: field(s) {sorted(unaccounted)} are neither built by the "
+        f"engine's Task constructor (_new_task) nor on the stated "
+        f"template-only allowlist -- add them to the allowlist with a "
+        f"stated reason, or fix the producer"
+    )
+
+
+class TemplateOnlyFieldAllowlist(unittest.TestCase):
+    """#475: TaskFieldCompleteness's own stated RESIDUAL LIMIT (above) says a
+    field introduced only by a shipped template -- carried in a checklist JSON
+    but built by neither `_build_amend_task` nor `append()` -- is invisible to
+    that property and needs a human to add it. This class closes that hole: a
+    walker over the real shipped templates plus a superset assertion against
+    (the engine's own Task builder keys) union (a small, stated allowlist of
+    template-only fields), so a genuinely new template-only field fails
+    loudly instead of silently passing.
+
+    RED-BEFORE-GREEN (NOT OVERRIDABLE per the issue): the negative self-test
+    below was written and run FIRST, before `_assert_task_fields_allowed` or
+    `_collect_shipped_task_fields` existed, and observed failing with
+    `NameError: name '_assert_task_fields_allowed' is not defined` -- proof
+    the check can fail on a planted field before it ships, not just pass by
+    construction. Only after that red was the helper implemented."""
+
+    ALLOWLIST = {
+        "anchors", "context_refs", "why_exempt",
+        "context_headroom_tokens", "context_headroom_note", "kind",
+    }
+
+    def test_negative_self_test_catches_a_synthetic_planted_field(self):
+        planted = _builder_task_keys() | {"totally_synthetic_field_zzqx"}
+        with self.assertRaises(AssertionError) as caught:
+            _assert_task_fields_allowed(
+                planted, self.ALLOWLIST, "synthetic plant")
+        self.assertIn("totally_synthetic_field_zzqx", str(caught.exception))
+
+    def test_shipped_templates_carry_no_unaccounted_task_fields(self):
+        # The real corpus walk: every `tasks` dict key across every shipped
+        # gated/survey template must be builder-emitted or on the allowlist.
+        shipped_fields = _collect_shipped_task_fields()
+        _assert_task_fields_allowed(
+            shipped_fields, self.ALLOWLIST, "shipped templates")
+
+
+def _doc_task_field_table():
+    """Parse docs/CHECKLIST_SCHEMA.md's `## Task` section field table (the
+    `| field | type | notes |` rows between the `## Task` header and the
+    next `## ` header) into a set of field names. Reads the `` `field` ``
+    column of every row shaped like a table data row -- the header and
+    separator rows don't backtick-quote a field name, so they never match."""
+    path = ROOT / "docs" / "CHECKLIST_SCHEMA.md"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    start = next(i for i, line in enumerate(lines) if line.strip() == "## Task")
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+        len(lines),
+    )
+    fields = set()
+    for line in lines[start:end]:
+        m = re.match(r"\|\s*`([A-Za-z_]+)`\s*\|", line)
+        if m:
+            fields.add(m.group(1))
+    return fields
+
+
+def _assert_doc_reconciles_with_builder(doc_fields, builder_keys, allowlist, label):
+    """The shared reconciliation assertion both the negative self-test and
+    the positive doc-vs-builder test drive -- not a copy of it. Two
+    directions, matching the issue's own stated check: every builder field
+    must be documented, and every documented field must be either
+    builder-emitted or on the stated template-only allowlist. This makes the
+    doc VERIFIABLE against what the engine builds, not authoritative over
+    it (#433 g3) -- a field the allowlist carries but the doc omits is not
+    itself a failure here."""
+    undocumented_builder = builder_keys - doc_fields
+    unaccounted_doc = doc_fields - (builder_keys | allowlist)
+    assert not undocumented_builder and not unaccounted_doc, (
+        f"{label}: builder field(s) {sorted(undocumented_builder)} are not "
+        f"documented in CHECKLIST_SCHEMA.md's Task table; documented "
+        f"field(s) {sorted(unaccounted_doc)} are neither builder-emitted "
+        f"nor on the stated template-only allowlist"
+    )
+
+
+class SchemaDocFieldReconciliation(unittest.TestCase):
+    """#476: docs/CHECKLIST_SCHEMA.md's `## Task` field table is hand-authored
+    prose that nothing checks against what the engine actually builds
+    (#433's g3 finding, quoted in the issue). This test makes the table
+    VERIFIABLE, not authoritative: a drift check between the doc and
+    `_new_task`'s real key set (plus m2-475's `TemplateOnlyFieldAllowlist.
+    ALLOWLIST`), never a new source of truth the engine is bound by.
+
+    RED-BEFORE-GREEN: the negative self-test drives the SAME
+    `_assert_doc_reconciles_with_builder` helper the positive test drives,
+    against a synthetic field set missing one real builder field
+    (`status`), and confirms it raises naming that field -- proof the
+    reconciliation can actually fail, not just pass by construction."""
+
+    def test_negative_self_test_catches_an_undocumented_builder_field(self):
+        doc_fields = _doc_task_field_table() - {"status"}
+        with self.assertRaises(AssertionError) as caught:
+            _assert_doc_reconciles_with_builder(
+                doc_fields, _builder_task_keys(),
+                TemplateOnlyFieldAllowlist.ALLOWLIST, "synthetic plant")
+        self.assertIn("status", str(caught.exception))
+
+    def test_schema_doc_task_table_reconciles_with_the_builder(self):
+        _assert_doc_reconciles_with_builder(
+            _doc_task_field_table(), _builder_task_keys(),
+            TemplateOnlyFieldAllowlist.ALLOWLIST,
+            "CHECKLIST_SCHEMA.md Task table")
 
 
 class Inv1CompletenessOracle(unittest.TestCase):
