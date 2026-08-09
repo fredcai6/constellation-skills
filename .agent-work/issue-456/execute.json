@@ -2530,7 +2530,12 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g8-review-1",
+          "attested": {
+            "evidence": "e-g8-review-1",
+            "note": "REVIEW_RESULT returned: APPROVE, no blockers, from the same reviewer role that issued three consecutive BLOCKs on this gate. Attempt 4 is the pass that matters, because it re-ran the two mutations attempt 3 designed BEFORE the fix existed, against a shape the reviewer chose rather than one I chose.\n\nBoth now bite, on the exact assertion that was hollow. Mutation 1, reverting to the remediation-2 shape so the blank-line branch drops its own overflow: 2 failed, 10 passed, 3 subtests -- down from 4 subtests -- with test_long_first_paragraph_with_blank_line_and_body FAILED and test_all_shapes_preserve_complete_content SUBFAILED on shape 'blank line with first-para overflow', both on assertIn of the overflow text. Mutation 2, the surgical drop of only the prepended overflow while keeping truncation: identical two tests, identical failure mode. Both reverts confirmed byte-clean with git diff --quiet rather than porcelain.\n\nScope confirmed test-only by range rather than by claim: git diff 1f2b57ab..8ad32efb -- scripts/ is empty. Production code is byte-identical to the state approved on quality grounds in attempt 3.\n\nClose-criteria numbers re-run by the reviewer, not taken from my brief: suite 1838 passed / 2 skipped / 701 subtests / 0 failed; selector 11 passed / 4 subtests; build then check 7/7 exit 0.\n\nThe reviewer was explicit about what it did NOT do: it did not construct a fourth independent mutation, and said so rather than letting the pass read as exhaustive. That honesty is worth more than the fourth mutation would have been.\n\nTwo handoff defects it found are mine and route to feedback. First, my close criteria cited `python scripts/code_map/build.py` and `check.py`, which do not exist -- the entry point is the package CLI, `python -m scripts.code_map build --root .`. Three reviewers in a row have had to rediscover that; it belongs in the stock close-criteria phrasing, not in each reviewer's head. It would also have broken my landing-zone measurement script, which I had already written against the same wrong path. Second, on a multi-round gate the append-a-recheck-then-re-consolidate convention is nowhere written down; the reviewer inferred it from the survey's own history. It also hit the override guard firing on historical fails and correctly supplied a per-item superseded-by reason."
+          }
         }
       ],
       "constraints": [],
@@ -2539,11 +2544,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g8-review-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g8-rereview-4-RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g8-integrate": {
@@ -2555,7 +2572,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received for this gate: .agent-work/issue-456/crew-handoffs/g8-rereview-4-RESULT.md, attached as e-g8-review-1, verdict APPROVE, no blockers, return status complete. This is attempt 4 from the same reviewer role that issued BLOCK on attempts 1, 2 and 3, so the APPROVE is a reversal by the party that raised every prior objection rather than a fresh reviewer with no history on the gate."
         }
       ],
       "postconditions": [
@@ -2571,7 +2589,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g8-integrate-2"
         },
         {
           "id": "c2",
@@ -2583,17 +2602,45 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g8-integrate-1",
+          "attested": {
+            "evidence": "e-g8-integrate-1",
+            "note": "Reviewer verdict is APPROVE, recorded in .agent-work/issue-456/crew-handoffs/g8-rereview-4-RESULT.md and attached here as e-g8-integrate-1. No blockers, return status complete. The verdict comes from the same reviewer role that BLOCKed attempts 1, 2 and 3, and it rests on that reviewer re-running its own two pre-fix mutations rather than reproducing mine."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g8-integrate-1",
+          "type": "review-result",
+          "payload": {
+            "path": ".agent-work/issue-456/crew-handoffs/g8-rereview-4-RESULT.md",
+            "verdict": "APPROVE",
+            "blockers": "none"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g8-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/ -q && env -u FORCE_COLOR -u PYTHONIOENCODING python -m pytest tests/test_code_map.py -k 'bom or docstring' -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "gs-implement": {
@@ -2605,7 +2652,8 @@
           "id": "p1",
           "statement": "g8 -- last, so the map it points at exists",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g8 is closed and advanced, which is what this precondition waits on: gs is last so that the map it points at exists. The map tree builds clean at this boundary -- build then check 7/7 exit 0 -- and the extraction work that shapes its pages (comment-tag grammar at g7, BOM handling and the docstring summary/body split at g8) is all landed and reviewed, so the entry point this gate commits will not be invalidated by a later gate rewriting page content.\n\nThe gate's stated assumption -- that the committed map tree ships here -- has now been replaced by measurement rather than carried forward on faith. The planned 115/116-file landing zone is NOT stable: one reworded docstring rewrites its module INDEX.md. A 2-file zone, root INDEX.md plus ids.jsonl, IS stable, and the negative control fires on it. Recorded in .agent-work/issue-456/landing-zone-measurement.md and flagged to the human, since it narrows what ships."
         }
       ],
       "postconditions": [
@@ -2650,7 +2698,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -2830,6 +2878,16 @@
       "id": "tc17",
       "from": "g8-integrate",
       "statement": "Two verification-method findings from g8, one of which lands on the Commander.\n\nFirst, the method. The g8 reviewer disclosed that its initial invariant check reconstructed the original text and compared by splitting on whitespace, which throws false positives on strings with no whitespace, and it redid the check character-exact. I had used the same word-splitting approach in my own four-shape verification of the same invariant and presented the result as though it settled the question. The conclusion survived the stronger method -- zero content loss, confirmed character-exact by the reviewer across shapes I had not chosen -- so nothing shipped wrong. But my check was weaker than I described it, and on a run whose recurring lesson is that evidence which cannot fail is worthless, a comparison that cannot detect a class of difference belongs in the same family. Worth carrying: when the claim is that no content is lost, compare characters, not tokens.\n\nSecond, an engine behavior worth confirming for the corpus rather than leaving as folklore. Re-consolidating a survey a second time via append, record, consolidate needed no --override-reason on this pass, because the guard only fires when consolidating APPROVE while a recorded check is failing. The reviewer's new verdict was BLOCK, so the guard stayed silent. The workbench reference documents only the BLOCK-to-APPROVE direction, so a reader would reasonably assume the override is always required on a second consolidate. Not a defect, but an undocumented asymmetry in a verb this run has now used three times, and the kind of thing that produces a superstitious extra flag if left unwritten."
+    },
+    {
+      "id": "tc18",
+      "from": "g8-integrate",
+      "statement": "The Commander's stock close-criteria phrasing hands reviewers a build command that does not exist. Three consecutive g8 reviewers were told to run `python scripts/code_map/build.py` and `python scripts/code_map/check.py`; there are no such standalone scripts. The real entry point is the package CLI, `python -m scripts.code_map build --root .` / `check --root .`. Each reviewer rediscovered it independently and none reported it until attempt 4. The cost is not just the rediscovery: I had already written my own landing-zone measurement script against the same wrong path, so the defect was propagating from the handoff into Commander-side tooling. Fix at the source -- the handoff template or the stock close-criteria phrasing -- not per gate. Related: a wrong command in a close criterion is a check that cannot pass, the mirror of this run's recurring theme."
+    },
+    {
+      "id": "tc19",
+      "from": "g8-integrate",
+      "statement": "Nothing tells a reviewer how to reuse a survey across multiple rounds of the same gate. On a re-review the survey file already exists in a consolidated state, and the convention -- append a recheck item as a sibling, record it, then re-consolidate with `--override-reason` -- is written down nowhere. The g8 attempt-4 reviewer reconstructed it by reading the survey's own history and seeing that attempts 2 and 3 had appended r7-recheck and r8-recheck rather than starting new files. It guessed right, but a reviewer coming in cold to a multi-round gate should not have to infer the file convention from archaeology. Name it in the reviewer handoff template or in the checklist-engine reference. Pairs with the separately-filed finding that the override guard fires only on APPROVE-while-failing and not on BLOCK, an asymmetry the same reference does not document."
     }
   ],
   "blockers": [],
@@ -3036,6 +3094,20 @@
       "why": "Both defects are built and the tests that guard them can now fail. The BOM path is exercised by a fixture of real bytes, which is the only way that check can go red in a repo with zero BOM files. The docstring split routes post-160 overflow into the body in both shapes, no-blank-line and blank-line, covering all 186 real docstrings that were mis-split or truncated.\n\nThe gate took five passes and the last one changed no production code. The reviewer proved the invariant tests hollow: the assertion sat behind a branch on the measured output, so removing the truncation from production left all eleven selector tests green. That is fixed, and I verified the fix by mutation rather than by reading the diff -- the same truncation removal now takes four tests red, both formerly-hollow ones among them, revert byte-clean under git diff --quiet.\n\nFour of the five passes trace to my briefs, not to the crew: I passed an undefined term through, then defined it wrong in a way that destroyed content, then scoped the repair to one of two identical branches. Recorded in the c1 attestation and routed to feedback.\n\nAdvancing on numbers I re-ran myself: suite 1838 passed / 2 skipped / 701 subtests / 0 failed, selector 11 passed / 4 subtests, fresh build then check 7/7 exit 0, tree clean.",
       "mechanical": false,
       "ts": "2026-08-09T02:42:13.215693+00:00"
+    },
+    {
+      "id": "w-30",
+      "gate": "g8-review",
+      "why": "Review closed APPROVE with no blockers, on the fourth pass, from the reviewer that BLOCKed the three before it.\n\nWhat makes this pass load-bearing is whose falsifiers were used. The two mutations were designed by the reviewer in attempt 3, before the repair existed, against shapes it chose -- so re-running them is not the author reproducing their own probe. Both now turn the selector RED on precisely the assertion that was hollow, and both reverts are byte-clean under git diff --quiet.\n\nTest-only scope is proven by range, not by assertion: the diff from 1f2b57ab to 8ad32efb touches nothing under scripts/. The production fix has been correct since 1f2b57ab; two full passes were spent because the evidence, not the mechanism, was broken.\n\nThe reviewer named what it skipped -- no fourth independent mutation -- rather than presenting the pass as exhaustive, which is the right shape for a report.\n\nAdvancing on numbers the reviewer re-ran independently and I had measured separately: suite 1838 passed / 2 skipped / 701 subtests / 0 failed, selector 11 passed / 4 subtests, build then check 7/7 exit 0.",
+      "mechanical": false,
+      "ts": "2026-08-09T02:57:22.953297+00:00"
+    },
+    {
+      "id": "w-31",
+      "gate": "g8-integrate",
+      "why": "Gate g8 closes. Both defects are built, both are guarded by tests that have been shown to fail, and the reviewer that objected three times has reversed to APPROVE on its own falsifiers.\n\nThe command postcondition is satisfied by this advance, which re-runs the check rather than taking my word. I ran it first myself: suite 1838 passed / 2 skipped / 701 subtests / 0 failed in 399s, exit 0; selector `bom or docstring` 11 passed / 135 deselected / 4 subtests, exit 0.\n\nThe gate's lasting content is not the two fixes. It is that a gate can be code-correct and evidence-hollow at the same time, and that the second condition is invisible from the diff. From remediation-3 onward the production code never changed; two further passes were spent because an invariant assertion sat behind `if len(summary) == 160`, a branch on the measured output, so the case it existed to protect skipped its own check while a comment above it claimed the assertion was unconditional. Removing the truncation from production left all eleven tests green. That is the fifth distinct instance of a check that cannot fail on this run, after g5's zero-matching selector, g6's negative tests green under whole-feature disable, g7's staleness test firing off the wrong mechanism, and g8's own earlier gated invariant. It is the first where the defect was in the evidence rather than the mechanism, and it is the one worth carrying forward.\n\nRule out of this gate: branch on the SHAPE, which is fixed and known when the case is written, never on the MEASURED output, which is the thing under test.\n\nFour of five passes trace to my briefs, not the crews: I passed the undefined term D3 through unresolved, then defined it empirically in a way that destroyed content for 132 real docstrings, then scoped the repair to one of two identical branches and left 54 more. Each was caught by the reviewer testing against real rendered pages rather than fixtures. Recorded in the attestations and routed to feedback with tc18 and tc19, both filed from this gate: a stock close-criterion naming a build script that does not exist, and an unwritten convention for reusing a survey across review rounds.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:12:29.168560+00:00"
     }
   ],
   "amendments": [
