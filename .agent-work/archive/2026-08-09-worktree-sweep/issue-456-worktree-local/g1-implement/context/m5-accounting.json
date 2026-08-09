@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m5-accounting",
+  "files": [],
+  "repo_rev": {
+    "commit": "ba8e78aa1b740ca8ed9d8a90f3961f6ca8be8335"
+  },
+  "run": {
+    "work_id": "g1-implement",
+    "generated_at": "2026-08-08T01:24:23Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-commander",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

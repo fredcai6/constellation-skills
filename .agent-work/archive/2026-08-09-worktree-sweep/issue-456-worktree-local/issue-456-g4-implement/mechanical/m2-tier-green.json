@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-tier-green",
+  "mechanical": {
+    "run": "issue-456-g4-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 5,
+    "spine-step": "m2-tier-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g4-implement-m2-tier-green@fc59a1f6aa155f20c50765306428a60c618ca791",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g4-implement",
+    "generated_at": "2026-08-08T10:32:54Z"
+  }
+}

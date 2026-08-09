@@ -1,0 +1,21 @@
+fix(code_map): preserve docstring overflow when no blank line separator
+
+Issue #456 gate g8 remediation-2: Previous fix silently dropped content
+from dense paragraphs (no blank line) exceeding 160 chars. This regressed
+the dominant case: 132+ docstrings in scripts/** alone become truncated
+with no body, losing content mid-clause.
+
+Fix: When there's no blank line and paragraph exceeds 160 chars, split
+at 160 and put overflow into body instead of discarding it. This preserves
+all docstring content while maintaining the wrapped-summary-whole behavior.
+
+- _first_paragraph() detects no-blank-line case and handles overflow
+- Emit sites still apply [:160] truncation (harmless double-check)
+- doc_body_of() retrieves overflow from _first_paragraph()
+
+Added critical boundary test: dense paragraph >160 chars, no blank line.
+Test confirms summary truncates AND overflow appears in body (not lost).
+Break-test verified: reverting overflow fix makes test go RED (221 chars
+instead of truncated 160).
+
+This preserves the design invariant: no docstring content is silently lost.

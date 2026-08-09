@@ -1,0 +1,27 @@
+fix(code_map): wrapped docstring summaries now span paragraphs, not lines
+
+Issue #456 gate g8 remediation: Defect 2 (D3) properly fixed.
+
+Docstring summaries that wrapped across multiple physical lines were being
+cut at the first newline instead of the first paragraph boundary (blank line
+per PEP 257). A wrapped summary sentence would be split in half: first
+physical line as summary, remainder becoming the body start.
+
+Solution: Factor paragraph extraction into _first_paragraph() helper used
+by both summary and body extraction, ensuring they never drift apart.
+
+- doc_summary_of(doc): Extract first paragraph, join lines to single spaces
+- doc_body_of(node): Extract text after first blank line (via _first_paragraph)
+- Updated three summary emission sites to use helper
+- BOM stripping added to SourceScan in checks.py (needed for check validation)
+
+Tests added cover boundary cases:
+- Wrapped summary + blank line + body (core defect)
+- One-line docstring (summary only, no body)
+- Wrapped summary with no blank line (entire docstring is summary)
+
+Break-test confirmed: test_wrapped_summary_is_first_paragraph fails (RED)
+when reverting to line-based splitting, passes (GREEN) with fix.
+
+Closing selector: 8 passing for -k 'bom or docstring' (was 6 at start of
+this pass, was 4 before first pass).

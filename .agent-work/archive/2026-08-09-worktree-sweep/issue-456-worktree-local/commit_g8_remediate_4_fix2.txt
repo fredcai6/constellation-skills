@@ -1,0 +1,15 @@
+Remove conditional gate from invariant test assertions
+
+The invariant test was still using a conditional gate (if len(summary) == 160)
+that would skip overflow assertions when truncation was disabled, making it
+hollow. Now branch on SHAPE (which is known and fixed) instead of MEASUREMENT
+(which is what we're testing).
+
+- Unconditional assertion that overflow shapes MUST be truncated to 160 chars
+- Unconditional assertion that overflow text is present in body
+- Gate-free shapes (short one-liner, short wrapped summary) don't run the
+  160-char assertions at all
+- Mutation testing confirms: disabling truncation now fails both overflow shapes
+
+The distinction: gates ask "did this happen?" and stay silent. Assertions say
+"this must happen" and fail when it doesn't.

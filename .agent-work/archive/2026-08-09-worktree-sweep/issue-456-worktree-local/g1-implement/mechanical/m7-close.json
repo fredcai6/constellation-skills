@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m7-close",
+  "mechanical": {
+    "run": "g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 6,
+    "spine-step": "m7-close",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-m7-close@a0e32e0aa6d563c802d3b2bf13943702538c36fc",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement",
+    "generated_at": "2026-08-08T01:37:47Z"
+  }
+}

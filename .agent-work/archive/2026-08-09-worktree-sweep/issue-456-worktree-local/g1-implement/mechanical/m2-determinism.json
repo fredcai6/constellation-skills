@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-determinism",
+  "mechanical": {
+    "run": "g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m2-determinism",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-m2-determinism@1e979d56aa3b48cb0fd6bd38c0e6956533d0fabb",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement",
+    "generated_at": "2026-08-08T00:56:29Z"
+  }
+}

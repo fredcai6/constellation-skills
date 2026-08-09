@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-harness",
+  "files": [],
+  "repo_rev": {
+    "commit": "dbb8b6e3732d80a25d905cb5094fb375d352f064"
+  },
+  "run": {
+    "work_id": "g1-implement",
+    "generated_at": "2026-08-08T00:53:43Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

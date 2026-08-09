@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-d2-symbol-identity",
+  "files": [],
+  "repo_rev": {
+    "commit": "dc1199b4a7240b11da23354a7cd3ee286b53786a"
+  },
+  "run": {
+    "work_id": "g2-implement",
+    "generated_at": "2026-08-08T05:13:47Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

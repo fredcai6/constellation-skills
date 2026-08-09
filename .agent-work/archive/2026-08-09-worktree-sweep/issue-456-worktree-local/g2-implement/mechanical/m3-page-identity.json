@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-page-identity",
+  "mechanical": {
+    "run": "g2-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m3-page-identity",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-m3-page-identity@15e5971ff971c0f6fc7a4dd19105b70778115c5d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement",
+    "generated_at": "2026-08-08T05:37:27Z"
+  }
+}

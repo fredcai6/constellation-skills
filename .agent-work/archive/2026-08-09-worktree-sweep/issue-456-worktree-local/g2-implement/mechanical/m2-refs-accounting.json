@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-refs-accounting",
+  "mechanical": {
+    "run": "g2-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m2-refs-accounting",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-m2-refs-accounting@041f74e38fd5425dc042545c30cc43aee2e9d5c5",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement",
+    "generated_at": "2026-08-08T05:30:33Z"
+  }
+}

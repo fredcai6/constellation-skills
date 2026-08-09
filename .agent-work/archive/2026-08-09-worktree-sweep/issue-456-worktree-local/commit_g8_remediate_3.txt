@@ -1,0 +1,24 @@
+fix(code_map): apply overflow preservation to ALL docstring branches
+
+Issue #456 gate g8 remediation-3: Unified the overflow-preservation logic
+across both branches of _first_paragraph() to enforce the invariant:
+
+**No docstring content is ever silently dropped.**
+
+Previous passes fixed overflow in the no-blank-line branch but missed the
+blank-line branch: when the first paragraph (before blank line) exceeds 160
+chars, its overflow was still dropped at emit sites. This affected 54+
+docstrings in scripts/*.py alone.
+
+Fix: Collapsed both branches into one unified path that:
+- Extracts post-blank-line body if present
+- Detects when paragraph > 160 chars
+- Preserves summary overflow in body (combined with post-blank content)
+
+Tests added:
+- test_long_first_paragraph_with_blank_line_and_body: blank-line overflow
+- test_all_shapes_preserve_complete_content: invariant across shapes 1-4
+- All verify summary+body contains full original content
+
+The unified approach prevents drift between branches and ensures both
+routes through _first_paragraph() apply the same preservation logic.

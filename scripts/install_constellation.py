@@ -447,26 +447,50 @@ def resolve_interpreter(
     return InterpreterResolution(_platform_interpreter(), tuple(candidates), "os-default-fallback")
 
 
-def rewrite_installed_skill_paths(
+def installed_path_replacements(
     target: Path, skill: Skill, interpreter: InterpreterResolution
-) -> None:
+) -> dict[str, str]:
+    """The token -> replacement map applied to an installed bundle's text, as ONE
+    definition shared by the writer below and by any reader that must reproduce the
+    transform to compare an installed copy against its source.
+
+    Extracted rather than inlined because a verifier that re-derived this map could
+    drift from the installer and then report drift that is really its own. That is
+    not hypothetical: comparing raw source bytes against installed bytes reports
+    every placeholder-bearing bundle as stale, which is exactly what a
+    substitution-blind check did during epic #418's closeout.
+
+    Insertion order is load-bearing -- see the note in `rewrite_installed_skill_paths`.
+    """
     # Rewrite the interpreter prefix FIRST, before the skill-dir tokens consume the
     # trailing `<`: the replacement preserves the `<` so `<…-skill-dir>` still resolves.
     # Forward slashes keep an absolute Windows interpreter executable while also
     # remaining valid when the command is embedded in a JSON checklist string.
     installed_interpreter = interpreter.interpreter.replace("\\", "/")
-    replacements = {
+    return {
         "python <": f"{installed_interpreter} <",
         "<skill-dir>": target.as_posix(),
         f"<{skill.source_name}-skill-dir>": target.as_posix(),
     }
+
+
+def apply_installed_path_replacements(text: str, replacements: dict[str, str]) -> str:
+    """Apply `replacements` to `text` in insertion order. The single application
+    path, so the writer and any verifier cannot disagree about ordering."""
+    for token, replacement in replacements.items():
+        text = text.replace(token, replacement)
+    return text
+
+
+def rewrite_installed_skill_paths(
+    target: Path, skill: Skill, interpreter: InterpreterResolution
+) -> None:
+    replacements = installed_path_replacements(target, skill, interpreter)
     for path in target.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in REWRITABLE_TEXT_SUFFIXES:
             continue
         text = path.read_text(encoding="utf-8")
-        rewritten = text
-        for token, replacement in replacements.items():
-            rewritten = rewritten.replace(token, replacement)
+        rewritten = apply_installed_path_replacements(text, replacements)
         if rewritten != text:
             path.write_text(rewritten, encoding="utf-8")
     # Per-skill sidecar: any engine-invoking command string living inside this

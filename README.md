@@ -153,6 +153,25 @@ nonzero exit if any fails: **engine** (pytest actually runs under this interpret
 directory). Report-only: it never repairs anything and never writes `settings.json`, so it refuses
 to be combined with `--wire-hooks` or `--baseline-only`.
 
+Check that what is installed still matches the source it was built from:
+
+```powershell
+python scripts/verify_installed_bundles.py --agent claude --scope user
+```
+
+Installing copies each skill's source tree and then rewrites placeholder tokens in
+it — `<skill-dir>`, `<{role}-skill-dir>`, and the `python <` interpreter prefix —
+into absolute installed paths and whichever interpreter this host answered to. That
+makes the installed bundle a *snapshot*, so "fixed on main" and "reaching the agent"
+are separate claims, and until now nothing compared the two. This does, applying the
+installer's own substitution map to the source first, so a rewritten file is not
+mistaken for a stale one. Exit 0 when every bundle matches, 1 on any difference
+(with the offending paths named), 2 when the check could not run.
+
+It reports drifted, missing, and deleted files, plus files in a bundle that came
+from no source at all. Line endings are normalised, so CRLF alone is never reported
+as drift.
+
 Rules:
 
 - `--agent` is required and must be `codex`, `claude`, `cursor`, `gemini`, or `all`.

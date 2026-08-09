@@ -1,0 +1,20 @@
+{
+  "3a4f3d5c-6d29-4e12-ae9a-287ecb603d1f#aexc-6-governor-prototype-e73c7032ae052a8d": {
+    "proto-exc6-self": {
+      "work_id": "proto-exc6-self",
+      "spine": "C:\\Programs\\.proto-exc6-governor-subagent-identity\\.agent-work\\proto-exc6-self\\spine.json",
+      "session_id": "3a4f3d5c-6d29-4e12-ae9a-287ecb603d1f",
+      "agent_id": "aexc-6-governor-prototype-e73c7032ae052a8d",
+      "method": "v2-self-probe"
+    }
+  },
+  "3a4f3d5c-6d29-4e12-ae9a-287ecb603d1f#ae74482d2c869d84c": {
+    "proto-gamma": {
+      "work_id": "proto-gamma",
+      "spine": "C:\\Programs\\.proto-exc6-governor-subagent-identity\\.agent-work\\proto-gamma\\spine.json",
+      "session_id": "3a4f3d5c-6d29-4e12-ae9a-287ecb603d1f",
+      "agent_id": "ae74482d2c869d84c",
+      "method": "v2-self-probe"
+    }
+  }
+}

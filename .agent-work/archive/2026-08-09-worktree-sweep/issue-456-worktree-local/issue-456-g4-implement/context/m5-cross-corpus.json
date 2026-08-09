@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m5-cross-corpus",
+  "files": [],
+  "repo_rev": {
+    "commit": "0e63f2086799107dc64c5a88343e709333f6e500"
+  },
+  "run": {
+    "work_id": "issue-456-g4-implement",
+    "generated_at": "2026-08-08T10:50:15Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

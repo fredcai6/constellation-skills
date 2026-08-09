@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-tc31-red",
+  "mechanical": {
+    "run": "issue-456-g4-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 6,
+    "spine-step": "m3-tc31-red",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g4-implement-m3-tc31-red@7f78931495937baf13b57fde7973d7bcef02947d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g4-implement",
+    "generated_at": "2026-08-08T10:43:15Z"
+  }
+}

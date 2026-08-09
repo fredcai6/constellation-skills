@@ -2,7 +2,7 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 52 modules, 1025 entities
+scripts: 52 modules, 1027 entities
 skills: 1 modules, 18 entities
 tests: 58 modules, 3378 entities
 
@@ -29,7 +29,7 @@ tests: 58 modules, 3378 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (52 modules, 1025 entities)
+## scripts (52 modules, 1027 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -62,7 +62,7 @@ tests: 58 modules, 3378 entities
 - [scripts.gauge_reader](scripts.gauge_reader/INDEX.md) (9 entities): Gauge reader -- fail-safe read of the context-fullness gauge file.
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
-- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (60 entities, 25 holes): HOLE: no docstring
+- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (62 entities, 25 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.

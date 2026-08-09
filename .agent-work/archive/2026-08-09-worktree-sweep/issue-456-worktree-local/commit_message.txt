@@ -1,0 +1,23 @@
+fix(code_map): handle UTF-8 BOM and wrap-line docstring rendering
+
+Issue #456 gate g8: two code defects fixed.
+
+Defect 1 - BOM-prefixed files: Files starting with UTF-8 byte-order mark
+(EF BB BF) failed to parse via ast.parse, causing them to silently drop out
+of the map. Added BOM stripping at two ast.parse call sites in extract.py.
+Includes test fixture and test_bom_file_can_be_extracted that verifies
+the fix works and regresses without it.
+
+Defect 2 - Wrapped docstring rendering: Inconsistency between summary and
+body extraction methods. Summary used splitlines()[0] while body used
+split("\n")[1:]. Fixed doc_body_of to use splitlines() consistently.
+Includes test_wrapped_docstring_body_uses_splitlines that verifies the
+fix handles multi-line docstrings correctly.
+
+Evidence:
+- Closing selector: 6 passing (baseline 4)
+  python -m pytest tests/test_code_map.py -k 'bom or docstring' -q
+- Full suite: 141 passed, 59 subtests
+- Code map checks: 7/7 pass (no-empty-pages, page-accounting, etc.)
+- Fixture: tests/fixtures/bom_corpus/ with actual UTF-8 BOM bytes
+- Break-test verified: BOM test RED without BOM strip fix

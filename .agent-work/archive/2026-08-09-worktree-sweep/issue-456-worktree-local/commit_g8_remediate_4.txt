@@ -1,0 +1,16 @@
+Fix hollow test assertions in docstring overflow tests
+
+The tests had conditional guards that silently skipped assertions when
+truncation was disabled, and checked for body existence instead of
+verifying the actual overflow text was preserved.
+
+- Removed `if summary and len(summary) == 160:` guard from
+  test_long_first_paragraph_with_blank_line_and_body
+- Assert len(summary) == 160 unconditionally
+- Assert overflow text ("character truncation limit") is in body
+- Apply same overflow-text assertion to Shape 4 of invariant test
+- Verified with two mutations: disabling truncation and dropping
+  overflow both now correctly fail the test suite
+
+The production code in _first_paragraph() remains correct; only test
+coverage was improved to prevent regression.

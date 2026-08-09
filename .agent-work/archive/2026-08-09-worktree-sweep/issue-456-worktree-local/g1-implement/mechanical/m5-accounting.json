@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-accounting",
+  "mechanical": {
+    "run": "g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 5,
+    "spine-step": "m5-accounting",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-m5-accounting@c4f9c05ec165d882a55865d8521230c9950e4e8a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement",
+    "generated_at": "2026-08-08T01:24:23Z"
+  }
+}
