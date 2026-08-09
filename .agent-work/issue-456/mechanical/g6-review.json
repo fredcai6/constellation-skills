@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g6-review",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "spine-step": "g6-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g6-review@c7efc2f39d63b222614fe0fcff00e14749e57ec4",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-08T20:36:22Z"
+  }
+}

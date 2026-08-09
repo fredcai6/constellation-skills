@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4-verify-suite",
+  "files": [],
+  "repo_rev": {
+    "commit": "e247ce92029dd30837b4bfa5029f525c6cc55194"
+  },
+  "run": {
+    "work_id": "g8-implement",
+    "generated_at": "2026-08-09T00:25:44Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}

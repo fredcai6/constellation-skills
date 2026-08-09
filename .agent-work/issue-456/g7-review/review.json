@@ -204,12 +204,13 @@
   "refusals": 0,
   "engine_session": {
     "session_id": "g7-reviewer-a2",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-08T23:56:35.995822+00:00",
     "last_heartbeat": "2026-08-08T23:58:36.744791+00:00",
     "claimed_by": "g7-reviewer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-08T23:59:29.791118+00:00"
   }
 }

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r8-recheck",
+  "mechanical": {
+    "run": "issue-456-g8-review",
+    "project": "constellation-skills",
+    "role": "g8-reviewer",
+    "refusals": 0,
+    "spine-step": "r8-recheck",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g8-review-r8-recheck@8a26217b3811b26d10cb978dcea702f62f7bdd71",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g8-review",
+    "generated_at": "2026-08-09T01:48:57Z"
+  }
+}

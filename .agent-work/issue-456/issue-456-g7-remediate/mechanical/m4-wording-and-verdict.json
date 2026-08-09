@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-wording-and-verdict",
+  "mechanical": {
+    "run": "issue-456-g7-remediate",
+    "project": "constellation-skills",
+    "role": "g7-remediator",
+    "refusals": 2,
+    "spine-step": "m4-wording-and-verdict",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g7-remediate-m4-wording-and-verdict@468156a8f57c6767508c81f14952af23780b1d6a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456-g7-remediate",
+    "generated_at": "2026-08-08T23:21:56Z"
+  }
+}

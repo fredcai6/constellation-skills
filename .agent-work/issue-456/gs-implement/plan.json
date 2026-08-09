@@ -270,7 +270,8 @@
           "id": "c2",
           "statement": "close criteria re-run, work committed, RESULT.md written",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Close criteria re-run and green (evidence 1-6 in RESULT.md). Committed df54417f with explicit paths (no git add -A): 4 skills paths, .gitignore, map/INDEX.md, map/ids.jsonl, tests/test_code_map.py, my own gs-implement/ plan+journal, and the RESULT.md. Did not push, open a PR, or merge. RESULT.md written to .agent-work/issue-456/crew-handoffs/gs-implement-RESULT.md."
         }
       ],
       "constraints": [
@@ -297,7 +298,7 @@
     "session_id": "constellation/issue-456/gs/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-09T03:21:13.625596+00:00",
-    "last_heartbeat": "2026-08-09T03:30:41.147128+00:00",
+    "last_heartbeat": "2026-08-09T03:42:10.942510+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,

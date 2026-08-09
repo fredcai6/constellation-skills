@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g8-integrate",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "spine-step": "g8-integrate",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-g8-integrate@d87d56ce54a44a75b532dfdab70c73a14c7744a7",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-09T02:58:05Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-verify-suite",
+  "mechanical": {
+    "run": "g8-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 6,
+    "spine-step": "m4-verify-suite",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g8-implement-m4-verify-suite@6c24d14e51d737ac459da3abb5e99080fb847fdf",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g8-implement",
+    "generated_at": "2026-08-09T00:25:44Z"
+  }
+}
