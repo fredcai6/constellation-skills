@@ -92,11 +92,11 @@
 > still describe `repair` as an enforced exit in **both** its execute prose and its
 > `directives.decisions` block.
 >
-> **MERGE BASELINE (use this, do not re-guess it):** after #511 merged, main is green at
-> **1871 passed / 2 skipped / 829 subtests / real exit 0**, `python -m pytest`, exit read **unpiped**.
-> Pre-merge it was 1867/2/829, so the delta is **+4 passed and nothing else** — exactly crew 3's four
-> new tests. **Check the delta, not just the green:** a green alone cannot rule out a new test landing
-> while an old one silently stops running.
+> **MERGE BASELINE (use this, do not re-guess it):** after #513 merged, main is green at
+> **1896 passed / 2 skipped / 829 subtests / real exit 0**, `python -m pytest`, exit read **unpiped**.
+> Progression: 1867 -> 1871 (+4, crew 3's tests) -> 1896 (+25, crew 2's readiness tests). **Check the
+> DELTA, not just the green** — a green alone cannot rule out a new test landing while an old one
+> silently stops running.
 >
 > **NOTHING MERGES UNDER A LIVE CREW.** A PR being green is not the same as a crew being done.
 > **#509's review finding is RESOLVED** — it had dropped a row from a fenced block that is verbatim

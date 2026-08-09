@@ -5237,3 +5237,21 @@ loosening the test**, adding a red-before-green reproduction, and reporting it u
 is the best single item in this wave's returns. **A crew that had quietly widened an assertion would
 have produced an identical diff and passed review.** The entire difference is in what it chose to make
 visible, unprompted, on a Sonnet implementer's second instance.
+
+### Post-merge verification after #513 — green, and the delta is exactly right again
+
+```
+1896 passed, 2 skipped, 829 subtests passed in 746.32s   REAL_EXIT=0
+```
+
+**Baseline was 1871/2/829. Delta: +25 passed, nothing else moved.** Crew 2 reported *"25 new readiness
+tests"*; the tree agrees to the test. No test lost, no subtest change, no skip change.
+
+**Third time this wave the delta has been checked rather than the green alone**, and it keeps being the
+useful half: a green cannot rule out a new test landing while an old one silently stops running, and
+that would be a check that cannot fail sitting in the merge gate itself.
+
+**Merge baseline for the remaining wave-5 merges: 1896 / 2 / 829, real exit 0.**
+
+**Running score: 5 of 21 closed, three PRs merged, one green and queued behind the merge-order ruling.**
+Four of five crews complete. Crew 1 is the whole remaining wave — `g1-integrate` now, then g2, g3, g4.
