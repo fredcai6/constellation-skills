@@ -362,7 +362,8 @@
           "id": "c1",
           "statement": "committed; IMPLEMENTER_RESULT.md written with DC3 verdict + Workflow Feedback",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "committed 50fb7987 to epic-418/f-424-mcp-door (tests/test_mcp_identity.py + map/INDEX.md + my own plan/journal + scratch-g3-live evidence); IMPLEMENTER_RESULT written with DC3 verdict (YES, measured) and Workflow Feedback"
         }
       ],
       "constraints": [
@@ -370,7 +371,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -384,13 +385,14 @@
   "refusals": 1,
   "engine_session": {
     "session_id": "g3-impl-424-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T21:01:07.896063+00:00",
-    "last_heartbeat": "2026-08-09T21:16:24.328018+00:00",
+    "last_heartbeat": "2026-08-09T21:22:29.173572+00:00",
     "claimed_by": "g3-implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T21:22:34.470014+00:00"
   },
   "why_trail": [
     {
@@ -441,6 +443,13 @@
       "why": "map rebuilt fresh (test_code_map.py 148 passed, 63 subtests); full suite 2175 passed, 1 skipped, 1061 subtests passed, 0 failed -- exactly baseline (2163) + my 12 new tests, skip count and subtest count both match baseline exactly, confirming no regression anywhere else",
       "mechanical": false,
       "ts": "2026-08-09T21:16:24.236743+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-closeout",
+      "why": "deliverable committed, result file written with all required sections including the exact DC3 verdict heading, evidence with real commands/output/exit codes, Map Impact, and Workflow Feedback",
+      "mechanical": false,
+      "ts": "2026-08-09T21:22:29.173563+00:00"
     }
   ]
 }
