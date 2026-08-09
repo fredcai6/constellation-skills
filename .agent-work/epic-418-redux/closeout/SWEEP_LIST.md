@@ -41,7 +41,8 @@ for merged and abandoned.
 | `.proto-exc6-governor-subagent-identity` | `ahead=1`, unmerged. Prototype evidence from the `explore-post-phase1` run — the governor identity demo this epic's workstream A was cut from. |
 | `.proto-exc8-spine-instructions` | `ahead=1`, unmerged. The spine-relocation prototype workstream C rests on. |
 | `.proto-exc9-mcp-front-door` | `ahead=1`, unmerged. **The MCP prototype F (#424) will be built from** — and F is the next effort after this epic closes. |
-| `agent-a247f573f8ff07d25`, `agent-adbe19c21cc561d95` | Harness-created under `.claude/worktrees/`. Not this run's to dispose of. |
+| `agent-a247f573f8ff07d25`, `agent-adbe19c21cc561d95` | Harness-created under `.claude/worktrees/`. Not this run's to dispose of. `a247…` holds an uncommitted `.agent-work/issue-454-force-color/`. |
+| `clean` (`%TEMP%/ctx-skew-d4sqs6ee/clean`) | **Added 2026-08-09 — this list missed it entirely until the v4 probe flagged it UNCLASSIFIED.** A **locked**, detached-HEAD worktree at `29acf140` under Windows Temp, holding **3566 uncommitted and 496 branch-only** `.agent-work` paths — mostly staged *deletions*, i.e. a stripped-`.agent-work` fixture for a context-skew measurement. Not this epic's, explicitly `locked` by whoever made it, and **the lock is the owner's stated intent** — do not sweep, do not unlock, do not prune. Flagged here for one further reason: **it lives in `%TEMP%`, which Windows clears**, so its registration can rot into a broken entry through no action of ours. That is the owner's problem to know about, not ours to fix. |
 
 **The three `.proto-*` trees are load-bearing for work that has not happened yet.** exc9 in particular
 is the prototype for the very next effort. They read as stale leftovers and are not.

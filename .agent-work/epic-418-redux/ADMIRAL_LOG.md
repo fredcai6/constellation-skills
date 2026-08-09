@@ -5612,3 +5612,66 @@ error (`unexpected EOF while looking for matching quote`) in a two-heredoc comma
 written — I verified the files were unchanged rather than assuming the failure was clean, then wrote
 both blocks via files instead. **A failed multi-part write must be checked for a partial effect, not
 assumed atomic.**
+
+### Harvest probe v4 — and a 16th worktree my "derived by command" sweep list never listed
+
+Ran the harvest probe as a dry run rather than meeting it for the first time at closeout. Three
+findings, in ascending order of how much they matter.
+
+**1. The probe was unreadable, which at closeout is the same as being absent.** It emitted **5207
+lines**. Measured by command, not estimated:
+
+| lines | worktree | sweepable? |
+|---|---|---|
+| 4067 | `clean` | **no** |
+| 545 | `issue-456` | **no** |
+| 334 | `explore-code-map` | **no** |
+| **156** | **the six `epic418-*` trees this epic may actually remove** | **yes** |
+
+**95% of the output came from three trees that must never be swept, and the six that matter began
+past line 1000.** This is not a check that cannot fail, but it is the same defect at the presentation
+layer: **a signal that is technically present and practically unreadable is not a signal.** An
+operator scrolling 5000 lines at the end of a long run does not read them, and the probe exists
+precisely for the moment when attention is thinnest. **v4 → 245 lines**, with the six real targets
+detailed and everything else reduced to counts (a surprising count on a protected tree is still
+information; a 500-line dump of it is not).
+
+**2. `SWEEP_LIST.md` was missing a worktree.** `git worktree list` reports **16**; my sweep list
+classified **14**. The unlisted one is `C:/Users/fredc/AppData/Local/Temp/ctx-skew-d4sqs6ee/clean` —
+**locked**, detached at `29acf140`, holding **3566 uncommitted and 496 branch-only** `.agent-work`
+paths, mostly staged *deletions*: a stripped-`.agent-work` fixture for somebody's context-skew
+measurement. Now recorded as **do not sweep, do not unlock, do not prune** — the lock is the owner's
+stated intent, and the tree is not this epic's. Noted separately: it lives in `%TEMP%`, **which
+Windows clears**, so its registration can rot with no action from anyone. That is worth the owner
+knowing and is not ours to fix.
+
+**This one is mine and it is the one worth carrying.** That list says of itself *"Derived by command
+2026-08-08, not from memory"* — and it was. **A command-derived list can still be under-inclusive if
+the command filtered before I looked.** The count was never checked against `git worktree list | wc
+-l`; had it been, 14-vs-16 would have shown up instantly. **Deriving from a command is necessary and
+not sufficient — the derived population needs a total to reconcile against.** Same family as the
+attribution defect that cost a rework round-trip earlier in this project's history, and I did not
+generalise it far enough at the time.
+
+**3. The fix for (2) had the same defect, and the probe caught it.** v4 reads the do-not-sweep set
+**out of `SWEEP_LIST.md`** rather than retyping it, so the two cannot drift. My first extraction —
+`s/^| \`\([^\`]*\)\`.*/\1/p` — stops at the **first** backticked token per row, and the two `agent-*`
+trees **share one row**, so the second was silently dropped and came back UNCLASSIFIED. Fixed to
+collect every backticked name in the first cell.
+
+**It failed safe** (unclassified suppresses rather than sweeps), and it was found **by running the
+probe and reading which trees it flagged — not by reading the sed.** Fourth time in this run that
+executing a countermeasure against real input beat inspecting it; census specimen 24 is the same
+lesson from a different tier, logged twenty minutes earlier.
+
+**Two design choices worth stating**, both aimed at the failure modes the census catalogues:
+
+- **A worktree on neither list is flagged `!! UNCLASSIFIED`, not treated as sweepable.** Absence of a
+  decision must not read as permission. This is what surfaced `clean`.
+- **A missing `SWEEP_LIST.md` makes the probe exit 2, not run permissively.** An absent policy file
+  reporting "nothing protected, all clear" is the exact shape of a check that cannot fail.
+
+**Both were verified by running them, not by writing them:** with the list moved aside the probe exits
+**2** (want 2), restored it exits **0** (want 0), and `SWEEP_LIST.md` is byte-identical after the
+test. The probe's header still prints before the refusal — cosmetic; the verdict rides the exit code,
+which is the standard this epic settled on.

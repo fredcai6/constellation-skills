@@ -28,17 +28,66 @@ echo "A harvest source is content NOT already on main. Mere presence proves noth
 echo ".agent-work/CONSTELLATION_FEEDBACK.md and staged-feedback/ are TRACKED."
 echo
 
+# CORRECTION 2, 2026-08-09 (v4) -- the probe was technically correct and practically unreadable.
+# It emitted 5207 lines, of which 4946 came from THREE worktrees that must never be swept
+# (`clean` 4067, `issue-456` 545, `explore-code-map` 334). The six trees this epic may actually
+# remove accounted for 156 lines, buried past line 1000. An operator scrolling that at the end of a
+# long run does not read it -- which makes the probe's real output indistinguishable from noise.
+# That is not a check that cannot fail, but it is the same failure at the presentation layer:
+# a signal that is technically present and practically unreadable is not a signal.
+#
+# v4 therefore SUPPRESSES the file lists for do-not-sweep trees and prints counts instead. It does
+# not skip them -- an unexpectedly large count on a protected tree is itself information -- but it
+# refuses to bury the sweep-eligible trees under them.
+#
+# The do-not-sweep set is read from SWEEP_LIST.md's own table rather than retyped here, so the two
+# documents cannot drift apart. If SWEEP_LIST.md is missing, the probe FAILS rather than silently
+# treating every tree as sweepable -- an absent policy file must not read as "everything is fine".
+SWEEP_LIST="$(dirname "$0")/SWEEP_LIST.md"
+if [ ! -f "$SWEEP_LIST" ]; then
+  echo "FATAL: $SWEEP_LIST not found -- refusing to run rather than report every tree as sweepable." >&2
+  exit 2
+fi
+# EVERY backticked name in the DO-NOT-SWEEP table's first cell -- not just the first one.
+# v4's initial cut used `s/^| `\([^`]*\)`.*/\1/p`, which stops at the first backticked token per
+# row; the two `agent-*` trees share one row, so the second was silently dropped and came back
+# UNCLASSIFIED. It failed SAFE (unclassified suppresses rather than sweeps) and it still had to be
+# fixed -- found by running the probe and reading which trees it flagged, not by reading the sed.
+protected=$(sed -n '/^## DO NOT SWEEP/,/^## Before any removal/p' "$SWEEP_LIST" \
+            | sed -n 's/^|\([^|]*\)|.*/\1/p' \
+            | grep -o '`[^`]*`' | tr -d '`' | tr -d '\r')
+echo "Do-not-sweep set, read from SWEEP_LIST.md (not retyped here):"
+echo "$protected" | sed 's/^/  /'
+echo
+
 for W in $(git worktree list --porcelain | awk '/^worktree /{print $2}'); do
   name=$(basename "$W")
   [ "$name" = "constellation-skills" ] && continue
-  case "$name" in
-    governor-264) tag=" [PROTECTED -- NEVER SWEEP]" ;;
-    *) tag="" ;;
-  esac
+
+  tag=""; quiet=""
+  if [ "$name" = "governor-264" ]; then
+    tag=" [PROTECTED -- NEVER SWEEP]"; quiet=1
+  elif echo "$protected" | grep -qx -- "$name"; then
+    tag=" [DO NOT SWEEP -- per SWEEP_LIST.md]"; quiet=1
+  fi
+  # A worktree on NEITHER list is the dangerous case: unclassified, so no one has decided about it.
+  if [ -z "$quiet" ] && ! echo "$name" | grep -q '^epic418-'; then
+    tag=" [!! UNCLASSIFIED -- absent from SWEEP_LIST.md; decide before sweeping anything]"; quiet=1
+  fi
   echo "## $name$tag"
 
   uncommitted=$(git -C "$W" status --porcelain -- .agent-work/ 2>/dev/null)
   branch_only=$(git -C "$W" diff --name-only main...HEAD -- .agent-work/ 2>/dev/null)
+
+  if [ -n "$quiet" ]; then
+    # Counts only -- enough to notice something surprising, not enough to bury the real targets.
+    nu=$(printf '%s' "$uncommitted" | grep -c . || true)
+    nb=$(printf '%s' "$branch_only" | grep -c . || true)
+    ni=$(git -C "$W" status --porcelain --ignored=matching -- .agent-work 2>/dev/null | grep -c '^!!' || true)
+    echo "  not a sweep target -- lists suppressed: uncommitted=$nu branch-only=$nb ignored=$ni"
+    echo
+    continue
+  fi
 
   if [ -n "$uncommitted" ]; then
     echo "  UNCOMMITTED (would be destroyed by removal):"
