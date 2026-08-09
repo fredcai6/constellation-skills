@@ -687,13 +687,15 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py w5-gates --store-root episodes --phase archive"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-2"
         },
         {
           "id": "c2",
           "statement": "branch committed and pushed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Branch committed and pushed: origin/epic-418/w5-bookend-gates moved 2d9d2313..a843ea94, and git rev-parse confirms HEAD and origin are both a843ea94d6b57e7463f3fbad766a9b0aa202f30b. Working tree clean apart from two of the Admiral's files that git reports modified with an EMPTY content diff (CRLF normalization only)."
         },
         {
           "id": "c2b",
@@ -702,13 +704,21 @@
             "kind": "command",
             "command": "gh pr list --head <branch> --state open --json number --jq 'length > 0'"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-archive-1",
+          "waived": {
+            "authority": "Admiral, epic-418-redux",
+            "reason": "EVIDENCE-ONLY WAIVER OF A DEFECTIVE CHECK. This check did NOT pass and cannot pass. Check command, verbatim: gh pr list --head <branch> --state open --json number --jq 'length > 0'. Measured on this host: exit code 1, stderr \"sh: line 1: branch: No such file or directory\". The engine runs check text through sh -c, where the unsubstituted <branch> placeholder leaves the < as an input redirection; sh fails to open a file named 'branch', exits 1, and gh is never invoked -- so the check is red in every state of the world, independent of any PR. This is the same defect this wave repaired at g3 (#439 / #484 / #446); this spine was instantiated before that fix landed and so never received its own crew's repair. This waiver records ONLY that the check is defective. It asserts nothing about whether the work is reachable; that question is untouched here and is recorded separately.",
+            "evidence": "e-archive-1",
+            "forced": true
+          }
         },
         {
           "id": "c3",
           "statement": "engine session lease released",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Release is the next action after this advance, and cannot precede it: advance requires --session-id, so the lease must still be held when the gate closes. The engine's own finish sequence states this order (final advance, then release). Attested as the commitment to release immediately on advance; the journal entry for the release verb is the proof."
         },
         {
           "id": "c4",
@@ -743,38 +753,75 @@
             ],
             "require_human_waiver_for_binary": true
           },
-          "satisfied": false,
+          "satisfied": true,
           "override_policy": {
             "allowed": true,
             "authority": "human",
             "reason_required": true
-          }
+          },
+          "satisfied_by": "e-archive-3"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-archive-1",
+          "type": "waiver",
+          "payload": {
+            "cond": "c2b",
+            "authority": "Admiral, epic-418-redux",
+            "reason": "EVIDENCE-ONLY WAIVER OF A DEFECTIVE CHECK. This check did NOT pass and cannot pass. Check command, verbatim: gh pr list --head <branch> --state open --json number --jq 'length > 0'. Measured on this host: exit code 1, stderr \"sh: line 1: branch: No such file or directory\". The engine runs check text through sh -c, where the unsubstituted <branch> placeholder leaves the < as an input redirection; sh fails to open a file named 'branch', exits 1, and gh is never invoked -- so the check is red in every state of the world, independent of any PR. This is the same defect this wave repaired at g3 (#439 / #484 / #446); this spine was instantiated before that fix landed and so never received its own crew's repair. This waiver records ONLY that the check is defective. It asserts nothing about whether the work is reachable; that question is untouched here and is recorded separately.",
+            "forced": true
+          },
+          "produced_by": "human",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w5-gates --store-root episodes --phase archive",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-archive-3",
+          "type": "artifact-policy",
+          "payload": {
+            "mode": "staged",
+            "violations": [],
+            "files_checked": 0
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 10,
+  "refusals": 11,
   "engine_session": {
     "session_id": "commander-w5-gates-g-20260808",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T04:57:22.476104+00:00",
-    "last_heartbeat": "2026-08-09T05:03:06.918406+00:00",
+    "last_heartbeat": "2026-08-09T05:05:26.609392+00:00",
     "claimed_by": "commander-w5-gates-g",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T05:05:34.611415+00:00"
   },
   "why_trail": [
     {
@@ -839,6 +886,13 @@
       "why": "Reflection written to RUN_FEEDBACK.md and attached as e-feedback-2, consolidating seven Commander sessions and the crew Workflow Feedback from all seven gN RESULT files. Episode capture verified BEFORE writing: five episodes were already recorded and green from a prior session, so I added only the four distinct things the crew feedback carried that they did not cover -- engine --session-id verb-ordering (three crews), unstated PATH composition (two crews on one gate), handoffs asserting .agent-work/ is untracked when it is tracked (two crews), and the reach-up/crew doctrine collision when a trip fires after the work but before the record. Nine episodes now recorded; capture gate exits 0 against the in-repo store; no store exists outside the repo.",
       "mechanical": false,
       "ts": "2026-08-09T05:02:16.586859+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "archive",
+      "why": "Run closed. Substance verified independently before closing: PR #516 is OPEN with head epic-418/w5-bookend-gates and GitHub reports closingIssuesReferences of exactly 439, 446, 468, 484, 501, 506; branch pushed 2d9d2313..a843ea94 with HEAD and origin both at a843ea94. c1 and c4 were evaluated by the engine against the real staged diff before commit, not against an empty one, and both passed. c2b did NOT pass and cannot: measured exit 1 with gh never invoked, waived FORCED on Admiral epic-418-redux authority as a defective check only. Nine episodes recorded in the in-repo store; no store exists outside the repo.",
+      "mechanical": false,
+      "ts": "2026-08-09T05:05:26.609363+00:00"
     }
   ],
   "trip_ledger": [
