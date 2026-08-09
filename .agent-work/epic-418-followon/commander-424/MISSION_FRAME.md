@@ -9,7 +9,18 @@ the thing being bought.
 
 ## Map confidence, staleness, disputes
 
-**There is no architecture map.** `map_orient orient` returned `DEGRADED-NO-MAP` — no
+> **CORRECTION, added at g1-integrate — the statement below is wrong, and the tool that produced it
+> is wrong too.** This repo **does** carry a machine-generated code map, at `map/INDEX.md`
+> (55 modules, 1047 entities), with a freshness test (`tests/test_code_map.py`) that fails if it is
+> not rebuilt after source changes. `map_orient.py` never found it: it probes only
+> `docs/architecture/generated/map.json`, `docs/architecture/index.md` and `docs/architecture/`, then
+> falls back to `README.md`/`AGENTS.md`/`CLAUDE.md`/a `docs/` index. `map/` is in neither list, so the
+> tool reported `DEGRADED-NO-MAP` on a repo with a real, enforced, current code map. I found this
+> only because adding two scripts turned the freshness test red. Filed as a triage candidate. The
+> practical cost: this run planned as if map-blind when a map was available, and the substitutes I
+> hash-pinned were doctrine files rather than the structural map I should have read.
+
+**There is no *Cartographer packet* architecture map.** `map_orient orient` returned `DEGRADED-NO-MAP` — no
 `docs/architecture/generated/map.json`, no `docs/architecture/index.md`, no packets directory,
 `anchor_count: 0`. This is a skill-source repo. The verdict was discharged, not skipped, with five
 hash-pinned substitutes, two unmapped statements and an escalation to the Admiral.

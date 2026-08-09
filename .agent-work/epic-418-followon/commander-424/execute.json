@@ -2,216 +2,672 @@
   "work_id": "epic-418-followon/commander-424",
   "type": "gated",
   "config_ref": "docs/agents/engine-config.json",
-  "items": ["e0-context", "g1-implement", "g1-review", "g1-integrate", "g2-implement", "g2-review", "g2-integrate", "g3-implement", "g3-review", "g3-integrate", "g4-measure", "g4-review", "g4-integrate"],
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-measure",
+    "g4-review",
+    "g4-integrate"
+  ],
   "tasks": {
     "e0-context": {
       "id": "e0-context",
       "title": "Load execution context",
-      "imperative": "Read the inherited global doctrine and the project deltas (docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/CREW_CONTEXT.md). No Cartographer packet exists — the context step returned DEGRADED-NO-MAP and pinned five substitutes; read MISSION_FRAME.md instead. Confirm the frozen plan's intent and scope, then attest c1.",
+      "imperative": "Read the inherited global doctrine and the project deltas (docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/CREW_CONTEXT.md). No Cartographer packet exists \u2014 the context step returned DEGRADED-NO-MAP and pinned five substitutes; read MISSION_FRAME.md instead. Confirm the frozen plan's intent and scope, then attest c1.",
       "preconditions": [],
-      "postconditions": [{"id": "c1", "statement": "orchestrator context + glossary + crew context + mission frame loaded; plan intent and scope confirmed", "check": null, "satisfied": false}],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + crew context + mission frame loaded; plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Doctrine and project deltas loaded at the spine's context step; MISSION_FRAME.md read in place of a Cartographer packet (none exists -- DEGRADED-NO-MAP). Plan intent and scope confirmed against the frozen launch order."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-
     "g1-implement": {
       "id": "g1-implement",
       "title": "The door: MCP server wrapping the engine, plus per-dispatch config generation",
-      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. Build (a) scripts/mcp_spine_server.py — a zero-dependency stdio JSON-RPC 2.0 MCP server exposing roughly seven typed tools that wrap checklist_engine.main(argv); (b) scripts/gen_mcp_config.py — per-dispatch config generation keyed by session_id#agentId, since the probe proved project-scope .mcp.json cannot serve a cold agent; (c) a project-scope .mcp.json for the interactive convenience path; (d) tests. Lift from the prototype at git object de6a0844 what earns its place; it is a throwaway against a four-gate toy, not a design. Wait for and integrate the returned IMPLEMENTER_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "the .mcp.json delivery branch point is settled by measurement, not assumption", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md and dispatch constellation-implementer. Build (a) scripts/mcp_spine_server.py \u2014 a zero-dependency stdio JSON-RPC 2.0 MCP server exposing roughly seven typed tools that wrap checklist_engine.main(argv); (b) scripts/gen_mcp_config.py \u2014 per-dispatch config generation keyed by session_id#agentId, since the probe proved project-scope .mcp.json cannot serve a cold agent; (c) a project-scope .mcp.json for the interactive convenience path; (d) tests. Lift from the prototype at git object de6a0844 what earns its place; it is a throwaway against a four-gate toy, not a design. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the .mcp.json delivery branch point is settled by measurement, not assumption",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Settled by measurement at the probe: project-scope .mcp.json is not picked up live and lands in 'Pending approval' on a fresh process (server start-marker never written), so it cannot serve a cold agent. Per-dispatch --mcp-config/--strict-mcp-config verified end to end."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
       "constraints": [
         "No engine logic is duplicated: every tool builds an argv and calls checklist_engine.main(). Refusals, rails, recovery hints, the journal and lease enforcement ride through unchanged.",
         "The gate imperative rides tool results VERBATIM. Spine templates stay the single source of instruction text; no second rendering path.",
         "settings.json is never written at any scope (decision:settings-json-untouched).",
-        "The CLI door stays. Every verb NOT covered by a tool keeps a documented CLI fallback — the engine has 18 verbs and the tool budget is ~7.",
+        "The CLI door stays. Every verb NOT covered by a tool keeps a documented CLI fallback \u2014 the engine has 18 verbs and the tool budget is ~7.",
         "Do not gold-plate the grouping: MCP is the vehicle, not the destination (decision:mcp-is-the-vehicle).",
-        "Do not edit scripts/install_constellation.py, tests/test_feedback_tooling.py, tests/test_install_constellation.py, tests/test_run_skill_eval.py, tests/test_spine_rail.py — fenced to a concurrent agent.",
+        "Do not edit scripts/install_constellation.py, tests/test_feedback_tooling.py, tests/test_install_constellation.py, tests/test_run_skill_eval.py, tests/test_spine_rail.py \u2014 fenced to a concurrent agent.",
         "Do not fix engine bugs #439/#446/#427/#443 in this gate: they must be held constant across both measurement arms (decision:hold-bug-fixes-constant)."
       ],
       "anchors": {
-        "structural": ["scripts/checklist_engine.py — main(argv) is the dispatch function being wrapped; 18 verbs", "scripts/mcp_spine_server.py — new", "scripts/gen_mcp_config.py — new"],
-        "capability": ["drive a spine through typed tool calls instead of CLI argv"],
-        "constraint": ["constraint:no-duplicated-engine-logic", "constraint:imperative-verbatim", "constraint:cli-door-stays", "constraint:settings-json-untouched"],
-        "decision": ["decision:mcp-probe-is-the-commanders — per-dispatch config generation is the delivery path; project-scope .mcp.json lands in 'Pending approval' and cannot serve a cold agent @grade: settled/measured", "decision:mcp-is-the-vehicle — seven-over-eighteen grouping is a placeholder @grade: settled/human", "decision pressure: WHICH verbs the ~7 tools cover. waive and attach are load-bearing on real role spines (this run needed both); skip/amend/append are rarer. Covering the wrong eleven makes the door useless on a real spine and surfaces only at DC1."],
-        "evidence": ["the server is genuinely up and serving — a live tool call returning real engine output, which is DC3's positive control and must exist before any no-identity result counts"],
-        "confidence_flags": ["No architecture map exists (DEGRADED-NO-MAP). The engine's verb table read directly from source is the authority for the wrapped surface."]
+        "structural": [
+          "scripts/checklist_engine.py \u2014 main(argv) is the dispatch function being wrapped; 18 verbs",
+          "scripts/mcp_spine_server.py \u2014 new",
+          "scripts/gen_mcp_config.py \u2014 new"
+        ],
+        "capability": [
+          "drive a spine through typed tool calls instead of CLI argv"
+        ],
+        "constraint": [
+          "constraint:no-duplicated-engine-logic",
+          "constraint:imperative-verbatim",
+          "constraint:cli-door-stays",
+          "constraint:settings-json-untouched"
+        ],
+        "decision": [
+          "decision:mcp-probe-is-the-commanders \u2014 per-dispatch config generation is the delivery path; project-scope .mcp.json lands in 'Pending approval' and cannot serve a cold agent @grade: settled/measured",
+          "decision:mcp-is-the-vehicle \u2014 seven-over-eighteen grouping is a placeholder @grade: settled/human",
+          "decision pressure: WHICH verbs the ~7 tools cover. waive and attach are load-bearing on real role spines (this run needed both); skip/amend/append are rarer. Covering the wrong eleven makes the door useless on a real spine and surfaces only at DC1."
+        ],
+        "evidence": [
+          "the server is genuinely up and serving \u2014 a live tool call returning real engine output, which is DC3's positive control and must exist before any no-identity result counts"
+        ],
+        "confidence_flags": [
+          "No architecture map exists (DEGRADED-NO-MAP). The engine's verb table read directly from source is the authority for the wrapped surface."
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g1-review": {
       "id": "g1-review",
       "title": "The door: review",
-      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Verify especially: no engine logic duplicated (tools call main(), not reimplementations); imperative text is byte-identical to the CLI projection; no settings.json write at any scope; uncovered verbs have a documented CLI fallback. ALSO re-verify the delivery-path decision rather than inheriting it: the commander's probe concluded project-scope .mcp.json lands in 'Pending approval' and cannot serve a cold agent, and ALL of this gate's config-generation work rests on that single observation. Re-run the probe independently and say whether 'Pending approval' is a permanent state or a one-time first-use state — if it is one-time, the delivery architecture is misdirected and that is a BLOCK. Wait for and integrate the returned REVIEW_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for this gate", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md and dispatch constellation-reviewer. Verify especially: no engine logic duplicated (tools call main(), not reimplementations); imperative text is byte-identical to the CLI projection; no settings.json write at any scope; uncovered verbs have a documented CLI fallback. ALSO re-verify the delivery-path decision rather than inheriting it: the commander's probe concluded project-scope .mcp.json lands in 'Pending approval' and cannot serve a cold agent, and ALL of this gate's config-generation work rests on that single observation. Re-run the probe independently and say whether 'Pending approval' is a permanent state or a one-time first-use state \u2014 if it is one-time, the delivery architecture is misdirected and that is a BLOCK. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
       "constraints": [],
-      "anchors": {"inherits": "g1-implement anchors — review verifies the change against the same structural/capability/constraint/decision/evidence anchors"},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g1-integrate": {
       "id": "g1-integrate",
       "title": "The door: integrate",
-      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself and advance — the command postcondition is satisfied by advance, never by attest. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
-      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for this gate", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "the door's own tests pass", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: re-run the verification command yourself and advance \u2014 the command postcondition is satisfied by advance, never by attest. BLOCK: return for rework. Log out-of-scope finds as triage candidates.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the door's own tests pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-
     "g2-implement": {
       "id": "g2-implement",
       "title": "DC4: same-gate equivalence as a property over every gate",
-      "imperative": "Fill the implementer handoff and dispatch. Build a mechanical check proving the CLI projection and the MCP tool result carry the SAME imperative text for EVERY gate that has one — across all shipped spine/plan templates, not one sampled gate. The check must assert what it looped over (print or assert the gate count) and must be demonstrated able to fail: mutate one imperative, watch it go red, assert the mutation applied, restore. Wait for and integrate the IMPLEMENTER_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "the door exists and serves", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "imperative": "Fill the implementer handoff and dispatch. Build a mechanical check proving the CLI projection and the MCP tool result carry the SAME imperative text for EVERY gate that has one \u2014 across all shipped spine/plan templates, not one sampled gate. The check must assert what it looped over (print or assert the gate count) and must be demonstrated able to fail: mutate one imperative, watch it go red, assert the mutation applied, restore. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the door exists and serves",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
       "constraints": [
         "DC4 is a PROPERTY, not a sample (decision:dc4-is-a-property). One gate matching once establishes nothing about drift, which by definition happens later and at a gate nobody sampled.",
-        "A check that cannot fail is indistinguishable from one that passed — demonstrate the red state and assert the mutation applied.",
+        "A check that cannot fail is indistinguishable from one that passed \u2014 demonstrate the red state and assert the mutation applied.",
         "A guard that loops must assert what it looped over; an empty set reports clean without examining anything."
       ],
       "anchors": {
-        "structural": ["skills/*/templates/*.json — the spine and plan templates carrying imperatives", "scripts/mcp_spine_server.py"],
-        "capability": ["imperative text delivery through two doors"],
-        "constraint": ["constraint:imperative-verbatim — spine templates are the single source of instruction text"],
-        "decision": ["decision:dc4-is-a-property — checked mechanically over every gate carrying an imperative @grade: settled/spec"],
-        "evidence": ["claim:no-second-rendering-path"],
+        "structural": [
+          "skills/*/templates/*.json \u2014 the spine and plan templates carrying imperatives",
+          "scripts/mcp_spine_server.py"
+        ],
+        "capability": [
+          "imperative text delivery through two doors"
+        ],
+        "constraint": [
+          "constraint:imperative-verbatim \u2014 spine templates are the single source of instruction text"
+        ],
+        "decision": [
+          "decision:dc4-is-a-property \u2014 checked mechanically over every gate carrying an imperative @grade: settled/spec"
+        ],
+        "evidence": [
+          "claim:no-second-rendering-path"
+        ],
         "confidence_flags": []
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g2-review": {
       "id": "g2-review",
       "title": "DC4: review",
       "imperative": "Dispatch constellation-reviewer. Verify the check is a genuine property over all gates (count asserted, not a sample), and that its ability to fail was demonstrated rather than asserted. Integrate the REVIEW_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for this gate", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
       "constraints": [],
-      "anchors": {"inherits": "g2-implement anchors"},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "anchors": {
+        "inherits": "g2-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g2-integrate": {
       "id": "g2-integrate",
       "title": "DC4: integrate",
       "imperative": "Check the verdict, re-run the verification yourself, advance.",
-      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for this gate", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "the equivalence property holds over every gate carrying an imperative", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_imperative_equivalence.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the equivalence property holds over every gate carrying an imperative",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_imperative_equivalence.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-
     "g3-implement": {
       "id": "g3-implement",
       "title": "DC2 separation and DC3 inheritance-fails-closed, with a positive control",
-      "imperative": "Fill the implementer handoff and dispatch. Build the two identity acceptance tests. DC2: a parent and a subagent drive two DIFFERENT spines at once, each through its own server instance; leases never collide and each status call returns its own reading. DC3: a subagent dispatched with NO special configuration gets a refusal or no identity, never the parent's lease — and this only counts once a POSITIVE CONTROL has proven the door is up and serving, because 'no identity' is also exactly what total non-installation produces. Wait for and integrate the IMPLEMENTER_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "the door exists and serves", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers", "check": {"kind": "artifact", "evidence_type": "implementer-result"}, "satisfied": false}],
+      "imperative": "Fill the implementer handoff and dispatch. Build the two identity acceptance tests. DC2: a parent and a subagent drive two DIFFERENT spines at once, each through its own server instance; leases never collide and each status call returns its own reading. DC3: a subagent dispatched with NO special configuration gets a refusal or no identity, never the parent's lease \u2014 and this only counts once a POSITIVE CONTROL has proven the door is up and serving, because 'no identity' is also exactly what total non-installation produces. Wait for and integrate the IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the door exists and serves",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
       "constraints": [
-        "decision:dc3-needs-a-positive-control — as written DC3 passes most loudly under total non-installation. Prove the door is serving BEFORE a no-identity result counts as failing closed. Same shape as A2's 'no absence is evidence'.",
+        "decision:dc3-needs-a-positive-control \u2014 as written DC3 passes most loudly under total non-installation. Prove the door is serving BEFORE a no-identity result counts as failing closed. Same shape as A2's 'no absence is evidence'.",
         "Each agent gets its own server instance, keyed by session_id#agentId (spec F, rulings 1 and 4).",
         "The live positive control is already in the tree: two spines in this run carry the same session id and differ only in free-text claimed_by. Do not manufacture the defect.",
-        "MECHANISM DISAMBIGUATION — read this before writing the test. The live same-session-id observation is a CLI-door/engine-lease fact: the engine accepts a claim carrying an inherited session id and distinguishes the two spines only by free-text claimed_by. DC3 is a DIFFERENT mechanism: whether a subagent dispatched with NO MCP configuration can reach the parent's SERVER INSTANCE and thereby its lease and its reading. F's scope is the door, not the engine's lease-identity semantics. So DC3's gate may legitimately go green while the engine-side observation stays red, and fixing the engine-side one is NOT in F's scope. If the test as written cannot separate the two mechanisms, say so and float it rather than forcing a green.",
+        "MECHANISM DISAMBIGUATION \u2014 read this before writing the test. The live same-session-id observation is a CLI-door/engine-lease fact: the engine accepts a claim carrying an inherited session id and distinguishes the two spines only by free-text claimed_by. DC3 is a DIFFERENT mechanism: whether a subagent dispatched with NO MCP configuration can reach the parent's SERVER INSTANCE and thereby its lease and its reading. F's scope is the door, not the engine's lease-identity semantics. So DC3's gate may legitimately go green while the engine-side observation stays red, and fixing the engine-side one is NOT in F's scope. If the test as written cannot separate the two mechanisms, say so and float it rather than forcing a green.",
         "Hold DC3's positive control to the same bar DC4 sets for its property check: DEMONSTRATE the red state. Show the DC3 assertion going red when the server is unreachable and green once it responds, and assert the manipulation actually applied. A control that is only described in the reviewer's instructions is decorative."
       ],
       "anchors": {
-        "structural": ["scripts/mcp_spine_server.py", "scripts/gen_mcp_config.py — session_id#agentId keying"],
-        "capability": ["per-agent identity and lease isolation across server instances"],
-        "constraint": ["constraint:per-agent-instance-keyed-by-session-and-agent"],
-        "decision": ["decision:dc3-needs-a-positive-control @grade: settled/spec"],
-        "evidence": ["claim:inheritance-fails-closed", "claim:leases-never-collide"],
-        "confidence_flags": ["Inheritance is currently OBSERVED not to fail closed (two spines, one session id). A green DC3 against that live defect would itself be evidence the test is wrong."]
+        "structural": [
+          "scripts/mcp_spine_server.py",
+          "scripts/gen_mcp_config.py \u2014 session_id#agentId keying"
+        ],
+        "capability": [
+          "per-agent identity and lease isolation across server instances"
+        ],
+        "constraint": [
+          "constraint:per-agent-instance-keyed-by-session-and-agent"
+        ],
+        "decision": [
+          "decision:dc3-needs-a-positive-control @grade: settled/spec"
+        ],
+        "evidence": [
+          "claim:inheritance-fails-closed",
+          "claim:leases-never-collide"
+        ],
+        "confidence_flags": [
+          "Inheritance is currently OBSERVED not to fail closed (two spines, one session id). A green DC3 against that live defect would itself be evidence the test is wrong."
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g3-review": {
       "id": "g3-review",
       "title": "DC2/DC3: review",
-      "imperative": "Dispatch constellation-reviewer. Verify BOTH done-conditions in this gate, not just DC3. DC3: the positive control genuinely gates the assertion — the test cannot pass when the server is absent, demonstrated red-then-green rather than asserted. DC2: the separation claim is real — the two instances are genuinely concurrent (not sequential), the two spines are genuinely different, and the collision scenario is one that could actually have been caught had leases leaked. Integrate the REVIEW_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "IMPLEMENTER_RESULT received for this gate", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
+      "imperative": "Dispatch constellation-reviewer. Verify BOTH done-conditions in this gate, not just DC3. DC3: the positive control genuinely gates the assertion \u2014 the test cannot pass when the server is absent, demonstrated red-then-green rather than asserted. DC2: the separation claim is real \u2014 the two instances are genuinely concurrent (not sequential), the two spines are genuinely different, and the collision scenario is one that could actually have been caught had leases leaked. Integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
       "constraints": [],
-      "anchors": {"inherits": "g3-implement anchors"},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "anchors": {
+        "inherits": "g3-implement anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g3-integrate": {
       "id": "g3-integrate",
       "title": "DC2/DC3: integrate",
       "imperative": "Check the verdict, re-run the verification yourself, advance.",
-      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for this gate", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "separation and fail-closed inheritance both proven, the latter behind a positive control", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "reviewer verdict is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false}
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "separation and fail-closed inheritance both proven, the latter behind a positive control",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
-
     "g4-measure": {
       "id": "g4-measure",
-      "title": "DC5 two-arm measurement, plus DC1 smoke and DC6 governor — reasoning gate",
-      "imperative": "REASONING GATE for the RUNNING of the arms — no implement crew. Crew waiver reason: this gate's deliverable is a measurement and a judgement about which fumble classes a typed interface can genuinely absorb; the launch order names that judgement as the reason this run is on Opus, and a crew on it would be shallower, not safer. The waiver covers the crew, NOT independent checking of the conclusion — that is g4-review, and it is not optional.\n\nDEFINE THE COUNTING UNIT FIRST, and make it identical across arms. The unit is one INVOCATION ATTEMPT by the driving agent, read from the driving agent's own record, counting attempts the client rejected pre-flight as well as those that reached the engine. Do NOT count from the server's own JSONL alone: a malformed call rejected by client-side schema validation never reaches the server, so the server log structurally suppresses exactly the fumbles the MCP arm is being credited with avoiding — that would produce a win regardless of whether the door helps. The server JSONL is corroborating detail, never the numerator.\n\nRun both arms with the SAME task on a REAL role spine, and CONTROL FOR ORDER: whichever arm runs second benefits from the agent having already solved the spine navigation once. Run both orders (CLI-first and MCP-first) and report the per-order counts, or state plainly that order was not controlled and treat the result as directional rather than attributable. Use cold agents so neither arm inherits the other's learning.\n\nRe-measure the CLI baseline yourself — do not reuse exc-9's 24-27 calls / 2 refusals / 4-7 help-reads, which ran against pre-B channel and pre-A2 verb semantics. Never count from the engine's refusals counter. Count recovery events on the FAR SIDE of the door too. Record DC1 as a machine assertion (zero malformed-call entries in the record) rather than as prose, and DC6 (the governor's threshold instruction arriving through a tool result and being acted on). Write the verdict into MEASUREMENT.md, keep the raw per-arm records alongside it so a second party can re-derive every number, and attest c1.",
-      "preconditions": [{"id": "p1", "statement": "the door, the equivalence property and the identity tests are all closed", "check": null, "satisfied": false}],
+      "title": "DC5 two-arm measurement, plus DC1 smoke and DC6 governor \u2014 reasoning gate",
+      "imperative": "REASONING GATE for the RUNNING of the arms \u2014 no implement crew. Crew waiver reason: this gate's deliverable is a measurement and a judgement about which fumble classes a typed interface can genuinely absorb; the launch order names that judgement as the reason this run is on Opus, and a crew on it would be shallower, not safer. The waiver covers the crew, NOT independent checking of the conclusion \u2014 that is g4-review, and it is not optional.\n\nDEFINE THE COUNTING UNIT FIRST, and make it identical across arms. The unit is one INVOCATION ATTEMPT by the driving agent, read from the driving agent's own record, counting attempts the client rejected pre-flight as well as those that reached the engine. Do NOT count from the server's own JSONL alone: a malformed call rejected by client-side schema validation never reaches the server, so the server log structurally suppresses exactly the fumbles the MCP arm is being credited with avoiding \u2014 that would produce a win regardless of whether the door helps. The server JSONL is corroborating detail, never the numerator.\n\nRun both arms with the SAME task on a REAL role spine, and CONTROL FOR ORDER: whichever arm runs second benefits from the agent having already solved the spine navigation once. Run both orders (CLI-first and MCP-first) and report the per-order counts, or state plainly that order was not controlled and treat the result as directional rather than attributable. Use cold agents so neither arm inherits the other's learning.\n\nRe-measure the CLI baseline yourself \u2014 do not reuse exc-9's 24-27 calls / 2 refusals / 4-7 help-reads, which ran against pre-B channel and pre-A2 verb semantics. Never count from the engine's refusals counter. Count recovery events on the FAR SIDE of the door too. Record DC1 as a machine assertion (zero malformed-call entries in the record) rather than as prose, and DC6 (the governor's threshold instruction arriving through a tool result and being acted on). Write the verdict into MEASUREMENT.md, keep the raw per-arm records alongside it so a second party can re-derive every number, and attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "the door, the equivalence property and the identity tests are all closed",
+          "check": null,
+          "satisfied": false
+        }
+      ],
       "postconditions": [
-        {"id": "c1", "statement": "MEASUREMENT.md records both arms under one counting unit identical across arms, the re-measured CLI baseline, the order control (or its plainly-stated absence), far-side recovery events, and a verdict on DC1, DC5 and DC6 — a measured negative being a complete result", "check": null, "satisfied": false},
-        {"id": "c2", "statement": "the raw per-arm records are kept alongside MEASUREMENT.md so a second party can re-derive every number without rerunning the arms", "check": null, "satisfied": false}
+        {
+          "id": "c1",
+          "statement": "MEASUREMENT.md records both arms under one counting unit identical across arms, the re-measured CLI baseline, the order control (or its plainly-stated absence), far-side recovery events, and a verdict on DC1, DC5 and DC6 \u2014 a measured negative being a complete result",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the raw per-arm records are kept alongside MEASUREMENT.md so a second party can re-derive every number without rerunning the arms",
+          "check": null,
+          "satisfied": false
+        }
       ],
       "constraints": [
-        "decision:count-from-the-call-record — #427 says the engine's refusals counter records zero when a refusal precedes the lease claim, so it undercounts in exactly the direction that flatters F.",
-        "decision:remeasure-the-cli-baseline — a stale baseline flatters F.",
-        "decision:hold-bug-fixes-constant — count only fumble classes a typed interface can absorb (malformed calls, wrong flags, usage reads). Fix engine bugs before both arms or neither, never between.",
-        "decision:count-the-far-side — otherwise 'the agent stopped fumbling' is indistinguishable from 'the fumbling moved somewhere we stopped looking'.",
-        "decision:dc1-is-a-smoke-test — zero malformed calls is close to true by construction once arguments are typed. Keep it, do not lean on it.",
+        "decision:count-from-the-call-record \u2014 #427 says the engine's refusals counter records zero when a refusal precedes the lease claim, so it undercounts in exactly the direction that flatters F.",
+        "decision:remeasure-the-cli-baseline \u2014 a stale baseline flatters F.",
+        "decision:hold-bug-fixes-constant \u2014 count only fumble classes a typed interface can absorb (malformed calls, wrong flags, usage reads). Fix engine bugs before both arms or neither, never between.",
+        "decision:count-the-far-side \u2014 otherwise 'the agent stopped fumbling' is indistinguishable from 'the fumbling moved somewhere we stopped looking'.",
+        "decision:dc1-is-a-smoke-test \u2014 zero malformed calls is close to true by construction once arguments are typed. Keep it, do not lean on it.",
         "Honest-null clause: a measured negative on DC5 is a complete, successful deliverable and is reported with the same rigor as a win."
       ],
       "anchors": {
-        "structural": ["scripts/mcp_spine_server.py — its call-record JSONL is the counting instrument", "the tracer lifted from de6a0844:proto/run_arm.py and score.py"],
-        "capability": ["measure spine-management attention cost per arm"],
-        "constraint": ["constraint:token-delta-must-not-go-the-wrong-way — a constraint, not the thing being bought"],
-        "decision": ["decision:count-from-the-call-record @grade: settled/spec", "decision:remeasure-the-cli-baseline @grade: settled/spec", "decision:count-the-far-side @grade: settled/spec"],
-        "evidence": ["claim:spine-management-cost-falls-attributably-to-the-door"],
-        "confidence_flags": ["exc-9 measured a four-gate toy spine. Behaviour against a real spine with delegation and rework is untested — that gap is named in spec F's Open/graded and this gate is where it lands."]
+        "structural": [
+          "scripts/mcp_spine_server.py \u2014 its call-record JSONL is the counting instrument",
+          "the tracer lifted from de6a0844:proto/run_arm.py and score.py"
+        ],
+        "capability": [
+          "measure spine-management attention cost per arm"
+        ],
+        "constraint": [
+          "constraint:token-delta-must-not-go-the-wrong-way \u2014 a constraint, not the thing being bought"
+        ],
+        "decision": [
+          "decision:count-from-the-call-record @grade: settled/spec",
+          "decision:remeasure-the-cli-baseline @grade: settled/spec",
+          "decision:count-the-far-side @grade: settled/spec"
+        ],
+        "evidence": [
+          "claim:spine-management-cost-falls-attributably-to-the-door"
+        ],
+        "confidence_flags": [
+          "exc-9 measured a four-gate toy spine. Behaviour against a real spine with delegation and rework is untested \u2014 that gap is named in spec F's Open/graded and this gate is where it lands."
+        ]
       },
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g4-review": {
       "id": "g4-review",
       "title": "DC5 measurement: independent re-derivation",
-      "imperative": "Dispatch constellation-reviewer with the reviewer handoff. This is NOT a re-run of the arms — it is an independent check of the conclusion, which the crew waiver at g4-measure does not cover. The reviewer: (1) re-derives every headline number in MEASUREMENT.md from the raw per-arm records, without trusting the summary; (2) confirms the counting unit is genuinely identical across arms and that client-rejected calls were counted, not silently dropped with the server log as numerator; (3) states whether order/practice effects were controlled or merely acknowledged; (4) checks that far-side recovery events were counted, so 'the agent stopped fumbling' is distinguishable from 'the fumbling moved'; (5) checks that the honest-null clause was honoured — a negative reported with the same rigor as a win, not softened. A number the reviewer cannot re-derive is a BLOCK. Integrate the REVIEW_RESULT.",
-      "preconditions": [{"id": "p1", "statement": "MEASUREMENT.md and the raw per-arm records exist", "check": null, "satisfied": false}],
-      "postconditions": [{"id": "c1", "statement": "REVIEW_RESULT returned", "check": {"kind": "artifact", "evidence_type": "review-result"}, "satisfied": false}],
-      "constraints": ["The reviewer has no stake in F succeeding. A measured negative that re-derives cleanly is an APPROVE, not a BLOCK — the honest-null clause governs."],
-      "anchors": {"inherits": "g4-measure anchors — review verifies the measurement against the same constraint and decision anchors"},
-      "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "imperative": "Dispatch constellation-reviewer with the reviewer handoff. This is NOT a re-run of the arms \u2014 it is an independent check of the conclusion, which the crew waiver at g4-measure does not cover. The reviewer: (1) re-derives every headline number in MEASUREMENT.md from the raw per-arm records, without trusting the summary; (2) confirms the counting unit is genuinely identical across arms and that client-rejected calls were counted, not silently dropped with the server log as numerator; (3) states whether order/practice effects were controlled or merely acknowledged; (4) checks that far-side recovery events were counted, so 'the agent stopped fumbling' is distinguishable from 'the fumbling moved'; (5) checks that the honest-null clause was honoured \u2014 a negative reported with the same rigor as a win, not softened. A number the reviewer cannot re-derive is a BLOCK. Integrate the REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "MEASUREMENT.md and the raw per-arm records exist",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "The reviewer has no stake in F succeeding. A measured negative that re-derives cleanly is an APPROVE, not a BLOCK \u2014 the honest-null clause governs."
+      ],
+      "anchors": {
+        "inherits": "g4-measure anchors \u2014 review verifies the measurement against the same constraint and decision anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     },
     "g4-integrate": {
       "id": "g4-integrate",
       "title": "Close F: integrate the measurement and run the closing regression",
-      "imperative": "Check the verdict. Then run the CLOSING REGRESSION over everything F shipped together — each earlier integrate gate checked only its own file, so a regression introduced at g3 in code g1 or g2 depends on would otherwise go uncaught. Also re-derive the pinned-red baseline and confirm the set has not grown.",
-      "preconditions": [{"id": "p1", "statement": "REVIEW_RESULT received for the measurement", "check": null, "satisfied": false}],
-      "postconditions": [
-        {"id": "c1", "statement": "every test F shipped passes together, not just gate by gate", "check": {"kind": "command", "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py tests/test_mcp_imperative_equivalence.py tests/test_mcp_identity.py"}, "override_policy": {"allowed": true, "authority": "human", "reason_required": true}, "satisfied": false},
-        {"id": "c2", "statement": "reviewer verdict on the measurement is APPROVE", "check": {"kind": "artifact", "evidence_type": "review-result", "match": {"verdict": "APPROVE"}}, "satisfied": false},
-        {"id": "c3", "statement": "the pinned red set has not grown and no member changed its failure mode, re-derived on this tree rather than trusted from the launch order's paste", "check": null, "satisfied": false}
+      "imperative": "Check the verdict. Then run the CLOSING REGRESSION over everything F shipped together \u2014 each earlier integrate gate checked only its own file, so a regression introduced at g3 in code g1 or g2 depends on would otherwise go uncaught. Also re-derive the pinned-red baseline and confirm the set has not grown.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for the measurement",
+          "check": null,
+          "satisfied": false
+        }
       ],
-      "constraints": [], "directives": null, "child_checklist": null,
-      "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "every test F shipped passes together, not just gate by gate",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_spine_server.py tests/test_mcp_imperative_equivalence.py tests/test_mcp_identity.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "reviewer verdict on the measurement is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the pinned red set has not grown and no member changed its failure mode, re-derived on this tree rather than trusted from the launch order's paste",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": []
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
+    "status": "active",
+    "claimed_at": "2026-08-09T16:48:03.872759+00:00",
+    "last_heartbeat": "2026-08-09T16:49:16.968904+00:00",
+    "claimed_by": "commander-424 execute plan",
+    "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-09T16:48:04.035174+00:00"
+    }
+  ]
 }
