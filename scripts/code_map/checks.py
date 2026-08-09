@@ -241,7 +241,9 @@ class SourceScan:
         self.unreadable = []
         for rel in sorted(files):
             try:
-                tree = ast.parse((self.root / rel).read_text(encoding="utf-8"))
+                src = (self.root / rel).read_text(encoding="utf-8")
+                src = src.lstrip('﻿')  # Strip UTF-8 BOM if present
+                tree = ast.parse(src)
             except Exception as error:
                 self.unreadable.append((rel, str(error)))
                 continue

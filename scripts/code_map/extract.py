@@ -265,8 +265,41 @@ def span_hash(node):
     return hashlib.sha1(dumped.encode("utf-8")).hexdigest()[:16]
 
 
+def _first_paragraph(doc):
+    """Extract the first paragraph from a docstring (text up to first blank line).
+
+    Returns a tuple (paragraph, remainder) where paragraph is the first
+    paragraph text and remainder is everything after the blank line separator.
+    Both are None if there is no corresponding section."""
+    if not doc:
+        return None, None
+    lines = doc.strip().splitlines()
+    if not lines:
+        return None, None
+
+    # Find the first blank line (empty string in splitlines output)
+    para_lines = []
+    body_start = None
+    for i, line in enumerate(lines):
+        if line.strip() == "":
+            body_start = i + 1
+            break
+        para_lines.append(line)
+
+    # Join paragraph lines with spaces to handle wrapped lines
+    paragraph = " ".join(para_lines).strip() if para_lines else None
+
+    # Body is everything after the blank line
+    body = None
+    if body_start is not None and body_start < len(lines):
+        body_lines = lines[body_start:]
+        body = "\n".join(body_lines).strip() or None
+
+    return paragraph, body
+
+
 def doc_body_of(node):
-    """A docstring past its summary line, or None.
+    """A docstring past its summary paragraph, or None.
 
     The summary already has its own `documents` statement. The BODY is the
     Args/Returns/Raises/Examples a reader wanted the docstring for, and the
@@ -274,7 +307,18 @@ def doc_body_of(node):
     doc = ast.get_docstring(node, clean=True)
     if not doc:
         return None
-    return "\n".join(doc.strip().splitlines()[1:]).strip() or None
+    _, body = _first_paragraph(doc)
+    return body
+
+
+def doc_summary_of(doc_text):
+    """Extract the summary (first paragraph) from a docstring text.
+
+    Returns the first paragraph with internal newlines collapsed to single
+    spaces, or the whole docstring if there is no blank line. Returns None
+    if the docstring is empty."""
+    paragraph, _ = _first_paragraph(doc_text)
+    return paragraph
 
 
 # ------------------------------------------------------------------ pass 1
@@ -777,8 +821,10 @@ class Extractor(ast.NodeVisitor):
             self.visit(n)
         doc = ast.get_docstring(self.tree)
         if doc:
-            self.emit(self.mod + ":", "documents", doc.strip().splitlines()[0][:160],
-                      LINE_BASE, 0, "literal")
+            summary = doc_summary_of(doc)
+            if summary:
+                self.emit(self.mod + ":", "documents", summary[:160],
+                          LINE_BASE, 0, "literal")
         return self.out
 
     def anchor(self, sym, node):
@@ -887,8 +933,10 @@ class Extractor(ast.NodeVisitor):
         self.tag_check(sym, node)
         doc = ast.get_docstring(node)
         if doc:
-            self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
-                      store_line(node.lineno), node.col_offset, "literal")
+            summary = doc_summary_of(doc)
+            if summary:
+                self.emit(sym, "documents", summary[:160],
+                          store_line(node.lineno), node.col_offset, "literal")
         for b in node.bases:
             s2, r2, w2 = self.resolve_expr(b)
             ln, cl = self.pos_of(b)
@@ -918,8 +966,10 @@ class Extractor(ast.NodeVisitor):
         self.tag_check(sym, node)
         doc = ast.get_docstring(node)
         if doc:
-            self.emit(sym, "documents", doc.strip().splitlines()[0][:160],
-                      store_line(node.lineno), node.col_offset, "literal")
+            summary = doc_summary_of(doc)
+            if summary:
+                self.emit(sym, "documents", summary[:160],
+                          store_line(node.lineno), node.col_offset, "literal")
         for d in node.decorator_list:
             self.visit(d)
         prev = self.scope

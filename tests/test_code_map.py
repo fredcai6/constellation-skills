@@ -4374,34 +4374,84 @@ class SpanHashUnitTests(unittest.TestCase):
 
 
 class WrappedDocstringTests(unittest.TestCase):
-    """Test that multi-line docstrings are rendered correctly."""
+    """Test that docstring summaries wrapped across lines render correctly.
 
-    def test_wrapped_docstring_body_uses_splitlines(self):
-        """Verify that doc_body_of uses splitlines() not split("\n").
+    Issue #456 gate g8 defect 2 (D3): summaries wrapped across multiple
+    physical lines were being cut at the first newline instead of the first
+    paragraph boundary (blank line per PEP 257). A wrapped summary sentence
+    would be split in half: first physical line as summary, rest as body start.
+    """
 
-        Issue #456 gate g8 defect 2: inconsistency between how the summary
-        (using splitlines()[0]) and body (using split("\n")) were extracted
-        could cause rendering issues. Both should use splitlines() for
-        consistency."""
-        # Create a test node with a multi-line docstring
-        code = '''def test_func():
-    """This is the summary line.
+    def test_wrapped_summary_is_first_paragraph(self):
+        """A summary spanning multiple lines before a blank line should be joined.
 
-    This is the body with Args section.
+        This is the core defect: 'This summary is deliberately long...' spans
+        two physical lines but is one paragraph, ending at the blank line."""
+        code = '''def func():
+    """This summary is deliberately long enough that an author
+    would wrap it across two physical lines, as authors constantly do.
+
+    Args:
+        x: parameter.
     """
     pass
 '''
         tree = ast.parse(code)
         func_node = tree.body[0]
 
-        # Call doc_body_of to extract the body
+        doc = ast.get_docstring(func_node)
+        summary = extract.doc_summary_of(doc)
         body = extract.doc_body_of(func_node)
 
-        # The body should contain everything after the first line
-        self.assertIsNotNone(body, "Body should be extracted from multi-line docstring")
-        self.assertIn("Args section", body, "Body should contain the actual body content")
-        self.assertNotIn("This is the summary", body,
-                        "Body should not contain the summary line")
+        # Summary should be the entire first paragraph with newlines collapsed
+        expected_summary = ("This summary is deliberately long enough that an author "
+                           "would wrap it across two physical lines, as authors constantly do.")
+        self.assertEqual(summary, expected_summary,
+                        "Summary should be first paragraph with newlines joined to spaces")
+
+        # Body should start at Args, not with the wrap continuation
+        self.assertIsNotNone(body, "Body should exist after blank line")
+        self.assertTrue(body.startswith("Args:"),
+                       f"Body should start at 'Args:', got: {body[:50]}")
+        self.assertNotIn("would wrap", body,
+                        "Body should not contain the wrapped part of the summary")
+
+    def test_one_line_docstring_has_no_body(self):
+        """A one-line docstring has only a summary, no body."""
+        code = '''def func():
+    """One line summary."""
+    pass
+'''
+        tree = ast.parse(code)
+        func_node = tree.body[0]
+
+        doc = ast.get_docstring(func_node)
+        summary = extract.doc_summary_of(doc)
+        body = extract.doc_body_of(func_node)
+
+        self.assertEqual(summary, "One line summary.")
+        self.assertIsNone(body, "One-line docstring should have no body")
+
+    def test_wrapped_summary_no_body(self):
+        """A wrapped summary with no blank line and no body is all summary."""
+        code = '''def func():
+    """This is a wrapped summary that spans
+    multiple physical lines but has no body
+    section at all."""
+    pass
+'''
+        tree = ast.parse(code)
+        func_node = tree.body[0]
+
+        doc = ast.get_docstring(func_node)
+        summary = extract.doc_summary_of(doc)
+        body = extract.doc_body_of(func_node)
+
+        expected = ("This is a wrapped summary that spans "
+                   "multiple physical lines but has no body section at all.")
+        self.assertEqual(summary, expected,
+                        "Entire docstring should be summary when no blank line")
+        self.assertIsNone(body, "No body when no blank line separator")
 
 
 class BOMParsingTests(unittest.TestCase):
