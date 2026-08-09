@@ -307,12 +307,12 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "blocked",
       "status_detail": {
-        "blocker": "This Admiral cannot BEGIN closeout: the engine refused 'start closeout' with 'context at 29% is at/over the hard limit'. That is #467's own semantics working as designed, not a defect and not a stall. Wave 5 is complete, merged and pushed; main is green at c9f894f4 (1943 passed, 2 skipped, 884 subtests, real exit 0); the w5-to-close boundary exited stop with the prelaunch verifier at exit 0. Closeout's five substeps -- epic episodes, lessons audit, cartographer reconcile, harvest-before-sweep, hygiene/summary/acceptance -- are all UNSTARTED. Overriding my own governor to grind them out would falsify the very instrument this epic exists to defend, so I am bubbling this up instead of waiving it: a waiver would assert the work is fine to skip, and it is not -- it is fine to HAND OFF.",
-        "authority_needed": "Admiral epic-418-redux, escalating to the human (Tommy) as the parent tier. Refresh-request e-closeout-1 is attached to closeout; no human authority has been given or assumed for a waiver.",
-        "next_action": "Relaunch a fresh Admiral into this same spine file. It must (1) claim --force, because this lease's heartbeat looks stale by design -- the Admiral sits inside one step for the whole epic; (2) read .agent-work/epic-418-redux/STATE_NOTE.md, whose final section is a written closeout handoff naming all five substeps, the six shape refusals the boundary builder cost, and the fact that epic418-w5-gauge is missing from SWEEP_LIST.md and must be added before any sweep; (3) resume closeout from its own fresh reading. Do NOT advance closeout to clear this block -- closeout has not been done.",
-        "resume_reason": "Context refresh landed: the blocker was the governor, not the work. Gauge fill measured 0.075289 at 2026-08-09T11:54:37Z (claude-opus-5, hard band 150000/1000000 = 0.15), down from the 0.18 that produced 'start closeout -> begin-refused'. Same spine file, lease reclaimed with --force per the recorded next_action; picked back up from the DIGEST, the blocker record, and STATE_NOTE's closeout handoff naming all five unstarted substeps. No waiver taken and none needed -- closeout is being done, not skipped."
+        "blocker": "AWAITING USER ACCEPTANCE -- not a defect and not a stall. Closeout is complete except c5, which is Tommy's to decide. c1 (episodes), c3 (reconcile), c4 (hygiene) attested with evidence; c2 is engine-checked and its command passes (verify_episode_captured.py real exit 0, 14 episodes). c5's evidence type is user-decision, so no agent authority for it exists by construction -- supplying it would fabricate the human's decision. Summary written at .agent-work/archive/2026-08-09-epic-418-redux/EPIC_SUMMARY.md and presented in session. Main green at c133d8ef: 1943 passed, 2 skipped, 884 subtests, real exit 0, identical to the pre-closeout baseline. Pushed fab5edcd..c133d8ef plus 11 epic-418-baseline/* tags; 0 unpushed. AUTHORITY NEEDED: the human (Tommy). NEXT ACTION on acceptance: attach the decision as evidence, attest closeout c5 against it, advance closeout (which re-runs c2's command), then release --session-id admiral-epic-418-redux LAST. On rejection: reopen what he names and re-drive it before advancing.",
+        "authority_needed": "parent agent",
+        "next_action": "",
+        "prior_status": "in-progress"
       },
       "result": null,
       "finding": null,
@@ -333,13 +333,20 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "closeout",
+      "blocker": "AWAITING USER ACCEPTANCE -- not a defect and not a stall. Closeout is complete except c5, which is Tommy's to decide. c1 (episodes), c3 (reconcile), c4 (hygiene) attested with evidence; c2 is engine-checked and its command passes (verify_episode_captured.py real exit 0, 14 episodes). c5's evidence type is user-decision, so no agent authority for it exists by construction -- supplying it would fabricate the human's decision. Summary written at .agent-work/archive/2026-08-09-epic-418-redux/EPIC_SUMMARY.md and presented in session. Main green at c133d8ef: 1943 passed, 2 skipped, 884 subtests, real exit 0, identical to the pre-closeout baseline. Pushed fab5edcd..c133d8ef plus 11 epic-418-baseline/* tags; 0 unpushed. AUTHORITY NEEDED: the human (Tommy). NEXT ACTION on acceptance: attach the decision as evidence, attest closeout c5 against it, advance closeout (which re-runs c2's command), then release --session-id admiral-epic-418-redux LAST. On rejection: reopen what he names and re-drive it before advancing.",
+      "authority_needed": "parent agent",
+      "next_action": ""
+    }
+  ],
   "refusals": 12,
   "engine_session": {
     "session_id": "admiral-epic-418-redux",
     "status": "active",
     "claimed_at": "2026-08-09T11:55:32.466503+00:00",
-    "last_heartbeat": "2026-08-09T12:13:58.071460+00:00",
+    "last_heartbeat": "2026-08-09T12:28:23.766888+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
