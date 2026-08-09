@@ -5812,3 +5812,49 @@ reading a deletion into it, not after.
 
 The state note's close sequence is corrected in place, including the numstat trap, so a successor
 inherits the fix rather than the plan that contained the defect.
+
+### Scope gap, mine: Tommy said "the 474-480 group"; I assigned five of the seven
+
+Auditing wave-5 issue states before the close, I found **#477 and #478 open and never worked**. They
+are not floats and not refusals — **they were never in a launch order at all.**
+
+Tommy's instruction was *"add the 474-480 group to crew 4. let's knock all of this stuff out and call
+it pretty for the work."* That range is seven issues. `LO-w5-c4-engine.md` names **#474, #475, #476,
+#479, #480** from it (plus #427, #493, #503, #495 from other themes) — **five of seven**. #477 and
+#478 were dropped when I wrote the order, silently, and nothing downstream could have caught it: the
+crew delivered exactly what its order listed, and the order was the only definition of "the group"
+anyone downstream could see.
+
+**My earlier log line "crew 4 closed all nine of its issues" is accurate** — nine was the assigned
+count. The defect is one level up: **the assignment was short, so the count was right about the wrong
+set.** A correct-looking tally over an under-specified population, which is the same failure I logged
+against myself yesterday on the sweep list — *deriving from a command is necessary and not sufficient;
+the derived population needs a total to reconcile against*. **Second occurrence in two days, and I
+wrote the lesson down after the first one.** The reconciliation here was trivially available — the
+user named a contiguous range, and `474..480` has seven members.
+
+### What the two are, and why they are not interchangeable
+
+- **#477 — the CONTEXT gauge is read per checklist directory, so a crew inherits its Commander's
+  reading.** This is **the exact defect that cost this run four crew relaunches**: a fresh agent reads
+  its predecessor's number, trips a HARD band, files a refresh-request and stands down, and every
+  cycle looks like correct doctrine being followed. I diagnosed it live, corrected three relaunches by
+  hand, wrote an episode about it, and filed the provenance half as #452 — **without ever noticing
+  the already-filed issue for it was sitting unassigned in the wave I was running.**
+- **#478 — crew work areas are minted beside the owning plan rather than under it.** Real, cosmetic in
+  effect, no forcing function.
+
+### Ruling
+
+**#477: attempt it now.** It has the strongest evidence in the epic behind it, the safer of its two
+suggested fixes is read-side only, and leaving it after this run's experience would be indefensible.
+Bounded implementer, fresh worktree, own PR.
+
+**#478: carry, with the reason recorded.** It relocates the directories that this run's own closeout
+tooling walks — the harvest probe, the archive step, and five live crew work areas. Changing where
+work areas are minted while the run that is closing still lives in them buys nothing and risks the
+close. **There is no forcing function**, so the only argument for doing it now is tidiness, and this
+epic has spent five waves establishing that tidiness is not a reason to touch live machinery.
+
+**Both dispositions go on the issues themselves**, not only here — an unassigned issue that a wave
+believed it had covered is exactly the invisible debt the #503/#495 reopen was about.
