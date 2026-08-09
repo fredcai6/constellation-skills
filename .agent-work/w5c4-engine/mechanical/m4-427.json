@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-427",
+  "mechanical": {
+    "run": "w5c4-engine",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 5,
+    "spine-step": "m4-427",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5c4-engine-m4-427@536e100f6ec48bc1eee878d627682ee625ba4bf0",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5c4-engine",
+    "generated_at": "2026-08-08T23:43:14Z"
+  }
+}
