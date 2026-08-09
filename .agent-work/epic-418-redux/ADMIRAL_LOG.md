@@ -6151,3 +6151,35 @@ the real merge result: **#514 → `025415f2`**, **#517 → `49023ceb`**, both `M
 spine.** Both change `checklist_engine.py`; measured earlier as touching disjoint regions (#517 at
 ~1274–1683, #514 at ~2416–3145) and clean in both directions, so the order is about blast radius on
 the live run, not conflicts.
+
+### WAVE 5 MERGED IN FULL. Five PRs, main green, every number accounted for.
+
+| PR | merged | closes |
+|---|---|---|
+| #511 | `39fb542a` | #507, #370 |
+| #509 | `4bde569e` | #496, #411 |
+| #513 | `c045ed2f` | #458 |
+| **#516** | `f9945286` | #439, #446, #468, #484, #501, #506 |
+| **#514** | `b2f33603` | #474, #475, #476, #427, #479, #480, #493 |
+| **#517** | `c9f894f4` | #477 |
+
+**Final main `c9f894f4`: 1943 passed, 2 skipped, 884 subtests, real exit 0.**
+
+**The delta is fully attributed, not accepted.** 1922 → 1945 collected (+23) and 872 → 884 subtests
+(+12), derived from the squash commits rather than from the PR bodies:
+
+| | tests added | subTest loops |
+|---|---|---|
+| #514 | **+10** | 0 |
+| #517 | **+13** | 2 (→ +12 subtests) |
+
+`10 + 13 = 23` and `+12` subtests. **Zero unexplained**, and nothing silently stopped being collected.
+
+**Both engine PRs were rebased onto the current main before merging** and each was followed immediately
+by `current` against my own live spine: **exit 0 both times**, lease active, no mutation. The engine
+that drives this run was changed twice underneath it and the run survived both, which was the whole
+reason for the merge-last ordering.
+
+**#481 closed** as materially resolved by #517, with the two uncovered cases stated in the closing
+comment (a checklist with no lease; a concurrent co-writer) and the remainder routed to **#452**. It is
+closed because its *filed* defect is fixed — not because its number was convenient.
