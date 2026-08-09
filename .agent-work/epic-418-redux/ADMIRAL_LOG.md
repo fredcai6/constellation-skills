@@ -6105,3 +6105,49 @@ would have to revert while holding the only live lease.
 3. **The fail-open cost is accepted on the record:** an agent that reads `current` without ever claiming
    has no provenance anchor and is unprotected. That is the deliberate trade against a gauge that
    refuses readings, and it is the correct side to err on.
+
+### MERGE — PR #516. Six issues closed. Both predictions held exactly.
+
+Gated on the check for **the commit being merged** (`53f02ddd`, `completed/success`), `MERGEABLE`/`CLEAN`,
+squash-merged to `f9945286`, **verified `state=MERGED` on the forge**, never by ancestry.
+
+**All six closed, verified individually on the forge after the merge:** #439, #446, #468, #484, #501,
+#506.
+
+**The count prediction was exact.** Pinned before the merge from a measured fork point:
+`1898 + 24 = 1922`. Measured after: **1922 collected**, and the full suite **1920 passed / 2 skipped /
+872 subtests, real exit 0**. `1920 + 2 = 1922`. Nothing was lost in the merge, and that is a *checked*
+statement rather than a green one.
+
+**The corrected close-step 3 did exactly what the original could not.** All three installed copies
+transitioned:
+
+```
+BEFORE  admiral/commander/explorer : dabb48ff  (repo blob fc1b50f9)
+AFTER   admiral/commander/explorer : fc1b50f9  MATCH x3
+```
+
+**That is a transition, not an equality.** The version of this step I wrote yesterday hashed
+`verify_replan.py`, which is byte-identical in all three places and untouched by this wave — it would
+have printed MATCH before the merge, after the merge, and after a reinstall that did nothing. The
+installer also reports the Context Governor hooks **UNWIRED**, unchanged and expected: `settings.json`
+is a hard constraint and `--wire-hooks` was not passed.
+
+**Own error, corrected:** my state note claimed *"Everything of mine is committed and pushed at all
+times — if this session dies, nothing of the Admiral's is lost."* **Sixteen of my log commits were
+local-only** when I went to merge. I started batching pushes after filing #512 (my own pushes queuing
+ahead of merge gates) and never resumed pushing. The claim was true when written and quietly false for
+hours — **a self-description that stops being re-derived is just another unowned reading.** Now merged
+and pushed; unpushed count 0.
+
+### Both remaining PRs rebased onto the new main before merging, deliberately
+
+#514 was green on `89ecbc65` — but that check ran against a **base that has since moved**. A green
+attached to a stale base is the same defect as #513's green attached to a superseded commit: it
+answers a question about a tree nobody is merging. `gh pr update-branch` on both, so CI re-runs against
+the real merge result: **#514 → `025415f2`**, **#517 → `49023ceb`**, both `MERGEABLE`.
+
+**Merge order stands: #514, then #517, each followed immediately by `current` against my own live
+spine.** Both change `checklist_engine.py`; measured earlier as touching disjoint regions (#517 at
+~1274–1683, #514 at ~2416–3145) and clean in both directions, so the order is about blast radius on
+the live run, not conflicts.
