@@ -660,18 +660,29 @@ class InstalledIterativeRoleRuntimeTests(unittest.TestCase):
         }
         self.assertEqual(8, len(mutations))
 
-        for label, (mutate, expected) in mutations.items():
-            with self.subTest(mutation=label):
-                for path, text in pristine.items():
-                    write(path, text)
-                for path in written:
-                    path.unlink(missing_ok=True)
-                mutate()
-                red = self.run_role("admiral", "admiral-prelaunch")
-                self.assertEqual(1, red.returncode, red.stdout)
-                self.assertIn(expected, red.stderr)
-                for path in written:
-                    self.assertFalse(path.is_file(), f"{label} must refuse before the transition is written")
+        # `finally`, not just the head of the next iteration: the last mutation
+        # would otherwise still be in force when this test returns. That is inert
+        # for the mutations that touch packet data (the per-test work area goes
+        # away), but `renderer_returns_empty` degrades the shared per-class
+        # installed bundle, and a later test in this class asserting a REFUSAL
+        # would then pass for the wrong reason.
+        try:
+            for label, (mutate, expected) in mutations.items():
+                with self.subTest(mutation=label):
+                    for path, text in pristine.items():
+                        write(path, text)
+                    for path in written:
+                        path.unlink(missing_ok=True)
+                    mutate()
+                    red = self.run_role("admiral", "admiral-prelaunch")
+                    self.assertEqual(1, red.returncode, red.stdout)
+                    self.assertIn(expected, red.stderr)
+                    for path in written:
+                        self.assertFalse(path.is_file(), f"{label} must refuse before the transition is written")
+        finally:
+            for path, text in pristine.items():
+                write(path, text)
+            self.assertNotIn('return ""', renderer_path.read_text(encoding="utf-8"))
 
 
 def make_source_checkout(path: Path) -> Path:
