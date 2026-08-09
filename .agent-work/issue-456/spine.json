@@ -568,7 +568,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact."
         }
       ],
       "postconditions": [
@@ -579,17 +580,32 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": "Full run summary presented as PR #527, which is the durable form of it rather than a message that scrolls away.\n\nGATES: eleven closed -- g0 CLI layer, g1 checks-that-can-fail, g2 D2 symbol collisions, g3 D1 line base, g4 schema and top index, g5 determinism, gb churn-under-rename, g6 redundancy rule, g7 authored-layer staleness, g8 tag-vocabulary cull, gs skills integration plus the landing zone. Each ran implementer then reviewer through run_crew.py; each closed on its criteria RE-RUN at the gate boundary rather than on the crew's report.\n\nCHANGES: scripts/code_map/ (discovery, extract, supplement, render, checks, thresholds, package CLI); check ships as a test so it reaches CI by the ordinary road; map/INDEX.md and map/ids.jsonl tracked with .gitignore holding map/* plus two negations; four skills files picked up from d102c05; tests/test_code_map.py including MapTreeFreshnessTests.\n\nARCHITECTURE RECONCILED: docs/CONSTELLATION_OVERVIEW.md gained map/ in the truth layers as compressed DERIVED truth and a subsection under the map-input contract. The gap was real -- grep for code_map across docs/ and skills/ returned nothing before this.\n\nTRIAGE: all 20 candidates routed. 9 issues filed, #518-#526, grouped by root cause. 3 dispositions (tc1 resolved and verified at test line 623, tc11 resolved by gs, tc20 REFUTED). 2 held for feedback as doctrine rather than tracker defects.\n\nVERIFIED: suite 1840 passed / 2 skipped / 701 subtests / 0 failed exit 0; -k map_tree_freshness 2 passed exit 0; build then check 7/7 exit 0; git ls-files map/ returns exactly two paths.\n\nTHE DECISION THAT CHANGED THE PLAN: the landing zone, measured with a negative control instead of assumed. The plan's 116-file zone is not stable; the 2-file zone is. Two tracked files ship instead of 3,975.\n\nWHAT I GOT WRONG, stated in the PR rather than smoothed: an unsatisfiable close criterion of my own, and a triage candidate that a reviewer refuted by running the experiment I had not.\n\nAuthority honored: push and a full non-draft PR were pre-approved and both are done. MERGE TO MAIN IS NOT APPROVED and has not been performed -- PR #527 is left open for Tommy."
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "Tommy, live, 2026-08-09: 'aight close on out.' -- direct instruction to run the closeout to completion, given after I had reported all eleven gates closed with the verified numbers and stated the one open decision. The run summary is presented as PR #527, the durable form rather than a message that scrolls away, and it states plainly what I got wrong as well as what shipped. Merge to main is NOT approved and has not been performed."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -601,7 +617,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Run summary accepted. review advanced on Tommy's live instruction \"aight close on out.\" (2026-08-09), given after I had reported all eleven gates closed with the verified numbers and named the one open decision. The summary itself is PR #527, the durable form rather than a message that scrolls away, and it states what I got wrong alongside what shipped."
         }
       ],
       "postconditions": [
@@ -612,7 +629,8 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         },
         {
           "id": "c2",
@@ -621,17 +639,41 @@
             "kind": "command",
             "command": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_agent_feedback.py issue-456 --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills/.claude/worktrees/issue-456/scripts/verify_lessons_applied.py --file .agent-work/LESSONS.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -643,7 +685,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Workflow feedback recorded and mechanically verified. A dated issue-456 entry is appended to the durable .agent-work/AGENT_FEEDBACK.md covering what went well, friction, crew-reported friction, improvement signals, and a plain account of five things I got wrong. Playbook adjudicated rather than logged: one confirm that the engine escalated to recurrence debt and I therefore EXPORTED to CONSTELLATION_FEEDBACK.md carrying the originating lesson id, and one add carrying a bank_reason naming the discriminator that will settle it. Everything else was understood and fixable now, so it went to the tracker as #518-#526 rather than into the bank. No threshold-ripe lessons are outstanding: --ripe returns empty. verify_agent_feedback.py issue-456 --phase feedback exits 0."
         }
       ],
       "postconditions": [
@@ -721,7 +764,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -953,12 +996,12 @@
     }
   ],
   "blockers": [],
-  "refusals": 9,
+  "refusals": 10,
   "engine_session": {
     "session_id": "commander-issue-456",
     "status": "active",
     "claimed_at": "2026-08-07T17:28:15.767364+00:00",
-    "last_heartbeat": "2026-08-09T10:58:25.793877+00:00",
+    "last_heartbeat": "2026-08-09T11:07:44.616539+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -1013,6 +1056,20 @@
       "why": "All 20 candidates routed. Nine issues filed against the tracker (#518-#526), three closed as dispositions, and two held for the feedback step rather than the tracker.\n\nFILED, grouped so each issue carries one actionable root rather than one finding:\n- #518 gate criteria that cannot fail (tc4, tc9). The run's central theme, hit six times; tc4 is the worst instance because it sat in the FROZEN PLAN where no reviewer looks. Proposes a mechanical plan-freeze check: run --collect-only on every `-k` postcondition and refuse a zero-collecting selector. That alone would have caught two of the six before the gate opened.\n- #519 corrupt statements.jsonl kills every subsequent build with a bare traceback (tc7). New failure mode g6 introduced, and not self-clearing.\n- #520 advisory FAIL prefix indistinguishable from build-failing FAIL (tc8).\n- #521 tag staleness does not survive a symbol rename (tc13). Structural, not a bug: anchors key on a slug that survives renames, tags key on the symbol so a rename reads as delete+create.\n- #522 pin tests guard the literal wording of the bug, not the class (tc2, tc5, tc14). Grouped because all three share one root and one fix.\n- #523 dead threshold constant (tc6).\n- #524 gate evidence scripts are not themselves checked (tc3, tc10, tc12). Carries the one-line doctrine fix that bit twice this run: verify reverts with `git diff --quiet -- <path>`, never `git status --porcelain`, which false-negatives here under core.autocrlf plus text=auto.\n- #525 shared crew temp dir collisions plus the silent crew death with no liveness signal (tc15).\n- #526 Commander skill defects: stock close criteria cite a build script that does not exist, and no written survey-reuse convention across rounds (tc18, tc19).\n\nDISPOSITIONS, not filed:\n- tc1 RESOLVED during the run. Verified rather than assumed: tests/test_code_map.py:623 asserts an empty page makes `check` exit non-zero.\n- tc11 RESOLVED. This was Tommy's landing-zone ruling, and gs implemented it -- the two-file zone, measured with a negative control.\n- tc20 REFUTED, and the refutation is what gets recorded, not the claim. I filed it as a check that cannot fail; the gs reviewer authored a genuine anchor and took the assertion RED, and RED again under direct corruption. The true fact is narrower: no repo history has ever exercised it, because zero anchors have ever been authored here. Filing my original framing would have put a wrong claim on the tracker.\n\nHELD FOR FEEDBACK, deliberately not tracker issues, because they are doctrine about how the Commander works rather than defects anyone can fix in a file:\n- tc16 specifying the case invites a fix to the case -- three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere, and in all three the narrowing was mine.\n- tc17 the verification-method findings, including that I used the same whitespace-splitting comparison the reviewer disclosed and corrected to character-exact.",
       "mechanical": false,
       "ts": "2026-08-09T10:58:25.793865+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Full run summary presented as PR #527, which is the durable form of it rather than a message that scrolls away.\n\nGATES: eleven closed -- g0 CLI layer, g1 checks-that-can-fail, g2 D2 symbol collisions, g3 D1 line base, g4 schema and top index, g5 determinism, gb churn-under-rename, g6 redundancy rule, g7 authored-layer staleness, g8 tag-vocabulary cull, gs skills integration plus the landing zone. Each ran implementer then reviewer through run_crew.py; each closed on its criteria RE-RUN at the gate boundary rather than on the crew's report.\n\nCHANGES: scripts/code_map/ (discovery, extract, supplement, render, checks, thresholds, package CLI); check ships as a test so it reaches CI by the ordinary road; map/INDEX.md and map/ids.jsonl tracked with .gitignore holding map/* plus two negations; four skills files picked up from d102c05; tests/test_code_map.py including MapTreeFreshnessTests.\n\nARCHITECTURE RECONCILED: docs/CONSTELLATION_OVERVIEW.md gained map/ in the truth layers as compressed DERIVED truth and a subsection under the map-input contract. The gap was real -- grep for code_map across docs/ and skills/ returned nothing before this.\n\nTRIAGE: all 20 candidates routed. 9 issues filed, #518-#526, grouped by root cause. 3 dispositions (tc1 resolved and verified at test line 623, tc11 resolved by gs, tc20 REFUTED). 2 held for feedback as doctrine rather than tracker defects.\n\nVERIFIED: suite 1840 passed / 2 skipped / 701 subtests / 0 failed exit 0; -k map_tree_freshness 2 passed exit 0; build then check 7/7 exit 0; git ls-files map/ returns exactly two paths.\n\nTHE DECISION THAT CHANGED THE PLAN: the landing zone, measured with a negative control instead of assumed. The plan's 116-file zone is not stable; the 2-file zone is. Two tracked files ship instead of 3,975.\n\nWHAT I GOT WRONG, stated in the PR rather than smoothed: an unsatisfiable close criterion of my own, and a triage candidate that a reviewer refuted by running the experiment I had not.\n\nAuthority honored: push and a full non-draft PR were pre-approved and both are done. MERGE TO MAIN IS NOT APPROVED and has not been performed -- PR #527 is left open for Tommy.",
+      "mechanical": false,
+      "ts": "2026-08-09T11:00:12.731216+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Run summary accepted. review advanced on Tommy's live instruction \"aight close on out.\" (2026-08-09), given after I had reported all eleven gates closed with the verified numbers and named the one open decision. The summary itself is PR #527, the durable form rather than a message that scrolls away, and it states what I got wrong alongside what shipped.",
+      "mechanical": false,
+      "ts": "2026-08-09T11:07:10.166073+00:00"
     }
   ]
 }

@@ -1,6 +1,6 @@
 # Lessons Inbox
 
-<!-- playbook-state: run-tick=43 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310,issue-419-governor-identity,issue-422-wire-invariants -->
+<!-- playbook-state: run-tick=44 dormancy-runs=10 apply-recurrences=1 apply-confirmed=3 ticked-work-ids=issue-87,issue-99,issue-103,issue-106,issue-142,issue-140,issue-141,issue-143,issue-145,epic-138-audit,epic-178,epic-198-burndown,epic-226-lessons-audit,governor-261,governor-269,governor-268,governor-265,303,299,issue-309,issue-308,issue-307,issue-310,issue-419-governor-identity,issue-422-wire-invariants,issue-456 -->
 
 Transitory inbox for between-audit workflow signal — **not** a playbook, and not a
 permanent home for any rule. Read the Active section at the Commander context step
@@ -31,16 +31,18 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - statement: A gate postcondition must be run against a deliberately-wrong decoy before it is trusted. A check that cannot fail is worse than no check, because it reports green on the exact condition it exists to catch.
 - grounding: .agent-work/issue-310/PLAN_ALTERNATIVES.md - 'Two of the four BLOCKING findings were checks that could not fail, sitting in this run's own gate acceptance criteria.' Corroborated by engine telemetry: both checks were replaced by amend at the plan step (commit c60f0ad) BEFORE any gate ran on them, so neither produced a false green in the journal.
 - bank-reason: Re-observation will tell whether this is a per-author habit or a template gap. Both instances here were keyword greps standing in for a semantic property, which suggests the template's command-postcondition examples invite grep-shaped checks -- but n=1 run cannot separate that from one commander's authoring style. If a second commander writes a grep-theatre check from the same template, it is the template.
-- mentions: 2
+- mentions: 3
 - confirmed: 0
 - disconfirmed: 0
-- recurrences: 1
+- recurrences: 2
 - status: exported
 - added: 2026-08-02 (issue-310)
-- last-confirmed: 2026-08-05 (issue-419-governor-identity)
+- last-confirmed: 2026-08-09 (issue-456)
 - runs-since-confirmed: 1
 - history: recurred 2026-08-05 (issue-419-governor-identity) (constellation debt, not trust) — .agent-work/issue-419-governor-identity/CRITIC_TRIAGE.md finding 2 - 'Every machine-checkable postcondition in the plan is already green, at HEAD, with zero code written': all three command postconditions I authored were re-runs of the green baseline dressed as verification of a change. A cold critic measured it (140 passed / 1621 passed on the unmodified tree) rather than arguing it. This is the SECOND commander, from the same template, writing checks that cannot fail - which is exactly the discriminator the lesson's own bank-reason named ('If a second commander writes a grep-theatre check from the same template, it is the template'). Corroborated by engine telemetry: the checks were rewritten to name new test node ids at the plan step, before any gate ran on them, so none produced a false green in the journal.
 - history: exported 2026-08-05 (issue-419-governor-identity) — .agent-work/CONSTELLATION_FEEDBACK.md 2026-08-05 entry for issue-419-governor-identity - the recurrence is exported with a concrete upstream shape (run every command postcondition against the tree at plan-freeze time and refuse to freeze any that exits 0), because confirming a constellation defect a second time logs debt, not trust.
+- history: recurred 2026-08-09 (issue-456) (constellation debt, not trust) — .agent-work/AGENT_FEEDBACK.md 2026-08-09 issue-456-code-map entry - 'Re-running the criterion instead of reading the report found six checks that could not fail.' This is the THIRD commander to produce them from the same template, which is past the discriminator the lesson's own bank-reason named. Six instances, all measured rather than argued: g5-integrate c1 selected -k 'caller_split', a name no test in this repo has ever carried (zero collected); gs-integrate c1 selected -k 'map_tree_freshness' at a gate where that test did not yet exist (zero collected, so the criterion could only ever exit 5); g6's negative tests stayed green under whole-feature disable; g7's staleness test fired off the wrong mechanism; g8 pass 4's invariant test was gated behind the condition it asserts. Corroborated by engine telemetry: g5 and g8 each took remediation rounds against reviewer BLOCK verdicts, and no unfailable check produced a false green in the journal because each was caught by re-running the criterion at the gate boundary rather than accepting the crew's report. NEW and worse than prior instances: tc4 sat in the FROZEN PLAN's own postcondition rather than in a crew's work, where no reviewer looks. The mirror form also appeared - a close criterion that could never PASS (git diff d102c05 -- skills/, unsatisfiable once later gates legitimately moved other files there), caught by the implementer rather than by me. Filed upstream as #518 with the concrete mechanical shape the prior export named: run --collect-only on every pytest -k postcondition at plan freeze and refuse a zero-collecting selector, which would have killed two of the six before their gate opened.
+- history: exported 2026-08-09 (issue-456) — .agent-work/CONSTELLATION_FEEDBACK.md 2026-08-09 entry for issue-456-code-map, carrying the originating lesson id - 'third recurrence of the vacuous-check family, and the first with a mechanical fix that is cheap enough to just ship'. Exported rather than confirmed again because confirming a constellation defect a third time logs debt, not trust. The export carries two things the prior #419 export did not: (1) the family's MIRROR form, a criterion that can never PASS, shipped this run as an unsatisfiable git diff check and caught by the implementer rather than the commander; (2) the upstream shape is now a filed issue, #518, rather than a recommendation - run pytest --collect-only on every -k postcondition at plan freeze and refuse a zero-collecting selector, which would have killed two of this run's six instances before their gate opened.
 
 ### lesson:a-verdict-must-not-select-on-the-gap-it-escalates
 - scope: constellation
@@ -54,7 +56,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 2
+- runs-since-confirmed: 3
 
 ### lesson:grading-a-contested-claim-settled-launders-it
 - scope: constellation
@@ -68,7 +70,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 2
+- runs-since-confirmed: 3
 
 ### lesson:reasoning-gate-crew-waiver-can-be-wrong-for-synthesis
 - scope: constellation
@@ -82,7 +84,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-02 (issue-310)
 - last-confirmed: none
-- runs-since-confirmed: 2
+- runs-since-confirmed: 3
 
 ### lesson:enumerate-the-sites-by-command-before-editing-a-claim
 - scope: constellation
@@ -96,7 +98,7 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - status: active
 - added: 2026-08-05 (issue-419-governor-identity)
 - last-confirmed: none
-- runs-since-confirmed: 1
+- runs-since-confirmed: 2
 
 ### lesson:archive-the-producer-with-the-output
 - scope: constellation
@@ -109,5 +111,19 @@ upstream, then retire it; do not keep confirming it into a permanent workaround.
 - disconfirmed: 0
 - status: active
 - added: 2026-08-05 (issue-419-governor-identity)
+- last-confirmed: none
+- runs-since-confirmed: 2
+
+### lesson:specifying-the-case-invites-a-fix-to-the-case
+- scope: constellation
+- task-class: crew-dispatch
+- statement: A remediation brief that names the failing case gets a fix to that case, leaving the same defect standing everywhere else. Name the defect CLASS and the shape that produces it; if you can only name an instance, say explicitly that the instance is an example and the class is the target.
+- grounding: .agent-work/AGENT_FEEDBACK.md 2026-08-09 issue-456-code-map entry - 'Three consecutive g8 remediations each fixed exactly what its brief named and left the same defect standing elsewhere - and in all three the narrowing was mine.' Corroborated by engine telemetry: g8 required five passes and three separate remediate/re-review cycles, each closing on the named case and each followed by a reviewer BLOCK finding the same defect at a site the brief had not named. The sequence is worth keeping because every step looked reasonable in isolation: the first brief named a defect the reference material never defined, so the crew fixed the one instance it could identify; each subsequent brief narrowed further in an attempt to be unambiguous. The rule that finally closed it came from the shape rather than the case - branch on the SHAPE, which is fixed and known when the case is written, never on the MEASURED output, which is the thing under test.
+- bank-reason: Re-observation will tell whether this is my authoring habit or the IMPLEMENTER_HANDOFF template inviting it. The template asks for close criteria that are unambiguous and mechanically checkable, and the cheapest way to satisfy that is to name a literal instance - so the pressure toward case-shaped briefs may be structural rather than personal. n=1 commander cannot separate those. If a different commander produces the same narrow-brief-then-same-defect-elsewhere sequence from the same template, it is the template, and the fix is a template field that forces the class to be stated separately from the example. Related evidence to watch for on the code side: #522 filed this run is the same disease in test form - a pin test guarding the literal wording of the bug rather than the class, which four reworded variants walked straight past.
+- mentions: 1
+- confirmed: 0
+- disconfirmed: 0
+- status: active
+- added: 2026-08-09 (issue-456)
 - last-confirmed: none
 - runs-since-confirmed: 1
