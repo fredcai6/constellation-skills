@@ -1122,6 +1122,11 @@ ATOM = re.compile(r'^\.([A-Za-z_][A-Za-z0-9_]*)\s*==\s*"([^"]*)"$')
 SELECT_LENGTH = re.compile(r'^\[\s*\.\[\]\s*\|\s*select\((.*)\)\s*\]\s*\|\s*length$', re.S)
 LENGTH_GT = re.compile(r'^length\s*>\s*(\d+)$')
 
+# Exactly the flags the shipped check passes. An ADDED flag is drift too: a
+# check carrying `--repo someone/else` would query the wrong repository while
+# every state test stayed green, so unknown flags refuse rather than answer.
+MODELLED_FLAGS = ("--head", "--state", "--json", "--jq")
+
 
 def refuse(message):
     sys.stderr.write("gh-stub refuses: " + message + "\n")
@@ -1150,8 +1155,6 @@ def apply_jq(expr, rows):
     if match:
         keep = compile_condition(match.group(1))
         return str(sum(1 for pr in rows if keep(pr)))
-    if expr == "length":
-        return str(len(rows))
     match = LENGTH_GT.match(expr)
     if match:
         return "true" if len(rows) > int(match.group(1)) else "false"
@@ -1167,6 +1170,8 @@ def main(argv):
         flag = argv[index]
         if not flag.startswith("--"):
             refuse("unexpected positional argument: " + flag)
+        if flag not in MODELLED_FLAGS:
+            refuse("unmodelled flag: " + flag)
         if index + 1 >= len(argv):
             refuse("flag with no value: " + flag)
         opts[flag] = argv[index + 1]
@@ -1183,10 +1188,6 @@ def main(argv):
         pass
     elif wanted == "open":
         rows = [row for row in rows if row["state"] == "OPEN"]
-    elif wanted == "closed":
-        rows = [row for row in rows if row["state"] in ("CLOSED", "MERGED")]
-    elif wanted == "merged":
-        rows = [row for row in rows if row["state"] == "MERGED"]
     else:
         refuse("unmodelled --state: " + wanted)
 
@@ -1481,6 +1482,11 @@ class ArchiveReachabilityRuntimeTests(unittest.TestCase):
             command.replace("--json state", "--json number,state"),
             command.replace('select(.state == "OPEN"', "select(.state | test(\"OPEN\")"),
             command.replace("--state all", "--state draft"),
+            # An ADDED flag is drift the four state tests cannot see: this one
+            # would query the wrong repository and still count PRs from the
+            # fixture, so the whole matrix would stay green on a broken check.
+            command.replace("--state all", "--repo someone/else --state all"),
+            command.replace("--state all", "--state all --limit 100"),
         )
         for mutated in unmodelled:
             with self.subTest(text=mutated[:60]):
