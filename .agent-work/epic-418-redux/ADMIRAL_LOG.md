@@ -5523,3 +5523,28 @@ issue that says exactly that, hours after it was demonstrated.
 
 **Verified after reopening: both OPEN.** I did not take the crew's report for the state — I read the
 forge before and after, which is the only reason this surfaced at all.
+
+### FINDING — a watcher subagent cannot sustain a poll loop here. Two attempts, same failure.
+
+Tommy asked me to stop narrating every poll and to delegate the watching. I dispatched
+**`w5-watcher`**, which went idle **without returning a report**. I re-dispatched **`w5-watcher-2`**
+with an explicit instruction naming that exact failure mode and requiring at least 40 iterations of
+`check; sleep 60`. **It went idle within ninety seconds, also without a report.**
+
+**Two independent attempts, one with the failure mode named in its own prompt, both ended immediately.**
+A subagent in this harness does not stay resident across a sleep loop — its turn ends and the
+notification fires with nothing in it.
+
+**So the watch cannot be delegated, and the constraint is the harness's, not the prompt's.** This is the
+same family as crew 1's report that **in-process teammates cannot spawn background agents** — the
+supervision primitives an orchestrator would reach for are the ones that are absent.
+
+**What I do instead:** keep polling in-turn, and **stop reporting the polls.** Tommy's actual
+instruction was *"you don't have to report holding"* — the narration was the cost, not the polling.
+Speak only when a gate moves, a verdict lands, a PR opens, or something needs adjudicating.
+
+**Worth carrying to closeout:** the Admiral tier has no working way to wait. It cannot end its turn
+(nothing resumes it), it cannot delegate the wait (watchers do not persist), and it cannot sleep in the
+foreground (the tool kills it). **The only available shape is a poll loop in the orchestrator's own
+context** — which is also the tier whose context is most expensive and least protected, since the
+governor never fires on it.
