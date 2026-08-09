@@ -1,0 +1,302 @@
+{
+  "work_id": "w5-gates-g3-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-state-matrix",
+    "m2-mutation",
+    "m3-coupled-suite",
+    "m4-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md, windows.md), the project deltas if present, the g3-implement handoff, and the anchors it names: the archive.c2b postcondition in skills/commander/templates/COMMANDER_SPINE.template.json, docs/CHECKLIST_SCHEMA.md on command-condition verdicts, scripts/init_work_area.py resolve_spine, and the engine's _run_check_command. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); block if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + anchors loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-state-matrix": {
+      "id": "m1-state-matrix",
+      "title": "archive_c2b four-state matrix, red then green",
+      "imperative": "Write tests carrying archive_c2b in their names that EXTRACT the archive.c2b check command from COMMANDER_SPINE.template.json resolved through scripts/init_work_area.py resolve_spine (never retyped), and run it through the same POSIX shell the engine uses with a stub gh and stub git early on PATH. Cover no-PR, OPEN, MERGED, CLOSED-unmerged: first and last must exit nonzero, middle two exit 0. Observe the tests RED against the shipped command first, then rewrite archive.c2b to the resolved shape and observe GREEN. init_work_area.py takes a zero-line diff; stop and report if it appears to need edits.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: the archive_c2b matrix written and observed failing against the SHIPPED archive.c2b command -- manual attest, check MUST be null so the engine does not run the by-design-failing test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed at exit 1 against the shipped archive.c2b: ['<branch>'] unresolved, and bash reports \"line 1: branch: No such file or directory\" -- the unquoted token is a shell REDIRECTION, so the shipped check fails even for an OPEN PR."
+        },
+        {
+          "id": "c2",
+          "statement": "archive.c2b rewritten; the four-state matrix passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_c2b"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-state-matrix-1"
+        }
+      ],
+      "constraints": [
+        "allowed scope: COMMANDER_SPINE.template.json, tests/test_iterative_planning_doctrine.py, init_work_area.py (zero-line diff expected)",
+        "no new resolver token",
+        "never retype the command text"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-state-matrix-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_c2b",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-mutation": {
+      "id": "m2-mutation",
+      "title": "archive_mutation legs, each proven non-no-op",
+      "imperative": "Write tests carrying archive_mutation in their names that drive the corrected command RED under each reintroduced defect: the literal <branch> token, a narrowed --state open, and the exit-code-blind --jq 'length > 0' form. Every leg must assert the mutation really applied AND assert the UNMUTATED command passes on the identical fixture, so no leg can be a no-op. For each leg write down what would have to be true for it to be a no-op.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "state matrix green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "each mutation leg carries a paired control assertion on the identical fixture, and its no-op condition is stated in the test docstring -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "6 mutation legs, each with a paired control on the identical fixture plus a machine-checked disagreement assertion (control-passes XOR mutant-passes), so no leg can be a no-op by construction. Each leg's no-op condition is named in a comment beside it. Independently confirmed by mutating the TEMPLATE itself: the old shipped text, #484's cannot-fail replacement, a --state open narrowing, and a CLOSED-widened selector all drive -k 'archive_c2b or archive_mutation' RED (exit 1); template restored byte-identical."
+        },
+        {
+          "id": "c2",
+          "statement": "the archive_mutation legs pass",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_mutation"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-mutation-1"
+        }
+      ],
+      "constraints": [
+        "mutations restore the template in a finally, never leave it mutated"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-mutation-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_mutation",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-coupled-suite": {
+      "id": "m3-coupled-suite",
+      "title": "Coupled suite green, delta accounted",
+      "imperative": "Run the handoff's coupled suite bare (never piped) and account for the delta against the 390 passed / 488 subtests baseline at bd56ac8a. An unexplained delta is a finding. Any red outside the ownership scope is a FLOAT, not an edit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "mutation legs green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the coupled suite passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q"
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "init_work_area.py took a zero-line diff",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && test -z \"$(git diff --numstat -- scripts/init_work_area.py)\""
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-coupled-suite-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-coupled-suite",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-result": {
+      "id": "m4-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write .agent-work/w5-gates/crew-handoffs/g3-implement-RESULT.md: COMPLETE or BLOCKED, the explicit four-state measurement with exit codes, per-item evidence with real exit codes AND selector collection counts, git diff --numstat, the per-leg no-op analysis, floats, map impact, and workflow feedback. Do NOT commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "coupled suite green and delta accounted",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the result file exists and names the four-state measurement and the no-op analysis",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && grep -q 'CLOSED-unmerged' .agent-work/w5-gates/crew-handoffs/g3-implement-RESULT.md && grep -q 'no-op' .agent-work/w5-gates/crew-handoffs/g3-implement-RESULT.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not commit; the Commander commits"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 7,
+  "engine_session": {
+    "session_id": "impl-w5-g3",
+    "status": "active",
+    "claimed_at": "2026-08-09T02:06:58.671696+00:00",
+    "last_heartbeat": "2026-08-09T02:26:07.086952+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is complete on all seven fields. Two defects confirmed at the anchor: literal <branch> and OPEN-only. Third property confirmed in code, not just prose -- checklist_engine._run_check_command runs [bash,-c,command] and _check_condition takes returncode only, so --jq 'length > 0' can never carry a verdict. resolve_spine substitutes <repo-root> via Path.resolve().as_posix() and does NOT own <branch>, so instantiation cannot catch it. No jq on PATH: the stub gh must model the --jq itself, deriving its behaviour FROM the expression text so the expression stays load-bearing.",
+      "mechanical": false,
+      "ts": "2026-08-09T02:07:30.517794+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-state-matrix",
+      "why": "archive.c2b rewritten to the pre-ruled shape; the four-state matrix collects 4 tests / 4 subtests and exits 0. The RED run recorded a fact the handoff did not predict: the shipped unquoted <branch> is a SHELL REDIRECTION, so the old check failed for OPEN and MERGED too and only 'passed' the two states it was supposed to reject -- it was an always-fails check, not just an OPEN-only one. Stub gh derives its filtering FROM the --jq text, so the selector stays load-bearing.",
+      "mechanical": false,
+      "ts": "2026-08-09T02:13:27.099215+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-mutation",
+      "why": "archive_mutation collects 2 tests / 9 subtests, exit 0. The disagreement assertion is the anti-no-op mechanism the g2 review asked for: a leg that agreed with the real check on its own fixture would fail even if its own directional assertion passed. The exit-code leg is DERIVED from the shipped text by unwrapping the shell comparison, not retyped, so it cannot drift away from what ships.",
+      "mechanical": false,
+      "ts": "2026-08-09T02:15:09.093102+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m3-coupled-suite",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1504,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-09T02:25:16.079509+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "m3-coupled-suite",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1511,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-09T02:25:23.355768+00:00"
+    }
+  ]
+}

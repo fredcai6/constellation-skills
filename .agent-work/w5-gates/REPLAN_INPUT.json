@@ -39,9 +39,13 @@
           "appetite": "One gate",
           "acceptance_or_falsification_evidence": "The three-location matrix and the name-only-decoy test pass; a permissive guard drives them red.",
           "implementation_latitude": "Choose the predicate shape inside the pre-rulings; add tests.",
-          "hard_constraints_no_gos": ["Do not widen the guard into a check that cannot fail"],
+          "hard_constraints_no_gos": [
+            "Do not widen the guard into a check that cannot fail"
+          ],
           "local_unknowns": [],
-          "anchors": ["scripts/verify_iterative_role_artifacts.py"],
+          "anchors": [
+            "scripts/verify_iterative_role_artifacts.py"
+          ],
           "type": "AFK",
           "blocks": []
         },
@@ -55,7 +59,9 @@
           "implementation_latitude": "Shared with 501.",
           "hard_constraints_no_gos": [],
           "local_unknowns": [],
-          "anchors": ["scripts/verify_iterative_role_artifacts.py"],
+          "anchors": [
+            "scripts/verify_iterative_role_artifacts.py"
+          ],
           "type": "AFK",
           "blocks": []
         },
@@ -67,9 +73,13 @@
           "appetite": "One gate",
           "acceptance_or_falsification_evidence": "stop_mutation selector collects nonzero and passes.",
           "implementation_latitude": "Choose internals; preserve the engine boundary.",
-          "hard_constraints_no_gos": ["checklist_engine.py is crew 4's"],
+          "hard_constraints_no_gos": [
+            "checklist_engine.py is crew 4's"
+          ],
           "local_unknowns": [],
-          "anchors": ["tests/test_iterative_planning_doctrine.py"],
+          "anchors": [
+            "tests/test_iterative_planning_doctrine.py"
+          ],
           "type": "AFK",
           "blocks": []
         },
@@ -82,8 +92,12 @@
           "acceptance_or_falsification_evidence": "archive_c2b selector collects nonzero and passes.",
           "implementation_latitude": "Extract the command text from the template rather than restating it.",
           "hard_constraints_no_gos": [],
-          "local_unknowns": ["Whether the text can be exercised without real network access"],
-          "anchors": ["skills/commander/templates/COMMANDER_SPINE.template.json"],
+          "local_unknowns": [
+            "Whether the text can be exercised without real network access"
+          ],
+          "anchors": [
+            "skills/commander/templates/COMMANDER_SPINE.template.json"
+          ],
           "type": "AFK",
           "blocks": []
         },
@@ -97,7 +111,9 @@
           "implementation_latitude": "Shared with 439.",
           "hard_constraints_no_gos": [],
           "local_unknowns": [],
-          "anchors": ["skills/commander/templates/COMMANDER_SPINE.template.json"],
+          "anchors": [
+            "skills/commander/templates/COMMANDER_SPINE.template.json"
+          ],
           "type": "AFK",
           "blocks": []
         },
@@ -111,7 +127,9 @@
           "implementation_latitude": "Route deferrals to triage.",
           "hard_constraints_no_gos": [],
           "local_unknowns": [],
-          "anchors": ["tests/"],
+          "anchors": [
+            "tests/"
+          ],
           "type": "AFK",
           "blocks": []
         }
@@ -121,7 +139,9 @@
       {
         "outcome": "The epic's own close can be verified end to end",
         "why_likely": "The three bookends are the only known blockers",
-        "entry_conditions": ["All six issues closed"]
+        "entry_conditions": [
+          "All six issues closed"
+        ]
       }
     ],
     "uncertainty_register": [
@@ -148,6 +168,26 @@
       "issue_id": "468",
       "outcome": "Fixed by the same predicate. The Commander worktree now reaches not-installed without consulting the name and falls through to the probe with a visible stderr note.",
       "evidence": "The commander-worktree row of test_guard_location_predicate_separates_the_three_real_locations, measured on disk with its three structural columns reported in the subTest."
+    },
+    {
+      "issue_id": "506",
+      "outcome": "Fixed. admiral-prelaunch is now decision-aware: a recorded, G2-verified, rendered stop transition packet closes the prelaunch check, while advance and replan are unchanged and repair is still refused. The launch_id relaxation is genuinely conditional, not a blanket loosening.",
+      "evidence": "The stop_boundary and stop_mutation selectors, and the reviewer's own three stop-shortcuts (skip G2 validation, skip the unique-audit-entry match, skip the render) all measured RED at bd56ac8a. Recorded because the FIRST review BLOCKed here: the render shortcut survived green at 57048457, so the mutation test did not cover the leg it claimed to. The gate caught it, not the suite."
+    },
+    {
+      "issue_id": "439",
+      "outcome": "Fixed, but NOT as the issue describes. The issue's diagnosis (the literal <branch> token ships unsubstituted) is right about the token and wrong about the consequence: gh never ran at all, because '<' is a shell input redirection under sh -c. The branch is now derived at CHECK time from the existing <repo-root> token, so no new resolver token was needed and scripts/init_work_area.py took a zero-line diff.",
+      "evidence": "The four-state matrix and the always-fails reproduction in wave_evidence, plus test_archive_c2b_derives_the_branch_from_the_real_repository and the archive_mutation leg that reintroduces the literal token."
+    },
+    {
+      "issue_id": "484",
+      "outcome": "Fixed, but the issue's SUGGESTED replacement was refused with evidence. Keeping --jq 'length > 0' would exit 0 on an empty list -- a check that cannot fail, inside a wave about checks that cannot fail. The count is compared in the shell instead, so the exit code carries the verdict.",
+      "evidence": "The 0/0/0/0 counterfactual measurement in wave_evidence, and the archive_mutation leg that restores the stdout form and goes red."
+    },
+    {
+      "issue_id": "446",
+      "outcome": "Fixed as the SECOND defect of the same postcondition, not merged into #439/#484. Its complaint -- that only an OPEN pull request is accepted, so a merged PR (the strongest evidence the work is reachable) fails -- is a distinct defect from the unsubstituted token, and pre-ruling 5 required both be fixed rather than one. The check now accepts {OPEN, MERGED} while still rejecting CLOSED-unmerged and no-PR. Note the issue's premise is also corrected by the always-fails finding: the shipped check rejected a MERGED PR, but so did it reject an OPEN one.",
+      "evidence": "MERGED exit 0 in the four-state matrix; test_archive_c2b_a_merged_pr_alone_satisfies_the_check; and the archive_mutation leg narrowing back to --state open, which is only discriminating on a MERGED fixture -- verified by the reviewer, who measured that the same mutation on an OPEN fixture is a genuine no-op."
     }
   ],
   "wave_evidence": [
@@ -180,6 +220,30 @@
       "expected": "Nonzero collection, so neither gate closes vacuously.",
       "observed": "guard_location 11 passed / 13 deselected, exit 0. guard_mutation 1 passed / 23 deselected, exit 0. Both run unpiped so the exit code is pytest's own. A bogus selector exits 5 on this machine, confirmed by the reviewer as a discriminating control.",
       "source": "Direct pytest runs at g1-integrate"
+    },
+    {
+      "claim": "archive.c2b's reachability verdict rides the exit code and discriminates all four pull-request states.",
+      "expected": "no-PR and CLOSED-unmerged nonzero (unreachable); OPEN and MERGED zero (reachable).",
+      "observed": "no-PR exit 1, OPEN exit 0, MERGED exit 0, CLOSED-unmerged exit 1, with EMPTY stdout in all four -- so nothing rides on printed text. Measured twice independently: by the Commander against four real branches on the live gh, and offline by the implementer and again by the reviewer through a PATH stub running the command text extracted from the shipped template. The three measurements agree.",
+      "source": "Live gh (Commander) + stubbed shell at g3-implement, g3-review pass 1 and pass 2"
+    },
+    {
+      "claim": "The SHIPPED archive.c2b was an always-fails check, not an open-PR-only check. #439, #484 and #446 all describe its behaviour wrongly.",
+      "expected": "If the issues were right, the old text would exit 0 on an OPEN pull request and nonzero on the other three.",
+      "observed": "The old text exits 1 in ALL FOUR states with `bash: line 1: branch: No such file or directory`. The engine runs check text through sh -c, where the unquoted '<' in `--head <branch>' is an INPUT REDIRECTION, so gh was never invoked at all. It passed no-PR and CLOSED-unmerged for entirely the wrong reason. Reproduced independently by the implementer and by the reviewer.",
+      "source": "Direct shell runs at g3-implement and g3-review"
+    },
+    {
+      "claim": "Adopting the replacement #484 suggests would convert a check that cannot pass into one that cannot fail.",
+      "expected": "If --jq 'length > 0' carried the verdict, an empty list would exit nonzero.",
+      "observed": "#484's form exits 0/0/0/0 across all four states. gh --jq prints `true` or `false` and exits 0 either way; a command condition's verdict is its EXIT CODE and stdout is discarded (docs/CHECKLIST_SCHEMA.md). The count is therefore compared IN THE SHELL. Measured by the Commander on live gh and by the reviewer offline.",
+      "source": "Live gh (Commander) + g3-review counterfactual"
+    },
+    {
+      "claim": "The g3 test harness itself could have gone vacuous, and did not, because the reviewer measured it.",
+      "expected": "A stub that models the shipped check should refuse any shape it does not model.",
+      "observed": "The first stub required --head, --state and --json but rejected nothing EXTRA, so `--repo someone/else` and `--limit 100` were answered silently and read exactly like the baseline -- a future check could have queried the wrong repository with the whole four-state matrix green. Reviewer BLOCKed on it; repaired at 84d1e998 by whitelisting the four modelled flags. Load-bearing confirmed by deleting the guard again: exactly the two new legs go red. Reviewer then probed 21 flag SHAPES (combined-form, short flags, positionals, missing values, adversarial values, unicode lookalikes) and all refuse.",
+      "source": "g3-review pass 1 BLOCK, rework 84d1e998, g3-review pass 2 APPROVE"
     }
   ],
   "discrepancies": [
@@ -200,7 +264,7 @@
       "reason": "Fixed inside the gate under inherited latitude; no plan change is warranted."
     }
   ],
-  "open_current_wave_issue_ids": ["506", "439", "484", "446"],
+  "open_current_wave_issue_ids": [],
   "unlaunched_items": [],
   "repo_state": {
     "anchors": [

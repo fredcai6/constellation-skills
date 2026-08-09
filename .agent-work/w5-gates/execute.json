@@ -477,7 +477,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-3"
         },
         {
           "id": "c2",
@@ -491,7 +492,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-4"
         },
         {
           "id": "c3",
@@ -505,7 +507,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-5"
         },
         {
           "id": "c4",
@@ -517,13 +520,14 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g2-integrate-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -547,6 +551,39 @@
             "seam": "g2-integrate",
             "why_ref": "w-6",
             "note": "Tripped HARD at 19% while trying to START g2-integrate. All three of its postcondition commands already pass in my hands (stop_boundary exit 0 / 2 passed; stop_mutation exit 0 / 1 passed / 8 subtests; coupled 390 passed / 488 subtests exit 0), the APPROVE verdict is attached as e-g2-integrate-1, and p1 is attested -- so the successor's g2-integrate is a start + advance, not a re-derivation."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_boundary",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_mutation",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g2-integrate-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -574,7 +611,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-implement-1"
         }
       ],
       "constraints": [
@@ -609,11 +647,27 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "COMPLETE",
+            "path": ".agent-work/w5-gates/crew-handoffs/g3-implement-RESULT.md",
+            "crew": "constellation/w5-gates/g3/implementer/attempt-1",
+            "blockers": "none",
+            "four_state": "no-PR 1, OPEN 0, MERGED 0, CLOSED-unmerged 1 -- reproduces the four-real-branch verification; stdout empty in all four so the verdict rides the exit code",
+            "scope": "COMMANDER_SPINE.template.json 1/1, test_iterative_planning_doctrine.py 410/0; init_work_area.py zero-line diff as predicted; no new resolver token",
+            "note": "Implementer's own child plan left m3/m4 evidence-complete but not engine-advanced after a context trip; the measurements are in the RESULT, so this gate's artifact condition is met on content."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-review": {
@@ -625,7 +679,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g3",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received at .agent-work/w5-gates/crew-handoffs/g3-implement-RESULT.md, status COMPLETE, no unresolved blockers; attached to g3-implement as e-g3-implement-1 and that gate is closed. The change is committed at ff43e883 so the reviewer judges a real ref."
         }
       ],
       "postconditions": [
@@ -636,7 +691,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-review-1"
         }
       ],
       "constraints": [],
@@ -645,11 +701,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w5-gates/crew-handoffs/g3-review-RESULT.md",
+            "crew": "constellation/w5-gates/g3/reviewer/attempt-1",
+            "history": "BLOCK (pass 1, one narrow in-scope finding: the gh stub answered added flags silently instead of refusing) -> rework at 84d1e998 -> re-verified APPROVE (pass 2). Pass-1 findings preserved verbatim in the result; pass 2 is a separate section.",
+            "reverification": "Probed 21 flag SHAPES not just names -- combined-form, short flags, positionals, missing values, adversarial values, unicode lookalikes -- all refuse exit 3. Deleted the guard itself and confirmed exactly the two new legs fail. Confirmed the three deleted stub branches cost nothing in both directions. Re-ran the whole pass-1 battery: four states unchanged, five template mutations still red, template restored byte-identically."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-integrate": {
@@ -661,7 +731,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for g3",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT received at .agent-work/w5-gates/crew-handoffs/g3-review-RESULT.md, verdict APPROVE after a BLOCK-rework-reverify cycle; attached to g3-review as e-g3-review-1 and that gate is closed."
         }
       ],
       "postconditions": [
@@ -677,7 +748,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-5"
         },
         {
           "id": "c2",
@@ -691,7 +763,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-6"
         },
         {
           "id": "c3",
@@ -705,7 +778,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-7"
         },
         {
           "id": "c4",
@@ -717,17 +791,97 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g3-integrate-4"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g3-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_c2b",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_mutation",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-4",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "path": ".agent-work/w5-gates/crew-handoffs/g3-review-RESULT.md",
+            "crew": "constellation/w5-gates/g3/reviewer/attempt-1",
+            "history": "BLOCK on the test harness at ff43e883, reworked at 84d1e998, re-verified APPROVE by the same reviewer. Pass-1 findings preserved unchanged in the result; pass 2 is a separate section at the end."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_c2b",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-6",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_mutation",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g3-integrate-7",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-implement": {
@@ -970,6 +1124,34 @@
       "why": "Reviewer returned BLOCK with proof, which is the gate working as designed. It built all three stop-shortcuts itself; two go red and the render one stays green, so the mutation test does not cover the render leg it claims to. Criterion 2, the likeliest failure mode, passes: the launch_id relaxation is genuinely conditional. Criterion 6 reasoned on the record -- the inversion is the fix.",
       "mechanical": false,
       "ts": "2026-08-09T01:45:54.032175+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "g2-integrate",
+      "why": "Re-ran all three verification commands myself on the current tree rather than inheriting the predecessor's numbers: stop_boundary 2 passed exit 0, stop_mutation 1 passed / 8 subtests exit 0 (the floor matched tests, so it is not a zero-match 5), coupled suite 390 passed / 488 subtests exit 0 in 36.5s. The reviewer's APPROVE is the re-verification after its own BLOCK: it rebuilt its three stop shortcuts at bd56ac8a and all three now go red, so the render leg the first review caught is genuinely covered. Fix A stands; no honest null here. Next is g3, where archive.c2b's real defect is sh -c input redirection on the unquoted '<', not the substitution the issues propose.",
+      "mechanical": false,
+      "ts": "2026-08-09T02:02:35.135149+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "g3-implement",
+      "why": "IMPLEMENTER_RESULT is COMPLETE with no unresolved blockers. The check text in the template is byte-for-byte the resolved shape; scope held (init_work_area.py zero diff, no new resolver token, nothing outside the two owned files). The implementer independently reproduced my four-branch matrix through a PATH stub and added the finding that matters: the OLD check exited 1 in ALL FOUR states, because the unquoted '<' in --head <branch> is a shell input redirection and gh never ran -- so 'accepts only an OPEN PR' was never a true description of shipped behavior. That confirms the redirection diagnosis from the other side and makes #439/#484's suggested replacement worse than I already knew. One scoped null carried to review: the --jq filter's behavior under real gojq is unproven offline; the stub derives its filtering from the --jq text and refuses loudly on unmodelled shapes, and my four real-branch run closes the gap from the live side.",
+      "mechanical": false,
+      "ts": "2026-08-09T02:29:25.211839+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "g3-review",
+      "why": "REVIEW_RESULT returned. It BLOCKed first, on proof: the gh stub required three flags to be present but rejected nothing extra, so a check carrying --repo someone/else would have kept the whole four-state matrix green while real gh queried the wrong repository -- this wave's own failure mode reappearing one level up, inside the harness built to prove the check is honest. I repaired both sites the reviewer named and verified the repair is load-bearing by deleting the guard again: exactly the two new legs go red. The same reviewer then re-verified independently, probing 21 flag shapes rather than the four names I had proven, and all refuse. All four required confirmations passed at both passes, and the reviewer built its mutations against the shipped template on disk rather than a retyped string, so the suite is shown to catch a bad artifact and not just a bad literal. The shipped check text never changed during rework.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:10:29.331150+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g3-integrate",
+      "why": "Ran all three commands myself at the reworked tree: archive_c2b exit 0 with 4 tests / 4 subtests, archive_mutation exit 0 with 2 tests / 11 subtests, coupled suite exit 0 with 396 passed / 503 subtests. Neither selector collected zero, so neither closed vacuously. Fix C is delivered and its harness has been proven honest twice over. The four-state measurement plus three corrections to the issue bodies are now in REPLAN_INPUT.json as observed evidence: the shipped check was an ALWAYS-FAILS check exiting 1 in all four states because the unquoted redirection meant gh never ran, so all three issues describe its behaviour wrongly; the replacement 484 suggests exits 0 in all four states and would have been a check that cannot fail; and 446 is fixed as the second defect of the same postcondition rather than collapsed into the other two. I also closed a gap my predecessor left: 506 had no completed_outcome recorded, and open_current_wave_issue_ids still listed all four. Both are now correct and the open list is empty.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:16:08.121430+00:00"
     }
   ],
   "trip_ledger": [
@@ -996,16 +1178,15 @@
       "ts": "2026-08-09T01:57:45.454118+00:00"
     }
   ],
-  "refusals": 6,
+  "refusals": 10,
   "engine_session": {
-    "session_id": "commander-w5-gates-d-20260808",
-    "status": "released",
-    "claimed_at": "2026-08-09T00:40:25.832835+00:00",
-    "last_heartbeat": "2026-08-09T01:58:17.496989+00:00",
-    "claimed_by": "commander-delegated",
+    "session_id": "commander-w5-gates-e-20260808",
+    "status": "active",
+    "claimed_at": "2026-08-09T01:59:18.973971+00:00",
+    "last_heartbeat": "2026-08-09T03:16:08.121454+00:00",
+    "claimed_by": "commander-w5-gates-e",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-09T01:58:39.807470+00:00"
+    "takeover_reason": null
   }
 }

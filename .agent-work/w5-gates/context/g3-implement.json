@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g3-implement",
+  "files": [],
+  "repo_rev": {
+    "commit": "b711c13afd32ef32dfb38b0b0243694471a111cd"
+  },
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T02:02:48Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-w5-gates"
+    }
+  }
+}
