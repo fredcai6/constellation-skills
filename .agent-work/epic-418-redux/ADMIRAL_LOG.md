@@ -4584,3 +4584,33 @@ does not wait on certainty; it waits on courtesy, and there is a bound on the co
 that reads as post-suite composition rather than a stall — and **no idle notification has arrived**,
 which is the authoritative channel and the one I have been wrong to second-guess twice today. Crew 2 is
 running hot at ~47 writes per four minutes.
+
+### Better liveness proxy found: `gauge.json`'s mtime IS "last tool call"
+
+The governor's gauge is written by a **PostToolUse hook**, so its mtime is a direct record of the
+agent's **last tool call** — not of file output, which is what I had been counting. That is a strictly
+better liveness signal than write counts, and it was sitting in front of me all wave:
+
+- an agent reading nine issue bodies writes nothing but **does** bump its gauge;
+- an agent thinking, or composing a long return, bumps neither.
+
+**So "no worktree writes" and "no tool calls" are different questions, and only the second is
+evidence of silence.** Crew 4's thirty-minute "silence" this morning — which I nearly acted on — was
+nine `gh issue view` calls, and the gauge would have shown that immediately.
+
+**Applied it, and it separated the quiet crews cleanly:** crew 1's last tool call 23:55, crew 4's 23:49,
+against 00:06 now — **eleven and seventeen minutes** with no tool call at all. Crews 2 and 5 both fresh.
+
+**Asked both rather than acting.** Fourth time today; the previous three were all right to ask and
+wrong to assume. Told each: if you tripped, say so and I relaunch, **but check the reading is yours
+first** — a stale gauge is the predecessor's, and a fresh tool call updates it.
+
+**Also pushed my outstanding rulings down to crew 4 in that message**, because the most likely thing
+eating its run is **#503**, and I had already ruled on it: float it as larger-than-filed with its
+predecessor's reasoning, **do not spend more of the run on it.** A ruling the crew has not seen is not
+a ruling — I made it in my log and in the relaunch prompt, and if that message did not survive, it was
+costing time I had already decided not to spend. Restated #495/#479/#480 with it, and reminded it that
+**nine issues does not mean nine fixes are owed.**
+
+Also told it, because it is reassuring and true: **its work-in-progress engine parses my live Admiral
+spine cleanly.** Its changes have not broken the run they are running inside.
