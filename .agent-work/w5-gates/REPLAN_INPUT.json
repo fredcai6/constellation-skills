@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic #418 wave 5 - bookend gates",
+      "spec_path": ".agent-work/epic-418-redux/launch-orders/LO-w5-c1-gates.md",
+      "intent_and_why": "Close the iterative-planning epic's own bookends: the role verifier must know where it is running from, the stop exit must not authorize a next wave, and the archive command text must resolve. Each is a check that today either cannot fail or fails for the wrong reason."
+    },
+    "definition_of_done": [
+      "All six issues are fixed, each behind a gate that fails closed when its tests were never written."
+    ],
+    "good_enough": {
+      "mandatory_quality": "Every gate closes on a -k selector keyed to a stated test naming contract; a zero-match selector exits 5 and fails the gate.",
+      "sufficient_evidence": "Targeted tests plus the coupled suite at each gate boundary; the full suite at g4.",
+      "appetite": "One crew, four gates"
+    },
+    "hard_constraints": [
+      "scripts/checklist_engine.py and tests/test_checklist_engine.py are crew 4's sole writers this wave",
+      "No hooks, no settings.json, no docs/agents/* doctrine promotion",
+      "Collateral red in a non-owned file is a float to the Admiral, not a local edit"
+    ],
+    "fixed_decisions": [
+      "A running process identifies an installed bundle by structure, not by name (launch-order pre-ruling 4)",
+      "The -k selectors are the cold critic's BLOCK remedy and are load-bearing, not stylistic"
+    ],
+    "current_wave": {
+      "objective": "Fix the three bookend defects behind gates that cannot close vacuously",
+      "exit_criteria": [
+        "guard_location, guard_mutation, stop_mutation and archive_c2b selectors each collect nonzero and pass",
+        "The full suite is green at g4"
+      ],
+      "issues": [
+        {
+          "id": "501",
+          "title": "Role verifier resolves the wrong skills root from the source checkout",
+          "desired_outcome": "The guard decides by structure and refuses elsewhere naming the real problem.",
+          "useful_now": "It is the defect blocking the epic's own close.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "The three-location matrix and the name-only-decoy test pass; a permissive guard drives them red.",
+          "implementation_latitude": "Choose the predicate shape inside the pre-rulings; add tests.",
+          "hard_constraints_no_gos": ["Do not widen the guard into a check that cannot fail"],
+          "local_unknowns": [],
+          "anchors": ["scripts/verify_iterative_role_artifacts.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "468",
+          "title": "Guard refuses outright from a Commander worktree",
+          "desired_outcome": "The worktree reaches the same not-installed verdict without consulting the name.",
+          "useful_now": "Same predicate, opposite polarity; fixing one without the other leaves the run broken.",
+          "appetite": "Shared with 501",
+          "acceptance_or_falsification_evidence": "The worktree row of the three-location matrix.",
+          "implementation_latitude": "Shared with 501.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": ["scripts/verify_iterative_role_artifacts.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "506",
+          "title": "A stop packet can authorize NEXT_WAVE",
+          "desired_outcome": "stop cannot authorize a next wave; the existing negative assertion is inverted.",
+          "useful_now": "It is the second bookend.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "stop_mutation selector collects nonzero and passes.",
+          "implementation_latitude": "Choose internals; preserve the engine boundary.",
+          "hard_constraints_no_gos": ["checklist_engine.py is crew 4's"],
+          "local_unknowns": [],
+          "anchors": ["tests/test_iterative_planning_doctrine.py"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "439",
+          "title": "Archive command text does not resolve",
+          "desired_outcome": "The archive command's resolved text runs.",
+          "useful_now": "Third bookend.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "archive_c2b selector collects nonzero and passes.",
+          "implementation_latitude": "Extract the command text from the template rather than restating it.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": ["Whether the text can be exercised without real network access"],
+          "anchors": ["skills/commander/templates/COMMANDER_SPINE.template.json"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "484",
+          "title": "archive.c2b carries an unresolvable <branch> token",
+          "desired_outcome": "<branch> no longer appears as an unresolved token in the archive command.",
+          "useful_now": "Shares the file and the fix with 439.",
+          "appetite": "Shared with 439",
+          "acceptance_or_falsification_evidence": "The resolved text contains no unowned token.",
+          "implementation_latitude": "Shared with 439.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": ["skills/commander/templates/COMMANDER_SPINE.template.json"],
+          "type": "AFK",
+          "blocks": []
+        },
+        {
+          "id": "446",
+          "title": "Integrate the three fixes and prove them together",
+          "desired_outcome": "The full suite is green and the verifier runs against the branch under review, not the machine's installed corpus.",
+          "useful_now": "It is the wave's own exit.",
+          "appetite": "One gate",
+          "acceptance_or_falsification_evidence": "Full suite green; c2 passes --skills-root explicitly.",
+          "implementation_latitude": "Route deferrals to triage.",
+          "hard_constraints_no_gos": [],
+          "local_unknowns": [],
+          "anchors": ["tests/"],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "The epic's own close can be verified end to end",
+        "why_likely": "The three bookends are the only known blockers",
+        "entry_conditions": ["All six issues closed"]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the archive command text can be exercised without real network access",
+        "affects": "g3's evidence strength",
+        "settle_by": "g3",
+        "current_evidence": "No test in this repo invokes gh; the verifier is network-free",
+        "next_probe": "A stub gh early on PATH, asserting on the exit code"
+      }
+    ],
+    "parked_possibilities": [
+      "Corpus-level fix for implementer-result conditions carrying no match",
+      "config_ref pointing at a nonexistent docs/agents/engine-config.json"
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "501",
+      "outcome": "Fixed and independently reviewed. _installed_skills_root() decides by structure, not by name.",
+      "evidence": "-k guard_location 11 passed / 13 deselected / 11 subtests, exit 0; -k guard_mutation 1 passed / 23 deselected / 6 subtests, exit 0; coupled suite 387 passed / 480 subtests, exit 0. Reviewer verdict APPROVE at .agent-work/w5-gates/crew-handoffs/g1-review-RESULT.md."
+    },
+    {
+      "issue_id": "468",
+      "outcome": "Fixed by the same predicate. The Commander worktree now reaches not-installed without consulting the name and falls through to the probe with a visible stderr note.",
+      "evidence": "The commander-worktree row of test_guard_location_predicate_separates_the_three_real_locations, measured on disk with its three structural columns reported in the subTest."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The structural predicate separates all three real locations.",
+      "expected": "Installed bundle accepted; main checkout and Commander worktree both not-installed.",
+      "observed": "Installed bundle: own SKILL.md present, parent CORPUS.json present, 20 sibling bundles -> True. Main checkout (C:/Programs/constellation-skills): no own SKILL.md, parent no CORPUS.json, 0 constellation-*/SKILL.md children -> False. Commander worktree (C:/Programs/constellation-skills-wt/epic418-w5-gates): the same three columns -> False.",
+      "source": "tests/test_iterative_planning_doctrine.py::GuardLocationStructureTests::test_guard_location_predicate_separates_the_three_real_locations, plus an on-disk measurement of the same three columns before crew dispatch"
+    },
+    {
+      "claim": "The guard is not a check that cannot fail.",
+      "expected": "An unconditionally-permissive guard drives the guard_location tests red.",
+      "observed": "Replacing _is_installed_bundle's body with `return True` gives 10 failed / 6 passed / 13 deselected, exit 1 -- red on the decoy test, on both non-installed rows of the matrix, and on four runtime resolution tests. The reviewer measured 9 failed independently before I added an eleventh test. Restored and confirmed by blob OID.",
+      "source": "Reviewer's own mutation run, and my own re-run after the post-review fix"
+    },
+    {
+      "claim": "The two-clause structural test does not self-certify.",
+      "expected": "A lone constellation-*-named directory carrying its own SKILL.md is NOT an installed bundle when nothing else marks its parent.",
+      "observed": "Found by the reviewer and fixed at g1-integrate: _is_skills_root globs constellation-* children of the PARENT, so the candidate satisfied clause 2 by being that child, and the test decayed to the old name test plus a SKILL.md. _is_installed_bundle now passes exclude=path. Removing the exclusion drives the new regression test red on assertFalse(_is_installed_bundle(lonely)) -- a behavioural red, not a signature error.",
+      "source": "tests/test_iterative_planning_doctrine.py::GuardLocationStructureTests::test_guard_location_predicate_refuses_to_let_a_candidate_certify_itself"
+    },
+    {
+      "claim": "--skills-root exists and wins when given.",
+      "expected": "The flag beats an otherwise-resolvable root and is reachable from all three modes.",
+      "observed": "Passing, including test_guard_location_flag_beats_an_otherwise_resolvable_root and test_guard_location_flag_wins_and_is_reachable_from_all_three_modes. g4-integrate.c2 depends on this flag.",
+      "source": "tests/test_iterative_planning_doctrine.py::GuardRuntimeTests"
+    },
+    {
+      "claim": "Both -k selectors collect a nonzero number of tests.",
+      "expected": "Nonzero collection, so neither gate closes vacuously.",
+      "observed": "guard_location 11 passed / 13 deselected, exit 0. guard_mutation 1 passed / 23 deselected, exit 0. Both run unpiped so the exit code is pytest's own. A bogus selector exits 5 on this machine, confirmed by the reviewer as a discriminating control.",
+      "source": "Direct pytest runs at g1-integrate"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The g1-review handoff stated the review target was the uncommitted working tree, but the implementer had already committed the pair at c63c2bb0, so git status showed both files clean.",
+      "classification": "evidence_only",
+      "affects": "Crew handoff accuracy for g2, g3 and g4",
+      "evidence": "Reviewer workflow feedback in g1-review-RESULT.md; a reviewer following the handoff literally could have returned BLOCK on 'the diff cannot be accessed'.",
+      "reason": "The reviewer recovered without help and the verdict stands; later handoffs must name a resolvable ref."
+    },
+    {
+      "id": "D1",
+      "signal": "The structural predicate let a candidate certify itself, which would have returned #501 in its original shape the moment constellation-skills gained a root-level SKILL.md.",
+      "classification": "evidence_only",
+      "affects": "The g1 fix's durability",
+      "evidence": "Reviewer finding, reproduced and fixed at g1-integrate with a regression test under the guard_location naming contract.",
+      "reason": "Fixed inside the gate under inherited latitude; no plan change is warranted."
+    }
+  ],
+  "open_current_wave_issue_ids": ["506", "439", "484", "446"],
+  "unlaunched_items": [],
+  "repo_state": {
+    "anchors": [
+      "scripts/verify_iterative_role_artifacts.py",
+      "tests/test_iterative_planning_doctrine.py",
+      "skills/commander/templates/COMMANDER_SPINE.template.json"
+    ],
+    "map_status": "DEGRADED-NO-MAP: this repo has no architecture map, so anchors are named by path and there are no struct:/decision: ids to cite."
+  }
+}

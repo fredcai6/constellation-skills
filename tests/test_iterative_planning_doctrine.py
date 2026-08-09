@@ -574,6 +574,35 @@ class GuardLocationStructureTests(unittest.TestCase):
         self.assertFalse((self.decoy / "SKILL.md").is_file())
         self.assertFalse(self.verifier._is_installed_bundle(self.decoy))
 
+    def test_guard_location_predicate_refuses_to_let_a_candidate_certify_itself(self):
+        """A lone `constellation-*` bundle cannot vouch for its own parent.
+
+        Regression guard for the self-match #501 would have returned through: the
+        sibling scan runs on the PARENT, so unless the candidate is excluded, the
+        second clause is satisfied by the candidate itself and the structural test
+        decays into `startswith("constellation-")` plus a `SKILL.md` -- exactly the
+        set the old name test wrongly accepted.
+        """
+        lonely = self.root / "self-certify" / "constellation-alone"
+        lonely.mkdir(parents=True)
+        (lonely / "SKILL.md").write_text("# alone\n", encoding="utf-8", newline="\n")
+
+        # Nothing else marks the parent: no CORPUS.json, no other bundle.
+        self.assertFalse((lonely.parent / self.verifier.CORPUS_MARKER).is_file())
+        self.assertEqual([lonely], list(lonely.parent.glob("constellation-*")))
+        # Unexcluded, the parent looks like a root -- solely because of the candidate.
+        self.assertTrue(self.verifier._is_skills_root(lonely.parent))
+        # Excluded, it does not, so the candidate is not an installed bundle.
+        self.assertFalse(self.verifier._is_skills_root(lonely.parent, exclude=lonely))
+        self.assertFalse(self.verifier._is_installed_bundle(lonely))
+
+        # A genuine sibling is what makes the parent a real root, and then the
+        # candidate IS accepted -- the exclusion narrows nothing it should not.
+        sibling = lonely.parent / "constellation-sibling"
+        sibling.mkdir()
+        (sibling / "SKILL.md").write_text("# sibling\n", encoding="utf-8", newline="\n")
+        self.assertTrue(self.verifier._is_installed_bundle(lonely))
+
     def test_guard_location_predicate_accepts_by_marker_not_by_name(self):
         """A bundle is accepted on structure even when nothing is named `constellation-*`."""
         marked = self.root / "marker-only"

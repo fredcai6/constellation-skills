@@ -54,19 +54,29 @@ def _write_markdown(path: Path, text: str) -> None:
         handle.write(text.strip() + "\n")
 
 
-def _is_skills_root(path: Path) -> bool:
+def _is_skills_root(path: Path, exclude: Path | None = None) -> bool:
     """Whether ``path`` is a directory that installed constellation bundles live in.
 
     Decided by structure, never by name: either the installer's corpus marker
     (``install_constellation.py``'s ``CORPUS_MARKER``) sits in it, or it already
     holds at least one installed bundle -- a ``constellation-*`` child carrying
     its own ``SKILL.md``.
+
+    ``exclude`` drops one child from the sibling scan. Without it, a candidate
+    named ``constellation-*`` carrying its own ``SKILL.md`` is itself the child
+    that makes its parent look like a skills root, so the two-clause test in
+    ``_is_installed_bundle`` collapses back to the name test that caused #501.
+    The probe passes no ``exclude``, so scope detection is unchanged.
     """
     if not path.is_dir():
         return False
     if (path / CORPUS_MARKER).is_file():
         return True
-    return any((child / "SKILL.md").is_file() for child in path.glob("constellation-*"))
+    skip = exclude.resolve() if exclude is not None else None
+    return any(
+        (child / "SKILL.md").is_file() and (skip is None or child.resolve() != skip)
+        for child in path.glob("constellation-*")
+    )
 
 
 def _is_installed_bundle(path: Path) -> bool:
@@ -78,8 +88,12 @@ def _is_installed_bundle(path: Path) -> bool:
     Commander worktree is not named ``constellation-*`` at all, so a name test
     wrongly refuses it; this reaches the same not-installed verdict without
     consulting the name.
+
+    The parent must look like a skills root on the strength of some OTHER bundle
+    (or the corpus marker), never on the strength of the candidate itself --
+    otherwise a ``constellation-*`` name plus a ``SKILL.md`` is self-certifying.
     """
-    return (path / "SKILL.md").is_file() and _is_skills_root(path.parent)
+    return (path / "SKILL.md").is_file() and _is_skills_root(path.parent, exclude=path)
 
 
 def _candidate_skills_roots() -> list[Path]:
