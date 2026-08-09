@@ -697,13 +697,14 @@
   "refusals": 2,
   "engine_session": {
     "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T16:48:03.872759+00:00",
     "last_heartbeat": "2026-08-09T18:04:51.227724+00:00",
     "claimed_by": "commander-424 execute plan",
     "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T18:07:52.102517+00:00"
   },
   "why_trail": [
     {

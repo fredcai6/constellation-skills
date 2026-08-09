@@ -1,9 +1,17 @@
 # Crash-resume state note — epic-418-followon/commander-424
 
-- **step:** execute · gate g1-implement (the door: MCP server + per-dispatch config generation)
-- **slug:** epic-418-followon/commander-424 · branch `epic-418/f-424-mcp-door` · worktree `/home/tommy/projects/constellation-skills-wt/f-424`
-- **next command:** `cd /home/tommy/projects/constellation-skills-wt/f-424 && python3 /home/tommy/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/epic-418-followon/commander-424/spine.json current` — then drive `.agent-work/epic-418-followon/commander-424/execute.json` gate by gate. Engine lease session id is `86708414-f5d3-40d3-8c9a-2f96d1ccdc14`; pass it on every mutating call.
-- **pid:** none — foreground (crews dispatched via run_crew.py, blocking)
-- **expected artifact:** `.agent-work/epic-418-followon/commander-424/crew-handoffs/g1-implementer-result.md`, then the closing verdict in `MEASUREMENT.md` and the notes at `/home/tommy/projects/constellation-skills/.agent-work/epic-418-followon/notes-424.md`
+**This run returned incomplete on purpose.** `g1-integrate` is blocked, not failed, and the reason is
+recorded in the engine. Both leases are released so a successor can claim without a forced takeover.
 
-_Updated: 2026-08-09T17:05:00+00:00_
+- **step:** execute · gate `g1-integrate` **[blocked]** · gates `g2`, `g3`, `g4` still pending
+- **slug:** epic-418-followon/commander-424 · branch `epic-418/f-424-mcp-door` · worktree `/home/tommy/projects/constellation-skills-wt/f-424` · PR #533
+- **next command:** `cd /home/tommy/projects/constellation-skills-wt/f-424 && python3 /home/tommy/.claude/skills/constellation-commander/scripts/checklist_engine.py --file .agent-work/epic-418-followon/commander-424/spine.json current` — then claim the lease with your own session id and drive `execute.json`. **The next real action is gate `g3`**, whose handoff is already written at `crew-handoffs/g3-implementer-handoff.md`; `g2`'s is written too.
+- **pid:** none — foreground; no detached process is running
+- **expected artifact:** `crew-handoffs/g3-implementer-result.md`, then `MEASUREMENT.md` at `g4`
+
+**The one question that unblocks `g1-integrate`:** does an in-session Task-tool subagent share its
+parent's already-launched MCP server? If yes, `${VAR}` expansion cannot reach it and
+`scripts/gen_mcp_config.py` is required. If no, generation is redundant and the `${VAR}` path already
+shipped in `.mcp.json` is the whole answer. That question **is DC3**, and its evidence is gate `g3`.
+
+_Updated: 2026-08-09T19:40:00+00:00_
