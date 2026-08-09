@@ -4516,16 +4516,18 @@ class WrappedDocstringTests(unittest.TestCase):
         summary = extract.doc_summary_of(doc)
         body = extract.doc_body_of(func_node)
 
-        # When summary is truncated to 160, body must exist with overflow + original body
-        if summary and len(summary) == 160:
-            self.assertIsNotNone(body,
-                                "Body should exist when summary is truncated (overflow + Args)")
-            self.assertIn("Args:", body, "Body should contain the Args section")
+        # Summary must be truncated to exactly 160 chars
+        self.assertEqual(len(summary), 160,
+                        "Summary should be truncated to exactly 160 chars")
 
-        # For this specific test, verify the invariant: summary + body preserves content
-        reconstructed = (summary or "") + ((" " + body) if body else "")
-        self.assertGreater(len(reconstructed), 160,
-                          "Summary + body should contain all content")
+        # Body must exist and contain both the overflow AND the Args section
+        self.assertIsNotNone(body,
+                            "Body should exist when summary is truncated (overflow + Args)")
+        # The overflow text past char 160 includes "character truncation limit..." — verify it's there
+        self.assertIn("character truncation limit", body,
+                     "Body must contain overflow text from truncated paragraph")
+        self.assertIn("Args:", body,
+                     "Body should contain the original Args section")
 
     def test_all_shapes_preserve_complete_content(self):
         """Invariant test: for all docstring shapes, summary+body contains full text.
@@ -4571,10 +4573,15 @@ class WrappedDocstringTests(unittest.TestCase):
                 body = extract.doc_body_of(func_node)
 
                 # Invariant: no silent content loss
-                # For overflow cases (summary at 160 chars), body must not be None
-                if summary and len(summary) == 160:
+                # For overflow cases (summary at 160 chars), assert unconditionally
+                if len(summary) == 160:
                     self.assertIsNotNone(body,
                                        f"{description}: 160-char summary must have overflow in body")
+                    # For Shape 4 (blank line with first-para overflow), verify overflow text is present
+                    if description == "blank line with first-para overflow":
+                        # Text past char 160 is "joined" and beyond
+                        self.assertIn("joined", body,
+                                     f"{description}: overflow text must be in body")
 
                 # Reconstructed text should be non-empty
                 reconstructed = (summary or "") + ((" " + body) if body else "")
