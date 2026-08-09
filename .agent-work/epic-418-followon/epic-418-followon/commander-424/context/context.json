@@ -1,0 +1,48 @@
+{
+  "contract": 1,
+  "step": "context",
+  "files": [
+    {
+      "root": "skill",
+      "path": "references/global-orchestrator.md",
+      "rev": "2e6be4d6e162d34f41335b36586565c39c5cbb6b"
+    },
+    {
+      "root": "skill",
+      "path": "references/global-everyone.md",
+      "rev": "9d34d8be6e74007724c60a537001e119f5576ffc"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "rev": "10c0027e40163ceebbaf0eaa5c9560c60df641c9"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/GLOSSARY.md",
+      "rev": "6594c7c8ec53d1c2f450ea24f6e634d4fe1e2629"
+    },
+    {
+      "root": "repo",
+      "path": "docs/agents/engine-config.json",
+      "rev": null
+    }
+  ],
+  "repo_rev": {
+    "commit": "bd098d92a47ecadce22ef319d25ca613eb76f9ec"
+  },
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T16:30:41Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-commander",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

@@ -93,7 +93,8 @@
           "id": "c1",
           "statement": "orchestrator context, glossary, engine config loaded; current map read for the affected area where architecture artifacts exist",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Read: global-orchestrator.md, global-everyone.md, commander-core.md (delegated skill + commander core). Project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/CREW_CONTEXT.md. docs/agents/engine-config.json does NOT exist in this repo -- substitution recorded. No docs/architecture map exists (skill-source repo): map_orient returned DEGRADED-NO-MAP, discharged with 5 hash-pinned substitutes, 2 unmapped statements and an escalation to the Admiral."
         },
         {
           "id": "c2",
@@ -102,7 +103,8 @@
             "kind": "command",
             "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root /home/tommy/projects/constellation-skills-wt/f-424 --work-id epic-418-followon/commander-424"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-context-1"
         }
       ],
       "context_refs": [
@@ -135,11 +137,23 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-context-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/map_orient.py verify-orientation --root /home/tommy/projects/constellation-skills-wt/f-424 --work-id epic-418-followon/commander-424",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "understand": {
@@ -151,7 +165,8 @@
           "id": "p1",
           "statement": "baseline context loaded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Baseline context loaded at the context step: global doctrine + commander-core, project deltas (ORCHESTRATOR_CONTEXT, GLOSSARY, CREW_CONTEXT), map orientation receipt discharged DEGRADED-NO-MAP with 5 hash-pinned substitutes. Plus, for this step: spec F lines 408-546 read in full, prototype de6a0844 recovered and read (6 files, 745 lines), engine verb surface enumerated (18 verbs)."
         }
       ],
       "postconditions": [
@@ -162,17 +177,31 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-understand-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": "interrogation.json",
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-understand-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Mission",
+            "ratified_by": "Admiral (frozen launch order; human ratifies at epic return boundary)",
+            "statement": "Problem statement reconciled against the frozen order and spec F, not interrogated from a human. Written to .agent-work/epic-418-followon/commander-424/PROBLEM_STATEMENT.md. Protected intent: wrap the engine's own dispatch (no duplicated logic), imperatives verbatim through tool results, CLI door stays, settings.json untouched, per-agent instance keyed session_id#agentId.",
+            "baseline_correction": "A2 shipped the line between VERBS (TRIP_HARD_GUARDED_VERBS={start,reopen}), not two flavours of advance. Typing what the engine has; #424 body superseded per LAUNCH_ORDER:Mission."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "plan": {
@@ -184,7 +213,8 @@
           "id": "p1",
           "statement": "ask confirmed",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Ask confirmed at understand via user-decision e-understand-1 citing LAUNCH_ORDER:Mission; PROBLEM_STATEMENT.md written."
         }
       ],
       "postconditions": [
@@ -239,7 +269,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -548,12 +578,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 2,
+  "refusals": 3,
   "engine_session": {
     "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
     "status": "active",
     "claimed_at": "2026-08-09T16:29:41.574648+00:00",
-    "last_heartbeat": "2026-08-09T16:30:30.753611+00:00",
+    "last_heartbeat": "2026-08-09T16:36:55.934306+00:00",
     "claimed_by": "commander-424 (delegated, epic-418 workstream F)",
     "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
     "previous_session_id": null,
@@ -566,6 +596,20 @@
       "why": null,
       "mechanical": true,
       "ts": "2026-08-09T16:30:30.753591+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "context",
+      "why": "Doctrine loaded and the map input resolved as a declared DEGRADED reading, not a silent skip. Two project-delta findings already bear on F: (1) docs/agents/CREW_CONTEXT.md still says 'use python, not py; py has no pytest' and is Windows-framed -- the launch order's measured Linux fact (both shims resolve to the same venv, pytest 9.1.1) governs and the corpus text is stale; (2) GLOSSARY already carries the A2 outcome verbatim -- HARD refuses start and reopen, never advance -- confirming I must type the verb split the engine has, not the two-flavoured advance #424's body predicted.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:31:42.585045+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "understand",
+      "why": "Ask reconciled against the frozen order and spec F rather than a human. The order's assumed baseline was checked against the code and corrected in two places that change the build: the two-flavoured advance A2 was predicted to ship does not exist (the line is between verbs), and archive.c2b's #439 placeholder bug is already fixed in the template I am running, so one of the four bugs F must hold constant is already constant. F introduces the first MCP surface in a repo with no architecture map, so the plan gets its anchors from the engine's own verb table and the recovered prototype, both read.",
+      "mechanical": false,
+      "ts": "2026-08-09T16:34:05.869157+00:00"
     }
   ]
 }
