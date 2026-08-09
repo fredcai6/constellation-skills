@@ -5179,3 +5179,38 @@ It also took my #313 measurement into its design unprompted: *"'engine present a
 
 **Wave 5: 5 of 21 closed** (#507 #370 #496 #411 #458). **Three PRs merged, one open (#514, held for
 closing keywords), one crew still running.**
+
+### RULING — I added #514's closing keywords myself, and the line I did not cross
+
+Crew 4 went quiet with my keyword request outstanding (journal 38 min, zero writes for 5). Its CI is
+**green** on `1bcc88bd`, its work is committed and pushed, and the only gap was PR metadata.
+
+**I appended the keywords myself** — seven `Closes` lines, one per issue, plus **#503 and #495
+referenced with no keyword** and the crew's own reasoning for each, under a heading that says the
+addition is mine.
+
+**Why this is not doing the crew's work.** The dispositions are **already stated, by the crew, in its
+own body text** — six fixed, one verified, two floated with reasons. I added nothing about *what
+happened*; I made an existing statement machine-actionable. **Merging the PR is my job, and issue
+closure is part of merging.** I also verified the split independently before writing it: the seven
+that close are the six fixed plus #480 (verified as already-fixed), and the two floats must not.
+
+**The line I did not cross, and would not have:** I did not touch the diff, the dispositions, or any
+verdict. **If a crew had reported an issue fixed and I disagreed, adding a `Closes` for it would be me
+writing a verdict I did not earn** — the same act as flipping a boundary decision, one tier down. Here
+the verdict is the crew's and unaltered; only the plumbing is mine.
+
+**Recorded in the PR body itself** rather than only here, so the next reader sees who added what
+without needing this log.
+
+**Also carried into the body: the `Closes #A, #B` trap**, with its live instance from #509 this same
+wave and the #354 pointer — so the next person writing a multi-issue PR in this repo meets the warning
+where they will need it.
+
+### Crew 1's g1 is through review — APPROVE, 0 findings, and the reviewer tested the right thing
+
+Its first close criterion is literally *"The guard is not a check that cannot fail — PASS"*, verified
+with **decoys**: a `constellation-decoy/` directory with **no `SKILL.md`** sitting inside a
+`CORPUS.json`-marked root was **rejected**. **A name-shaped impostor refused by a structural test** —
+exactly what fix B was supposed to buy, checked adversarially rather than assumed. Crew 1 is now at
+`g1-integrate`, one of four gates down.
