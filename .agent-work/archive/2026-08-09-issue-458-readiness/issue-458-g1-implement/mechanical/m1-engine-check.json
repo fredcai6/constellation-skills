@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-engine-check",
+  "mechanical": {
+    "run": "issue-458-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m1-engine-check",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-458-g1-implement-m1-engine-check@42abcd68342ec295f715e11443ab217c6850ae54",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-458-g1-implement",
+    "generated_at": "2026-08-08T23:51:54Z"
+  }
+}

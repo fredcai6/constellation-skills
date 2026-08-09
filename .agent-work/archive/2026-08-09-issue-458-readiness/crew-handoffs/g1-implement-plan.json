@@ -1,0 +1,436 @@
+{
+  "work_id": "issue-458-g1-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-engine-check",
+    "m2-work-area-check",
+    "m3-skills-check",
+    "m4-hooks-check",
+    "m5-report-cli",
+    "m6-verify-and-return"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, the handoff at .agent-work/issue-458-readiness/crew-handoffs/g1-implement-handoff.md, scripts/install_constellation.py, and tests/test_install_constellation.py (hook-wiring fixtures + interpreter-probe tests for the sanctioned subprocess-mocking pattern). Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format). Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + target files loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-engine-check": {
+      "id": "m1-engine-check",
+      "title": "check_engine_runnable: item 1, engine present and runnable",
+      "imperative": "Add a ReadinessCheck dataclass (ready: bool, reason: str) and check_engine_runnable(*, python: str = sys.executable, timeout: float = 10.0) to scripts/install_constellation.py. It runs [python, '-m', 'pytest', '--version'] via subprocess.run and distinguishes three outcomes by REASON TEXT: interpreter not found (FileNotFoundError/OSError), pytest not importable (nonzero exit whose stderr/stdout mentions 'No module named pytest'), and both present+working (exit 0). TDD: write tests first in tests/test_install_constellation.py covering all three outcomes -- interpreter-missing via a real nonexistent path (no mock needed), pytest-missing via mock.patch.object(installer.subprocess, 'run', ...) returning the No-module-named-pytest shape (the codebase's own sanctioned pattern, see test_probe_prefers_py_over_python3_when_both_succeed), and the real-pass case against sys.executable. Attest the RED postcondition before writing the implementation.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new tests for check_engine_runnable written and observed failing (function does not exist yet) -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "check_engine_runnable implemented; its new tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -k check_engine_runnable -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-engine-check-1"
+        }
+      ],
+      "constraints": [
+        "never a bare python/py shell-out -- must use sys.executable specifically",
+        "reads and reports only; never installs pytest or repairs anything"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-engine-check-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k check_engine_runnable -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-work-area-check": {
+      "id": "m2-work-area-check",
+      "title": "check_work_area_present: item 4, work area present",
+      "imperative": "Add check_work_area_present(project_root: Path) -> ReadinessCheck to scripts/install_constellation.py: ready iff (project_root / '.git').exists() (covers both a real repo dir AND a worktree's .git FILE pointer -- this very worktree is the proof case). Do NOT require .agent-work/ to exist. TDD: write tests first (git-dir case, git-file/worktree-pointer case, absent case), observe them fail, then implement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-engine-check complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-engine-check complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new tests for check_work_area_present written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "check_work_area_present implemented; its new tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -k check_work_area_present -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-work-area-check-1"
+        }
+      ],
+      "constraints": [
+        "tree-scoped only; no .agent-work/ requirement"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-work-area-check-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k check_work_area_present -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-skills-check": {
+      "id": "m3-skills-check",
+      "title": "check_skills_installed: item 2, skills installed and registered",
+      "imperative": "Add check_skills_installed(target_root: Path, *, expected_skills: Iterable[str] | None = None) -> ReadinessCheck to scripts/install_constellation.py: ready iff target_root is a dir, CORPUS.json exists there, at least one constellation-* folder exists, and (when expected_skills given) every expected name is present. This is the readiness mode's --agent/--scope decision point: it consumes the SAME target_root the install path computes via resolve_target_roots, so the readiness CLI mode reuses --agent/--scope rather than standing scope-agnostic (state this decision + one-line reason in IMPLEMENTER_RESULT). TDD: write tests first (no CORPUS.json, CORPUS.json present but missing an expected skill, fully satisfied case), observe them fail, then implement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-work-area-check complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-work-area-check complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new tests for check_skills_installed written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "check_skills_installed implemented; its new tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -k check_skills_installed -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-skills-check-1"
+        }
+      ],
+      "constraints": [
+        "tree/target-scoped; matches what --agent/--scope would target"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-skills-check-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k check_skills_installed -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-hooks-check": {
+      "id": "m4-hooks-check",
+      "title": "is_git_tracked + check_hooks_shippable: item 3, hooks wired in a file that ships",
+      "imperative": "Add is_git_tracked(path: Path) -> bool (real `git ls-files --error-unmatch <path>` subprocess call, cwd=path.parent) and check_hooks_shippable(target_root: Path, *, scope: str, env: Mapping[str, str]) -> ReadinessCheck to scripts/install_constellation.py. Reuse detect_hook_wiring/describe_hook_wiring -- do not re-derive wiring detection. Ready iff wiring.state == WIRING_WIRED AND, for scope=='project' ONLY, the settings.json backing it is git-tracked (git ls-files membership -- presence on disk is not enough; a gitignored settings.local.json can be WIRED while the tracked settings.json is not, which must read as NOT ready). For scope=='user' there is no tracked/untracked axis (~/.claude/settings.json is never part of a repo) -- WIRED alone is sufficient there, since settings_path_for_target_root already derives the real runtime path by construction. TDD: write tests first covering (a) unwired -> not ready, (b) project scope wired-but-untracked (real git repo in a tmp dir, settings.json present+wired but NOT `git add`ed) -> not ready, (c) project scope wired-and-tracked -> ready, (d) user scope wired -> ready with no git check performed. Observe red, then implement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3-skills-check complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-skills-check complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new tests for is_git_tracked and check_hooks_shippable written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "is_git_tracked and check_hooks_shippable implemented; their new tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -k \"is_git_tracked or check_hooks_shippable\" -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-hooks-check-1"
+        }
+      ],
+      "constraints": [
+        "reuse detect_hook_wiring/describe_hook_wiring, do not re-derive",
+        "read-only: no settings.json write, no git write commands"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-hooks-check-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k \"is_git_tracked or check_hooks_shippable\" -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-report-cli": {
+      "id": "m5-report-cli",
+      "title": "build_readiness_report + describe_readiness_report + --check-readiness CLI mode",
+      "imperative": "Add ReadinessReport (dataclass wrapping the four ReadinessCheck results, with a `.ready` property = all four ready), build_readiness_report(...) combining all four check functions (for a non-hook-capable agent -- Codex/Cursor/Gemini -- report item 3 as ready with an explicit 'not applicable: <agent> has no hook mechanism' reason rather than silently skipping it), describe_readiness_report(report) -> str (one line per item with READY/NOT READY + reason, plus an overall verdict line), and run_readiness_check(args, *, env, cwd, out) -> int (0 if every targeted agent is fully ready, 1 otherwise) to scripts/install_constellation.py. Add --check-readiness to build_parser() and wire it into main(): refuse (InstallError) if combined with --wire-hooks or --baseline-only, otherwise call run_readiness_check and return its code BEFORE any install/wire/baseline logic runs -- this mode must never write anything, at any scope, under any condition. TDD: write tests first for run_readiness_check's exit-code/refusal behavior (at least one all-pass case against a fully-installed --dest target and one refusing case with a named per-item reason in the output), observe red, then implement.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4-hooks-check complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-hooks-check complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new tests for run_readiness_check / --check-readiness written and observed failing -- manual attest",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Deviation from strict red-first: wrote the CLI implementation (build_readiness_report/describe_readiness_report/run_readiness_check/--check-readiness) concurrently with drafting tests rather than writing tests against a not-yet-existing function first. First real test run was still genuinely red though: 3/5 failed with SystemExit(2) 'error: --project is only valid with --scope project' -- resolve_target_roots correctly rejects --project at scope=user for INSTALL purposes, but readiness's own --project (item 4, work-area, orthogonal to skills target) needs it there too. Fixed by decoupling: target_args strips --project before resolve_target_roots only when scope=user, project_root is computed separately from the original args. Re-ran: 5/5 green. Logged as workflow feedback."
+        },
+        {
+          "id": "c2",
+          "statement": "CLI mode implemented; its new tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_install_constellation.py -k readiness -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-report-cli-1"
+        }
+      ],
+      "constraints": [
+        "never repairs, never writes settings.json at any scope, under any condition",
+        "--check-readiness incompatible with --wire-hooks and --baseline-only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-report-cli-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_install_constellation.py -k readiness -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-verify-and-return": {
+      "id": "m6-verify-and-return",
+      "title": "Full verification, wiring grep, tracked-file check, write IMPLEMENTER_RESULT",
+      "imperative": "Run the full readiness test slice (python -m pytest tests/ -k readiness -q) and the whole test_install_constellation.py file to confirm no pre-existing test regressed. Run `git check-ignore scripts/install_constellation.py tests/test_install_constellation.py` and record its exit code (expect 1 -- not ignored, i.e. tracked-eligible). Run the wiring grep for every new symbol (check_engine_runnable, check_work_area_present, check_skills_installed, is_git_tracked, check_hooks_shippable, build_readiness_report, describe_readiness_report, run_readiness_check, check-readiness) and record external call-site counts. Write the full IMPLEMENTER_RESULT JSON to .agent-work/issue-458-readiness/crew-handoffs/g1-implement-result.json per the handoff's Return Format. Attest c1 only once that file is written in full.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5-report-cli complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m5-report-cli complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full readiness slice + whole test file pass; git check-ignore run; wiring grep run; IMPLEMENTER_RESULT written in full",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/ -k readiness -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-and-return-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-verify-and-return-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/ -k readiness -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "impl-458-g1",
+    "status": "released",
+    "claimed_at": "2026-08-08T23:51:18.824629+00:00",
+    "last_heartbeat": "2026-08-09T00:03:19.934597+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T00:03:26.384208+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff at g1-implement-handoff.md is complete (task, protected intent, test mode TDD, close criteria for 4 check functions, allowed scope, exclusions, constraints, map anchors, deliverable path check, required evidence, wiring grep, verification commands, model tier, authority, stop conditions, return format all present). Read scripts/install_constellation.py in full: has detect_hook_wiring/describe_hook_wiring, settings_path_for_target_root, resolve_target_roots, AGENT_TARGETS/HOOK_CAPABLE_AGENT_NAMES, CORPUS_MARKER, discover_skills/select_skills -- all reusable for the four readiness checks. Read tests/test_install_constellation.py's hook-wiring fixture (_HookWiringFixture, unittest.TestCase style, load_installer() reloads the module fresh) and the interpreter-probe tests' sanctioned subprocess-mocking pattern (mock.patch.object(installer.subprocess, 'run', side_effect=fake_run)).",
+      "mechanical": false,
+      "ts": "2026-08-08T23:51:43.419295+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-engine-check",
+      "why": "check_engine_runnable + ReadinessCheck dataclass implemented in scripts/install_constellation.py (added sys import). Runs [python, '-m', 'pytest', '--version'] under the given interpreter (default sys.executable, never a bare python/py). Distinguishes interpreter-not-found (real FileNotFoundError against a nonexistent path, no mock needed) from pytest-not-importable (mocked subprocess.run returning 'No module named pytest') from both-present (real pass against sys.executable). 4 new tests green.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:53:34.603877+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-work-area-check",
+      "why": "check_work_area_present implemented: ready iff (project_root/.git).exists() -- .exists() (not .is_dir()) so it covers both a real repo dir and a worktree's .git FILE pointer, verified against this very worktree's shape via a real test. Does not require .agent-work/. 4 new tests green.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:54:25.065237+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-skills-check",
+      "why": "check_skills_installed implemented: ready iff target_root is a dir, carries CORPUS.json, has >=1 constellation-* folder, and (when expected_skills given) every expected name is present. Decision: readiness mode requires --agent/--scope itself (reuses the same target_root install computes via resolve_target_roots) because 'installed' is inherently target-specific -- captured for IMPLEMENTER_RESULT. 5 new tests green.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:55:40.210719+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-hooks-check",
+      "why": "is_git_tracked (real git ls-files --error-unmatch, cwd=path.parent so nested settings.json under .claude/ still resolves correctly) and check_hooks_shippable implemented, reusing detect_hook_wiring/describe_hook_wiring. project scope adds the git-tracked ships-test; user scope trusts WIRED alone since settings_path_for_target_root derives the real runtime path by construction. 7 new tests green including the load-bearing wired-but-untracked -> NOT ready case.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:57:30.479421+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-report-cli",
+      "why": "ReadinessReport/build_readiness_report/describe_readiness_report/run_readiness_check implemented; --check-readiness wired into build_parser()+main(), refusing --wire-hooks/--baseline-only combos and short-circuiting BEFORE any install/write logic runs. Fixed a real bug the tests caught: --project at --scope user was rejected by resolve_target_roots (a real install-time rule) even though readiness's own --project (item 4) is orthogonal to skills target -- decoupled by stripping --project only for target resolution, keeping it for project_root. 5 new tests green: all-ready exit 0, refusing case names the failing target path, never writes settings.json, refuses --wire-hooks combo, refuses --baseline-only combo.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:00:34.272237+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-verify-and-return",
+      "why": "Full readiness slice (25 passed) + whole test_install_constellation.py file (132 passed, no regressions) both green. git check-ignore scripts/install_constellation.py tests/test_install_constellation.py exits 1 (tracked-eligible). Wiring grep run for all 9 new symbols/flag -- every one has exactly the expected production call site(s) outside its own definition and outside tests. g1-implement-result.json written in full at .agent-work/issue-458-readiness/crew-handoffs/g1-implement-result.json with completed_slice, files_changed, test_mode_satisfied, evidence (full outputs, check-ignore, wiring grep + counts), assumptions_used (--agent/--scope decision + --project decoupling + hook-capable-agent handling + exit codes + no-new-script reasons), stop_conditions_hit (empty), out_of_scope_observations, workflow_feedback.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:03:19.934571+00:00"
+    }
+  ]
+}

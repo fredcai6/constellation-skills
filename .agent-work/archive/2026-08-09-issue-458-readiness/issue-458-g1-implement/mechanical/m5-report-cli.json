@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-report-cli",
+  "mechanical": {
+    "run": "issue-458-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m5-report-cli",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-458-g1-implement-m5-report-cli@b6e56471251b309ecb54ea5c2d8793bfb3d53035",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-458-g1-implement",
+    "generated_at": "2026-08-08T23:57:37Z"
+  }
+}

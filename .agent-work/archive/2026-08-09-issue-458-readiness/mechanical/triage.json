@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "triage",
+  "mechanical": {
+    "run": "issue-458-readiness",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 6,
+    "spine-step": "triage",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-458-readiness-triage@999983b68850fe3d37e3ba1be2d1bf7eba0c567d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-458-readiness",
+    "generated_at": "2026-08-09T00:27:18Z"
+  }
+}

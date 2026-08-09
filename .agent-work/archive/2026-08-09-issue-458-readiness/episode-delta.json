@@ -1,0 +1,217 @@
+{
+  "work_id": "issue-458-readiness",
+  "ops": [
+    {
+      "mechanical": {
+        "run": "issue-458-readiness",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "context",
+        "context-manifest-ref": ".agent-work/issue-458-readiness/context/context.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/issue-458-readiness/gauge.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Watch the context governor's own gauge to know when to hand off, per the launch order's own Budget section."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "gauge.json is refreshed periodically by a PostToolUse writer hook as the session makes tool calls, so its fill_fraction reading tracks the session's real, current context usage."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "gauge.json's fill_fraction (0.190464) and observed_at (2026-08-08T23:18:53.944Z) never changed across dozens of tool calls spanning context, understand, plan, and execute -- the same single reading, inherited from a predecessor session, was read by every HARD-band advisory this whole run until the engine itself finally flagged it as too stale to trust (CONTEXT GAUGE SILENT)."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "Every gate this run hit the HARD advisory on the same frozen reading and required filing a refresh-request to release the begin, even though no genuine context pressure existed in this fresh session -- resolved each time via the engine's documented release path (a matching pending refresh-request lets `start` proceed), so no gate was actually blocked, but the signal itself was never live."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "File the refresh-request at the gate about to be started (same session, immediately) rather than waiting for a relaunch, since the underlying reading was never going to refresh on its own in this environment."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The gauge-writer PostToolUse hook is not wired in this environment's settings.json -- consistent with this run's own launch order Mission section, which independently reports 'Context Governor hooks: UNWIRED' from an install_constellation.py --dry-run run minutes before this dispatch."
+        }
+      ],
+      "op": "create"
+    },
+    {
+      "mechanical": {
+        "run": "issue-458-readiness",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "context",
+        "context-manifest-ref": ".agent-work/issue-458-readiness/context/context.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/issue-458-readiness/spine.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Pick up a predecessor session's refresh-request at the `context` gate, per the reach-up cold-start doctrine (current-alone, no handoff document)."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The HARD-band advisory text ('close THIS gate carrying your handoff... and stop') describes closing a gate the tripped agent is already inside."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The predecessor's trip fired at a step BOUNDARY, not mid-gate: `init` was already complete and `context` was still `pending` (never started) when the HARD advisory fired. In that state the documented recipe is unsatisfiable -- `advance` refuses a pending gate ('must be in-progress to advance'), and `start` is exactly the verb HARD refuses. The predecessor correctly filed the refresh-request against the not-yet-started gate and stopped; this session then found `start context` succeeded (begin-released) once that same refresh-request was on file, which is what actually resolved it."
+        },
+        "impact-cost": {
+          "strength": "medium",
+          "statement": "No gate was permanently blocked, but resolving the boundary case required deriving the release mechanism from checklist_engine.py source rather than following the advisory text directly."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "None needed beyond the ordinary refresh-request-then-start sequence, once understood -- filed as triage candidate tc1 rather than treated as a live blocker."
+        }
+      },
+      "diagnosis": [],
+      "op": "create"
+    },
+    {
+      "mechanical": {
+        "run": "issue-458-readiness",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/issue-458-readiness/context/execute.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/issue-458-readiness/REPLAN_INPUT.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Satisfy execute.c2, which runs 'python scripts/verify_iterative_role_artifacts.py commander --work-id issue-458-readiness' to confirm REPLAN_INPUT.json is a valid G2 input."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The repo's own vendored scripts/verify_iterative_role_artifacts.py, run against a correct REPLAN_INPUT.json, exits 0."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The repo-vendored command always refuses with 'role verifier must run from an installed constellation-* skill' regardless of REPLAN_INPUT.json's content, because verify_iterative_role_artifacts.py's _installed_skills_root() guard checks that Path(__file__).resolve().parents[1].name starts with 'constellation-', which a worktree's own scripts/ directory never satisfies. Running the identical artifact through the INSTALLED copy at ~/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py passed clean ('iterative role artifact ok'), confirming the artifact was correct and the guard was the only obstacle."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "execute.c2 cannot pass for any Commander spine dogfooded on this repo's own worktree -- a structural property of the check, not a defect in any one run's REPLAN_INPUT.json. Independently re-derives crew 1's own report this same wave against #501/#468, which predicted exactly this would hit a Commander."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Waived execute.c2 (FORCED) on the Admiral's authority, citing both commands' exact output verbatim in the waiver reason, after floating the finding rather than force-waiving unilaterally."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "verify_iterative_role_artifacts.py's _installed_skills_root() guard assumes it is always invoked from an installed skill bundle (it dynamically loads sibling installed verifiers by relative path from the skills root), which is true for a normal project consuming Constellation but false when Constellation's own source repo dogfoods its own Commander spine against its own vendored scripts/."
+        }
+      ],
+      "op": "create"
+    },
+    {
+      "mechanical": {
+        "run": "issue-458-readiness",
+        "project": "constellation-skills",
+        "role": "implementer",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/issue-458-readiness/context/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 1,
+        "artifact-ref": [
+          ".agent-work/issue-458-readiness/crew-handoffs/g1-implement-result.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Drive g1-implement's own TDD plan gate-by-gate, observing red before green on each of the four readiness checks and the CLI layer."
+        },
+        "expected-behavior": {
+          "strength": "medium",
+          "statement": "The plan's postcondition text for the CLI-mode gate expected the first test run to fail because the function under test did not exist yet (an AttributeError)."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The implementer wrote the CLI mode's implementation and its tests together rather than strictly test-first; the first real test run instead caught a genuine pre-existing defect -- resolve_target_roots rejects --project at --scope user, which collided with readiness's own orthogonal use of --project for the work-area item -- rather than the by-design AttributeError the plan text anticipated."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "The net TDD value held (a real defect caught before green), but the letter of the plan's expected-failure text did not match what actually failed; recorded honestly in the engine's attest note rather than silently reconciled to match the plan's wording."
+        },
+        "workaround": {
+          "strength": "medium",
+          "statement": "Fixed resolve_target_roots to strip --project from target-root resolution only when scope == 'user', then continued the TDD cycle normally."
+        }
+      },
+      "diagnosis": [],
+      "op": "create"
+    },
+    {
+      "mechanical": {
+        "run": "issue-458-readiness",
+        "project": "constellation-skills",
+        "role": "reviewer",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/issue-458-readiness/context/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/issue-458-readiness/g1-review/review.json"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "medium",
+          "statement": "Run the r6-fowler item of REVIEW_SURVEY.template.json, invoking the check command its postcondition names."
+        },
+        "expected-behavior": {
+          "strength": "weak",
+          "statement": "The r6-fowler item's imperative prose and its postcondition c1 name the same check-command path."
+        },
+        "observed-behavior": {
+          "strength": "medium",
+          "statement": "The imperative prose ships with 'templates/FOWLER_PASS.template.json' as its literal check-command path, while postcondition c1 (the thing advance/record actually gates on) already carries the real resolved instance path filled in at instantiation. The documented normal path worked cleanly once the instance path was substituted; the wording of the two only disagrees, it does not disagree in behavior."
+        },
+        "impact-cost": {
+          "strength": "weak",
+          "statement": "A less careful reader could stumble trying to run the imperative's literal template path directly instead of the resolved instance path."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "None needed -- substituted the resolved instance path from postcondition c1 and proceeded."
+        }
+      },
+      "diagnosis": [],
+      "op": "create"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-458-readiness",
+  "diff_ref": "git diff scripts/install_constellation.py tests/test_install_constellation.py (working tree, worktree epic-418/w5-readiness-458, base commit ea85447164c358db8558536831899b558b6f6a9b)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "check_hooks_shippable reuses detect_hook_wiring/describe_hook_wiring rather than re-deriving wiring detection; run_readiness_check reuses resolve_target_roots/select_skills/discover_skills rather than re-deriving target resolution.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "ReadinessCheck(ready, reason) is exactly the value-object antidote to a data clump -- the pair is never passed around as two loose positional values.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "overridden", "finding": "build_readiness_report takes 7 keyword-only parameters (agent, target_root, scope, project_root, env, expected_skills, python).", "override": {"repo_standard": "scripts/install_constellation.py's existing install_skills() (line 1164) already takes 8 keyword-only parameters (skills, target_root, dry_run, force, full_set, restart_message, out, interpreter) for the same reason -- a multi-config orchestration function threading several independently-resolved values through one call, called from exactly one call site.", "reason": "This file's established convention for an orchestration function is keyword-only args over a parameter object; build_readiness_report matches that convention exactly and is not an outlier, so introducing a parameter object here would be inconsistent with the surrounding code rather than an improvement."}},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "overridden", "finding": "install_constellation.py is a single script now serving install, --wire-hooks, --baseline-only, and --check-readiness -- each a distinct reason to change the file.", "override": {"repo_standard": "Handoff Map Anchors, Pre-Ruling 4: 'default against a new script' -- an explicit human ruling recorded in the implementer's assumptions_used (no_new_script), reasoned that a standalone script would need to re-import or re-derive AGENT_TARGETS, resolve_target_roots, CORPUS_MARKER, detect_hook_wiring/describe_hook_wiring, and settings_path_for_target_root.", "reason": "The ruling authority (Pre-Ruling 4) explicitly weighed and rejected splitting this into a separate script; housing the readiness mode as a CLI branch that reuses existing machinery is the ruled outcome, not an accident."}},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "expected_skills and python parameters are both exercised by real call sites (run_readiness_check populates expected_skills from select_skills; the tests exercise python= directly for the missing-interpreter/missing-pytest cases) -- neither is unused hook-for-the-future.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "Docstrings and inline comments explain non-obvious design rationale (why sys.executable not a bare python/py, why --project is stripped only at scope=user) consistent with the file's existing dense-rationale-comment style (wire_hooks, detect_hook_wiring) -- they document decisions, not compensate for unclear code.", "override": null}
+  ],
+  "rail_exception": null
+}

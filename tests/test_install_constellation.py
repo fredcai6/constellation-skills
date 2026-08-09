@@ -2533,3 +2533,359 @@ class HookWiringOptInTests(_HookWiringFixture):
             self.assertIn("commit", output)
             self.assertIn("absolute path", output)
             self.assertIn("user name", output)
+
+
+# --------------------------------------------------------------------------- #
+# readiness check (#458) -- report-only, refuses when unready, never repairs
+# --------------------------------------------------------------------------- #
+class ReadinessEngineCheckTests(unittest.TestCase):
+    """check_engine_runnable: readiness item 1, engine present and runnable.
+
+    Must distinguish interpreter-missing from pytest-missing from
+    both-present-and-working -- a bare launch success is NOT proof pytest
+    actually runs. `py` on a real box exits nonzero with 'No module named
+    pytest' and reads exactly like a red suite if only a launch is checked."""
+
+    def test_check_engine_runnable_ready_when_pytest_runs_under_the_interpreter(self):
+        installer = load_installer()
+        result = installer.check_engine_runnable(python=sys.executable)
+        self.assertTrue(result.ready)
+        self.assertIn(sys.executable, result.reason)
+
+    def test_check_engine_runnable_not_ready_when_interpreter_missing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = str(Path(tmp) / "no-such-interpreter")
+            result = installer.check_engine_runnable(python=missing)
+        self.assertFalse(result.ready)
+        self.assertIn(missing, result.reason)
+        self.assertNotIn("pytest", result.reason.lower())
+
+    def test_check_engine_runnable_not_ready_when_pytest_missing(self):
+        """The discriminating case named in the handoff: a launch that exits
+        nonzero because pytest is not importable must read as pytest-missing,
+        not interpreter-missing, and must never be reported as ready."""
+        installer = load_installer()
+
+        def fake_run(cmd, **kwargs):
+            self.assertEqual([sys.executable, "-m", "pytest", "--version"], cmd)
+            return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="No module named pytest")
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=fake_run):
+            result = installer.check_engine_runnable(python=sys.executable)
+        self.assertFalse(result.ready)
+        self.assertIn("pytest", result.reason.lower())
+
+    def test_check_engine_runnable_uses_the_given_interpreter_not_a_bare_launcher(self):
+        """Regression guard: argv must be [<python>, '-m', 'pytest', ...], never
+        a bare 'python'/'py' token standing in for the interpreter."""
+        installer = load_installer()
+        seen = {}
+
+        def fake_run(cmd, **kwargs):
+            seen["cmd"] = cmd
+            return subprocess.CompletedProcess(cmd, 0, stdout="pytest 8.0.0\n", stderr="")
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=fake_run):
+            installer.check_engine_runnable(python=sys.executable)
+        self.assertEqual(sys.executable, seen["cmd"][0])
+
+
+class ReadinessWorkAreaCheckTests(unittest.TestCase):
+    """check_work_area_present: readiness item 4, work area present
+    (tree-scoped). README.md's own Baseline Assumptions: 'a Git repo, Markdown
+    docs, and file-based workflow state'. Must NOT require .agent-work/ to
+    already exist -- a project ready to START using Constellation has not
+    necessarily run it yet."""
+
+    def test_check_work_area_present_ready_with_a_git_directory(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / ".git").mkdir()
+            result = installer.check_work_area_present(project)
+        self.assertTrue(result.ready)
+
+    def test_check_work_area_present_ready_with_a_git_worktree_file_pointer(self):
+        """A git worktree's `.git` is a FILE, not a directory -- this very
+        worktree is the proof case for that shape."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / ".git").write_text("gitdir: /elsewhere/.git/worktrees/x\n", encoding="utf-8")
+            result = installer.check_work_area_present(project)
+        self.assertTrue(result.ready)
+
+    def test_check_work_area_present_not_ready_with_no_git_entry(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            result = installer.check_work_area_present(Path(tmp))
+        self.assertFalse(result.ready)
+        self.assertIn(str(Path(tmp)), result.reason)
+
+    def test_check_work_area_present_does_not_require_agent_work_dir(self):
+        """A project that has never run Constellation still has no .agent-work/
+        -- that must not count against readiness."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            (project / ".git").mkdir()
+            self.assertFalse((project / ".agent-work").exists())
+            result = installer.check_work_area_present(project)
+        self.assertTrue(result.ready)
+
+
+class ReadinessSkillsCheckTests(unittest.TestCase):
+    """check_skills_installed: readiness item 2, skills installed and
+    registered (tree/target-scoped). Decision point resolved here: the
+    readiness mode reuses --agent/--scope (via the same target_root install
+    itself computes) rather than standing scope-agnostic -- "installed" is
+    inherently target-specific, so `expected_skills` matches what a real
+    --agent/--scope/--skills combination would have installed."""
+
+    def test_check_skills_installed_not_ready_when_target_root_missing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"  # never created
+            result = installer.check_skills_installed(target)
+        self.assertFalse(result.ready)
+
+    def test_check_skills_installed_not_ready_without_corpus_marker(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"
+            target.mkdir()
+            (target / "constellation-workbench").mkdir()  # skill dir with no CORPUS.json
+            result = installer.check_skills_installed(target)
+        self.assertFalse(result.ready)
+        self.assertIn("CORPUS.json", result.reason)
+
+    def test_check_skills_installed_not_ready_when_an_expected_skill_is_missing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"
+            target.mkdir()
+            (target / "constellation-workbench").mkdir()
+            (target / "CORPUS.json").write_text("{}", encoding="utf-8")
+            result = installer.check_skills_installed(
+                target, expected_skills=["constellation-workbench", "constellation-implementer"])
+        self.assertFalse(result.ready)
+        self.assertIn("constellation-implementer", result.reason)
+
+    def test_check_skills_installed_ready_when_corpus_and_expected_skills_present(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"
+            target.mkdir()
+            (target / "constellation-workbench").mkdir()
+            (target / "constellation-implementer").mkdir()
+            (target / "CORPUS.json").write_text("{}", encoding="utf-8")
+            result = installer.check_skills_installed(
+                target, expected_skills=["constellation-workbench", "constellation-implementer"])
+        self.assertTrue(result.ready)
+
+    def test_check_skills_installed_ready_with_no_expected_skills_given(self):
+        """expected_skills=None -- any installed corpus counts, matching a
+        scope-agnostic caller that hasn't resolved a skill set yet."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "skills"
+            target.mkdir()
+            (target / "constellation-workbench").mkdir()
+            (target / "CORPUS.json").write_text("{}", encoding="utf-8")
+            result = installer.check_skills_installed(target)
+        self.assertTrue(result.ready)
+
+
+class ReadinessHooksCheckTests(_HookWiringFixture):
+    """is_git_tracked + check_hooks_shippable: readiness item 3, hooks wired in
+    a file that ships. Reuses detect_hook_wiring/describe_hook_wiring rather
+    than re-deriving wiring detection. Two DISTINCT ships-tests: project scope
+    requires git-tracked membership (`git ls-files`) -- presence on disk alone
+    is not enough, since a gitignored settings.local.json can be WIRED while
+    the tracked settings.json is not; user scope has no tracked/untracked axis
+    at all, so WIRED alone is sufficient there."""
+
+    def _git(self, cwd, *args):
+        return subprocess.run(["git", *args], cwd=str(cwd), capture_output=True, text=True)
+
+    def _init_repo(self, repo_root):
+        self._git(repo_root, "init", "-q")
+        self._git(repo_root, "config", "user.email", "test@example.com")
+        self._git(repo_root, "config", "user.name", "Test")
+
+    def _project_dest(self, repo_root) -> Path:
+        return repo_root / ".claude" / "skills"
+
+    # -- is_git_tracked -------------------------------------------------------
+
+    def test_is_git_tracked_true_for_a_committed_file(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._init_repo(tmp)
+            path = Path(tmp) / "settings.json"
+            path.write_text("{}", encoding="utf-8")
+            self._git(tmp, "add", "settings.json")
+            self._git(tmp, "commit", "-q", "-m", "init")
+            self.assertTrue(installer.is_git_tracked(path))
+
+    def test_is_git_tracked_false_for_an_untracked_file(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._init_repo(tmp)
+            path = Path(tmp) / "settings.local.json"
+            path.write_text("{}", encoding="utf-8")  # never `git add`ed
+            self.assertFalse(installer.is_git_tracked(path))
+
+    def test_is_git_tracked_false_outside_any_repo(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "settings.json"
+            path.write_text("{}", encoding="utf-8")
+            self.assertFalse(installer.is_git_tracked(path))
+
+    # -- check_hooks_shippable --------------------------------------------------
+
+    def test_check_hooks_shippable_not_ready_when_unwired(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._init_repo(tmp)
+            result = installer.check_hooks_shippable(self._dest(tmp), scope="project", env={})
+        self.assertFalse(result.ready)
+
+    def test_check_hooks_shippable_project_scope_not_ready_when_wired_but_untracked(self):
+        """The load-bearing case: settings.json is WIRED on disk but was never
+        `git add`ed -- must read as NOT ready, not silently pass."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            self._init_repo(repo_root)
+            hook = self._fake_hook_file(tmp)
+            dest = self._project_dest(repo_root)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            (dest.parent / "settings.json").write_text(
+                json.dumps({"hooks": {"PostToolUse": [
+                    self._entry(f'py "{hook.as_posix()}"')]}}), encoding="utf-8")
+            # deliberately never `git add`ed
+            result = installer.check_hooks_shippable(dest, scope="project", env={})
+        self.assertFalse(result.ready)
+        self.assertIn("track", result.reason.lower())
+
+    def test_check_hooks_shippable_project_scope_ready_when_wired_and_tracked(self):
+        """Mirrors the real install layout: .git lives at the project root, but
+        settings.json lives one level down under .claude/ -- git must still
+        resolve tracked-ness from that nested cwd."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            self._init_repo(repo_root)
+            hook = self._fake_hook_file(tmp)
+            dest = self._project_dest(repo_root)
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            (dest.parent / "settings.json").write_text(
+                json.dumps({"hooks": {"PostToolUse": [
+                    self._entry(f'py "{hook.as_posix()}"')]}}), encoding="utf-8")
+            self._git(repo_root, "add", ".claude/settings.json")
+            self._git(repo_root, "commit", "-q", "-m", "wire hooks")
+            result = installer.check_hooks_shippable(dest, scope="project", env={})
+        self.assertTrue(result.ready)
+
+    def test_check_hooks_shippable_user_scope_ready_when_wired_with_no_git_repo_at_all(self):
+        """User scope has no tracked/untracked axis -- WIRED alone is enough,
+        even with no git repo present at all (~/.claude/settings.json is never
+        part of a repo)."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry(f'py "{hook.as_posix()}"')]}})
+            result = installer.check_hooks_shippable(self._dest(tmp), scope="user", env={})
+        self.assertTrue(result.ready)
+
+
+class ReadinessCLITests(unittest.TestCase):
+    """run_readiness_check / --check-readiness: the thin report layer over the
+    four checks. Exits 0 only when every targeted agent is fully ready; exits
+    nonzero with a named per-item reason otherwise. Never repairs, never
+    writes settings.json at any scope, under any condition."""
+
+    def _git_init(self, path):
+        path.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "init", "-q"], cwd=str(path), capture_output=True, text=True)
+        return path
+
+    def test_check_readiness_exits_zero_when_every_item_is_ready(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_init(Path(tmp) / "project")
+            dest = Path(tmp) / "skills"
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", "workbench", "--wire-hooks"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+
+            lines = []
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", "workbench", "--check-readiness", "--project", str(project)],
+                env={}, cwd=project, out=lines.append,
+            )
+        self.assertEqual(0, code)
+        self.assertIn("READY", "\n".join(lines))
+
+    def test_check_readiness_exits_nonzero_and_names_the_failing_item(self):
+        """Refusing case: nothing installed at the target -- must exit nonzero
+        and name the specific failing reason, not fail silently."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_init(Path(tmp) / "project")
+            dest = Path(tmp) / "skills"  # never installed into
+            lines = []
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--check-readiness", "--project", str(project)],
+                env={}, cwd=project, out=lines.append,
+            )
+        self.assertNotEqual(0, code)
+        output = "\n".join(lines)
+        self.assertIn("NOT READY", output)
+        self.assertIn(str(dest), output)
+
+    def test_check_readiness_never_writes_settings_json(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_init(Path(tmp) / "project")
+            dest = Path(tmp) / "skills"
+            installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--check-readiness", "--project", str(project)],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertFalse((dest.parent / "settings.json").exists())
+
+    def test_check_readiness_refuses_combination_with_wire_hooks(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user",
+                         "--dest", str(Path(tmp) / "skills"),
+                         "--check-readiness", "--wire-hooks"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+
+    def test_check_readiness_refuses_combination_with_baseline_only(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "project", "--project", tmp,
+                         "--check-readiness", "--baseline-only"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
