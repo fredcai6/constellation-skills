@@ -5081,3 +5081,33 @@ passed" has caught something, and the first time it caught it **before** rather 
 **Also throttling my own pushes properly now.** Three `main` runs were still queued from my log
 commits, which is #512 doing exactly what I filed it for — and I filed it and then kept pushing. Log
 entries continue per-event; **pushes batch to merges and milestones only.**
+
+### #513 RED — crew 2's episode reads as an instruction. #460, caught by the guard that also caught me.
+
+```
+FAILED tests/test_episode_observations.py::RealStoreTests::test_the_real_store_is_clean_under_strict
+  episodes/ carries a statement that reads as an instruction and is not on the exception list
+  OFFENDER issue-458-readiness-001 a5 (workaround) imperative: 'File'
+```
+
+**The guard did its job on a real store, on CI, after a crew had released its lease and reported done.**
+That is the shape you want from a wired check: it did not need anyone to remember it.
+
+**Sent back to crew 2 to fix, not fixed by me.** It is **its** observation, and only it knows what it
+meant — rewording another agent's record of what it saw is a small act of falsification even when the
+words come out fine. What I gave it was the exact offender, the `restate-assertion` op (which appends
+the original **verbatim**, built by the script so the record cannot lose what it first said), and the
+field-name gotcha (`id`, not `episode`) that cost me a refusal an hour ago.
+
+**And I told it this caught me tonight too**, on my own episodes, because it is true and because a crew
+that thinks it uniquely erred works worse than one that knows the guard is doing its job. **My own
+restatement came out better than compliant** — the prescriptive version told a future agent what to do;
+the restated one recorded what happened *and whether it worked*, which is the part with evidential
+value. I said so, rather than just asking for compliance.
+
+**Nothing else about #513 is in question** — scope verified, `settings.json` untouched, no write path
+added, waive conditions all met. One field in one episode.
+
+**Gate discipline paid again:** I did not merge #513 on the green that existed. That green was on
+`dbd787b9`, **two commits superseded**; the head commit's run is the one that just came back **red**.
+Merging on "a run passed" would have landed a red main.
