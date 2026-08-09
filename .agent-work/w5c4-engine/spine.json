@@ -550,17 +550,30 @@
             "kind": "command",
             "command": "python -m pytest -q"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m10-wrapup-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m10-wrapup-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
@@ -570,13 +583,14 @@
   "refusals": 9,
   "engine_session": {
     "session_id": "impl-w5-engine-c-1786234427",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T00:13:47.228647+00:00",
-    "last_heartbeat": "2026-08-09T00:23:33.835263+00:00",
+    "last_heartbeat": "2026-08-09T01:04:34.156386+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": "impl-w5-engine-b",
-    "takeover_reason": "Refresh takeover: predecessor impl-w5-engine-b filed refresh-request at m5-503 and stood down after a fresh-tool-call-verified HARD trip; I am the replacement session resuming per team-lead handoff."
+    "takeover_reason": "Refresh takeover: predecessor impl-w5-engine-b filed refresh-request at m5-503 and stood down after a fresh-tool-call-verified HARD trip; I am the replacement session resuming per team-lead handoff.",
+    "released_at": "2026-08-09T01:04:55.086783+00:00"
   },
   "trip_ledger": [
     {
@@ -694,6 +708,13 @@
       "why": "FLOAT ENTIRELY (#495). Command `grep -rn \"encoding=.utf-8.\" --include=\"*.py\" scripts/ | grep -v checklist_engine.py` run. All six issue-named sites confirmed present exactly as claimed: collect_feedback.py:290,365 (write_text(json.dumps(...), encoding=\"utf-8\") -- no newline=); install_constellation.py:911,1182,1241 (same pattern); build_architecture_map.py:385 (same pattern). Command surfaced many additional encoding=\"utf-8\" matches across scripts/ (read_text calls, subprocess encoding=, and writers that already pass newline= e.g. context_manifest.py:447, map_orient.py:1137, verify_iterative_role_artifacts.py:49) -- named honestly, none of these are additional instances of the same write_text-without-newline= defect the issue targets; the six named sites are the only ones matching that exact shape. None of the six sites are inside scripts/checklist_engine.py -- install_constellation.py is explicitly crew 2's owned file per the launch order, collect_feedback.py and build_architecture_map.py are outside this crew's sole-writer set (scripts/checklist_engine.py, tests/test_checklist_engine.py) entirely. Per the launch order's file-ownership rule and team-lead ruling: floating #495 whole to the Admiral rather than editing files this crew does not own. No code change made; none of the three named files touched.",
       "mechanical": false,
       "ts": "2026-08-09T00:23:10.750712+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "m10-wrapup",
+      "why": "Full suite green at real exit 0 (1877 passed, 2 skipped, 828 subtests -- captured via EXITCODE:$? into a file, never read from a pipe). PR #514 opened (epic-418/w5-engine-internals -> main). All nine issues (#474 #475 #476 #427 #503 #479 #480 #493 #495) commented with their fixed/floated/verified line and evidence, then closed. IMPLEMENTER_RESULT.md written to .agent-work/w5c4-engine/IMPLEMENTER_RESULT.md, including the per-issue return-shape line, #475's planted-field red-before-fix evidence, #495's enumeration command and output, PR number, and the one thing not done differently than planned: a real cross-file regression against tests/test_episode_negative_control.py (not owned) was found running the full suite before push -- the original #427 fix armed refusals on any refusal while unclaimed, breaking the #357 child-gate-plan shape's structural absence invariant. Root cause lived entirely in scripts/checklist_engine.py (owned), so it was fixed (narrowed to args.verb == 'claim') rather than floated, with its own red-before-green regression test. Nothing else left undone within scope.",
+      "mechanical": false,
+      "ts": "2026-08-09T01:04:34.156358+00:00"
     }
   ]
 }
