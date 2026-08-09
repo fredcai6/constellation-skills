@@ -550,7 +550,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete"
         }
       ],
       "postconditions": [
@@ -561,17 +562,33 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape",
+            "summary": "Run complete: all gates closed (init, context, understand, plan, execute [waived c2], reconcile, triage). Readiness check built, tested, independently reviewed APPROVE, observed refusing on a genuine fresh GitHub clone. PR #513 opened, #458 commented. Two candidates recommend-and-defer (tc1, tc2). Admiral ratifies at epic return boundary."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -583,7 +600,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "run summary accepted at review step"
         }
       ],
       "postconditions": [
@@ -594,17 +612,30 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py issue-458-readiness --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py issue-458-readiness --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -616,7 +647,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "workflow feedback recorded at feedback step"
         }
       ],
       "postconditions": [
@@ -694,7 +726,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -716,12 +748,12 @@
     }
   ],
   "blockers": [],
-  "refusals": 6,
+  "refusals": 7,
   "engine_session": {
     "session_id": "commander-issue-458-readiness",
     "status": "active",
     "claimed_at": "2026-08-08T22:55:49.031986+00:00",
-    "last_heartbeat": "2026-08-09T00:27:35.485920+00:00",
+    "last_heartbeat": "2026-08-09T00:33:42.960273+00:00",
     "claimed_by": "commander",
     "worktree": ".",
     "previous_session_id": "session_01TTKPTbD6nnMt7jFWw9GtjX",
@@ -776,6 +808,20 @@
       "why": "tc1 and tc2 both routed recommend-and-defer (file-ownership boundaries + launch order's Inherited Latitude doesn't name issue-filing authority). Recommendations written in full, floated to the Admiral for filing decision rather than filed unilaterally.",
       "mechanical": false,
       "ts": "2026-08-09T00:27:35.485906+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary accepted via LAUNCH_ORDER:Return Shape citation, delegated mode. All gates closed: init, context, understand, plan, execute (waived c2, Admiral-authorized), reconcile (reasoned no-op), triage (tc1/tc2 recommend-and-defer). PR #513 opened, #458 commented. Proceeding to feedback/archive.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:29:50.788332+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Honest reflection: followed the commander-delegated skill closely for context/understand/plan; the trip-refresh recipe was unsatisfiable at the context/understand/plan boundaries and required deriving the release mechanism from source (tc1). execute.c2's own dogfooding-layout defect (D1) required a floated waiver rather than a clean pass -- confirmed via the Admiral's four conditions, not improvised. Crew workflow feedback harvested at g1-integrate: implementer noted the handoff was actionable with only a minor pointer gap (existing subprocess-mock test pattern), and one honest TDD letter-vs-value gap (real bug caught instead of the anticipated AttributeError); reviewer noted a wording mismatch (not a behavior bug) between r6-fowler's imperative prose and its resolved postcondition path. 5 episodes captured covering all of the above, verified via verify_episode_captured.py (5 recorded, phase feedback).",
+      "mechanical": false,
+      "ts": "2026-08-09T00:33:17.692584+00:00"
     }
   ],
   "trip_ledger": [

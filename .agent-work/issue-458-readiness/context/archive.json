@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "archive",
+  "files": [],
+  "repo_rev": {
+    "commit": "dbd787b9bbe9c3ee713a5d8f1c719fc348accead"
+  },
+  "run": {
+    "work_id": "issue-458-readiness",
+    "generated_at": "2026-08-09T00:33:42Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-w5-readiness",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-w5-readiness"
+    }
+  }
+}
