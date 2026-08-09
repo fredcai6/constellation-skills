@@ -18,7 +18,7 @@ invoker: <human | agent | both>
 
 1. **<Take intake / read the input>.** <what to check first; refuse condition>.
 2. **<Do the core work>.** <the model-judgment body>.
-3. **Clear the rail:** `py scripts/<verify_x>.py <args>` — fix the work, never lower the claim to pass.
+3. **Clear the rail:** `python <skill-dir>/scripts/<verify_x>.py <args>` — fix the work, never lower the claim to pass.
 4. **Independent review.** A fresh-context reviewer — never the author — checks <the semantic judgment>; surface the shape conversationally; act on a chat go-ahead.
 
 <Cold-trail / edge note: a measured negative is a complete result. Schema/detail: `references/<x>.md`.>
