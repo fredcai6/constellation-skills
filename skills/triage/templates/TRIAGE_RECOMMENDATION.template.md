@@ -62,6 +62,14 @@ Contrast this with issue #446, which claimed the same gate "accepts only an OPEN
 
 A suggested fix is evidence that *a* fix is feasible; it is not the fix. Issue #484 — the issue that coined "a check that cannot pass" for this repo — carried a suggested fix that itself measured exit 0 in all four PR states. Following it would have converted a check that cannot pass into a check that cannot fail.
 
+## Open questions
+
+> **Optional, and a place to get thoughts out — not a commitment and not a work item.** A top-level sibling of *Possible fix*. Record what is unresolved or in dispute, and what would settle it. Delete the section if you have none.
+
+- `<the question, and what evidence or ruling would settle it>`
+
+*Observations* is the load-bearing half of this template: recorded with a baseline, it is what survives to inform a future reader. *Possible fix* and *Open questions* are thinking out loud for whoever picks this up, and a later reader should feel free to discard them.
+
 ## Impact
 `<Why this matters. What future work or correctness does it affect?>`
 

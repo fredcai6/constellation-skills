@@ -39,6 +39,7 @@ Clearing three of four does not qualify; route it as `filed` or `recommend-and-d
    - **A defect** carries a *list* of observations — one block per occurrence, never merged into one summary. Each block states what's wrong, what was expected, the feeding conditions that enable the bad state (including which environment), `type` (`measured` or `inferred`, and *how* — mandatory for both values), and `rev` (the state the observation was true of).
    - **An enhancement** carries the desired behavior *plus what happens today instead*. Without the current-behavior statement, an enhancement cannot be distinguished from something that already works.
    - **`possible fix` is optional, is a hypothesis rather than a spec, and is a top-level sibling of the observations** — one per issue, not one per observation.
+   - **`open questions` is optional and sits alongside `possible fix`** — what is unresolved or in dispute, and what would settle it. Both are thinking out loud; only the observations are load-bearing.
 
    Then add importance, acceptance criteria, out of scope, and the disposition from step 3 with its disposition-specific detail (fix commit sha / issue number / deferral reason). This step runs for every candidate, including `fixed-now` ones — fixing it now shortens the work, it never skips the record.
 
