@@ -5307,3 +5307,27 @@ had only run the suite, or only mutated once, would have reported green.
 **No ruling from me is needed.** The Commander owns its rework cycle and the BLOCK is correct on its
 face; I pre-ruled at launch that a verdict must never be reworded to fit a gate, and nothing here asks
 me to adjudicate. **Crew 1 reworks; I do not merge #506 until the render mutation goes red.**
+
+### Rework landed — `bd56ac8a fix(#506): close the render leg of the stop mutation test`
+
+**The commit subject names the right thing, and that matters more than it sounds.** The reviewer's
+BLOCK was **not** that the fix was wrong — seven of eight criteria passed on measurement. It was that
+the fix's own test could not detect a version skipping the render on `stop`. Crew 1's subject line says
+*"close the render leg of the **stop mutation test**"* — it repaired the **test**, not the fix, because
+the test was what was broken.
+
+**A crew that had misread the BLOCK would have "fixed" working code**, produced a green, and left the
+blind mutation exactly where it was. The whole rework hinges on reading a review verdict precisely
+enough to know which artifact is at fault, and this one did.
+
+**Full arc of #506, worth the retrospective:**
+1. The Admiral hits a gate that cannot be closed by a run that finishes, blocks it rather than waiving
+   or falsifying, and files it.
+2. A crew implements it as *verify* a stop transition, not *refuse* it — resisting the cheaper framing
+   that would have converted cannot-pass into cannot-fail.
+3. A cold reviewer mutates three shortcuts, finds **two go red and one stays green**, and BLOCKs on the
+   one.
+4. The crew repairs the **test**, not the code.
+
+**Four actors, four chances to take the easy green, none taken.** That is the epic's argument
+demonstrated end-to-end on the single issue that gates its own close.
