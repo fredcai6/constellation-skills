@@ -1,0 +1,301 @@
+{
+  "work_id": "impl-w5-docs-496-411",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-issue-496-newline-exception",
+    "m2-issue-411-trend-snapshot-shared-row",
+    "m3-artifact-and-pr"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then the project deltas: docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus issue #496 and #411 bodies (gh issue view). Verify the team-lead handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + both issue bodies loaded; handoff confirmed complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-issue-496-newline-exception": {
+      "id": "m1-issue-496-newline-exception",
+      "title": "Verify #496 against source and fix CREW_CONTEXT.md's newline rule",
+      "imperative": "Verify against source: docs/agents/CREW_CONTEXT.md's 'Writing Files On Windows' section says pass newline='\\n' explicitly on EVERY write, with no named exception; scripts/checklist_engine.py's save() (fixed under #465) deliberately does NOT pass a fixed newline= -- it write_bytes()s, preserving the file's existing line ending (LF for new/mixed files). If confirmed, add one sentence to CREW_CONTEXT.md naming save()'s byte-preserving behavior as the sanctioned exception to the 'every write' rule, per the issue's suggested scope. If refuted, do not edit -- record the refuting quote instead. Do not touch scripts/checklist_engine.py or tests/test_checklist_engine.py (crew 4's exclusive territory this wave); if the verification implies the CODE needs changing, do not edit it -- float that to the Admiral in the result instead. Attest c1 with the quotes verifying or refuting, then attach evidence of the doc diff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context and handoff confirmed complete per m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "issue #496 checked against CREW_CONTEXT.md and checklist_engine.py save(); verdict (holds/refuted) recorded with quotes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "VERDICT: HOLDS. CREW_CONTEXT.md 'Writing Files On Windows' (line 35, before edit): 'Pass encoding=utf-8, newline=\\n explicitly on every write.' -- no exception named. checklist_engine.py save() (line 191-209): 'Write the checklist as JSON, PRESERVING the line ending the file already uses, and write BYTES so nothing translates them again.' -- does not pass newline= at all, uses Path(path).write_bytes(payload) after replacing \\n with the file's own dominant eol. Confirmed the rule did not name this exception; added one sentence naming it."
+        },
+        {
+          "id": "c2",
+          "statement": "if verdict holds: CREW_CONTEXT.md carries the new exception sentence; git diff shows only that file changed for this step",
+          "check": {
+            "kind": "command",
+            "command": "git diff --name-only | grep -Fx docs/agents/CREW_CONTEXT.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-issue-496-newline-exception-1"
+        }
+      ],
+      "constraints": [
+        "do not edit scripts/checklist_engine.py or tests/test_checklist_engine.py",
+        "doc-only fix; float any code-change conclusion to the Admiral rather than editing"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-issue-496-newline-exception-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --name-only | grep -Fx docs/agents/CREW_CONTEXT.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-issue-411-trend-snapshot-shared-row": {
+      "id": "m2-issue-411-trend-snapshot-shared-row",
+      "title": "Verify #411 against source and fix TREND_SNAPSHOT.md's per-role table",
+      "imperative": "Verify against source: .agent-work/archive/2026-08-02-issue-304/TREND_SNAPSHOT.md section 2 lists `_shared` as a peer row in the per-role surface table (20 rows total); scripts/install_constellation.py excludes dirs starting with '_' when enumerating skills ('_shared holds bundled refs, not a skill'). If confirmed, apply the issue's suggested fix: move the `_shared` row out of the per-role table into a separate 'bundled shared surface' line, and state that the role count at this snapshot's commit (fc1685a) was 19, derived from the installer's own exclusion rule. Do not fabricate new per-role word-count attributions for bundled _shared content (SKILL_REFERENCE_BUNDLES) -- that recomputation is a follow-on, not this correction; note it as a triage candidate instead. If refuted, do not edit -- record the refuting quote. Attest c1 with the quotes verifying or refuting, then attach evidence of the doc diff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context and handoff confirmed complete per m0-context"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "issue #411 checked against TREND_SNAPSHOT.md and install_constellation.py; verdict (holds/refuted) recorded with quotes",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "VERDICT: HOLDS (unchanged from first pass). REWORK per Admiral review finding on PR #509: the deleted _shared row sat inside a fenced block that is verbatim '$ for d in ...' command output; TREND_SNAPSHOT.md sec0 commits to reproducibility ('every figure below is derived from a git command, and the command is printed next to its output so the successor can re-derive'). Restored the row verbatim; the note now does the correction work instead: '_shared is not a role... the table above is 19 roles, not 20', explains bundled-surface, and explicitly answers pre-ruling 3 (propagation): 'Nothing here stops the mistake recurring -- this note only corrects THIS reading of THIS block... the propagation path #411 names is closed only if the command itself excludes _-prefixed directories, or a later snapshot format labels the row inline.'"
+        },
+        {
+          "id": "c2",
+          "statement": "if verdict holds: TREND_SNAPSHOT.md's table no longer lists _shared as a peer role row; git diff shows only that file changed for this step",
+          "check": {
+            "kind": "command",
+            "command": "git diff --name-only | grep -F 'archive/2026-08-02-issue-304/TREND_SNAPSHOT.md'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-issue-411-trend-snapshot-shared-row-2"
+        }
+      ],
+      "constraints": [
+        "doc-only fix; do not recompute per-role _shared attribution -- log as triage candidate instead"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-issue-411-trend-snapshot-shared-row-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --name-only | grep -F 'archive/2026-08-02-issue-304/TREND_SNAPSHOT.md'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2-issue-411-trend-snapshot-shared-row",
+            "reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead.",
+            "ts": "2026-08-08T23:19:10.175668+00:00"
+          }
+        },
+        {
+          "id": "e-m2-issue-411-trend-snapshot-shared-row-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "git diff --name-only | grep -F 'archive/2026-08-02-issue-304/TREND_SNAPSHOT.md'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "m3-artifact-and-pr": {
+      "id": "m3-artifact-and-pr",
+      "title": "Write result artifact and open PR",
+      "imperative": "Write .agent-work/impl-w5-docs-496-411/notes.md (working notes) and the IMPLEMENTER_RESULT per template, run the full suite as a sanity check, commit, push branch, and open a PR against main with `gh pr create -F <file>` (no heredoc). Attest c1 once PR URL is captured.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "both issues verified/fixed (or refuted) with evidence",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "notes + result written, branch pushed, PR opened",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green as sanity check (no code touched, but confirms nothing broke)",
+          "check": {
+            "kind": "command",
+            "command": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {
+        "superseded_by_reopen": "m2-issue-411-trend-snapshot-shared-row"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-artifact-and-pr-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m2-issue-411-trend-snapshot-shared-row",
+            "reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead.",
+            "ts": "2026-08-08T23:19:10.175687+00:00"
+          }
+        },
+        {
+          "id": "e-m3-artifact-and-pr-2",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-artifact-and-pr",
+            "why_ref": "w-7"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "impl-w5-docs-496-411",
+    "status": "active",
+    "claimed_at": "2026-08-08T23:19:02.718284+00:00",
+    "last_heartbeat": "2026-08-08T23:20:30.322568+00:00",
+    "claimed_by": "agent",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff (team-lead message) is complete: task = correct #496 and #411 as documentation corrections, scope = docs only (checklist_engine.py and its test are crew 4's exclusive territory), authority = correct against source and quote it, a refuted issue is a good outcome. Both issue bodies read in full via gh issue view. No test surface for either -- doc-only, inspection evidence per global-crew.md.",
+      "mechanical": false,
+      "ts": "2026-08-08T22:56:50.048610+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-issue-496-newline-exception",
+      "why": "Verified #496 against source and it holds; added the exception sentence to CREW_CONTEXT.md naming checklist_engine.py's save() byte-preserving behavior. Did not touch checklist_engine.py or its test -- out of my scope this wave.",
+      "mechanical": false,
+      "ts": "2026-08-08T22:57:32.123886+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-issue-411-trend-snapshot-shared-row",
+      "why": "Verified #411 against source and it holds; dropped the _shared row from TREND_SNAPSHOT.md's per-role table, added a note stating 19 roles and explaining the bundled-shared-surface effect, without fabricating new per-role attribution numbers.",
+      "mechanical": false,
+      "ts": "2026-08-08T22:58:16.524553+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-artifact-and-pr",
+      "why": "notes.md + IMPLEMENTER_RESULT.md written; full suite green as sanity check; commit a4ad153a pushed to epic-418/w5-docs; PR #509 opened.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:17:05.103357+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m2-issue-411-trend-snapshot-shared-row",
+      "reopen": true,
+      "reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead.",
+      "ts": "2026-08-08T23:19:10.175694+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m3-artifact-and-pr",
+      "reopen": true,
+      "reason": "Admiral review finding on PR #509 (correct): the deleted _shared row sits inside a fenced block that is verbatim output of the '$ for d in ...' command printed immediately above it. TREND_SNAPSHOT.md sec0 commits every figure to being derived-and-reproducible from a printed command. Deleting the row breaks that contract -- a successor re-running the command gets _shared back and sees an unexplained mismatch. Restoring the row and strengthening the note instead.",
+      "ts": "2026-08-08T23:19:10.175698+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m2-issue-411-trend-snapshot-shared-row",
+      "why": "Reworked per Admiral review finding: restored the verbatim _shared row inside the command-output block (this file commits to reproducibility, sec0), moved the correction entirely into the surrounding note, and added the propagation answer pre-ruling 3 asked for (nothing yet stops the mistake recurring on a re-run of the raw command).",
+      "mechanical": false,
+      "ts": "2026-08-08T23:20:13.153357+00:00"
+    }
+  ]
+}
