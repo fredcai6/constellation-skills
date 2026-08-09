@@ -1,0 +1,392 @@
+diff --git a/tests/test_iterative_planning_doctrine.py b/tests/test_iterative_planning_doctrine.py
+index 58948a76..0a0897a6 100644
+--- a/tests/test_iterative_planning_doctrine.py
++++ b/tests/test_iterative_planning_doctrine.py
+@@ -1220,6 +1220,31 @@ sys.stdout.write(os.environ["GIT_STUB_BRANCH"] + "\n")
+ '''
+ 
+ 
++def write_offline_stubs(root: Path) -> Path:
++    """Write the offline `gh`/`git` shims under ``root`` and return their directory.
++
++    Shared by every suite that has to run a shipped check text with no network
++    and no tracker: one copy of the stubs means a check shape one suite proves
++    unmodelled cannot be silently answered in another.
++    """
++    stub_dir = root / "bin"
++    stub_dir.mkdir(parents=True, exist_ok=True)
++    gh_stub = root / "gh_stub.py"
++    git_stub = root / "git_stub.py"
++    gh_stub.write_text(GH_STUB_SOURCE, encoding="utf-8", newline="\n")
++    git_stub.write_text(GIT_STUB_SOURCE, encoding="utf-8", newline="\n")
++    interpreter = Path(sys.executable).as_posix()
++    for name, script in (("gh", gh_stub), ("git", git_stub)):
++        shim = stub_dir / name
++        shim.write_text(
++            f'#!/bin/sh\nexec "{interpreter}" "{script.as_posix()}" "$@"\n',
++            encoding="utf-8",
++            newline="\n",
++        )
++        os.chmod(shim, 0o755)
++    return stub_dir
++
++
+ class ArchiveReachabilityRuntimeTests(unittest.TestCase):
+     """Exit-code behaviour of the shipped `archive.c2b` check text.
+ 
+@@ -1238,21 +1263,7 @@ class ArchiveReachabilityRuntimeTests(unittest.TestCase):
+         cls.engine = load_module("checklist_engine_for_archive_c2b", ROOT / "scripts" / "checklist_engine.py")
+         cls.resolver = load_module("init_work_area_for_archive_c2b", ROOT / "scripts" / "init_work_area.py")
+         cls.tmp = tempfile.TemporaryDirectory()
+-        cls.stub_dir = Path(cls.tmp.name) / "bin"
+-        cls.stub_dir.mkdir(parents=True)
+-        gh_stub = Path(cls.tmp.name) / "gh_stub.py"
+-        git_stub = Path(cls.tmp.name) / "git_stub.py"
+-        gh_stub.write_text(GH_STUB_SOURCE, encoding="utf-8", newline="\n")
+-        git_stub.write_text(GIT_STUB_SOURCE, encoding="utf-8", newline="\n")
+-        interpreter = Path(sys.executable).as_posix()
+-        for name, script in (("gh", gh_stub), ("git", git_stub)):
+-            shim = cls.stub_dir / name
+-            shim.write_text(
+-                f'#!/bin/sh\nexec "{interpreter}" "{script.as_posix()}" "$@"\n',
+-                encoding="utf-8",
+-                newline="\n",
+-            )
+-            os.chmod(shim, 0o755)
++        cls.stub_dir = write_offline_stubs(Path(cls.tmp.name))
+ 
+     @classmethod
+     def tearDownClass(cls):
+@@ -1495,5 +1506,332 @@ class ArchiveReachabilityRuntimeTests(unittest.TestCase):
+                 self.assertNotEqual(0, proc.returncode, proc.stdout)
+ 
+ 
++@unittest.skipUnless(ROLE_VERIFIER.is_file(), "awaiting executable G3 role verifier")
++class ComposedShippedArtifactTests(unittest.TestCase):
++    """Do the three wave-5 fixes still hold when run TOGETHER, as shipped?
++
++    Each fix was measured through its own fixtures: the location guard against
++    hand-built directory shapes, the stop relaxation against a seeded work area,
++    the archive check against the repo-side template read through an in-process
++    resolver. None of those exercises the artifact a user actually gets, and
++    three separately-green gates do not prove the three compose.
++
++    So one fixture here carries all of it: the real installer lays down a real
++    bundle, the real `init_work_area.py` entrypoint instantiates the bundle's own
++    spine template, and the bundle's own verifier is run as a subprocess with
++    `HOME`/`USERPROFILE` pointed at an empty directory -- the developer's real
++    `~/.claude/skills` cannot leak in and make any leg pass.
++
++    The class name carries none of the earlier gates' selector tokens
++    (`guard_location`, `guard_mutation`, `archive_c`, `archive_mutation`,
++    `stop_boundary`, `stop_mutation`), and neither does any method name, so no
++    test here can satisfy an earlier gate's close criterion.
++    """
++
++    STUB_BRANCH = "epic-418/composition-probe"
++
++    @classmethod
++    def setUpClass(cls):
++        cls.tmp = tempfile.TemporaryDirectory()
++        cls.root = Path(cls.tmp.name)
++        cls.engine = load_module("checklist_engine_for_composition", ROOT / "scripts" / "checklist_engine.py")
++        cls.stub_dir = write_offline_stubs(cls.root)
++        cls.skills_root = cls.root / "installed"
++        install_bundles(
++            cls.skills_root,
++            ["commander", "to-initial-issues", "replan"],
++            "g4_composition_install_constellation",
++        )
++        cls.bundle = cls.skills_root / "constellation-commander"
++        cls.bundle_spine = cls.bundle / "templates" / "COMMANDER_SPINE.template.json"
++        cls.bundle_script = cls.bundle / "scripts" / ROLE_VERIFIER.name
++        cls.replan_templates = cls.skills_root / "constellation-replan" / "templates"
++        # An empty HOME: no `~/.claude/skills` to fall back to, so a leg that
++        # passes did so on the structure under test and not on machine state.
++        cls.bare_home = cls.root / "empty-home"
++        cls.bare_home.mkdir()
++        # The two non-installed shapes the guard must reach "not installed" on.
++        # One is named `constellation-skills` exactly as the source repo is; the
++        # other is a Commander worktree, named nothing of the sort.
++        cls.checkout = make_source_checkout(cls.root / "programs" / "constellation-skills")
++        cls.worktree = make_source_checkout(cls.root / "wt" / "epic418-w5-gates")
++
++    @classmethod
++    def tearDownClass(cls):
++        cls.tmp.cleanup()
++
++    def setUp(self):
++        self.work_id = self._testMethodName.replace("test_compose_", "compose-")[:40]
++        self.project = self.root / "projects" / self.work_id
++        self.work_area = self.project / ".agent-work" / self.work_id
++        self.work_area.mkdir(parents=True, exist_ok=True)
++
++    def run_bundled_verifier(self, script: Path, mode: str, skills_root=None):
++        """Run a verifier copy as a subprocess with an empty HOME."""
++        env = dict(os.environ)
++        env["HOME"] = str(self.bare_home)
++        env["USERPROFILE"] = str(self.bare_home)
++        argv = [sys.executable, str(script), mode, "--work-id", self.work_id]
++        if skills_root is not None:
++            argv += ["--skills-root", str(skills_root)]
++        return subprocess.run(argv, cwd=self.project, env=env, capture_output=True, text=True)
++
++    def run_shipped_check(self, command: str, prs: dict, branch: str | None = None):
++        """Run an instantiated check text through the ENGINE'S own POSIX runner."""
++        saved = dict(os.environ)
++        try:
++            os.environ["PATH"] = str(self.stub_dir) + os.pathsep + os.environ.get("PATH", "")
++            os.environ["GH_STUB_PRS"] = json.dumps(prs)
++            os.environ["GIT_STUB_BRANCH"] = branch or self.STUB_BRANCH
++            proc, marker = self.engine._run_check_command(command)
++        finally:
++            os.environ.clear()
++            os.environ.update(saved)
++        self.assertEqual("posix", marker, "this test requires the engine's POSIX shell")
++        return proc
++
++    def instantiate_bundle_spine(self, spine_template: Path) -> dict:
++        """Instantiate `spine_template` through the REAL init_work_area entrypoint."""
++        proc = subprocess.run(
++            [
++                sys.executable,
++                str(ROOT / "scripts" / "init_work_area.py"),
++                self.work_id,
++                "--root", str(self.project),
++                "--spine", str(spine_template),
++                "--skill-dir", str(self.bundle),
++                "--force",
++            ],
++            capture_output=True,
++            text=True,
++        )
++        self.assertEqual(0, proc.returncode, f"instantiation refused: {proc.stdout}{proc.stderr}")
++        written = self.work_area / "spine.json"
++        self.assertTrue(written.is_file(), "instantiation reported success but wrote no spine.json")
++        return load_json(written)
++
++    def command_checks(self, spine: dict) -> list[tuple[str, str, str]]:
++        found = [
++            (task_id, cond["id"], cond["check"]["command"])
++            for task_id, task in spine["tasks"].items()
++            for cond in task["postconditions"]
++            if isinstance(cond.get("check"), dict) and cond["check"].get("kind") == "command"
++        ]
++        # A scan over an empty set reports clean without examining anything.
++        self.assertGreaterEqual(len(found), 5, f"the command-check scan found only {len(found)}")
++        return found
++
++    def test_compose_spine_instantiates_and_ships_a_runnable_reachability_check(self):
++        """The SHIPPED spine still instantiates, and its archive check still runs.
++
++        Composition, not restatement: the template comes out of a bundle the real
++        installer laid down (not `skills/commander/templates/` in this checkout),
++        it is resolved by running `init_work_area.py` as a process (not by calling
++        `resolve_spine` in-process), and the resolved `archive.c2b` is then
++        EXECUTED through the engine's own runner. A check that instantiates but
++        cannot run is the exact defect #439 was, so "resolves" is asserted by
++        running it, in both directions -- reachable and unreachable.
++
++        NO-OP CONDITIONS. This test stops proving anything if (a) the leftover
++        scan finds no command checks to scan -- guarded by `command_checks`'s
++        count assertion; (b) `archive.c2b` disappears from the spine -- guarded by
++        the explicit lookup, which raises rather than skipping; (c) the two
++        reachability legs agree, i.e. the check returns the same verdict for a
++        merged PR and for no PR at all -- guarded by asserting the two exit codes
++        DIFFER, so a check that is stuck on one answer cannot pass this.
++        """
++        spine = self.instantiate_bundle_spine(self.bundle_spine)
++        checks = self.command_checks(spine)
++        leftovers = {
++            f"{task_id}.{cond_id}": re.findall(r"<[a-zA-Z][a-zA-Z0-9_-]*>", command)
++            for task_id, cond_id, command in checks
++        }
++        self.assertEqual(
++            {}, {key: found for key, found in leftovers.items() if found},
++            "the instantiated spine ships unsubstituted token(s) in a command check",
++        )
++
++        c2b = [command for task_id, cond_id, command in checks if (task_id, cond_id) == ("archive", "c2b")]
++        self.assertEqual(1, len(c2b), "the instantiated spine has no archive.c2b command check")
++        reachable = self.run_shipped_check(c2b[0], {self.STUB_BRANCH: ["MERGED"]})
++        unreachable = self.run_shipped_check(c2b[0], {})
++        self.assertEqual(
++            0, reachable.returncode,
++            f"a merged PR is reachable: {reachable.stdout}{reachable.stderr}",
++        )
++        self.assertNotEqual(
++            0, unreachable.returncode,
++            f"no PR at all is not reachable: {unreachable.stdout}{unreachable.stderr}",
++        )
++        # Without this the two legs could share one stuck answer and still pass.
++        self.assertNotEqual(
++            reachable.returncode == 0, unreachable.returncode == 0,
++            "the shipped check gives the same verdict either way -- it decides nothing",
++        )
++
++    def seed_commander_artifact(self) -> None:
++        """Give the run a valid REPLAN_INPUT so it REACHES skills-root resolution.
++
++        `verify_commander` reads the work-area artifact before it resolves the
++        skills root, so an unseeded work area refuses for the wrong reason and
++        every refusal leg below would pass without exercising the guard at all.
++        """
++        shutil.copy2(
++            self.replan_templates / "REPLAN_INPUT.template.json",
++            self.work_area / "REPLAN_INPUT.json",
++        )
++
++    def test_compose_verifier_locates_itself_by_structure_across_the_real_locations(self):
++        """The shipped verifier, run as a process, from every location that exists.
++
++        Five legs on one installed corpus. The two that carry the wave's finding
++        are the name-only decoy -- a `constellation-decoy/` with no `SKILL.md`,
++        sitting INSIDE the real skills root beside genuine bundles, which a name
++        test accepts and structure rejects (#501, #468) -- and the explicit-root
++        pair, where the worktree copy refuses and the SAME copy with the SAME
++        argv plus `--skills-root` passes.
++
++        NO-OP CONDITIONS, per leg. (1) Every leg seeds a valid REPLAN_INPUT
++        first: without it the refusal legs would refuse on the missing artifact
++        and never reach the guard, which is precisely how a refusal test becomes
++        a no-op. (2) The refusal legs therefore assert the refusal REASON, not
++        just a nonzero exit -- a refusal for any other cause fails here. (3) The
++        `--skills-root` leg is worthless alone, since it would pass on any code
++        that resolves a root at all; it is asserted only as a DIFFERENCE against
++        the same script refusing without the flag, so a flag the code ignores
++        cannot pass. (4) The accept leg asserts stderr carries no `note:` line,
++        so a bundle that resolved through the fallback path rather than its own
++        structure does not read as a structural accept.
++        """
++        self.seed_commander_artifact()
++
++        accepted = self.run_bundled_verifier(self.bundle_script, "commander")
++        self.assertEqual(0, accepted.returncode, f"installed bundle must be accepted: {accepted.stderr}")
++        self.assertNotIn(
++            "note:", accepted.stderr,
++            "a bundle that resolves itself must not announce a fallback",
++        )
++
++        # A name-only decoy inside the REAL skills root: the case a name test
++        # accepts and this must not. Built here rather than in setUpClass so the
++        # corpus the other legs see is the one the installer wrote.
++        decoy = self.skills_root / "constellation-decoy"
++        (decoy / "scripts").mkdir(parents=True, exist_ok=True)
++        decoy_script = decoy / "scripts" / ROLE_VERIFIER.name
++        shutil.copy2(self.bundle_script, decoy_script)
++        self.assertFalse((decoy / "SKILL.md").is_file(), "the decoy must carry no SKILL.md")
++        self.assertTrue(decoy.name.startswith("constellation-"), "the decoy must look right by name")
++
++        checkout_script = self.checkout / "scripts" / ROLE_VERIFIER.name
++        worktree_script = self.worktree / "scripts" / ROLE_VERIFIER.name
++        refusals = (
++            ("source-checkout-named-constellation-skills", checkout_script),
++            ("commander-worktree", worktree_script),
++            ("name-only-decoy-inside-a-real-skills-root", decoy_script),
++        )
++        self.assertEqual(3, len(refusals))
++        for label, script in refusals:
++            with self.subTest(location=label):
++                self.assertTrue(script.is_file(), f"{label} fixture was never built")
++                refused = self.run_bundled_verifier(script, "commander")
++                self.assertNotEqual(0, refused.returncode, f"{label} is not an installed bundle")
++                self.assertIn(
++                    "cannot locate an installed constellation skills root", refused.stderr,
++                    f"{label} refused for some other reason: {refused.stderr}",
++                )
++                self.assertIn("Roots tried", refused.stderr, "the refusal must name what it tried")
++
++        # The flag, measured as the only difference against the leg above.
++        with_flag = self.run_bundled_verifier(worktree_script, "commander", skills_root=self.skills_root)
++        without_flag = self.run_bundled_verifier(worktree_script, "commander")
++        self.assertNotEqual(0, without_flag.returncode, without_flag.stderr)
++        self.assertEqual(
++            0, with_flag.returncode,
++            f"--skills-root must make the same run resolvable: {with_flag.stderr}",
++        )
++        self.assertNotEqual(
++            with_flag.returncode == 0, without_flag.returncode == 0,
++            "--skills-root changed nothing -- the flag is not load-bearing here",
++        )
++
++    def seed_boundary(self, boundary_id: str, launch_id, source: Path, result: dict, decision: str) -> Path:
++        transition = self.work_area / "transitions" / boundary_id
++        transition.mkdir(parents=True, exist_ok=True)
++        shutil.copy2(source, transition / "REPLAN_INPUT.json")
++        (transition / "REPLAN_RESULT.json").write_text(
++            json.dumps(result), encoding="utf-8", newline="\n"
++        )
++        (self.work_area / "NEXT_WAVE.json").write_text(
++            json.dumps({"boundary_id": boundary_id, "launch_id": launch_id, "trigger": "wave_boundary"}),
++            encoding="utf-8",
++            newline="\n",
++        )
++        (self.work_area / "ADMIRAL_LOG.md").write_text(
++            f"- TRANSITION | boundary={boundary_id} | decision={decision} | verified\n",
++            encoding="utf-8",
++            newline="\n",
++        )
++        return transition
++
++    def test_compose_terminal_transition_closes_prelaunch_from_the_installed_bundle(self):
++        """The stop relaxation, run through the bundle a user installs.
++
++        Composition: the packet is the live epic's own terminal transition, the
++        script is the copy the installer wrote, resolution is structural with an
++        empty `HOME` and no `--skills-root`, and the replan verifier it loads is
++        the installed one -- so this leg fails if EITHER the stop relaxation or
++        the location guard regresses. The second leg is the relaxation's width: a
++        `repair` naming no launch must still be refused, or "a stop may leave
++        launch_id null" has quietly become "anything may."
++
++        NO-OP CONDITIONS. (1) If the live fixture were not really an applicable
++        stop the golden leg would be measuring an advance -- asserted before the
++        run. (2) If the run refused early, no Markdown is written at all, so the
++        golden leg asserts the exact rendered CONTENT of both files rather than a
++        zero exit; a short-circuit cannot produce it. (3) The refusal leg would
++        be a no-op if the packet were rejected upstream at G2 instead of at the
++        authorization clause -- so it asserts the refusal's exact reason, and
++        that neither Markdown file appeared.
++        """
++        result = load_json(LIVE_STOP_TRANSITION / "REPLAN_RESULT.json")
++        self.assertEqual("stop", result["decision"], "the live fixture must really be a stop")
++        self.assertIs(True, result["applicable"], "the live fixture must be an applicable stop")
++        transition = self.seed_boundary(
++            "wave-1", None, LIVE_STOP_TRANSITION / "REPLAN_INPUT.json", result, "stop"
++        )
++
++        closed = self.run_bundled_verifier(self.bundle_script, "admiral-prelaunch")
++        self.assertEqual(0, closed.returncode, f"a verified stop must close prelaunch: {closed.stderr}")
++        self.assertNotIn("note:", closed.stderr, "the bundle must resolve itself, not fall back")
++        self.assertEqual(
++            result["revised_epic_body"].strip() + "\n",
++            (transition / "CURRENT_TRUTH.md").read_text(encoding="utf-8"),
++        )
++        self.assertEqual(
++            result["wave_review_comment"].strip() + "\n",
++            (transition / "WAVE_REVIEW.md").read_text(encoding="utf-8"),
++        )
++
++        # The width of the relaxation: a repair that names no launch is still an
++        # open authorization question, and must refuse for exactly that reason.
++        repair = load_json(self.replan_templates / "REPLAN_RESULT.template.json")
++        self.assertEqual("repair", repair["decision"], "the shipped result template must be a repair")
++        refused_transition = self.seed_boundary(
++            "wave-2",
++            None,
++            self.replan_templates / "REPLAN_INPUT.template.json",
++            repair,
++            "repair",
++        )
++        refused = self.run_bundled_verifier(self.bundle_script, "admiral-prelaunch")
++        self.assertNotEqual(0, refused.returncode, "repair must not inherit the stop relaxation")
++        self.assertIn("only advance or replan may authorize NEXT_WAVE", refused.stderr)
++        for name in ("CURRENT_TRUTH.md", "WAVE_REVIEW.md"):
++            self.assertFalse(
++                (refused_transition / name).is_file(),
++                f"a refused transition must not have written {name}",
++            )
++
++
+ if __name__ == "__main__":
+     unittest.main()

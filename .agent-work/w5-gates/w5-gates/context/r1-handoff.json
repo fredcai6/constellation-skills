@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r1-handoff",
+  "files": [],
+  "repo_rev": {
+    "commit": "c63c2bb07c99651af61108d25bebbd82e274efa7"
+  },
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T00:44:15Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-w5-gates"
+    }
+  }
+}

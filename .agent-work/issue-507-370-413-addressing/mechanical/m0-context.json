@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "issue-507-370-413-addressing",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-507-370-413-addressing-m0-context@02bec35db2be457c65382248a90bf6c7520ca56c",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-507-370-413-addressing",
+    "generated_at": "2026-08-08T23:29:06Z"
+  }
+}

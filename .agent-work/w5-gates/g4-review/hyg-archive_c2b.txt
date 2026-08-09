@@ -1,0 +1,2 @@
+[32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                                 [100%][0m
+[32m[32m[1m4 passed[0m, [33m32 deselected[0m, [32m[1m4 subtests passed[0m[32m in 1.72s[0m[0m

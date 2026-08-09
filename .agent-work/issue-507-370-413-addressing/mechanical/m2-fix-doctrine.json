@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-fix-doctrine",
+  "mechanical": {
+    "run": "issue-507-370-413-addressing",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 3,
+    "spine-step": "m2-fix-doctrine",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-507-370-413-addressing-m2-fix-doctrine@e6d3ff376728073361b7e431bf82dcb7e21cf9a7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-507-370-413-addressing",
+    "generated_at": "2026-08-08T23:31:29Z"
+  }
+}

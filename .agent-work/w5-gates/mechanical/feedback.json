@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "feedback",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "commander-w5-gates-g",
+    "refusals": 9,
+    "spine-step": "feedback",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-feedback@a21d97bdb310578d182e17e1796b9a8cc3e243a2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T05:01:22Z"
+  }
+}

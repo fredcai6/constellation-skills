@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "files": [],
+  "repo_rev": {
+    "commit": "ea85447164c358db8558536831899b558b6f6a9b"
+  },
+  "run": {
+    "work_id": "issue-458-readiness",
+    "generated_at": "2026-08-09T00:12:00Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-reviewer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-w5-readiness",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-w5-readiness"
+    }
+  }
+}

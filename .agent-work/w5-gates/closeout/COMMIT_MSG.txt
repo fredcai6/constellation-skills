@@ -1,0 +1,35 @@
+close(#418 w5-gates): g4 review APPROVE, findings routed, run closed
+
+The g4 reviewer rebuilt all six broken inputs itself rather than reading
+the implementer's claims, asserting each mutation applied in BYTES before
+believing any red -- this repo is CRLF and an LF literal silently matches
+nothing, "succeeds", and certifies a no-op.
+
+The decoy holds live: reverting _is_installed_bundle to the name test makes
+the REAL installed bundle return exit 0 for a constellation--named directory
+with no SKILL.md. That is #501 reproduced against the artifact a user
+installs, not a repo-side fixture. Its second polarity is the sharper half --
+the constellation-skills checkout went red for the WRONG REASON, which proves
+asserting the refusal reason is load-bearing where an exit-code-only leg
+would have passed.
+
+Selector hygiene re-derived by matched node identity, not merely by count;
+all six load-bearing selectors sit at their pre-g4 values and compose_stop
+collects zero at exit 5, so the g2 rename is complete. The +24 delta
+reconciles on both sides -- the reviewer cut its own worktree at the fork
+point and measured 1867 there.
+
+One non-blocking finding discharged: g4-implement-RESULT.md claimed a single
+production path differs from the fork point where three do. Corrected in
+place after re-deriving with git diff --numstat; the delta conclusion is
+unaffected. The sentence was true against the g4 baseline, not the fork point.
+
+Six triage candidates added (tc8-tc13), including the three findings this
+run deferred deliberately: #501's boundary-freshness sub-ask (recommend-and-
+defer, with the falsification -- the stateless variant is green in exactly
+the world it was written to catch), finding 1 (both issues' suggested archive
+fix would create a check that cannot fail), and the Admiral spine template's
+stale repair prose, which this run does not own and did not edit.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01TTKPTbD6nnMt7jFWw9GtjX

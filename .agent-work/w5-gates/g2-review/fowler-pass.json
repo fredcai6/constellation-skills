@@ -1,0 +1,82 @@
+{
+  "work_id": "w5-gates",
+  "diff_ref": "git diff 6f48ece4 57048457 -- scripts/verify_iterative_role_artifacts.py tests/test_iterative_planning_doctrine.py (+45/-7 and +187/-2)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "flagged",
+      "finding": "test_admiral_prelaunch_stop_mutation_every_surviving_requirement_still_goes_red is ~75 lines holding seven nested mutation closures, the pristine/restore harness, the control run and the driving loop. It is cohesive and table-driven so this is an observation, not a blocker -- but it is already at the size where the eighth mutation this review requires will strain it. Lifting the closures to module-level helpers keyed by their label would keep it legible as the mutation table grows.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "InstalledIterativeRoleRuntimeTests grew ~190 lines but took on no new responsibility: it remains one fixture for one verifier's installed-layout runtime behaviour.",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "flagged",
+      "finding": "The NEXT_WAVE.json write -- json.dumps of the same three keys with the mandatory encoding='utf-8', newline='\\n' -- is repeated four times across seed_stop_boundary, the null-launch-id test and the boundary_id_is_unsafe mutation. Minor and partly mitigated by the local write() helper inside the mutation test; the same helper could cover the seeds.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "_require_launch_authorization reads one field of the dict handed to it and is the natural owner of launch policy; it envies nothing.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "boundary_id / launch_id / trigger do travel together, but they are already reified as the single NEXT_WAVE object rather than passed as loose parallel arguments.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "overridden",
+      "finding": "decision is a bare string compared against the literals 'stop', 'advance', 'replan'; launch_id is a bare str | None. No enum or value object.",
+      "override": {
+        "repo_standard": "docs/agents/CREW_CONTEXT.md, Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list -- a list of characters, filenames or call sites drifts from the predicate the code actually applies, and the gap is silent.' Reinforced by the file's own header note (scripts/verify_iterative_role_artifacts.py lines 15-17) that it runs from an installed bundle where the sibling modules are not importable.",
+        "reason": "The decision vocabulary is already owned by skills/replan/scripts/verify_replan.py's DECISIONS set, and this script deliberately cannot import it. Introducing a local enum would create a SECOND hand-maintained list of decisions able to drift silently from the one the replan verifier actually applies -- exactly the failure the standard names. Bare strings compared at the single point of use keep one source of truth."
+      }
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "The new function takes two parameters; no signature in the diff grew.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The behaviour change is confined to one function pair in one file plus its tests; git diff --stat over skills/ and docs/ is empty.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "absent",
+      "finding": "The change reduces this pressure rather than adding it: _next_wave previously had to change for both artifact-shape reasons and launch-policy reasons, and the split gives each axis its own function.",
+      "override": null
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No chained navigation introduced; path building is one join per component.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "_require_launch_authorization has a single call site, but the extraction is forced rather than speculative: boundary_id comes out of _next_wave and is what locates the REPLAN_RESULT holding the decision, so the policy cannot run in the old position. The constraint is recorded in the docstring and the commit message.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "flagged",
+      "finding": "The mutation test's docstring asserts coverage the code does not deliver: 'every requirement that must survive a stop is broken here in turn.' The render is named as a survivor in the same change's commit message and in the sibling test's docstring, yet no mutation breaks it -- I proved a stop-shortcut around the render leaves the entire file green. This is prose standing in for a missing check, which is precisely what CREW_CONTEXT's 'Assert against behaviour, never against text that describes it' forbids. It is the narrative half of this review's blocker."
+    }
+  ],
+  "rail_exception": null
+}

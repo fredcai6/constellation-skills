@@ -24,6 +24,16 @@
 > silence and log it. For the **Admiral**, unchanged. The rule was written by the one tier that can obey
 > it, for a tier that cannot. **Do not let a ritual outlive its hazard.**
 >
+> **3b. THE ADMIRAL LEASE WILL LOOK STALE AND THAT IS NORMAL.** Its heartbeat only advances on a
+> **gated verb**, and this role sits inside `execute` for the entire epic — mine reads `22:46` while I
+> am actively working ninety minutes later. **A successor Admiral will need `claim --force`.** Do not
+> read the stale heartbeat as a crashed predecessor, and do not read a *live* one as proof anybody is
+> there. Same shape as the gauge: it answers a different question than the one you are asking.
+>
+> **Everything of mine is committed and pushed at all times** — check `git status --porcelain` (0) and
+> `git log origin/main..HEAD` (0). If this session dies, **nothing of the Admiral's is lost**; the
+> crews' uncommitted work in their own worktrees is the only exposure, and the harvest probe finds it.
+>
 > **4. Then read the NINE rules.** They are the ones I broke *after writing them down*.
 >
 > **WHERE IT IS RIGHT NOW (2026-08-08, refresh at each launch):** **WAVE 5 — the last wave.** Wave 4
@@ -31,13 +41,238 @@
 > exited **advance**, G2-verified, prelaunch exit 0. **Five crews, 21 issues.** This is the final wave
 > of epic #418; closeout follows it, then F (#424) becomes its own effort.
 >
+> **USE `python`, NEVER `py`.** Under the Bash tool they are different interpreters and `py` has NO
+> pytest — `py -m pytest` exits **nonzero** with `No module named pytest`, which reads exactly like a
+> red suite when no test ran. `py` is fine for the engine and verifier scripts (stdlib only); it is
+> specifically the suite it cannot run. This is #313, live. All five crews were corrected mid-flight.
+>
+> **COLLAPSE CLAIMS CORRECTED 2026-08-08 — the Admiral's were wrong.** #446 is **NOT** part of the
+> `archive.c2b` collapse (its body never mentions `<branch>`; `grep -c` → 0), and #501 ≡ #468 is
+> **partial**, not total. Crew 1 refuted both by obeying the confirm-against-the-body rule. **Do not
+> re-inherit the original three-way claim from any older document.**
+>
+> **CREW 1 IS NOW `commander-w5-gates-b`.** The first instance tripped at `plan` on a HARD reading,
+> wrote its refresh-request, committed `eff00abf` and stood down — working as designed, not a failure.
+>
+> **LIVE POSITION @ 02:35Z 2026-08-09 — 3 MERGED, 1 PR queued, 1 crew running.**
+>
+> | crew | state |
+> |---|---|
+> | 1 gates | **on its 5th instance `-e`.** g1+g2 CLOSED. g3 committed (`ff43e883`). **g4 (#446) remains.** Its PR triggers the close sequence. |
+> | 2 readiness | DONE, **MERGED** — #458 (PR #513 `c045ed2f`). `execute.c2` waived on my authority, all four conditions verified in the record. |
+> | 3 addressing | DONE, **MERGED** — #507, #370 (PR #511 `39fb542a`). **#413 left OPEN, correctly.** |
+> | 4 engine | DONE. **PR #514 green, HELD by merge order** — it changes the engine driving this live spine, so it goes LAST. |
+> | 5 docs | DONE, **MERGED** — #496, #411 (PR #509 `4bde569e`). |
+>
+> **12 of 21 closed.** **DO NOT DISPATCH A WATCHER SUBAGENT — it does not work.** Tried twice; the
+> second was given an explicit 40-iteration `check; sleep 60` loop *and told about the first one's
+> failure by name*, and **both went idle within ninety seconds with no report.** A subagent does not
+> stay resident across a sleep loop here. Same family as crew 1's finding that in-process teammates
+> cannot spawn background agents: **the supervision primitives an orchestrator would reach for are the
+> ones this harness lacks.** The Admiral cannot end its turn (nothing resumes it), cannot delegate the
+> wait, and cannot foreground-sleep (the tool kills it) — **the only working shape is a poll loop in the
+> Admiral's own context.** Poll, but do not narrate the polls; speak only when something moves.
+>
+> **#513 IS NOT MERGEABLE YET even though `gh pr checks` may say pass.** Its head is `3c4da612`; the
+> only green run is on `dbd787b9`, **two commits superseded**. **Gate on the check for the commit you
+> are merging**, never on "a run passed" — a green attached to a superseded commit is a check that
+> cannot fail.
+>
+> **CREW 1 REMAINING: g2, g3, g4 — #506, #439+#484, #446. Three of six issues untouched.** It is the
+> long pole and the one whose merge triggers the close sequence.
+>
+> **A CLOSED ISSUE OVER AN UNFIXED DEFECT IS AN INVISIBLE DEBT.** Crew 4 closed all nine of its issues
+> together — but **two were FLOATS** (#503 larger-than-filed, #495 entirely outside its owned files).
+> Closing a float retires an issue whose defect is still there, and **`CLOSED` reads identically
+> whether the fix shipped or was declined.** Both reopened. **After every crew return, re-read the
+> forge and check each issue's state against what the crew said it DID** — not against what it closed.
+> Worse than #354's leave-it-open shape, because that debt at least stays visible.
+>
+> **`Closes #A, #B` CLOSES ONLY #A.** GitHub honours the first issue in a comma-list; each number needs
+> its own keyword. #509's body said `Closes #496, #411.` and left #411 open. **Verify issue state on the
+> forge after EVERY merge** — never trust the merge to have done it. That rule is the only reason this
+> was caught.
+>
+> **#413 STAYS OPEN and that is not an oversight.** Crew 3 re-read all three bodies independently and
+> found it is a *different defect* — **never-valid-from-the-start** (a spawned subagent has no
+> addressable name to its own children), not **valid-then-stale**. **Do not close it in this wave.**
+>
+> **Crew 1's `-k` selectors are LOAD-BEARING.** A cold critic returned BLOCK: two of its gates could
+> have closed with **zero work done**. Every gate now closes on a `-k` selector keyed to a test-naming
+> contract; zero match exits 5, so a gate whose tests were never written fails closed. **Do not loosen
+> them.** `PLAN_CRITIC_TRIAGE.md` is the file a successor must not skip.
+>
+> **CARRIED TO CLOSEOUT, mine not theirs:** after crew 1's fix A, `ADMIRAL_SPINE.template.json` will
+> still describe `repair` as an enforced exit in **both** its execute prose and its
+> `directives.decisions` block.
+>
+> **MERGE BASELINE (use this, do not re-guess it):** after #513 merged, main is green at
+> **1896 passed / 2 skipped / 829 subtests / real exit 0**, `python -m pytest`, exit read **unpiped**.
+> Progression: 1867 -> 1871 (+4, crew 3's tests) -> 1896 (+25, crew 2's readiness tests). **Check the
+> DELTA, not just the green** — a green alone cannot rule out a new test landing while an old one
+> silently stops running.
+>
+> **NOTHING MERGES UNDER A LIVE CREW.** A PR being green is not the same as a crew being done.
+> **#509's review finding is RESOLVED** — it had dropped a row from a fenced block that is verbatim
+> command output; crew 5 restored the row and moved the correction into the surrounding note, and found
+> a better justification than mine (that file commits to reproducibility in its own §0). **The rework is
+> pushed and verified** — the `_shared` row is byte-present on both main and the branch. It is held for
+> exactly one reason: `m3-artifact-and-pr` is still `pending` and the lease is still active.
+>
+> **BOTH review findings this wave were resolved by the crew improving on the instruction, not by
+> arguing.** #509's rework beat my reasoning; #511's crew built a real doctrine guard when I had only
+> asked for an honest sentence. Do not read "held" as "disputed".
+>
+> **DO NOT re-poke a quiet crew.** Twice today disk silence looked like death and was reading. The
+> authoritative channel is the harness **idle notification**. Ask; never relaunch on an inference.
+>
+> ## LIVENESS — three signals, each blind to something. Know which, before you act on one.
+>
+> I got this wrong twice in one hour. **All three are proxies; none is authoritative.**
+>
+> | signal | blind to |
+> |---|---|
+> | **worktree file writes** | an agent reading (`gh issue view` x9 writes nothing) — nearly cost a relaunch |
+> | **`gauge.json` mtime** (PostToolUse hook) | **an agent the hook never fires for.** Crew 2 ran **9 engine verbs over 40 min with ZERO gauge writes** while being the most active agent in the wave. A frozen gauge and a dead agent are byte-identical. Live instance on **#452**. |
+> | **`*.json.journal` mtime** (written by the engine itself, no hook) | activity that is not an engine verb — reading, editing, composing a return. Fires for **every** crew, which the gauge does not. |
+>
+> | **a Commander blocked on a SYNCHRONOUS crew dispatch** | everything. It produces **no journal entry, no tool call, no file write** for the entire review — potentially many minutes. Crew 1 reported the cause: *"In-process teammates cannot spawn background agents. Use run_in_background=false"*, so a delegated Commander's crew dispatch **blocks in-turn**. |
+>
+> **Best available: journal mtime, cross-checked against the others, and NEVER acted on alone.**
+>
+> **A Commander that has just dispatched a reviewer will look completely dead and is not.** Check its
+> `crew-handoffs/` for a handoff written with no matching result — that is a dispatch in flight, and
+> the correct action is to wait, not to relaunch.
+>
+> **THE ONLY AUTHORITATIVE SIGNAL IS THE HARNESS IDLE NOTIFICATION.** Everything above is for deciding
+> *whether to ask*. **Ask-then-act is four-for-four today** and it is the only reason a healthy
+> Commander mid-`execute` was not relaunched on a frozen gauge, destroying 40 minutes of context in a
+> way that would have left **no trace at all** in the replacement run.
+>
+> ## MERGING CREW 4 CHANGES THE ENGINE UNDER YOUR OWN LIVE SPINE
+>
+> Crew 4 edits `scripts/checklist_engine.py` — **the engine driving this Admiral spine right now**,
+> mid-`execute`, with an active lease and a hash-chained journal. Its nine issues include the Task-shape
+> unification (#474/#475/#476) and a journal-write change (#493). Any of those can alter how an
+> **already-written** `spine.json` or `spine.json.journal` is read.
+>
+> **Immediately after merging crew 4, before anything else:**
+>
+> ```
+> python scripts/checklist_engine.py --file .agent-work/epic-418-redux/spine.json current
+> ```
+>
+> Expect exit 0 and the lease still reported active. **If that breaks, the merge broke the Admiral's own
+> run** — that is a blocking finding, not a nuisance: re-open, do not work around it, and do not
+> hand-edit `spine.json` to make it parse. The engine owns that file.
+>
+> Merge crew 4 **last** among the code PRs for this reason — every other merge can be verified with an
+> engine that is still known-good.
+>
+> ## THE CLOSE SEQUENCE — get this order wrong and the epic cannot close. Read before merging crew 1.
+>
+> `execute.c3` runs **`admiral-prelaunch` from the INSTALLED skill bundle**, not from the repo. Crew 1's
+> #506 fix lands in the **repo**. So:
+>
+> 1. merge crew 1's PR
+> 2. **RE-INSTALL** (`python scripts/install_constellation.py --agent claude --scope user --force`)
+> 3. **verify the installed verifier actually carries the fix** — `git hash-object` the installed files
+>    against the repo blob, do **not** trust the installer's own report
+> 4. only then build the `w5-to-close` packet and expect c3 to pass on a `stop` exit
+>
+> ### Step 3, corrected 2026-08-09 — the version written above was a check that cannot fail
+>
+> **The file is `scripts/verify_iterative_role_artifacts.py`, NOT `verify_replan.py`.** Measured
+> before writing this down:
+>
+> | file | main | crew 1 branch | installed |
+> |---|---|---|---|
+> | `skills/replan/scripts/verify_replan.py` | `614b2b2c` | `614b2b2c` | `614b2b2c` |
+> | `scripts/verify_iterative_role_artifacts.py` | `dabb48ff` | **`fc1b50f9`** | `dabb48ff` ×3 |
+>
+> **`verify_replan.py` is byte-identical in all three places and this wave never touches it** — hashing
+> it would have returned "match" before the merge, after the merge, and after a reinstall that silently
+> did nothing. **Green in every world, exactly the defect the census is about**, and it was sitting in
+> my own close plan. Found by running the comparison early instead of at close time; the first attempt
+> exited 128, `path 'scripts/verify_replan.py' does not exist in 'HEAD'`, because the file lives under
+> `skills/replan/scripts/`.
+>
+> **There are THREE installed copies** of `verify_iterative_role_artifacts.py` — under
+> `constellation-admiral`, `constellation-commander` and `constellation-explorer`. **Check all three.**
+> One copy checked is a partial reinstall away from a false green.
+>
+> **The real assertion is a transition, not an equality:** all three must go `dabb48ff` → `fc1b50f9`
+> (or whatever blob the merge commit carries — re-derive it with
+> `git rev-parse HEAD:scripts/verify_iterative_role_artifacts.py` **after** merging, never assume).
+> A hash that was already correct before the step proves nothing about the step.
+>
+> **Both fixes ride in that one file:** `57048457` is #506 (+45/−7 there, +187 tests) and the
+> `_is_skills_root` / `_is_installed_bundle` rework is #501/#468 including specimen 23's `exclude`
+> repair. Net `143/22`.
+>
+> **Merge safety, measured 2026-08-09:** `git merge-tree --write-tree main epic-418/w5-bookend-gates`
+> exits **0 — clean**, fork point `ea854471`. No file crew 1 changed has moved on main since the fork
+> except `docs/agents/CREW_CONTEXT.md` (1 commit), which git resolves. **Do not be alarmed by
+> `git diff --numstat main..epic-418/w5-bookend-gates` showing `0/260` for
+> `scripts/install_constellation.py` and `0/70` for the `episodes/active/*` files** — those are
+> *main's* merged wave-5 PRs that crew 1's branch predates, read as "removed" by direction of the
+> two-dot diff. Nothing is being deleted.
+>
+> **Skip step 2 and c3 still fails with the OLD logic, on a tree that already contains the fix.** That
+> is the corpus-drift trap (#344) and it already bit this run once: at wave-5 launch, **all nine**
+> installed bundles were pre-#467 and nothing reported it. Never pass `--wire-hooks` — `settings.json`
+> is a hard constraint.
+>
+> **If #506 does NOT land:** the close needs a `waive` of `execute.c3` **on Tommy's authority**, with
+> #506 cited as the defect that forced it. Do not flip the boundary decision from `stop` to `advance`
+> to make it green — that is falsifying a verdict to fit a check, forbidden in three launch orders.
+>
+> **Boundary builder:** copy `C:/Users/fredc/.claude/jobs/*/tmp/build_w5_boundary.py` (the one that
+> produced a G2-clean packet on its second try) and edit its content. Do **not** author a fresh
+> skeleton — the last pre-staged skeleton reproduced the exact shape error it was built to prevent.
+> Contract gotchas already paid for: `entry_conditions` must be an **array**; a `stop`/`later_only`
+> disposition maps to `amend_forecast_or_parked`; `record_evidence_only` requires `issue_created=false`;
+> a fixed-boundary change requires `applicable=false`.
+>
+> ## THE TRIP-LOOP — the one that can silently eat this wave. Read before relaunching anything.
+>
+> **A fresh agent reads its PREDECESSOR'S gauge until its own first tool call lands.** The gauge is
+> written per checklist directory by a PostToolUse hook. Verified on crew 2: `gauge.json` said
+> `fill_fraction 0.190464, observed_at 23:18:53Z` — **nine minutes before that agent existed.**
+>
+> So a relaunched agent opens `current`, sees a number over the hard line that is **not its own**,
+> hands off, and you relaunch again. **Relaunch → inherit → trip → hand off → relaunch, forever, and
+> every cycle looks like correct doctrine being followed.** Four crews were relaunched inside a few
+> minutes on 2026-08-08; this was about to happen four times over.
+>
+> **EVERY relaunch dispatch must say:** the CONTEXT number in your first `current` is your
+> predecessor's — make any tool call, re-read, and **never file a refresh-request against a reading
+> you did not produce.** Open as #481 (stale reading outlives its session) and #477 (gauge read per
+> directory). Neither is fixed.
+>
+> **And `REFRESH REQUESTED:` is a marker left FOR the successor, not an instruction TO it.** The
+> successor **is** the refresh — it proceeds, it does not re-file. Nothing in `current` says whether a
+> request was already served (#500), so a fresh agent genuinely cannot tell. Say it in the dispatch.
+>
+> **#510 (filed 2026-08-08):** a HARD trip at a gate BOUNDARY has no legal verb — `advance` refuses a
+> `pending` gate, `start` is what HARD guards — so the refresh-request survives but **the DIGEST
+> cannot be written.** Expect boundary-tripped crews to hand off by prose message instead. That is
+> them compensating, not the mechanism working.
+>
 > | Crew | Worktree | Issues | Model |
 > |---|---|---|---|
-> | 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484+#446 | Opus, Commander |
+> | 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484, #446 | Opus, Commander |
 > | 2 readiness (R) | `epic418-w5-readiness` | #458 | Sonnet, Commander |
 > | 3 crew addressing | `epic418-w5-addressing` | #507+#370+#413 | Sonnet, implementer |
 > | 4 engine internals | `epic418-w5-engine` | #474 #475 #476 #479 #480 #427 #503 #493 #495 | Sonnet, implementer |
 > | 5 docs | `epic418-w5-docs` | #496+#411 | Sonnet, implementer |
+>
+> **LAUNCH ORDERS ARE NOT IN THE WORKTREES — READ THEM FROM THE MAIN CHECKOUT.** I cut the worktrees
+> from `ea854471` and committed the orders afterwards at `197ad5b0`, so every dispatch prompt named a
+> path that resolves to nothing. They live at
+> `C:/Programs/constellation-skills/.agent-work/epic-418-redux/launch-orders/LO-w5-c{1..5}-*.md`,
+> read-only for crews. Correction was messaged to crews 2-5; crew 1 found it itself.
+> **Fresh Admiral: next time commit the orders BEFORE cutting the worktrees.**
 >
 > **THE ONE THING THAT CAN VOID THIS WAVE'S DELIVERABLE:** **crew 4 is the sole writer of
 > `scripts/checklist_engine.py` and `tests/test_checklist_engine.py` for the whole wave.** Nine of its
@@ -467,3 +702,59 @@ from the forge.**
   CI runs on main, all mine**, starving a PR's check ~25 minutes.
 
 _Updated: 2026-08-08T07:20:00Z_
+
+> ### POST-MERGE TEST COUNT — predict it before you merge, don't rationalise it after
+>
+> Measured 2026-08-09 by `pytest --collect-only`, three revisions:
+>
+> | revision | collected |
+> |---|---|
+> | fork point `ea854471` | **1869** |
+> | `main` @ `57b1748b` | **1898** (= 1869 + 29, the three merged wave-5 PRs) |
+> | crew 1 branch, mid-g4 | **1893** (= 1869 + 24, its own g1–g3 work) |
+>
+> **The formula:** after merging crew 1, collected should be `1898 + (crew1_final − 1869)`. Re-collect
+> on crew 1's branch at its final commit to get `crew1_final`; g4 will add to the 24.
+>
+> Main's full suite at `57b1748b`: **1896 passed, 2 skipped, 829 subtests, real exit 0**, 461s,
+> unpiped. `1896 + 2 = 1898` reconciles with the collect count.
+>
+> **Why bother:** the merged total is the sum of two disjoint additions to a common base, and any other
+> number means something was lost in the merge. Without the fork-point figure the post-merge count is
+> unfalsifiable — whatever it is, it looks plausible. The 1869 was measured in a throwaway detached
+> worktree that was created, collected, and **removed in the same command** (worktree count back to 16);
+> it was not reconstructed from remembered per-PR deltas, though it happens to confirm them exactly.
+
+> ### LATE ADDITION 2026-08-09 — #477 dispatched, #478 carried. Two issues I dropped from crew 4's order.
+>
+> Tommy asked for **"the 474-480 group"** — seven issues. `LO-w5-c4-engine.md` names **five** of them.
+> **#477 and #478 were never assigned**, so they were never worked, and nothing downstream could catch
+> it: the crew delivered exactly what its order listed, and the order was the only definition of "the
+> group" anyone downstream could see. Found by auditing issue states before the close, not by any gate.
+>
+> - **#477** (gauge read per checklist directory, so a crew inherits its Commander's reading) — the
+>   defect that cost this run **four crew relaunches**. Dispatched as a bounded implementer:
+>   worktree `C:/Programs/constellation-skills-wt/epic418-w5-gauge`, branch `epic-418/w5-gauge-477`.
+>   **Add it to the sweep list once its PR is merged — it is not in `SWEEP_LIST.md`.**
+> - **#478** (crew work areas minted beside the owning plan) — **carried, deliberately.** It relocates
+>   directories the closeout tooling walks and five live crew work areas sit in, with **no forcing
+>   function**. Disposition posted on the issue.
+>
+> **Both dispositions are on the issues themselves, not only here.** An unassigned issue the wave
+> believed it had covered is the same invisible debt as the #503/#495 closed-float reopen.
+>
+> **The reconciliation that would have caught it was trivial:** the user named a contiguous range, and
+> `474..480` has seven members. Deriving the assignment from a command is not enough — **the derived
+> population needs a total to check against.** Same lesson as the sweep list's 14-of-16 the same day.
+
+> ### ` M` IN `git status` IS NOT EVIDENCE OF AN EDIT ON THIS REPO
+>
+> Crew 1's worktree showed my own `transitions/close-to-w5/CURRENT_TRUTH.md` and `WAVE_REVIEW.md` as
+> ` M` — files a crew is forbidden to touch. **Both `git diff --numstat` and
+> `git diff --ignore-cr-at-eol --numstat` returned completely empty.** Zero content change. The
+> verifier rewrites them with LF, git normalises back to CRLF, and the stat cache reports modified.
+>
+> **Check `git diff`, not `git status`, before accusing anyone of a scope violation.** I nearly sent a
+> second false accusation on this exact signal — the first cost a retraction, and crew 1 was the one
+> who diagnosed the cause. It also means **"dirty count" is a weak liveness proxy**: it moves without
+> anyone writing anything.

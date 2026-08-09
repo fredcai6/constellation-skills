@@ -34,7 +34,11 @@ the gate.
 
 Pass `encoding='utf-8', newline='\n'` explicitly on **every** write. The default encoding
 here is not UTF-8 and the default newline translation produces CRLF, which shows up later
-as spurious diffs and as byte-level comparison failures.
+as spurious diffs and as byte-level comparison failures. **The sanctioned exception:**
+`scripts/checklist_engine.py`'s `save()` writes bytes directly and preserves whichever line
+ending the target file already has instead of forcing `\n` — a byte-faithful writer earns
+the same trust this rule protects, so it satisfies the rule's intent without its literal
+mechanism.
 
 `.gitattributes` sets `* text=auto`, so a checkout may legitimately hold CRLF while the blob
 holds LF. **Never compare two files by raw working-tree bytes** — compare normalized content

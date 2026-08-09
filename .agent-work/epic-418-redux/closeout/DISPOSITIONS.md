@@ -6,8 +6,9 @@ command (`gh issue list --search "418 in:body"` plus direct `gh issue view` on t
 workstream issues), **not from memory** — the run has already produced three errors this week from
 claims carried forward and never re-derived.
 
-**Population: 48 issues — 17 closed, 31 open.** Every one gets a line below. Nothing is left
-unrouted; that is the point of the ledger.
+**Population: 56 issues — 19 closed, 37 open.** Re-derived by command at 23:21Z on 2026-08-08 (`gh issue list --state all --search "418 in:body"`), **not carried forward** — the wave-4 figure was 48/17/31 and eight issues have been filed since (#500-#504, #506, #507, #508), every one of them found while doing something else. Every issue gets a line below. Nothing is left unrouted; that is the point of the ledger.
+
+**All 21 wave-5 issues verified still OPEN at that same moment.** That is correct, not a lag: a crew closes its issues only after the code lands, and no wave-5 PR has merged yet. An issue closed ahead of its merge would be the failure this ledger exists to catch.
 
 **A rising open count is not a failure here, and the spec says so.** E's fourth done-condition was
 **retired** during the 2026-08-07 revision precisely because it was falsified by this epic's own
@@ -176,15 +177,103 @@ the fix, which is the good kind of finding. #497/#498 are maintainability, expli
 
 Crew triage candidates tc19-tc24 are recorded in the issue's own spine and carried in `RETROSPECTIVE_SOURCE.md`; tc19 is #504.
 
+## Wave 5 — the final wave, launched 2026-08-08 (21 issues, in flight)
+
+**Authorized by Tommy at the wave-4 checkpoint**, against a score of the epic's own five
+done-conditions rather than the wave list: DC3 met, DC2 substantially met, DC1 mechanism done but
+shipping not, DC4 and DC5 untouched. Then widened by him to include the #474-#480 group.
+
+**Seven of the 21 close as duplicate collapses** (corrected down from eight), **and no collapse is visible from the issue titles.**
+Every one was confirmed against the issue **body**, and every launch order carries that as a
+NOT-OVERRIDABLE rule — a title-level sweep here is a check that cannot fail.
+
+| Crew | Issues | Fixes | Disposition |
+|---|---|---|---|
+| **1** bookend gates (Opus, Commander) | #506, **#501+#468**, **#439+#484+#446** | 3 | In flight |
+| **2** readiness, workstream R (Sonnet, Commander) | #458 | 1 | In flight |
+| **3** crew addressing (Sonnet, implementer) | **#507+#370+#413** | 1 | In flight |
+| **4** engine internals (Sonnet, implementer) | #474 #475 #476 #479 #480 #427 #503 #493 #495 | ~9 | In flight |
+| **5** docs (Sonnet, implementer) | #496+#411 | 2 | In flight |
+
+**The three collapses, verified against bodies:**
+
+| Collapse | Shared root |
+|---|---|
+| #501 ≈ #468 | same function, same line — `_installed_skills_root()`, `verify_iterative_role_artifacts.py:53`. **Partial, not total:** #501 additionally carries a boundary-freshness sub-ask with no counterpart in #468, deferred with a falsification rather than skipped. |
+| #439 ≡ #484 | the unsubstituted `<branch>` placeholder. **CORRECTED 2026-08-08: #446 is NOT part of this collapse** — same postcondition, but its body never mentions `<branch>` (`grep -c` → 0) and neither fix subsumes the other. The Admiral asserted a three-way collapse; crew 1, obeying the confirm-against-the-body rule, refuted it. |
+| #507 ≡ #370 ≡ #413 | one defect, three filings, **three different epics** — a crew cannot address the Commander that dispatched it. |
+
+**Two of the 21 were already this epic's own findings**, filed in wave 4 and now being fixed rather
+than carried: #501 and #503. **#506 was filed against the gate that would otherwise have forced a
+waiver to close this very epic**, and crew 1 is fixing it. That is the retire-what-you-subsume
+obligation doing exactly what it was written to do.
+
+**Explicitly left out, with reasons:** #264 (rebase over 211 commits — a scope change, and #452/#444
+belong with it), #409 (cheap only once the working-notes location is ruled), #429, #500/#502/#504
+(each needs design thought). #504 in particular stays deferred and is what keeps DC6 partial.
+
+## Wave 5 — merges landed (updated 2026-08-09 00:16Z, verified on the forge)
+
+| PR | crew | merge commit | issues | verified |
+|---|---|---|---|---|
+| **#511** | 3 addressing | `39fb542a` | **#507 CLOSED, #370 CLOSED**, #413 left OPEN | `gh pr view` state=MERGED; issue states re-read after merge |
+| **#509** | 5 docs | `4bde569e` | **#496 CLOSED** (by merge), **#411 CLOSED** (by hand) | same |
+
+**4 of 21 wave-5 issues closed. Main green at 1871 passed / 2 skipped / 829 subtests, real exit 0** —
+the delta from the 1867 baseline is **+4 and nothing else**, exactly crew 3's four new tests.
+
+**#411 required a manual close, and the reason is a finding.** PR #509's body said `Closes #496, #411.`
+GitHub honours only the **first** issue in a comma-list. #496 closed; #411 did not. Caught by verifying
+issue state on the forge after the merge rather than trusting the merge — routed as a third instance to
+**#354**, which already owns this defect, rather than filed as a new issue.
+
+**#413 is deliberately open and must not be swept up in a closeout count.** Crew 3 re-derived all three
+bodies independently and found it a *different* defect: never-valid-from-the-start (a spawned subagent
+has no addressable name to its own children) rather than valid-then-stale. The Admiral had asserted a
+three-way collapse; the crew refuted it.
+
+**Still in flight:** crew 1 (gates — #506, #501+#468, #439+#484, #446), crew 2 (readiness — #458),
+crew 4 (engine — nine issues, m0-m4 complete). Crews 1 and 4 are on their second relaunch each, every
+one a clean designed handoff after a HARD trip, none a failure.
+
+## Wave 5 — issue closures, re-derived from the forge 2026-08-09 02:30Z
+
+**Closed and correct (12):** #507 #370 (PR #511) · #496 #411 (PR #509) · #458 (PR #513) ·
+#474 #475 #476 #427 #479 #480 #493 (crew 4, pending PR #514).
+
+**REOPENED — closed against work that was not done (2):**
+
+| issue | what the crew actually did | state now |
+|---|---|---|
+| **#503** | **floated larger-than-filed** — `--authority` still validated only as non-empty; a real fix breaks a test file the crew did not own | **OPEN** |
+| **#495** | **floated entirely** — all six writer sites confirmed by grep to be outside owned files, untouched | **OPEN** |
+
+**Both floats were correct and were accepted rulings. Only the closing was wrong.** An issue left open
+after its work lands is a visible debt; an issue closed over an unfixed defect is an invisible one, and
+`CLOSED` reads identically whether the fix shipped or was declined.
+
+**Still deliberately open, not an oversight:** **#413** — a different defect from #507/#370
+(never-valid-from-the-start, not valid-then-stale), refuted against the bodies by the crew after the
+Admiral asserted a three-way collapse.
+
+**Running total: 12 of 21 wave-5 issues closed.** Four PRs: #511, #509, #513 merged; #514 green and
+queued behind crew 1 by the merge-order ruling. Crew 1 has #506 #501 #468 #439 #484 outstanding in its
+branch and #446 still to implement.
+
 ## Summary of routing
 
 | Disposition | Count |
 |---|---|
 | Merged / closed | 19 (+4 from waves 0-1) |
-| In flight | 0 |
-| Escalated — awaiting Tommy | 3 workstreams + #264 |
+| Wave 5 — closed | 4 (#507 #370 #496 #411) |
+| Wave 5 — in flight | 17 |
+| Deferred to their own efforts by ruling | 3 workstreams (F #424, C #421, E #423) + #264 |
 | Dissolved with #467 — closed | 1 |
 | Deferred with ruling | 30 |
 | Open by construction | 1 (#418) |
 
-**Zero unrouted.** Re-derived at the wave-4 boundary, 2026-08-08.
+**Zero unrouted.** Re-derived at the `close-to-w5` boundary, 2026-08-08.
+
+**Scope is settled and nothing is escalated.** F, C and E are no longer "awaiting Tommy" — he ruled
+at the wave-4 checkpoint that they become their own efforts after this epic closes. The only open
+item in this ledger is wave 5 itself.

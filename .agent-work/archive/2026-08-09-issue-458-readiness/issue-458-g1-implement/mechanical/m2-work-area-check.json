@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-work-area-check",
+  "mechanical": {
+    "run": "issue-458-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m2-work-area-check",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-458-g1-implement-m2-work-area-check@7265f5fb6195c8d437e1ba6709725c69b684bef2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-458-g1-implement",
+    "generated_at": "2026-08-08T23:53:42Z"
+  }
+}

@@ -3435,3 +3435,2673 @@ because #458's own Fixed section says the check reports and never silently repai
 thought). Expected net: **156 → ~135.**
 
 - TRANSITION | boundary=close-to-w5 | decision=advance | verified
+
+## 2026-08-08 — WAVE LAUNCH: wave 5, five crews, 21 issues
+
+**Boundary.** `close-to-w5`, trigger `material_exception`, decision **advance**, applicable true,
+escalation null. `verify_replan` G1+G2 **exit 0**; `admiral-prelaunch` **exit 0** via the installed
+verifier. `execute` resumed off its blocked state — **the gate closed without a waiver**, because the
+scope decision made `advance` the honest exit rather than because anything was bent.
+
+**The w4-to-close `stop` exit stands, unedited.** Editing an exited verdict to fit a new scope is the
+doctored-verdict failure this epic exists to remove. The input changed — a human scope decision
+arriving after wave 4 had already exited — which is precisely what `material_exception` is for.
+
+**RULING — install sync before dispatch (pre-cleared at contract time).** Measured first: **all nine**
+installed bundles carried engine blob `819ef205…`/`30b41e98…` against main's `c281cb68…` — i.e. **none
+of them had #467**. Crews would have driven spines on an engine where a HARD trip still refuses
+`advance`: the exact bug this wave's predecessor fixed. Re-installed `--agent claude --scope user
+--force`; **9 in sync, 0 stale**, verified by `git hash-object` per bundle, not by the installer's own
+report. **`--wire-hooks` deliberately NOT passed** — `settings.json` is a hard constraint of this
+epic, and whether the gauge writer ships is #458's question, which is crew 2's to answer.
+
+**Incidental corroboration for crew 2, unprompted:** the installer's own dry-run ends with *"Context
+Governor hooks: UNWIRED — no PostToolUse entry for gauge_writer_hook.py … so the Context Governor
+never fires."* The installer already knows. Nothing asks it. That is #458 in one line.
+
+**Five worktrees provisioned and verified**, all at `ea854471`, one per crew, never two into one.
+
+| Crew | Worktree | Issues | Model |
+|---|---|---|---|
+| 1 bookend gates | `epic418-w5-gates` | #506, #501+#468, #439+#484+#446 | Opus, Commander |
+| 2 readiness (R) | `epic418-w5-readiness` | #458 | Sonnet, Commander |
+| 3 crew addressing | `epic418-w5-addressing` | #507+#370+#413 | Sonnet, implementer |
+| 4 engine internals | `epic418-w5-engine` | #474 #475 #476 #479 #480 #427 #503 #493 #495 | Sonnet, implementer |
+| 5 docs | `epic418-w5-docs` | #496+#411 | Sonnet, implementer |
+
+**RULING — crew 4 is the sole writer of `checklist_engine.py` and its tests for the whole wave.** Nine
+of its issues live there. #493 and #495 were moved **into** crew 4 for this reason after they read as
+repo-wide hygiene, and crew 5 exists **only** so #496 — a doc fix whose subject is `save()` — cannot
+pull a second writer into that file. Every order names what it does *not* own and says that a fix
+needing another crew's file is a **float, not a decision**.
+
+**RULING — the duplicate-collapse rule is in every relevant order, NOT OVERRIDABLE.** Confirm each
+collapse against the issue **body** before closing. Three of the wave's collapses (#501≡#468,
+#439≡#484≡#446, #507≡#370≡#413) are **invisible from the titles**, and last wave a comment was posted
+on #371 from a plausible title-reading and had to be corrected. A title-level check here is a check
+that cannot fail, in a wave about checks that cannot fail.
+
+**Told crew 1 in writing, up front:** #506 is the fix that lets this epic close its own `execute`
+gate without a waiver against Tommy's name — **and that this is not a reason to report it done when
+it is not**, because the honest waiver exists as a fallback precisely so no report has to soften.
+
+**Told crew 2 in writing:** its first deliverable is a **discrepancy, not code** — workstream R and
+#458's own body specify different things, and neither noticed until this checkpoint.
+
+### ERROR (mine) — every launch order was addressed to a path that did not exist
+
+**Caught by `commander-w5-gates` within minutes of dispatch, in its proof-of-life, unprompted.**
+
+I provisioned all five worktrees from `ea854471`, then committed the launch orders at `197ad5b0` —
+**after** the branches were cut. So no worktree contained its own order, and every dispatch prompt
+told its crew to read a path inside its worktree that resolves to nothing. Five for five.
+
+Crew 1 recovered on its own by reading the order from the main checkout and said so plainly:
+
+> a Commander told to "read your launch order first, in your worktree" would have found nothing there
+> — that is itself a provisioning gap of the kind this wave is about.
+
+**It is right, and the observation is sharper than the error.** The order was correct when written and
+stale by the time it was read, and *nothing in the provisioning step checks that the artifact a
+dispatch names actually exists at the address it names.* A worktree that exists, a branch that exists
+and an order that exists all passed their checks independently; the **binding between them** is what
+nothing verified. That is a check that cannot fail, sitting in this wave's own launch machinery — and
+crew 3 is fixing the same shape one tier down (a handoff addressed to a name that has moved).
+
+**Correction issued** to crews 2–5 by direct message with the absolute main-checkout path, marked
+read-only, before any of them could hit it. Crew 1 needed none.
+
+**Ordering rule, for the retrospective:** commit the launch orders **before** cutting the worktrees,
+or cut the worktrees from the commit that contains them. The dispatch step should verify the order is
+readable **at the address the prompt gives**, not merely that the file was written somewhere.
+
+### Closeout input, taken early: cross-project feedback sweep — HONEST NULL
+
+Run while wave 5 is in flight, because it depends on nothing the crews are doing. Mandated for
+self-maintenance epics by the Admiral closeout doctrine; roots per `docs/DEBT_SWEEP_CADENCE.md`.
+
+```
+py scripts/collect_feedback.py C:/Programs/f1Brainz C:/Programs/network_elo C:/Programs/story_time
+-> "No new or open candidates."   real exit 0 (unpiped)
+```
+
+All three roots verified present first — a sweep over a missing root would report the same clean
+result as a sweep over a healthy one, which is the defect class this epic is about. **Dry run only:
+no `--mark`, no `--confirm`.** Issue filing stays human-gated and nothing was mutated.
+
+Result archived at `.agent-work/debt-sweeps/2026-08-08-epic-418-closeout.md`. **This is a real null,
+not a skipped step** — the cross-project loop has nothing outstanding to carry into this closeout.
+
+### Closeout input, taken early: the Admiral's own episodes
+
+Three episodes written for `epic-418-redux` while wave 5 runs — the Admiral-tier observations no
+crew can write, because each spans issues no single crew saw.
+
+| id | Observation |
+|---|---|
+| `epic-418-redux-001` | The `execute` gate cannot be closed by a run that finishes. Three refusals walked down to the one that cannot be fixed without changing the boundary's verdict. Records that **neither shortcut was taken** — blocked and bubbled instead, then re-derived as a new boundary rather than by editing an exited `stop`. |
+| `epic-418-redux-002` | Five dispatch prompts named a launch-order path that resolved to nothing. Worktree, branch and order each passed their own check; **the binding between them was asserted by nobody.** |
+| `epic-418-redux-003` | **All nine** installed bundles were pre-merge at dispatch. Nothing in the dispatch path reports drift, and a run that skipped the measurement would have looked identical until a crew tripped. |
+
+Written through `apply_episode_delta.py` — **the only write path into `episodes/`** — dry-run first,
+then applied. `verify_episode_captured.py epic-418-redux` **exit 0**, 3 recorded of 60 scanned.
+
+**`verify_episode_observations.py --strict` exit 0, and none of the three is flagged.** That matters
+because of #460: the store's own records had drifted into reading as *prescriptions* — ~24 of 32
+canon workarounds were instructions rather than observations. These three are written as records of
+what was seen, including the `proposed-remedy` entries, which state what was observed to help rather
+than what a future agent should do.
+
+**Two argument-name corrections, mine, logged because the log is where errors go:**
+`verify_episode_captured.py` takes the work-id **positionally**, not as `--work-id`; and
+`verify_episode_observations.py` takes **no file arguments**, it scans the store. Both were exit-2
+usage refusals, both re-run correctly.
+
+### FINDING (#508) — my own loaded doctrine went stale, and the install sync did it
+
+**Found by not trusting a step.** I was about to compile the closeout lessons-auditor brief and
+stopped to ask whether that step still existed, **because #447 merged inside this epic**. It does not.
+
+My in-context `constellation-admiral` was loaded at session start. The install sync I ran an hour
+later — correctly, all nine bundles were pre-merge — replaced `SKILL.md` on disk underneath me. The
+installed file is **right**; the stale copy is the one inside me.
+
+| My loaded doctrine says | Verified on disk |
+|---|---|
+| dispatch `constellation-lessons-auditor` | `skills/lessons-auditor/` does not exist |
+| append the retrospective to `.agent-work/AGENT_FEEDBACK.md` | does not exist |
+| harvest the durable **trio** | harvest is now **one** file, `CONSTELLATION_FEEDBACK.md` |
+| write deltas via `apply_lessons_delta.py` | does not exist |
+| *(absent)* | `apply_episode_delta.py` needs `--store-root episodes` **every** invocation |
+
+Checked with `ls` and `grep -c`, not from memory. The real closeout is **five** steps, not seven.
+
+**RULING — closeout runs against the doctrine on disk, not the one in my context.** I will re-read
+the installed `SKILL.md` closeout section at the start of closeout and follow that. Recorded here
+because the temptation is to trust what is already loaded; it is the cheaper read and it is wrong.
+
+**Why this is a finding and not just my mistake.** Three of the five diverged steps fail loudly — a
+missing skill, a missing file. **One fails silently, and it is the dangerous one:**
+harvest-before-sweep over a retired filename reports *"nothing to collect"*, which is byte-identical
+to a genuinely empty harvest. An Admiral on the stale doctrine would have harvested two names that no
+longer exist, found nothing, concluded there was nothing, and swept the worktrees — **dropping the
+export that was there under the name the current doctrine uses.** A check that cannot fail, sitting in
+the step whose whole job is to stop a run's learning being dropped.
+
+**And there is no version of this run that avoids it.** Skipping the sync leaves five crews on an
+engine without #467. Running it invalidates my own doctrine. Only noticing is available.
+
+**Self-audit against the corrected doctrine, done immediately:** my three episodes were applied
+*without* `--store-root episodes`. Outcome re-derived rather than assumed —
+`verify_episode_captured.py epic-418-redux` reports them in
+`C:\Programs\constellation-skills\episodes\active`, the correct store. The default resolved right; I
+will pass the flag explicitly from here.
+
+Filed as **#508**, with #344 named as its mirror (that issue is the corpus going stale relative to
+main; this is the agent going stale relative to the corpus, **caused by the fix for #344**).
+
+### ERROR (mine) — the probe I wrote to remove a check-that-cannot-fail WAS one
+
+Acting on #508's third remedy, I wrote `closeout/harvest_probe.sh` so that "nothing to collect" and
+"the file is not called that any more" would stop rendering identically before I sweep any worktree.
+
+**Version 1 tested `[ -f .agent-work/CONSTELLATION_FEEDBACK.md ]` and reported PRESENT for every
+worktree, including ones with no work in them at all.** Because that file is **tracked** —
+`git ls-files` confirms it, along with **57 tracked files** under `.agent-work/staged-feedback/` — so
+every fresh checkout has it. **PRESENT was true in the healthy world and the empty world alike.**
+
+I caught it only because the output looked too uniform: seven worktrees, byte-identical findings,
+including one provisioned forty minutes earlier that could not possibly have produced an export.
+
+**This is the second time this epic that a fixture built to prevent a class of error reproduced that
+exact error** — the first was the pre-staged boundary skeleton, built specifically to prevent shape
+refusals, which used the wrong field names and caused one. Worth the retrospective: **being the
+author of the countermeasure is not protection; it may be the opposite**, because the author is the
+one person who cannot read the countermeasure cold.
+
+**Corrected.** A harvest source is content **not already on main**, queried through two channels:
+`git status --porcelain` (uncommitted) and `git diff --name-only main...HEAD` (committed on the
+branch since it forked). **Three-dot, not two** — two-dot would also list everything *main* changed
+since the fork, which is my own Admiral commits, not the crew's work. The rewrite states its own v1
+defect in a comment block so the next reader inherits the correction, not just the fix.
+
+**The corrected probe immediately paid for itself**, distinguishing what v1 could not:
+
+| worktree | verdict |
+|---|---|
+| `epic418-w5-gates` / `-readiness` / `-addressing` / `-docs` | real work areas, uncommitted, **would be destroyed by removal** |
+| `epic418-w5-engine` | **nothing at all** — see the liveness note below |
+| `epic418-a2-467`, `governor-264` | genuine nulls, both channels queried and both empty |
+
+**Incidental, and it is DC1 evidence:** four of the five crews have written a `gauge.json`. **The
+governor is firing on live dispatched agents**, on the shipped-to-them corpus, without anyone
+arranging it.
+
+### Liveness — crew 4 quiet at ~30 minutes, asked rather than acted on
+
+`epic418-w5-engine` has written **nothing** since checkout: no work area, no gauge, clean
+`git status`. The other four all have both.
+
+**No idle notification has arrived, so it is running.** That is the authoritative channel and I am not
+overriding it with an inference from disk. Reading nine issue bodies through `gh` writes nothing, so
+the observation is fully consistent with a crew doing exactly what it was told first.
+
+**Action: asked it for one line of proof-of-life**, and told it explicitly that a float costs me
+nothing and that I would rather re-cut the assignment now than take a soft pass on nine issues. **No
+stop, no relaunch, no second Commander into that worktree.**
+
+### Liveness resolved — crew 4 was reading, and the disk inference would have been wrong
+
+`impl-w5-engine` is now `ACTIVE execute [in-progress]` with a live spine and local changes. The
+thirty minutes of total silence were nine issue bodies fetched through `gh`, which writes nothing.
+
+**All five crews confirmed driving:** gates `execute`, addressing `execute`, engine `execute`, docs
+`execute`, readiness `context`. No PRs yet.
+
+**The rule earned its keep.** Every disk signal said dead; the authoritative channel — no idle
+notification — said running, and the authoritative channel was right. Recorded in
+`RETROSPECTIVE_SOURCE.md` §52 with the point that matters: **the cost of getting this wrong leaves no
+trace.** A relaunch would have destroyed thirty minutes of loaded context and the successor's run
+would have looked completely normal, with nothing anywhere recording that a healthy agent was killed.
+
+### INCIDENT — `py` cannot run the suite, and I found it by running a baseline I did not need
+
+I kicked off a suite run on current main purely to have a green baseline ready before the first merge.
+It came back **exit 1**: `No module named pytest`. On a main I had every reason to believe was green.
+
+```
+py     -> C:\Users\fredc\.cache\codex-runtimes\...\python.exe   import pytest -> ModuleNotFoundError
+python -> C:\Users\fredc\AppData\Local\Python\pythoncore-3.14-64\python.exe   pytest 9.0.2
+```
+
+**`py` and `python` are different interpreters under the Bash tool, and only one can run the suite.**
+
+**This is #313, happening to me, in the middle of the wave whose subject is checks that cannot fail.**
+`py` passes every probe anyone would reach for — it starts, it exits 0 on `--help`, and it has driven
+**this entire epic**: the engine, `verify_replan`, `apply_episode_delta`, `install_constellation`, the
+role verifier. All stdlib. The one thing it cannot do is the one thing the check exists to assure.
+
+**The dangerous part is the exit code, not the missing module.** `py -m pytest` exits **nonzero**,
+which reads as *the suite is red*. I only caught it because the tree was known-green; on a tree where
+a red was plausible it would have been attributed to the change under test. And any agent that pipes
+the output loses the real exit code anyway — a trap this run has already hit twice.
+
+**Action, immediately, before adjudicating anything:** all five crews sent an explicit correction —
+use `python -m pytest`, never `py` — with the instruction to **re-derive any red, green, or exit code
+that came from a `py` invocation**, because a red produced by a missing pytest is not a red. Two crews
+got issue-specific versions: crew 4 because nine changes in one file means it runs the suite most, and
+crew 2 because **#458's readiness list literally contains "engine present and runnable"** and this is a
+live case of an interpreter that starts, runs scripts, and still cannot run the suite. I told crew 2 to
+decide what "runnable" should mean and to state the choice either way rather than inheriting the weaker
+probe.
+
+Live reproduction posted to **#313**, including the observation that a fix hardcoding `py` would
+inherit the defect, and cross-referencing **#373** (`py` is a silent no-op under the PowerShell tool) —
+**two tools, two failure modes, one token.**
+
+**Baseline re-run under `python` and in flight.** No merge happens until it returns green.
+
+### REFRESH — crew 1 tripped at `plan`, handed off cleanly, relaunched as `commander-w5-gates-b`
+
+`commander-w5-gates` was refused `start plan` on a HARD reading (16% fill against the 0.15 band),
+attached a `refresh-request` to `plan` against why-record `w-3`, committed and pushed at `eff00abf`,
+and stood down. **This is #467 working**: the band guarded a verb that BEGINS work, the handoff got
+written, and `current` carries `REFRESH REQUESTED:`. Not blocked, not dead.
+
+Relaunched a **fresh** Commander into the **same worktree and spine file**, cold-started from
+`current` alone — no handoff document, no re-briefing from my memory of the run. Only two facts it
+cannot derive from the spine were passed: use `python` not `py`, and where its launch order actually
+lives.
+
+### CORRECTION — my duplicate collapse was wrong, and my own non-overridable rule caught me
+
+I wrote *"confirm every collapse against the issue BODY, never the title"* as a NOT-OVERRIDABLE
+pre-ruling for the crews. **Crew 1 obeyed it and it caught the Admiral.**
+
+| My claim | Truth | Re-derived by me |
+|---|---|---|
+| #439 ≡ #484 ≡ #446, "all the same postcondition" | **#439 ≡ #484 holds. #446 is DISTINCT** — same postcondition, but it never mentions `<branch>` and neither fix subsumes the other. | `gh issue view 446 ... \| grep -c "<branch>"` → **0** |
+| #501 ≡ #468 | **Partial, not total** — #501 carries a boundary-freshness sub-ask that #468 has no counterpart for. | crew 1's interrogation record, quoted per-issue |
+
+Wave 5 is still 21 issues; what I got wrong is the number of **distinct defects**, which is 4 for
+crew 1 and not 3. `DISPOSITIONS.md` corrected. **I had read #446's body earlier this session and still
+wrote the three-way collapse** — reading is not the same as checking, and the rule I imposed on others
+is the one that found it.
+
+### FINDING (crew 1, verified independently by me) — #484's own suggested fix is a check that cannot fail
+
+The best thing to come out of the wave so far, and it inverts two issues.
+
+**`archive.c2b` does not fail the way #439 and #484 say.** The engine runs check text through `sh -c`,
+where the unquoted `<` in `--head <branch>` is **input redirection**: `sh: line 1: branch: No such
+file or directory`, exit 1. **`gh` is never invoked at all.** Both bodies assert it "returns an empty
+list" / "asks GitHub for PRs named `<branch>`". Neither happens.
+
+**And the fix both issues propose would make it worse.** The engine's verdict is **returncode-only**
+(`checklist_engine.py:832`). I ran #484's own suggested command myself:
+
+```
+$ gh pr list --head 'no-such-branch-xyz-418' --state open --json number --jq 'length > 0'
+false
+REAL_EXIT=0
+```
+
+**Prints `false`, exits 0.** So substituting the branch while keeping that `--jq` expression converts
+a check that **cannot pass** into one that **cannot fail** — and that command is #484's suggested
+replacement, verbatim, in the issue that coined "it is a check that cannot pass" for this repo.
+Crew 1's replacement compares the count in the shell so the exit code carries the verdict, verified
+red and green across four real branches covering no-PR, MERGED and CLOSED-unmerged.
+
+**Second finding, in neither issue:** `_installed_skills_root()` doesn't only wrongly *pass* in the
+main checkout — it wrongly *refuses* in every Commander worktree, because a worktree directory is not
+named `constellation-*`, and `COMMANDER_SPINE`'s own `execute.c2` runs the vendored copy from exactly
+there. **So fix B must resolve a real installed corpus, not merely improve the refusal message** —
+message-only satisfies #468, fails #501's acceptance, and leaves `execute.c2` permanently red for
+every Commander. Crew 1 noted its own run will hit it.
+
+**Third:** #501's freshness sub-ask deferred **with a falsification, not skipped**. Crew 1 designed the
+stateless variant (refuse unless `NEXT_WAVE.boundary_id` is the last verified `TRANSITION` in the log),
+then killed it against **this live epic's own artifacts**: run early, the new boundary is not logged
+yet, so the stale boundary *is* the last entry. **Green in exactly the world it was written to catch.**
+Routed `recommend-and-defer`; #501's stated Acceptance is met without it.
+
+### RULING — my pre-ruling 1 on #506 was wrong; crew 1's correction stands
+
+I framed #506's options 1 and 2 as alternatives. They are not. A `stop` packet is refused by **two**
+clauses, and `_next_wave()`'s nonempty-`launch_id` requirement (`verify_iterative_role_artifacts.py:115`)
+fires **before** the authorization clause at 145-148 is ever reached. **Option 1 alone leaves the gate
+unclosable unless someone writes a dummy `launch_id`** — which is precisely the falsification my own
+pre-ruling 6 forbids. Crew 1 takes 1+2 combined, keeping the mode name so `ADMIRAL_SPINE.template.json`
+needs no edit. **Confirmed, and passed to the refresh in its dispatch.**
+
+**Zero ownership violations** across crews 1 and 5, checked by diffing their branches against the
+files each does not own.
+
+### Two additions to the interpreter finding, from the retired crew-1 instance — both sharper than mine
+
+It re-derived the split in its own worktree, then named two things my report did not:
+
+1. **They differ by minor version, not only by whether pytest is installed** — `py` is 3.12.13,
+   `python` is 3.14.3. So my line *"`py` is fine for the engine and the verifier scripts"* is true
+   **by luck, not by construction**: a stdlib behaviour change across two minors could let a verifier
+   pass by hand under `py` and fail at the gate under `python`. **That is #313 one layer down**, and
+   I stated the weaker claim.
+
+2. **The spine's own command postconditions already invoke `python`.** `execute.c2` is
+   `python scripts/verify_iterative_role_artifacts.py ...`; `init.c1` is `python scripts/init_work_area.py`.
+   **So the gates have been running 3.14 all along while agents hand-check the same scripts under `py`
+   — hand verification and gate verification were on different interpreters.**
+
+Point 2 applies to **me**, not only to crews: I have hand-run the role verifier, the replan verifier,
+the episode writer and the installer under `py` throughout this epic, while every command postcondition
+that matters ran under `python`. Nothing has diverged yet. **Nothing was checking that it hadn't.**
+This is "verify by re-running the failed command" with a twist — re-running it *by hand* can test a
+different world than the gate's.
+
+**It re-derived all three of its fix-B red repros under `python` 3.14.3 rather than asserting they
+were unaffected.** Identical results: worktree refusal, main-checkout refusal, installed-copy exit 0.
+**No finding in its return depends on the interpreter** — and that is now a measured statement rather
+than an assumption. Its fix-C repros are `sh -c` and never touch Python at all.
+
+It also recorded no pytest result of any kind this run — it tripped at `plan` before writing code — so
+there was nothing of its own to re-derive. It said so plainly instead of performing a re-check.
+
+### RULING — I will not assert the #507/#370/#413 collapse; crew 3 decides
+
+My collapse record today is **one for two**. #370 and #507 clearly share a root: an address correct
+when written and stale when read. **#413 may not.** In #413 the dispatching commander appears not to
+have handed off at all — it was simply absent from the reachable set, which is a *reachability*
+failure rather than a *staleness* failure. Same root or two defects presenting identically; I cannot
+tell from the body and **I am not going to guess twice in one day.**
+
+Told crew 3 explicitly: if all three collapse, name the shared root and close all three; **if #413 is
+distinct, say so and leave it open.** A partial is the correct answer when it is the true one. And I
+held myself to my own non-overridable rule out loud — confirm against the body, never against another
+agent's summary, **including the Admiral's.**
+
+### Self-audit against the retired crew's point — every gate result this session re-derived under `python`
+
+Crew 1's second observation was aimed at crews but lands on me: **the spine's command postconditions
+invoke `python`, while I have hand-run every verifier under `py` for this entire epic.** Hand
+verification and gate verification have been on different interpreters — 3.12.13 versus 3.14.3 — and
+nothing was checking that they agreed.
+
+So I re-derived rather than reasoned about it. **Every verifier result I have asserted this session,
+re-run under the gate's interpreter:**
+
+| check | `py` (3.12.13) | `python` (3.14.3) |
+|---|---|---|
+| `verify_replan.py` G1+G2 on `close-to-w5` | 0 | **0** |
+| `admiral-prelaunch --work-id epic-418-redux` | 0 | **0** |
+| `verify_episode_captured.py epic-418-redux` | 0 | **0** |
+| `verify_episode_observations.py --strict` | 0 | **0** |
+| `checklist_engine.py current` | 0 | **0** |
+
+**No divergence. The boundary, the launch authorization and the episode capture all stand.** That is
+now a measured statement rather than an assumption, which is the only reason it is worth writing down
+— a green I merely expected would have been worth nothing.
+
+**And the correct reading of the null is narrow.** It says these five ran the same on both today. It
+does **not** say `py` is safe: two minor versions apart, that is luck rather than construction, which
+is exactly the point crew 1 made and the reason the interpreter is now pinned in the state note.
+
+### Liveness — crew 2 slow but alive, not stalled
+
+`epic418-w5-readiness` is at `next: start context` with an active lease
+(`commander-issue-458-readiness`) and a `gauge.json` written inside the last six minutes. It is the
+slowest of the five and it is the only full Commander besides crew 1. **Alive on the live channel;
+no action.**
+
+### REVIEW — PR #509 (crew 5, #496 + #411): one half approved on source, one finding raised
+
+Crew 5 is an implementer with no reviewer gate of its own, so the cold read is mine. **CI green**
+(`test` pass, 7m20s). Its suite evidence used **`python`** and matches the known-good count exactly —
+1867 passed / 2 skipped / 829 subtests. Scope verified by me, not accepted on report: I diffed its
+branch against every file it does not own and it touched **none** of crew 4's.
+
+**#496 — APPROVED, verified against source.** The added sentence names `save()` as the sanctioned
+exception to the always-pass-`newline` rule. I checked the claim rather than the prose:
+
+```
+scripts/checklist_engine.py:191  def save(...)
+  """Write the checklist as JSON, PRESERVING the line ending the file already
+     uses, and write BYTES so nothing translates them again."""
+```
+
+The doc now says what the code does, and it explains *why* the exception is safe — a byte-faithful
+writer satisfies the rule's intent without its literal mechanism. That is the right shape: it will
+still read correctly to someone who meets it cold.
+
+**#411 — FINDING, raised to the crew rather than ruled.** The fix **deletes the `_shared` row from a
+fenced block that is verbatim output of a command printed immediately above it**. That block is a
+record of what the command printed at `fc1685a`; removing a row makes it no longer faithful to its own
+command. A successor who re-runs it gets `_shared` back, sees the disagreement, and now has reason to
+distrust the whole snapshot — **including the parts that are correct.** The file also lives under
+`.agent-work/archive/`, and correcting an archived *measurement* is a different act from correcting a
+live *doc*.
+
+Recommended instead: keep the row, keep the block reproducible, and let the note — which is already
+good, citing the installer's own exclusion rule — carry the correction. **#411's stated concern is
+that the error propagates to successors, and a note the successor reads solves that** without
+falsifying a record.
+
+**Raised as a finding with a reason demanded either way, not as an order.** The crew read the issue
+body and I did not; "the issue asks for the row's removal" would settle it against me. What is not
+acceptable is a silent change in either direction.
+
+**No merge while the crew is live.** Its spine still reads `execute [in-progress]`. A PR being green is
+not the same as a crew being done, and merging under a running crew risks landing a partial tree.
+
+### Merge baseline established — main green under the correct interpreter
+
+`FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests` on current main (`43ccff7f` + log commits):
+**1867 passed, 2 skipped, 829 subtests passed in 556.04s, real exit 0** — exit code read from an
+unpiped run, not from a pipe.
+
+This is the reference point every wave-5 merge is gated against, and it also confirms that my own
+commits this session — three episodes into the tracked `episodes/` path, plus `.agent-work` — moved
+nothing. **The number matches wave 4's post-merge figure exactly**, which is what makes it usable as
+a baseline rather than just a green.
+
+### Crew 5 complete — `plan.json` lease RELEASED, PR #509 open and green
+
+`impl-w5-docs-496-411` finished and released its lease. Two commits: the fix, then a closeout log.
+**It is the first crew of the wave to finish.**
+
+Its return is the shape I keep asking for and rarely get: scope stated with the exclusions it
+deliberately did **not** touch (crew 4's two files, *"read for verification only, never edited"*),
+test mode declared as `evidence-only` with the doctrine line justifying it rather than a skipped
+check, and a suite run under `python` matching the known-good count.
+
+**My #411 finding reached it after it had already released.** That is a real sequencing gap of my
+own making — the review arrived after the reviewed party stood down — and it is the same class as
+#507, one tier over: a message addressed to a live agent that is no longer live by the time it lands.
+The finding is a judgement call about whether an archived *measurement* may be edited, not a defect,
+so it is **not blocking**. Holding briefly to see whether the crew resumes and answers; if it does not,
+I will decide and record the reason rather than let a PR sit on an unanswered question.
+
+### Closeout artifact written: the check-that-cannot-fail census
+
+`closeout/CENSUS-checks-that-cannot-fail.md` — **19 specimens with evidence**, grouped by where they
+live rather than by taxonomy, because this epic's own experience is that the pattern is recognised
+from examples and missed from definitions.
+
+The three claims it rests on, each measured rather than argued:
+
+- **Density** — 11 specimens in wave 4 alone, by five actors **who all knew the wave was about this
+  defect**.
+- **Blindness is positional, not personal** — the same defect at three tiers inside one issue, each
+  caught by an independent cold reader and **none by its author**.
+- **Countermeasures are not immune and may be worse** — two fixtures built specifically to prevent a
+  class of error reproduced that exact error.
+
+**Two specimens are the sharpest thing the epic found**, and both are cases where the obviously-correct
+*repair* moves the defect instead of removing it: #484's own suggested fix converts a check that
+cannot pass into one that cannot fail (returncode-only verdict; the command prints `false` and exits
+0), and #501's freshness variant is green in exactly the world it was written to catch.
+
+The census closes on what actually found them — **nothing was found by inspection.** Four things
+found all nineteen: running it against a case that should make it fail, a known-good baseline coming
+back wrong, output that is too uniform across inputs that should differ, and an independent cold
+reader. That is the argument for why the project's existing `good_enough` line — *"a guard is observed
+refusing something real, not reasoned about"* — is load-bearing rather than pedantic.
+
+**It states its own limit.** Nineteen found by people looking for them is a lower bound, not a total,
+and the useful response is a habit rather than a list to work through.
+
+### Tracker updated — epic #418's body now carries the rendered truth
+
+The epic's public body still read *"A2 — needs cutting"* and carried a scope decision as open. Both
+have been false since wave 4 merged. **Anyone reading the tracker was reading a stale epic.**
+
+Posted through the authorized route rather than by hand: the text is `CURRENT_TRUTH.md` **as rendered
+by `admiral-prelaunch` from the `close-to-w5` packet** (exit 0), not prose I wrote at the keyboard.
+That is what the `render: revised_epic_body` directive is for — the body and the boundary verdict
+cannot drift apart if one is generated from the other.
+
+**Prepended, not replaced.** The two earlier dated status sections are kept for provenance and
+explicitly marked superseded, and the 2026-08-03 original spec below them is untouched. Guarded the
+edit against GitHub's body cap by measuring first — 52,098 bytes against a ~65,000 limit — because
+#429 records that an oversized body fails on Windows, and an assertion that would have refused rather
+than truncated.
+
+The body now states: A2 complete and merged; DC2 done-by-different-means and **DC6 partial**, not
+rounded up; the follow-on cluster #500-#504; and **scope SETTLED** — one more wave, then close, with
+F/C/E as their own efforts.
+
+### FOUR crews tripped at gate boundaries — all four relaunched, and the shared defect is filed as #510
+
+**Not a failure mode. This is the machinery working, four times, and then hitting its own residual.**
+
+Crews 2 (readiness), 3 (addressing), 4 (engine) and 5 (docs) each HARD-tripped, each filed a
+refresh-request, each stood down cleanly rather than pushing through, and each **asked me explicitly**
+whether to push through anyway rather than deciding alone. Crew 2 put the reason precisely: *"that
+goes against the doctrine this exact epic wrote, so I want it as your explicit call, not mine."*
+
+**RULING: relaunch fresh, every time. Never push through a trip.** All four relaunched into their own
+worktree and spine, cold-started. Crew 5's predecessor deliberately did **not** release its lease so
+the re-claim would be idempotent — a good call I did not have to make.
+
+### FINDING #510 — three crews found the same deadlock independently, and #467's guarantee fails at a boundary
+
+`advance` refuses a `pending` gate ("must be in-progress"); `start` is the exact verb HARD guards.
+**At a gate boundary there is no legal verb.** Only `attach refresh-request` works — so the agent can
+say *it needs a refresh* but cannot write the **DIGEST**, because the DIGEST is written by `advance`.
+
+**I did not take the crews' word for the harm. Verified against three live spines:**
+
+| spine | trip point | `DIGEST:` in `current` |
+|---|---|---|
+| readiness | `init`→`context` boundary | present — but it is **`init`'s** digest; nothing of the tripped step |
+| engine | first gate of the run | **absent entirely** |
+| gates (contrast) | **mid-step**, at `plan` | full three-finding digest, exactly as #467 intends |
+
+So my own first assumption — *"a boundary trip writes no DIGEST"* — was **too strong**, and the
+verified version is sharper: a boundary trip writes no digest **of the tripped step**, and at the
+first gate of a run there is no digest at all. Filed as measured, not as reported.
+
+**The structural half, which is the part worth keeping.** The trip lands on the **first `current` of a
+session** because the `context`/`m0-context` gate's own imperative is *read the doctrine, run map
+orientation, read the issue bodies*. The agent does that **in its own context** — as instructed — then
+turns to the engine to record it, and the gauge reads a window the gate itself just filled.
+**An agent that does its first gate well arrives at the engine too full to record it.** Raising the
+threshold moves the boundary; it does not remove the shape.
+
+All three compensated by sending me long prose reports out-of-band, and crew 4 wrote its entire plan
+into the spine's task imperatives so the content would survive somewhere. **Well-behaved agents
+papering over a broken mechanism** — the exact pattern this epic exists to stop depending on.
+
+**#510 names the trap in its own acceptance:** a check asserting *"a refresh-request exists"* passes
+today, because the refresh-request is the part that already works. The absent thing is the DIGEST.
+
+### NEAR-MISS — the trip-loop, caught because a fresh Commander doubted its own reading
+
+`commander-w5-readiness-b` opened with the right instinct rather than the obedient one:
+
+> it shows the context step still ACTIVE/pending with a REFRESH REQUESTED flag from my predecessor's
+> hard trip (CONTEXT 19%, >= hard line) ... whether I should proceed through context normally, or
+> whether the rail's "close this gate and stop" instruction is stale guidance meant for the tripped
+> session.
+
+**Both halves of its doubt were correct, and I verified the first from the file rather than reasoning
+about it:**
+
+```
+.agent-work/issue-458-readiness/gauge.json
+  fill_fraction 0.190464   observed_at 2026-08-08T23:18:53Z    <- ~9 min before that agent existed
+```
+
+**The 19% was its predecessor's.** The gauge is written per checklist directory by a PostToolUse hook,
+so **a fresh agent reads the previous agent's value until its own first tool call lands.** It
+inherited an exhaustion that was not its own. That is **#481** (a stale reading outlives its session)
+and **#477** (the gauge is read per directory), both open and neither fixed.
+
+**The failure this avoided is a trip-loop, and it would have eaten the wave:** relaunch → inherit the
+stale number → trip → hand off → relaunch, forever, with every cycle looking like correct doctrine
+being followed. Four crews were relaunched within the same few minutes, so this was about to happen
+**four times over.**
+
+**Action: pre-emptive correction to all three other refreshes** before any of them looked at a
+`current`. Told each one plainly — the number is not yours, make any tool call and re-read, and **do
+not file a refresh-request against a reading you did not produce.**
+
+**Second half of its question, and it is #500 exactly.** A `REFRESH REQUESTED:` line is a **marker
+left FOR the successor, not an instruction TO it** — the predecessor filed it, stood down, and I
+relaunched in response. **The successor IS the refresh.** But a refresh-request has **no served
+state**, so nothing in `current` can tell a fresh agent whether the request it is looking at has
+already been answered. It had to ask me because the engine cannot say. That is the cleanest live
+demonstration of #500 this run has produced, and it came from an agent asking instead of guessing.
+
+**Fed back into the work:** told crew 2 to carry the experience into its own design — *"engine present
+and runnable" cannot mean "a value was read."* It was handed a nine-minute-old number with no
+staleness marker and no way to tell it was not its own. A readiness check that reports an observation
+should report **when** it was made and **by whom**; a reading with no provenance is the exact shape
+that just bit it.
+
+### RULING (pre-emptive) — the close sequence, pinned before it can bite
+
+`execute.c3` runs `admiral-prelaunch` **from the installed skill bundle**, not from the repo. Crew 1's
+#506 fix lands in the **repo**. Those are different files.
+
+**So the close order is: merge crew 1 → RE-INSTALL → verify the installed verifier carries the fix by
+hashing it against the repo blob (not by trusting the installer's report) → only then build the
+`w5-to-close` packet.** Skip the re-install and **c3 still fails with the OLD logic on a tree that
+already contains the fix** — and the failure would look exactly like "#506 did not work".
+
+This is not hypothetical: **at wave-5 launch all nine installed bundles were pre-#467 and nothing
+reported it.** Same trap (#344), same run, second time. Pinned in `STATE_NOTE.md` rather than left to
+be rediscovered at the moment it costs most.
+
+**Recorded alongside it, so the fallback cannot quietly become the shortcut:** if #506 does not land,
+the close needs a **`waive` of `execute.c3` on Tommy's authority** with #506 cited as the defect that
+forced it. **Flipping the boundary decision from `stop` to `advance` to make it green is falsifying a
+verdict to fit a check** — forbidden in three consecutive launch orders and not available to me either.
+
+**Boundary builder preserved** as `closeout/build_boundary_reference.py` — the script that produced a
+G2-clean packet on its second try. The instruction with it is to **copy and edit, never author a fresh
+skeleton**, because the last pre-staged skeleton reproduced the exact shape error it was built to
+prevent. The four contract gotchas already paid for are written down with it: `entry_conditions` must
+be an array; `later_only` maps to `amend_forecast_or_parked`; `record_evidence_only` requires
+`issue_created=false`; a fixed-boundary change requires `applicable=false`.
+
+**All five crews confirmed writing** at 23:31Z — gates 11 dirty files, engine 15 writes in 5 minutes,
+readiness recovered from the stale-gauge correction and moving. No crew idle, no crew silent.
+
+### Sweep list decided in advance — and building it produced specimen 22
+
+`git worktree remove` is the only destructive step in closeout, so I decided it now rather than at the
+end of a long run. `closeout/SWEEP_LIST.md`, derived by command.
+
+**The obvious eligibility test is a check that cannot fail.** *"Is the branch merged into main?"* —
+`git branch --merged main` reports `w5-crew-addressing`, `w5-engine-internals` and `w5-readiness-458`
+as **merged**. They are not. They have **zero commits**, so they are trivially ancestors of main.
+**A branch with no work is indistinguishable from a branch whose work landed** — and on a live crew,
+`ahead=0` means *uncommitted work in progress*, which is the single most destructive thing to sweep.
+
+Correct test recorded: **`ahead` count AND forge state together.** `ahead=0 AND pr=MERGED` is landed;
+`ahead=0 AND pr=none` is empty. That is the fourth time this run that a plausible one-line check has
+turned out to be blind, and the third time I wrote the blind version first.
+
+**SWEEP (6):** the five wave-5 worktrees after merge, plus **`epic418-a2-467`, eligible now** —
+`ahead=0`, PR #505 MERGED, harvest probe returns a genuine null on both channels.
+
+**DO NOT SWEEP (8), each with its reason on the record:**
+
+- **`governor-264`** — protected, `ahead=3`, carries #264's unmerged 1144 lines. Destroying it would
+  delete the work the decline decision deliberately preserved.
+- **`issue-456` (`ahead=134`) and `explore-code-map` (`ahead=36`)** — the code-map effort, not this
+  epic. Sweeping `issue-456` would be the worst single action available in this repo.
+- **The three `.proto-*` trees** — and this is the part worth flagging: **they read as stale leftovers
+  and are load-bearing for work that has not happened yet.** `.proto-exc9-mcp-front-door` is the
+  prototype **F (#424) will be built from**, and F is the next effort after this epic closes.
+- The two harness-created `.claude/worktrees/agent-*` trees are not this run's to dispose of.
+
+Order pinned as mandatory: **harvest → verify MERGED on the forge → remove → prune.** Never on an
+ancestry test — squash-merge returns the same answer for merged and abandoned.
+
+### harvest_probe v3 — v2 was blind too, and I found it by counting files
+
+Checking a sweep precondition (does main actually hold wave 4's work area?) turned up a mismatch:
+**379 files on disk in `epic418-a2-467`, 371 on main — while BOTH probe channels reported clean.**
+
+The 8-file gap is **gitignored paths**. `git status --porcelain` omits them and
+`git diff main...HEAD` only sees tracked files, so **neither channel v2 uses can see them, and
+`git worktree remove` destroys them.**
+
+**v1 was blind to trackedness. v2 was blind to ignoredness.** Each fix narrowed the blind spot without
+eliminating it — which is the honest shape of this work and worth saying plainly rather than
+presenting v3 as finally correct.
+
+**v3 adds a third channel that REPORTS ignored paths and refuses to judge them**, because the script
+cannot tell a disposable `gauge.json` from a real local artifact and the reader can. Its "nothing to
+harvest" line now says **all three** channels were queried, not "both" — a document about accuracy
+should not miscount its own checks.
+
+**Inspected for the one worktree this affects now:** `epic418-a2-467`'s nine ignored paths are
+`gauge.json` transients and `__pycache__`. **Disposable — judged, not assumed.** Recorded in
+`SWEEP_LIST.md` so the judgement is auditable rather than re-made under time pressure.
+
+**Not sweeping it during the wave.** It is eligible on every test, but keeping it costs nothing and a
+premature sweep is unrecoverable. It goes at closeout with the rest.
+
+Noted in passing: **`governor-264`'s entire `.agent-work/` is ignored** in that tree. It is already
+protected from sweep, but under v2's rules a probe would have called it empty.
+
+### Three more episodes — and the store's own guard caught me writing a prescription
+
+`epic-418-redux-004/005/006`: the harvest probe's two successive blind spots, the inherited-gauge
+trip-loop, and the interpreter split. Written with `--store-root episodes` explicitly, per the
+corrected doctrine.
+
+**`verify_episode_observations.py --strict` refused them: exit 1, three offenders, all in 005.a5.**
+That field quoted my own instruction to the crews verbatim — *"make any tool call and re-read, and do
+not file a refresh-request against a reading you did not produce"* — imperatives and second person.
+**An instruction for a future agent, filed as a record of what happened.** That is precisely the defect
+**#460** catalogued in this same store, and I wrote it into the store while holding the census of it
+open in another file.
+
+**Restated through `restate-assertion`**, which exists for exactly this: it rewrites the statement and
+appends a history line carrying the original **verbatim**, and the history line is **built by the
+script from the parsed original, never supplied by the caller** — because a caller who could author it
+could misquote what was there. Good design, and it worked on me.
+
+The restatement drops the instruction and records the outcome instead: the three remaining relaunches
+were sent a correction before any read a gauge, and **none of them subsequently tripped on an
+inherited value.** That last clause is the part with evidential value, and the prescriptive version
+did not contain it.
+
+**Now: `--strict` exit 0, zero offenders across the whole store.** Six episodes for this run.
+
+One owned error: my first `restate-assertion` used `episode` where the op wants `id`. The refusal
+named the exact accepted field set and why `lifecycle-standing`/`strength`/`kind` are excluded — a
+refusal that teaches rather than just rejects, which is the standard the engine's other refusals are
+being held to this wave.
+
+### The Admiral's own reading: 44%, and nothing has asked me to stop
+
+`.agent-work/epic-418-redux/gauge.json` → `fill=0.440, model=claude-opus-5` at 23:40:50Z, against a
+**0.15 hard line**. I am nearly three times over it.
+
+**Five crews tripped today. I have not been prompted once.** The reason is structural, not lucky: the
+trip evaluates **only on a gated verb**, and this role sits inside a single gate — `execute` — for the
+entire epic. A Commander crosses gate boundaries constantly and meets the check every time. **An
+Admiral holds one gate for hours and never does.**
+
+So **the tier with the longest-running context is the one the governor never fires on**, and the tiers
+that trip most are the ones with the least context to lose. Wave 4 recorded the same thing at 54.9%;
+this is the second measurement, on a different day, in a different wave, at a different fill. That
+makes it a property of the arrangement rather than an anecdote.
+
+**What I do about it, since the mechanism will not:** the crash-resume note is the mitigation, and it
+is why I have kept refreshing it rather than treating it as launch paperwork. It now carries the merge
+baseline, the close sequence, the trip-loop warning, the sweep list and the two rules that earned their
+keep today — enough that a successor could take this over cold. **That is the handoff the governor
+would have forced on a Commander, written voluntarily because nothing will force it here.**
+
+Not filing this as a new issue: it is the same subsystem as #452 (a bare-keyed agent driving several
+spines gets no reading) and #458 (the gauge ships nowhere), both open and both deferred to the governor
+thread by ruling. **Recorded as a second measurement on an existing finding, not as a new one** — the
+backlog does not need another issue, it needs this one to have evidence.
+
+### ERROR (mine) — my launch orders reproduced #409, which I had excluded from the wave that morning
+
+Every one of the five wave-5 launch orders carried the line *"Working notes: `notes-1.md`"* — **with
+no directory.** I wrote that having read #409 the same day and having deliberately left it out of the
+wave on the grounds that it needed a location ruling first.
+
+**Three crews, the same instruction, two different readings, both correct:**
+
+| crew | where it put the file |
+|---|---|
+| gates | `.agent-work/w5-gates/notes-1.md` |
+| docs | `.agent-work/impl-w5-docs-496-411/notes.md` |
+| addressing | **`notes-1.md`** — repo root |
+
+`git ls-files` counts **seven** already on main. Crew 3's would have been the eighth. Caught before
+merge and corrected by asking it to `git mv` into its work area.
+
+**The root cause is sharper than #409 states it, and I posted that to the issue.** The doctrine
+mandates the **filename** and says nothing about the **location** — *"named `notes-<n>.md` (never
+`findings-<n>.md`)"* is entirely about the name. So **an agent cannot be non-compliant either way**,
+and a check for "does a `notes-<n>.md` exist" passes identically wherever it landed.
+
+**The pairing worth keeping:** the `findings-<n>.md` half never drifts because the **harness refuses
+that basename** — the rule has a backstop that is not the agent's memory. The location half has no
+backstop and has drifted seven times. **A sweep that relocates the seven leaves the generator
+running.** The cheapest real fix is a declared home the instruction actually names —
+`.agent-work/<work-id>/notes-<n>.md`, which is where the two crews that inferred a location both put
+it independently, so the convention already exists in practice and is merely unwritten.
+
+**Correction to the crew was explicit that the ambiguity was mine, not its.** Its scope I verified
+rather than assumed: `commander-core.md`, `crew-dispatch.md`, both handoff templates, and a new
+`tests/test_crew_delivery_addressing.py` — no other crew's file, and **no `references/global-*.md`
+install-time copy**, which the installer would have silently overwritten. Its commit message names
+**#507 and #370 only**, correctly excluding #413.
+
+**PR #511 is up** (crew 3). Two PRs open now: #509 and #511. Neither merges while its crew is live.
+
+### REVIEW — PR #511 (crew 3, #507 + #370): work looks good, two things held before merge
+
+Crew 3 released its lease with m5 complete. **PR #511 up.** My cold read, with everything checked
+rather than accepted on report:
+
+- **Scope clean.** `commander-core.md`, `crew-dispatch.md`, both handoff templates, one new test file.
+  No other crew's files. **No `references/global-*.md`** — those are install-time copies the installer
+  regenerates, and an edit there would have been silently overwritten on the next sync.
+- **Commit message names #507 and #370 only**, correctly excluding #413 per the verdict it reached
+  independently and I accepted.
+- **The test looks like it does the hard thing**, not the easy one: a negative case
+  (`InstanceAddressingMisroutesAfterRelaunch`) and a positive one (`JobAddressedDeliverySurvivesRelaunch`),
+  with a **simulated relaunch that reloads the registry from disk sharing no state** — which is what
+  makes it an *announcement* test rather than a file-existence test. That distinction is the trap #507
+  names explicitly, and the test appears to have been built around it.
+
+**HELD — the red is missing.** The launch order made it NOT OVERRIDABLE: *shown failing on today's
+code and passing on yours, not just passing.* There is no `IMPLEMENTER_RESULT.md` in the work area and
+nothing in the PR records the run. **A green with no red behind it is the exact thing this wave is
+about, and the code reading well is not a substitute.** Asked for the two invocations with real
+unpiped exit codes — and told the crew that an honest *"I did not run the red"* costs it nothing, so
+the cheap answer is not the dishonest one.
+
+**HELD — `notes-1.md` still at the repo root**, my #409 reproduction. Asked for a `git mv`; PR
+auto-updates.
+
+**PR #509 CI: pass. PR #511 CI: pending.** Neither merges yet — #509 waits on crew 5 finishing its
+rework, #511 on these two items.
+
+### FINDING — PR #511's acceptance test passes on unmodified main. Derived, not reported.
+
+Rather than wait for crew 3's red, I derived it. Copied its test into a **clean** main checkout
+(0 dirty lines before and after, file removed) and ran it:
+
+```
+FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/_tmp_red_check.py
+2 passed in 0.37s        REAL_EXIT=0
+```
+
+**The test passes without the fix.**
+
+**And I do not think the crew did anything dishonest** — its own analysis predicted this and I missed
+the implication when I read it: *"the fix's real mechanism already exists in production — `run_crew.py`
+and `recover_crews.py`; the actual bug is narrower than 'build new machinery' — it's the doctrine
+telling crews the SendMessage announcement is load-bearing."*
+
+If that is right, and I think it is, then it follows that **the test characterises machinery that
+already worked, and the actual fix is prose no test can reach.** The test cannot fail on today's code
+**because the code was never the defect.**
+
+So the PR stands as: the mechanism is now pinned (worth keeping); the fix — four documents telling
+crews to stop treating the announcement as load-bearing — has **no evidence behind it at all**; and
+the green reads, to anyone who does not run it against main, exactly like proof that the fix works.
+
+**That is a check that cannot fail, inside the PR closing an addressing defect, in the wave whose
+whole subject is that pattern.** Census specimen, and one I only caught by **running the command
+instead of reading the code** — which is the census's own stated lesson about what actually finds
+these.
+
+**What I asked for is not an impossible test.** Say plainly in the return that it is a
+characterization test and that it passes on unmodified main — one sentence converts a misleading green
+into an honest one. Then tell me whether anything can reach the doctrine change even weakly (a shipped
+template asserted to contain the job-addressed path would at least fail on a revert), **and a reasoned
+"nothing worthwhile" is an acceptable answer.** And I invited correction: if the test really would fail
+without the change and my run was wrong, I want to be told what to re-run.
+
+**#511 does not merge until this is settled.** Notes file confirmed moved — repo root clean, that item
+is closed.
+
+### ERROR (mine) — I handed a crew a finding I had asserted rather than measured, then measured it
+
+Crew 1's worktree showed my two boundary-render artifacts modified. I told it the launch verifier
+*"mutates the run's own rendered truth as a side effect of being run"*, called that a finding worse
+than its other three, and asked it to carry it in its return.
+
+**Then I tested it:**
+
+```
+main checkout, transitions/ dirty:   0
+admiral-prelaunch                 -> exit 0
+transitions/ dirty AFTER:            0
+```
+
+**Unmodified `admiral-prelaunch` re-renders those files byte-identically. It is idempotent on
+unchanged input.** My claim was not supported.
+
+**Retracted to the crew within a minute, explicitly and before it could write it up.** What is actually
+true is narrower and I do not know the cause: the shipped verifier does not dirty the render, and yet
+**its** worktree shows both files modified. I gave it the two candidates worth one command each — its
+own #506 fix may legitimately change what the render produces (a real and reportable consequence of
+its change, not a verifier defect), or it is line endings under `* text=auto`. **The crew holds the
+evidence; I do not.** The merge-hygiene instruction stands regardless of cause, because that part does
+not depend on it.
+
+**Worth recording as more than an apology.** I have spent this wave insisting that crews derive rather
+than report, refusing a PR for a green with no red behind it, and re-deriving my own verifier results
+under a second interpreter. And then I manufactured a finding from a two-line `git status` and pushed
+it downward with authority attached. **A wrong claim from the Admiral is more expensive than a wrong
+claim from a crew, because a crew treats it as settled** — this one was heading into a return document
+as an established defect.
+
+The rule I was already applying to everyone else, now written down for myself: **do not hand a finding
+down until it has been run.** The command that falsified it cost one line.
+
+### RESOLVED — crew 3 answered the cannot-fail finding by closing the gap, not by arguing it
+
+I asked for one honest sentence plus a judgement call on whether the doctrine prose could be reached
+at all, and said a reasoned *"nothing worthwhile"* would be accepted. **It built the thing instead.**
+
+`bd31f69c test(#507,#370): add a real regression guard for the doctrine prose itself` — +74 lines.
+**Verified against a clean main checkout, by running it, not by reading it:**
+
+```
+FAILED DoctrineNamesJobAddressedDelivery::test_doctrine_drops_the_old_load_bearing_line_...
+FAILED DoctrineNamesJobAddressedDelivery::test_handoff_templates_name_the_crew_handoffs_result_path...
+2 failed, 2 passed        REAL_EXIT=1
+```
+
+**A genuine red-then-green, and the shape is right.** The two characterization tests still pass on
+main — correctly, they pin machinery that was never broken — and the two new guards go **red without
+the change**, reaching the prose where it matters: the shipped templates' Return Format sections and
+the doctrine line itself. **A revert now fails.** Anyone reading the suite can now tell the two halves
+apart, which is exactly what was missing.
+
+**Asked for one thing in the return and nothing else:** state that the two characterization tests pass
+on unmodified main — not as a confession but as a fact about what each half proves, so a future reader
+looking at four greens can tell which two would have caught a regression.
+
+**Recorded because it cuts against me:** I was prepared to hold this PR on the finding. The crew made
+the finding moot by fixing the underlying gap rather than by disputing it, and I did not have to
+insist. **That is the second time today a crew's response was better than the instruction it was
+answering** — the first was crew 5 finding a stronger justification for the #411 rework than the one I
+gave it.
+
+**#511 merges on green CI for `bd31f69c`.** Run in progress.
+
+### Pre-merge collision check — zero cross-crew collisions, run before the first merge rather than after
+
+Enumerated every non-`.agent-work` file touched by all five crews (committed **and** uncommitted) and
+looked for any path claimed by more than one:
+
+```
+files touched by MORE THAN ONE crew:  (none)
+```
+
+**The file-ownership rulings held across all five crews for the whole wave.** That is the payoff for
+carving crew 5 out as docs-only purely so #496 — a doc fix whose *subject* is `save()` — could not
+pull a second writer into `checklist_engine.py`, and for moving #493/#495 **into** crew 4 when they
+read as repo-wide hygiene.
+
+Worth stating plainly because it is the kind of result that looks like nothing happened: **no conflicts
+is the outcome the assignment was designed to produce**, and it was checked by command rather than
+assumed from the design. Run before the first merge, when a collision would still be cheap to
+re-assign, rather than discovered at the second merge when it would not.
+
+### RULING — merge order, and crew 4 goes LAST among the code PRs
+
+Crew 4 edits `scripts/checklist_engine.py`: **the engine driving this Admiral spine right now**,
+mid-`execute`, with an active lease and a hash-chained journal. Its nine issues include the Task-shape
+unification (#474/#475/#476) and a journal-write change (#493), any of which can alter how an
+**already-written** `spine.json` or `spine.json.journal` is read.
+
+**So: crew 4 merges last among the code PRs**, and immediately after it lands, before anything else,
+`checklist_engine.py current` runs against my own spine expecting exit 0 with the lease still active.
+Every earlier merge is then verified with an engine that is still known-good, and if the engine merge
+does break my run, **nothing else is in flight to confuse the diagnosis.**
+
+**Recorded with its own stop condition, because the tempting repair is the wrong one:** if my spine
+stops parsing after that merge, that is a **blocking finding** — re-open it. **Do not hand-edit
+`spine.json` to make it parse.** The engine owns that file; an Admiral repairing it by hand to keep its
+own run alive would be falsifying the record its own gates read, which is the same act as flipping a
+boundary verdict to satisfy a check.
+
+Pinned in `STATE_NOTE.md` under its own heading rather than buried in the close sequence, because a
+fresh Admiral would meet the merge before it met the close.
+
+### VERIFIED — #509's rework is correct, and the crew's reasoning was better than mine
+
+`8f3a6f54 rework(#411): restore verbatim _shared row, move correction into the note`. Checked by
+comparing the file on both sides rather than reading the diff:
+
+```
+_shared row present on MAIN:   1
+_shared row present on BRANCH: 1
+```
+
+**The fenced block is byte-faithful to the command printed above it again**, and the correction now
+lives entirely in the surrounding note.
+
+**And the justification the crew found is stronger than the one I gave.** I argued from a general
+principle — do not falsify a record. It cited **the file's own §0 reproducibility contract**: *"every
+figure below is derived from a git command, and the command is printed next to its output so the
+successor can re-derive."* **The file had already promised the property I was arguing for.** That is a
+better argument because it is the document's own commitment rather than my preference, and I did not
+know it was there.
+
+It also answered a pre-ruling I had not pressed — whether anything stops the miscount recurring — and
+answered it **honestly in the negative**, in the artifact itself: *"Nothing here stops the mistake
+recurring... The propagation path #411 names is closed only if the command itself excludes `_`-prefixed
+directories."* An honest "no" written into the deliverable, not buried in a return.
+
+**#509 is correct and still held**, for one mechanical reason only: `m3-artifact-and-pr` is still
+`pending` and the lease is still active. **A PR being right is not the same as a crew being done**, and
+I am not going to break my own rule on the one PR where the crew has done everything I asked.
+
+### Early warning taken, not deferred — crew 4's in-progress engine reads my live spine cleanly
+
+The merge-order ruling says crew 4 goes last because it edits the engine driving this run. Rather than
+wait for the merge to find out, I pointed **its work-in-progress engine** at **my live spine**, using
+the pure projection so nothing could be written:
+
+```
+python <crew4-worktree>/scripts/checklist_engine.py --file <my spine> current
+REAL_EXIT=0     LEASE active: admiral-epic-418-redux     ACTIVE execute [in-progress]
+my spine dirty after: 0
+```
+
+**It parses my spine, reports my lease correctly, and mutates nothing.** As of `m4` complete — the
+Task-shape unification (#474/#475/#476) and the refusals counter (#427) already landed in that tree —
+the compatibility risk I flagged has not materialised.
+
+**The right weight for this: it is an early warning that came back clean, not a clearance.** #493
+(journal write) and the rest of `m5`-onward are still ahead of it, and the journal is the half most
+likely to bite, because my journal is **already written** and hash-chained. The post-merge re-run
+against my own spine stays mandatory and stays in the state note.
+
+Crew 4 is at `m5-503` with a heartbeat nine minutes old and `scripts/checklist_engine.py` +
+`tests/test_checklist_engine.py` modified — **its two owned files and nothing else**, consistent with
+the collision check. It has cleared m0 through m4 of a ten-item plan.
+
+### ERROR (mine, operational) — my own logging discipline was delaying my own merge gates. Filed as #512.
+
+Checking why the two PR checks were slow, I found **four full suite runs queued on `main`, all of them
+my own documentation commits**, sitting ahead of the check a merge was waiting on. None of the four
+could fail for any reason related to its own commit — **not one touched code.**
+
+`.github/workflows/ci.yml` triggers on every push to main and every PR with **no path filters**, so an
+`ADMIRAL_LOG.md` entry costs a ~9-minute suite run and contends with real gates. I have pushed roughly
+**twenty** such commits this wave.
+
+**The tension is real and I am not going to resolve it by logging less.** The doctrine that produces
+these commits is per-event *by design* — log the ruling **as it happens**, so the audit trail cannot be
+reconstructed after the fact. Batching them to save CI trades away the exact property the rule exists
+for. **The cost belongs on the CI config, not on the audit trail.**
+
+Filed as **#512**, with the fix and — more usefully — the **caveat that makes the obvious fix wrong
+here.** Several tests in this repo assert on the *content of documentation*: the guard crew 3 added in
+PR #511 asserts shipped handoff templates name the job-addressed delivery path, and
+`test_install_constellation.py` asserts on retired signatures in `SKILL.md` files. **In this repo a
+markdown change genuinely can break the suite**, so a blanket `**/*.md` ignore would silence a real
+guard. `.agent-work/**` and `episodes/**` are the safe pair, and they alone would have removed all four
+queued runs.
+
+Its acceptance carries the mutation test that matters: a commit touching a **shipped template's** prose
+must still run the suite and must still be able to go red — **a path filter that silences the #511
+guard is worse than the problem it fixes.**
+
+**Behaviour change now, for the rest of this run:** batch log entries where the ruling is already
+settled and push less often, without giving up per-event logging in the file itself. The log is written
+as it happens; only the push is batched.
+
+## MERGE 1 of wave 5 — PR #511 (crew 3): #507 + #370
+
+**MERGED at `39fb542a`, verified on the forge** (`state=MERGED, mergedAt 2026-08-08T23:59:46Z`), not
+by an ancestry test — squash-merge returns the same answer for merged and abandoned, and this repo
+merges with `--merge` precisely to preserve the evidence commits.
+
+**Every gate checked before the merge, none assumed:**
+
+| gate | result |
+|---|---|
+| CI green on the final commit | `test pass 7m10s` — read from `gh pr checks`, not inferred |
+| crew genuinely done | lease released, 5 commits, no uncommitted work |
+| review findings resolved | both — the repo-root notes file moved, and the red-then-green built |
+| red verified independently | **I ran its guard against a clean main checkout myself**: `2 failed, 2 passed, REAL_EXIT=1` |
+| no cross-crew file collision | checked by command across all five worktrees |
+| not the engine PR | crew 4 merges last; this is not it |
+
+**#507 CLOSED. #370 CLOSED. #413 correctly LEFT OPEN.**
+
+That last one is the part worth keeping. I asserted a three-way collapse; the crew re-read all three
+bodies independently — **not from my framing, and it said so** — and found #413 is a *different
+defect*: **never-valid-from-the-start** (a spawned subagent was never registered under an addressable
+name to its own children) rather than **valid-then-stale**. Same presentation, different root cause.
+It closed the two that genuinely collapse and left the third open with a comment. **A partial, because
+a partial was the true answer.**
+
+**Wave 5 running total: 2 of 21 issues closed.** Merge order holds — crew 4 (engine) last, with the
+mandatory `current`-against-my-own-spine check immediately after it.
+
+### RULING — do NOT re-install mid-wave, even though merge 1 just made the corpus stale again
+
+Checked immediately after #511 landed, because #344 has already bitten this run once:
+
+```
+STALE references/commander-core.md
+STALE references/crew-dispatch.md
+STALE templates/IMPLEMENTER_HANDOFF.template.md
+```
+
+**One merge, three installed files stale.** The corpus drifts on *every* merge, which is the general
+shape of #344 and worth having measured twice in one day rather than argued once.
+
+**Ruling: do not re-sync now.** Four crews are mid-run. An install rewrites the doctrine and templates
+**underneath a running agent**, which is exactly the failure I filed as **#508** this morning — an
+agent's loaded copy silently diverging from disk — and re-syncing mid-wave would be me *causing* it to
+four agents at once rather than merely suffering it. The changed files are crew-dispatch doctrine, and
+**none of the four running crews dispatches a crew**, so the staleness is inert for the rest of this
+wave.
+
+**Where the re-sync belongs is already written down:** the close sequence, after crew 1's merge, with
+its own verification step that hashes the installed file against the repo blob rather than trusting
+the installer's report. That single re-install picks up #511's files too.
+
+**Recorded because the tempting action and the correct action point opposite ways here.** The reflex
+after finding drift is to fix the drift. With live crews, fixing it is the more damaging move — and the
+reason I can say that with any confidence is that I filed the exact failure mode eight hours ago and
+would otherwise have walked into it from the other side.
+
+### Pre-decision, made before it is needed — how #509 merges if crew 5 never closes `m3`
+
+`m3-artifact-and-pr` is `in-progress` with `next: advance m3 --why`, heartbeat eight minutes old.
+Crew 5 is **one verb** from done and everything else is finished: rework pushed, `_shared` row verified
+byte-present on both sides, **CI green**.
+
+**Deciding this now rather than at the moment it bites**, because a rule invented under time pressure
+is the one that bends:
+
+- **If crew 5 closes `m3` and releases:** merge normally. Preferred, and what I expect.
+- **If crew 5 goes idle without closing it:** **merge on artifact adjudication.** The orchestrator
+  doctrine is explicit that an idle agent with complete artifacts is *done*, not stalled — verify from
+  the artifact set (branch, commit, PR, files) and accept the work, **never block on a dropped verdict.**
+  Every element of that set is already verified here by my own commands, not by its report.
+- **What I will NOT do either way: drive its spine for it.** The lease is its own and the engine owns
+  that file. An Admiral closing a crew's gate to unblock its own merge is writing a verdict it did not
+  earn into a record its gates read — the same act as flipping a boundary decision, one tier down.
+
+**So the outstanding item is bookkeeping in the crew's own spine, not doubt about the work.** The merge
+does not wait on certainty; it waits on courtesy, and there is a bound on the courtesy.
+
+**Three crews (1, 4, 5) quiet for 4-15 minutes; all three show pytest caches written 23:43-23:52**, so
+that reads as post-suite composition rather than a stall — and **no idle notification has arrived**,
+which is the authoritative channel and the one I have been wrong to second-guess twice today. Crew 2 is
+running hot at ~47 writes per four minutes.
+
+### Better liveness proxy found: `gauge.json`'s mtime IS "last tool call"
+
+The governor's gauge is written by a **PostToolUse hook**, so its mtime is a direct record of the
+agent's **last tool call** — not of file output, which is what I had been counting. That is a strictly
+better liveness signal than write counts, and it was sitting in front of me all wave:
+
+- an agent reading nine issue bodies writes nothing but **does** bump its gauge;
+- an agent thinking, or composing a long return, bumps neither.
+
+**So "no worktree writes" and "no tool calls" are different questions, and only the second is
+evidence of silence.** Crew 4's thirty-minute "silence" this morning — which I nearly acted on — was
+nine `gh issue view` calls, and the gauge would have shown that immediately.
+
+**Applied it, and it separated the quiet crews cleanly:** crew 1's last tool call 23:55, crew 4's 23:49,
+against 00:06 now — **eleven and seventeen minutes** with no tool call at all. Crews 2 and 5 both fresh.
+
+**Asked both rather than acting.** Fourth time today; the previous three were all right to ask and
+wrong to assume. Told each: if you tripped, say so and I relaunch, **but check the reading is yours
+first** — a stale gauge is the predecessor's, and a fresh tool call updates it.
+
+**Also pushed my outstanding rulings down to crew 4 in that message**, because the most likely thing
+eating its run is **#503**, and I had already ruled on it: float it as larger-than-filed with its
+predecessor's reasoning, **do not spend more of the run on it.** A ruling the crew has not seen is not
+a ruling — I made it in my log and in the relaunch prompt, and if that message did not survive, it was
+costing time I had already decided not to spend. Restated #495/#479/#480 with it, and reminded it that
+**nine issues does not mean nine fixes are owed.**
+
+Also told it, because it is reassuring and true: **its work-in-progress engine parses my live Admiral
+spine cleanly.** Its changes have not broken the run they are running inside.
+
+### CORRECTION — the liveness proxy I called "strictly better" two entries ago is itself blind
+
+I wrote that `gauge.json`'s mtime is a **strictly better** liveness signal than counting file writes.
+**Within four minutes it pointed at the healthiest crew in the wave as the deadest.**
+
+Crew 2's gauge read **23:18** — its predecessor's value, 49 minutes stale — while at that same moment:
+
+```
+execute.json           written 00:07
+execute.json.journal   written 00:07
+9 engine verbs journalled since 23:30, ZERO gauge writes
+```
+
+**It is the most active agent in the wave. Its gauge has never fired in its entire run.** A full
+worktree search found exactly one `gauge.json`, the stale one, so it is not writing elsewhere.
+
+**"Strictly better" was wrong. The correct claim is: better WHEN IT FIRES, and silent when it does
+not — which is the same failure mode as everything else in this census.** A frozen gauge is
+indistinguishable from a dead agent: no predicate over that file separates *"no tool call in 49
+minutes"* from *"the hook has never fired for this agent."* **My new heuristic was a check that cannot
+fail, and I adopted it four minutes before it misfired.**
+
+**Had I acted on it I would have relaunched a Commander mid-`execute` with a live plan**, destroyed
+forty minutes of loaded context, and the replacement run would have looked entirely normal — nothing
+anywhere recording that a healthy agent was killed. **I did not, because the rule is ask-then-act, and
+that rule is now four-for-four today.** It is the only thing that saved this one, and it saved it
+without me understanding the mechanism.
+
+**Posted as a live measured instance on #452**, including the part I could not determine: **why the
+hook fired for four agents and not the fifth.** Both Commanders load the same skill; crew 1's gauge
+updates and crew 2's does not. **The report stops at what was measured rather than guessing.**
+
+**Second-order consequence, which is the real harm:** this crew **cannot trip**. Every other crew in
+the wave tripped at least once and handed off cleanly. This one has no reading to trip on, so it will
+run to whatever its true fill is with no governor intervention — #383's *"goes silent on exactly the
+runs that need it"*, live.
+
+**And the irony belongs in the retrospective:** the crew that gets no governor reading is the crew
+working on **#458 — ship the gauge writer.**
+
+### Post-merge verification — main green after #511, and the delta is exactly right
+
+```
+1871 passed, 2 skipped, 829 subtests passed in 571.20s   REAL_EXIT=0
+```
+
+**Baseline was 1867 / 2 / 829. Delta: +4 passed, everything else identical.**
+
+**That number is the check, not the green.** Crew 3 added exactly four tests — two characterization
+tests of the existing job-addressed machinery (which pass on unmodified main, correctly) and two
+doctrine guards (which I verified go **red** on unmodified main). **+4 is precisely what should have
+appeared**, and nothing else moved: no test lost, no subtest count change, no skip change.
+
+A green alone would not have told me that. A green **plus the expected delta** rules out the case
+where a new test lands and an old one silently stops running — which on this project would be a check
+that cannot fail, landing in the wave about checks that cannot fail.
+
+**Merge baseline for the remaining wave-5 merges is now 1871 / 2 / 829, real exit 0**, run with
+`python -m pytest`, exit read unpiped. Recorded so the next merge is compared against the current
+tree rather than against a figure I remember from an hour ago.
+
+### #509 gate check — CI verified against the HEAD SHA, not against "a run passed"
+
+```
+gh pr view 509 --json headRefOid   ->  8f3a6f54
+gh run list --branch epic-418/w5-docs ->  run on 8f3a6f54: completed success
+```
+
+**`gh pr checks` reporting `pass` is not sufficient on its own** — it can report a green from an
+earlier run while the branch head has moved, which is exactly the situation here: crew 5 pushed a
+rework (`8f3a6f54`) on top of an already-green commit (`da1e7b87`). Both runs are green, but only the
+first fact matters, and only comparing the SHAs establishes it.
+
+**This is the merge-gating invariant the fleet doctrine states as "gate on the check exit code" applied
+one level more carefully: gate on the check *for the commit you are merging*.** A green attached to a
+superseded commit is a check that cannot fail — it stays green no matter what the rework did.
+
+**So #509 is fully ready on every substantive gate:** review finding resolved, rework verified by
+byte-comparison on both sides, CI green **on the head commit**. It is held on exactly one thing —
+`m3-artifact-and-pr` still open in the crew's own spine — and the fallback for that is already decided
+and written down.
+
+**Crew 5 is working:** journal mtime 00:05, five minutes ago. Crews 1 and 4 remain quiet on the engine
+channel at 15 and 23 minutes; both have been asked and neither has been acted on.
+
+## MERGE 2 of wave 5 — PR #509 (crew 5): #496 + #411
+
+**MERGED at `4bde569e`, verified on the forge.** Gated on the check **for the head commit** (`8f3a6f54`),
+not on "a run passed" — crew 5 had pushed a rework on top of an already-green commit, so a stale green
+was available and would have proved nothing.
+
+### `Closes #496, #411.` closed only #496 — caught by verifying, not by assuming
+
+**GitHub honours only the first issue in a comma-list; each number needs its own keyword.** #496
+auto-closed; **#411 stayed open.** The only reason this was caught is the standing rule to verify issue
+state on the forge after every merge rather than trusting the merge to have done it. A run that skipped
+that check would have left a completed issue open and no signal anywhere.
+
+**Closed #411 by hand with the verification recorded**, including the part the crew was right to leave
+undone: the **propagation half is explicitly NOT fixed**, and its own artifact says so —
+*"Nothing here stops the mistake recurring... the propagation path #411 names is closed only if the
+command itself excludes `_`-prefixed directories."* Closed against the issue's **stated** target (the
+snapshot's miscategorisation at `fc1685a`) with the residual named where the next reader meets it, and
+noted that fixing the generator is a new issue against the command, not this one.
+
+### The rework was the right call and the crew found the better argument
+
+First attempt **deleted** the `_shared` row. Reverted in review: that row sits in a fenced block that is
+verbatim output of a command printed directly above it, and — the crew's finding, not mine — **the file
+commits to reproducibility in its own §0.** I argued from principle; it cited the document's own
+promise. Row restored verbatim, correction moved into the note, propagation gap answered honestly.
+
+**Wave 5: 4 of 21 issues closed** (#507, #370, #496, #411). Two PRs merged, zero rework cycles wasted.
+
+### Two crews stood down cleanly and were relaunched
+
+**Crew 1** finished `plan` — all six postconditions — and tripped at the `execute` seam on a reading it
+**verified was its own**: 17.5% at 23:55:54, and it corroborated that by noting its first `current`
+read **18%** before any tool call (the predecessor's) and its own read came in **lower**. *"A fresh
+agent replacing a larger reading with a smaller one is exactly the shape you would expect."* It
+released the lease so the successor claims without `--force`.
+
+**Its plan step earned its keep, measurably.** A cold critic panel returned **BLOCK**: **g1 and g3 could
+each have closed with zero work done.** One critic replaced the guard with an unconditionally-permissive
+version and the closing command still exited 0. Remedy: every gate now closes on a `-k` selector keyed
+to a test-naming contract in its own imperative — zero match exits 5, so a gate whose tests were never
+written **fails closed**. It re-measured all six selectors itself at exit 5 rather than taking the
+critic's word. **In a wave about checks that cannot fail, it had authored two and caught them before
+they shipped.**
+
+It also corrected **two of its own predecessor's claims** by measurement, including one where its
+evidence anchor had the failure polarity backwards and would have misled the reviewer.
+
+**Crew 4** completed m0-m4, each with a real red-before-green, then hit a genuine HARD trip at
+`start m5-503` — and **re-verified it with a fresh tool call** (16% → 17%, moving the right way) rather
+than assuming, precisely because I had warned it about inherited readings. Relaunched both.
+
+### Crew 1 corrected my monitoring, and it is right
+
+> the gauge is not a liveness signal here... it did not move for my last turn's five git commands...
+> Inferring "last tool call" from that timestamp will keep telling you an agent is idle when it is
+> working — and, worse in the other direction, would tell you an agent is alive at the moment it dies
+> mid-gate. If you want a real one, the spine journal's last entry moves on every engine verb.
+
+**Independently the same conclusion I reached from crew 2's frozen gauge, arrived at from the other
+end.** Two agents, two routes, one answer: **journal mtime, never the gauge.** That is now in the state
+note with what each signal is blind to.
+
+**One item routed to me, not fixable by them:** after crew 1's fix A, `ADMIRAL_SPINE.template.json`'s
+execute prose **and** its `directives.decisions` block will still describe `repair` as an enforced exit.
+Not their file. Mine to carry into closeout.
+
+### RULING — routed the `Closes #A, #B` finding to #354 rather than filing a new issue
+
+The finding is real and it is a **new failure mode**, not a repeat: #354 records PRs whose bodies
+carried **no** closing keyword. #509's body **carried one and named both issues** — `Closes #496, #411.`
+— and closed only the first. GitHub honours only the leading issue in a comma-list.
+
+**That variant is worse than the one #354 already documents**, and I said so there: the artifact that
+would prompt a check **is present and looks right.** Nobody re-reads a PR body that already says
+`Closes`. #301 and #309 were visibly missing something; this one was visibly fine.
+
+Also measured and posted: **no template, handoff, or doctrine file in this repo mentions closing
+keywords at all** —
+
+```
+grep -rn "Closes #\|Fixes #\|closing keyword" skills/ docs/ --include="*.md"   -> no matches
+```
+
+So a crew writing the comma form is following no instruction and violating none.
+
+**RULING: comment on #354, do not file a new issue.** Tommy's standing direction for this wave is to
+bring the count **down**; a third instance of a defect that already has an open issue belongs on that
+issue as evidence, not as a new row. The backlog does not need another entry — **#354 needed a
+measurement, and now it has three.**
+
+**And I named why the obvious fix is insufficient**, since that is the part a future implementer will
+otherwise redo: a doctrine line is the same remedy that already failed for #301 and #309, where the
+rule existed informally and simply was not applied. The checkable version is a **post-merge
+reconciliation** — every issue a merged PR references must be either closed or explicitly declared
+not-to-be-closed. **PR #509 would fail that check; PR #511 would pass it while correctly leaving #413
+open**, because #511 references #413 deliberately without a keyword and says why. Telling those two
+apart is the whole difficulty, and nothing today can.
+
+**Crews 1 and 4 relaunches both confirmed driving** — journals at 00:15, one minute apart. Crew 2 in
+`execute`. Prelaunch re-verified exit 0 after the state-note refresh.
+
+### My own fill: 64.4% and climbing ~20 points per 40 minutes. Surfacing it rather than absorbing it.
+
+```
+.agent-work/epic-418-redux/gauge.json  ->  fill_fraction 0.644 at 00:16:34
+```
+
+Against a **0.15** hard band. I was at 0.440 forty minutes ago. **Nothing will ask me to stop** — the
+trip evaluates only on a gated verb and this role holds `execute` for the entire epic, which is the
+structural gap I recorded twice today and which #452's live instance sharpens further.
+
+**Three crews are mid-flight with substantial work left:** crew 1 has four gates in `execute`, crew 2
+has just entered `execute` on its own g1, crew 4 has six plan items. That is not a short tail.
+
+**The mitigation is the crash-resume note, and I checked it rather than assuming it was adequate:**
+628 lines, 55 bolded directives, 8 sections — including the close sequence, the trip-loop, the three
+liveness signals with what each is blind to, the merge baseline with its expected delta, the sweep
+list, the crew positions, that **#413 must stay open**, and that crew 1's `-k` selectors are
+load-bearing rather than stylistic. A cold successor could take this over.
+
+**But "a successor could take over" is not the same as "the run should burn down to that."** This is a
+resourcing question that belongs to Tommy, not a technical one I should quietly absorb — so I am
+surfacing it in the report rather than deciding it. **No action taken, nothing paused, no crew
+disturbed.** The work continues either way; what changes is whether the handoff is planned or forced.
+
+### Carried item verified as PRESENT, but deliberately not judged yet
+
+Crew 1 routed me one thing it could not fix: after its fix A, `ADMIRAL_SPINE.template.json` will still
+describe `repair` as an enforced exit. Located all three sites rather than taking it on report:
+
+- **line 34** (execute imperative) — *"requires a unique advance|repair|replan|stop exit, enforces repair safety"*
+- **line 42** (postcondition c3) — *"...G2-verified, **repair-safe**, and rendered before launch"*
+- **line 45** (`directives.wave_transition`) — `"decisions": [advance, repair, replan, stop]`, `"repair_holds_forecast": true`
+
+**All three confirmed present. Whether any is WRONG is not yet knowable, and I am not going to guess.**
+If fix A only adds a `stop` branch to c3, repair enforcement stands untouched and there is no
+inconsistency at all — crew 1 wrote this as a *note to me*, not as a defect claim, and treating it as a
+defect before the fix exists would be exactly the error I made earlier tonight when I handed a crew a
+finding I had asserted rather than measured.
+
+**Closeout check, with its own verification rather than a reminder to think about it:** after crew 1's
+PR merges, re-read those three sites against what fix A actually does. File only if the prose asserts
+something the code no longer does.
+
+### RULING — waive `execute.c2` for crew 2, on my authority, with four conditions
+
+Crew 2 finished #458's deliverable and hit a blocker that is **not #458's**: the spine's own
+`execute.c2` runs the **repo-vendored** `verify_iterative_role_artifacts.py`, whose
+`_installed_skills_root()` guard refuses from any worktree. It ran the **installed** copy against the
+identical `REPLAN_INPUT.json` and got `iterative role artifact ok`.
+
+**RULING: waive. The check's subject is verified and the check's mechanism is broken.** The line I hold
+crews to is *never change a verdict to fit a check* — this is the opposite: **waiving a broken
+instrument while recording the working instrument's result.** Conditions imposed, all four required:
+
+1. `--authority` names me **and cites #501/#468**, not a bare string — **because #503 means that field
+   is validated as non-empty and nothing else.** No mechanism will catch a vague authority, so the
+   honesty is entirely ours, which is precisely why it must be specific.
+2. `--reason` carries the installed-verifier command **verbatim with its exact output**, re-derivable
+   cold, not summarized.
+3. **Nothing may say c2 passed.** It was waived, with the substantive check verified by another route.
+   Two different sentences; the record uses the second.
+4. Stays `evidence_only`; **no new issue** — #501/#468 own it and crew 1 is fixing it now.
+
+### Two independent derivations of the same defect, in one wave
+
+Crew 1 predicted this hours ago while working #501: *"the guard also breaks `execute.c2` in every
+Commander worktree... **My own run will hit it.**"* Crew 2 then hit it in a **different worktree, on a
+different issue**, and diagnosed it from source **without having seen crew 1's report.**
+
+**That is the difference between one crew's theory and a property of the system**, and it is worth more
+than either report alone. Relayed to crew 2 so it knows its finding is not isolated.
+
+**Crew 2 asked instead of forcing, and I told it so.** It had a legitimate technical justification and
+could have `--force`d unilaterally on an ungated check. It stopped. That cost a few minutes rather
+than costing the run its credibility — and it is the third time this wave a crew has chosen the slower
+honest path unprompted.
+
+**#458's verification is the strongest in the wave:** 25 new tests, the reviewer's APPROVE **reproduced
+rather than accepted**, `settings.json` confirmed unwritten by **reading every new function** rather
+than grepping, and a **fresh clone from GitHub refused with named per-item reasons** — Pre-Ruling 3
+satisfied exactly as written, a guard **observed refusing something real**.
+
+### REVIEW — PR #513 (crew 2, #458): scope and hard constraints verified by command
+
+**Scope is exactly the two owned files**, nothing else:
+
+```
+scripts/install_constellation.py
+tests/test_install_constellation.py            (+356 insertions)
+```
+
+**Every constraint I imposed, checked rather than accepted on report:**
+
+| constraint | how I checked | result |
+|---|---|---|
+| no other crew's files | diff vs `checklist_engine`, `test_checklist_engine`, `commander-core`, `crew-dispatch`, `CREW_CONTEXT`, `TREND_SNAPSHOT`, `verify_iterative_role` | **clean** |
+| **`settings.json` never touched, any scope** — the epic's hard constraint | diff name-only for any `settings` path | **clean, no settings file in the diff** |
+| **the check reports and never repairs** (#458's own Fixed section) | grepped every **added** line for `open(`, `write_text`, `.write(`, `mkdir`, `json.dump` | **no write path added at all** |
+
+That third one is the one worth having done properly. #458's Fixed section says *"the check reports;
+it does not silently repair"* — a readiness checker that quietly fixes what it finds is a worse defect
+than the gap it was built for, because the next run's "ready" would be caused by the checker rather
+than observed by it. **Verified against the added lines specifically**, not the file as a whole, so a
+pre-existing writer elsewhere in the installer could not mask the answer.
+
+**Held pending its crew closing out** — the `execute.c2` waive I authorized has to land with its four
+conditions first, and I do not merge under a live crew. Crews 1 and 4 still driving.
+
+### FINDING (mine, at the entry point) — `truth.sh` reported WAVE 4 while wave 5 ran
+
+I tested the crash-resume note's **own first instruction** by running it rather than reading it. It
+exits 0 and prints:
+
+```
+--- gates (source: execute.json, not any note) ---
+  17/17 complete   amendments: 2
+  lease: released by agent
+```
+
+**Those are wave 4's numbers.** `truth.sh` is hardcoded to `epic418-a2-467` / `issue-467-trip-semantics`
+— the previous wave's worktree. A fresh Admiral executing step 1 of the note would read
+*"17/17 complete, lease released"* and conclude **the run is finished**, while five crews were mid-flight.
+
+**Identical output in the done world and the mid-wave world, at the entry point of the crash-resume
+path** — and the file's own header says *"derive reality. never recall it."* It was deriving reality,
+just the wrong wave's.
+
+**Why it was invisible:** it never breaks. It exits 0, prints 25 lines of well-formed derived state, and
+every figure in it is true — of a wave that ended hours ago. Nothing about the output signals which
+wave it describes. **A script that is right about the wrong thing is the hardest kind to notice**, and
+I have run this file repeatedly today without looking at what it was pointed at.
+
+**Corrected**, with the defect stated in a comment block at the top so the next reader inherits the
+correction rather than just the fix. Wave 5 runs **five** crews, so there is no single work area to
+point at; it now enumerates all five with the one liveness signal that fires for every crew:
+
+```
+gates:      last-engine-verb=00:33 commits=2 dirty=26
+readiness:  last-engine-verb=00:33 commits=1 dirty=12
+addressing: last-engine-verb=23:51 commits=0 dirty=0     (merged)
+engine:     last-engine-verb=00:23 commits=0 dirty=3
+docs:       last-engine-verb=00:05 commits=0 dirty=3     (merged)
+```
+
+plus the open wave-5 PRs asked of the forge, and two carried warnings: **journal mtime is the only
+proxy that fires for every crew; `gauge.json` does not (#452), and file-write counts miss a reading
+agent.**
+
+**This is census specimen territory and it is mine, not a crew's** — the third countermeasure of my own
+today to contain the defect it was built against. The pattern is now unambiguous: **I do not catch
+these by reading, and neither does anyone else. Only running them against a case that should make them
+fail works.**
+
+### ERROR (mine) — raised a data-loss alarm from an absence, one command short of the answer
+
+Crew 2's `.agent-work/issue-458-readiness/` vanished from its path. I sent it an **urgent** message
+asking whether it had lost its spine, journals and evidence trail, and whether it could still close out.
+
+**It had archived it.** `ae0c52d0 archive(#458): close out issue-458-readiness work area` — a pure
+rename into `.agent-work/archive/2026-08-09-issue-458-readiness/`, **83 tracked files** including
+`spine.json`, `execute.json`, both journals, `MISSION_FRAME.md`, `STATE_NOTE.md`, `REPLAN_INPUT.json`
+and the crew-handoffs. **The provenance is now MORE durable than before** — untracked local directory
+to committed and tracked. Exactly what the archive step is for.
+
+**`git log main..HEAD` had the answer in the commit subject line.** I ran the alarm instead of the
+command.
+
+**The shape, which is the part worth keeping:** I saw an **absence** and reached for the alarming
+explanation before checking the adjacent benign one. That is the same failure I have corrected in
+myself twice already tonight — acting on an inference from disk state instead of deriving the fact —
+and this was the cheapest of the three to have avoided. **An absence is not evidence of destruction;
+it is evidence that the thing is not where you looked.**
+
+**Retracted to the crew immediately and explicitly**, told it not to spend any time answering, and
+named my own error rather than softening it into "just checking." It had done nothing wrong and should
+not carry a minute of doubt from my mistake.
+
+**Asking was still right; the framing was not.** The distinction matters for the retrospective: the
+ask-then-act rule is four-for-four and I am not weakening it. What failed here was *what I asked* —
+an alarmed question built on an unchecked premise, when a one-line derivation would have turned it
+into no question at all.
+
+### VERIFIED — crew 2's `execute.c2` waive met all four conditions, checked against the record
+
+Crew 2 is **DONE**: `DONE: no open items. WAIVED: ['execute.c2']`, lease released, four commits.
+I read the waive record out of the archived spine rather than accepting the summary:
+
+| condition I set | what the record says |
+|---|---|
+| authority names me **and cites the defect** | `Admiral epic-418-redux -- #501/#468, guard refuses from any worktree` |
+| reason carries the installed-verifier command **verbatim with output** | full command path and result, quoted |
+| **nothing may say c2 passed** | its **first sentence** is *"c2 was NOT verified by its own literal command -- it was waived."* |
+| stays evidence-only, no new issue | held |
+
+**It also did something I did not ask for and should have:** it wrote the two-independent-derivations
+point **into the waive reason itself** — *"confirmed independently by re-deriving the same root cause
+crew 1 already reported... without having seen crew 1's report: two independent derivations of one
+system property, not one crew's theory."* The corroboration now travels with the record instead of
+living only in my log.
+
+### A THIRD independent derivation — crew 2 also hit crew 1's `<branch>` defect
+
+Separately, on its own authority (correctly — a template-instantiation fix inside its own latitude),
+it **amended `c2b`**:
+
+> c2b's check command was instantiated from `COMMANDER_SPINE.template.json` with the `<branch>`
+> placeholder never substituted... the literal text `gh pr list --head <branch> ...` **can never match a
+> real branch and would refuse every run** regardless of whether a PR is actually open.
+
+**That is #439/#484 — crew 1's fix C — hit independently by a third crew, from a fourth angle.** It
+verified the real command manually before retexting (`-> true`, PR #513 open) rather than assuming.
+
+So in one wave: **crew 1 predicted the guard would break every Commander worktree; crew 2 hit it. Crew
+1 found `archive.c2b` can never pass; crew 2 hit that too.** Both of crew 1's headline findings have
+now been independently reproduced by a crew that had not seen its report. **That is no longer a
+finding — it is a measured property of the system**, and it is the strongest evidence this wave has
+produced for why those two fixes are worth shipping.
+
+### Fix B landed (#501 + #468) — and it repairs something a second crew independently proved
+
+`c63c2bb0 fix(#501,#468): resolve the installed skills root by structure, not by name`. Crew 1 closed
+g1-implement, tripped at `g1-review`, released the lease cleanly, and was relaunched as `-d`.
+
+**The fix does the thing I pre-ruled it must:** `_installed_skills_root()` no longer tests the
+directory name. `_is_installed_bundle` = own `SKILL.md` **and** a parent that is a skills root
+(installer `CORPUS.json` marker, or a `constellation-*/SKILL.md` child). Resolution order:
+`--skills-root` → own bundle → probe project then user scope with a visible stderr note → **refuse
+naming every root tried and its count.** That is a guard that answers *where am I running from* rather
+than one widened until it passes everywhere, which is exactly the trap I forbade in the launch order.
+
+**Verified in its own hands, not taken on its crew's report** — the distinction it drew itself:
+
+- structural predicate **measured on disk at all three locations before dispatch**: main checkout and
+  worktree each have no own `SKILL.md` and a parent with no `CORPUS.json` and **0**
+  `constellation-*/SKILL.md` children; the installed bundle has its own `SKILL.md`, a parent
+  `CORPUS.json`, and 20 siblings. **It separates them cleanly.**
+- both `-k` selectors **collect nonzero**, so neither gate closed vacuously; no selector loosened.
+- coupled suite 386 passed / 480 subtests, exit 0 unpiped — base was 375/463, **delta exactly this
+  gate's additions.**
+
+**And the trip was checked, not assumed:** `gauge.json` written **13 seconds** before the refusal,
+0.1527 against the 0.15 band, this session's reading rather than a predecessor's residue.
+
+**It also resolved a question I had retracted.** Earlier I claimed the launch verifier mutates my
+`transitions/` render as a side effect, then measured it idempotent and retracted. Crew 1 has now named
+the real cause: those files show `M` as a **CRLF stat artifact** — empty diffs, blob OIDs matching
+HEAD. **My retraction was right and the cause is now known**, which is a better end state than either
+the wrong claim or the bare retraction.
+
+**One stale coordinate, diagnosed and deliberately not acted on:** g2 cites an assertion at
+`test_iterative_planning_doctrine.py:461-462`; it has moved twice (g1 added ~366 lines to that file).
+The plan **names the right assertion**, so the next agent finds it by text. **No amend** — the plan is
+not wrong, only a line number is, and amending a frozen plan for that would cost more than it buys.
+
+**Remaining: g1-review, then all of g2, g3, g4 — #506, #439+#484, #446. Three of six issues untouched.**
+Its predecessor's g1-review handoff is **already written**, so the relaunch dispatches rather than
+re-authors it — most of a context cycle saved by a crew that stood down thinking about its successor.
+
+### Fourth liveness caveat, from crew 1 — a synchronous crew dispatch makes a Commander look dead
+
+> **I cannot spawn background subagents.** In-process teammates get *"In-process teammates cannot spawn
+> background agents. Use run_in_background=false"*. So my reviewer dispatch is **synchronous and blocks
+> in-turn**... if I go quiet, that is why.
+
+**This blinds every signal I have at once** — no journal entry, no tool call, no file write, for the
+entire review. A Commander that has just dispatched a reviewer looks *completely* dead and is not.
+
+Added to the state note's liveness table as a fourth row, with the tell that separates it from a real
+stall: **a handoff written in `crew-handoffs/` with no matching result** is a dispatch in flight, and
+the correct action is to wait. Four signals now, each blind to something, none authoritative.
+
+**#513 CANNOT MERGE YET, and the SHA check is why.** Its head is `3c4da612`; the only **green** run on
+that branch is `dbd787b9` — **two commits superseded.** `gh pr checks` would have shown a pass. This is
+the second time tonight that gating on the check *for the commit being merged* rather than on "a run
+passed" has caught something, and the first time it caught it **before** rather than after.
+
+**Also throttling my own pushes properly now.** Three `main` runs were still queued from my log
+commits, which is #512 doing exactly what I filed it for — and I filed it and then kept pushing. Log
+entries continue per-event; **pushes batch to merges and milestones only.**
+
+### #513 RED — crew 2's episode reads as an instruction. #460, caught by the guard that also caught me.
+
+```
+FAILED tests/test_episode_observations.py::RealStoreTests::test_the_real_store_is_clean_under_strict
+  episodes/ carries a statement that reads as an instruction and is not on the exception list
+  OFFENDER issue-458-readiness-001 a5 (workaround) imperative: 'File'
+```
+
+**The guard did its job on a real store, on CI, after a crew had released its lease and reported done.**
+That is the shape you want from a wired check: it did not need anyone to remember it.
+
+**Sent back to crew 2 to fix, not fixed by me.** It is **its** observation, and only it knows what it
+meant — rewording another agent's record of what it saw is a small act of falsification even when the
+words come out fine. What I gave it was the exact offender, the `restate-assertion` op (which appends
+the original **verbatim**, built by the script so the record cannot lose what it first said), and the
+field-name gotcha (`id`, not `episode`) that cost me a refusal an hour ago.
+
+**And I told it this caught me tonight too**, on my own episodes, because it is true and because a crew
+that thinks it uniquely erred works worse than one that knows the guard is doing its job. **My own
+restatement came out better than compliant** — the prescriptive version told a future agent what to do;
+the restated one recorded what happened *and whether it worked*, which is the part with evidential
+value. I said so, rather than just asking for compliance.
+
+**Nothing else about #513 is in question** — scope verified, `settings.json` untouched, no write path
+added, waive conditions all met. One field in one episode.
+
+**Gate discipline paid again:** I did not merge #513 on the green that existed. That green was on
+`dbd787b9`, **two commits superseded**; the head commit's run is the one that just came back **red**.
+Merging on "a run passed" would have landed a red main.
+
+### PR #514 (crew 4, engine internals) — "six fixed, two floated, one verified"
+
+Scope verified by command: **exactly `scripts/checklist_engine.py` and `tests/test_checklist_engine.py`**,
+no other crew's territory. The sole-writer grant held for the whole wave across all five crews.
+
+**The return is the honest-partial shape the launch order asked for and rarely gets.** Nine issues, nine
+different answers — six fixed, **#480 verified as already-fixed with no code change**, and two floated
+with reasons: **#503** larger-than-filed (a reference-binding fix breaks a file it does not own, and a
+shape heuristic is insufficient by the issue's own text), **#495** entirely (all six writers live
+outside its files). It did not manufacture nine fixes to match nine issues.
+
+### The best single item in this wave's returns
+
+> The #427 fix as first landed armed `refusals` on **any** refusal while unclaimed, which broke
+> `tests/test_episode_negative_control.py` (not owned) — the #357 child-gate-plan shape is legitimately
+> driven with `engine_session` staying `None` for its entire life... **Found by running the full suite
+> before push, not by any of the nine issues themselves.**
+
+It broke something in a file it does not own, **found it itself before pushing**, **narrowed the fix
+rather than loosening the test**, added a red-before-green regression reproducing the #357 shape, and
+then **reported it in the PR body under its own heading** instead of letting it pass as noise.
+
+**A crew that had quietly reverted or widened an assertion to get its suite green would have produced an
+identical diff and passed review.** The difference is entirely in what it chose to make visible. That is
+the standard this whole epic argues for, done unprompted by a Sonnet implementer on its second instance.
+
+### HELD — no closing keywords at all
+
+#514's body carries **zero `Closes`**, so merging it would close nothing and leave me hand-sorting seven
+closes against two deliberate floats. Sent back with the exact list: **seven `Closes` lines, one per
+issue** (#474 #475 #476 #427 #479 #480 #493), and **#503/#495 referenced with no keyword** and a reason
+each.
+
+Told it explicitly that `Closes #474, #475` closes **only the first** — the same form that left #411
+open on #509 tonight, caught only by forge verification, and now a third instance on #354. **That is
+the second PR this wave whose issue-closing would have silently under-delivered**, in opposite
+directions: one keyword covering too little, and no keyword at all.
+
+## MERGE 3 of wave 5 — PR #513 (crew 2): #458, workstream R
+
+**MERGED at `c045ed2f`, verified on the forge. #458 CLOSED — confirmed by re-reading its state, not
+assumed from the merge.** Its body used the correct single-keyword form (`Closes #458.`), so this one
+auto-closed properly, unlike #509's comma-list.
+
+**Gated on the check for the HEAD commit**, which mattered twice on this PR:
+- an earlier green existed on `dbd787b9`, **two commits superseded** — merging on that would have
+  landed a red main, because the head commit's run came back **red**;
+- the red was real (#460: an episode read as an instruction), the crew fixed it at `010de2a8`, and
+  **that** SHA is the one I verified green before merging.
+
+### Workstream R is done, and it is the one that moves a done-condition
+
+**DC1 required the governor to hold on a *shipped* configuration.** #458 does not ship the writer — by
+design, mine and the issue's — it makes the gap **answerable**: one command that reports whether a
+project is set up to run Constellation and **refuses with named per-item reasons** when it is not.
+
+The crew's own acceptance is the part worth keeping: it **cloned constellation-skills fresh from
+GitHub and ran the check against it unconfigured** — refused, exit 1, per-item reasons (skills/hooks
+NOT READY, work_area READY). **A guard observed refusing something real**, which is this project's
+`good_enough` standard stated exactly, and Pre-Ruling 3 satisfied as written rather than reasoned
+about.
+
+It also took my #313 measurement into its design unprompted: *"'engine present and runnable' can't mean
+'an interpreter starts'... I'll define 'runnable' as 'can actually import and run pytest'."*
+
+**Wave 5: 5 of 21 closed** (#507 #370 #496 #411 #458). **Three PRs merged, one open (#514, held for
+closing keywords), one crew still running.**
+
+### RULING — I added #514's closing keywords myself, and the line I did not cross
+
+Crew 4 went quiet with my keyword request outstanding (journal 38 min, zero writes for 5). Its CI is
+**green** on `1bcc88bd`, its work is committed and pushed, and the only gap was PR metadata.
+
+**I appended the keywords myself** — seven `Closes` lines, one per issue, plus **#503 and #495
+referenced with no keyword** and the crew's own reasoning for each, under a heading that says the
+addition is mine.
+
+**Why this is not doing the crew's work.** The dispositions are **already stated, by the crew, in its
+own body text** — six fixed, one verified, two floated with reasons. I added nothing about *what
+happened*; I made an existing statement machine-actionable. **Merging the PR is my job, and issue
+closure is part of merging.** I also verified the split independently before writing it: the seven
+that close are the six fixed plus #480 (verified as already-fixed), and the two floats must not.
+
+**The line I did not cross, and would not have:** I did not touch the diff, the dispositions, or any
+verdict. **If a crew had reported an issue fixed and I disagreed, adding a `Closes` for it would be me
+writing a verdict I did not earn** — the same act as flipping a boundary decision, one tier down. Here
+the verdict is the crew's and unaltered; only the plumbing is mine.
+
+**Recorded in the PR body itself** rather than only here, so the next reader sees who added what
+without needing this log.
+
+**Also carried into the body: the `Closes #A, #B` trap**, with its live instance from #509 this same
+wave and the #354 pointer — so the next person writing a multi-issue PR in this repo meets the warning
+where they will need it.
+
+### Crew 1's g1 is through review — APPROVE, 0 findings, and the reviewer tested the right thing
+
+Its first close criterion is literally *"The guard is not a check that cannot fail — PASS"*, verified
+with **decoys**: a `constellation-decoy/` directory with **no `SKILL.md`** sitting inside a
+`CORPUS.json`-marked root was **rejected**. **A name-shaped impostor refused by a structural test** —
+exactly what fix B was supposed to buy, checked adversarially rather than assumed. Crew 1 is now at
+`g1-integrate`, one of four gates down.
+
+### Crew 4 COMPLETE — and #514 is held by my own merge-order ruling, not by any doubt
+
+`DONE: no open items.` CI green on `1bcc88bd`, scope exactly its two owned files, seven closes and two
+floats now machine-actionable.
+
+**Held because I ruled earlier that crew 4 merges LAST among the code PRs**, and crew 1 still has three
+gates. Its diff changes `scripts/checklist_engine.py` — **the engine driving my own live spine**, mid-
+`execute`, with an active lease and a hash-chained journal. Merging it first would mean verifying crew
+1's later merge against an engine that had already changed underneath me, **with no known-good
+reference left to compare against.**
+
+**This is the ruling costing me something, which is the test of whether it was a real rule.** The
+tempting move is to bank a finished, green PR now and re-derive the ordering argument later. The
+ordering argument does not get better by being deferred; it gets unfalsifiable. Held, and the crew told
+plainly that it is queue position rather than quality.
+
+**Told it what it earned, specifically.** Its self-caught regression — breaking a test in a file it
+does not own, finding it **before push** by running the full suite, **narrowing the fix rather than
+loosening the test**, adding a red-before-green reproduction, and reporting it under its own heading —
+is the best single item in this wave's returns. **A crew that had quietly widened an assertion would
+have produced an identical diff and passed review.** The entire difference is in what it chose to make
+visible, unprompted, on a Sonnet implementer's second instance.
+
+### Post-merge verification after #513 — green, and the delta is exactly right again
+
+```
+1896 passed, 2 skipped, 829 subtests passed in 746.32s   REAL_EXIT=0
+```
+
+**Baseline was 1871/2/829. Delta: +25 passed, nothing else moved.** Crew 2 reported *"25 new readiness
+tests"*; the tree agrees to the test. No test lost, no subtest change, no skip change.
+
+**Third time this wave the delta has been checked rather than the green alone**, and it keeps being the
+useful half: a green cannot rule out a new test landing while an old one silently stops running, and
+that would be a check that cannot fail sitting in the merge gate itself.
+
+**Merge baseline for the remaining wave-5 merges: 1896 / 2 / 829, real exit 0.**
+
+**Running score: 5 of 21 closed, three PRs merged, one green and queued behind the merge-order ruling.**
+Four of five crews complete. Crew 1 is the whole remaining wave — `g1-integrate` now, then g2, g3, g4.
+
+### #506 is implemented — `57048457 fix(#506): verify a stop transition instead of refusing it`
+
++52 lines in `verify_iterative_role_artifacts.py`, +189 in `test_iterative_planning_doctrine.py`.
+Crew 1 is now in `g2-review`. **Two of four gates through implementation** (fix B for #501/#468 already
+merged-ready at `6f48ece4`; #506 now). Remaining: #439+#484 and #446, both `archive.c2b`.
+
+**The commit subject is the fix stated correctly**, which is worth noting because the wrong framing was
+available and cheaper: *verify* a stop transition rather than *refuse* it. The defect was never that
+`stop` should be allowed through unchecked — it was that the closure check asked the launch question.
+A fix that simply skipped verification on `stop` would have gone green and converted a check that
+cannot pass into one that cannot fail, which is the inversion this wave already caught twice (#484's
+own suggested fix, #501's freshness variant).
+
+**This is the commit the epic's own close depends on.** Once it merges and the installed bundle carries
+it, `execute.c3` can close on a `stop` boundary and the epic ends without a waiver against Tommy's
+name. If it had not landed, the fallback was an honest waive — never flipping the boundary decision.
+
+### g2-review returns BLOCK on #506 — a check that cannot fail, inside the fix for a check that cannot pass
+
+**The fix itself is correct.** Seven of eight close criteria pass on measurement. The block is one
+finding, and it is the sharpest of the wave:
+
+> **B1 — a stop-shortcut around the render survives with green tests**
+
+The reviewer mutated three separate `decision == "stop"` shortcuts into the fix and watched what the
+tests did:
+
+| mutation | result |
+|---|---|
+| skip **G2 validation** when `decision == "stop"` | **RED** — exit 1, `packet_fails_g2` fails |
+| skip the **unique-audit-entry match** when `decision == "stop"` | **RED** — exit 1, 3 audit subtests fail |
+| **skip the RENDER when `decision == "stop"`** | **GREEN — exit 0, 1 passed, 7 subtests passed** |
+
+With the render shortcut in place **the whole file is green: 27 passed, 32 subtests, exit 0.**
+
+**So the fix's own tests cannot tell a correct #506 from one that silently stops rendering on a `stop`
+boundary.** And the render is not incidental — it is what writes `CURRENT_TRUTH.md` and
+`WAVE_REVIEW.md`, the artifacts the epic's public body was generated from tonight.
+
+**This is the epic's thesis proving itself one more time, at the deepest point available:** the fix for
+**a check that cannot pass** contained **a check that cannot fail**, and only *mutating the thing the
+check guards* found it. The reviewer quoted the project's own doctrine back at the gate —
+*"mutate the thing it guards and watch it go red"* — and then did it three times instead of arguing.
+
+**Two of three mutations went red**, which is the part that makes this a real finding rather than a
+blanket complaint: the test file is mostly load-bearing, and exactly one clause is not. A reviewer that
+had only run the suite, or only mutated once, would have reported green.
+
+**No ruling from me is needed.** The Commander owns its rework cycle and the BLOCK is correct on its
+face; I pre-ruled at launch that a verdict must never be reworded to fit a gate, and nothing here asks
+me to adjudicate. **Crew 1 reworks; I do not merge #506 until the render mutation goes red.**
+
+### Rework landed — `bd56ac8a fix(#506): close the render leg of the stop mutation test`
+
+**The commit subject names the right thing, and that matters more than it sounds.** The reviewer's
+BLOCK was **not** that the fix was wrong — seven of eight criteria passed on measurement. It was that
+the fix's own test could not detect a version skipping the render on `stop`. Crew 1's subject line says
+*"close the render leg of the **stop mutation test**"* — it repaired the **test**, not the fix, because
+the test was what was broken.
+
+**A crew that had misread the BLOCK would have "fixed" working code**, produced a green, and left the
+blind mutation exactly where it was. The whole rework hinges on reading a review verdict precisely
+enough to know which artifact is at fault, and this one did.
+
+**Full arc of #506, worth the retrospective:**
+1. The Admiral hits a gate that cannot be closed by a run that finishes, blocks it rather than waiving
+   or falsifying, and files it.
+2. A crew implements it as *verify* a stop transition, not *refuse* it — resisting the cheaper framing
+   that would have converted cannot-pass into cannot-fail.
+3. A cold reviewer mutates three shortcuts, finds **two go red and one stays green**, and BLOCKs on the
+   one.
+4. The crew repairs the **test**, not the code.
+
+**Four actors, four chances to take the easy green, none taken.** That is the epic's argument
+demonstrated end-to-end on the single issue that gates its own close.
+
+### g2 re-review: APPROVE — the reviewer re-ran its OWN shortcuts rather than accepting the fix report
+
+> The render bypass under stop now gives exit 1 with `SUBFAILED(mutation='renderer_returns_empty')` —
+> **the leg that was green in my hands is red.** G2 and audit bypasses still go red.
+
+`-k stop_boundary` 2 passed exit 0; `-k stop_mutation` 1 passed / 8 subtests exit 0; coupled suite
+**390 passed / 488 subtests / exit 0**. And it checked the *shape* of the change, not just the result:
+**the verifier script is byte-clean between the two commits, so only the guard grew** — the fix was not
+quietly loosened to make the mutation pass.
+
+**It answered the Commander's two questions properly, and the first is a specimen:**
+
+**Is the new mutation a no-op?** *No* — and the decisive check is one line: `grep 'return ""'` on the
+**pristine** renderer **exits 1**. The string does not pre-exist, so the assertion **cannot pass unless
+the surgery took**. That is exactly the property an earlier `revised_forecast` mutation lacked. **A
+mutation test whose planted string already exists in the target is a check that cannot fail**, and this
+one proved it is not, by command.
+
+**Cross-test leakage?** *Yes — real, currently inert, and not downgraded.* `renderer_returns_empty` is
+the last dict entry and the restore runs at the **head** of each iteration, so nothing restores the
+renderer after the final one. **It proved this deterministically rather than guessing at pytest
+ordering** — a probe showing `LEAKED=True` and a later admiral run returning rc=1 — then bounded the
+blast radius (per-class temp install, torn down at teardown, repo file verified untouched) and
+established that the three tests running after it invoke admiral mode **zero** times.
+
+**It recorded that as a preserved `fail` carried through `consolidate` with an explicit override reason
+rather than downgrading it to a note**, and routed it as a triage candidate. *"It didn't bar the gate
+because it produces no incorrect result and isn't a defect in the change under review — but it's worth
+the one-line fix before that class grows, since three of its seven runtime tests assert refusals and
+would pass for the wrong reason under a leaked degraded renderer."* **That is the distinction between
+'not blocking' and 'not real' held correctly**, which is the thing this epic keeps finding collapsed.
+
+### CARRIED — `repair` has #506's defect and nobody has fixed it
+
+Two reviewer triage candidates sit outside the reviewed pair, and **one is mine to carry**:
+
+- **`repair` still cannot be verified at all** — the same defect class #506 just fixed for `stop`. The
+  fix was scoped to `stop` because that is what blocked this epic; `repair` was never in scope and is
+  still broken.
+- the verifier's "cannot render" branch is **dead code** — the renderer re-runs G2 itself and the
+  rendered value is discarded.
+
+**This joins the item crew 1 routed me earlier** — that `ADMIRAL_SPINE.template.json` still describes
+`repair` as an enforced exit in both its prose and its `directives.decisions` block. **Those are the
+same gap seen from two sides:** the template asserts `repair` is enforced, and the verifier cannot
+verify it. Neither is knowable as *wrong* until #506 lands; both go into the closeout check with the
+verification named rather than as a reminder to think about it.
+
+### Crew 1 relaunched as `-e` — g1 and g2 CLOSED, two gates remain
+
+`3f73b0f1 chore(w5-gates): g1 and g2 closed, g2-integrate refresh requested`. **Fifth clean handoff of
+this wave**, all five designed rather than failures.
+
+**Two of four gates are done and verified:**
+- **g1 (#501 + #468)** — APPROVE, 0 findings, tested with **decoys**.
+- **g2 (#506)** — BLOCKed, reworked, **APPROVED on independent re-verification**.
+
+**The relaunch prompt carries what the successor must not re-derive**, which is now the main cost of a
+refresh and the main thing I can reduce: that `archive.c2b` does not fail the way #439/#484 say (the
+`<` is an `sh` input redirection, `gh` is never invoked), that **their suggested fix converts a check
+that cannot pass into one that cannot fail** (returncode-only verdict; I verified `--jq 'length > 0'`
+prints `false` and exits **0** myself), and that **#446 is a separate defect** — my own three-way
+collapse claim, refuted by a crew against the bodies.
+
+**That last one is worth noting as a pattern in these prompts:** three of the five facts I hand a
+successor are **corrections to something an Admiral or an issue asserted**, not new information. The
+launch order was right about the work; the corrections are what the run learned by doing it, and they
+would be lost at every refresh without being carried explicitly.
+
+### Census specimen 23 — the structural fix that collapses back into the name test it replaced
+
+The g1 reviewer's catch, and the best of the wave. Fix B replaced *"is this directory NAMED
+`constellation-*`"* with a two-clause **structural** test. But `_is_skills_root` globs
+`constellation-*/SKILL.md` children of the **parent** — so a `constellation-*`-named candidate carrying
+its own `SKILL.md` **satisfies clause 2 by being that child.** The structural test **collapses back
+into the name test that caused #501.**
+
+Latent today, live the moment this repo gains a root-level `SKILL.md`. Fixed inside the gate, pinned
+with a regression test.
+
+**This is the repair for specimen 3 containing specimen 3** — correct in intent, correct in shape,
+defect reintroduced through one glob at one directory level up.
+
+**Third instance in one wave of the same recursion** (this, #484's suggested fix, #501's freshness
+variant): **when the fix for a check-that-cannot-X is itself a check, it inherits the whole problem.
+There is no base case.** The only thing that has broken the recursion in this run is **running the new
+check against an input that should make it fail.**
+
+### Correction to my own standing instruction — "never pipe" was incomplete
+
+Crew 1 piped a mutation run into `tail` and read **exit 0 when pytest's real answer was 1** — after I
+had warned it. Its own diagnosis: *"the warning alone did not save me."*
+
+**It was a prohibition with no positive form.** Corrected and sent on: **redirect to a file and echo
+`$?` — a redirect is not a pipe.**
+
+```
+python -m pytest -q tests/... > /tmp/out.txt 2>&1; echo "REAL_EXIT=$?"
+```
+
+**Third distinct exit-code masking in this run, and the first two were mine.** A rule that only says
+what not to do leaves the agent to invent the alternative under time pressure, which is exactly when it
+will reach for the pipe again.
+
+**Also recorded:** crew 1 confirms it **cannot spawn background subagents**, so every crew dispatch was
+synchronous and blocked its turn — *"likely part of why I reached the band at three issues rather than
+more."* That is a concrete, measured cost of the harness constraint on Commander throughput, not a
+guess.
+
+### RULING — the g2 APPROVE predates HEAD by one commit; attach the note, no re-review cycle
+
+A **retired** crew self-reported this after standing down: the g2 APPROVE was recorded against
+`bd56ac8a`, then `4b8abc12` landed. **The record said APPROVE without saying a change landed after it.**
+
+**RULING: attach the note, do not spend a re-review cycle.** Four things make it safe, and I required
+all four in the note rather than in my head:
+
+1. **the change IS the reviewer's own named remedy** for its own finding — *"restore `pristine` after
+   the loop, or in a `finally`"*. Not an unreviewed change of direction; a prescription being filled.
+2. all three postconditions **re-run green against `4b8abc12`**;
+3. `git diff --numstat` over `tests/ scripts/ skills/` shows **only the test file** — the reviewed fix
+   did not move;
+4. the `finally` block **asserts the renderer is clean**, so the change is self-checking.
+
+**Left the override open**: if the successor wants the APPROVE to cover HEAD exactly, attempt-1 still
+holds context and one line would do it. I will not second-guess spending that cycle.
+
+### This is the PR-green defect, one tier down — and a crew found its own instance
+
+**An APPROVE attached to a superseded commit is the same defect as a CI green attached to a superseded
+commit.** I caught the CI form **twice tonight** — #509 and #513 both had an earlier green on a commit
+two behind, and on #513 the head commit's run came back **red**. A verdict that stays valid-looking
+while the thing it judged moves underneath it.
+
+**The crew caught its own instance, unprompted, after it had already stood down**, and noted it had
+been careful about exactly this at g1 and missed it at g2. **Nothing would have surfaced it** — the
+integrate gate reads the verdict, not the verdict's provenance.
+
+**Filing note for closeout:** the checkable form is the one I have been applying by hand all night —
+*gate on the verdict for the commit you are advancing*, exactly as I gate CI on the commit I am
+merging. It belongs with #354's post-merge reconciliation as the same shape at a different layer.
+
+### g3-implement COMPLETE — `archive.c2b` measured across four PR states, verdict on the exit code
+
+> Measured directly on the resolved shipped text, printed exit codes, stub `gh` on PATH.
+> CLOSED-unmerged → 1, OPEN → 0. **stdout was empty in all four cases — the verdict rides the exit
+> code.**
+
+**That last clause is the whole fix.** The trap I verified myself is that the engine's command verdict
+is **returncode-only**, so #484's own suggested replacement — keeping `--jq 'length > 0'` — prints
+`false` and exits **0**, converting a check that cannot pass into one that cannot fail. The measurement
+proves the replacement does not do that: **stdout empty, exit code discriminating, across four
+states.**
+
+**Four states, not one.** A single-state check (does it pass on an open PR?) would have gone green on
+both the correct fix and the inverted one. The discrimination only appears when you ask what it does
+on the states that should fail — which is the census's central lesson applied by an implementer
+without being told.
+
+### CORRECTION — #503 and #495 were CLOSED against work that was NOT done. Reopened.
+
+Crew 4 closed all nine of its issues together. **Two of them were FLOATS, and the floats were mine:**
+
+- **#503** — floated **larger-than-filed**; `--authority` is still validated only as non-empty.
+- **#495** — floated **entirely**; all six writer sites are outside the crew's owned files and untouched.
+
+**Both reopened with the reason recorded on the issue**, and both floats explicitly re-affirmed as
+**correct** — the crew's reasoning was sound and I had ruled it accepted. **The error was in the
+closing, not the judgement.**
+
+**Why this is worse than the defect #354 tracks.** #354 is issues that stay **open** after their work
+lands. This is the inverse: **issues CLOSED against work that was never done.** An open issue after a
+merge is a *visible* debt; a closed issue over an unfixed defect is an **invisible** one — and
+"CLOSED" reads identically whether the fix shipped or was declined. **That is a check that cannot fail
+in the tracker itself.**
+
+**It has a live consequence tonight.** #503's `--authority` field is what carried
+*"Admiral epic-418-redux — #501/#468, guard refuses from any worktree"* on a real waiver in this same
+wave. That waiver is honest **and nothing mechanical made it so.** Closing #503 would have retired the
+issue that says exactly that, hours after it was demonstrated.
+
+**Two contributing causes, both mine:**
+1. My launch order said *"never manually close — let the merge do it."* The crew closed by hand,
+   **before its PR merged.**
+2. **I added seven `Closes` keywords to #514 myself** and deliberately left #503/#495 keyword-free with
+   their reasons — then the crew closed them by hand anyway. **My machine-readable disposition and the
+   crew's manual action disagreed, and nothing reconciled them.** That is the same gap #354's proposed
+   post-merge reconciliation would catch, one step earlier.
+
+**Verified after reopening: both OPEN.** I did not take the crew's report for the state — I read the
+forge before and after, which is the only reason this surfaced at all.
+
+### FINDING — a watcher subagent cannot sustain a poll loop here. Two attempts, same failure.
+
+Tommy asked me to stop narrating every poll and to delegate the watching. I dispatched
+**`w5-watcher`**, which went idle **without returning a report**. I re-dispatched **`w5-watcher-2`**
+with an explicit instruction naming that exact failure mode and requiring at least 40 iterations of
+`check; sleep 60`. **It went idle within ninety seconds, also without a report.**
+
+**Two independent attempts, one with the failure mode named in its own prompt, both ended immediately.**
+A subagent in this harness does not stay resident across a sleep loop — its turn ends and the
+notification fires with nothing in it.
+
+**So the watch cannot be delegated, and the constraint is the harness's, not the prompt's.** This is the
+same family as crew 1's report that **in-process teammates cannot spawn background agents** — the
+supervision primitives an orchestrator would reach for are the ones that are absent.
+
+**What I do instead:** keep polling in-turn, and **stop reporting the polls.** Tommy's actual
+instruction was *"you don't have to report holding"* — the narration was the cost, not the polling.
+Speak only when a gate moves, a verdict lands, a PR opens, or something needs adjudicating.
+
+**Worth carrying to closeout:** the Admiral tier has no working way to wait. It cannot end its turn
+(nothing resumes it), it cannot delegate the wait (watchers do not persist), and it cannot sleep in the
+foreground (the tool kills it). **The only available shape is a poll loop in the orchestrator's own
+context** — which is also the tier whose context is most expensive and least protected, since the
+governor never fires on it.
+
+### g3-review returns BLOCK — and the finding is this epic's thesis one level up. Census specimen 24.
+
+Crew 1's g3 reviewer blocked `ff43e883` (#439 + #484) on **one narrow, in-scope finding**, with
+everything else independently confirmed: all four gate confirmations PASS, the four-state matrix
+reproduced on **three independent harnesses** (implementer's, reviewer's own, and four live-`gh`
+branches — all three agreeing), scope clean, template restored byte-identically (sha256 equal before
+and after), 396 passed / 501 subtests with the delta derived from the diff rather than accepted.
+
+**The block:** the `gh` stub's docstring — **shipped in the diff** — promises it "refuses everything
+else, so the check text cannot drift into a shape this stub silently accepts." It does not. Its argv
+loop whitelists nothing, so **four unmodelled flags (`--limit`, `--repo`, `--author`, `--search`) are
+silently answered** while the three modelled drift dimensions correctly refuse. If `archive.c2b` ever
+grew `--repo someone/else`, the suite would stay green while real `gh` queried the wrong repository.
+
+**This is the wave's own failure mode reappearing inside the harness built to prevent it** — written
+by an agent whose assigned task was removing that defect class, on the wave dedicated to it, in a repo
+that had already catalogued 23 instances. **Recorded as census specimen 24, and it is the strongest
+entry in the census**: it establishes that the defect is not a knowledge problem.
+
+**I am not intervening.** The repair is a few lines in a test file this gate already owns, the
+reviewer scoped it precisely, and crew 1 has the turn. My ruling from #506 stands: **a reviewer that
+blocks a nearly-perfect diff on a falsified claim is doing the job.** The reviewer even wrote out why
+it rejected the easier path — "I considered recording it as an observation and approving" — and named
+the deciding factor as the claim being false **in shipped code, where the next reader will trust it**,
+not merely in a report. That is the correct line, and it is the fourth time in this epic an actor
+declined an easy green.
+
+**Two corrections the reviewer made to my own crew's handoff, both right:**
+
+- The handoff said the commit range "should show only the two" files. It does not — the range contains
+  two intermediate commits adding `.agent-work` artifacts, and **`.agent-work` is tracked in this
+  repo**, contrary to the handoff's "correctly absent from the tracked diff." A reviewer following the
+  handoff literally would have raised a false alarm. Scope is clean at the commit under review.
+- The handoff predicted a 500-subtest total; the true figure is **501**, because a subtest that had
+  dropped the spine template from its clean set returns once the change is committed. The reviewer
+  derived +6 tests / +13 subtests from the diff and cross-checked against the file at HEAD rather than
+  accepting the account.
+
+**Routed, not filed as new:** the reviewer's observation 3 (`references/windows.md` §4 tells agents to
+prefer `py`, which has no pytest here) is **already #313**. Commented the wave-5 corroboration there
+instead of opening a duplicate — including the two things that sharpen it: the spine's own command
+postconditions already invoke `python`, so gate and hand verification ran on different interpreters
+all epic; and the correction that actually worked was the **positive form**
+(`cmd > file 2>&1; echo REAL_EXIT=$?`), not the prohibition. Linked **#373** as the same
+interpreter-identity defect in another harness. **Issue count unchanged — this is the routing the
+close is supposed to do, and it is worth more than a new number.**
+
+Observations 1 (no lint for prose-shaped tokens or shell safety in shipped spine commands) and 2 (the
+doctrine test file now hosts three unrelated subjects) are triage candidates for after the wave; the
+reviewer explicitly declined to move the file now because the gate's `-k` close criteria are pinned to
+it. Correct call — a rename mid-gate would break the gate's own selectors.
+
+**Liveness note, measured here:** during the g3 review, `last-engine-verb` sat unchanged at 02:30 for
+**twenty minutes** while the crew was demonstrably alive — dirty-file count climbed 19→20→21 and the
+RESULT landed at 02:46. The journal proxy is blind to a Commander waiting on a synchronous dispatch;
+only the worktree-write signal caught it. **No single liveness signal suffices**, which is now
+observed rather than argued.
+
+**Own error, logged:** my first attempt to write this entry and specimen 24 died on a shell parse
+error (`unexpected EOF while looking for matching quote`) in a two-heredoc command. Nothing was
+written — I verified the files were unchanged rather than assuming the failure was clean, then wrote
+both blocks via files instead. **A failed multi-part write must be checked for a partial effect, not
+assumed atomic.**
+
+### Harvest probe v4 — and a 16th worktree my "derived by command" sweep list never listed
+
+Ran the harvest probe as a dry run rather than meeting it for the first time at closeout. Three
+findings, in ascending order of how much they matter.
+
+**1. The probe was unreadable, which at closeout is the same as being absent.** It emitted **5207
+lines**. Measured by command, not estimated:
+
+| lines | worktree | sweepable? |
+|---|---|---|
+| 4067 | `clean` | **no** |
+| 545 | `issue-456` | **no** |
+| 334 | `explore-code-map` | **no** |
+| **156** | **the six `epic418-*` trees this epic may actually remove** | **yes** |
+
+**95% of the output came from three trees that must never be swept, and the six that matter began
+past line 1000.** This is not a check that cannot fail, but it is the same defect at the presentation
+layer: **a signal that is technically present and practically unreadable is not a signal.** An
+operator scrolling 5000 lines at the end of a long run does not read them, and the probe exists
+precisely for the moment when attention is thinnest. **v4 → 245 lines**, with the six real targets
+detailed and everything else reduced to counts (a surprising count on a protected tree is still
+information; a 500-line dump of it is not).
+
+**2. `SWEEP_LIST.md` was missing a worktree.** `git worktree list` reports **16**; my sweep list
+classified **14**. The unlisted one is `C:/Users/fredc/AppData/Local/Temp/ctx-skew-d4sqs6ee/clean` —
+**locked**, detached at `29acf140`, holding **3566 uncommitted and 496 branch-only** `.agent-work`
+paths, mostly staged *deletions*: a stripped-`.agent-work` fixture for somebody's context-skew
+measurement. Now recorded as **do not sweep, do not unlock, do not prune** — the lock is the owner's
+stated intent, and the tree is not this epic's. Noted separately: it lives in `%TEMP%`, **which
+Windows clears**, so its registration can rot with no action from anyone. That is worth the owner
+knowing and is not ours to fix.
+
+**This one is mine and it is the one worth carrying.** That list says of itself *"Derived by command
+2026-08-08, not from memory"* — and it was. **A command-derived list can still be under-inclusive if
+the command filtered before I looked.** The count was never checked against `git worktree list | wc
+-l`; had it been, 14-vs-16 would have shown up instantly. **Deriving from a command is necessary and
+not sufficient — the derived population needs a total to reconcile against.** Same family as the
+attribution defect that cost a rework round-trip earlier in this project's history, and I did not
+generalise it far enough at the time.
+
+**3. The fix for (2) had the same defect, and the probe caught it.** v4 reads the do-not-sweep set
+**out of `SWEEP_LIST.md`** rather than retyping it, so the two cannot drift. My first extraction —
+`s/^| \`\([^\`]*\)\`.*/\1/p` — stops at the **first** backticked token per row, and the two `agent-*`
+trees **share one row**, so the second was silently dropped and came back UNCLASSIFIED. Fixed to
+collect every backticked name in the first cell.
+
+**It failed safe** (unclassified suppresses rather than sweeps), and it was found **by running the
+probe and reading which trees it flagged — not by reading the sed.** Fourth time in this run that
+executing a countermeasure against real input beat inspecting it; census specimen 24 is the same
+lesson from a different tier, logged twenty minutes earlier.
+
+**Two design choices worth stating**, both aimed at the failure modes the census catalogues:
+
+- **A worktree on neither list is flagged `!! UNCLASSIFIED`, not treated as sweepable.** Absence of a
+  decision must not read as permission. This is what surfaced `clean`.
+- **A missing `SWEEP_LIST.md` makes the probe exit 2, not run permissively.** An absent policy file
+  reporting "nothing protected, all clear" is the exact shape of a check that cannot fail.
+
+**Both were verified by running them, not by writing them:** with the list moved aside the probe exits
+**2** (want 2), restored it exits **0** (want 0), and `SWEEP_LIST.md` is byte-identical after the
+test. The probe's header still prints before the refusal — cosmetic; the verdict rides the exit code,
+which is the standard this epic settled on.
+
+### g3 re-review APPROVE at `84d1e998` — repair took 4 minutes, re-verification went well past what I asked. #515 filed.
+
+The reviewer that blocked returned **APPROVE** on the repair, and it did not re-verify the thing it
+had found. It re-verified the **class**.
+
+My block named four unmodelled flag *names*. The reviewer's own framing of why that was not enough:
+**proving four flag names refuse does not prove the guard is closed.** So it probed 21 flag **shapes**
+where it expected to break the fix — combined one-token `--repo=someone/else` and `--limit=100`; the
+*modelled* flags in combined form (`--json=state`, `--head=BRANCH`); short `-R`/`-L`/`-s`; a bare `--`
+separator; missing values at end of argv for unknown **and** modelled flags; a flag whose value looks
+like a flag; empty values; uppercase `--HEAD`; trailing-space `--repo `; an **en-dash lookalike**; a
+positional. **All 21 refuse, exit 3.** It also checked the guard sits *before* the missing-value
+check, so ordering opens no gap. Its original exploit now refuses where it had answered exit 0.
+
+**The two new legs were proven load-bearing by deletion:** guard removed → exit 1 with **exactly the
+two new legs failing** and 9 subtests still passing; restored → exit 0, 11 subtests, file
+byte-identical. Counts 396 / **503** — its own 501 plus exactly the two new legs. Delta accounted for,
+again.
+
+**The best thing in the return, and it is a near-miss it volunteered:** its mutation probe **refused to
+run** on first attempt because its match literal was LF and the file is CRLF. That is
+`CREW_CONTEXT`'s *assert-the-mutation-applied* rule catching the reviewer itself — in its words,
+without it *"I'd have deleted nothing, seen green, and wrongly certified the legs."* **A verification
+step that silently no-ops produces a confident false APPROVE**, which is census specimen 9's exact
+shape (a passing test certifying the bug) one tier up. The rule that saved it is a repo standard
+someone wrote down earlier; this is the first time in this epic I have seen a written standard catch a
+defect *before* it shipped rather than explain one afterwards.
+
+**It also declined a tidy I left open.** I had flagged the optional `--jq` else-branch as a possible
+deletion. It measured instead of reasoning: stripping `--jq` makes the command exit **2** in all three
+fixtures (`integer expression expected`) — it **fails closed even on a reachable branch**, so it is
+cosmetic, not a finding. The distinction it drew is the right one and worth keeping: the three
+branches it *did* delete answered a **count**, a plausible number the shell comparison consumes
+happily, so a wrong count becomes a wrong verdict **silently**; this one emits JSON the comparison
+cannot consume at all. Filed as a triage candidate, no action. **Not freelancing past the finding was
+correct** and I am recording it as correct, because the opposite call is the one that usually gets
+praised.
+
+### The finding I owe it: #515
+
+Driving a **block-then-approve** through the engine exposed a gap neither of us was looking for.
+**`record` journals *that* a verb ran — verb, task, session, hashes — and not the result or the
+finding.** Re-recording `c7` as pass leaves **no machine-readable trace it was ever a fail**: the
+survey now reads as a clean APPROVE with 0 findings.
+
+**The BLOCK survives only because the Commander had asked for pass 1 to be preserved verbatim in the
+RESULT markdown** — by prose convention, in a file no verifier reads, not by the mechanism built to
+make gate history tamper-evident.
+
+This is this epic's own census defect aimed at the audit layer: **"blocked, repaired, then passed" and
+"passed first time" emit byte-identical records**, and those are precisely the two worlds the record
+exists to distinguish. Two consequences worth stating plainly — it **removes the evidence that review
+is working** (the run where reviewers caught real defects looks like the run where nothing happened),
+and it **quietly rewards not blocking**, since a reviewer who blocks creates work and leaves no
+durable credit.
+
+Filed as **#515**, cross-linked to **#502** (same shape, different missing field: #502 is *which
+engine ran the verb*, #515 is *what the verb concluded* — one pass over the journal entry schema
+covers both) and **#359**. The reviewer's secondary note — `reopen` refuses on a survey, so a repaired
+fail cannot be formally reopened — is carried in #515 as an **observation, not a claimed bug**, since
+it may be deliberate; it matters because it makes supersede the only path a survey has, which is what
+makes the missing payload bite.
+
+**Issue-count note, since the standing direction is to bring it down:** this is the first genuinely new
+issue I have opened in this wave. Three other findings today were routed into **#313**, **#373** and
+**#452** rather than filed. **#515 is new because nothing covers it** — I checked the tracker for
+journal/record/supersede/reopen before opening it. A finding this well-evidenced going unfiled would
+be the epic's own failure mode, and the count is not worth that.
+
+### One more thing the reviewer said, which I am treating as a template change
+
+*"The re-review request itself was the best-formed instruction I got on this gate — it named the
+commit, mapped each change to a finding, stated what had been measured so I could reproduce rather
+than rediscover, and pre-identified where it might have fooled itself."*
+
+**The last clause is the one to keep.** A handoff field that makes the author name *where this might
+have fooled me* is cheap to write and, per the reviewer, is what made pass 2 fast. Routing to the
+lessons audit as a `REVIEWER_HANDOFF.template.md` delta candidate — the crew that wrote it discovered
+it, so it belongs in the template, not in this log.
+
+### My own close-sequence verification step was a check that cannot fail. Found by running it early.
+
+While crew 1 worked g4 I pre-ran the close sequence's step 3 — *"`git hash-object` the installed
+verifier against the repo blob"* — rather than meeting it for the first time under end-of-run
+pressure. It does not work, in two separate ways.
+
+**It named the wrong file, and the wrong file is one that can never disagree.** Measured:
+
+| file | main | crew 1 branch | installed |
+|---|---|---|---|
+| `skills/replan/scripts/verify_replan.py` | `614b2b2c` | `614b2b2c` | `614b2b2c` |
+| `scripts/verify_iterative_role_artifacts.py` | `dabb48ff` | **`fc1b50f9`** | `dabb48ff` ×3 |
+
+**`verify_replan.py` is byte-identical everywhere and this wave never touches it.** Hashing it would
+have reported a match before the merge, after the merge, and after a reinstall that silently did
+nothing at all. **Identical signal in the healthy world and the broken one** — the census's own
+definition, sitting in my close plan, written by me, in the run whose thesis this is. Twenty-fifth
+specimen of the epic and the second I have authored.
+
+It did not even survive being typed: the first command exited **128** —
+`path 'scripts/verify_replan.py' does not exist in 'HEAD'` — because the file lives under
+`skills/replan/scripts/`. **The step was never runnable as written**, so the plan contained a check
+that could not run, guarding a property that could not fail. At close time, that resolves into either
+a fabricated "verified" or a scramble.
+
+**Three further facts the pre-run bought**, all measured rather than assumed:
+
+1. **There are three installed copies** of `verify_iterative_role_artifacts.py` — `constellation-admiral`,
+   `constellation-commander`, `constellation-explorer`. Checking one is a partial reinstall away from a
+   false green. All three must be checked.
+2. **The correct assertion is a transition, not an equality**: all three must go `dabb48ff` →
+   `fc1b50f9`, re-deriving the target blob *after* the merge rather than assuming it. **A hash that
+   was already correct before the step proves nothing about the step** — which is the general form of
+   the mistake above, and the sentence I should have written the first time.
+3. **Both of crew 1's production fixes ride in that one file.** `57048457` carries #506 (+45/−7 there,
+   +187 test lines); the `_is_skills_root` / `_is_installed_bundle` rework carries #501/#468 including
+   specimen 23's `exclude` repair. Net `143/22`.
+
+**Merge safety, also measured now rather than at the merge:**
+`git merge-tree --write-tree main epic-418/w5-bookend-gates` exits **0 — clean**, fork point
+`ea854471`. Of the files crew 1 changed, only `docs/agents/CREW_CONTEXT.md` has moved on main since
+the fork (1 commit), and git resolves it.
+
+**And a false alarm I nearly raised on myself.**
+`git diff --numstat main..epic-418/w5-bookend-gates` reports `0/260` for
+`scripts/install_constellation.py`, `0/356` and `0/256` for two test files, and `0/70` for eleven
+`episodes/active/*` files. My first read was that crew 1 had deleted them. **They are main's own
+merged wave-5 PRs, which crew 1's branch predates** — the two-dot diff reports them as removed
+because of its direction. Nothing is being deleted. This is the same shape as the earlier alarm over
+crew 2's "vanished" work area, where the answer was in the log subject line: **an absence measured
+from the wrong end of a comparison reads as destruction.** Second occurrence in this run, both mine,
+both caught before I acted — but the correct habit is to establish the direction of a diff *before*
+reading a deletion into it, not after.
+
+The state note's close sequence is corrected in place, including the numstat trap, so a successor
+inherits the fix rather than the plan that contained the defect.
+
+### Scope gap, mine: Tommy said "the 474-480 group"; I assigned five of the seven
+
+Auditing wave-5 issue states before the close, I found **#477 and #478 open and never worked**. They
+are not floats and not refusals — **they were never in a launch order at all.**
+
+Tommy's instruction was *"add the 474-480 group to crew 4. let's knock all of this stuff out and call
+it pretty for the work."* That range is seven issues. `LO-w5-c4-engine.md` names **#474, #475, #476,
+#479, #480** from it (plus #427, #493, #503, #495 from other themes) — **five of seven**. #477 and
+#478 were dropped when I wrote the order, silently, and nothing downstream could have caught it: the
+crew delivered exactly what its order listed, and the order was the only definition of "the group"
+anyone downstream could see.
+
+**My earlier log line "crew 4 closed all nine of its issues" is accurate** — nine was the assigned
+count. The defect is one level up: **the assignment was short, so the count was right about the wrong
+set.** A correct-looking tally over an under-specified population, which is the same failure I logged
+against myself yesterday on the sweep list — *deriving from a command is necessary and not sufficient;
+the derived population needs a total to reconcile against*. **Second occurrence in two days, and I
+wrote the lesson down after the first one.** The reconciliation here was trivially available — the
+user named a contiguous range, and `474..480` has seven members.
+
+### What the two are, and why they are not interchangeable
+
+- **#477 — the CONTEXT gauge is read per checklist directory, so a crew inherits its Commander's
+  reading.** This is **the exact defect that cost this run four crew relaunches**: a fresh agent reads
+  its predecessor's number, trips a HARD band, files a refresh-request and stands down, and every
+  cycle looks like correct doctrine being followed. I diagnosed it live, corrected three relaunches by
+  hand, wrote an episode about it, and filed the provenance half as #452 — **without ever noticing
+  the already-filed issue for it was sitting unassigned in the wave I was running.**
+- **#478 — crew work areas are minted beside the owning plan rather than under it.** Real, cosmetic in
+  effect, no forcing function.
+
+### Ruling
+
+**#477: attempt it now.** It has the strongest evidence in the epic behind it, the safer of its two
+suggested fixes is read-side only, and leaving it after this run's experience would be indefensible.
+Bounded implementer, fresh worktree, own PR.
+
+**#478: carry, with the reason recorded.** It relocates the directories that this run's own closeout
+tooling walks — the harvest probe, the archive step, and five live crew work areas. Changing where
+work areas are minted while the run that is closing still lives in them buys nothing and risks the
+close. **There is no forcing function**, so the only argument for doing it now is tidiness, and this
+epic has spent five waves establishing that tidiness is not a reason to touch live machinery.
+
+**Both dispositions go on the issues themselves**, not only here — an unassigned issue that a wave
+believed it had covered is exactly the invisible debt the #503/#495 reopen was about.
+
+### Crew 1 tripped at g4-review, filed a refresh-request, released the lease. Relaunched as `-f`. Sixth instance.
+
+**g4 is implemented and closed** (`f959b391`); only `g4-review`, archive, and the PR remain. The trip is
+the reach-up mechanism working: `REFRESH REQUESTED: g4-review`, `CONTEXT 18% (>= hard)`, gate closed
+carrying a handoff, lease **released** cleanly. Nothing to recover, nothing to stop.
+
+**The DIGEST is the best handoff any instance has produced in this run**, and two lines in it are the
+wave's strongest evidence:
+
+- *"reverting the guard to a name test makes the decoy leg return exit 0 against the REAL installed
+  bundle"* — **#501 reproduced live against the installed artifact**, not against a repo-side fixture.
+  That is the difference between a test that models the defect and one that exhibits it.
+- *"no reserved selector moved by a single test, so nothing added here can satisfy an earlier gate's
+  floor"* — it checked that its own new tests could not retroactively close an **earlier** gate. That
+  is the `-k`-selector attack surface the cold critic found, and the Commander audited it unprompted.
+
+**And the honest one:** *"The implementer tripped before writing its result and correctly refused to
+attest what it had not run; I ran the one remaining command and transcribed the report with provenance
+marked in the file."* An agent out of context **declining to attest** rather than writing the
+plausible sentence, and a Commander that ran the command itself and **marked whose evidence it was**.
+That is the behaviour this epic's whole census argues for, appearing without anyone asking for it.
+
+**Relaunch: cold from `execute.json current` alone**, per job-file-not-agent-file. No separate handoff
+document, no re-briefing from my memory of the run — the DIGEST is the briefing.
+
+**I pre-empted the gauge trap in the launch, because it is live in this exact relaunch.** The
+predecessor's **18%** is still in `gauge.json` with no owner on it, and the fresh agent reads that
+number until its own first tool call lands. Told explicitly: the first reading is not yours, make a
+tool call and re-read, do not file a refresh-request against a reading you did not produce.
+
+**This is #477 — the issue I dropped from crew 4's order and dispatched a fix for forty minutes ago —
+biting again, live, in the same hour.** Four crews were relaunched into that loop earlier in this
+wave. The fix is in flight on `epic-418/w5-gauge-477`; until it lands, a warning in the launch order
+is the entire defence, and it only works because I happened to be the one writing the order.
+
+### g4-review APPROVE — the last gate of the last crew of the epic. No blockers, and it looked hard for one.
+
+19 checks, 19 pass. **All six broken inputs reproduced by the reviewer itself**, at byte level, with a
+discipline worth copying: the literal asserted **unique** before mutating, the mutation asserted
+**present on disk in bytes** before any red was believed, restore from saved original bytes, and the
+restore verified with `read_bytes()` **and** `git status` — never `read_text()`. That last detail is
+the CRLF trap that nearly fooled the g3 reviewer, now standard practice one gate later.
+
+**The decoy row is the sharpest evidence in the wave.** Under a name-only revert of the guard, the
+decoy leg returns exit **0** from the **real installed bundle** — a `constellation-`-named directory
+carrying no `SKILL.md`, sitting in the real skills root beside genuine bundles. **#501 reproduced live
+against the artifact a user installs**, not against a repo-side fixture. The opposite polarity landed
+in the same run and **went red for the wrong reason**, which the reviewer caught and said so.
+
+### Its delta derivation independently reproduces mine, from a different direction
+
+It refused to take the base count on trust, cut its own throwaway detached worktree at `aa2038d9`, ran
+the full suite there, and removed the worktree afterwards — **the same move I made an hour earlier at
+`ea854471` without either of us knowing about the other.** Two independent measurements:
+
+| | mine | reviewer's |
+|---|---|---|
+| base | `ea854471` → **1869 collected** | `aa2038d9` → **1867 passed + 2 skipped** |
+| crew 1 tree | **1893 collected** | `764a2728` → **1891 passed + 2 skipped** |
+
+`1867 + 2 = 1869` and `1891 + 2 = 1893`. **Identical, derived independently.** My collect ran while
+g4's tests were already written but uncommitted — `--collect-only` reads the working tree, not HEAD —
+which is why a mid-g4 count matches a post-g4 one rather than being three short. Worth knowing before
+anyone treats that as a discrepancy.
+
+**Its attribution goes further than mine did:** an AST count of `test_*` methods per class at every
+commit in the range — base 12, g1 +12, g2 +3, g3 +6, g4 +3 = **36**, cross-validated against pytest's
+own `1 selected + 35 deselected`. **Zero removed**; every pre-existing class holds or grows.
+
+**So the post-merge prediction is now pinned from two sources: `1898 + 24 = 1922` collected — 1920
+passed, 2 skipped.** Anything else means something was lost in the merge.
+
+### One correction it demanded, and it is right
+
+The implementer's RESULT says *"Only `tests/test_iterative_planning_doctrine.py` differs from
+`aa2038d9` outside `.agent-work/`."* **False** — three paths differ (`verify_iterative_role_artifacts.py`
+143/22, `COMMANDER_SPINE.template.json` 1/1, the test file 1370/2). The two extras are the wave's own
+g1–g3 fixes, already reviewed at their gates, neither changing a collected test, **so the +24 stands
+and nothing is hidden.**
+
+The reviewer's reason for raising it anyway is the part I want kept: *"it is exactly the kind of
+premise a later reader would use to skip checking whether other files changed."* **A false premise
+that supports a true conclusion is still load-bearing for the next reader** — and this document
+carries a provenance note saying parts of it were transcribed by the Commander after the implementer
+tripped, which is precisely when a transcription-level error is most likely and least visible.
+Non-blocking; correct the sentence.
+
+### Four floats, none blocking
+
+`tc1` the last repo-side script inside a composition test; `tc2` a mirrored `CORPUS_MARKER` literal
+with no test asserting the two copies agree; `tc3` the doctrine file is now ~1838 lines / eight
+classes / four reasons to change; `tc4` the template → top-level-script → installed-bundle seam has no
+map id, and the only record that the three wave-5 fixes compose across it lives inside one test class.
+**`tc4` goes to the Cartographer at closeout** — that is durable architecture context, not a tidy-up.
+
+**No-op analysis:** *"This run has been BLOCKed twice for checks that could not fail. I looked for a
+third and did not find one."* A stated, bounded negative from a reviewer that had every incentive to
+find a third and said plainly that it did not. **That is what an honest null looks like**, and it is
+worth more here than a fifth finding would have been.
+
+### RULING — `archive.c2b` waived for crew 1, pre-emptively. The crew that fixed the check is blocked by the un-upgraded copy in its own spine.
+
+Inspected crew 1's instantiated `spine.json` before it reached its archive gate. Its `archive.c2b` is
+the **pre-fix** text:
+
+```
+gh pr list --head <branch> --state open --json number --jq 'length > 0'
+```
+
+**Its spine was instantiated before g3 landed, so it never received its own repair.** Both defects the
+wave documented are live in it: the unsubstituted `<branch>` makes `sh -c` read an unquoted `<` as
+**input redirection**, so bash fails to open a file named `branch`, exits 1, and `gh` is never invoked
+— **always red**; and the `--jq 'length > 0'` form would print `false` and **exit 0**, so the obvious
+repair converts a check that cannot pass into one that cannot fail.
+
+**The crew that spent the wave fixing this check is blocked at its final gate by the version of it
+that shipped before the fix.** That is #344 corpus-drift in miniature, and it is the third time this
+epic that a fix has been unable to protect the run that produced it.
+
+**Ruling — waived on my authority, substance first, four conditions**, the same shape I used for crew
+2's `execute.c2`:
+
+1. **Push the branch, then open the PR** — `origin/epic-418/w5-bookend-gates` is still at the fork
+   point `aa2038d9`, **13 commits behind**. Nothing crew 1 did is on the remote.
+2. **Then** waive, with: authority naming me and citing **#439/#484/#446**; the reason carrying the
+   **command text verbatim** and the measured exit; **nothing may state or imply c2b passed**; and the
+   waiver **evidence-only**.
+3. **No hand-editing `spine.json`, no hand-substituting the branch name to force green, no changing
+   the verdict.**
+4. **I verify the PR on the forge myself before merging.** The waiver covers the broken check, not the
+   requirement — if the PR is not actually open, the waiver is void.
+
+**Why pre-emptively rather than on a float:** a crew that meets an unpassable gate at the very end of a
+long run has three exits available, and two of them are bad — hand-edit the spine, or quietly restate
+the verdict. Both are cheaper than asking. **The cost of waiting for the float is that the crew picks
+first and asks second.** I would rather grant the sanctioned path before the pressure arrives than
+adjudicate a falsification afterwards.
+
+**Also relayed:** correct the g4 RESULT's false premise per its reviewer's float 1 (three paths differ
+from `aa2038d9` outside `.agent-work/`, not one — the `+24` conclusion is unaffected), and report final
+suite numbers in the PR body against the pinned prediction of **1922 collected**.
+
+### PR #516 CI RED — three failures, all of which pass locally and fail only on the runner
+
+`2d9d2313`: **3 failed, 1918 passed, 1 skipped, 872 subtests.** Held the merge and sent crew 1 the
+specifics. None of its later commits touch either cause.
+
+**Two: crew 1's own episodes trip the strict guard** —
+`RealStoreTests::test_the_real_store_is_clean_under_strict`, *"episodes/ carries a statement that reads
+as an instruction and is not on the exception list."* The failure is at `2d9d2313`, **before**
+`a843ea94` added episodes 006–009, so the offender is in the earlier ones and the four new ones may
+have added more. Told the crew to fix **every** offender via `apply_episode_delta.py restate-assertion`
+with `--store-root episodes`, never by hand-editing the store. **I hit this same guard on my own
+Admiral episodes earlier in this epic** and had to restate one — it is a good guard and it catches
+everybody.
+
+**One: an environment-fragile path assertion in crew 1's own g1 test** —
+
+```
+['C:\Users\RUNNER~1\AppData\Local\Temp\...'] != ['C:\Users\runneradmin\AppData\Local\Temp\...']
+```
+
+**`RUNNER~1` vs `runneradmin` — the same directory in two spellings.** The runner's `%TEMP%` resolves
+through a Windows **8.3 short name**; this box's does not. The test asserts **string** equality on
+paths that are equal as paths. Ruled: fix by normalising/resolving, **not** by loosening to a substring
+match — the assertion's job is to prove the refusal names *every root tried*, and that property must
+survive the repair. That is the #506 lesson applied to a test: repair the check, do not weaken it into
+one that cannot fail.
+
+**The general finding, and it is the one worth carrying.** All three are **green in the worktree and
+red on the runner**. Every verification discipline this wave built — mutation, red-before-green,
+byte-identical restore, delta reconciliation — runs *in the worktree*, and **none of it can see a
+difference between the worktree and the runner.** CI is the only instrument in the whole apparatus
+that samples the second environment, and it is the last one consulted.
+
+Concretely visible in the numbers: the runner reports **1918 passed / 1 skipped** where this box
+reports **1896 passed / 2 skipped** — a different pass/skip split on the same tree. **A crew deriving
+its expected counts from my local baseline would mis-reconcile on the runner**, so I told crew 1 to
+derive its expectation on the runner instead. My own pinned post-merge prediction of 1922 collected is
+a **local** figure and must not be checked against a runner number.
+
+**Merge order unchanged and now enforced by a red:** #516 does not merge until its own commit is green.
+
+### #517 reviewed by me (it had no review gate), and smoke-tested against my own live spine BEFORE merging
+
+#477 was a bounded implementer dispatch, not a Commander run, so there was no reviewer crew. That
+review is mine and I did it rather than merging on the PR body.
+
+**Scope claim verified by command, not accepted:** `scripts/checklist_engine.py` (124/2) and
+`tests/test_checklist_engine.py` (259/0). **`gauge_writer_hook.py` and `gauge_reader.py` untouched**,
+as promised. (The `.agent-work/*` rows in the numstat show `0/142` and `0/22` — that is *main* ahead of
+the branch, my own log commits, read as removal by the two-dot direction. Same trap I documented this
+morning; I checked the added column rather than the shape of the line.)
+
+**The mechanism is sound and the insight is the right one.** There is no predicate over the bare number
+that separates my reading from yours — the record carries no owner, and adding one is the *writer's*
+job. So the fix uses the only who-and-when fact available on the read side: **`engine_session.claimed_at`.
+A sample from strictly before the acting session claimed the checklist cannot be that session's.**
+Ownership is decided in **one place**, consulted by both the advisory and the hard-band read, so what an
+agent is *shown* and what it is *judged against* cannot disagree about whose reading it is.
+
+**The fail-open matrix is complete** — I ran the class rather than reading the list: **13 passed**, and
+the names cover every direction that matters: `_no_lease_at_all_behaves_exactly_as_today`,
+`_a_released_lease_...`, `_an_unparseable_claimed_at_...`, `_predicate_fails_open_on_a_missing_reading_or_lease`,
+the boundary `_a_reading_sampled_exactly_at_the_claim_is_owned`, and critically
+**`_a_self_measured_reading_over_hard_still_refuses`** — the guard cannot be used to switch the governor
+off. Its own mutation table confirms this from the other side: forcing the predicate to `True` fails
+**8** tests.
+
+**Then the check the implementer could not run: I pointed the 517 engine at my own live Admiral spine.**
+
+| | exit | LEASE | ACTIVE | CONTEXT |
+|---|---|---|---|---|
+| 517 engine | **0** | active, same | `execute [in-progress]` | **23% (>= hard)** |
+| main engine | **0** | active, same | `execute [in-progress]` | **23% (>= hard)** |
+
+**Byte-identical behaviour, and zero mutation** — `git status --porcelain` on my spine directory was 0
+before and 0 after both runs. It also **correctly did not fire**: my 23% was sampled after I claimed at
+22:46, so it is mine, and the guard left it alone. A fix for over-firing that over-fires would be worse
+than the bug.
+
+**This is the post-merge smoke test moved before the merge**, which is strictly better: if it had
+broken my spine I would have learned it from a branch I can simply not merge, rather than from a main I
+would have to revert while holding the only live lease.
+
+**Verdict: APPROVE.** Merges in the engine-last slot per the standing order, not now.
+
+**Its three adjudication items, ruled:**
+
+1. **The residual is real and correctly stated.** Where a crew's plan sits inside its Commander's work
+   directory, both hooks write the *same* `gauge.json`; once the crew has claimed, the Commander's
+   *subsequent* writes carry `observed_at` after that claim and are indistinguishable from the crew's
+   own. **#477 is fixed for the case it was filed from — the relaunch loop, which cost this wave six
+   relaunches — and the general property "this reading is mine" remains uncheckable without the writer
+   side (#452).** Accepted as stated; the implementer volunteered this rather than letting the fix read
+   as total, which is the right instinct.
+2. **#481 is materially resolved and I will close it after the merge, not before.** Its filed scenario
+   is a relaunched dispatch inheriting its predecessor's exhaustion and having every `advance` refused;
+   a relaunched agent claims a **fresh** lease (confirmed against three live spines with distinct ids),
+   so that reading now predates the claim and is declined. Its own suggested fix — "the reader discounts
+   a record whose writing session is demonstrably gone" — is what shipped, anchored on the lease rather
+   than a writer-supplied session id. **Closing it before the merge would be a closed float**, which is
+   the exact debt I reopened #503 and #495 over.
+3. **The fail-open cost is accepted on the record:** an agent that reads `current` without ever claiming
+   has no provenance anchor and is unprotected. That is the deliberate trade against a gauge that
+   refuses readings, and it is the correct side to err on.

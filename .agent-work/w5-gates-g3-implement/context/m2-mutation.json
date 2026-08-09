@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m2-mutation",
+  "files": [],
+  "repo_rev": {
+    "commit": "b711c13afd32ef32dfb38b0b0243694471a111cd"
+  },
+  "run": {
+    "work_id": "w5-gates-g3-implement",
+    "generated_at": "2026-08-09T02:15:02Z",
+    "roots": {
+      "skill": "C:/Users/fredc/.claude/skills/constellation-implementer",
+      "repo": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills-wt/epic418-w5-gates"
+    }
+  }
+}

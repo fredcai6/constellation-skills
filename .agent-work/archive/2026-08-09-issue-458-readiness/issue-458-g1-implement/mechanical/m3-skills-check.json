@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-skills-check",
+  "mechanical": {
+    "run": "issue-458-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 2,
+    "spine-step": "m3-skills-check",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-458-g1-implement-m3-skills-check@b5e9f0c830635c547a8e4fe937bed0566173d8e3",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-458-g1-implement",
+    "generated_at": "2026-08-08T23:54:30Z"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g1-implement",
+  "mechanical": {
+    "run": "issue-458-readiness",
+    "project": "constellation-skills",
+    "spine-step": "g1-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-458-readiness-g1-implement@2afecaa8c30052ba04209cb4aefa497f20856da2",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "issue-458-readiness",
+    "generated_at": "2026-08-09T00:06:26Z"
+  }
+}

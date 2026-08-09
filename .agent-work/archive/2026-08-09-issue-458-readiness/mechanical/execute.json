@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "issue-458-readiness",
+    "project": "constellation-skills",
+    "role": "commander",
+    "refusals": 5,
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-458-readiness-execute@0aac25dcb58825b33408cf141665ee8b4f3299b7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-458-readiness",
+    "generated_at": "2026-08-08T23:45:51Z"
+  }
+}

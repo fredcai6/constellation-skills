@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "q10-fixC-state-criterion",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "interrogator",
+    "refusals": 2,
+    "spine-step": "q10-fixC-state-criterion",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-q10-fixC-state-criterion@af9cf255f1656b175de271e86227938f2acb0b50",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-08T23:05:54Z"
+  }
+}

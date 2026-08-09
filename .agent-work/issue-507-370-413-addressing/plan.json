@@ -1,0 +1,583 @@
+{
+  "work_id": "issue-507-370-413-addressing",
+  "type": "gated",
+  "config_ref": null,
+  "items": [
+    "m0-context",
+    "m1-confirm-collapse",
+    "m2-fix-doctrine",
+    "m3-fix-templates",
+    "m4-acceptance-test",
+    "m5-pr-and-issues"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, then the project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md, plus LO-w5-c3-addressing.md and the three issue bodies (#507, #370, #413). Verify the handoff (launch order) is complete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + launch order + all three issue bodies loaded; launch order complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m0-context-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m0-context"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m1-confirm-collapse": {
+      "id": "m1-confirm-collapse",
+      "title": "Confirm each pair independently against BODIES -- do not inherit any prior collapse claim",
+      "imperative": "Do not inherit the launch order's or any other agent's 'one defect, three filings' framing -- verify each pair independently against gh issue view <n> --json body. Working verdict already reasoned this session (re-derive, do not just copy): #507 and #370 share a root -- an address that was CORRECT WHEN THE HANDOFF WAS WRITTEN and STALE BY DELIVERY TIME, because the dispatching commander relaunched/tripped (#507) or deliberately handed off (#370) in between; #370's own body confirms the message reached the exact named agent, who simply no longer owned the gate -- that is staleness, not a resolution failure, and it is the same failure mode as #507's lineage-resolves-to-origin misroute. #413 reads as a DISTINCT root cause: its body states the dispatching commander 'was spawned as a subagent and therefore never registered under an addressable name' to its own children -- the address was never valid, even at dispatch time (no staleness window at all), a structural non-registration gap rather than a staleness gap. If your own re-reading confirms this split, write it to notes-1.md as PARTIAL collapse (#507 + #370 confirmed; #413 distinct) with the quotes backing each leg; if your re-reading instead finds true collapse or a different split, override this working verdict with your own reasoned one -- either way, never close on a title match or on an inherited summary (including this one). Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "notes-1.md quotes all three issue bodies, states an independently-reasoned collapse verdict per pair (not copied from the launch order or from team-lead's caution), and is explicit about which issues genuinely collapse vs. which (if any) are distinct",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "never close on a title match; body evidence only"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-fix-doctrine": {
+      "id": "m2-fix-doctrine",
+      "title": "Re-address crew delivery in commander doctrine",
+      "imperative": "Edit skills/commander/references/commander-core.md (the 'must be told...to deliver its result via SendMessage' paragraph) and skills/commander/references/crew-dispatch.md so a dispatched crew's delivery is the WRITE to the job/gate-addressed result path (already required by run_crew.py's --result contract) with SendMessage reduced to a best-effort, non-load-bearing courtesy ping; and so a resumed/relaunched Commander is told to run recover_crews.py / --verify-result to discover an already-completed crew before assuming one must be (re)dispatched. Note the lineage-resolves-to-origin bug (Pre-Ruling 3) explicitly in the text. Do not touch scripts/checklist_engine.py or the excluded files. Attest c1 (manual), then verify c2 by command.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "collapse confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1-confirm-collapse complete: #507+#370 confirmed collapse (valid-at-write/stale-at-read), #413 confirmed distinct (never-valid structural gap); verdict + body quotes recorded in notes-1.md"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine edited: write-is-delivery, SendMessage is best-effort, recover_crews-first-on-resume, lineage bug noted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "commander-core.md ~line147 paragraph recast: write to job/gate-addressed crew-handoffs/<gate>-<role>-result.md is the delivery; SendMessage recast as best-effort courtesy ping; lineage-resolves-to-origin bug (#507/Pre-Ruling3) noted explicitly, unfixed by design. crew-dispatch.md: added cold-start recover_crews.py-first guidance (discover STATE_COMPLETE before assuming redispatch needed) and reiterated the write-is-delivery framing."
+        },
+        {
+          "id": "c2",
+          "statement": "old load-bearing SendMessage-before-idle instruction is gone; job-addressed language present",
+          "check": {
+            "kind": "command",
+            "command": "! grep -q 'must be told' skills/commander/references/commander-core.md && grep -l 'job-addressed\\|job/gate-addressed' skills/commander/references/commander-core.md skills/commander/references/crew-dispatch.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-doctrine-1"
+        }
+      ],
+      "constraints": [
+        "do not touch scripts/checklist_engine.py, tests/test_checklist_engine.py, verify_iterative_role_artifacts.py, COMMANDER_SPINE.template.json, install_constellation.py, docs/CREW_CONTEXT.md, docs/TREND_SNAPSHOT.md",
+        "do not edit skills/<role>/references/global-*.md install-time copies"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-doctrine-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "! grep -q 'must be told' skills/commander/references/commander-core.md && grep -l 'job-addressed\\|job/gate-addressed' skills/commander/references/commander-core.md skills/commander/references/crew-dispatch.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-fix-templates": {
+      "id": "m3-fix-templates",
+      "title": "Re-address the Return Format in the crew handoff templates",
+      "imperative": "Edit skills/commander/templates/IMPLEMENTER_HANDOFF.template.md and REVIEWER_HANDOFF.template.md 'Return Format' sections: require the crew write its full result to the job/gate-addressed path .agent-work/<work-id>/crew-handoffs/<gate>-<role>-result.md before ending its turn (that write is the delivery), with any SendMessage announcement best-effort only. Attest c1, verify c2 by command.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "doctrine re-addressed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2-fix-doctrine complete: commander-core.md + crew-dispatch.md re-addressed, c2 command check passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "both templates' Return Format sections name the job-addressed result path as the delivery",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_HANDOFF.template.md and REVIEWER_HANDOFF.template.md Return Format sections each carry a new Delivery paragraph naming .agent-work/<work-id>/crew-handoffs/<gate>-{implementer,reviewer}-result.md as the delivery write, SendMessage recast as best-effort courtesy ping."
+        },
+        {
+          "id": "c2",
+          "statement": "both templates reference crew-handoffs/<gate>-<role>-result.md",
+          "check": {
+            "kind": "command",
+            "command": "grep -l 'crew-handoffs' skills/commander/templates/IMPLEMENTER_HANDOFF.template.md skills/commander/templates/REVIEWER_HANDOFF.template.md"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-fix-templates-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-fix-templates-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "grep -l 'crew-handoffs' skills/commander/templates/IMPLEMENTER_HANDOFF.template.md skills/commander/templates/REVIEWER_HANDOFF.template.md",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-acceptance-test": {
+      "id": "m4-acceptance-test",
+      "title": "Relaunch acceptance test: shown failing on today's addressing, passing on the job-addressed fix",
+      "imperative": "Write tests/test_crew_delivery_addressing.py. It must exercise a simulated Commander relaunch (dispatcher identity changes mid-gate) and prove the delivery ANNOUNCEMENT lands correctly, not merely that a result file exists (a file-existence-only check cannot fail, per the issue). One test characterizes today's instance-name addressing misrouting after a relaunch (grounded in the #507 evidence table: a requested name that no longer resolves lands on the retired origin instance, not the live successor). A second test proves the job/gate-addressed path -- using the REAL run_crew.py/recover_crews.py production functions, not a mock -- succeeds regardless of which Commander instance is currently live. Run it. Attest c1 (test-after style; collapse to c2).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "templates re-addressed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m3-fix-templates complete, c2 command check passed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "tests/test_crew_delivery_addressing.py passes; the legacy-addressing test demonstrates a misroute (wrong recipient), the job-addressed test demonstrates delivery survives a simulated relaunch via real run_crew.py/recover_crews.py functions",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_crew_delivery_addressing.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-acceptance-test-4"
+        }
+      ],
+      "constraints": [
+        "do not touch scripts/checklist_engine.py or tests/test_checklist_engine.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "reopen_reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine."
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-acceptance-test-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-acceptance-test",
+            "why_ref": "w-4"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034371+00:00"
+          }
+        },
+        {
+          "id": "e-m4-acceptance-test-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_crew_delivery_addressing.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034382+00:00"
+          }
+        },
+        {
+          "id": "e-m4-acceptance-test-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m4-acceptance-test",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034385+00:00"
+          }
+        },
+        {
+          "id": "e-m4-acceptance-test-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest tests/test_crew_delivery_addressing.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 1
+    },
+    "m5-pr-and-issues": {
+      "id": "m5-pr-and-issues",
+      "title": "Push branch, open PR, close/comment per m1's confirmed verdict -- never a blanket three-way close",
+      "imperative": "Commit, push epic-418/w5-crew-addressing. Open a PR whose body cites a closing keyword ('Closes #NNN') ONLY for the issue(s) m1 confirmed truly collapse to this fix's root cause -- per the working verdict, that is #507 and #370; quote the collapse argument from notes-1.md for each. For any issue m1 found distinct (working verdict: #413), do NOT use a closing keyword -- reference it plainly ('Related to #413') and comment on it directly: state the distinct-root-cause finding, note that this fix still resolves the issue's PRACTICAL SYMPTOM as a side effect (delivery no longer depends on a crew addressing its dispatcher by name at all, so a never-addressable-parent stops mattering in practice) without claiming to have fixed the underlying harness reachability gap, and leave it OPEN for a human to judge whether the symptom fix is sufficient to close. Comment the matching collapse confirmation (quoted body evidence) on each of #507 and #370 too. Do not manually close ANY issue -- closing rides the PR merge, and #413 must not carry a closing keyword at all if m1 confirmed it distinct. Note the lineage-resolves-to-origin bug in the PR body per Pre-Ruling 3. Attest c1, verify c2 by command.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "acceptance test green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m4-acceptance-test re-closed with DoctrineNamesJobAddressedDelivery added; 4/4 green, c2 command re-verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "PR opened citing a closing keyword ONLY for the issue(s) m1 confirmed collapse; any distinct issue is referenced (not closed) with a comment explaining the distinction and the symptom-only relief",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "PR #511 body updated (gh pr edit) to add the honesty caveat: the original two test classes pass unmodified on main (mechanism untouched by this fix); new DoctrineNamesJobAddressedDelivery class is the real red-then-green evidence for the actual (prose) fix, verified failing on ea854471's doctrine/template text and passing on this PR's. Still cites Closes #507 + Closes #370 only, #413 referenced plainly. Issue comments unchanged (already accurate, no re-post needed)."
+        },
+        {
+          "id": "c2",
+          "statement": "PR exists on the branch",
+          "check": {
+            "kind": "command",
+            "command": "gh pr view epic-418/w5-crew-addressing --json number,url"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-pr-and-issues-4"
+        }
+      ],
+      "constraints": [
+        "never manually close #507/#370/#413 -- merge does it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {
+        "superseded_by_reopen": "m4-acceptance-test"
+      },
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-pr-and-issues-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-pr-and-issues",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034397+00:00"
+          }
+        },
+        {
+          "id": "e-m5-pr-and-issues-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "gh pr view epic-418/w5-crew-addressing --json number,url",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": "",
+          "superseded": {
+            "by": "reopen:m4-acceptance-test",
+            "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+            "ts": "2026-08-08T23:50:09.034399+00:00"
+          }
+        },
+        {
+          "id": "e-m5-pr-and-issues-3",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-pr-and-issues",
+            "why_ref": "w-9"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-pr-and-issues-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "gh pr view epic-418/w5-crew-addressing --json number,url",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 6,
+  "engine_session": {
+    "session_id": "impl-w5-addressing-c",
+    "status": "released",
+    "claimed_at": "2026-08-08T23:49:58.914911+00:00",
+    "last_heartbeat": "2026-08-08T23:51:42.548117+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-08T23:51:42.778373+00:00"
+  },
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m0-context",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1606,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": null,
+      "ts": "2026-08-08T23:01:50.805138+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "m4-acceptance-test",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1585,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-08T23:35:33.107511+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "m4-acceptance-test",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1596,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-4",
+      "ts": "2026-08-08T23:35:45.819015+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "m5-pr-and-issues",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2004,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-08T23:40:21.257557+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "m4-acceptance-test",
+      "verb": "reopen",
+      "outcome": "begin-refused",
+      "fill": 0.2528,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-08T23:49:59.127910+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "m4-acceptance-test",
+      "verb": "reopen",
+      "outcome": "begin-released",
+      "fill": 0.2528,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-08T23:50:08.688378+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "m5-pr-and-issues",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2649,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-9",
+      "ts": "2026-08-08T23:51:23.820209+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-08T23:09:42.160303+00:00",
+      "reason": "team-lead(Admiral) flagged: under Bash, 'py' resolves to a python with no pytest installed; 'python -m pytest' is the correct invocation. m4's command postcondition authored 'py -m pytest' before this was known -- corrected before any fresh agent could hit the false-red.",
+      "authority": "team-lead (Admiral directive)",
+      "ops": [
+        "retext-check m4-acceptance-test.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-08T23:15:48.705444+00:00",
+      "reason": "team-lead(Admiral) cautioned against inheriting the 'all three collapse' claim uninvestigated (their own #439/#484/#446 collapse call was one-for-two today). Independent re-read of the three bodies this session: #507+#370 share a root (address valid when the handoff was written, stale by delivery -- relaunch/trip for #507, deliberate handoff for #370; #370's body confirms the message reached the exact named agent, who simply no longer owned the gate). #413's body states the dispatching commander 'was spawned as a subagent and therefore never registered under an addressable name' to its own children -- never valid even at dispatch time, a structural non-registration gap, not a staleness gap. Rescoped m1 to require independent per-pair verification (not inherited from the launch order or from team-lead) and m5 to close only what m1 confirms, leaving any distinct issue open with a comment rather than a blanket three-way close.",
+      "authority": "team-lead (Admiral directive) + own independent body re-read",
+      "ops": [
+        "rescoped m1-confirm-collapse",
+        "rescoped m5-pr-and-issues"
+      ]
+    },
+    {
+      "ts": "2026-08-08T23:34:02.413297+00:00",
+      "reason": "m2-fix-doctrine.c2's authored check used 'grep -L PATTERN file && ...': grep -L exits 1 exactly when it successfully finds/prints a file with no match (POSIX/GNU semantics -- exit status tracks match/no-match, not what -L inverts for display), so the && chain can never reach the second grep once 'must be told' is genuinely removed -- a check that cannot pass. Verified live: 'grep -L \"must be told\" commander-core.md' prints the filename (correct: no match) but exits 1. Corrected to '! grep -q PATTERN file && grep -l ...', which asserts the same two facts (absence + presence) without the -L exit-status trap. Verified the corrected command exits 0 against the already-edited files.",
+      "authority": "impl-w5-addressing-b (self-caught authoring defect in the plan's own check text, same class as the prior py/python amendment)",
+      "ops": [
+        "retext-check m2-fix-doctrine.c2"
+      ]
+    }
+  ],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "m0 context loaded: global-crew.md + global-everyone.md (implementation/review discipline, engine-verb doctrine, refresh-not-rederive, trip=HARD-refuses-start/reopen-only), CREW_CONTEXT.md (python not py; utf-8/LF writes; edit skills/_shared/global-*.md never the per-role copies; verification-that-can-fail discipline) and GLOSSARY.md; LO-w5-c3-addressing.md read in full and confirmed complete (Mission, 4 Pre-Rulings incl. NOT-OVERRIDABLE relaunch acceptance test, Honest-Null, Inherited Latitude/File Ownership, Workspace, Inherited Context, Budget, Stop Conditions, Return Shape); all three issue bodies (#507, #370, #413) fetched fresh via gh issue view --json body and read in full, matching notes-1.md's digest. Proceeding to m1 to independently re-verify the collapse verdict against these bodies per the gate's own imperative.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:29:56.365610+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-confirm-collapse",
+      "why": "Independently re-fetched all three issue bodies fresh via gh issue view and re-derived the collapse verdict (written to notes-1.md, new section under m1-confirm-collapse): #507+#370 genuinely collapse (valid-at-write/stale-at-read, dispatcher identity changed between handoff-write and crew-delivery -- relaunch for #507, deliberate handoff for #370). #413 is distinct -- never-valid-from-the-start structural non-registration gap (a spawned subagent is not addressable to its own children, no lineage/relaunch involved at all). Matches the working verdict but independently confirmed against bodies, not copied. Proceeding to m2 to fix doctrine.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:31:07.841053+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix-doctrine",
+      "why": "commander-core.md and crew-dispatch.md re-addressed: write to the job/gate-addressed crew-handoffs result path is the delivery, SendMessage is best-effort/non-load-bearing, resumed/relaunched Commander runs recover_crews.py first on cold start, lineage-resolves-to-origin bug noted per Pre-Ruling 3. Self-caught and fixed a grep -L exit-status authoring bug in c2's own check command via amend (grep -L exits 1 precisely when it prints, so the && chain could never pass); corrected command verified green. Proceeding to m3 templates.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:34:18.293327+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-fix-templates",
+      "why": "Both crew handoff templates' Return Format sections now name the job/gate-addressed crew-handoffs/<gate>-<role>-result.md path as the delivery write, with SendMessage demoted to best-effort. c2 command check (grep -l crew-handoffs on both templates) verified green. Proceeding to m4 acceptance test -- the NOT-OVERRIDABLE gate: must exercise a simulated relaunch and prove the announcement mechanism, not file existence.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:35:21.230357+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-acceptance-test",
+      "why": "tests/test_crew_delivery_addressing.py written and green (2/2). Test A characterizes today's instance-name addressing misrouting after a relaunch, transcribed directly from #507's evidence table (no in-repo function exists for SendMessage resolution -- it's a harness property outside this repo). Test B proves the job/gate-addressed fix using REAL run_crew.record_external_attempt/load_registry/verify_external_result and recover_crews.classify_registry (no mocks): a simulated relaunch -- fresh registry reloads sharing no Python identity with the dispatcher, across two different asking-instance labels never passed into either function -- discovers STATE_COMPLETE from the durable registry+result alone. Mutation-verified both assertions are load-bearing, not vacuous (evidence in c2 attestation note). Proceeding to m5: push branch, open PR citing Closes #507 + Closes #370 only, comment #413 as distinct without a closing keyword.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:39:49.675812+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-pr-and-issues",
+      "why": "Committed and pushed epic-418/w5-crew-addressing (0148638d). PR #511 opened citing Closes #507 + Closes #370 only, quoting each body's collapse argument; #413 referenced plainly (not closed) with the distinct-root-cause explanation and symptom-relief note; Pre-Ruling 3 lineage-resolves-to-origin bug noted in the PR body. Comments posted on #507, #370, #413 matching the PR's framing. c2 command check (gh pr view) verified green. No issue manually closed -- merge does it. All five gates (m0-m5... m0-m4 already complete) done; plan complete.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:43:08.240226+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m4-acceptance-test",
+      "reopen": true,
+      "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+      "ts": "2026-08-08T23:50:09.034405+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m5-pr-and-issues",
+      "reopen": true,
+      "reason": "Admiral's cold review of PR #511 found the acceptance test's two original assertions (instance-addressing misroute characterization, job-addressed-delivery mechanism proof) pass unmodified on main -- run_crew.py/recover_crews.py are untouched by this fix, which is entirely doctrine prose. Reopening to record the added DoctrineNamesJobAddressedDelivery regression guard (verified red on ea854471's doctrine/template text, green on the fix) and the module docstring's honest caveat, already committed (bd31f69c) but not yet run through the engine.",
+      "ts": "2026-08-08T23:50:09.034409+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m4-acceptance-test",
+      "why": "Added DoctrineNamesJobAddressedDelivery to tests/test_crew_delivery_addressing.py (commit bd31f69c): reads the shipped doctrine/template text directly, fails if the job-addressed delivery language regresses. Verified genuinely red against ea854471's pre-fix doctrine/template text (2 failed, matching old 'must be told' wording + absent job-addressed language) and green against the fix (4 passed total). Module docstring now states plainly that the original two tests (misroute characterization, job-addressed-mechanism proof) pass unmodified on main because run_crew.py/recover_crews.py are untouched by this fix -- the fix is prose, and this new class is the regression guard reaching that prose specifically. c2 command re-verified (4 passed). Proceeding to re-close m5 with the same PR/comments, now backed by accurate evidence.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:50:28.667079+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "m5-pr-and-issues",
+      "why": "PR #511 body edited via gh pr edit to plainly state the two mechanism tests pass unmodified on main (run_crew.py/recover_crews.py untouched -- the fix is prose) and to present the new DoctrineNamesJobAddressedDelivery class as the actual red-then-green evidence for the doctrine change (failed on ea854471's text, passes on the fix). c2 command re-verified (gh pr view). Plan re-complete after Admiral's cold-review rework cycle on m4/m5.",
+      "mechanical": false,
+      "ts": "2026-08-08T23:51:42.548095+00:00"
+    }
+  ]
+}

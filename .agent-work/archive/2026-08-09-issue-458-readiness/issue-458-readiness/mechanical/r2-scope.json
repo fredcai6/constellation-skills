@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r2-scope",
+  "mechanical": {
+    "run": "issue-458-readiness",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 0,
+    "spine-step": "r2-scope",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-458-readiness-r2-scope@98fa1075bf18122e2f08fd0b3c2bcf6e7f8f8604",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-458-readiness",
+    "generated_at": "2026-08-09T00:11:53Z"
+  }
+}

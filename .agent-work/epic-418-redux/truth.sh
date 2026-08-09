@@ -10,8 +10,15 @@
 # Usage:  bash .agent-work/epic-418-redux/truth.sh
 set -u
 REPO="C:/Programs/constellation-skills"
-WT="C:/Programs/constellation-skills-wt/epic418-a2-467"
-WORK="$WT/.agent-work/issue-467-trip-semantics"
+# CORRECTED 2026-08-09: this was hardcoded to WAVE 4 (epic418-a2-467 / issue-467).
+# Run during wave 5 it printed "17/17 complete, lease: released" -- wave 4's numbers -- which
+# reads exactly like "the run is finished" to a fresh Admiral executing this note's own first
+# instruction. Identical output in the done world and the mid-wave world: a check that cannot fail,
+# sitting at the entry point of the crash-resume path.
+# Wave 5 runs FIVE crews, so there is no single work area to point at. Enumerate them all.
+W5="C:/Programs/constellation-skills-wt"
+WT="$W5/epic418-w5-gates"
+WORK="$WT/.agent-work/w5-gates"
 BR="epic-418/a2-467-trip-semantics"
 
 echo "=============== DERIVED $(date -u +%Y-%m-%dT%H:%M:%SZ) ==============="
@@ -70,4 +77,26 @@ echo -n "  CI runs in_progress on main: "
 gh run list --branch main --limit 10 --json status -q '[.[] | select(.status=="in_progress")] | length' 2>/dev/null || echo "?"
 
 echo -n "  unpushed commits: "; git -C "$REPO" rev-list --count origin/main..HEAD 2>/dev/null
+echo "--- WAVE 5: all five crews (the wave that is actually running) ---"
+for d in gates readiness addressing engine docs; do
+  WD="$W5/epic418-w5-$d"
+  [ -d "$WD" ] || { echo "  $d: WORKTREE GONE (swept?)"; continue; }
+  # v3: print WHICH journal, not just when. The glob matches ~28 journals across every
+  # work area checked out in the worktree, so `ls -t | head -1` can silently return a
+  # STALE one from an older wave -- it did, reporting 22:47 while the crew was live at
+  # 00:33, and I acted on it. Showing the path makes a wrong pick visible instead of
+  # resolving it wrongly: the reader sees the work-id and knows if it is not the crew's.
+  J=$(ls -t "$WD"/.agent-work/*/*.json.journal 2>/dev/null | head -1)
+  JN=$([ -n "$J" ] && basename "$(dirname "$J")" || echo "-")
+  C=$(git -C "$WD" rev-list --count main..HEAD 2>/dev/null)
+  DY=$(git -C "$WD" status --porcelain 2>/dev/null | wc -l)
+  LAST=$([ -n "$J" ] && date -u -r "$J" +%H:%M || echo "none")
+  echo "  $d: last-engine-verb=$LAST (in work-area: $JN) commits=$C dirty=$DY"
+done
+echo "  ^ journal mtime is the ONLY liveness proxy that fires for every crew."
+echo "  ^ gauge.json does NOT (see #452); file writes miss a reading agent."
+echo "  ^ CHECK THE work-area NAME. If it is not this crew's, the timestamp is a STALE"
+echo "    journal from another wave checked out in the same worktree, not the crew's silence."
+echo "--- wave-5 PRs (ask the forge) ---"
+gh pr list --state open --json number,headRefName --jq '.[]|select(.headRefName|startswith("epic-418/w5"))|"  PR #\(.number) \(.headRefName)"' 2>/dev/null || echo "  (gh unavailable)"
 echo "=============== END DERIVED ==============="
