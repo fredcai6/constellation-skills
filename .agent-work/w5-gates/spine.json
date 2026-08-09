@@ -619,13 +619,14 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py w5-gates --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-3"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -636,6 +637,28 @@
           "payload": {
             "seam": "feedback",
             "why_ref": "w-8"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-2",
+          "type": "workflow-feedback",
+          "payload": {
+            "ref": ".agent-work/w5-gates/RUN_FEEDBACK.md",
+            "episodes": "9",
+            "crew_feedback_sources": "g1-implement,g1-review,g2-implement,g2-review,g3-implement,g3-review,g4-review"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-feedback-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py w5-gates --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -652,7 +675,8 @@
           "id": "p1",
           "statement": "workflow feedback recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Workflow feedback recorded: feedback gate advanced to complete with e-feedback-2 (workflow-feedback) attached, pointing at .agent-work/w5-gates/RUN_FEEDBACK.md, which consolidates the seven-session run and the crew Workflow Feedback from all seven gN RESULT files."
         }
       ],
       "postconditions": [
@@ -730,7 +754,7 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "in-progress",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -741,17 +765,16 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 9,
+  "refusals": 10,
   "engine_session": {
-    "session_id": "commander-w5-gates-f-20260808",
-    "status": "released",
-    "claimed_at": "2026-08-09T04:52:14.711895+00:00",
-    "last_heartbeat": "2026-08-09T04:55:57.010135+00:00",
-    "claimed_by": "agent",
-    "worktree": ".",
+    "session_id": "commander-w5-gates-g-20260808",
+    "status": "active",
+    "claimed_at": "2026-08-09T04:57:22.476104+00:00",
+    "last_heartbeat": "2026-08-09T05:03:06.918406+00:00",
+    "claimed_by": "commander-w5-gates-g",
+    "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
     "previous_session_id": null,
-    "takeover_reason": null,
-    "released_at": "2026-08-09T04:55:57.244258+00:00"
+    "takeover_reason": null
   },
   "why_trail": [
     {
@@ -809,6 +832,13 @@
       "why": "Review closed. Both postconditions were met before my trip via e-review-1, a delegated-mode user-decision citing LAUNCH_ORDER:Return Shape. The Admiral then ruled mid-trip and instructed me to finish, so I am completing the run rather than handing off. Substance first, per the ruling: the branch is PUSHED (origin moved aa2038d9..34e97f46, carrying all production commits plus the full work-area record) and PR #516 is OPEN against main. GitHub itself confirms all six issues as closing references -- 439, 446, 468, 484, 501, 506 -- which verifies the one-Closes-per-line format actually took, rather than my asserting it. The reviewer's float 1 was already discharged earlier in my run: the g4 implementer RESULT's false premise about how many production paths differ from the fork point was re-derived and corrected in place before the Admiral asked.",
       "mechanical": false,
       "ts": "2026-08-09T04:52:26.611229+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Reflection written to RUN_FEEDBACK.md and attached as e-feedback-2, consolidating seven Commander sessions and the crew Workflow Feedback from all seven gN RESULT files. Episode capture verified BEFORE writing: five episodes were already recorded and green from a prior session, so I added only the four distinct things the crew feedback carried that they did not cover -- engine --session-id verb-ordering (three crews), unstated PATH composition (two crews on one gate), handoffs asserting .agent-work/ is untracked when it is tracked (two crews), and the reach-up/crew doctrine collision when a trip fires after the work but before the record. Nine episodes now recorded; capture gate exits 0 against the in-repo store; no store exists outside the repo.",
+      "mechanical": false,
+      "ts": "2026-08-09T05:02:16.586859+00:00"
     }
   ],
   "trip_ledger": [
