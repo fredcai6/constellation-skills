@@ -5111,3 +5111,41 @@ added, waive conditions all met. One field in one episode.
 **Gate discipline paid again:** I did not merge #513 on the green that existed. That green was on
 `dbd787b9`, **two commits superseded**; the head commit's run is the one that just came back **red**.
 Merging on "a run passed" would have landed a red main.
+
+### PR #514 (crew 4, engine internals) — "six fixed, two floated, one verified"
+
+Scope verified by command: **exactly `scripts/checklist_engine.py` and `tests/test_checklist_engine.py`**,
+no other crew's territory. The sole-writer grant held for the whole wave across all five crews.
+
+**The return is the honest-partial shape the launch order asked for and rarely gets.** Nine issues, nine
+different answers — six fixed, **#480 verified as already-fixed with no code change**, and two floated
+with reasons: **#503** larger-than-filed (a reference-binding fix breaks a file it does not own, and a
+shape heuristic is insufficient by the issue's own text), **#495** entirely (all six writers live
+outside its files). It did not manufacture nine fixes to match nine issues.
+
+### The best single item in this wave's returns
+
+> The #427 fix as first landed armed `refusals` on **any** refusal while unclaimed, which broke
+> `tests/test_episode_negative_control.py` (not owned) — the #357 child-gate-plan shape is legitimately
+> driven with `engine_session` staying `None` for its entire life... **Found by running the full suite
+> before push, not by any of the nine issues themselves.**
+
+It broke something in a file it does not own, **found it itself before pushing**, **narrowed the fix
+rather than loosening the test**, added a red-before-green regression reproducing the #357 shape, and
+then **reported it in the PR body under its own heading** instead of letting it pass as noise.
+
+**A crew that had quietly reverted or widened an assertion to get its suite green would have produced an
+identical diff and passed review.** The difference is entirely in what it chose to make visible. That is
+the standard this whole epic argues for, done unprompted by a Sonnet implementer on its second instance.
+
+### HELD — no closing keywords at all
+
+#514's body carries **zero `Closes`**, so merging it would close nothing and leave me hand-sorting seven
+closes against two deliberate floats. Sent back with the exact list: **seven `Closes` lines, one per
+issue** (#474 #475 #476 #427 #479 #480 #493), and **#503/#495 referenced with no keyword** and a reason
+each.
+
+Told it explicitly that `Closes #474, #475` closes **only the first** — the same form that left #411
+open on #509 tonight, caught only by forge verification, and now a third instance on #354. **That is
+the second PR this wave whose issue-closing would have silently under-delivered**, in opposite
+directions: one keyword covering too little, and no keyword at all.
