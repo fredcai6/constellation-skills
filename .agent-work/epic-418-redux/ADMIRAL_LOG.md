@@ -5019,3 +5019,43 @@ So in one wave: **crew 1 predicted the guard would break every Commander worktre
 now been independently reproduced by a crew that had not seen its report. **That is no longer a
 finding — it is a measured property of the system**, and it is the strongest evidence this wave has
 produced for why those two fixes are worth shipping.
+
+### Fix B landed (#501 + #468) — and it repairs something a second crew independently proved
+
+`c63c2bb0 fix(#501,#468): resolve the installed skills root by structure, not by name`. Crew 1 closed
+g1-implement, tripped at `g1-review`, released the lease cleanly, and was relaunched as `-d`.
+
+**The fix does the thing I pre-ruled it must:** `_installed_skills_root()` no longer tests the
+directory name. `_is_installed_bundle` = own `SKILL.md` **and** a parent that is a skills root
+(installer `CORPUS.json` marker, or a `constellation-*/SKILL.md` child). Resolution order:
+`--skills-root` → own bundle → probe project then user scope with a visible stderr note → **refuse
+naming every root tried and its count.** That is a guard that answers *where am I running from* rather
+than one widened until it passes everywhere, which is exactly the trap I forbade in the launch order.
+
+**Verified in its own hands, not taken on its crew's report** — the distinction it drew itself:
+
+- structural predicate **measured on disk at all three locations before dispatch**: main checkout and
+  worktree each have no own `SKILL.md` and a parent with no `CORPUS.json` and **0**
+  `constellation-*/SKILL.md` children; the installed bundle has its own `SKILL.md`, a parent
+  `CORPUS.json`, and 20 siblings. **It separates them cleanly.**
+- both `-k` selectors **collect nonzero**, so neither gate closed vacuously; no selector loosened.
+- coupled suite 386 passed / 480 subtests, exit 0 unpiped — base was 375/463, **delta exactly this
+  gate's additions.**
+
+**And the trip was checked, not assumed:** `gauge.json` written **13 seconds** before the refusal,
+0.1527 against the 0.15 band, this session's reading rather than a predecessor's residue.
+
+**It also resolved a question I had retracted.** Earlier I claimed the launch verifier mutates my
+`transitions/` render as a side effect, then measured it idempotent and retracted. Crew 1 has now named
+the real cause: those files show `M` as a **CRLF stat artifact** — empty diffs, blob OIDs matching
+HEAD. **My retraction was right and the cause is now known**, which is a better end state than either
+the wrong claim or the bare retraction.
+
+**One stale coordinate, diagnosed and deliberately not acted on:** g2 cites an assertion at
+`test_iterative_planning_doctrine.py:461-462`; it has moved twice (g1 added ~366 lines to that file).
+The plan **names the right assertion**, so the next agent finds it by text. **No amend** — the plan is
+not wrong, only a line number is, and amending a frozen plan for that would cost more than it buys.
+
+**Remaining: g1-review, then all of g2, g3, g4 — #506, #439+#484, #446. Three of six issues untouched.**
+Its predecessor's g1-review handoff is **already written**, so the relaunch dispatches rather than
+re-authors it — most of a context cycle saved by a crew that stood down thinking about its successor.
