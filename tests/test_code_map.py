@@ -4626,5 +4626,62 @@ class BOMParsingTests(unittest.TestCase):
         self.assertIsNotNone(tree, "BOM file should parse successfully (tree non-None)")
 
 
+class MapTreeFreshnessTests(unittest.TestCase):
+    """Gate gs: the tracked `map/INDEX.md` and `map/ids.jsonl` (the map entry
+    point) must match what `build` produces from THIS repo's own current
+    tracked source. `.agent-work/issue-456/landing-zone-measurement.md` is why
+    only these two files are tracked: the negative-control measurement showed
+    they are the largest zone that survives a body-only edit while still
+    moving under a shape edit. A crew opening `map/INDEX.md` trusts that it is
+    current; this test is the only thing that keeps that trust honest.
+
+    Comparison is over normalized TEXT, not raw working-tree bytes.
+    `.gitattributes` sets `* text=auto` and this repo runs
+    `core.autocrlf=true`, so a checkout may legitimately hold CRLF while the
+    committed blob (and a fresh build, which always writes `newline="\n"`)
+    holds LF -- `git add` on this very gate warned 'LF will be replaced by
+    CRLF the next time Git touches it' for map/INDEX.md. Reading with the
+    default text-mode universal-newline translation normalizes that away, per
+    CREW_CONTEXT.md's 'Writing Files On Windows': comparing raw bytes would
+    read a line-ending-only checkout artifact as staleness.
+    """
+
+    def _fresh_build(self):
+        """Rebuild the map from THIS repo's current tracked source into a
+        scratch --out/--artifacts pair, so the real map/ and .code-map/ trees
+        are never touched by this test."""
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        out = Path(tmp.name) / "map"
+        artifacts = Path(tmp.name) / ".code-map"
+        proc = subprocess.run(
+            [sys.executable, "-m", "scripts.code_map", "build", "--root", str(ROOT),
+             "--artifacts", str(artifacts), "--out", str(out)],
+            cwd=str(ROOT), capture_output=True, text=True,
+        )
+        self.assertEqual(proc.returncode, 0,
+                         f"fresh build failed\n{proc.stdout}\n{proc.stderr}")
+        return out
+
+    def test_map_tree_freshness_root_index_matches_a_fresh_build(self):
+        fresh = self._fresh_build()
+        committed = (ROOT / "map" / "INDEX.md").read_text(encoding="utf-8")
+        self.assertEqual(
+            (fresh / "INDEX.md").read_text(encoding="utf-8"), committed,
+            "map/INDEX.md is stale: rerun `python -m scripts.code_map build "
+            "--root .` and commit the result")
+
+    def test_map_tree_freshness_ids_jsonl_matches_a_fresh_build(self):
+        """`ids.jsonl` is empty in this repo -- no anchor id has ever been
+        authored here, the same fact gate g6 found scanning the only real
+        corpus. Empty is not a defect; a mismatch still is."""
+        fresh = self._fresh_build()
+        committed = (ROOT / "map" / "ids.jsonl").read_text(encoding="utf-8")
+        self.assertEqual(
+            (fresh / "ids.jsonl").read_text(encoding="utf-8"), committed,
+            "map/ids.jsonl is stale: rerun `python -m scripts.code_map build "
+            "--root .` and commit the result")
+
+
 if __name__ == "__main__":
     unittest.main()

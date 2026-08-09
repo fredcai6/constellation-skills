@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m1-cherry-pick-skills",
+  "mechanical": {
+    "run": "gs-implement",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 1,
+    "spine-step": "m1-cherry-pick-skills",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-gs-implement-m1-cherry-pick-skills@0cb80faf275d168bf3619bdce920839021e84262",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "gs-implement",
+    "generated_at": "2026-08-09T03:22:20Z"
+  }
+}

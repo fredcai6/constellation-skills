@@ -9,7 +9,7 @@ Find architecture trouble from map truth. Drive `templates/SCOUT.template.json` 
 
 Drive every step through the checklist engine and finish its sequence — final `advance`, then `release`, as journaled actions. Work the engine never saw did not happen. Full completion doctrine: `_shared/global-everyone.md`.
 
-Read Cartographer artifacts first: packets, index, overlays, generated map. Then sample code to challenge the map, not rediscover whole repo.
+Enter the map at its index and pull only the packets/overlays your focus touches — the index is a routing surface, not reading material. Then sample code to challenge the map, not rediscover whole repo.
 
 Own: `.agent-work/SCOUT_REPORT.md` candidates. No durable truth.
 

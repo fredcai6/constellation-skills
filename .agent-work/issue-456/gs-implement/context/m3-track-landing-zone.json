@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-track-landing-zone",
+  "files": [],
+  "repo_rev": {
+    "commit": "c8226fed737565ea2c9f9ef6d78491fb40a90361"
+  },
+  "run": {
+    "work_id": "gs-implement",
+    "generated_at": "2026-08-09T03:25:26Z",
+    "roots": {
+      "skill": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "repo": "C:/Programs/constellation-skills/.claude/worktrees/issue-456",
+      "durable": "C:/Programs/constellation-skills"
+    },
+    "host": {
+      "platform": "win32",
+      "python": "3.14.3",
+      "cwd": "C:/Programs/constellation-skills/.claude/worktrees/issue-456"
+    }
+  }
+}
