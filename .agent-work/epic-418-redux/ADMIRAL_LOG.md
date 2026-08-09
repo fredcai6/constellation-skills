@@ -6219,3 +6219,36 @@ own enumeration would have missed.
 line in this log.
 
 **The epic now goes to closeout. No further wave.**
+
+### CLOSEOUT BLOCKED and bubbled to the human. `closeout -> blocked (bubbled to parent)`.
+
+`start closeout` was **REFUSED**: *"context at 29% is at/over the hard limit, so this is not the moment
+to BEGIN work here."* That is **#467's own semantics working exactly as built** — the HARD band guards
+the verbs that BEGIN work, so the refusal is the mechanism, not a defect and not a stall.
+
+**I first stood down with only a refresh-request attached, and the stop rail correctly pushed back:**
+*"If this is an honest stop, use the engine's `block` verb to bubble the blocker to the parent, or
+waive the check with human authority — do not just stop."* It was right. **Filing a refresh-request
+and ending the turn leaves the blocker recorded only in my prose**, which is the same defect as #515
+one tier up: the state of the run and the reason for it living in a document no verb reads. Corrected
+by blocking through the engine, so the journal carries it.
+
+**Blocked rather than waived, deliberately.** A waiver asserts the work is **fine to skip**. Closeout
+is not fine to skip — it is fine to **hand off**. Its five substeps (epic episodes, lessons audit,
+cartographer reconcile, harvest-before-sweep, hygiene/summary/acceptance) are **all unstarted**, and
+waiving would retire them silently, which is precisely the closed-float debt I reopened #503 and #495
+over. I also hold **no human authority** for a waiver and did not assume any.
+
+**And I am not overriding my own governor.** On the epic whose thesis is *a check must be able to
+register its own failure*, an Admiral that grinds past its own HARD reading because it wants to finish
+has falsified the instrument the whole run was built to defend. Four actors declined an easy green in
+this epic; this is the fifth, and it is the cheapest one to have taken and the most tempting to skip.
+
+**Nothing is at risk.** Wave 5 merged, pushed, green at `c9f894f4`. No crew running. Lease held.
+`origin/main..HEAD` = 0. The `w5-to-close` boundary exited `stop` with the prelaunch verifier at exit 0
+— the gate #506 fixed, closed honestly by the run that fixed it.
+
+**Resume path is in the block's `--next` and in the state note's final section**, which names all five
+substeps, the six shape refusals the boundary builder cost, and the one live trap: **`epic418-w5-gauge`
+is missing from `SWEEP_LIST.md`** and must be added before any sweep, or a merged worktree gets
+classified UNCLASSIFIED at exactly the moment attention is thinnest.

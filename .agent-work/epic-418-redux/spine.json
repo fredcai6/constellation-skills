@@ -304,8 +304,13 @@
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "blocked",
+      "status_detail": {
+        "blocker": "This Admiral cannot BEGIN closeout: the engine refused 'start closeout' with 'context at 29% is at/over the hard limit'. That is #467's own semantics working as designed, not a defect and not a stall. Wave 5 is complete, merged and pushed; main is green at c9f894f4 (1943 passed, 2 skipped, 884 subtests, real exit 0); the w5-to-close boundary exited stop with the prelaunch verifier at exit 0. Closeout's five substeps -- epic episodes, lessons audit, cartographer reconcile, harvest-before-sweep, hygiene/summary/acceptance -- are all UNSTARTED. Overriding my own governor to grind them out would falsify the very instrument this epic exists to defend, so I am bubbling this up instead of waiving it: a waiver would assert the work is fine to skip, and it is not -- it is fine to HAND OFF.",
+        "authority_needed": "Admiral epic-418-redux, escalating to the human (Tommy) as the parent tier. Refresh-request e-closeout-1 is attached to closeout; no human authority has been given or assumed for a waiver.",
+        "next_action": "Relaunch a fresh Admiral into this same spine file. It must (1) claim --force, because this lease's heartbeat looks stale by design -- the Admiral sits inside one step for the whole epic; (2) read .agent-work/epic-418-redux/STATE_NOTE.md, whose final section is a written closeout handoff naming all five substeps, the six shape refusals the boundary builder cost, and the fact that epic418-w5-gauge is missing from SWEEP_LIST.md and must be added before any sweep; (3) resume closeout from its own fresh reading. Do NOT advance closeout to clear this block -- closeout has not been done.",
+        "prior_status": "pending"
+      },
       "result": null,
       "finding": null,
       "evidence": [
@@ -325,13 +330,20 @@
   },
   "consolidation": null,
   "triage_candidates": [],
-  "blockers": [],
+  "blockers": [
+    {
+      "item": "closeout",
+      "blocker": "This Admiral cannot BEGIN closeout: the engine refused 'start closeout' with 'context at 29% is at/over the hard limit'. That is #467's own semantics working as designed, not a defect and not a stall. Wave 5 is complete, merged and pushed; main is green at c9f894f4 (1943 passed, 2 skipped, 884 subtests, real exit 0); the w5-to-close boundary exited stop with the prelaunch verifier at exit 0. Closeout's five substeps -- epic episodes, lessons audit, cartographer reconcile, harvest-before-sweep, hygiene/summary/acceptance -- are all UNSTARTED. Overriding my own governor to grind them out would falsify the very instrument this epic exists to defend, so I am bubbling this up instead of waiving it: a waiver would assert the work is fine to skip, and it is not -- it is fine to HAND OFF.",
+      "authority_needed": "Admiral epic-418-redux, escalating to the human (Tommy) as the parent tier. Refresh-request e-closeout-1 is attached to closeout; no human authority has been given or assumed for a waiver.",
+      "next_action": "Relaunch a fresh Admiral into this same spine file. It must (1) claim --force, because this lease's heartbeat looks stale by design -- the Admiral sits inside one step for the whole epic; (2) read .agent-work/epic-418-redux/STATE_NOTE.md, whose final section is a written closeout handoff naming all five substeps, the six shape refusals the boundary builder cost, and the fact that epic418-w5-gauge is missing from SWEEP_LIST.md and must be added before any sweep; (3) resume closeout from its own fresh reading. Do NOT advance closeout to clear this block -- closeout has not been done."
+    }
+  ],
   "refusals": 9,
   "engine_session": {
     "session_id": "admiral-epic-418-redux",
     "status": "active",
     "claimed_at": "2026-08-08T04:39:39.773550+00:00",
-    "last_heartbeat": "2026-08-09T06:11:32.084894+00:00",
+    "last_heartbeat": "2026-08-09T06:13:12.628893+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
