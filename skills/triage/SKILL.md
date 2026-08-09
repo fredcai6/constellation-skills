@@ -41,7 +41,7 @@ Clearing three of four does not qualify; route it as `filed` or `recommend-and-d
    - **`possible fix` is optional, is a hypothesis rather than a spec, and is a top-level sibling of the observations** — one per issue, not one per observation.
    - **`open questions` is optional and sits alongside `possible fix`** — what is unresolved or in dispute, and what would settle it. Both are thinking out loud; only the observations are load-bearing.
 
-   Then add the recommended priority and the disposition from step 3 with its disposition-specific detail (fix commit sha / issue number / deferral reason). **Do not write impact, scope, non-goals or acceptance criteria into the issue** — those are implementation-side, judged under the conditions of the actual edit with the real code in front of you; settling them in issue space commits a reader to a shape of work decided before anyone looked. This step runs for every candidate, including `fixed-now` ones — fixing it now shortens the work, it never skips the record.
+   Then add the recommended priority and the disposition from step 3 with its disposition-specific detail (fix commit sha / issue number / deferral reason). This step runs for every candidate, including `fixed-now` ones — fixing it now shortens the work, it never skips the record.
 
 ## Issue Authority
 
