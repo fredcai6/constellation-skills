@@ -758,3 +758,67 @@ _Updated: 2026-08-08T07:20:00Z_
 > second false accusation on this exact signal — the first cost a retraction, and crew 1 was the one
 > who diagnosed the cause. It also means **"dirty count" is a weak liveness proxy**: it moves without
 > anyone writing anything.
+
+> # ============ HANDOFF TO A FRESH ADMIRAL — 2026-08-09 06:1xZ ============
+>
+> **WAVE 5 IS DONE, MERGED, PUSHED, AND GREEN. Nothing is at risk and no crew is running.**
+> `git status` clean apart from the engine's own `spine.json` write; `origin/main..HEAD` = 0.
+>
+> **I tripped the HARD band at 29% trying to `start closeout` and was REFUSED — correctly.** The
+> refusal is `#467`'s semantics working, and the refresh-request `e-closeout-1` is filed. I did not
+> grind past it: on the epic whose thesis is *a check must be able to fail*, an Admiral overriding its
+> own governor would be falsifying its own instrument. **Do not `advance closeout` to tidy this up —
+> closeout has not been done.**
+>
+> ## Where the epic actually is
+>
+> | | |
+> |---|---|
+> | spine | `execute` **complete**. `closeout` **pending**, p1 attested, refresh-request attached. |
+> | main | **`c9f894f4`** — 1943 passed, 2 skipped, 884 subtests, real exit 0 |
+> | boundary | `w5-to-close` exits **`stop`**, prelaunch verifier **exit 0** |
+> | issues | **19 of 22 dispatched closed**, verified individually on the forge |
+> | open by ruling | **#413** (different defect: never-valid-from-the-start), **#503** + **#495** (reopened floats) |
+> | lease | **held** by `admiral-epic-418-redux`; heartbeat looks stale by design — a successor needs `claim --force` |
+>
+> Merged this session: **#516** `f9945286` (#439 #446 #468 #484 #501 #506), **#514** `b2f33603`
+> (#474 #475 #476 #427 #479 #480 #493), **#517** `c9f894f4` (#477). Also closed **#481** (materially
+> resolved by #517, remainder routed to #452). Filed **#515**. Carried unworked with its disposition on
+> the issue: **#478**.
+>
+> ## CLOSEOUT — five steps, none started. Read the ACTIVE imperative on disk, not this summary.
+>
+> 1. **Episodes** — the epic's observations, one per distinct thing, **records not rules** (the strict
+>    guard rejects prescriptive text and it rejected crew 1's five episodes tonight). Write
+>    `.agent-work/epic-418-redux/episode-delta.json`, apply with
+>    `python scripts/apply_episode_delta.py --delta … --store-root episodes` — **`--store-root` on every
+>    invocation**, never hand-edit `episodes/`. Then
+>    `python scripts/verify_episode_captured.py epic-418-redux --store-root episodes --phase feedback`.
+>    **Six Admiral episodes already exist** (`episodes/active/epic-418-redux-001..006.md`); this is the
+>    epic-level retrospective on top of them.
+> 2. **Lessons audit** — fresh-context subagent, `constellation-lessons-auditor`, with a compiled run
+>    brief. Under dogfooding it also needs a fresh `collect_feedback.py` sweep per
+>    `docs/DEBT_SWEEP_CADENCE.md`.
+> 3. **Cartographer reconcile** — subagent, epic's net change. **Feed it crew 1's g4 float `tc4`:** the
+>    template → top-level-script → installed-bundle seam has **no map id**, and the only record that the
+>    three wave-5 fixes compose across it lives inside one test class.
+> 4. **Harvest before sweep.** `bash .agent-work/epic-418-redux/closeout/harvest_probe.sh` — **v4, 245
+>    lines, and it refuses (exit 2) if `SWEEP_LIST.md` is missing.** Sweep ONLY the six `epic418-*`
+>    trees; everything else is tagged do-not-sweep, including the locked `%TEMP%/ctx-skew-…/clean`.
+>    **`epic418-w5-gauge` is NOT in `SWEEP_LIST.md` — add it (PR #517 merged) before sweeping.**
+>    Order is mandatory: harvest → verify MERGED on the forge → `git worktree remove` → `prune`.
+> 5. **Repo hygiene** (archive `ADMIRAL_LOG.md` under `.agent-work/archive/`), **epic summary**,
+>    **user acceptance**, then **`release --session-id admiral-epic-418-redux` LAST.**
+>
+> ## Things that cost me time tonight — don't re-pay them
+>
+> - **The boundary builder took SIX shape refusals** because I replaced whole blocks instead of editing
+>   fields. `.agent-work/epic-418-redux/closeout/build_w5_to_close.py` now works; **copy it and edit
+>   fields.** `repo_state` takes exactly `{anchors, map_status}` — extra keys are refused.
+>   `result.current_wave` must be an **exact copy** of `input.current_plan.current_wave`.
+>   `completed_outcomes` + `open_current_wave_issue_ids` must **exactly partition** the wave's issue ids.
+> - **A watcher subagent cannot poll for you.** Two attempts, both idle in 90 seconds.
+> - **A bare ` M` in `git status` is not an edit on this CRLF repo** — check `git diff`.
+> - **`py` is not `python`.** `py` has no pytest and exits nonzero, reading like a red suite.
+> - **The CI runner differs from this box** (1918/1 vs 1896/2 on the same tree) and resolves `%TEMP%`
+>   through an 8.3 short name. Derive runner expectations on the runner.
