@@ -1,5 +1,5 @@
 {
-  "boundary_id": "close-to-w5",
-  "launch_id": "w5-gates-readiness-and-cheap-fixes",
-  "trigger": "material_exception"
+  "boundary_id": "w5-to-close",
+  "launch_id": "epic-418-closeout",
+  "trigger": "wave_boundary"
 }

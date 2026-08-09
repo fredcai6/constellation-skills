@@ -6183,3 +6183,39 @@ reason for the merge-last ordering.
 **#481 closed** as materially resolved by #517, with the two uncovered cases stated in the closing
 comment (a checklist with no lease; a concurrent co-writer) and the remainder routed to **#452**. It is
 closed because its *filed* defect is fixed — not because its number was convenient.
+- TRANSITION | boundary=w5-to-close | decision=stop | verified
+
+### BOUNDARY w5-to-close — exit `stop`, verifier exit 0. The gate #506 fixed, closing the run that fixed it.
+
+`verify_iterative_role_artifacts.py admiral-prelaunch --work-id epic-418-redux` → **REAL_EXIT=0**,
+`iterative role artifact ok`. Decision **`stop`**, `applicable: true`, `escalation: null`.
+
+**This is the epic proving its own fix on itself.** Before #506, `execute.c3` demanded a launch
+authorization at a boundary that correctly exits `stop` — **the gate could not be closed by a run that
+finishes**, and its only two exits were a waiver or changing the verdict to `advance`. #506 shipped in
+PR #516 an hour ago; the installed copies were re-verified `dabb48ff → fc1b50f9`; and the very next
+thing this run did was close that gate honestly, on a real `stop`, with no waiver.
+
+**Six shape refusals to get there, and I should have had none.** In order:
+`completed_outcomes[0] missing issue_id` → `discrepancies[0] missing affects/evidence/reason/signal` →
+`completed and open ids must exactly partition current-wave issue ids` → `repo_state missing
+anchors/map_status` → `repo_state has unknown fields branch, head` → `result.current_wave is not an
+exact G1 plan` → `material_changes[0] missing after/before/reason/surface`.
+
+**Every one is the same mistake: I replaced a block wholesale instead of editing its fields.** The
+builder was copied from the reference precisely so this would not happen, and then I overwrote
+`completed_outcomes`, `discrepancies`, `current_wave`, `repo_state` and `material_changes` with
+freshly-authored dicts — reproducing, inside the copied builder, the exact defect the copy exists to
+prevent (census specimen 12). **Copying the tool is not the same as copying the shape.**
+
+**The partition refusal was the useful one.** It forced me to derive wave-5's issue population from the
+forge rather than from memory: 22 dispatched, `gh issue view` on each, **19 closed / 3 open**
+(#413, #503, #495 — the deliberate leave-open and the two reopened floats). That is a *checked*
+partition, and it is the third time in two days that a total-to-reconcile-against caught something my
+own enumeration would have missed.
+
+`CURRENT_TRUTH.md` and `WAVE_REVIEW.md` written by the verifier from `revised_epic_body` and
+`wave_review_comment`. Exactly one `- TRANSITION | boundary=w5-to-close | decision=stop | verified`
+line in this log.
+
+**The epic now goes to closeout. No further wave.**
