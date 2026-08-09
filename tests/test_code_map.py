@@ -4453,6 +4453,42 @@ class WrappedDocstringTests(unittest.TestCase):
                         "Entire docstring should be summary when no blank line")
         self.assertIsNone(body, "No body when no blank line separator")
 
+    def test_dense_paragraph_over_160_chars_no_blank_line(self):
+        """A realistic dense paragraph exceeding 160 chars with no blank line.
+
+        This is the critical boundary case: common docstring shape in this
+        codebase. The summary should truncate at 160 chars, and the overflow
+        should appear in the body, not be silently dropped.
+
+        Without the fix, the overflow is lost and the page ends mid-word.
+        """
+        code = '''def func():
+    """This is a dense docstring paragraph that wraps across multiple physical
+    lines in the source but forms one continuous paragraph with no blank line
+    separator, causing it to exceed the 160 character summary truncation limit."""
+    pass
+'''
+        tree = ast.parse(code)
+        func_node = tree.body[0]
+
+        doc = ast.get_docstring(func_node)
+        summary = extract.doc_summary_of(doc)
+        body = extract.doc_body_of(func_node)
+
+        # Summary should be exactly 160 chars (truncated)
+        self.assertEqual(len(summary), 160,
+                        "Summary should be exactly 160 chars when over limit")
+
+        # Body should contain the overflow that would have been lost
+        self.assertIsNotNone(body, "Overflow should be preserved in body")
+        self.assertIn("truncation limit", body,
+                     "Body should contain the overflow text (end of docstring)")
+
+        # Together, summary + body should contain substantial content
+        full_reconstructed = (summary + body) if body else summary
+        self.assertGreater(len(full_reconstructed), 160,
+                          "Full reconstruction should exceed 160 chars")
+
 
 class BOMParsingTests(unittest.TestCase):
     """Test that files with UTF-8 BOM prefix are handled correctly during extraction.

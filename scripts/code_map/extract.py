@@ -268,9 +268,12 @@ def span_hash(node):
 def _first_paragraph(doc):
     """Extract the first paragraph from a docstring (text up to first blank line).
 
-    Returns a tuple (paragraph, remainder) where paragraph is the first
-    paragraph text and remainder is everything after the blank line separator.
-    Both are None if there is no corresponding section."""
+    Returns a tuple (paragraph, remainder) where:
+    - If there's a blank line: paragraph is text before it, remainder is text after
+    - If there's no blank line: paragraph is the joined text, remainder is None
+    - If paragraph would be truncated (>160 chars, no blank line), the overflow
+      goes into remainder to preserve content.
+    Both are None if there is no content."""
     if not doc:
         return None, None
     lines = doc.strip().splitlines()
@@ -289,11 +292,18 @@ def _first_paragraph(doc):
     # Join paragraph lines with spaces to handle wrapped lines
     paragraph = " ".join(para_lines).strip() if para_lines else None
 
-    # Body is everything after the blank line
+    # Body handling depends on whether there's a blank line
     body = None
     if body_start is not None and body_start < len(lines):
+        # There's a blank line: body is everything after it
         body_lines = lines[body_start:]
         body = "\n".join(body_lines).strip() or None
+    elif paragraph and len(paragraph) > 160:
+        # No blank line, but paragraph exceeds truncation limit:
+        # split at 160 chars and put overflow in body to avoid silent loss
+        body = paragraph[160:].lstrip()
+        paragraph = paragraph[:160]
+        body = body or None  # body is None if it's just whitespace
 
     return paragraph, body
 
