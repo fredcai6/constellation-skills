@@ -1,0 +1,54 @@
+[31mF[0m[31m                                                                        [100%][0m
+================================== FAILURES ===================================
+[31m[1m_ ComposedShippedArtifactTests.test_compose_spine_instantiates_and_ships_a_runnable_reachability_check _[0m
+
+self = <test_iterative_planning_doctrine.ComposedShippedArtifactTests testMethod=test_compose_spine_instantiates_and_ships_a_runnable_reachability_check>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_compose_spine_instantiates_and_ships_a_runnable_reachability_check[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+    [90m    [39;49;00m[33m"""The SHIPPED spine still instantiates, and its archive check still runs.[39;49;00m
+    [33m[39;49;00m
+    [33m    Composition, not restatement: the template comes out of a bundle the real[39;49;00m
+    [33m    installer laid down (not `skills/commander/templates/` in this checkout),[39;49;00m
+    [33m    it is resolved by running `init_work_area.py` as a process (not by calling[39;49;00m
+    [33m    `resolve_spine` in-process), and the resolved `archive.c2b` is then[39;49;00m
+    [33m    EXECUTED through the engine's own runner. A check that instantiates but[39;49;00m
+    [33m    cannot run is the exact defect #439 was, so "resolves" is asserted by[39;49;00m
+    [33m    running it, in both directions -- reachable and unreachable.[39;49;00m
+    [33m[39;49;00m
+    [33m    NO-OP CONDITIONS. This test stops proving anything if (a) the leftover[39;49;00m
+    [33m    scan finds no command checks to scan -- guarded by `command_checks`'s[39;49;00m
+    [33m    count assertion; (b) `archive.c2b` disappears from the spine -- guarded by[39;49;00m
+    [33m    the explicit lookup, which raises rather than skipping; (c) the two[39;49;00m
+    [33m    reachability legs agree, i.e. the check returns the same verdict for a[39;49;00m
+    [33m    merged PR and for no PR at all -- guarded by asserting the two exit codes[39;49;00m
+    [33m    DIFFER, so a check that is stuck on one answer cannot pass this.[39;49;00m
+    [33m    """[39;49;00m[90m[39;49;00m
+        spine = [96mself[39;49;00m.instantiate_bundle_spine([96mself[39;49;00m.bundle_spine)[90m[39;49;00m
+        checks = [96mself[39;49;00m.command_checks(spine)[90m[39;49;00m
+        leftovers = {[90m[39;49;00m
+            [33mf[39;49;00m[33m"[39;49;00m[33m{[39;49;00mtask_id[33m}[39;49;00m[33m.[39;49;00m[33m{[39;49;00mcond_id[33m}[39;49;00m[33m"[39;49;00m: re.findall([33mr[39;49;00m[33m"[39;49;00m[33m<[a-zA-Z][a-zA-Z0-9_-]*>[39;49;00m[33m"[39;49;00m, command)[90m[39;49;00m
+            [94mfor[39;49;00m task_id, cond_id, command [95min[39;49;00m checks[90m[39;49;00m
+        }[90m[39;49;00m
+        [96mself[39;49;00m.assertEqual([90m[39;49;00m
+            {}, {key: found [94mfor[39;49;00m key, found [95min[39;49;00m leftovers.items() [94mif[39;49;00m found},[90m[39;49;00m
+            [33m"[39;49;00m[33mthe instantiated spine ships unsubstituted token(s) in a command check[39;49;00m[33m"[39;49;00m,[90m[39;49;00m
+        )[90m[39;49;00m
+    [90m[39;49;00m
+        c2b = [command [94mfor[39;49;00m task_id, cond_id, command [95min[39;49;00m checks [94mif[39;49;00m (task_id, cond_id) == ([33m"[39;49;00m[33marchive[39;49;00m[33m"[39;49;00m, [33m"[39;49;00m[33mc2b[39;49;00m[33m"[39;49;00m)][90m[39;49;00m
+        [96mself[39;49;00m.assertEqual([94m1[39;49;00m, [96mlen[39;49;00m(c2b), [33m"[39;49;00m[33mthe instantiated spine has no archive.c2b command check[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        reachable = [96mself[39;49;00m.run_shipped_check(c2b[[94m0[39;49;00m], {[96mself[39;49;00m.STUB_BRANCH: [[33m"[39;49;00m[33mMERGED[39;49;00m[33m"[39;49;00m]})[90m[39;49;00m
+        unreachable = [96mself[39;49;00m.run_shipped_check(c2b[[94m0[39;49;00m], {})[90m[39;49;00m
+        [96mself[39;49;00m.assertEqual([90m[39;49;00m
+            [94m0[39;49;00m, reachable.returncode,[90m[39;49;00m
+            [33mf[39;49;00m[33m"[39;49;00m[33ma merged PR is reachable: [39;49;00m[33m{[39;49;00mreachable.stdout[33m}[39;49;00m[33m{[39;49;00mreachable.stderr[33m}[39;49;00m[33m"[39;49;00m,[90m[39;49;00m
+        )[90m[39;49;00m
+>       [96mself[39;49;00m.assertNotEqual([90m[39;49;00m
+            [94m0[39;49;00m, unreachable.returncode,[90m[39;49;00m
+            [33mf[39;49;00m[33m"[39;49;00m[33mno PR at all is not reachable: [39;49;00m[33m{[39;49;00munreachable.stdout[33m}[39;49;00m[33m{[39;49;00munreachable.stderr[33m}[39;49;00m[33m"[39;49;00m,[90m[39;49;00m
+        )[90m[39;49;00m
+[1m[31mE       AssertionError: 0 == 0 : no PR at all is not reachable:[0m
+
+[1m[31mtests\test_iterative_planning_doctrine.py[0m:1662: AssertionError
+[36m[1m=========================== short test summary info ===========================[0m
+[31mFAILED[0m tests/test_iterative_planning_doctrine.py::[1mComposedShippedArtifactTests::test_compose_spine_instantiates_and_ships_a_runnable_reachability_check[0m - AssertionError: 0 == 0 : no PR at all is not reachable:
+[31m[31m[1m1 failed[0m, [33m35 deselected[0m[31m in 0.94s[0m[0m

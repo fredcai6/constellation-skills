@@ -1,0 +1,1 @@
+fowler pass ok: .agent-work/w5-gates/g4-review/fowler-pass.json (smells=12, flagged=['long-parameter-list', 'divergent-change'], overridden=['long-method', 'feature-envy', 'data-clumps', 'comments-as-deodorant'])

@@ -1,0 +1,90 @@
+{
+  "work_id": "w5-gates",
+  "diff_ref": "git diff 84d1e998 764a2728 -- tests/test_iterative_planning_doctrine.py (353 added / 15 removed): one new class ComposedShippedArtifactTests with 3 tests plus 4 helpers, and one extraction of the gh/git offline stub shim into a module-level write_offline_stubs()",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md (Verification Discipline; Writing Files On Windows; Evidence You Owe Back), docs/agents/GLOSSARY.md, references/global-crew.md, references/global-everyone.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "overridden",
+      "finding": "test_compose_verifier_locates_itself_by_structure_across_the_real_locations carries five legs in one ~50-line body; test_compose_terminal_transition_closes_prelaunch_from_the_installed_bundle carries two legs in ~40 lines.",
+      "override": {
+        "repo_standard": "CREW_CONTEXT.md Verification Discipline: 'A check that cannot fail is indistinguishable from one that passed' and 'Any guard that loops must assert what it looped over'.",
+        "reason": "The length is what buys the non-tautology. The --skills-root leg is asserted only as a DIFFERENCE between the same script with the same argv run twice, so both runs must live in one method or the difference assertion is lost; the same holds for the two compose_spine reachability legs asserted to DIFFER. Splitting these into separate methods would convert measured differences into two independent absolute assertions, each of which could pass on a stuck answer. I measured this: under the m3 and m4 mutations the difference assertions are exactly what goes red."
+      }
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "overridden",
+      "finding": "command_checks() reaches through the spine dict -- spine['tasks'][id]['postconditions'][n]['check']['command'] -- rather than asking a spine object for its command checks.",
+      "override": {
+        "repo_standard": "CREW_CONTEXT.md Verification Discipline: 'Assert against behaviour, never against text that describes it' and 'A round-trip test over the real shipped artifacts proves the artifacts are clean'.",
+        "reason": "The spine is a shipped JSON artifact, not an object with behaviour to envy; there is no spine type in the codebase to move this onto. Introducing a wrapper would put a hand-written model between the test and the bytes a user installs, which is precisely what this gate exists to stop doing. Reading the shipped shape directly is the point."
+      }
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "overridden",
+      "finding": "boundary_id, launch_id and decision travel together through seed_boundary() and are written into three separate artifacts.",
+      "override": {
+        "repo_standard": "CREW_CONTEXT.md Verification Discipline: 'Define a guard by its consumer's behaviour, not by a hand-maintained list. A list ... drifts from the predicate the code actually applies, and the gap is silent.'",
+        "reason": "Those three fields are exactly the on-disk field set of NEXT_WAVE.json plus the ADMIRAL_LOG.md transition line that the verifier under test reads. Wrapping them in a test-side value object would create a second, hand-maintained model of the artifact that can drift from the real one silently -- the failure mode the standard names. The clump mirrors the consumer, so it is the correct shape here."
+      }
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "flagged",
+      "finding": "seed_boundary(self, boundary_id, launch_id, source, result, decision) takes five parameters, four of them positional at both call sites, and the two call sites differ only in three of them. At the second call site the arguments are spread over five lines and the reader must count positions to see that launch_id is None in both cases -- which is the load-bearing fact of the whole second leg. OBSERVATION, not a blocker: keyword arguments at the call sites would make the shared 'launch_id is None' visible without changing any behaviour. Recorded rather than fixed, because the gate imperative forbids introducing behaviour and this is the reviewer's judgment, not a defect."
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "flagged",
+      "finding": "tests/test_iterative_planning_doctrine.py is now ~1838 lines holding eight test classes that change for four unrelated reasons -- the location guard (#501/#468), the stop relaxation (#506), the archive reachability check (#439/#484), and now composition. This diff adds the fourth reason. It is a textbook divergent-change file, and it is also why the six load-bearing selector tokens had to be hand-kept disjoint across gates: the selectors are doing the job module boundaries would otherwise do. OBSERVATION and a triage candidate, explicitly NOT a blocker: splitting the file is out of this gate's scope (the imperative is composition evidence and a zero-behaviour diff), the new class correctly avoids every reserved token, and I verified by node-ID listing that no earlier gate's floor was widened. Raising it so the epic can decide whether wave 6 splits the file."
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The new class and all three test methods carry long docstrings, including an explicit NO-OP CONDITIONS paragraph per test, and there are several explanatory inline comments over fixture construction.",
+      "override": {
+        "repo_standard": "CREW_CONTEXT.md Verification Discipline ('A check that cannot fail is indistinguishable from one that passed ... demonstrate it can reach a failing state') plus the established convention of the surrounding file, which global-crew.md requires the change to match ('Match the surrounding code's naming, labeling, and in-file documentation conventions').",
+        "reason": "These docstrings are not covering for unclear code -- they carry the required no-op analysis, which is a deliverable of this repo's verification discipline and has no other home in the source. The g1, g2 and g3 classes in this same file already carry it the same way, so this matches the surrounding convention rather than inventing one. Important caveat I did not take on trust: CREW_CONTEXT also warns that docstrings are hand-authored and never checked against what runs, so I did not accept the NO-OP CONDITIONS prose as evidence. I measured each claimed guard by mutation (survey items c1-c6, c8), and every claimed guard went red as described. The comments are accurate, which is why the override is honest."
+      }
+    }
+  ],
+  "rail_exception": null
+}

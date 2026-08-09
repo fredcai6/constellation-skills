@@ -1,0 +1,318 @@
+{
+  "work_id": "w5-gates",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "k1-decoy",
+    "k2-permissive-mutation",
+    "k3-polarities",
+    "k4-skills-root-wins",
+    "k5-refusal-enumeration",
+    "k6-mutation-floor",
+    "k7-selectors"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read global-crew.md + global-everyone.md (bundled), docs/agents/CREW_CONTEXT.md, GLOSSARY present, the g1-review handoff, g1-implement-RESULT.md, and the diff of the reviewed pair. Note: change is COMMITTED at c63c2bb0, not uncommitted as the handoff states; content identical either way.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. The handoff asked for three things and all three landed. (1) The name test is gone: _installed_skills_root no longer calls .name.startswith at all; the decision is _is_skills_root (CORPUS.json marker OR a constellation-*/SKILL.md child) plus _is_installed_bundle (own SKILL.md AND parent is a skills root). (2) --skills-root is load-bearing, not shipped-inert: it is on the shared parser and threaded to all three modes, and I proved it overrides both a correctly-detected bundle and a working probe (k4). (3) Both polarities fixed and measured at all three real locations (k3). Resolution order matches the handoff exactly: explicit flag -> own bundle -> project scope -> user scope -> refuse. Note for the record: the handoff says the review target is the UNCOMMITTED working tree, but the implementer COMMITTED the pair at c63c2bb0 and git status shows the pair clean. Content is identical either way and I reviewed it as HEAD-vs-main on those two files; flagging the mismatch rather than silently absorbing it.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- no scope drift. 'git diff --name-only main...HEAD' excluding .agent-work/ returns EXACTLY the two allowed files: scripts/verify_iterative_role_artifacts.py and tests/test_iterative_planning_doctrine.py. Every named exclusion verified untouched: scripts/checklist_engine.py, tests/test_checklist_engine.py, scripts/install_constellation.py (read-only for CORPUS_MARKER; empty diff confirmed), handoff templates, docs/CREW_CONTEXT.md, docs/TREND_SNAPSHOT.md, COMMANDER_SPINE.template.json, hooks, settings.json, docs/agents/*. The two .agent-work/epic-418-redux/transitions/close-to-w5/ files showing M are the known CRLF stat artifact -- I confirmed independently that git diff on them is empty; left unstaged as instructed. I also restored both files I mutated and verified restoration by BLOB OID (29c3c9ba and 5c018b24, both identical to HEAD), per the repo rule against comparing working-tree bytes on Windows.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- every load-bearing claim in g1-implement-RESULT.md was independently reproduced, not accepted. Reproduced and CONFIRMED: guard_location 10/13/11 EXIT=0; guard_mutation 1/22/6 EXIT=0; coupled suite 386 passed / 480 subtests EXIT=0; the exact refusal string with 'Roots tried (3)' and its three roots; the #501 red output from the unfixed on-main copy AND its disappearance under the fixed script; the three-location structural matrix measured on the live filesystem; the wrong-root-red / correct-root-green pair. The suite delta (+11 tests / +17 subtests) was reconciled arithmetically against the file's own method count on main (12) vs HEAD (23). ONE CLAIM DOES NOT HOLD, minor: the result says the CORPUS_MARKER duplication 'is commented at both ends of the intent'. Only the verifier end carries the back-reference; scripts/install_constellation.py:1040 has no comment pointing at the duplicate (the comment above it is about corpus-id hashing). This is an overstated claim rather than a defect -- the installer was correctly off-limits for editing, so the implementer could not have added the other end without violating scope. No evidence was absent or unverifiable.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS on every constraint the handoff names. (i) Guard not widened into a check that cannot fail: proven two ways -- the permissive mutation drives 9 failures (k2), and the name-only decoy is rejected while a real bundle and a NAME-FREE bundle are both accepted (k1), so the predicate discriminates in both directions. The probe fallback is the frozen plan's specified behaviour, not the forbidden widening: the predicate still returns False for the checkout and the worktree. (ii) Fail visibly, no silent fallback: the note IS emitted -- I separated the streams and confirmed it lands on STDERR ('note: this script is not inside an installed bundle ...; resolved installed skills root ...') while stdout carries only the ok line. (iii) The note is for a human, not a check: nothing in the change makes a command condition depend on it, and the implementer surfaced the engine-discards-stdout limitation as a triage candidate rather than building a check on it -- correct handling. (iv) Targeted tests plus the relevant broader suite: 11 targeted tests / 17 subtests plus the eight-file coupled suite, no no-test-surface exception claimed. (v) Test naming contract honoured: the three-location matrix and the decoy carry guard_location, the wrong-root test carries guard_mutation, and I verified on this machine that a zero-match selector exits 5, so both floors are real.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- no divergence Commander must reconcile. Orientation is DEGRADED-NO-MAP, so there is no recorded architecture to contradict; anchors are paths. The Map Impact notes match the diff: I verified the cited line numbers on disk (_is_skills_root:57, _is_installed_bundle:72, _candidate_skills_roots:85, _installed_skills_root:91) and the CLI gaining --skills-root. The capability claim (role-artifact verification now runnable from a source checkout and a Commander worktree) is backed by the measured runs in k3, and the g4-integrate.c2 dependency by k4. The settled/human decision anchor -- identify a bundle by structure, not by name -- was implemented as ruled and not unsettled. The source-repo/installed-bundle duality, this run's named unmapped seam, was measured on disk rather than reasoned from structure, exactly as the handoff required. Durable context correctly routed: the seam is offered to Cartographer, the three out-of-scope finds to Triage. Two triage candidates added by me, both out of scope for this gate.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a C:/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/g1-review/fowler-pass.json placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like w5-gates on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python C:/Programs/constellation-skills-wt/epic418-w5-gates/scripts/verify_fowler_pass.py C:/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/g1-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. Full Fowler baseline pass rendered on all 12 smells; record at .agent-work/w5-gates/g1-review/fowler-pass.json, rail exits 0 (smells=12, flagged=3, overridden=1). I also confirmed the rail is not a check that cannot fail by feeding it a record with a dropped smell and one with an unlogged override -- both REFUSED. FLAGGED (all observations, none a blocker): (1) duplicated-code -- CORPUS_MARKER is copied from install_constellation.py:1040 with nothing asserting the two copies still agree; a rename would silently degrade _is_skills_root to its sibling-glob clause rather than fail. (2) shotgun-surgery -- the option had to be threaded through five parallel sites and the three verify_* functions must be edited in lockstep for any future resolution option. (3) comments-as-deodorant -- _is_skills_root's 'never by name' docstring is stronger than the predicate, which globs constellation-* on the parent and therefore self-matches for a constellation-*-named candidate, making the parent clause vacuous (my k1 decoy 3). OVERRIDDEN with logged standard: long-method, subordinated to CREW_CONTEXT's Verification Discipline, which mandates the assert-what-you-looped-over and assert-the-mutation-applied checks that account for the length.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python C:/Programs/constellation-skills-wt/epic418-w5-gates/scripts/verify_fowler_pass.py C:/Programs/constellation-skills-wt/epic418-w5-gates/.agent-work/w5-gates/g1-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "k1-decoy": {
+      "id": "k1-decoy",
+      "title": "CC1: name-only decoy rejected (built by reviewer)",
+      "imperative": "Build a constellation-<name> directory with NO SKILL.md inside a real skills root myself and confirm _is_installed_bundle rejects it. Do not accept the implementer's test as proof.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS on criterion 1 as written. I built three decoys and two controls myself (repro/decoy.py), independent of the implementer's tests. Decoy1 (constellation-decoy, NO SKILL.md, inside a CORPUS.json-marked root) REJECTED. Decoy2 (same, root marked only by clause 2 via a real sibling bundle) REJECTED. Both are name-test positives, so the old guard would have taken them. Positive control (real bundle) ACCEPTED and name-free control (totally-unrelated-name under a marked root) ACCEPTED -- so the predicate can say both yes and no, and its yes does not consult the name. OBSERVATION (not criterion 1): decoy3, a constellation-* dir carrying SKILL.md whose parent is otherwise an ordinary directory, is ACCEPTED -- because _is_skills_root's clause 2 globs 'constellation-*' in the PARENT and the candidate matches ITSELF. For a constellation-*-named candidate the parent clause is therefore vacuous and the predicate degrades to 'has SKILL.md'. No real location is misjudged by this (all three measured in k3), and the failure mode is a visible downstream refusal, not a silent accept.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "k2-permissive-mutation": {
+      "id": "k2-permissive-mutation",
+      "title": "CC2: guard tests go RED under a permissive mutation",
+      "imperative": "Make _is_installed_bundle unconditionally True in the worktree copy, run the guard_location selector, confirm RED. Restore and confirm git diff returns to the reviewed state.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS. I mutated _is_installed_bundle to 'return True' myself, asserting the substitution matched EXACTLY ONCE before writing (a silent no-match would read as a passing guard). Confirmed the marker was really in the file at line 82. Bare, unpiped run: python -m pytest tests/test_iterative_planning_doctrine.py -q -k guard_location -> 9 failed, 6 passed, 13 deselected, EXIT=1. RED includes the decoy test itself ('AssertionError: True is not false') and both non-installed rows of the three-location matrix ('False != True' for main-checkout and commander-worktree), plus three runtime tests that lost the refusal entirely. Restored with git checkout; blob OID compared, not raw bytes (Windows CRLF rule): HEAD 29c3c9ba == worktree 29c3c9ba, git diff on the pair empty. Re-ran the same selector: 10 passed, 13 deselected, 11 subtests, EXIT=0. The guard's tests can fail, and they fail for the right reason.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "k3-polarities": {
+      "id": "k3-polarities",
+      "title": "CC3: both polarities addressed, measured from each location",
+      "imperative": "Run the FIXED script by absolute path with cwd = main checkout and this worktree. Confirm probe behaviour and that #501's quoted red output no longer appears.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- both polarities measured on disk at all three locations, not reasoned from structure. Predicate on the live filesystem: main checkout C:/Programs/constellation-skills (own SKILL.md False, parent CORPUS False, 0 sibling bundles) -> not installed; commander worktree (same columns) -> not installed; installed bundle ~/.claude/skills/constellation-replan (own SKILL.md True, parent CORPUS True, 20 siblings) -> installed. _is_skills_root('C:/Programs') is now False, so #501's wrong root is gone at the source. Polarity (a): cwd=C:/Programs/constellation-skills running the FIXED worktree script -> stderr note emitted, 'iterative role artifact ok: admiral-prelaunch (epic-418-redux)', EXIT=0; the quoted red 'C:\\Programs\\constellation-replan\\scripts\\verify_replan.py' does NOT appear. CONTROL: the main checkout's own unfixed on-main copy still emits exactly that red, EXIT=1 -- so the comparison discriminates and is not a vacuous pass. Polarity (b): cwd=worktree, fixed script -> same note + ok, EXIT=0; 'REFUSED: role verifier must run from an installed constellation-* skill' does not appear. Installed-bundle branch measured with a fixture I built (CORPUS.json root + constellation-under-test/SKILL.md + the fixed script, constellation-replan deliberately ABSENT) run with cwd=main checkout, where a probe WOULD have found the real ~/.claude/skills and succeeded: it instead refused naming the FIXTURE root, EXIT=1, and emitted NO stderr note -- proving the own-bundle branch won and no probe ran.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "k4-skills-root-wins": {
+      "id": "k4-skills-root-wins",
+      "title": "CC4: --skills-root exists and WINS over a detected bundle",
+      "imperative": "Pass --skills-root and observe resolution actually uses it, including from a location where the own-bundle branch would otherwise win.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- the flag exists and demonstrably WINS over a correctly-detected bundle. From the k3 fixture bundle (own-bundle branch provably won there, refusing and naming the fixture root), adding --skills-root C:/Users/fredc/.claude/skills flipped the SAME invocation to 'iterative role artifact ok', EXIT=0. Reverse direction: from cwd=main checkout where autodetection resolves fine, --skills-root <a plausible CORPUS.json-marked temp root with no verifiers> drove admiral-prelaunch to 'REFUSED: installed public verifier is missing: ...wrong-root/constellation-replan/scripts/verify_replan.py', EXIT=1 -- so the flag overrides both a bundle and a working probe. Validation reached: --skills-root C:/no/such/dir -> 'REFUSED: --skills-root is not a directory', EXIT=1. Flag is on the shared parser and threaded to all three modes (verified in --help and in the diff at :228 / :235,:237,:239), so g4-integrate.c2's dependency is satisfied. OBSERVATION: verify_explorer and verify_commander read their work-area artifact BEFORE calling _installed_skills_root, so a bad --skills-root is masked by an artifact-missing refusal in those two modes; only admiral-prelaunch reaches the flag validation first. Ordering nit, not a defect -- both paths still refuse visibly with EXIT=1.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "k5-refusal-enumeration": {
+      "id": "k5-refusal-enumeration",
+      "title": "CC5: refusal names the real problem and every root tried, count matches",
+      "imperative": "Force the refusal in an isolated HOME/cwd and confirm the stated count equals the number of roots actually listed.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- reproduced end-to-end in a subprocess with an isolated HOME/USERPROFILE and a cwd holding no .claude/skills (repro/refusal.py). Without that isolation the developer's real ~/.claude/skills leaks in and the refusal is unreachable, which would make this a check that cannot fail; I isolated it and got EXIT=1. The message names the REAL problem ('cannot locate an installed constellation skills root') and neither stale message appears. Count checked by PARSING, not by eye: stated (3) == roots actually listed (3), and the three listed are exactly the three the code consults, in order -- bundle.parent, <cwd>/.claude/skills, ~/.claude/skills. No under-inclusive enumeration.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "k6-mutation-floor": {
+      "id": "k6-mutation-floor",
+      "title": "CC6: guard_mutation floor holds",
+      "imperative": "Confirm guard_mutation fails on a plausible-but-wrong root and passes on the correct one, reproduced independently.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- floor confirmed at two levels. (a) At the command level, independent of the test: from cwd=main checkout, --skills-root <plausible CORPUS.json-marked temp root without verifiers> -> admiral-prelaunch REFUSED 'installed public verifier is missing: ...wrong-root/constellation-replan/scripts/verify_replan.py', EXIT=1; the same invocation with the correct root -> EXIT=0. Fails on broken input, passes on correct input. (b) The guard_mutation TEST is itself falsifiable: I substituted self.user_skills into the wrong-root slot (asserted exactly one match before writing), and got 3 SUBFAILED 'AssertionError: 1 != 0 : acceptance must not survive a wrong root' across explorer/commander/admiral-prelaunch, EXIT=1. Restored via git checkout; test blob OID 5c018b24 identical to HEAD, git diff on the pair empty, selector back to 1 passed / 6 subtests / EXIT=0. The test also self-guards: it asserts _is_skills_root(wrong) is True (the wrong root is plausible, not obviously broken) and that each target is absent from the wrong root AND present in the correct one, so an empty or mis-built fixture cannot report clean.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "k7-selectors": {
+      "id": "k7-selectors",
+      "title": "CC7: both -k selectors collect nonzero, unpiped; coupled suite green",
+      "imperative": "Run both selectors bare (never piped) and read pytest's own exit code; run the eight-file coupled suite.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "PASS -- all runs bare and unpiped, exit codes read from pytest itself. guard_location -> 10 passed, 13 deselected, 11 subtests, EXIT=0. guard_mutation -> 1 passed, 22 deselected, 6 subtests, EXIT=0. Both collect nonzero. CONTROL: I ran a deliberately-bogus selector (guard_no_such_selector_xyz) -> '23 deselected', EXIT=5, confirming on THIS machine that a zero-match selector really does exit 5 and would fail the gate closed, so the nonzero-collection claim is not vacuous. Coupled eight-file suite -> 386 passed, 480 subtests, 52.22s, EXIT=0, matching the claimed figures. Delta verified independently rather than accepted: the test file holds 12 test methods on main and 23 at HEAD (+11), and the two selectors collect exactly 10+1=11 tests and 11+6=17 subtests, which reconciles exactly with the claimed 386-375=11 / 480-463=17. Nothing else moved.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "APPROVE. All seven close criteria independently reproduced, not accepted. The guard is demonstrably not a check that cannot fail: I built the name-only decoy myself (rejected, while a real bundle and a name-free bundle are accepted) and the permissive mutation drives 9 failures across the guard_location selector, restored to identical blob OIDs. Both polarities fixed and measured at all three real on-disk locations, with the unfixed on-main copy as a discriminating control. --skills-root wins over a correctly-detected bundle and over a working probe. The refusal's stated count (3) parses equal to the roots actually listed. Both selectors collect nonzero unpiped, a bogus selector exits 5 on this machine, and the coupled suite is 386/480 green with the delta reconciled to the file's own method count. No blockers. Four triage candidates, the leading one a measured latent regression path: the constellation-* glob runs on the parent so the source repo self-matches, which would resurrect #501 if the repo ever gains a root-level SKILL.md."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "k1-decoy",
+      "statement": "_is_skills_root clause 2 is self-satisfying: for a candidate named constellation-* that carries SKILL.md, parent.glob('constellation-*') matches the candidate itself, so _is_installed_bundle's parent clause is vacuous and reduces to 'has SKILL.md'. Exclude the candidate from its own parent scan (or require a DIFFERENT sibling) to keep the structural test genuinely two-clause."
+    },
+    {
+      "id": "tc2",
+      "from": "r5-reconciliation",
+      "statement": "verify_explorer and verify_commander read their work-area artifact BEFORE resolving the skills root, so an invalid --skills-root is masked by an artifact-missing refusal in those two modes; only admiral-prelaunch surfaces 'skills-root is not a directory' first. Consider resolving the root before reading the artifact so the flag's own error is not shadowed."
+    },
+    {
+      "id": "tc3",
+      "from": "r3-evidence",
+      "statement": "g1-implement-RESULT.md claims the CORPUS_MARKER duplication is 'commented at both ends of the intent'; only the verifier end carries the back-reference. install_constellation.py was correctly off-limits, so if the other end is wanted it needs its own scoped change."
+    },
+    {
+      "id": "tc4",
+      "from": "r6-fowler",
+      "statement": "Nothing asserts verify_iterative_role_artifacts.CORPUS_MARKER still equals install_constellation.CORPUS_MARKER. A rename of the installer's marker would silently degrade _is_skills_root to its sibling-glob clause instead of failing. Add a one-line equality test."
+    },
+    {
+      "id": "tc5",
+      "from": "k1-decoy",
+      "statement": "MEASURED consequence of tc1 (same root cause, this is the actionable part): because the constellation-* glob runs on the PARENT, the source repo self-matches. I measured it on a temp stand-in for C:/Programs -- today _is_skills_root(Programs)=False and _is_installed_bundle(repo)=False (correct), but the moment constellation-skills gains a root-level SKILL.md, _is_skills_root(Programs) flips to True and _is_installed_bundle(repo) flips to True, resurrecting #501's wrong-accept exactly. The fix is therefore correct today but conditional on the repo never acquiring a root SKILL.md. One-line hardening: exclude the candidate itself from its own parent scan (require a DIFFERENT sibling bundle)."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "rev-g1-review-w5g",
+    "status": "released",
+    "claimed_at": "2026-08-09T00:43:12.885381+00:00",
+    "last_heartbeat": "2026-08-09T00:56:30.582158+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T00:58:00.987957+00:00"
+  }
+}

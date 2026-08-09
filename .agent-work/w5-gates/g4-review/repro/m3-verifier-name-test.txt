@@ -1,0 +1,132 @@
+[32m.[0m[31m                                                                     [100%][0m
+================================== FAILURES ===================================
+[31m[1m_ ComposedShippedArtifactTests.test_compose_verifier_locates_itself_by_structure_across_the_real_locations (location='source-checkout-named-constellation-skills') _[0m
+
+self = <test_iterative_planning_doctrine.ComposedShippedArtifactTests testMethod=test_compose_verifier_locates_itself_by_structure_across_the_real_locations>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_compose_verifier_locates_itself_by_structure_across_the_real_locations[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+    [90m    [39;49;00m[33m"""The shipped verifier, run as a process, from every location that exists.[39;49;00m
+    [33m[39;49;00m
+    [33m    Five legs on one installed corpus. The two that carry the wave's finding[39;49;00m
+    [33m    are the name-only decoy -- a `constellation-decoy/` with no `SKILL.md`,[39;49;00m
+    [33m    sitting INSIDE the real skills root beside genuine bundles, which a name[39;49;00m
+    [33m    test accepts and structure rejects (#501, #468) -- and the explicit-root[39;49;00m
+    [33m    pair, where the worktree copy refuses and the SAME copy with the SAME[39;49;00m
+    [33m    argv plus `--skills-root` passes.[39;49;00m
+    [33m[39;49;00m
+    [33m    NO-OP CONDITIONS, per leg. (1) Every leg seeds a valid REPLAN_INPUT[39;49;00m
+    [33m    first: without it the refusal legs would refuse on the missing artifact[39;49;00m
+    [33m    and never reach the guard, which is precisely how a refusal test becomes[39;49;00m
+    [33m    a no-op. (2) The refusal legs therefore assert the refusal REASON, not[39;49;00m
+    [33m    just a nonzero exit -- a refusal for any other cause fails here. (3) The[39;49;00m
+    [33m    `--skills-root` leg is worthless alone, since it would pass on any code[39;49;00m
+    [33m    that resolves a root at all; it is asserted only as a DIFFERENCE against[39;49;00m
+    [33m    the same script refusing without the flag, so a flag the code ignores[39;49;00m
+    [33m    cannot pass. (4) The accept leg asserts stderr carries no `note:` line,[39;49;00m
+    [33m    so a bundle that resolved through the fallback path rather than its own[39;49;00m
+    [33m    structure does not read as a structural accept.[39;49;00m
+    [33m    """[39;49;00m[90m[39;49;00m
+        [96mself[39;49;00m.seed_commander_artifact()[90m[39;49;00m
+    [90m[39;49;00m
+        accepted = [96mself[39;49;00m.run_bundled_verifier([96mself[39;49;00m.bundle_script, [33m"[39;49;00m[33mcommander[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        [96mself[39;49;00m.assertEqual([94m0[39;49;00m, accepted.returncode, [33mf[39;49;00m[33m"[39;49;00m[33minstalled bundle must be accepted: [39;49;00m[33m{[39;49;00maccepted.stderr[33m}[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        [96mself[39;49;00m.assertNotIn([90m[39;49;00m
+            [33m"[39;49;00m[33mnote:[39;49;00m[33m"[39;49;00m, accepted.stderr,[90m[39;49;00m
+            [33m"[39;49;00m[33ma bundle that resolves itself must not announce a fallback[39;49;00m[33m"[39;49;00m,[90m[39;49;00m
+        )[90m[39;49;00m
+    [90m[39;49;00m
+        [90m# A name-only decoy inside the REAL skills root: the case a name test[39;49;00m[90m[39;49;00m
+        [90m# accepts and this must not. Built here rather than in setUpClass so the[39;49;00m[90m[39;49;00m
+        [90m# corpus the other legs see is the one the installer wrote.[39;49;00m[90m[39;49;00m
+        decoy = [96mself[39;49;00m.skills_root / [33m"[39;49;00m[33mconstellation-decoy[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+        (decoy / [33m"[39;49;00m[33mscripts[39;49;00m[33m"[39;49;00m).mkdir(parents=[94mTrue[39;49;00m, exist_ok=[94mTrue[39;49;00m)[90m[39;49;00m
+        decoy_script = decoy / [33m"[39;49;00m[33mscripts[39;49;00m[33m"[39;49;00m / ROLE_VERIFIER.name[90m[39;49;00m
+        shutil.copy2([96mself[39;49;00m.bundle_script, decoy_script)[90m[39;49;00m
+        [96mself[39;49;00m.assertFalse((decoy / [33m"[39;49;00m[33mSKILL.md[39;49;00m[33m"[39;49;00m).is_file(), [33m"[39;49;00m[33mthe decoy must carry no SKILL.md[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        [96mself[39;49;00m.assertTrue(decoy.name.startswith([33m"[39;49;00m[33mconstellation-[39;49;00m[33m"[39;49;00m), [33m"[39;49;00m[33mthe decoy must look right by name[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+    [90m[39;49;00m
+        checkout_script = [96mself[39;49;00m.checkout / [33m"[39;49;00m[33mscripts[39;49;00m[33m"[39;49;00m / ROLE_VERIFIER.name[90m[39;49;00m
+        worktree_script = [96mself[39;49;00m.worktree / [33m"[39;49;00m[33mscripts[39;49;00m[33m"[39;49;00m / ROLE_VERIFIER.name[90m[39;49;00m
+        refusals = ([90m[39;49;00m
+            ([33m"[39;49;00m[33msource-checkout-named-constellation-skills[39;49;00m[33m"[39;49;00m, checkout_script),[90m[39;49;00m
+            ([33m"[39;49;00m[33mcommander-worktree[39;49;00m[33m"[39;49;00m, worktree_script),[90m[39;49;00m
+            ([33m"[39;49;00m[33mname-only-decoy-inside-a-real-skills-root[39;49;00m[33m"[39;49;00m, decoy_script),[90m[39;49;00m
+        )[90m[39;49;00m
+        [96mself[39;49;00m.assertEqual([94m3[39;49;00m, [96mlen[39;49;00m(refusals))[90m[39;49;00m
+        [94mfor[39;49;00m label, script [95min[39;49;00m refusals:[90m[39;49;00m
+            [94mwith[39;49;00m [96mself[39;49;00m.subTest(location=label):[90m[39;49;00m
+                [96mself[39;49;00m.assertTrue(script.is_file(), [33mf[39;49;00m[33m"[39;49;00m[33m{[39;49;00mlabel[33m}[39;49;00m[33m fixture was never built[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+                refused = [96mself[39;49;00m.run_bundled_verifier(script, [33m"[39;49;00m[33mcommander[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+                [96mself[39;49;00m.assertNotEqual([94m0[39;49;00m, refused.returncode, [33mf[39;49;00m[33m"[39;49;00m[33m{[39;49;00mlabel[33m}[39;49;00m[33m is not an installed bundle[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+>               [96mself[39;49;00m.assertIn([90m[39;49;00m
+                    [33m"[39;49;00m[33mcannot locate an installed constellation skills root[39;49;00m[33m"[39;49;00m, refused.stderr,[90m[39;49;00m
+                    [33mf[39;49;00m[33m"[39;49;00m[33m{[39;49;00mlabel[33m}[39;49;00m[33m refused for some other reason: [39;49;00m[33m{[39;49;00mrefused.stderr[33m}[39;49;00m[33m"[39;49;00m,[90m[39;49;00m
+                )[90m[39;49;00m
+[1m[31mE               AssertionError: 'cannot locate an installed constellation skills root' not found in 'REFUSED: installed public verifier is missing: C:\\Users\\fredc\\AppData\\Local\\Temp\\tmpe7hbvidf\\programs\\constellation-replan\\scripts\\verify_replan.py\n' : source-checkout-named-constellation-skills refused for some other reason: REFUSED: installed public verifier is missing: C:\Users\fredc\AppData\Local\Temp\tmpe7hbvidf\programs\constellation-replan\scripts\verify_replan.py[0m
+
+[1m[31mtests\test_iterative_planning_doctrine.py[0m:1738: AssertionError
+[31m[1m_ ComposedShippedArtifactTests.test_compose_verifier_locates_itself_by_structure_across_the_real_locations (location='name-only-decoy-inside-a-real-skills-root') _[0m
+
+self = <test_iterative_planning_doctrine.ComposedShippedArtifactTests testMethod=test_compose_verifier_locates_itself_by_structure_across_the_real_locations>
+
+    [0m[94mdef[39;49;00m[90m [39;49;00m[92mtest_compose_verifier_locates_itself_by_structure_across_the_real_locations[39;49;00m([96mself[39;49;00m):[90m[39;49;00m
+    [90m    [39;49;00m[33m"""The shipped verifier, run as a process, from every location that exists.[39;49;00m
+    [33m[39;49;00m
+    [33m    Five legs on one installed corpus. The two that carry the wave's finding[39;49;00m
+    [33m    are the name-only decoy -- a `constellation-decoy/` with no `SKILL.md`,[39;49;00m
+    [33m    sitting INSIDE the real skills root beside genuine bundles, which a name[39;49;00m
+    [33m    test accepts and structure rejects (#501, #468) -- and the explicit-root[39;49;00m
+    [33m    pair, where the worktree copy refuses and the SAME copy with the SAME[39;49;00m
+    [33m    argv plus `--skills-root` passes.[39;49;00m
+    [33m[39;49;00m
+    [33m    NO-OP CONDITIONS, per leg. (1) Every leg seeds a valid REPLAN_INPUT[39;49;00m
+    [33m    first: without it the refusal legs would refuse on the missing artifact[39;49;00m
+    [33m    and never reach the guard, which is precisely how a refusal test becomes[39;49;00m
+    [33m    a no-op. (2) The refusal legs therefore assert the refusal REASON, not[39;49;00m
+    [33m    just a nonzero exit -- a refusal for any other cause fails here. (3) The[39;49;00m
+    [33m    `--skills-root` leg is worthless alone, since it would pass on any code[39;49;00m
+    [33m    that resolves a root at all; it is asserted only as a DIFFERENCE against[39;49;00m
+    [33m    the same script refusing without the flag, so a flag the code ignores[39;49;00m
+    [33m    cannot pass. (4) The accept leg asserts stderr carries no `note:` line,[39;49;00m
+    [33m    so a bundle that resolved through the fallback path rather than its own[39;49;00m
+    [33m    structure does not read as a structural accept.[39;49;00m
+    [33m    """[39;49;00m[90m[39;49;00m
+        [96mself[39;49;00m.seed_commander_artifact()[90m[39;49;00m
+    [90m[39;49;00m
+        accepted = [96mself[39;49;00m.run_bundled_verifier([96mself[39;49;00m.bundle_script, [33m"[39;49;00m[33mcommander[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        [96mself[39;49;00m.assertEqual([94m0[39;49;00m, accepted.returncode, [33mf[39;49;00m[33m"[39;49;00m[33minstalled bundle must be accepted: [39;49;00m[33m{[39;49;00maccepted.stderr[33m}[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        [96mself[39;49;00m.assertNotIn([90m[39;49;00m
+            [33m"[39;49;00m[33mnote:[39;49;00m[33m"[39;49;00m, accepted.stderr,[90m[39;49;00m
+            [33m"[39;49;00m[33ma bundle that resolves itself must not announce a fallback[39;49;00m[33m"[39;49;00m,[90m[39;49;00m
+        )[90m[39;49;00m
+    [90m[39;49;00m
+        [90m# A name-only decoy inside the REAL skills root: the case a name test[39;49;00m[90m[39;49;00m
+        [90m# accepts and this must not. Built here rather than in setUpClass so the[39;49;00m[90m[39;49;00m
+        [90m# corpus the other legs see is the one the installer wrote.[39;49;00m[90m[39;49;00m
+        decoy = [96mself[39;49;00m.skills_root / [33m"[39;49;00m[33mconstellation-decoy[39;49;00m[33m"[39;49;00m[90m[39;49;00m
+        (decoy / [33m"[39;49;00m[33mscripts[39;49;00m[33m"[39;49;00m).mkdir(parents=[94mTrue[39;49;00m, exist_ok=[94mTrue[39;49;00m)[90m[39;49;00m
+        decoy_script = decoy / [33m"[39;49;00m[33mscripts[39;49;00m[33m"[39;49;00m / ROLE_VERIFIER.name[90m[39;49;00m
+        shutil.copy2([96mself[39;49;00m.bundle_script, decoy_script)[90m[39;49;00m
+        [96mself[39;49;00m.assertFalse((decoy / [33m"[39;49;00m[33mSKILL.md[39;49;00m[33m"[39;49;00m).is_file(), [33m"[39;49;00m[33mthe decoy must carry no SKILL.md[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+        [96mself[39;49;00m.assertTrue(decoy.name.startswith([33m"[39;49;00m[33mconstellation-[39;49;00m[33m"[39;49;00m), [33m"[39;49;00m[33mthe decoy must look right by name[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+    [90m[39;49;00m
+        checkout_script = [96mself[39;49;00m.checkout / [33m"[39;49;00m[33mscripts[39;49;00m[33m"[39;49;00m / ROLE_VERIFIER.name[90m[39;49;00m
+        worktree_script = [96mself[39;49;00m.worktree / [33m"[39;49;00m[33mscripts[39;49;00m[33m"[39;49;00m / ROLE_VERIFIER.name[90m[39;49;00m
+        refusals = ([90m[39;49;00m
+            ([33m"[39;49;00m[33msource-checkout-named-constellation-skills[39;49;00m[33m"[39;49;00m, checkout_script),[90m[39;49;00m
+            ([33m"[39;49;00m[33mcommander-worktree[39;49;00m[33m"[39;49;00m, worktree_script),[90m[39;49;00m
+            ([33m"[39;49;00m[33mname-only-decoy-inside-a-real-skills-root[39;49;00m[33m"[39;49;00m, decoy_script),[90m[39;49;00m
+        )[90m[39;49;00m
+        [96mself[39;49;00m.assertEqual([94m3[39;49;00m, [96mlen[39;49;00m(refusals))[90m[39;49;00m
+        [94mfor[39;49;00m label, script [95min[39;49;00m refusals:[90m[39;49;00m
+            [94mwith[39;49;00m [96mself[39;49;00m.subTest(location=label):[90m[39;49;00m
+                [96mself[39;49;00m.assertTrue(script.is_file(), [33mf[39;49;00m[33m"[39;49;00m[33m{[39;49;00mlabel[33m}[39;49;00m[33m fixture was never built[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+                refused = [96mself[39;49;00m.run_bundled_verifier(script, [33m"[39;49;00m[33mcommander[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+>               [96mself[39;49;00m.assertNotEqual([94m0[39;49;00m, refused.returncode, [33mf[39;49;00m[33m"[39;49;00m[33m{[39;49;00mlabel[33m}[39;49;00m[33m is not an installed bundle[39;49;00m[33m"[39;49;00m)[90m[39;49;00m
+[1m[31mE               AssertionError: 0 == 0 : name-only-decoy-inside-a-real-skills-root is not an installed bundle[0m
+
+[1m[31mtests\test_iterative_planning_doctrine.py[0m:1737: AssertionError
+[36m[1m=========================== short test summary info ===========================[0m
+[31mSUBFAILED(location='source-checkout-named-constellation-skills')[0m tests/test_iterative_planning_doctrine.py::[1mComposedShippedArtifactTests::test_compose_verifier_locates_itself_by_structure_across_the_real_locations[0m - AssertionError: 'cannot locate an installed constellation skills root' not ...
+[31mSUBFAILED(location='name-only-decoy-inside-a-real-skills-root')[0m tests/test_iterative_planning_doctrine.py::[1mComposedShippedArtifactTests::test_compose_verifier_locates_itself_by_structure_across_the_real_locations[0m - AssertionError: 0 == 0 : name-only-decoy-inside-a-real-skills-root is not a...
+[31m[31m[1m2 failed[0m, [32m1 passed[0m, [33m35 deselected[0m, [32m1 subtests passed[0m[31m in 1.06s[0m[0m

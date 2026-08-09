@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "g4-review",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 13,
+    "spine-step": "g4-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-g4-review@0c2930685955e1772c63e0420cba689bb2ad794e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T03:57:19Z"
+  }
+}

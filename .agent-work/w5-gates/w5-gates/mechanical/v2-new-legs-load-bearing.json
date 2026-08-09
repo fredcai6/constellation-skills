@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "v2-new-legs-load-bearing",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 4,
+    "spine-step": "v2-new-legs-load-bearing",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-v2-new-legs-load-bearing@1d13d69ff9d7aa0c81bc1a3563ae95de5146f5ef",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T02:56:35Z"
+  }
+}

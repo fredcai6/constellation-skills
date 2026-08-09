@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "v1-whitelist-closed",
+  "mechanical": {
+    "run": "w5-gates",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 4,
+    "spine-step": "v1-whitelist-closed",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-v1-whitelist-closed@e47e628235138491ec30d15d08c202cc3ab9a659",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates",
+    "generated_at": "2026-08-09T02:56:34Z"
+  }
+}

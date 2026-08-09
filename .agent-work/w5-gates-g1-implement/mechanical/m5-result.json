@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-result",
+  "mechanical": {
+    "run": "w5-gates-g1-implement",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m5-result",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-w5-gates-g1-implement-m5-result@2f2e5407c0c7a6944713a95936e0a305e1a1aa7d",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "w5-gates-g1-implement",
+    "generated_at": "2026-08-09T00:31:09Z"
+  }
+}
