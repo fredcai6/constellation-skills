@@ -5490,3 +5490,36 @@ states.**
 both the correct fix and the inverted one. The discrimination only appears when you ask what it does
 on the states that should fail — which is the census's central lesson applied by an implementer
 without being told.
+
+### CORRECTION — #503 and #495 were CLOSED against work that was NOT done. Reopened.
+
+Crew 4 closed all nine of its issues together. **Two of them were FLOATS, and the floats were mine:**
+
+- **#503** — floated **larger-than-filed**; `--authority` is still validated only as non-empty.
+- **#495** — floated **entirely**; all six writer sites are outside the crew's owned files and untouched.
+
+**Both reopened with the reason recorded on the issue**, and both floats explicitly re-affirmed as
+**correct** — the crew's reasoning was sound and I had ruled it accepted. **The error was in the
+closing, not the judgement.**
+
+**Why this is worse than the defect #354 tracks.** #354 is issues that stay **open** after their work
+lands. This is the inverse: **issues CLOSED against work that was never done.** An open issue after a
+merge is a *visible* debt; a closed issue over an unfixed defect is an **invisible** one — and
+"CLOSED" reads identically whether the fix shipped or was declined. **That is a check that cannot fail
+in the tracker itself.**
+
+**It has a live consequence tonight.** #503's `--authority` field is what carried
+*"Admiral epic-418-redux — #501/#468, guard refuses from any worktree"* on a real waiver in this same
+wave. That waiver is honest **and nothing mechanical made it so.** Closing #503 would have retired the
+issue that says exactly that, hours after it was demonstrated.
+
+**Two contributing causes, both mine:**
+1. My launch order said *"never manually close — let the merge do it."* The crew closed by hand,
+   **before its PR merged.**
+2. **I added seven `Closes` keywords to #514 myself** and deliberately left #503/#495 keyword-free with
+   their reasons — then the crew closed them by hand anyway. **My machine-readable disposition and the
+   crew's manual action disagreed, and nothing reconciled them.** That is the same gap #354's proposed
+   post-merge reconciliation would catch, one step earlier.
+
+**Verified after reopening: both OPEN.** I did not take the crew's report for the state — I read the
+forge before and after, which is the only reason this surfaced at all.
