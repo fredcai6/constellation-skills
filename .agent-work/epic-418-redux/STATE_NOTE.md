@@ -746,3 +746,15 @@ _Updated: 2026-08-08T07:20:00Z_
 > **The reconciliation that would have caught it was trivial:** the user named a contiguous range, and
 > `474..480` has seven members. Deriving the assignment from a command is not enough — **the derived
 > population needs a total to check against.** Same lesson as the sweep list's 14-of-16 the same day.
+
+> ### ` M` IN `git status` IS NOT EVIDENCE OF AN EDIT ON THIS REPO
+>
+> Crew 1's worktree showed my own `transitions/close-to-w5/CURRENT_TRUTH.md` and `WAVE_REVIEW.md` as
+> ` M` — files a crew is forbidden to touch. **Both `git diff --numstat` and
+> `git diff --ignore-cr-at-eol --numstat` returned completely empty.** Zero content change. The
+> verifier rewrites them with LF, git normalises back to CRLF, and the stat cache reports modified.
+>
+> **Check `git diff`, not `git status`, before accusing anyone of a scope violation.** I nearly sent a
+> second false accusation on this exact signal — the first cost a retraction, and crew 1 was the one
+> who diagnosed the cause. It also means **"dirty count" is a weak liveness proxy**: it moves without
+> anyone writing anything.
