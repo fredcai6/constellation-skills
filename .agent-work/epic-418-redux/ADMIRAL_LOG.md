@@ -4614,3 +4614,43 @@ costing time I had already decided not to spend. Restated #495/#479/#480 with it
 
 Also told it, because it is reassuring and true: **its work-in-progress engine parses my live Admiral
 spine cleanly.** Its changes have not broken the run they are running inside.
+
+### CORRECTION — the liveness proxy I called "strictly better" two entries ago is itself blind
+
+I wrote that `gauge.json`'s mtime is a **strictly better** liveness signal than counting file writes.
+**Within four minutes it pointed at the healthiest crew in the wave as the deadest.**
+
+Crew 2's gauge read **23:18** — its predecessor's value, 49 minutes stale — while at that same moment:
+
+```
+execute.json           written 00:07
+execute.json.journal   written 00:07
+9 engine verbs journalled since 23:30, ZERO gauge writes
+```
+
+**It is the most active agent in the wave. Its gauge has never fired in its entire run.** A full
+worktree search found exactly one `gauge.json`, the stale one, so it is not writing elsewhere.
+
+**"Strictly better" was wrong. The correct claim is: better WHEN IT FIRES, and silent when it does
+not — which is the same failure mode as everything else in this census.** A frozen gauge is
+indistinguishable from a dead agent: no predicate over that file separates *"no tool call in 49
+minutes"* from *"the hook has never fired for this agent."* **My new heuristic was a check that cannot
+fail, and I adopted it four minutes before it misfired.**
+
+**Had I acted on it I would have relaunched a Commander mid-`execute` with a live plan**, destroyed
+forty minutes of loaded context, and the replacement run would have looked entirely normal — nothing
+anywhere recording that a healthy agent was killed. **I did not, because the rule is ask-then-act, and
+that rule is now four-for-four today.** It is the only thing that saved this one, and it saved it
+without me understanding the mechanism.
+
+**Posted as a live measured instance on #452**, including the part I could not determine: **why the
+hook fired for four agents and not the fifth.** Both Commanders load the same skill; crew 1's gauge
+updates and crew 2's does not. **The report stops at what was measured rather than guessing.**
+
+**Second-order consequence, which is the real harm:** this crew **cannot trip**. Every other crew in
+the wave tripped at least once and handed off cleanly. This one has no reading to trip on, so it will
+run to whatever its true fill is with no governor intervention — #383's *"goes silent on exactly the
+runs that need it"*, live.
+
+**And the irony belongs in the retrospective:** the crew that gets no governor reading is the crew
+working on **#458 — ship the gauge writer.**
