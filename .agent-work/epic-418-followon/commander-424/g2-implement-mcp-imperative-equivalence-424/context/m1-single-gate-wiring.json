@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m1-single-gate-wiring",
+  "files": [],
+  "repo_rev": {
+    "commit": "8b4e99efaa38522369379f505b727629a4d1f0b3"
+  },
+  "run": {
+    "work_id": "g2-implement-mcp-imperative-equivalence-424",
+    "generated_at": "2026-08-09T22:36:16Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-implementer",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

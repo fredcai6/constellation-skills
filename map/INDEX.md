@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 54 modules, 1045 entities
 skills: 1 modules, 18 entities
-tests: 62 modules, 3534 entities
+tests: 63 modules, 3557 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -98,7 +98,7 @@ tests: 62 modules, 3534 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (62 modules, 3534 entities)
+## tests (63 modules, 3557 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -143,6 +143,7 @@ tests: 62 modules, 3534 entities
 - [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
 - [tests.test_map_orient](tests.test_map_orient/INDEX.md) (120 entities, 87 holes): The falsification floor for scripts/map_orient.py.
 - [tests.test_mcp_identity](tests.test_mcp_identity/INDEX.md) (35 entities, 17 holes): DC2 (separation) and DC3 (inheritance fails closed) acceptance tests for the MCP front door (issue #424, workstream F, gate g3).
+- [tests.test_mcp_imperative_equivalence](tests.test_mcp_imperative_equivalence/INDEX.md) (23 entities, 12 holes): DC4 acceptance test for the MCP front door (issue #424, workstream F, gate g2): the CLI projection and the MCP tool result carry the SAME imperative text for EV
 - [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (44 entities, 37 holes): Tests for scripts/mcp_spine_server.py (issue #424, workstream F: the MCP front door on the checklist engine).
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
