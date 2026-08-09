@@ -43,7 +43,7 @@
 - **Expected:** exit 0 when the branch has an OPEN or MERGED pull request, nonzero otherwise.
 - **Conditions:** any PR state; the gate is unconditional. Reproduced locally against four fixtures — no PR, OPEN, MERGED, CLOSED-unmerged.
 - **Type:** `measured` — ran the check text under `sh -c` against all four fixtures: exit 1 every time.
-- **Rev:** `f9945286^` (the fix landed in `f9945286`).
+- **Rev:** as observed, the uncommitted crew worktree at branch commit `84d1e998` — which is *not* reachable from `main` today, because PR #516 squash-merged and its branch was deleted. Retroactively this is `f9945286^`, the fix's parent. Write the rev you actually observed at; add the retroactive pin later if one becomes available.
 
 Contrast this with issue #446, which claimed the same gate "accepts only an OPEN PR". Nobody ran it — that was read off the check text by eye, and it was wrong: the gate accepted nothing. An `inferred` claim written as if measured is what sends the next run at the wrong target.
 

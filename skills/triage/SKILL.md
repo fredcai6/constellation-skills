@@ -37,7 +37,7 @@ Clearing three of four does not qualify; route it as `filed` or `recommend-and-d
 4. **Write recommendations.** For each candidate produce an issue-ready recommendation using `templates/TRIAGE_RECOMMENDATION.template.md`. An issue records observations with baselines; it does not prescribe a solution.
 
    - **A defect** carries a *list* of observations — one block per occurrence, never merged into one summary. Each block states what's wrong, what was expected, the feeding conditions that enable the bad state (including which environment), `type` (`measured` or `inferred`, and *how* — mandatory for both values), and `rev` (the state the observation was true of).
-   - **An enhancement** carries the desired behavior *plus what happens today instead*. Without the current-behavior statement, an enhancement cannot be distinguished from something that already works.
+   - **An enhancement** carries the desired behavior *plus what happens today instead*, and the "today instead" claim carries its own `type` and `rev` — it is an observation, and it goes stale as the code changes exactly like any other. Without the current-behavior statement, an enhancement cannot be distinguished from something that already works.
    - **`possible fix` is optional, is a hypothesis rather than a spec, and is a top-level sibling of the observations** — one per issue, not one per observation.
    - **`open questions` is optional and sits alongside `possible fix`** — what is unresolved or in dispute, and what would settle it. Both are thinking out loud; only the observations are load-bearing.
 
