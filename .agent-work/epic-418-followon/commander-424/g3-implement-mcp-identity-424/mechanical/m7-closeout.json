@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m7-closeout",
+  "mechanical": {
+    "run": "g3-implement-mcp-identity-424",
+    "project": "constellation-skills",
+    "role": "g3-implementer",
+    "refusals": 1,
+    "spine-step": "m7-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-implement-mcp-identity-424-m7-closeout@66eb78ddcf587c085d32ece7063e4bc605975f4e",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-implement-mcp-identity-424",
+    "generated_at": "2026-08-09T21:16:24Z"
+  }
+}

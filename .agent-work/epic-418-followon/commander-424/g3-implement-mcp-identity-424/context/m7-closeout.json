@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m7-closeout",
+  "files": [],
+  "repo_rev": {
+    "commit": "05b35a2e49006865457e7b52a24a8b9f861b1f66"
+  },
+  "run": {
+    "work_id": "g3-implement-mcp-identity-424",
+    "generated_at": "2026-08-09T21:16:24Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-implementer",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}
