@@ -4801,3 +4801,27 @@ apart is the whole difficulty, and nothing today can.
 
 **Crews 1 and 4 relaunches both confirmed driving** — journals at 00:15, one minute apart. Crew 2 in
 `execute`. Prelaunch re-verified exit 0 after the state-note refresh.
+
+### My own fill: 64.4% and climbing ~20 points per 40 minutes. Surfacing it rather than absorbing it.
+
+```
+.agent-work/epic-418-redux/gauge.json  ->  fill_fraction 0.644 at 00:16:34
+```
+
+Against a **0.15** hard band. I was at 0.440 forty minutes ago. **Nothing will ask me to stop** — the
+trip evaluates only on a gated verb and this role holds `execute` for the entire epic, which is the
+structural gap I recorded twice today and which #452's live instance sharpens further.
+
+**Three crews are mid-flight with substantial work left:** crew 1 has four gates in `execute`, crew 2
+has just entered `execute` on its own g1, crew 4 has six plan items. That is not a short tail.
+
+**The mitigation is the crash-resume note, and I checked it rather than assuming it was adequate:**
+628 lines, 55 bolded directives, 8 sections — including the close sequence, the trip-loop, the three
+liveness signals with what each is blind to, the merge baseline with its expected delta, the sweep
+list, the crew positions, that **#413 must stay open**, and that crew 1's `-k` selectors are
+load-bearing rather than stylistic. A cold successor could take this over.
+
+**But "a successor could take over" is not the same as "the run should burn down to that."** This is a
+resourcing question that belongs to Tommy, not a technical one I should quietly absorb — so I am
+surfacing it in the report rather than deciding it. **No action taken, nothing paused, no crew
+disturbed.** The work continues either way; what changes is whether the handoff is planned or forced.
