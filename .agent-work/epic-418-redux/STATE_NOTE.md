@@ -44,22 +44,35 @@
 > **CREW 1 IS NOW `commander-w5-gates-b`.** The first instance tripped at `plan` on a HARD reading,
 > wrote its refresh-request, committed `eff00abf` and stood down — working as designed, not a failure.
 >
-> **LIVE POSITION @ 00:01Z 2026-08-09 — 1 MERGED, 1 PR open, 3 crews running.**
+> **LIVE POSITION @ 00:15Z 2026-08-09 — 2 MERGED, 0 PRs open, 3 crews running.**
 >
 > | crew | state |
 > |---|---|
-> | 1 gates | running as `-b-refresh1`, authoring `execute.json` |
-> | 2 readiness | running as `-b`, heaviest activity in the wave |
-> | 3 addressing | **MERGED — PR #511 at `39fb542a`.** #507, #370 closed. **#413 left OPEN, correctly.** |
-> | 4 engine | running as `-b`, at `m5-503`, 5 of 10 items cleared |
-> | 5 docs | rework pushed, **PR #509 correct but `m3` still open** |
+> | 1 gates | **relaunched as `-c`** at `execute`/`g1-implement`. `plan` complete, lease was released cleanly. |
+> | 2 readiness | running as `-b`, in `execute` on its own g1. **Its gauge never fires — see #452.** |
+> | 3 addressing | **MERGED** — PR #511 `39fb542a`. #507, #370 closed. #413 open, correctly. |
+> | 4 engine | **relaunched as `-c`**, resuming at `m5-503`. m0-m4 done with real red-before-green each. |
+> | 5 docs | **MERGED** — PR #509 `4bde569e`. #496 closed by merge, **#411 closed by hand**. |
 >
-> **Wave-5 score: 2 of 21 issues closed.**
+> **Wave-5 score: 4 of 21 issues closed** (#507 #370 #496 #411).
+>
+> **`Closes #A, #B` CLOSES ONLY #A.** GitHub honours the first issue in a comma-list; each number needs
+> its own keyword. #509's body said `Closes #496, #411.` and left #411 open. **Verify issue state on the
+> forge after EVERY merge** — never trust the merge to have done it. That rule is the only reason this
+> was caught.
 >
 > **#413 STAYS OPEN and that is not an oversight.** Crew 3 re-read all three bodies independently and
-> found it is a *different defect* — **never-valid-from-the-start** (a spawned subagent was never
-> registered under an addressable name to its own children), not **valid-then-stale**. Same
-> presentation, different root cause. **Do not close it as part of this wave.**
+> found it is a *different defect* — **never-valid-from-the-start** (a spawned subagent has no
+> addressable name to its own children), not **valid-then-stale**. **Do not close it in this wave.**
+>
+> **Crew 1's `-k` selectors are LOAD-BEARING.** A cold critic returned BLOCK: two of its gates could
+> have closed with **zero work done**. Every gate now closes on a `-k` selector keyed to a test-naming
+> contract; zero match exits 5, so a gate whose tests were never written fails closed. **Do not loosen
+> them.** `PLAN_CRITIC_TRIAGE.md` is the file a successor must not skip.
+>
+> **CARRIED TO CLOSEOUT, mine not theirs:** after crew 1's fix A, `ADMIRAL_SPINE.template.json` will
+> still describe `repair` as an enforced exit in **both** its execute prose and its
+> `directives.decisions` block.
 >
 > **MERGE BASELINE (use this, do not re-guess it):** after #511 merged, main is green at
 > **1871 passed / 2 skipped / 829 subtests / real exit 0**, `python -m pytest`, exit read **unpiped**.
