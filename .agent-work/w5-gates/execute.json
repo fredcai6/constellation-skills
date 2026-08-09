@@ -999,12 +999,13 @@
   "refusals": 6,
   "engine_session": {
     "session_id": "commander-w5-gates-d-20260808",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T00:40:25.832835+00:00",
     "last_heartbeat": "2026-08-09T01:58:17.496989+00:00",
     "claimed_by": "commander-delegated",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T01:58:39.807470+00:00"
   }
 }
