@@ -1,0 +1,790 @@
+{
+  "work_id": "w5-gates",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "e0-context",
+    "g1-implement",
+    "g1-review",
+    "g1-integrate",
+    "g2-implement",
+    "g2-review",
+    "g2-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate",
+    "g4-implement",
+    "g4-review",
+    "g4-integrate"
+  ],
+  "tasks": {
+    "e0-context": {
+      "id": "e0-context",
+      "title": "Load execution context",
+      "imperative": "Read your inherited global doctrine (the commander skill's references/global-orchestrator.md and references/global-everyone.md), then the project deltas: docs/agents/ORCHESTRATOR_CONTEXT.md and docs/agents/GLOSSARY.md. There is no Cartographer packet map in this repo \u2014 the orientation receipt at .agent-work/w5-gates/map-orientation.json records DEGRADED-NO-MAP and hash-pins four substitutes; read the mission frame at .agent-work/w5-gates/MISSION_FRAME.md instead, which is cut from them. Confirm the frozen plan's intent and scope against LO-w5-c1-gates.md. Also read .agent-work/w5-gates/PLAN_CRITIC_TRIAGE.md: this plan was BLOCKed by a cold critic on two gates that could close with zero work done, and the anti-vacuity selectors below are that block's remedy. Then attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "orchestrator context + glossary + mission frame + critic triage loaded (no packet map exists; the receipt's substitutes stand in); plan intent and scope confirmed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Loaded: global-orchestrator.md + global-everyone.md (installed commander-delegated references), docs/agents/ORCHESTRATOR_CONTEXT.md, docs/agents/GLOSSARY.md, MISSION_FRAME.md (DEGRADED-NO-MAP, cut from the four hash-pinned substitutes), PLAN_CRITIC_TRIAGE.md (panel BLOCK + the -k selector remedy), notes-1.md, and LO-w5-c1-gates.md from the main checkout. Plan intent and scope confirmed against the launch order: three fixes, six issues, ownership scope of three files plus tests, checklist_engine.py/install_constellation.py/handoff templates/CREW_CONTEXT/TREND_SNAPSHOT out of scope and a float if needed."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g1-implement": {
+      "id": "g1-implement",
+      "title": "Location guard (fix B, #501 + #468): implement",
+      "imperative": "Fill the commander skill's templates/IMPLEMENTER_HANDOFF.template.md for this gate and dispatch via python scripts/run_crew.py. TASK: replace the name test in _installed_skills_root() (scripts/verify_iterative_role_artifacts.py:53) with a STRUCTURAL one. A directory is an installed bundle when it carries its own SKILL.md AND its parent is a skills root (the installer's CORPUS.json marker, or a constellation-*/SKILL.md sibling). Resolution order: --skills-root wins if given; else the installed parent; else probe the known user-scope roots and print a VISIBLE stderr note naming the root resolved; else REFUSE, naming the real problem and every root tried (#468's ask). The --skills-root flag DOES NOT EXIST TODAY and this gate introduces it: g4-integrate.c2 depends on it, so it is load-bearing, not optional. PROTECTED INTENT: the guard answers 'where am I running from'. Widening it so it passes everywhere is explicitly refused by pre-ruling 4 \u2014 that converts a guard that wrongly refuses into a check that cannot fail, which is worse than today. TEST NAMING CONTRACT, load-bearing because this gate's close criteria select on it: the three-location matrix and decoy tests MUST carry 'guard_location' in their names, and the wrong-root mutation test MUST carry 'guard_mutation'. Tests go in tests/test_iterative_planning_doctrine.py. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "execution context loaded (e0-context)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e0-context is complete: global doctrine, project deltas, mission frame and critic triage all loaded, plan intent reconciled against the launch order."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-g1-implement-1"
+        }
+      ],
+      "constraints": [
+        "Owned files only: scripts/verify_iterative_role_artifacts.py and tests/test_iterative_planning_doctrine.py.",
+        "scripts/checklist_engine.py and tests/test_checklist_engine.py are another crew's this wave \u2014 if the fix appears to need them, STOP and float; do not edit them. The same applies to ANY file outside the ownership scope.",
+        "No hooks, no settings.json, no docs/agents/* doctrine edits.",
+        "HONEST NULL: if the structural predicate turns out not to separate the three locations, report that with the measurement and stop. Do not widen the guard to make a check pass."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/verify_iterative_role_artifacts.py \u2014 _installed_skills_root() at line 53, the guard predicate. Named by path, not by a map id: this repo has NO architecture map, so no struct anchor id exists to cite (mission frame, 'Structural Anchors')."
+        ],
+        "capability": [
+          "Role-artifact verification \u2014 classed a strengthened durable system by docs/agents/ORCHESTRATOR_CONTEXT.md, so it owes targeted tests PLUS the relevant broader suite; no no-test-surface exception is available."
+        ],
+        "constraint": [
+          "README.md 'Repo layout vs. installed layout': skills/<name>/ in the repo becomes constellation-<name>/ when installed, shared infrastructure copied into every bundle. The repo's own name, constellation-skills, collides with the installed prefix \u2014 that collision IS the defect.",
+          "The engine's verdict for a command condition is the exit code; stdout is discarded (docs/CHECKLIST_SCHEMA.md). The stderr note this gate adds is for a human, never for a check."
+        ],
+        "decision": [
+          "decision pressure: how a running process identifies an installed bundle \u2014 by structure, not by name. Carries no grade; it is a candidate, not yet an anchor (this repo has no decision anchors at all).",
+          "decision pressure: whether boundary freshness is in scope \u2014 NO, deferred to the spine's triage step as recommend-and-defer, with the falsification recorded in notes-1.md. #501's stated Acceptance is met without it."
+        ],
+        "evidence": [
+          "THE DEFECT HAS TWO POLARITIES AND BOTH MUST BE FIXED. (a) From the main checkout the guard WRONGLY ACCEPTS \u2014 'constellation-skills'.startswith('constellation-') is True \u2014 resolves to C:/Programs, and the run then fails downstream with a message naming the wrong problem ('installed public verifier is missing: C:/Programs/constellation-replan/...'). (b) From a Commander worktree the guard WRONGLY REFUSES outright, because a worktree directory is not named constellation-*. #501 and #468 are about (a); (b) is in neither issue and is a finding this run returns. A cold critic measured both on 2026-08-08 and this anchor was corrected against that measurement.",
+          "After the fix: installed bundle \u2192 accept; main checkout \u2192 not-installed, falling through to the user-scope probe with a visible stderr note; Commander worktree \u2192 same. #501's quoted red output must no longer appear from the main checkout."
+        ],
+        "confidence_flags": [
+          "The source-repo/installed-bundle duality is the run's one UNMAPPED seam \u2014 nothing records it as an architectural fact; README.md documents it in prose only. Therefore this gate MUST measure the guard on disk from each of the three locations rather than reason from structure. That measurement is the verification step planned in place of a trusted map."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "path": ".agent-work/w5-gates/crew-handoffs/g1-implement-RESULT.md",
+            "session": "constellation/w5-gates/g1/implementer/attempt-1",
+            "blockers": "none",
+            "verified": "fresh"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-review": {
+      "id": "g1-review",
+      "title": "Location guard (fix B): review",
+      "imperative": "Fill the commander skill's templates/REVIEWER_HANDOFF.template.md and dispatch via python scripts/run_crew.py. Relay this gate's anchors block. The reviewer must independently confirm the guard is not a check that cannot fail: a name-only decoy directory (named constellation-* but carrying no SKILL.md) must NOT be accepted as an installed bundle, and an unconditionally-permissive guard must make the new guard_location tests go red. The reviewer must also confirm BOTH polarities in the evidence anchor are addressed \u2014 the main checkout's wrong-accept and the worktree's wrong-refusal \u2014 and that --skills-root exists and wins when given. Wait for and integrate the returned REVIEW_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received and verified fresh: run_crew.py --verify-result constellation/w5-gates/g1/implementer/attempt-1 reported fresh (completed); attached as e-g1-implement-1."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g1-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-g1-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g1-review",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "g1-integrate": {
+      "id": "g1-integrate",
+      "title": "Location guard (fix B): integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run the verification commands yourself, then advance this gate \u2014 a command postcondition is satisfied by advance re-running the check, never by attest. c1 and c2 SELECT on the test naming contract stated in g1-implement: a selector matching zero tests exits 5, so these fail closed when the tests were never written. That is deliberate and is the remedy for the cold critic's BLOCK finding F1, which measured that an unconditionally-permissive guard left the whole-file run green. BLOCK: send the implementer back for rework, or raise a blocker if the gate is unresolvable. Log out-of-scope finds as triage candidates. Record the three-location measurement in REPLAN_INPUT.json as observed evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g1",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the guard resolves an installed bundle by structure and refuses elsewhere with a message naming the real problem; the three-location matrix and the name-only-decoy test exist and pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k guard_location"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "MUTATION FLOOR (#501's second Acceptance criterion, NOT OVERRIDABLE): point the resolver at a plausible-but-wrong root and the acceptance check still goes RED",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k guard_mutation"
+          },
+          "override_policy": {
+            "allowed": false,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the coupled suite \u2014 every test file that consumes the spine template, the installer, or the work-area resolver \u2014 is green, so no red window opens at this gate boundary",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-implement": {
+      "id": "g2-implement",
+      "title": "Stop-boundary closure semantics (fix A, #506): implement",
+      "imperative": "Fill the commander skill's templates/IMPLEMENTER_HANDOFF.template.md for this gate and dispatch via python scripts/run_crew.py. TASK: make verify_admiral_prelaunch decision-aware, KEEPING the mode name admiral-prelaunch. TWO clauses block a stop packet, not the one pre-ruling 1 names: _next_wave() (verify_iterative_role_artifacts.py:113-116) requires the key present AND a nonempty SAFE_ID launch_id, and lines 145-148 require decision in {advance, replan}. Note the ordering wrinkle: _next_wave() runs at :134, BEFORE the decision is read at :138, so the relaxation must be restructured rather than bolted on. A third _require at :144 asserts result['applicable'] is True; it does not block a stop packet whose applicable is true, so it needs no change \u2014 but know it is there. The Admiral has ruled that #506's options 1 and 2 are taken COMBINED, not as alternatives \u2014 option 1 needs option 2 to be implementable at all. Under stop: the artifact may express 'no launch authorized', the authorization clause is SKIPPED, and G2 validation, the unique-audit-entry match, the render, and the CURRENT_TRUTH/WAVE_REVIEW writes ALL still run. repair stays refused \u2014 out of scope, and a real authorization question. YOU MUST INVERT AN EXISTING NEGATIVE ASSERTION: tests/test_iterative_planning_doctrine.py:461-462 currently asserts assertNotEqual(0, refused.returncode, 'stop cannot authorize NEXT_WAVE'). Fix A inverts exactly that. The file is owned so the edit is legal, but state the inversion explicitly in your IMPLEMENTER_RESULT \u2014 pre-ruling 6 forbids changing a recorded exit to make a check pass, and the difference between that and this is that this inversion IS the fix, not a workaround for it. TEST NAMING CONTRACT, load-bearing because this gate's close criteria select on it: golden-path stop tests MUST carry 'stop_boundary' in their names; the mutation test required by pre-ruling 2 MUST carry 'stop_mutation'. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1 closed. HONEST BASIS, corrected after a cold critic measured the original claim FALSE: this is NOT a technical dependency. g2's pytest verification reaches the verifier through InstalledIterativeRoleRuntimeTests.run_role (tests/test_iterative_planning_doctrine.py:289), which installs a real bundle into a tempdir where the guard passes today, unfixed. The real reasons to order g1 first are same-file edit serialization and reviewer locality, plus the fact that the stop path is easier to reason about once the guard is structural. The guard is a genuine dependency only for g4-integrate.c2, which invokes the repo copy directly. If g1 goes to rework, this ordering may be revisited through the engine's amend verb rather than treated as immovable.",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Owned files only: scripts/verify_iterative_role_artifacts.py and tests/test_iterative_planning_doctrine.py. Any red outside the ownership scope is a FLOAT, not an edit.",
+        "A separate admiral-boundary mode is DECLINED: ADMIRAL_SPINE.template.json names the mode string and is not this run's file.",
+        "COPY the live stop fixture into the test; NEVER mutate the live epic's packet at .agent-work/epic-418-redux/transitions/w4-to-close/.",
+        "Pre-ruling 6: you may not change any decision, verdict, or recorded exit to make a check pass. If a check cannot pass, that is a finding.",
+        "HONEST NULL: if fix A's cheapest shape is refuted \u2014 say the authorization clause turns out to be load-bearing for a reason the issue missed \u2014 report that with the evidence and STOP. Do not build the expensive version to avoid returning a null."
+      ],
+      "anchors": {
+        "structural": [
+          "scripts/verify_iterative_role_artifacts.py \u2014 _next_wave() at 113-116 (the nonempty-launch_id clause, called at :134) and the decision test at 145-148 (read at :138). Named by path; no map id exists."
+        ],
+        "capability": [
+          "Boundary transition verification \u2014 the closure check for an Admiral boundary. Today it can only be satisfied by a boundary that AUTHORIZES A LAUNCH, so a boundary correctly exiting stop can never close it."
+        ],
+        "constraint": [
+          "A waiver is the human's recorded decision, never an agent's quiet satisfaction (docs/CHECKLIST_SCHEMA.md). That path existing is precisely why this fix is worth doing rather than routing around: the epic should not spend a waiver against the human's name to close a gate that is simply wrong.",
+          "The wave-4 Admiral ruling, pasted in the launch order: changing the decision from stop to advance would be falsifying a boundary verdict to fit a check. Not available."
+        ],
+        "decision": [
+          "decision pressure: how a stop boundary satisfies its closure check \u2014 the audit value is in the PACKET, not in the launch. Options 1+2 combined, per the Admiral's ruling. Carries no grade; no decision anchors exist in this repo."
+        ],
+        "evidence": [
+          "A stop boundary with a recorded, verified, rendered transition packet CLOSES its gate. The stop path has NEVER been exercised by a test.",
+          "MUTATION FLOOR, pre-ruling 2, NOT OVERRIDABLE: corrupt the transition packet and the closure check still goes RED. A closure check that passes on an unverified packet has MOVED the defect, not fixed it.",
+          "The live specimen is this epic's own w4-to-close boundary: ADMIRAL_LOG.md:3242, decision=stop, verified."
+        ],
+        "confidence_flags": [
+          "No map asserts the relationship between the verifier and the Admiral spine template that calls it. This gate therefore verifies the mode-name contract by measurement (the mode string stays admiral-prelaunch and the template is untouched), not by assuming it."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-review": {
+      "id": "g2-review",
+      "title": "Stop-boundary closure semantics (fix A): review",
+      "imperative": "Fill the commander skill's templates/REVIEWER_HANDOFF.template.md and dispatch via python scripts/run_crew.py. Relay this gate's anchors block. The reviewer must independently confirm that the stop path is not a hole: a stop-shortcut that bypasses G2 validation, the audit-entry match, or the render must make the stop_mutation test go RED, and an ungated null-launch_id allowance on the ADVANCE path must also go red. The reviewer must confirm the mode name is unchanged, repair is still refused, and \u2014 explicitly stated in the REVIEW_RESULT \u2014 that the inversion of the existing negative assertion at tests/test_iterative_planning_doctrine.py:461-462 is the fix itself and not a check bent to pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g2-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g2-integrate": {
+      "id": "g2-integrate",
+      "title": "Stop-boundary closure semantics (fix A): integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run all three verification commands yourself, then advance. c2 is the pre-ruling-2 mutation floor and is NOT OVERRIDABLE \u2014 it is a separate selector precisely so it can never be satisfied by the golden-path test passing. If c2 exits 5 the mutation test was never written or was misnamed; that is a rework, never a waiver, and never an amend spent to rename the gate around the gap. BLOCK: rework or blocker. If fix A's cheapest shape is refuted, that is an honest null: report it with the evidence and STOP building, per the launch order's Honest-Null Clause.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g2",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a recorded, G2-verified, rendered stop transition packet closes the prelaunch check; advance and replan are unchanged; repair still refused",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_boundary"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "MUTATION FLOOR (pre-ruling 2, NOT OVERRIDABLE): a corrupted transition packet still drives the closure check RED on the stop path",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k stop_mutation"
+          },
+          "override_policy": {
+            "allowed": false,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the coupled suite is green, so no red window opens at this gate boundary",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "Archive reachability postcondition (fix C, #439 + #484 + #446): implement",
+      "imperative": "Fill the commander skill's templates/IMPLEMENTER_HANDOFF.template.md for this gate and dispatch via python scripts/run_crew.py. TASK: rewrite archive.c2b in skills/commander/templates/COMMANDER_SPINE.template.json (the shipped text is at :131). TWO defects, not one (pre-ruling 5): the literal <branch> token is never substituted, AND the criterion accepts only an OPEN pull request. Derive the branch through the EXISTING <repo-root> token and accept {OPEN, MERGED} while still rejecting CLOSED-unmerged, comparing the count IN THE SHELL so the EXIT CODE carries the verdict. The resolved shape, already verified against four real branches (no-PR 1, MERGED 0, CLOSED-unmerged 1, MERGED 0): test \"$(gh pr list --head \"$(git -C <repo-root> rev-parse --abbrev-ref HEAD)\" --state all --json state --jq '[.[] | select(.state == \"OPEN\" or .state == \"MERGED\")] | length')\" -gt 0 . NO new resolver token; scripts/init_work_area.py stays UNTOUCHED, because the branch is not guaranteed to exist when the spine is instantiated \u2014 init's own imperative instantiates the spine first and starts the branch after. TEST MECHANISM, because no test in this repo invokes gh and the verifier is explicitly network-free: put a STUB gh (and git, if you need to pin the branch name) early on PATH inside the test and assert on the EXIT CODE of the resolved text run through the same POSIX shell the engine uses. Extract the command text FROM the template \u2014 never hand-retype it, or the test stops testing the shipped artifact. TEST NAMING CONTRACT, load-bearing because this gate's close criteria select on it: the state-matrix tests MUST carry 'archive_c2b' in their names; the tests proving a reintroduced literal <branch> or a narrowed --state open goes RED MUST carry 'archive_mutation'. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "none \u2014 this gate is independent of g1 and g2 (different production file, different mechanism: shell text and PR state, not Python control flow). It shares the test file with them, so it is sequenced third for edit serialization and reviewer locality; that ordering is editorial and may be reordered without technical consequence.",
+          "check": null,
+          "satisfied": true
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Owned files: skills/commander/templates/COMMANDER_SPINE.template.json and tests/test_iterative_planning_doctrine.py. scripts/init_work_area.py is in the ownership scope but is expected to take a ZERO-line diff \u2014 if you find yourself editing it, stop and say why. Any red outside the ownership scope is a FLOAT, not an edit.",
+        "Do NOT adopt #484's suggested replacement command verbatim: it exits 0 on an empty list and is a check that cannot fail (finding 1).",
+        "The test must exercise the RESOLVED command text extracted from the template, not a hand-retyped copy of it.",
+        "HONEST NULL: if the resolved text cannot be exercised without real network or gh auth, say so plainly and report what you could and could not prove. Do not substitute a test that only re-reads the template string and calls that verification \u2014 that would be a check that cannot fail, in a gate about checks that cannot fail."
+      ],
+      "anchors": {
+        "structural": [
+          "skills/commander/templates/COMMANDER_SPINE.template.json:131 \u2014 the archive step's c2b postcondition. Named by path; no map id exists.",
+          "scripts/init_work_area.py:28 \u2014 _RESOLVER_OWNED_TOKEN_RE, which covers work-id|repo-root|*-skill-dir|*-session-id and does NOT own <branch>; and :148, where <repo-root> is confirmed an existing token. In scope, expected untouched; the zero-diff is an asserted scope fence, and it is a scope assertion rather than a behavioral test."
+        ],
+        "capability": [
+          "Spine instantiation and archive closure \u2014 the shipped Commander spine's archive postcondition, and the token resolution that fills it at instantiation time."
+        ],
+        "constraint": [
+          "The engine's verdict for a command condition is the EXIT CODE; stdout is discarded (docs/CHECKLIST_SCHEMA.md, evidence payload {cmd, exit, shell}). A command that prints a falsy word and exits 0 is a check that cannot fail.",
+          "Command check text runs under a POSIX shell (same document; checklist_engine.py locates bash and fails visibly with 127 rather than falling back to cmd.exe). An unquoted < is an INPUT REDIRECTION, not a placeholder \u2014 this is the check's actual failure mode and it is not the one either issue describes.",
+          "Nothing in the suite reads c2b's check text today: test_every_spine_command_names_an_installed_script skips it because it asserts only on commands containing a .py token, and _assert_no_resolver_placeholders does not own <branch>. So the defect survives both instantiation and CI silently \u2014 which is why this gate must add a test that reads it."
+        ],
+        "decision": [
+          "decision pressure: what question the archive check is asking \u2014 'is there a pull request carrying this work', not 'is there an OPEN one'. The narrower reading is the defect. Carries no grade."
+        ],
+        "evidence": [
+          "The check passes on a MERGED pull request and fails when there is none. Verified by running the resolved command against the four states, verdict read from the exit code.",
+          "Finding 1 goes UP to the Admiral, not into the code: the shipped check fails because sh parses <branch> as a redirection, so gh is never invoked \u2014 which is NOT how #439 and #484 describe it. Both issues' suggested fix would convert a check that cannot pass into one that cannot fail."
+        ],
+        "confidence_flags": [
+          "Nothing in the repo maps the relationship between a template's check text and the shell the engine runs it under. This gate therefore measures the resolved text through a real shell rather than reasoning about it."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "Archive reachability postcondition (fix C): review",
+      "imperative": "Fill the commander skill's templates/REVIEWER_HANDOFF.template.md and dispatch via python scripts/run_crew.py. Relay this gate's anchors block. The reviewer must independently confirm the new check is not a check that cannot fail: reintroducing the literal <branch> token must go red, narrowing back to --state open must go red, and a branch with NO pull request at all must go red. The reviewer must confirm the test reads the command text OUT of the template rather than restating it, and that init_work_area.py took a zero-line diff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g3",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g3-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "Archive reachability postcondition (fix C): integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run all three verification commands yourself, then advance. c1 and c2 select on the naming contract; a zero-match selector exits 5, so a gate whose tests were never written fails closed. This is the remedy for the cold critic's BLOCK finding F2, which measured that fix C touches no Python at all and that a byte-identical template would have left the old whole-file check green. BLOCK: rework or blocker. If the resolved text cannot be exercised without real network access, that is an honest null on the mechanism, not a licence to close on a weaker test \u2014 report it and stop. Record the four-state measurement in REPLAN_INPUT.json as observed evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g3",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "archive.c2b resolves its own branch, accepts OPEN and MERGED, rejects CLOSED-unmerged and no-PR, and carries its verdict in the exit code",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_c2b"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "MUTATION FLOOR: reintroducing the literal <branch> token, or narrowing back to --state open, drives the check RED",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py -q -k archive_mutation"
+          },
+          "override_policy": {
+            "allowed": false,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "the coupled suite is green, so no red window opens at this gate boundary",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c4",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-implement": {
+      "id": "g4-implement",
+      "title": "Composition floor: the three fixes through the real artifacts: implement",
+      "imperative": "Fill the commander skill's templates/IMPLEMENTER_HANDOFF.template.md for this gate and dispatch via python scripts/run_crew.py. TASK: three green gates do not prove the three fixes COMPOSE. Add the regression floor that proves it through the real artifacts rather than through unit fixtures: the shipped COMMANDER_SPINE template still instantiates and its archive check still resolves after fix C; the verifier still refuses from a non-installed location after fix B while accepting an installed bundle and honouring --skills-root; and the stop path still closes after fix A. Then repair any collateral red the three fixes left in the broader suite, WITHIN THE OWNERSHIP SCOPE ONLY. This gate adds tests and fixes fallout; it introduces no new behavior of its own. Wait for and integrate the returned IMPLEMENTER_RESULT.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g1, g2 and g3 all closed \u2014 this gate exists to prove they compose, so it is vacuous before they land",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Owned files only. If collateral red lands in ANY file outside the ownership scope \u2014 scripts/checklist_engine.py and tests/test_checklist_engine.py (crew 4), scripts/install_constellation.py (crew 2), the handoff templates (crew 3), docs/CREW_CONTEXT.md or docs/TREND_SNAPSHOT.md (crew 5), or anything else this run does not own \u2014 STOP and FLOAT to the Admiral with the failing test named. Do not edit it, and do not reach for a waiver: an unowned red is a cross-crew finding, and the launch order's Honest-Null Clause covers reporting it as a partial.",
+        "The full-suite run takes about 16 minutes (measured 947s, 1867 passed / 2 skipped on the base commit). The engine re-evaluates postconditions on every advance, so budget for that rather than being surprised by it."
+      ],
+      "anchors": {
+        "structural": [
+          "All three owned files together, plus tests/test_iterative_planning_doctrine.py \u2014 the composition surface. No map id exists for it, which is part of why it needs measuring."
+        ],
+        "capability": [
+          "All three affected capabilities at once: role-artifact verification, boundary transition verification, and spine instantiation/archive closure."
+        ],
+        "constraint": [
+          "docs/agents/ORCHESTRATOR_CONTEXT.md: a mechanism or workflow behavior change owes targeted automated tests PLUS the relevant broader suite, and both commands must be named. This gate is where the broader suite is named.",
+          "A deliberately red suite across gates is a plan smell \u2014 the coupled-suite condition on g1, g2 and g3 is this plan's answer to it, and this gate is the full-suite backstop rather than the only place red is caught."
+        ],
+        "decision": [
+          "decision pressure: whether the run's own execute closure check counts as evidence. It does, and this gate is where it stops being a formality \u2014 see the evidence anchor below."
+        ],
+        "evidence": [
+          "The run's OWN spine closes execute on `python scripts/verify_iterative_role_artifacts.py commander --work-id w5-gates`, which TODAY CANNOT PASS from this worktree \u2014 that is finding 2, and it is in neither issue. After fix B that command runs for real. This gate is where the epic's own check stops being a formality and becomes evidence.",
+          "The full suite is green: no fix left collateral red behind."
+        ],
+        "confidence_flags": [
+          "This gate is itself the response to the unmapped seam: with no map asserting how templates, top-level scripts, and installed bundles relate, composition is established by running the real artifacts end to end rather than by trusting the structure."
+        ]
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-review": {
+      "id": "g4-review",
+      "title": "Composition floor: review",
+      "imperative": "Fill the commander skill's templates/REVIEWER_HANDOFF.template.md and dispatch via python scripts/run_crew.py. Relay this gate's anchors block. The reviewer must confirm the composition tests are not tautological \u2014 each must be shown to go red on a stated broken input \u2014 and must confirm no owned fix silently depended on another crew's file.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for g4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "anchors": {
+        "inherits": "g4-implement anchors \u2014 review verifies the change against the same structural/capability/constraint/decision/evidence anchors"
+      },
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g4-integrate": {
+      "id": "g4-integrate",
+      "title": "Composition floor: integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: run both verification commands yourself, then advance. c2 is the run's own execute closure check run one gate early, deliberately: if it still refuses here, fix B is not done. It passes --skills-root explicitly so the verdict is not silently decided by whatever happens to be installed on this machine \u2014 a cold critic found that without the flag, c2 validates this run against the INSTALLED replan verifier rather than the one on the branch under review, and would go green or red on machine state no PR reviewer can see. c2 stays waivable so an environment problem cannot hard-block the run, but a waiver here is a FLOAT to the Admiral carrying the finding, never a local decision. BLOCK: rework or blocker. BEFORE advancing, route this run's three deferred findings to the spine's triage step so they are not left in a work-area note: (1) boundary freshness, recommend-and-defer with the falsification; (2) finding 1 \u2014 both issues' suggested archive fix would create a check that cannot fail; (3) after fix A, ADMIRAL_SPINE.template.json's execute prose and its directives block still describe repair as an enforced exit, which this run does not own and does not change.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for g4",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "the full suite is green \u2014 no fix left collateral red behind",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "the run's own role-artifact verification RUNS from this worktree instead of refusing on the guard, against an explicitly named skills root \u2014 finding 2 discharged against the live run",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_iterative_role_artifacts.py commander --work-id w5-gates --skills-root C:/Users/fredc/.claude/skills"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "e0-context",
+      "why": "Execution context is loaded and the plan's intent and scope reconcile with LO-w5-c1-gates.md. The three fixes and their six issues are unchanged; ownership is the three named files plus tests, and checklist_engine.py is a float not an edit. The frame is DEGRADED-NO-MAP so every structural claim in this run must be measured on disk rather than reasoned from a map. The anti-vacuity -k selectors and the per-gate test naming contracts are the cold critic's BLOCK remedy and are load-bearing; I will not loosen them. Next: g1-implement, the location guard.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:15:05.786718+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "g1-implement",
+      "why": "Fix B landed structurally, and I re-measured it rather than taking it on report. _is_installed_bundle asks for an own SKILL.md plus a parent that is a skills root by CORPUS.json or a constellation-*/SKILL.md child; I measured that predicate on disk before dispatch and it separates all three locations (main checkout 0 sibs no SKILL.md, worktree the same, installed bundle 20 sibs plus CORPUS.json). --skills-root exists and is threaded through all three modes, so g4-integrate.c2 has the flag it depends on. Both selectors collect nonzero in my own hands: guard_location 10 passed/13 deselected exit 0, guard_mutation 1 passed/22 deselected exit 0. Coupled suite 386 passed/480 subtests, 38.9s, exit 0. The transitions files show M only as a CRLF stat artifact - git diff is empty for them. Next: g1-review, which must independently confirm the guard is not a check that cannot fail.",
+      "mechanical": false,
+      "ts": "2026-08-09T00:35:27.282674+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "g1-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1521,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-09T00:36:43.800761+00:00"
+    }
+  ]
+}

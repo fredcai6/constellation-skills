@@ -12,6 +12,10 @@ from pathlib import Path
 
 
 SAFE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+# Mirrors install_constellation.CORPUS_MARKER: the file the installer writes into
+# a skills root. Duplicated rather than imported because this script runs from an
+# installed bundle, where the installer is not on the path.
+CORPUS_MARKER = "CORPUS.json"
 TRANSITION_LINE = re.compile(
     r"^\s*-\s+TRANSITION \| boundary=(?P<boundary>[^ |]+) "
     r"\| decision=(?P<decision>[^ |]+) \| verified\s*$"
@@ -50,13 +54,73 @@ def _write_markdown(path: Path, text: str) -> None:
         handle.write(text.strip() + "\n")
 
 
-def _installed_skills_root() -> Path:
-    skill_root = Path(__file__).resolve().parents[1]
-    _require(
-        skill_root.name.startswith("constellation-"),
-        "role verifier must run from an installed constellation-* skill",
+def _is_skills_root(path: Path) -> bool:
+    """Whether ``path`` is a directory that installed constellation bundles live in.
+
+    Decided by structure, never by name: either the installer's corpus marker
+    (``install_constellation.py``'s ``CORPUS_MARKER``) sits in it, or it already
+    holds at least one installed bundle -- a ``constellation-*`` child carrying
+    its own ``SKILL.md``.
+    """
+    if not path.is_dir():
+        return False
+    if (path / CORPUS_MARKER).is_file():
+        return True
+    return any((child / "SKILL.md").is_file() for child in path.glob("constellation-*"))
+
+
+def _is_installed_bundle(path: Path) -> bool:
+    """Whether ``path`` is an installed skill bundle rather than a source checkout.
+
+    A bundle carries its own ``SKILL.md`` and sits inside a skills root. The
+    source repo is itself named ``constellation-skills``, so a name test wrongly
+    accepts it; it carries no top-level ``SKILL.md``, so this does not. A
+    Commander worktree is not named ``constellation-*`` at all, so a name test
+    wrongly refuses it; this reaches the same not-installed verdict without
+    consulting the name.
+    """
+    return (path / "SKILL.md").is_file() and _is_skills_root(path.parent)
+
+
+def _candidate_skills_roots() -> list[Path]:
+    """The known install scopes, most specific first -- project scope before user
+    scope, matching install_constellation.py's two --scope targets."""
+    return [Path.cwd() / ".claude" / "skills", Path.home() / ".claude" / "skills"]
+
+
+def _installed_skills_root(skills_root: str | Path | None = None) -> Path:
+    """Where the installed constellation bundles live.
+
+    Resolution order: an explicit ``--skills-root`` wins; else this script's own
+    bundle, when it really is one; else the known install scopes, announced on
+    stderr so a fallback is never silent; else refuse, naming every root tried.
+    """
+    if skills_root is not None:
+        chosen = Path(skills_root).expanduser()
+        _require(chosen.is_dir(), f"--skills-root is not a directory: {chosen}")
+        return chosen
+
+    bundle = Path(__file__).resolve().parents[1]
+    if _is_installed_bundle(bundle):
+        return bundle.parent
+
+    tried = [bundle.parent]
+    for candidate in _candidate_skills_roots():
+        if _is_skills_root(candidate):
+            print(
+                f"note: this script is not inside an installed bundle ({bundle}); "
+                f"resolved installed skills root {candidate}",
+                file=sys.stderr,
+            )
+            return candidate
+        tried.append(candidate)
+
+    raise RoleArtifactError(
+        "cannot locate an installed constellation skills root: this script is not inside an "
+        f"installed skill bundle ({bundle}) and no known skills root was found -- pass "
+        f"--skills-root <path> to name one explicitly. Roots tried ({len(tried)}): "
+        + "; ".join(str(path) for path in tried)
     )
-    return skill_root.parent
 
 
 def _load_module(name: str, path: Path):
@@ -89,18 +153,18 @@ def _work_area(work_id: str) -> Path:
     return Path.cwd() / ".agent-work" / work_id
 
 
-def verify_explorer(work_id: str) -> None:
+def verify_explorer(work_id: str, skills_root: str | Path | None = None) -> None:
     artifact = _read_json(_work_area(work_id) / "SHAPED_BRIEF.json", "Explorer SHAPED_BRIEF")
-    verifier = _initial_verifier(_installed_skills_root())
+    verifier = _initial_verifier(_installed_skills_root(skills_root))
     try:
         verifier.verify_shaped_brief(artifact)
     except verifier.IssueSetError as exc:
         raise RoleArtifactError(f"Explorer SHAPED_BRIEF violates G1: {exc}") from exc
 
 
-def verify_commander(work_id: str) -> None:
+def verify_commander(work_id: str, skills_root: str | Path | None = None) -> None:
     artifact = _read_json(_work_area(work_id) / "REPLAN_INPUT.json", "Commander REPLAN_INPUT")
-    verifier = _replan_verifier(_installed_skills_root())
+    verifier = _replan_verifier(_installed_skills_root(skills_root))
     try:
         verifier.verify_replan_input(artifact)
     except verifier.ReplanError as exc:
@@ -129,14 +193,14 @@ def _verify_transition_audit(log_path: Path, boundary_id: str, decision: str) ->
     _require(matches[0] == decision, "verified TRANSITION audit decision must match REPLAN_RESULT.decision")
 
 
-def verify_admiral_prelaunch(work_id: str) -> None:
+def verify_admiral_prelaunch(work_id: str, skills_root: str | Path | None = None) -> None:
     work_area = _work_area(work_id)
     next_wave = _next_wave(work_area)
     boundary_id = next_wave["boundary_id"]
     transition = work_area / "transitions" / boundary_id
     source = _read_json(transition / "REPLAN_INPUT.json", "Admiral boundary REPLAN_INPUT")
     result = _read_json(transition / "REPLAN_RESULT.json", "Admiral boundary REPLAN_RESULT")
-    verifier = _replan_verifier(_installed_skills_root())
+    verifier = _replan_verifier(_installed_skills_root(skills_root))
     try:
         verifier.verify_replan_result(source, result)
     except verifier.ReplanError as exc:
@@ -160,14 +224,19 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("explorer", "commander", "admiral-prelaunch"))
     parser.add_argument("--work-id", required=True)
+    parser.add_argument(
+        "--skills-root",
+        default=None,
+        help="directory the installed constellation bundles live in; wins over autodetection",
+    )
     args = parser.parse_args(argv)
     try:
         if args.mode == "explorer":
-            verify_explorer(args.work_id)
+            verify_explorer(args.work_id, args.skills_root)
         elif args.mode == "commander":
-            verify_commander(args.work_id)
+            verify_commander(args.work_id, args.skills_root)
         else:
-            verify_admiral_prelaunch(args.work_id)
+            verify_admiral_prelaunch(args.work_id, args.skills_root)
     except (OSError, RoleArtifactError) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 1

@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -463,6 +464,371 @@ class InstalledIterativeRoleRuntimeTests(unittest.TestCase):
         refused = self.run_role("admiral", "admiral-prelaunch")
         with self.subTest(launch_authority="stop"):
             self.assertNotEqual(0, refused.returncode, "stop cannot authorize NEXT_WAVE")
+
+
+def make_source_checkout(path: Path) -> Path:
+    """A source-checkout shape: `scripts/` plus `skills/<name>/SKILL.md`, and --
+    the point of the fixture -- no `SKILL.md` of its own at the top level."""
+    (path / "scripts").mkdir(parents=True)
+    shutil.copy2(ROLE_VERIFIER, path / "scripts" / ROLE_VERIFIER.name)
+    (path / "skills" / "commander").mkdir(parents=True)
+    (path / "skills" / "commander" / "SKILL.md").write_text(
+        "# commander\n", encoding="utf-8", newline="\n"
+    )
+    return path
+
+
+def install_bundles(dest: Path, names: list[str], module_name: str):
+    installer = load_module(module_name, ROOT / "scripts" / "install_constellation.py")
+    installer.install_skills(
+        installer.select_skills(names, installer.discover_skills()),
+        dest,
+        dry_run=False,
+        force=False,
+        full_set=False,
+        restart_message="",
+        out=lambda _: None,
+        interpreter=installer.InterpreterResolution(sys.executable, (sys.executable,), "probe"),
+    )
+    return installer
+
+
+@unittest.skipUnless(ROLE_VERIFIER.is_file(), "awaiting executable G3 role verifier")
+class GuardLocationStructureTests(unittest.TestCase):
+    """The location guard decides "where am I running from" by structure, not by name.
+
+    The old `startswith("constellation-")` test had two polarities. It wrongly
+    ACCEPTED the source repo, which is itself named `constellation-skills`
+    (#501, #468), and it wrongly REFUSED a Commander worktree, whose directory is
+    not named `constellation-*` at all. Both are measured here on real trees.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.root = Path(cls.tmp.name)
+        cls.verifier = load_module("g1_guard_role_verifier", ROLE_VERIFIER)
+        cls.skills_root = cls.root / "installed"
+        install_bundles(
+            cls.skills_root,
+            ["commander", "to-initial-issues", "replan"],
+            "g1_guard_install_constellation",
+        )
+        cls.installed_bundle = cls.skills_root / "constellation-commander"
+        # Name-only decoy: named like a bundle and sitting in a real skills root,
+        # but carrying no SKILL.md of its own.
+        cls.decoy = cls.skills_root / "constellation-decoy"
+        (cls.decoy / "scripts").mkdir(parents=True)
+        cls.checkout = make_source_checkout(cls.root / "programs" / "constellation-skills")
+        cls.worktree = make_source_checkout(
+            cls.root / "constellation-skills-wt" / "epic418-w5-gates"
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def columns(self, path: Path) -> dict:
+        """The three structural columns the predicate reads, measured on disk."""
+        parent = path.parent
+        return {
+            "own_skill_md": (path / "SKILL.md").is_file(),
+            "parent_corpus_json": (parent / self.verifier.CORPUS_MARKER).is_file(),
+            "parent_bundle_siblings": sum(
+                1 for child in parent.glob("constellation-*") if (child / "SKILL.md").is_file()
+            ),
+        }
+
+    def test_guard_location_predicate_separates_the_three_real_locations(self):
+        cases = [
+            ("installed-bundle", self.installed_bundle, True),
+            ("main-checkout", self.checkout, False),
+            ("commander-worktree", self.worktree, False),
+        ]
+        self.assertEqual(3, len(cases))
+        for label, path, expected in cases:
+            with self.subTest(location=label, columns=self.columns(path)):
+                self.assertTrue(path.is_dir(), f"{label} fixture was never built")
+                self.assertEqual(expected, self.verifier._is_installed_bundle(path))
+        installed = self.columns(self.installed_bundle)
+        self.assertTrue(installed["own_skill_md"])
+        # Assert what the sibling scan looped over: an empty scan would report
+        # "not a skills root" without ever examining a bundle.
+        self.assertGreaterEqual(installed["parent_bundle_siblings"], 3)
+        self.assertTrue(self.verifier._is_skills_root(self.skills_root))
+        for label, path in (("main-checkout", self.checkout), ("commander-worktree", self.worktree)):
+            with self.subTest(not_a_skills_root=label):
+                self.assertFalse(self.verifier._is_skills_root(path.parent))
+        # The old name test is the thing being replaced: it disagrees on BOTH
+        # of the two non-installed locations, in opposite directions.
+        self.assertTrue(self.checkout.name.startswith("constellation-"))
+        self.assertFalse(self.worktree.name.startswith("constellation-"))
+
+    def test_guard_location_predicate_rejects_name_only_decoy(self):
+        self.assertTrue(self.decoy.is_dir())
+        # The decoy would pass the old guard on its name alone.
+        self.assertTrue(self.decoy.name.startswith("constellation-"))
+        # Clause 2 holds for it -- its parent IS a real skills root -- so clause 1
+        # is the only thing rejecting it.
+        self.assertTrue(self.verifier._is_skills_root(self.decoy.parent))
+        self.assertFalse((self.decoy / "SKILL.md").is_file())
+        self.assertFalse(self.verifier._is_installed_bundle(self.decoy))
+
+    def test_guard_location_predicate_accepts_by_marker_not_by_name(self):
+        """A bundle is accepted on structure even when nothing is named `constellation-*`."""
+        marked = self.root / "marker-only"
+        bundle = marked / "oddly-named-bundle"
+        bundle.mkdir(parents=True)
+        (bundle / "SKILL.md").write_text("# bundle\n", encoding="utf-8", newline="\n")
+        self.assertFalse(self.verifier._is_skills_root(marked))
+        (marked / self.verifier.CORPUS_MARKER).write_text(
+            '{"corpus_id": "test"}\n', encoding="utf-8", newline="\n"
+        )
+        self.assertTrue(self.verifier._is_skills_root(marked))
+        self.assertTrue(self.verifier._is_installed_bundle(bundle))
+        self.assertEqual(0, sum(1 for _ in marked.glob("constellation-*")))
+
+
+@unittest.skipUnless(ROLE_VERIFIER.is_file(), "awaiting executable G3 role verifier")
+class GuardRuntimeTests(unittest.TestCase):
+    """Resolution order, the `--skills-root` flag, the refusal, and the wrong-root mutation.
+
+    The class name deliberately carries neither gate token, so `-k guard_location`
+    and `-k guard_mutation` select on method names alone.
+
+    Every run here shells out with HOME/USERPROFILE pointed at a temp home, so the
+    developer's real `~/.claude/skills` can never leak in and make a probe pass.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.root = Path(cls.tmp.name)
+        cls.home = cls.root / "h"
+        cls.user_skills = cls.home / ".claude" / "skills"
+        install_bundles(
+            cls.user_skills,
+            ["commander", "to-initial-issues", "replan"],
+            "g1_resolution_install_constellation",
+        )
+        cls.bundle_script = (
+            cls.user_skills / "constellation-commander" / "scripts" / ROLE_VERIFIER.name
+        )
+        assert cls.bundle_script.is_file()
+        # A detached copy of the same script in a Commander-worktree shape: not a
+        # bundle, and not named `constellation-*` either.
+        cls.detached = make_source_checkout(cls.root / "wt" / "epic418-w5-gates")
+        cls.detached_script = cls.detached / "scripts" / ROLE_VERIFIER.name
+        cls.bare_home = cls.root / "bare"
+        cls.bare_home.mkdir()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def setUp(self):
+        self.work_id = self._testMethodName.replace("test_", "run-")
+
+    def make_project(self, label: str) -> Path:
+        project = self.root / "projects" / f"{label}-{self.work_id}"
+        (project / ".agent-work" / self.work_id).mkdir(parents=True)
+        return project
+
+    def work_area(self, project: Path) -> Path:
+        return project / ".agent-work" / self.work_id
+
+    def seed(self, project: Path, mode: str) -> None:
+        """Write the artifacts `mode` needs so the run reaches the skills root."""
+        area = self.work_area(project)
+        if mode == "explorer":
+            shutil.copy2(
+                self.user_skills
+                / "constellation-to-initial-issues"
+                / "templates"
+                / "SHAPED_BRIEF.template.json",
+                area / "SHAPED_BRIEF.json",
+            )
+            return
+        replan_templates = self.user_skills / "constellation-replan" / "templates"
+        if mode == "commander":
+            shutil.copy2(replan_templates / "REPLAN_INPUT.template.json", area / "REPLAN_INPUT.json")
+            return
+        (area / "NEXT_WAVE.json").write_text(
+            json.dumps({"boundary_id": "wave-1", "launch_id": "wave-2", "trigger": "wave_boundary"}),
+            encoding="utf-8",
+            newline="\n",
+        )
+        transition = area / "transitions" / "wave-1"
+        transition.mkdir(parents=True)
+        shutil.copy2(replan_templates / "REPLAN_INPUT.template.json", transition / "REPLAN_INPUT.json")
+        result = load_json(replan_templates / "REPLAN_RESULT.template.json")
+        result["decision"] = "advance"
+        (transition / "REPLAN_RESULT.json").write_text(
+            json.dumps(result), encoding="utf-8", newline="\n"
+        )
+        (area / "ADMIRAL_LOG.md").write_text(
+            "- TRANSITION | boundary=wave-1 | decision=advance | verified\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+
+    def run_verifier(self, script: Path, mode: str, project: Path, home: Path, skills_root=None):
+        env = dict(os.environ)
+        env["HOME"] = str(home)
+        env["USERPROFILE"] = str(home)
+        argv = [sys.executable, str(script), mode, "--work-id", self.work_id]
+        if skills_root is not None:
+            argv += ["--skills-root", str(skills_root)]
+        return subprocess.run(argv, cwd=project, env=env, capture_output=True, text=True)
+
+    def test_guard_location_resolution_uses_own_bundle_without_a_fallback_note(self):
+        project = self.make_project("own-bundle")
+        self.seed(project, "commander")
+        run = self.run_verifier(self.bundle_script, "commander", project, self.bare_home)
+        self.assertEqual(0, run.returncode, run.stderr)
+        self.assertNotIn("note:", run.stderr)
+
+    def test_guard_location_resolution_probes_project_scope_before_user_scope(self):
+        """Project scope wins over user scope -- proved by behaviour, not by the note.
+
+        The project-scope root is a marker-only decoy holding no bundles, so if the
+        project scope really wins the run fails naming a verifier UNDER THAT ROOT.
+        The user-scope root is the real install, which would have succeeded.
+        """
+        project = self.make_project("project-scope")
+        self.seed(project, "commander")
+        project_root = project / ".claude" / "skills"
+        project_root.mkdir(parents=True)
+        (project_root / "CORPUS.json").write_text(
+            '{"corpus_id": "decoy"}\n', encoding="utf-8", newline="\n"
+        )
+        run = self.run_verifier(self.detached_script, "commander", project, self.home)
+        self.assertNotEqual(0, run.returncode, run.stdout)
+        self.assertIn(str(project_root), run.stderr)
+        self.assertNotIn(str(self.user_skills / "constellation-replan"), run.stderr)
+        self.assertIn("note:", run.stderr)
+
+    def test_guard_location_resolution_falls_back_to_user_scope_with_a_visible_note(self):
+        project = self.make_project("user-scope")
+        self.seed(project, "commander")
+        self.assertFalse((project / ".claude" / "skills").exists())
+        run = self.run_verifier(self.detached_script, "commander", project, self.home)
+        self.assertEqual(0, run.returncode, run.stderr)
+        self.assertIn("note:", run.stderr)
+        self.assertIn(str(self.user_skills), run.stderr)
+
+    def test_guard_location_resolution_refusal_names_the_problem_and_every_root_tried(self):
+        project = self.make_project("no-root")
+        self.seed(project, "commander")
+        run = self.run_verifier(self.detached_script, "commander", project, self.bare_home)
+        self.assertEqual(1, run.returncode, run.stdout)
+        self.assertIn("REFUSED:", run.stderr)
+        # It names the REAL problem, not the old wrong one.
+        self.assertIn("cannot locate an installed constellation skills root", run.stderr)
+        self.assertNotIn("must run from an installed constellation-* skill", run.stderr)
+        self.assertNotIn("installed public verifier is missing", run.stderr)
+        stated, listing = run.stderr.split("Roots tried (", 1)[1].split("): ", 1)
+        roots = [entry.strip() for entry in listing.strip().splitlines()[0].split(";")]
+        self.assertEqual(int(stated), len(roots))
+        self.assertEqual(3, len(roots))
+        expected = [
+            # the root the script's own location would have implied, then the two
+            # install scopes, project before user
+            self.detached.parent,
+            project / ".claude" / "skills",
+            self.bare_home / ".claude" / "skills",
+        ]
+        self.assertEqual([str(path) for path in expected], roots)
+
+    def test_guard_location_flag_wins_and_is_reachable_from_all_three_modes(self):
+        modes = ["explorer", "commander", "admiral-prelaunch"]
+        self.assertEqual(3, len(modes))
+        for mode in modes:
+            project = self.make_project(mode)
+            self.seed(project, mode)
+            with self.subTest(mode=mode, flag="absent"):
+                without = self.run_verifier(self.detached_script, mode, project, self.bare_home)
+                self.assertNotEqual(0, without.returncode)
+                self.assertIn("cannot locate an installed constellation skills root", without.stderr)
+            with self.subTest(mode=mode, flag="present"):
+                with_flag = self.run_verifier(
+                    self.detached_script, mode, project, self.bare_home, skills_root=self.user_skills
+                )
+                self.assertEqual(0, with_flag.returncode, with_flag.stderr)
+
+    def test_guard_location_flag_beats_an_otherwise_resolvable_root(self):
+        """`--skills-root` wins even when autodetection would have found something."""
+        project = self.make_project("flag-wins")
+        self.seed(project, "commander")
+        wrong = self.root / "flag-wins-root"
+        (wrong / "constellation-explorer").mkdir(parents=True)
+        (wrong / "constellation-explorer" / "SKILL.md").write_text(
+            "# explorer\n", encoding="utf-8", newline="\n"
+        )
+        # The bundle copy would resolve its own parent; the flag overrides that.
+        run = self.run_verifier(
+            self.bundle_script, "commander", project, self.home, skills_root=wrong
+        )
+        self.assertNotEqual(0, run.returncode, run.stdout)
+        self.assertIn(str(wrong / "constellation-replan"), run.stderr)
+
+    def test_guard_mutation_wrong_skills_root_drives_the_acceptance_check_red(self):
+        """Point the resolver at a plausible-but-wrong root; acceptance must go RED.
+
+        The wrong root is not obviously broken: it satisfies the skills-root test,
+        so nothing upstream of the load rejects it. It simply is not the root that
+        holds the verifiers this run needs -- which is exactly the shape of #501's
+        original wrong-accept, where `C:/Programs` was resolved as a skills root.
+        """
+        wrong = self.root / "mutation-wrong-root"
+        (wrong / "constellation-explorer").mkdir(parents=True)
+        (wrong / "constellation-explorer" / "SKILL.md").write_text(
+            "# explorer\n", encoding="utf-8", newline="\n"
+        )
+        # Assert the mutation applied: the wrong root IS plausible, and IS missing
+        # the verifiers. A mutation that never took would leave a green run that
+        # reads exactly like a working guard.
+        verifier = load_module("g1_mutation_role_verifier", ROLE_VERIFIER)
+        self.assertTrue(verifier._is_skills_root(wrong))
+        missing = {
+            "explorer": wrong / "constellation-to-initial-issues" / "scripts" / "verify_issue_set.py",
+            "commander": wrong / "constellation-replan" / "scripts" / "verify_replan.py",
+            "admiral-prelaunch": wrong / "constellation-replan" / "scripts" / "verify_replan.py",
+        }
+        for mode, absent in missing.items():
+            self.assertFalse(absent.exists(), f"{mode} target must be absent from the wrong root")
+            self.assertTrue(
+                (self.user_skills / absent.relative_to(wrong)).is_file(),
+                f"{mode} target must be present in the correct root",
+            )
+
+        self.assertEqual(3, len(missing))
+        for mode, absent in missing.items():
+            project = self.make_project(f"mutation-{mode}")
+            self.seed(project, mode)
+            with self.subTest(mode=mode, root="correct"):
+                green = self.run_verifier(
+                    self.detached_script, mode, project, self.bare_home, skills_root=self.user_skills
+                )
+                self.assertEqual(0, green.returncode, green.stderr)
+            with self.subTest(mode=mode, root="wrong"):
+                red = self.run_verifier(
+                    self.detached_script, mode, project, self.bare_home, skills_root=wrong
+                )
+                self.assertEqual(1, red.returncode, "acceptance must not survive a wrong root")
+                self.assertIn("installed public verifier is missing", red.stderr)
+                self.assertIn(str(absent), red.stderr)
+
+    def test_guard_location_flag_refuses_a_path_that_is_not_a_directory(self):
+        project = self.make_project("bad-flag")
+        self.seed(project, "commander")
+        missing = self.root / "nope"
+        run = self.run_verifier(
+            self.detached_script, "commander", project, self.bare_home, skills_root=missing
+        )
+        self.assertEqual(1, run.returncode, run.stdout)
+        self.assertIn("--skills-root is not a directory", run.stderr)
+        self.assertIn(str(missing), run.stderr)
 
 
 if __name__ == "__main__":

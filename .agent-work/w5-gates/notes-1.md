@@ -5,12 +5,66 @@ Working notes. The authoritative state is the engine: `.agent-work/w5-gates/spin
 `.agent-work/w5-gates/INTERROGATION_RECORD.json` (12 questions, `verify_interrogation.py`
 exit 0) and the consolidation summary inside `.agent-work/w5-gates/interrogation.json`.
 
-## Where the run stopped
+## Where the run stopped (crew-1 original agent)
 
 Spine complete through `understand`. `start plan` was **refused** by the engine on a HARD
 context reading (16% fill against a 0.15 hard band for a 1M window — a real trip, not a stale
 gauge). A `refresh-request` is attached to `plan` against why-record `w-3`. The next actor is a
 **fresh** Commander cold-starting from `current`, same spine file.
+
+## Where the run is now (refresh agent, session `commander-w5-gates-b-refresh1`)
+
+`plan` is **complete**, all six postconditions met. Artifacts a future refresh should read first:
+
+- `MISSION_FRAME.md` — verifies FRAME-OK against the DEGRADED-NO-MAP receipt. The map is **absent**,
+  not stale, so the frame cites no anchor ids and is cut from the four hash-pinned substitutes.
+- `execute.json` — four gates: g1 location guard (fix B), g2 stop-boundary (fix A), g3 archive
+  (fix C), g4 composition floor. Frozen at `plan`; change it through the engine's `amend`/`reopen`,
+  never by hand.
+- `PLAN_ALTERNATIVES_BRIEF.md` + `PLAN_ALTERNATIVES_CONVERGENCE.md` — panel of 3, converged hybrid.
+- `PLAN_CRITIC_TRIAGE.md` — **read this one.** A cold critic panel of 2 BLOCKed the first draft: g1
+  and g3 could each have closed with zero work done. The `-k` selectors and the test naming
+  contracts in the gate imperatives are that block's remedy and are load-bearing, not stylistic.
+
+**Two claims in the sections below are corrected by measurement.** Ordering g1 before g2 is *not* a
+technical dependency — g2's pytest path reaches the verifier through a tempdir bundle where the
+guard passes today, unfixed; the real reasons are same-file serialization and reviewer locality.
+And the guard's main-checkout failure is a **wrong-accept** at the guard (the downstream refusal
+then names the wrong problem); the outright refusal at the guard is the **worktree** case.
+
+**Measured baselines** (base commit, before any fix): full suite `python -m pytest -q` → 1867
+passed, 2 skipped, exit 0, **947s**. The eight-file coupled suite used at each gate boundary → 375
+passed, 463 subtests, exit 0, **44s**. All six `-k` selectors exit **5** (zero match) today, which is
+what makes them fail closed.
+
+## Where the run is now (second refresh, session `commander-w5-gates-c-refresh2`)
+
+`execute` is **in-progress**. Inside `execute.json`: `e0-context` complete, **`g1-implement` complete**,
+`g1-review` pending with its precondition attested and its handoff already written.
+
+- The g1 handoff and result are at `.agent-work/w5-gates/crew-handoffs/g1-implement-{HANDOFF,RESULT}.md`.
+  **The g1-review handoff is already written** at `crew-handoffs/g1-review-HANDOFF.md` — a fresh agent
+  should dispatch it rather than re-author it.
+- I re-measured the structural predicate on disk myself before dispatch, and it separates all three
+  locations: main checkout and worktree both have **no own `SKILL.md`** and a parent with no
+  `CORPUS.json` and **0** `constellation-*/SKILL.md` children; the installed bundle has its own
+  `SKILL.md`, a parent `CORPUS.json`, and **20** sibling bundles.
+- Verified in my own hands after the crew returned: `guard_location` **10 passed / 13 deselected**,
+  exit 0; `guard_mutation` **1 passed / 22 deselected**, exit 0; coupled suite **386 passed / 480
+  subtests, 38.9s**, exit 0 (base was 375/463, so the delta is exactly this gate's additions).
+- The two `M` files under `.agent-work/epic-418-redux/transitions/close-to-w5/` are a **CRLF stat
+  artifact** — `git diff` is empty for them and their blob OIDs match HEAD. Leave them unstaged; they
+  are the Admiral's.
+- A g1 **reviewer registration was created and then explicitly abandoned** without ever being
+  dispatched, because the trip landed between registration and dispatch. `recover_crews.py` reports
+  **0 unresolved**; relaunch a fresh reviewer normally.
+
+**Line-reference correction for g2.** The plan cites the negative assertion to invert at
+`tests/test_iterative_planning_doctrine.py:461-462`. On the pre-g1 tree it is actually at **:465** —
+`self.assertNotEqual(0, refused.returncode, "stop cannot authorize NEXT_WAVE")`, inside the
+`with self.subTest(launch_authority="stop")` block at :464. g1 added ~366 lines to that file, so the
+line number has moved again. **Find it by its text, not its line number.** The plan's identification
+of *which* assertion is correct; only the coordinate is stale.
 
 ## Launch order
 
