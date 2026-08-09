@@ -170,12 +170,13 @@
   "refusals": 0,
   "engine_session": {
     "session_id": "g8-reviewer-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-09T01:11:23.066327+00:00",
     "last_heartbeat": "2026-08-09T01:24:31.268114+00:00",
     "claimed_by": "g8-reviewer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-09T01:26:12.698143+00:00"
   }
 }
