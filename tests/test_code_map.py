@@ -4551,12 +4551,12 @@ class WrappedDocstringTests(unittest.TestCase):
 ''', "one-liner"),
             # Shape 3: no blank line, with overflow
             ('''def f3():
-    """This is a longer docstring that wraps across lines in the source but has no blank line separator at all, causing overflow at the truncation limit."""
+    """This is a much longer docstring that wraps across multiple lines in the source code and keeps going without any blank line separator at all, causing significant overflow at the 160 character truncation limit that applies here."""
     pass
 ''', "no blank line with overflow"),
             # Shape 4: blank line, first para has overflow
             ('''def f4():
-    """This first paragraph is very long and wraps across multiple lines in the source code and still keeps going, exceeding 160 characters total when joined.
+    """This first paragraph is extremely long and wraps across multiple lines in the source code and still keeps going, definitely exceeding the 160 character truncation limit that applies to summary extraction when joined together.
 
     This is the body content that comes after the blank line.
     """
@@ -4573,17 +4573,23 @@ class WrappedDocstringTests(unittest.TestCase):
                 body = extract.doc_body_of(func_node)
 
                 # Invariant: no silent content loss
-                # For overflow cases (summary at 160 chars), assert unconditionally
-                if len(summary) == 160:
+                # Branch on SHAPE (known), not MEASUREMENT (what we're testing)
+                if description in ("no blank line with overflow", "blank line with first-para overflow"):
+                    # These shapes MUST overflow — assert truncation happened, unconditionally
+                    self.assertEqual(len(summary), 160,
+                                   f"{description}: summary must be truncated to 160 chars")
+                    # Body must exist and contain the overflow
                     self.assertIsNotNone(body,
-                                       f"{description}: 160-char summary must have overflow in body")
-                    # For Shape 4 (blank line with first-para overflow), verify overflow text is present
-                    if description == "blank line with first-para overflow":
-                        # Text past char 160 is "joined" and beyond
+                                       f"{description}: body must contain overflow when summary is 160 chars")
+                    # Verify overflow text is actually present
+                    if description == "no blank line with overflow":
+                        self.assertIn("truncation limit", body,
+                                     f"{description}: overflow text must be in body")
+                    elif description == "blank line with first-para overflow":
                         self.assertIn("joined", body,
                                      f"{description}: overflow text must be in body")
 
-                # Reconstructed text should be non-empty
+                # Reconstructed text should be non-empty (applies to all shapes)
                 reconstructed = (summary or "") + ((" " + body) if body else "")
                 self.assertGreater(len(reconstructed), 0,
                                   f"{description}: reconstructed text empty")
