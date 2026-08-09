@@ -1,0 +1,20 @@
+{
+  "work_id": "issue-456-gs-review",
+  "diff_ref": "gs gate diff: skills/commander/references/commander-core.md, skills/commander/templates/IMPLEMENTER_HANDOFF.template.md, skills/implementer/SKILL.md, skills/scout/SKILL.md (cherry-picked from d102c05), .gitignore, map/INDEX.md, map/ids.jsonl, tests/test_code_map.py (MapTreeFreshnessTests)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "flagged", "finding": "<example: build_report() takes 7 positional args — introduce a parameter object>", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "overridden", "finding": "", "override": {"repo_standard": "<the documented standard that wins, e.g. GLOSSARY: ports-and-adapters seam is a required extension point>", "reason": "<why the standard subordinates the smell: the seam is a stated requirement, not speculative>"}},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "", "override": null}
+  ],
+  "rail_exception": null
+}
