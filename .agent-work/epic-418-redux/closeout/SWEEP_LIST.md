@@ -26,6 +26,7 @@ committed yet** — the single most destructive thing to sweep.
 | `epic418-w5-addressing` | `epic-418/w5-crew-addressing` | after merge |
 | `epic418-w5-engine` | `epic-418/w5-engine-internals` | after merge |
 | `epic418-w5-docs` | `epic-418/w5-docs` | after merge (PR #509) |
+| `epic418-w5-gauge` | `epic-418/w5-gauge-477` | **ADDED 2026-08-09 at closeout — this list was built 2026-08-08 and #477 was dispatched after it.** PR **#517 MERGED**. The omission is the same class as the wave's own #477/#478 miss: a list derived by command still needs a total to check against, and this one had none. |
 
 **Order is mandatory: harvest → verify merged on the forge → remove → `git worktree prune`.** Never
 close an issue or sweep a tree on an ancestry test; squash-merge makes ancestry return the same answer

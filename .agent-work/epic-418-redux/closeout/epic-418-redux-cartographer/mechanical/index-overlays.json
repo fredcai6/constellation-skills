@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "index-overlays",
+  "mechanical": {
+    "run": "epic-418-redux-cartographer",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 5,
+    "spine-step": "index-overlays",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-redux-cartographer-index-overlays@f0738c97cdda681fe4d7708eb083c5db9dce5a1a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-redux-cartographer",
+    "generated_at": "2026-08-09T12:04:10Z"
+  }
+}

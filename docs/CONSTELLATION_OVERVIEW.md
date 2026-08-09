@@ -13,7 +13,6 @@ Implementer  -> implements a bounded change from a handoff
 Reviewer     -> independently verifies a bounded change
 Triage       -> classifies and writes issue-ready recommendations; no checklist
 Prototyper   -> answers one named question with throwaway code (logic/UI/measurement); handoff-driven, no checklist
-Lessons-auditor -> distills scoped, grounded lesson candidates from run artifacts with fresh context (Admiral closeout / Commander feedback subagent)
 Docent       -> generates a stamped static HTML explainer site from Cartographer map truth; read-only map consumer
 Curator      -> periodically measures the skills corpus (curate_corpus.py), mends mechanical drift in place, routes design decisions to Triage; human-invoked, no checklist
 ```
@@ -49,7 +48,7 @@ Skill.md is trigger, boundary, and resource pointer. Templates are the interface
 | Commander | `REVIEWER_HANDOFF` | Reviewer | task statement, diff access, close criteria, constraints, implementer evidence |
 | Implementer / Reviewer | `IMPLEMENTER_RESULT` / `REVIEW_RESULT` | Commander | evidence, blockers, scope drift, assumptions, out-of-scope observations |
 | Commander, Cartographer, Scout, Implementer, Reviewer, Curator | Triage candidate | Triage | future work package, not current-scope expansion |
-| Triage | issue-ready recommendation | user / issue tracker | bounded future work with evidence and acceptance criteria |
+| Triage | issue-ready recommendation | user / issue tracker | bounded future work recorded as **observations with baselines**, never a prescribed fix: one block per occurrence carrying what's wrong, what was expected, the feeding conditions, `type` (`measured` or `inferred` — and *how*, for both) and `rev`. `possible fix` and `open questions` are optional top-level siblings, one per issue; only the observations are load-bearing. Acceptance criteria, impact, scope, and non-goals are deliberately not in the body (dropped at `ff1f39c9`) |
 | Curator | `CURATOR_REPORT` + `--json` record | human, Triage | periodic corpus-health pass: mechanical measurement (`curate_corpus.py`, flags-never-gates), in-place mechanical mends reviewed by git diff; design decisions routed to Triage, never silently applied |
 | Explorer | confirmed shaped brief or shaped-design issue | to-initial-issues / Commander, human | hard gate: the strict shaped-brief confirmation must pass before a current wave is cut; an unconfirmed design is never cut |
 | Explorer | `EXCURSION_BRIEF` | Prototyper, research agents, design-it-twice panels | one named question per excursion; prototype section fields identical to `PROTOTYPE_HANDOFF` |
@@ -169,6 +168,57 @@ Freshness is not owned by a dedicated gate. `tests/test_code_map.py::MapTreeFres
 compares the committed entry point against a fresh build, so a stale map fails the ordinary
 suite — every future run's own close-criteria check catches it without anyone remembering to
 look.
+
+## The install and instantiation chain: one source, three live copies
+
+Every checklist template and shared script exists in up to three places at once, and those places
+hold copies of **different ages**:
+
+```text
+source        skills/<role>/{templates,references,scripts}/*  +  repo-root scripts/*.py
+                 |  install_constellation.py: shutil.copytree of the skill dir, plus a
+                 |  shutil.copy2 of each `required_scripts` entry out of repo-root scripts/
+installed     <skills-root>/constellation-<role>/{SKILL.md,templates,references,scripts}
+                 |  init_work_area.py: resolves the BUNDLE's template, substituting
+                 |  <work-id> / <commander-skill-dir> / <repo-root> into check text
+instantiated  .agent-work/<work-id>/spine.json  (and the other role artifacts)
+```
+
+**A fix lands only in the source layer.** The other two are snapshots taken at install time and at
+instantiation time, so a live run executes whichever version was current when it started. That is
+why the suite can be entirely green while a running agent still runs the broken text, and why
+*fixed* and *reaching the agent* are two separate claims.
+
+Three instances in one epic (#418 wave 5), so this is measured rather than hypothetical:
+
+- `verify_iterative_role_artifacts.py` decided whether it was running from an installed bundle by
+  **name**. The source repo is itself called `constellation-skills`, so the name test wrongly
+  accepted it; a Commander worktree is called nothing of the sort, so it wrongly refused that
+  (#501). Detection is now structural — a `SKILL.md` in the candidate, plus a corpus marker or some
+  *other* installed bundle in its parent, never the candidate certifying itself.
+- `COMMANDER_SPINE.template.json`'s `archive.c2b` shipped a check that could not run, then a repair
+  that could not fail (#439, #446, #484). Both defects lived in template check text that is copied
+  into the bundle and then substituted into `spine.json`.
+- The run that produced that repair was blocked by it: the Admiral's own `spine.json` had been
+  instantiated *before* the fix landed, so it still carried the pre-fix text and had to be waived.
+  A fix cannot protect the run that produces it.
+
+**Nothing traverses this chain automatically, and nothing can find it by scanning code.** No check
+compares a copy against its source, and neither hop is a Python import or call — one is a file copy,
+the other is text substitution — so no static reference scan produces an edge here. The only record
+that the three fixes above still hold *as shipped* is `ComposedShippedArtifactTests` in
+`tests/test_iterative_planning_doctrine.py`: it installs a real bundle, instantiates that bundle's
+own spine template through the real `init_work_area.py` entrypoint, and runs the bundle's own
+verifier as a subprocess with `HOME`/`USERPROFILE` pointed at an empty directory so the developer's
+real `~/.claude/skills` cannot leak in and make a leg pass.
+
+**A fourth instance, from #456, confirming the chain rather than adding to it.** That run's
+Commander spine had been instantiated before the `archive.c2b` repair above landed, so it
+still carried the unrunnable `gh pr list --head <branch>` text and had to be force-waived at
+the final gate — the substance verified by hand instead (`--head issue-456/code-map` returns
+`true`, PR open). Two runs in flight at once hit the same pre-fix copy independently, which
+is exactly the "a fix cannot protect the run that produces it" property stated above, seen
+from the other side: it also cannot protect a *sibling* run already under way.
 
 ## Authority transfer
 

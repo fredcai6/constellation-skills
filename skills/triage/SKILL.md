@@ -24,7 +24,7 @@ Clearing three of four does not qualify; route it as `filed` or `recommend-and-d
 
 1. **Load candidates and authority.** Consume all sources: `execute.json` `triage_candidates`, Cartographer findings, review findings, plans, implementation evidence, user notes. Note issue creation authority from `docs/agents/ORCHESTRATOR_CONTEXT.md` if present (the default posture is the inherited `references/global-orchestrator.md`).
 
-2. **Classify each candidate.** Assign one or more labels: bug, cleanup, missing test, missing doc, missing architecture packet, missing structural node, missing capability anchor, architecture weakness, structure/constraint mismatch, stale generated map, ungrounded claim/decision, bad map edge, feature, tooling, unresolved decision, research hardening, dependency cleanup, security/privacy, performance/resource. Preserve structural anchor, current truth, future concern, evidence.
+2. **Classify each candidate.** Assign one or more labels: bug, cleanup, missing test, missing doc, missing architecture packet, missing structural node, missing capability anchor, architecture weakness, structure/constraint mismatch, stale generated map, ungrounded claim/decision, bad map edge, feature, tooling, unresolved decision, research hardening, dependency cleanup, security/privacy, performance/resource. Preserve the structural anchor and, for each observation, its conditions, `type` and `rev` — the grounding travels with the observation, so do not strip it while classifying.
 
    Map-quality findings from Scout map them as: stale map -> `stale generated map`; missing capability anchor -> `missing capability anchor`; bad/high-maintenance edge -> `bad map edge`; ungrounded claim/decision -> `ungrounded claim/decision` (or `unresolved decision` when a decision is in dispute); architecture pressure -> `architecture weakness` or `structure/constraint mismatch`.
 
@@ -34,7 +34,14 @@ Clearing three of four does not qualify; route it as `filed` or `recommend-and-d
    - **`filed`** — ineligible for fix-now, and issue-filing authority is clear: file the issue as today; the recommendation records the issue number.
    - **`recommend-and-defer`** — ineligible for fix-now, and filing authority is unclear or unavailable this run: produce the issue-ready recommendation but do not file it; the recommendation records why authority was unclear, so the orchestrator/human decides later instead of the run improvising a filing decision it wasn't authorized to make.
 
-4. **Write recommendations.** For each candidate produce an issue-ready recommendation using `templates/TRIAGE_RECOMMENDATION.template.md`: what, importance, evidence, acceptance criteria, out of scope, and the disposition from step 3 with its disposition-specific detail (fix commit sha / issue number / deferral reason). This step runs for every candidate, including `fixed-now` ones — fixing it now shortens the work, it never skips the record.
+4. **Write recommendations.** For each candidate produce an issue-ready recommendation using `templates/TRIAGE_RECOMMENDATION.template.md`. An issue records observations with baselines; it does not prescribe a solution.
+
+   - **A defect** carries a *list* of observations — one block per occurrence, never merged into one summary. Each block states what's wrong, what was expected, the feeding conditions that enable the bad state (including which environment), `type` (`measured` or `inferred`, and *how* — mandatory for both values), and `rev` (the state the observation was true of).
+   - **An enhancement** carries the desired behavior *plus what happens today instead*, and the "today instead" claim carries its own `type` and `rev` — it is an observation, and it goes stale as the code changes exactly like any other. Without the current-behavior statement, an enhancement cannot be distinguished from something that already works.
+   - **`possible fix` is optional, is a hypothesis rather than a spec, and is a top-level sibling of the observations** — one per issue, not one per observation.
+   - **`open questions` is optional and sits alongside `possible fix`** — what is unresolved or in dispute, and what would settle it. Both are thinking out loud; only the observations are load-bearing.
+
+   Then add the recommended priority and the disposition from step 3 with its disposition-specific detail (fix commit sha / issue number / deferral reason). This step runs for every candidate, including `fixed-now` ones — fixing it now shortens the work, it never skips the record.
 
 ## Issue Authority
 

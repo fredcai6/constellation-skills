@@ -268,7 +268,8 @@
           "id": "c1",
           "statement": "the epic's observations recorded as episodes \u2014 what was observed, with no rule written for a future agent to follow",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Eight epic-level episodes written and applied via apply_episode_delta.py --store-root episodes (created epic-418-redux-007..014), on top of the six already in the store. Each is a record of one distinct thing observed across the epic -- the #477/#478 unassigned-issue miss, the harvest probe's merge-base channel over-reporting ~240 files, the 165 stale active leases materialising from tracked .agent-work, this gate's own context trip and its clearing, the shared-identity self-approval refusal, the three archive.c2b issues that reached the right verdict via quoted-placeholder repros, the CRLF ' M' phantom, and CI starvation from per-entry pushes. No rule for a future agent is written in any of them; the strict guard accepted all eight."
         },
         {
           "id": "c2",
@@ -283,13 +284,15 @@
           "id": "c3",
           "statement": "architecture reconciled for the epic's net change",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Cartographer reconcile complete, recorded at .agent-work/epic-418-redux/ARCHITECTURE_RECONCILE.md (230 lines) with its engine record at closeout/cartographer/plan.json (context, packets, index-overlays, map-compliance all complete). Net change reconciled against fork point ea854471: three stale claims found and corrected, one unmapped seam anchored, two candidates routed, no drift left open. tc4 RULED: the template -> top-level-script -> installed-bundle seam earns a durable anchor but NOT a docs/architecture/ node -- recorded as a named section in docs/CONSTELLATION_OVERVIEW.md ('The install and instantiation chain: one source, three live copies') carrying the layer chain, the governing rule, three measured violations (#501, #439/#446/#484, and this Admiral's own pre-fix spine.json), and the ComposedShippedArtifactTests pointer. Reasons against a node: there is no graph to add to, #456 is in flight and owns where map surface lives, and the seam is invisible to an AST-derived map anyway because neither hop is a reference edge -- so the anchor and #456 do not overlap and #456 landing does not retire it. TC-A (nothing compares a copy against its source) recorded as future work with the design question named. TC-B routed to #528 as evidence rather than filed as a near-duplicate; posted as comment 5231448291."
         },
         {
           "id": "c4",
           "statement": "repo hygiene complete: branches dispositioned, worktrees swept, ADMIRAL_LOG archived",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Hygiene complete and measured. BRANCHES: all 11 epic-418/* dispositioned by forge state (gh pr list --head, never ancestry) -- 7 MERGED (#505 #509 #511 #513 #514 #516 #517), 4 CLOSED-unmerged (#469 #471 #483 #486) carrying 36 commits not on main. 11 annotated tags epic-418-baseline/* minted BEFORE any deletion so squash-merge cannot GC the baselines (#411's lesson applied prospectively); the 7 merged local branches deleted, the 4 closed-unmerged kept local and remote, remote heads not deleted anywhere. Recorded in .agent-work/archive/2026-08-09-epic-418-redux/BRANCH_DISPOSITION.md. WORKTREES: harvest_probe.sh v4 run first (real exit 0), every reported line re-checked by content, harvest verdict a real null naming all three channels, the only worktree-exclusive content (3 uncommitted engine-state files in epic418-w5-docs) archived; then all 7 epic418-* removed and pruned. Protected set intact: governor-264, explore-code-map, issue-456, three .proto-*, two harness trees, the locked ctx-skew clean tree. Recorded in .../harvest/HARVEST_RESULT.md. ADMIRAL_LOG: archived to .agent-work/archive/2026-08-09-epic-418-redux/ADMIRAL_LOG.md (456352 bytes) via git mv."
         },
         {
           "id": "c5",
@@ -306,10 +309,10 @@
       "child_checklist": null,
       "status": "blocked",
       "status_detail": {
-        "blocker": "This Admiral cannot BEGIN closeout: the engine refused 'start closeout' with 'context at 29% is at/over the hard limit'. That is #467's own semantics working as designed, not a defect and not a stall. Wave 5 is complete, merged and pushed; main is green at c9f894f4 (1943 passed, 2 skipped, 884 subtests, real exit 0); the w5-to-close boundary exited stop with the prelaunch verifier at exit 0. Closeout's five substeps -- epic episodes, lessons audit, cartographer reconcile, harvest-before-sweep, hygiene/summary/acceptance -- are all UNSTARTED. Overriding my own governor to grind them out would falsify the very instrument this epic exists to defend, so I am bubbling this up instead of waiving it: a waiver would assert the work is fine to skip, and it is not -- it is fine to HAND OFF.",
-        "authority_needed": "Admiral epic-418-redux, escalating to the human (Tommy) as the parent tier. Refresh-request e-closeout-1 is attached to closeout; no human authority has been given or assumed for a waiver.",
-        "next_action": "Relaunch a fresh Admiral into this same spine file. It must (1) claim --force, because this lease's heartbeat looks stale by design -- the Admiral sits inside one step for the whole epic; (2) read .agent-work/epic-418-redux/STATE_NOTE.md, whose final section is a written closeout handoff naming all five substeps, the six shape refusals the boundary builder cost, and the fact that epic418-w5-gauge is missing from SWEEP_LIST.md and must be added before any sweep; (3) resume closeout from its own fresh reading. Do NOT advance closeout to clear this block -- closeout has not been done.",
-        "prior_status": "pending"
+        "blocker": "AWAITING USER ACCEPTANCE -- not a defect and not a stall. Closeout is complete except c5, which is Tommy's to decide. c1 (episodes), c3 (reconcile), c4 (hygiene) attested with evidence; c2 is engine-checked and its command passes (verify_episode_captured.py real exit 0, 14 episodes). c5's evidence type is user-decision, so no agent authority for it exists by construction -- supplying it would fabricate the human's decision. Summary written at .agent-work/archive/2026-08-09-epic-418-redux/EPIC_SUMMARY.md and presented in session. Main green at c133d8ef: 1943 passed, 2 skipped, 884 subtests, real exit 0, identical to the pre-closeout baseline. Pushed fab5edcd..c133d8ef plus 11 epic-418-baseline/* tags; 0 unpushed. AUTHORITY NEEDED: the human (Tommy). NEXT ACTION on acceptance: attach the decision as evidence, attest closeout c5 against it, advance closeout (which re-runs c2's command), then release --session-id admiral-epic-418-redux LAST. On rejection: reopen what he names and re-drive it before advancing.",
+        "authority_needed": "parent agent",
+        "next_action": "",
+        "prior_status": "in-progress"
       },
       "result": null,
       "finding": null,
@@ -333,17 +336,17 @@
   "blockers": [
     {
       "item": "closeout",
-      "blocker": "This Admiral cannot BEGIN closeout: the engine refused 'start closeout' with 'context at 29% is at/over the hard limit'. That is #467's own semantics working as designed, not a defect and not a stall. Wave 5 is complete, merged and pushed; main is green at c9f894f4 (1943 passed, 2 skipped, 884 subtests, real exit 0); the w5-to-close boundary exited stop with the prelaunch verifier at exit 0. Closeout's five substeps -- epic episodes, lessons audit, cartographer reconcile, harvest-before-sweep, hygiene/summary/acceptance -- are all UNSTARTED. Overriding my own governor to grind them out would falsify the very instrument this epic exists to defend, so I am bubbling this up instead of waiving it: a waiver would assert the work is fine to skip, and it is not -- it is fine to HAND OFF.",
-      "authority_needed": "Admiral epic-418-redux, escalating to the human (Tommy) as the parent tier. Refresh-request e-closeout-1 is attached to closeout; no human authority has been given or assumed for a waiver.",
-      "next_action": "Relaunch a fresh Admiral into this same spine file. It must (1) claim --force, because this lease's heartbeat looks stale by design -- the Admiral sits inside one step for the whole epic; (2) read .agent-work/epic-418-redux/STATE_NOTE.md, whose final section is a written closeout handoff naming all five substeps, the six shape refusals the boundary builder cost, and the fact that epic418-w5-gauge is missing from SWEEP_LIST.md and must be added before any sweep; (3) resume closeout from its own fresh reading. Do NOT advance closeout to clear this block -- closeout has not been done."
+      "blocker": "AWAITING USER ACCEPTANCE -- not a defect and not a stall. Closeout is complete except c5, which is Tommy's to decide. c1 (episodes), c3 (reconcile), c4 (hygiene) attested with evidence; c2 is engine-checked and its command passes (verify_episode_captured.py real exit 0, 14 episodes). c5's evidence type is user-decision, so no agent authority for it exists by construction -- supplying it would fabricate the human's decision. Summary written at .agent-work/archive/2026-08-09-epic-418-redux/EPIC_SUMMARY.md and presented in session. Main green at c133d8ef: 1943 passed, 2 skipped, 884 subtests, real exit 0, identical to the pre-closeout baseline. Pushed fab5edcd..c133d8ef plus 11 epic-418-baseline/* tags; 0 unpushed. AUTHORITY NEEDED: the human (Tommy). NEXT ACTION on acceptance: attach the decision as evidence, attest closeout c5 against it, advance closeout (which re-runs c2's command), then release --session-id admiral-epic-418-redux LAST. On rejection: reopen what he names and re-drive it before advancing.",
+      "authority_needed": "parent agent",
+      "next_action": ""
     }
   ],
-  "refusals": 9,
+  "refusals": 12,
   "engine_session": {
     "session_id": "admiral-epic-418-redux",
     "status": "active",
-    "claimed_at": "2026-08-08T04:39:39.773550+00:00",
-    "last_heartbeat": "2026-08-09T06:13:12.628893+00:00",
+    "claimed_at": "2026-08-09T11:55:32.466503+00:00",
+    "last_heartbeat": "2026-08-09T12:28:23.766888+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
