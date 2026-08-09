@@ -4844,3 +4844,42 @@ finding I had asserted rather than measured.
 **Closeout check, with its own verification rather than a reminder to think about it:** after crew 1's
 PR merges, re-read those three sites against what fix A actually does. File only if the prose asserts
 something the code no longer does.
+
+### RULING — waive `execute.c2` for crew 2, on my authority, with four conditions
+
+Crew 2 finished #458's deliverable and hit a blocker that is **not #458's**: the spine's own
+`execute.c2` runs the **repo-vendored** `verify_iterative_role_artifacts.py`, whose
+`_installed_skills_root()` guard refuses from any worktree. It ran the **installed** copy against the
+identical `REPLAN_INPUT.json` and got `iterative role artifact ok`.
+
+**RULING: waive. The check's subject is verified and the check's mechanism is broken.** The line I hold
+crews to is *never change a verdict to fit a check* — this is the opposite: **waiving a broken
+instrument while recording the working instrument's result.** Conditions imposed, all four required:
+
+1. `--authority` names me **and cites #501/#468**, not a bare string — **because #503 means that field
+   is validated as non-empty and nothing else.** No mechanism will catch a vague authority, so the
+   honesty is entirely ours, which is precisely why it must be specific.
+2. `--reason` carries the installed-verifier command **verbatim with its exact output**, re-derivable
+   cold, not summarized.
+3. **Nothing may say c2 passed.** It was waived, with the substantive check verified by another route.
+   Two different sentences; the record uses the second.
+4. Stays `evidence_only`; **no new issue** — #501/#468 own it and crew 1 is fixing it now.
+
+### Two independent derivations of the same defect, in one wave
+
+Crew 1 predicted this hours ago while working #501: *"the guard also breaks `execute.c2` in every
+Commander worktree... **My own run will hit it.**"* Crew 2 then hit it in a **different worktree, on a
+different issue**, and diagnosed it from source **without having seen crew 1's report.**
+
+**That is the difference between one crew's theory and a property of the system**, and it is worth more
+than either report alone. Relayed to crew 2 so it knows its finding is not isolated.
+
+**Crew 2 asked instead of forcing, and I told it so.** It had a legitimate technical justification and
+could have `--force`d unilaterally on an ungated check. It stopped. That cost a few minutes rather
+than costing the run its credibility — and it is the third time this wave a crew has chosen the slower
+honest path unprompted.
+
+**#458's verification is the strongest in the wave:** 25 new tests, the reviewer's APPROVE **reproduced
+rather than accepted**, `settings.json` confirmed unwritten by **reading every new function** rather
+than grepping, and a **fresh clone from GitHub refused with named per-item reasons** — Pre-Ruling 3
+satisfied exactly as written, a guard **observed refusing something real**.
