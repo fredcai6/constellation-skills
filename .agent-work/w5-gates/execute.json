@@ -893,7 +893,8 @@
           "id": "p1",
           "statement": "g1, g2 and g3 all closed \u2014 this gate exists to prove they compose, so it is vacuous before they land",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g1, g2 and g3 are all closed in this checklist. Production diff across the wave: verify_iterative_role_artifacts.py 143/22 (fixes A and B), COMMANDER_SPINE.template.json 1/1 (fix C), test_iterative_planning_doctrine.py 1032/2. Each fix independently reviewed and APPROVEd; g2 and g3 each through a BLOCK and re-verification. This gate is therefore no longer vacuous."
         }
       ],
       "postconditions": [
@@ -904,7 +905,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4-implement-1"
         }
       ],
       "constraints": [
@@ -935,11 +937,26 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "status": "COMPLETE",
+            "path": ".agent-work/w5-gates/crew-handoffs/g4-implement-RESULT.md",
+            "crew": "constellation/w5-gates/g4/implementer/attempt-1",
+            "blockers": "none",
+            "provenance": "The implementer measured everything but tripped HARD at its own plan item m6 and stopped rather than fabricate. It returned all findings in its final report; the Commander ran m6 (the closure check, exit 0) and transcribed the RESULT, marking in the file which sections are the implementer's measurements and which are the Commander's independent re-measurement. Its returned BLOCKED was on the trip, not the work.",
+            "verified": "Commander re-ran: production diff is 353/15 in the test file only, the three other owned files zero-diff; compose_spine 1, compose_verifier 1/3 subtests, compose_terminal 1, all exit 0; all six reserved selectors collect exactly their pre-g4 counts so nothing leaked into an earlier floor; closure check exit 0."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-review": {
@@ -951,7 +968,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for g4",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT received at .agent-work/w5-gates/crew-handoffs/g4-implement-RESULT.md, COMPLETE, no unresolved blockers; attached as e-g4-implement-1 and g4-implement is closed. Change committed at 764a2728. The result carries a provenance note: the implementer tripped before writing it, so the Commander ran the one remaining command and transcribed; the reviewer is told it is the first independent check on those numbers."
         }
       ],
       "postconditions": [
@@ -975,7 +993,19 @@
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4-review-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "g4-review",
+            "why_ref": "w-11",
+            "note": "Tripped HARD at 15% trying to START g4-review. The gate is fully prepared and needs no re-derivation: g4-implement is CLOSED at commit 764a2728, p1 is attested, and the REVIEWER_HANDOFF is written in full at .agent-work/w5-gates/crew-handoffs/g4-review-HANDOFF.md. I registered a reviewer crew and then ABANDONED it without dispatching, so the successor registers a fresh attempt-2 with no duplicate-guard conflict -- no reviewer is running. The successor's first act is to dispatch the reviewer against that handoff, then drive g4-review and g4-integrate. All four of g4-integrate's inputs are already measured by me: full suite is the only command I have not run myself."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4-integrate": {
@@ -1152,6 +1182,13 @@
       "why": "Ran all three commands myself at the reworked tree: archive_c2b exit 0 with 4 tests / 4 subtests, archive_mutation exit 0 with 2 tests / 11 subtests, coupled suite exit 0 with 396 passed / 503 subtests. Neither selector collected zero, so neither closed vacuously. Fix C is delivered and its harness has been proven honest twice over. The four-state measurement plus three corrections to the issue bodies are now in REPLAN_INPUT.json as observed evidence: the shipped check was an ALWAYS-FAILS check exiting 1 in all four states because the unquoted redirection meant gh never ran, so all three issues describe its behaviour wrongly; the replacement 484 suggests exits 0 in all four states and would have been a check that cannot fail; and 446 is fixed as the second defect of the same postcondition rather than collapsed into the other two. I also closed a gap my predecessor left: 506 had no completed_outcome recorded, and open_current_wave_issue_ids still listed all four. Both are now correct and the open list is empty.",
       "mechanical": false,
       "ts": "2026-08-09T03:16:08.121430+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4-implement",
+      "why": "IMPLEMENTER_RESULT is COMPLETE with no unresolved blockers. Three composition tests land, each shown RED on a stated broken input actually run, each with its no-op conditions named and guarded. The gate introduced no behavior: the only production diff is the test file, and the three other owned files are zero-line diffs with every mutation restored. The strongest evidence in the wave is here -- reverting the guard to a name test makes the decoy leg return exit 0 against the REAL installed bundle, which is 501 reproduced live rather than in a repo-side fixture. I verified the parts a trip could have corrupted: no reserved selector moved by a single test, so nothing added here can satisfy an earlier gate's floor, and the run's own closure check now exits 0 from this worktree, which is finding 2 discharged live. The implementer tripped before writing its result and correctly refused to attest what it had not run; I ran the one remaining command and transcribed the report with provenance marked in the file.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:48:18.484026+00:00"
     }
   ],
   "trip_ledger": [
@@ -1176,14 +1213,25 @@
       "model": "claude-opus-5",
       "why_ref": "w-6",
       "ts": "2026-08-09T01:57:45.454118+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "g4-review",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1535,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-11",
+      "ts": "2026-08-09T03:49:57.635995+00:00"
     }
   ],
-  "refusals": 10,
+  "refusals": 11,
   "engine_session": {
     "session_id": "commander-w5-gates-e-20260808",
     "status": "active",
     "claimed_at": "2026-08-09T01:59:18.973971+00:00",
-    "last_heartbeat": "2026-08-09T03:16:08.121454+00:00",
+    "last_heartbeat": "2026-08-09T03:50:27.362660+00:00",
     "claimed_by": "commander-w5-gates-e",
     "worktree": "C:/Programs/constellation-skills-wt/epic418-w5-gates",
     "previous_session_id": null,

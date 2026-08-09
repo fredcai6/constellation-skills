@@ -1,0 +1,483 @@
+{
+  "work_id": "w5-gates-g4-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-spine-compose",
+    "m2-verifier-compose",
+    "m3-stop-compose",
+    "m4-coupled-suite",
+    "m5-full-suite",
+    "m6-closure-check",
+    "m7-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (references/global-crew.md, references/global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md and docs/agents/GLOSSARY.md if present, plus the g4-implement handoff and the three prior gate results. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions, return format); block if incomplete. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff + prior gate results loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-spine-compose": {
+      "id": "m1-spine-compose",
+      "title": "Composition test 1: shipped COMMANDER_SPINE instantiates and archive.c2b resolves after fix C",
+      "imperative": "Add a composition test that instantiates the REAL skills/commander/templates/COMMANDER_SPINE.template.json through the REAL resolver and asserts the resolved archive c2b command text carries no unresolved token and is runnable-shaped. Before believing it, run it against a stated BROKEN input (a template copy carrying an unresolved token in archive c2b) and OBSERVE RED; assert the mutation actually applied (CRLF host). State what would make this test a no-op.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "broken-input run observed RED, and the mutation was asserted to have actually applied",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "composition test green through the real template + real resolver; selector collects > 0",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k compose_spine"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-spine-compose-1"
+        }
+      ],
+      "constraints": [
+        "no new behavior; tests only",
+        "do not collide with guard_*/stop_*/archive_* selectors",
+        "python never py; never pipe pytest"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-spine-compose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k compose_spine",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-verifier-compose": {
+      "id": "m2-verifier-compose",
+      "title": "Composition test 2: verifier refuses non-installed, accepts installed bundle, honours --skills-root after fix B",
+      "imperative": "Add a composition test exercising the REAL scripts/verify_iterative_role_artifacts.py through a subprocess/entrypoint across three legs: (a) refuses from a non-installed location, (b) accepts a structurally-installed bundle, (c) honours --skills-root. Run each leg against a stated broken input and OBSERVE RED; assert every mutation applied. State the no-op condition for each leg.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "each of the three legs observed RED on a stated broken input, mutation application asserted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "all three legs green through the real script; selector collects > 0",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k compose_verifier"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-verifier-compose-1"
+        }
+      ],
+      "constraints": [
+        "ownership scope only",
+        "no behavior change to the verifier"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-verifier-compose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k compose_verifier",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-stop-compose": {
+      "id": "m3-stop-compose",
+      "title": "Composition test 3: stop path still closes after fix A, through the real verifier",
+      "imperative": "Add a composition test that drives the admiral-prelaunch stop path through the REAL verifier script (not a unit fixture) with a recorded, G2-verified, rendered stop transition packet, and confirms prelaunch closes while repair is still refused. Run broken and OBSERVE RED. State the no-op condition.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2 landed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "broken-input run observed RED, mutation application asserted",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "stop composition test green through the real verifier; selector collects > 0",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k compose_terminal"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-stop-compose-2"
+        }
+      ],
+      "constraints": [
+        "must not collide with the g2 stop_* selector family"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-stop-compose-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k compose_stop",
+            "exit": 5,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-stop-compose-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py -q -k compose_terminal",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-coupled-suite": {
+      "id": "m4-coupled-suite",
+      "title": "Coupled suite green; init_work_area.py stays a zero-line diff",
+      "imperative": "Run the named coupled suite bare and confirm exit 0. Confirm scripts/init_work_area.py has a zero-line diff.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "three composition tests landed green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "coupled suite exit 0",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-coupled-suite-1"
+        },
+        {
+          "id": "c2",
+          "statement": "scripts/init_work_area.py zero-line diff",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && test -z \"$(git diff --numstat -- scripts/init_work_area.py)\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-coupled-suite-2"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-coupled-suite-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && python -m pytest tests/test_iterative_planning_doctrine.py tests/test_install_constellation.py tests/test_init_work_area.py tests/test_context_manifest.py tests/test_spine_provenance_check.py tests/test_map_contract_wiring.py tests/test_worktree_precondition_wiring.py tests/test_spine_rail.py -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m4-coupled-suite-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && test -z \"$(git diff --numstat -- scripts/init_work_area.py)\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-full-suite": {
+      "id": "m5-full-suite",
+      "title": "Full suite; delta against 1867 accounted test by test",
+      "imperative": "Run the full suite (python -m pytest -q), budget ~16 minutes, poll actively in-turn. Compare against the 1867 passed / 2 skipped baseline at aa2038d9 and account for every test of the delta. Any red outside the ownership scope is a FLOAT, not an edit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "coupled suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite run completed; exit code and counts recorded; delta accounted test by test",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "unowned red = FLOAT with the failing test named; never edit, never waive"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6-closure-check": {
+      "id": "m6-closure-check",
+      "title": "The run's own closure check, with --skills-root load-bearing",
+      "imperative": "Run: python scripts/verify_iterative_role_artifacts.py commander --work-id w5-gates --skills-root C:/Users/fredc/.claude/skills . Record what it did, and report what --skills-root changes versus omitting it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite run recorded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "closure check run from this worktree; exit code and behavior recorded, including the effect of --skills-root",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-closure-check-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m6-closure-check",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-result": {
+      "id": "m7-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write .agent-work/w5-gates/crew-handoffs/g4-implement-RESULT.md with COMPLETE/BLOCKED, per-test broken input + red observed, no-op analysis, full-suite delta accounted, closure-check behavior, git diff --numstat, floats, map impact, workflow feedback. Do not commit.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "all evidence gathered",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "result file exists and carries the no-op analysis and the broken-input evidence",
+          "check": {
+            "kind": "command",
+            "command": "cd /c/Programs/constellation-skills-wt/epic418-w5-gates && grep -q 'no-op' .agent-work/w5-gates/crew-handoffs/g4-implement-RESULT.md && grep -q 'numstat' .agent-work/w5-gates/crew-handoffs/g4-implement-RESULT.md && grep -q 'skills-root' .agent-work/w5-gates/crew-handoffs/g4-implement-RESULT.md"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not commit"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "g4-implement-attempt-1",
+    "status": "active",
+    "claimed_at": "2026-08-09T03:19:59.855284+00:00",
+    "last_heartbeat": "2026-08-09T03:44:21.270130+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "handoff complete: task, scope, exclusions, evidence, stop conditions, return format all present; prior gate results and the doctrine test file read",
+      "mechanical": false,
+      "ts": "2026-08-09T03:23:20.710442+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-spine-compose",
+      "why": "two broken inputs run for real against the shipped template: <branch> token reintroduced -> RED on the leftover scan; -gt 0 -> -ge 0 -> RED on the unreachable leg. Both mutations asserted applied on disk and restored byte-identical.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:26:36.220869+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-verifier-compose",
+      "why": "B1 name-test revert: decoy leg went RED with exit 0 (wrongly accepted) and the constellation-skills checkout leg refused for the wrong reason. B2 --skills-root ignored: the flag leg went RED. Both mutations asserted applied, both restored byte-identical.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:28:14.850378+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-stop-compose",
+      "why": "A1 pre-#506 conflation restored -> golden stop leg RED. A2 relaxation widened to any null launch_id -> repair leg RED (exit 0, wrongly accepted). Both mutations asserted applied and restored byte-identical.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:30:18.924920+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-coupled-suite",
+      "why": "coupled suite 399 passed / 506 subtests exit 0, vs 396/503 baseline: +3 tests and +3 subtests, all mine. init_work_area.py zero-line diff confirmed.",
+      "mechanical": false,
+      "ts": "2026-08-09T03:32:41.151941+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-full-suite",
+      "why": "full suite 1891 passed / 2 skipped exit 0 in 497s. Delta +24 vs 1867 accounted exactly by collection diff: only tests/test_iterative_planning_doctrine.py changed since aa2038d9; it collected 12 then, 36 now, 0 removed. 12 guard (g1), 3 stop (g2), 6 archive (g3), 3 composition (g4).",
+      "mechanical": false,
+      "ts": "2026-08-09T03:42:46.515473+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-09T03:30:06.303760+00:00",
+      "reason": "the planned selector -k compose_stop collects zero tests: the method is named test_compose_terminal_transition_... deliberately, so it cannot be swept up by the g2 gate's -k stop_boundary/-k stop_mutation close criteria. Correcting the selector text, not the test.",
+      "authority": "implementer",
+      "ops": [
+        "retext-check m3-stop-compose.c2"
+      ]
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m6-closure-check",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1529,
+      "hard": 0.15,
+      "model": "claude-opus-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-09T03:42:47.530642+00:00"
+    }
+  ]
+}
