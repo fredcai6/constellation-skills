@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "reconcile",
+  "mechanical": {
+    "run": "issue-456",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 8,
+    "spine-step": "reconcile",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-456-reconcile@7adbcd7364830c32af1d4517ce8b8dc4b998b8a2",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-456",
+    "generated_at": "2026-08-09T10:50:43Z"
+  }
+}
