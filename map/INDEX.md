@@ -143,7 +143,7 @@ tests: 61 modules, 3504 entities
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
 - [tests.test_map_contract_wiring](tests.test_map_contract_wiring/INDEX.md) (27 entities, 11 holes): The map-first contract as it is actually SERVED to a Commander run.
 - [tests.test_map_orient](tests.test_map_orient/INDEX.md) (120 entities, 87 holes): The falsification floor for scripts/map_orient.py.
-- [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (50 entities, 44 holes): Tests for scripts/mcp_spine_server.py and scripts/gen_mcp_config.py (issue #424, workstream F: the MCP front door on the checklist engine).
+- [tests.test_mcp_spine_server](tests.test_mcp_spine_server/INDEX.md) (50 entities, 43 holes): Tests for scripts/mcp_spine_server.py and scripts/gen_mcp_config.py (issue #424, workstream F: the MCP front door on the checklist engine).
 - [tests.test_measure_overread](tests.test_measure_overread/INDEX.md) (23 entities, 23 holes): Unit tests for scripts/measure_overread.py.
 - [tests.test_mutation_floor](tests.test_mutation_floor/INDEX.md) (32 entities, 18 holes): EXECUTED falsifiability for scripts/map_orient.py.
 - [tests.test_next_verbs_record_gate_comment](tests.test_next_verbs_record_gate_comment/INDEX.md) (16 entities, 12 holes): Issue #437: `_next_verbs()`'s comments must not restate a premise #422/#328 killed.
