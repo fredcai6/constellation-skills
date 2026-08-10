@@ -1506,16 +1506,19 @@ def mcp_config_path_for_target_root(target_root: Path) -> Path:
     """The `.mcp.json` governing the PROJECT this install writes into:
     `<project>/.claude/skills` -> `<project>/.mcp.json`.
 
-    READ-ONLY derivation, for `check_mcp_launchable`, which asks "what file
-    would Claude Code load for this tree" and answers report-only. It makes no
-    claim about being safe to WRITE: for that, and only that,
-    `resolve_mcp_config_write_path` is the entry point, because a write needs
-    the shape CHECKED and this needs a best-effort answer. Where the shape is
-    the expected one -- every real install and every test but the shape tests
-    themselves -- the two agree by construction."""
-    project_root = mcp_project_root_for_target_root(target_root)
-    if project_root is not None:
-        return project_root / MCP_CONFIG_FILENAME
+    READ-ONLY derivation, and this docstring is careful where the old one was
+    not. It used to borrow `settings_path_for_target_root`'s "a `--dest` install
+    can never reach past its own tree" assurance, which is true of that
+    function's ONE level and false of this one's two. What this actually answers
+    is "which file would Claude Code load for this tree", best-effort, for
+    `check_mcp_launchable` -- which is report-only and cannot make a mess with a
+    wrong answer.
+
+    It is NOT the entry point for a write, and those two unchecked levels are
+    exactly why. `resolve_mcp_config_write_path` is, and it CHECKS the shape
+    instead of assuming it. Where the shape is the expected one -- every real
+    install -- the two agree by construction: the write path derives the same
+    two levels, once it has confirmed they are the right two."""
     return target_root.parent.parent / MCP_CONFIG_FILENAME
 
 
