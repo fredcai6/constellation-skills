@@ -1,6 +1,5 @@
 import importlib.util
 import json
-import os
 import re
 import subprocess
 import sys
@@ -346,15 +345,47 @@ def _shebang_invoked_scripts() -> list[Path]:
     return scripts
 
 
-def _shebang_violations(path: Path) -> list[str]:
-    """Every way `path` could fail to run when invoked bare, relying only on
-    its own shebang line. Returns human-readable reasons; empty means clean."""
-    if not path.is_file():
-        return [f"{path} does not exist"]
-    reasons: list[str] = []
-    if not os.access(path, os.X_OK):
-        reasons.append(f"{path} is not executable (chmod +x)")
+def _git_index_mode(path: Path) -> str | None:
+    """The mode git's index records for `path` (e.g. "100755"), or None if
+    `path` is not tracked. Read from git's own data model, not the
+    filesystem: `os.access(path, os.X_OK)` returns True for every EXISTING
+    file on Windows -- there is no real POSIX execute bit there -- so it
+    silently never fires the "not executable" branch on the exact platform
+    this whole PR protects. Caught in Windows CI by this file's own
+    anti-vacuity self-test refusing to pass on an inert detector. Git's
+    recorded mode is what a POSIX checkout actually receives (git chmods to
+    match it on checkout) and is what a reviewer/CI diffs -- durable and
+    platform-independent, unlike asking the local filesystem."""
+    result = subprocess.run(
+        ["git", "ls-files", "-s", str(path)],
+        cwd=str(ROOT), capture_output=True, text=True, timeout=10,
+    )
+    line = result.stdout.strip()
+    if not line:
+        return None
+    return line.split()[0]
+
+
+def _mode_violation(mode: str | None) -> str | None:
+    """Pure: given a git index mode (or None for untracked), the violation
+    reason if it isn't the executable 100755, else None. Split out from any
+    file/git access so it is unit-testable with synthetic values --
+    deterministic on every OS the suite runs on, unlike a chmod()+os.access()
+    round-trip against a real file."""
+    if mode is None:
+        return "is not tracked by git -- cannot verify its committed mode"
+    if mode != "100755":
+        return f"is tracked with git mode {mode}, not 100755 (chmod +x)"
+    return None
+
+
+def _shebang_byte_violations(path: Path) -> list[str]:
+    """The shebang as `path`'s first two bytes, and no `\r` corrupting it --
+    read from `path`'s actual byte content, so this is platform-independent
+    by construction: it never asks the OS anything, unlike the git-tracked-
+    mode check above."""
     raw = path.read_bytes()
+    reasons: list[str] = []
     if not raw.startswith(b"#!"):
         reasons.append(f"{path} does not start with a shebang (`#!`) as its first two bytes")
     else:
@@ -364,6 +395,19 @@ def _shebang_violations(path: Path) -> list[str]:
                 f"{path}'s shebang line contains a carriage return (CRLF checkout -- "
                 f"`env` cannot resolve an interpreter name with a trailing \\r)"
             )
+    return reasons
+
+
+def _shebang_violations(path: Path) -> list[str]:
+    """Every way `path` could fail to run when invoked bare, relying only on
+    its own shebang line. Returns human-readable reasons; empty means clean."""
+    if not path.is_file():
+        return [f"{path} does not exist"]
+    reasons: list[str] = []
+    mode_problem = _mode_violation(_git_index_mode(path))
+    if mode_problem:
+        reasons.append(f"{path} {mode_problem}")
+    reasons.extend(_shebang_byte_violations(path))
     return reasons
 
 
@@ -385,45 +429,56 @@ class ShebangInvariantTests(unittest.TestCase):
             all_violations.extend(_shebang_violations(script))
         self.assertEqual(all_violations, [])
 
-    def test_detector_actually_fires_on_constructed_violations(self):
+    def test_mode_violation_detector_fires_on_constructed_values(self):
+        """Pure unit test of the executable-bit check, decoupled from the
+        filesystem entirely: the original self-test here used
+        `chmod(0o644)` + `os.access(path, os.X_OK)` against a real temp
+        file, which is inert on Windows -- there is no real POSIX execute
+        bit there, so `os.access(..., os.X_OK)` returns True for every
+        existing file regardless of chmod, the constructed violation
+        produced no violations, and the detector went quietly inert on
+        exactly the platform this PR protects. Caught by this very
+        self-test refusing to pass in Windows CI (`False is not true: []`)
+        -- the anti-vacuity discipline working as intended. Tested here
+        against synthetic git-index mode strings instead, so the assertion
+        is deterministic on every OS the suite runs on."""
+        self.assertIsNotNone(_mode_violation("100644"))
+        self.assertIsNotNone(_mode_violation(None))
+        self.assertIsNone(_mode_violation("100755"))
+
+    def test_byte_violation_detector_fires_on_constructed_violations(self):
         """Self-test against synthetic temp files -- never touches the real
-        repo scripts -- proving each of the three checks can independently
-        fail."""
+        repo scripts -- proving the shebang-presence and CRLF checks can
+        independently fail. These two, unlike the mode check above, read
+        `path`'s actual byte content rather than asking the OS about it, so
+        they are genuinely platform-independent and a real tempfile
+        round-trip is the right test shape."""
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
 
-            not_executable = tmp_path / "not_executable.py"
-            not_executable.write_bytes(b"#!/usr/bin/env python3\nprint('hi')\n")
-            not_executable.chmod(0o644)
-            violations = _shebang_violations(not_executable)
-            self.assertTrue(
-                any("not executable" in v for v in violations), violations,
-            )
-
             no_shebang = tmp_path / "no_shebang.py"
             no_shebang.write_bytes(b"print('hi')\n")
-            no_shebang.chmod(0o755)
-            violations = _shebang_violations(no_shebang)
+            violations = _shebang_byte_violations(no_shebang)
             self.assertTrue(
                 any("does not start with a shebang" in v for v in violations), violations,
             )
 
             crlf_shebang = tmp_path / "crlf_shebang.py"
             crlf_shebang.write_bytes(b"#!/usr/bin/env python3\r\nprint('hi')\r\n")
-            crlf_shebang.chmod(0o755)
-            violations = _shebang_violations(crlf_shebang)
+            violations = _shebang_byte_violations(crlf_shebang)
             self.assertTrue(
                 any("carriage return" in v for v in violations), violations,
             )
 
-            missing = tmp_path / "does_not_exist.py"
-            violations = _shebang_violations(missing)
-            self.assertTrue(any("does not exist" in v for v in violations), violations)
-
             clean = tmp_path / "clean.py"
             clean.write_bytes(b"#!/usr/bin/env python3\nprint('hi')\n")
-            clean.chmod(0o755)
-            self.assertEqual(_shebang_violations(clean), [])
+            self.assertEqual(_shebang_byte_violations(clean), [])
+
+    def test_shebang_violations_reports_a_missing_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            missing = Path(tmp) / "does_not_exist.py"
+            violations = _shebang_violations(missing)
+            self.assertTrue(any("does not exist" in v for v in violations), violations)
 
 
 # --------------------------------------------------------------------------- #
