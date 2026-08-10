@@ -4,6 +4,8 @@
 `g3fix` — post-archive fix, `epic-418-followon/commander-424`, crew id
 `constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix/implementer/attempt-1`
 
+Committed: `b9b80316` on `epic-418/f-424-mcp-door`.
+
 ## Completed slice
 Replaced `select.select` on the subprocess stdout pipe in
 `tests/test_mcp_identity.py::ServerInstance.recv()` with a portable
