@@ -23,6 +23,7 @@ import json
 import os
 import queue
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -41,6 +42,29 @@ EXPECTED_TOOLS = {
     "spine_evidence", "spine_halt", "spine_survey_result",
 }
 UNCOVERED_VERBS = ["skip", "reopen", "append", "amend", "flag-candidate"]
+
+_FILE_EXISTS_SNIPPET = "import sys, pathlib; sys.exit(0 if pathlib.Path(sys.argv[1]).is_file() else 1)"
+
+
+def file_exists_check(path: str) -> str:
+    """Build a `command`-kind postcondition that genuinely checks file
+    existence -- portable house pattern (see PASS_COMMAND/FAIL_COMMAND in
+    tests/test_checklist_engine.py) driven through `sys.executable` instead of
+    the POSIX `test` builtin, which the engine's command checks cannot rely on
+    (no `sh`/`test` on a Windows box; see `_find_posix_shell` in
+    scripts/checklist_engine.py). `path` is passed as a `python -c` argv
+    element -- never interpolated into the Python source text -- and both the
+    snippet and the path are `shlex.quote`d before being placed on the outer
+    shell command line. That quoting is load-bearing on Windows: an unquoted
+    f-string interpolation (the bug this replaces) lets the shell's own
+    backslash-escape processing strip a Windows path's backslashes before
+    Python ever sees it, and a plain double-quoted interpolation still breaks
+    on a path containing a space. `shlex.quote` single-quotes anything with
+    such characters, and a POSIX shell (bash on Windows, sh elsewhere) applies
+    zero escape processing inside single quotes, so the path survives byte for
+    byte. Exits 0 when `path` is a file, non-zero otherwise -- a genuine
+    existence check in both directions, never an always-pass stub."""
+    return f"{shlex.quote(sys.executable)} -c {shlex.quote(_FILE_EXISTS_SNIPPET)} {shlex.quote(path)}"
 
 
 def write_gated_spine(root: Path) -> Path:
@@ -64,7 +88,7 @@ def write_gated_spine(root: Path) -> Path:
                 "preconditions": [],
                 "postconditions": [
                     {"id": "c1", "statement": "notes.txt exists",
-                     "check": {"kind": "command", "command": f"test -f {w}/notes.txt"},
+                     "check": {"kind": "command", "command": file_exists_check(f"{w}/notes.txt")},
                      "satisfied": False},
                     {"id": "c2", "statement": "understood", "check": None, "satisfied": False},
                 ],
@@ -89,7 +113,7 @@ def write_gated_spine(root: Path) -> Path:
                 "preconditions": [],
                 "postconditions": [
                     {"id": "c1", "statement": "optional_report.txt exists",
-                     "check": {"kind": "command", "command": f"test -f {w}/optional_report.txt"},
+                     "check": {"kind": "command", "command": file_exists_check(f"{w}/optional_report.txt")},
                      "override_policy": {"allowed": True, "authority": "human", "reason_required": True},
                      "satisfied": False},
                 ],

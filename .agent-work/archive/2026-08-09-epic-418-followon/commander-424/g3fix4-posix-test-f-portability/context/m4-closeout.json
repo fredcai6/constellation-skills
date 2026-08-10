@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4-closeout",
+  "files": [],
+  "repo_rev": {
+    "commit": "d58197ddd6c6f69a0b3d531da1411f8076749c0c"
+  },
+  "run": {
+    "work_id": "g3fix4-posix-test-f-portability",
+    "generated_at": "2026-08-10T02:58:22Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-workbench",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}
