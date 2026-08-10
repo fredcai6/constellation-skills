@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4-hook-actually-executes",
+  "files": [],
+  "repo_rev": {
+    "commit": "5db3a3667b8d6700613af879c7bc46f70ddfce45"
+  },
+  "run": {
+    "work_id": "wave1-fixes",
+    "generated_at": "2026-08-10T04:47:37Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/integrate-wave1",
+      "repo": "/home/tommy/projects/constellation-skills-wt/integrate-wave1",
+      "durable": "/home/tommy/projects/constellation-skills-wt/integrate-wave1"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/integrate-wave1"
+    }
+  }
+}

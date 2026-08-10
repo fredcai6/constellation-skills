@@ -376,7 +376,8 @@
           "id": "p1",
           "statement": "m5-work-id-grammar-pin complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m5-work-id-grammar-pin complete"
         }
       ],
       "postconditions": [
@@ -387,33 +388,57 @@
             "kind": "command",
             "command": "python -m pytest -q tests"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m6-verify-2"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m6-verify-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m6-verify",
+            "why_ref": "w-6"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m6-verify-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     }
   },
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 8,
+  "refusals": 9,
   "engine_session": {
     "session_id": "impl-wave1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-10T04:40:19.258636+00:00",
-    "last_heartbeat": "2026-08-10T04:50:29.701826+00:00",
+    "last_heartbeat": "2026-08-10T04:58:07.544056+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-10T04:58:12.698133+00:00"
   },
   "why_trail": [
     {
@@ -457,6 +482,13 @@
       "why": "Added WorkIdGrammarPinTests.test_the_two_work_id_grammars_are_the_same_grammar to tests/test_work_id_nesting.py, in the same style as test_the_two_run_grammars_are_the_same_grammar: compares run_crew.WORK_ID_SEGMENT_RE.pattern against verify_iterative_role_artifacts.SAFE_ID.pattern (loaded via the file's existing load_module helper as VIRA), stripping SAFE_ID's explicit ^...$ anchors first since WORK_ID_SEGMENT_RE relies on .fullmatch() for the same anchoring at both real call sites. No shared module created. Passes at HEAD (26 passed, 18 subtests). TDD red demonstrated: hand-drifted SAFE_ID's character class (dropped '-': '[A-Za-z0-9][A-Za-z0-9._]*') -- the new pin test FAILED (AssertionError, patterns differ by the dropped '-'); reverted (diffed clean against pre-drift backup), full tests/test_work_id_nesting.py green again (26 passed, 18 subtests).",
       "mechanical": false,
       "ts": "2026-08-10T04:50:29.701803+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-verify",
+      "why": "Full suite run with python -m pytest -q tests: 2265 passed, 1 skipped, 1079 subtests passed, real exit code 0 -- strictly above the 2263-passed baseline (net +2 new tests: the is_git_tracked relative-path test and the work-id grammar pin test; the two rewritten tautology tests and the rewritten hook-execution test replaced existing test bodies without adding new top-level test methods). One incidental failure surfaced on the first run and was fixed as required upkeep, not a 6th scope item: tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build failed because map/INDEX.md's committed entity counts (3700) were stale against the new test methods this run added (3704) -- ran pass1: 132 modules indexed\nstatements: 126142 over 132 files (0 failures)\n{\n \"modules\": 132,\n \"entities\": 4846,\n \"pages\": 4979,\n \"entity_pages\": 4846,\n \"holes\": 3032,\n \"ids\": 0,\n \"median_entity_page_lines\": 19,\n \"largest_5\": [\n  [\n   61,\n   \"tests.test_install_constellation:InstallConstellationTests\"\n  ],\n  [\n   61,\n   \"tests.test_checklist_engine:TripHardGuardsBeginNotClose\"\n  ],\n  [\n   60,\n   \"tests.test_episode_store:RestateAssertionTests\"\n  ],\n  [\n   58,\n   \"tests.test_episode_fields:EscalatedReopenIsNotAReopenTests\"\n  ],\n  [\n   57,\n   \"scripts.code_map.checks:refs_line_self_consistent\"\n  ]\n ],\n \"stale_tags\": []\n}, which only changed the two un-ignored map artifacts (map/INDEX.md; map/ids.jsonl was unchanged), confirmed the freshness test green, then re-ran the full suite clean: 2265 passed, 1 skipped, 0 failed.",
+      "mechanical": false,
+      "ts": "2026-08-10T04:58:07.544031+00:00"
     }
   ],
   "trip_ledger": [
@@ -591,6 +623,28 @@
       "model": "claude-sonnet-5",
       "why_ref": "w-5",
       "ts": "2026-08-10T04:49:32.531051+00:00"
+    },
+    {
+      "id": "tl-13",
+      "gate": "m6-verify",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.226,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-10T04:50:43.822932+00:00"
+    },
+    {
+      "id": "tl-14",
+      "gate": "m6-verify",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.226,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-6",
+      "ts": "2026-08-10T04:50:49.264124+00:00"
     }
   ]
 }
