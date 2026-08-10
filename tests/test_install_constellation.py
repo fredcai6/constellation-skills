@@ -345,15 +345,32 @@ class InstallConstellationTests(unittest.TestCase):
                 reference_text,
             )
 
-    def test_platform_interpreter_maps_os_name(self):
-        # Narrow unit: os.name -> interpreter. (Mocking os.name only around this
-        # pure helper is safe; mocking it around a full install would break pathlib
-        # on a Windows host.)
+    def test_there_is_no_os_name_interpreter_fallback_left(self):
+        """Replaces test_platform_interpreter_maps_os_name (#539 owner ruling).
+
+        `_platform_interpreter()` returned `py` on Windows and `python3`
+        elsewhere and was reached ONLY after every candidate had been probed
+        and rejected -- so its answer was always drawn from the set just
+        disproved and could not be right on any platform. It is deleted rather
+        than left unreferenced: dead code encoding a disproved guess is a trap
+        for the next reader, who would reasonably assume it is a safety net.
+
+        This test is the guard against it coming back, and it fails LOUDLY if
+        someone reintroduces a name-shaped fallback."""
         installer = load_installer()
-        with mock.patch.object(installer.os, "name", "nt"):
-            self.assertEqual("py", installer._platform_interpreter())
-        with mock.patch.object(installer.os, "name", "posix"):
-            self.assertEqual("python3", installer._platform_interpreter())
+        self.assertFalse(
+            hasattr(installer, "_platform_interpreter"),
+            "_platform_interpreter is back. Its answer is always a member of "
+            "INTERPRETER_CANDIDATES, and it can only run after every one of those "
+            "was probed and failed -- so it is guaranteed wrong wherever it runs. "
+            "resolve_interpreter must refuse instead.",
+        )
+        # And the module names no os.name-keyed interpreter default anywhere.
+        source = INSTALLER.read_text(encoding="utf-8")
+        self.assertNotIn(
+            'if os.name == "nt" else', source,
+            "an os.name-keyed interpreter default is back in install_constellation.py",
+        )
 
     def _install_commander_spine(self, installer, interpreter):
         # Drive the REAL rewrite path but pin the resolved interpreter, so the test
@@ -1209,27 +1226,49 @@ class InterpreterProbeTests(unittest.TestCase):
         # just documented in prose
         self.assertTrue(all(t == installer.DEFAULT_INTERPRETER_PROBE_TIMEOUT for _, t in calls))
 
-    def test_resolve_interpreter_falls_back_to_os_default_on_total_failure(self):
-        # Required evidence (5): a dedicated test for the NEW total-probe-failure
-        # -> os.name-default fallback branch, distinct from
-        # test_platform_interpreter_maps_os_name (which tests the OLD, still-intact
-        # pure os.name helper directly, not this new fallback wiring).
+    def test_resolve_interpreter_refuses_when_no_candidate_answers(self):
+        """#539 owner ruling, replacing the os.name-fallback test.
+
+        Measured on the owner's Windows host: `py` is an extensionless
+        `#!/bin/sh` wrapper PowerShell cannot execute, and neither `python3`
+        nor `python` is on PATH. All three fail, and the old fallback stamped
+        `py` -- the exact thing just proven unlaunchable -- into every
+        installed skill body, so the failure surfaced later, elsewhere, with no
+        trace back to the cause. It must hard-stop at the cause instead."""
         installer = load_installer()
 
         def always_fails(cmd, **kwargs):
             raise FileNotFoundError(f"no such candidate: {cmd[0]}")
 
         with mock.patch.object(installer.subprocess, "run", side_effect=always_fails):
-            with mock.patch.object(installer.os, "name", "nt"):
-                resolution = installer.resolve_interpreter()
-        self.assertEqual("py", resolution.interpreter)
-        self.assertEqual("os-default-fallback", resolution.resolved_via)
+            with self.assertRaises(installer.InstallError) as raised:
+                installer.resolve_interpreter()
 
-        with mock.patch.object(installer.subprocess, "run", side_effect=always_fails):
-            with mock.patch.object(installer.os, "name", "posix"):
-                resolution = installer.resolve_interpreter()
+        message = str(raised.exception)
+        # Actionable: names every candidate, says how each was tested, and says
+        # what to do about it. A reader on a misconfigured box must not have to
+        # read the source to understand this.
+        for candidate in installer.INTERPRETER_CANDIDATES:
+            self.assertIn(candidate, message)
+        self.assertIn("--version", message)
+        self.assertIn("PATH", message)
+
+    def test_the_refusal_is_about_no_interpreter_and_not_about_probing_at_all(self):
+        """Positive control for the refusal above: with a candidate that DOES
+        answer, the same call returns a probed resolution. Without this, a
+        `resolve_interpreter` that raised unconditionally would pass the test
+        above and nobody would notice."""
+        installer = load_installer()
+
+        def only_python3_answers(cmd, **kwargs):
+            if cmd[0] == "python3":
+                return subprocess.CompletedProcess(cmd, 0, stdout="Python 3.x\n", stderr="")
+            raise FileNotFoundError(f"no such candidate: {cmd[0]}")
+
+        with mock.patch.object(installer.subprocess, "run", side_effect=only_python3_answers):
+            resolution = installer.resolve_interpreter()
         self.assertEqual("python3", resolution.interpreter)
-        self.assertEqual("os-default-fallback", resolution.resolved_via)
+        self.assertEqual("probe", resolution.resolved_via)
 
     def test_probe_invoked_exactly_once_total_across_multi_skill_install(self):
         # Required evidence (3): a call-count assertion (not prose) that the
@@ -1264,9 +1303,12 @@ class InterpreterProbeTests(unittest.TestCase):
             for skill in skills:
                 self.assertTrue((target_root / skill.install_name / "interpreter.json").is_file())
 
-    def test_sidecar_records_resolved_via_for_probe_success_and_fallback(self):
-        # Required evidence (6): resolved_via sidecar-content correctness for
-        # BOTH the probe-success and os-default-fallback cases.
+    def test_sidecar_records_resolved_via_probe(self):
+        # resolved_via sidecar-content correctness. Only "probe" is reachable
+        # from an install now -- the os-default-fallback case this test used to
+        # cover is gone with the fallback itself (#539 owner ruling). What a
+        # sidecar written by an OLDER installer reads back as is covered
+        # separately, below, since that is the one remaining producer.
         installer = load_installer()
         skill = installer.discover_skills()[0]
 
@@ -1287,34 +1329,41 @@ class InterpreterProbeTests(unittest.TestCase):
             self.assertEqual("py", sidecar["interpreter"])
             self.assertEqual(["py", "python3", "python"], sidecar["candidates"])
 
-        def fake_run_failure(cmd, **kwargs):
+    def test_install_refuses_rather_than_writing_a_sidecar_with_no_probe(self):
+        """The install path's half of the ruling: no interpreter answering must
+        stop the install, not produce a bundle stamped with a guess. Nothing is
+        written -- not the skill tree, not a sidecar."""
+        installer = load_installer()
+        skill = installer.discover_skills()[0]
+
+        def always_fails(cmd, **kwargs):
             raise FileNotFoundError("no such candidate")
 
         with tempfile.TemporaryDirectory() as tmp:
             target_root = Path(tmp) / "skills"
-            # os.name can't be safely faked around a FULL install_skills() call --
-            # pathlib.Path()'s class selection reads live os.name, so a bare
-            # Path(...) re-wrap anywhere downstream (write_corpus_marker ->
-            # compute_corpus_id) silently becomes a WindowsPath instance that then
-            # raises NotImplementedError on the next path-join on a real POSIX
-            # host (see _install_commander_spine's comment above). Narrow the mock
-            # to just the resolution call -- the same pattern
-            # test_resolve_interpreter_falls_back_to_os_default_on_total_failure
-            # already uses -- then thread the resolved value in explicitly so
-            # install_skills does not re-probe and never touches os.name itself.
-            with mock.patch.object(installer.subprocess, "run", side_effect=fake_run_failure):
-                with mock.patch.object(installer.os, "name", "nt"):
-                    resolution = installer.resolve_interpreter()
-            installer.install_skills(
-                [skill], target_root, dry_run=False, force=False,
-                full_set=False, restart_message="", out=lambda _msg: None,
-                interpreter=resolution,
+            with mock.patch.object(installer.subprocess, "run", side_effect=always_fails):
+                with self.assertRaises(installer.InstallError):
+                    installer.install_skills(
+                        [skill], target_root, dry_run=False, force=False,
+                        full_set=False, restart_message="", out=lambda _msg: None,
+                    )
+            self.assertFalse(
+                (target_root / skill.install_name / "interpreter.json").exists(),
+                "a sidecar was written from an interpreter that never answered",
             )
-            sidecar = json.loads(
-                (target_root / skill.install_name / "interpreter.json").read_text(encoding="utf-8")
-            )
-            self.assertEqual("os-default-fallback", sidecar["resolved_via"])
-            self.assertEqual("py", sidecar["interpreter"])
+
+    def test_resolved_via_still_round_trips_a_historical_fallback_sidecar(self):
+        """`resolved_via` keeps its non-probe value in the DATACLASS even though
+        the installer can no longer produce one. scripts/verify_installed_bundles.py
+        reconstructs an InterpreterResolution from an installed
+        `interpreter.json`, and a bundle installed by an older version still
+        carries "os-default-fallback" on disk -- reading it back is exactly how
+        a consumer learns that bundle was built from the disproved guess and
+        should be reinstalled. Dropping the value would blind that check."""
+        installer = load_installer()
+        resolution = installer.InterpreterResolution(
+            "py", installer.INTERPRETER_CANDIDATES, "os-default-fallback")
+        self.assertEqual("os-default-fallback", resolution.as_sidecar()["resolved_via"])
 
 
 def _direct_runtime_siblings(module_path: Path, scripts_root: Path) -> set[str]:
@@ -2612,6 +2661,372 @@ class HookWiringOptInTests(_HookWiringFixture):
 
 
 # --------------------------------------------------------------------------- #
+# all four hooks, source-tree wiring, and loud refusal (#539)
+# --------------------------------------------------------------------------- #
+class _MultiHookFixture(_HookWiringFixture):
+    """Adds helpers for the four-hook world on top of the governor fixture."""
+
+    def _settings_json(self, tmp, name="settings.json") -> dict:
+        return json.loads((Path(tmp) / name).read_text(encoding="utf-8"))
+
+    def _all_commands(self, settings: dict) -> dict:
+        """{(event, matcher, script): (command, timeout)} for every hook."""
+        found = {}
+        for event, entries in settings.get("hooks", {}).items():
+            for entry in entries:
+                for hook in entry["hooks"]:
+                    command = hook["command"]
+                    script = Path(command.split('"')[1]).name
+                    found[(event, entry.get("matcher"), script)] = (command, hook.get("timeout"))
+        return found
+
+
+class AllFourHookWiringTests(_MultiHookFixture):
+    """#539 gap 2: `--wire-hooks` could only ever write the PostToolUse gauge
+    writer. The three spine_rail.py events -- Stop, SessionStart and a second
+    PostToolUse -- had no representation in the installer at all, so neither
+    wiring nor detection could see them.
+
+    `--hooks governor` remains the default and remains byte-for-byte what the
+    flag did before, because the rail can BLOCK a Stop and must not arrive in
+    somebody's settings.json as a side effect of an install they already knew
+    how to run."""
+
+    def test_default_wire_hooks_still_writes_only_the_governor(self):
+        """The unchanged contract, asserted rather than assumed."""
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks")
+            settings = self._settings_json(tmp)
+            self.assertEqual(["PostToolUse"], list(settings["hooks"]))
+            self.assertEqual(1, len(settings["hooks"]["PostToolUse"]))
+
+    def test_hooks_all_writes_every_spec_with_its_own_event_matcher_and_timeout(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all")
+            written = self._all_commands(self._settings_json(tmp))
+            self.assertEqual(
+                len(installer.HOOK_SPECS), len(written),
+                f"expected one entry per spec, got {sorted(written)}",
+            )
+            for spec in installer.HOOK_SPECS:
+                key = (spec.event, spec.matcher, spec.script)
+                self.assertIn(key, written, f"{spec.name} was not wired")
+                command, timeout = written[key]
+                self.assertEqual(spec.timeout, timeout, spec.name)
+                # The event argument distinguishes the three rail entries from
+                # each other; without it all three would invoke the same
+                # handler and two of the three events would be dead.
+                self.assertTrue(
+                    command.endswith(" ".join(("", *spec.args)).rstrip()) if spec.args
+                    else command.endswith('"'),
+                    f"{spec.name}: args not appended: {command!r}",
+                )
+
+    def test_hooks_rail_writes_the_three_rail_events_and_no_governor(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "rail")
+            written = self._all_commands(self._settings_json(tmp))
+            self.assertEqual(
+                {(s.event, s.matcher, s.script) for s in installer.SPINE_RAIL_SPECS},
+                set(written),
+            )
+
+    def test_every_wired_command_actually_executes(self):
+        """Run each generated command EXACTLY as Claude Code would -- same
+        string, stdin JSON. String-matching a rendered command is not evidence
+        that it runs, and a shipped-but-inert hook is indistinguishable from a
+        working one from the outside. This is the governor test extended to
+        all four, where a wrong event argument or a lost quote would otherwise
+        be invisible."""
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all")
+            commands = [c for c, _ in self._all_commands(self._settings_json(tmp)).values()]
+            self.assertEqual(4, len(commands), "nothing was wired, so nothing was run")
+            for command in commands:
+                result = subprocess.run(
+                    command, shell=True, input="{}", capture_output=True, text=True,
+                    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                )
+                self.assertEqual(
+                    0, result.returncode,
+                    f"the wired command did not run: {command!r}\n"
+                    f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
+                )
+
+    def test_all_four_wired_then_detect_as_wired(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all")
+            wiring = installer.detect_hook_wiring(
+                self._settings(tmp), env={}, specs=installer.HOOK_SPECS)
+            self.assertEqual(installer.WIRING_WIRED, wiring.state)
+            self.assertEqual((), wiring.missing)
+
+    def test_three_of_four_reads_as_partial_and_names_the_missing_hook(self):
+        """THE new reassuring-failure shape, one level up from `stale`: before
+        #539 a single resolvable entry made the whole verdict `wired`, so three
+        missing hooks out of four would have read as fully wired."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all")
+            settings = self._settings_json(tmp)
+            del settings["hooks"]["Stop"]
+            self._write_settings(tmp, settings)
+            wiring = installer.detect_hook_wiring(
+                self._settings(tmp), env={}, specs=installer.HOOK_SPECS)
+            self.assertEqual(installer.WIRING_PARTIAL, wiring.state)
+            self.assertEqual(("spine_rail_stop",), wiring.missing)
+            line = installer.describe_hook_wiring(wiring)
+            self.assertIn("PARTIALLY WIRED", line)
+            self.assertIn("spine_rail_stop", line)
+
+    def test_partial_is_unreachable_for_a_single_spec(self):
+        """Anti-vacuity for the state above: with one spec there is nothing to
+        be partial about, which is why the governor-only default keeps exactly
+        its pre-#539 four-state behaviour."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry(f'py "{hook.as_posix()}"')]}})
+            wiring = installer.detect_hook_wiring(path, env={})
+            self.assertEqual(installer.WIRING_WIRED, wiring.state)
+
+    def test_detection_of_an_exec_form_entry_is_not_a_false_unwired(self):
+        """We never emit exec form, but a hand-written one is real. Reading it
+        as "no hook here" would be a silent false negative in the one detector
+        that exists to catch silence."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                {"matcher": "*", "hooks": [{
+                    "type": "command", "command": "python3",
+                    "args": [hook.as_posix()], "timeout": 10}]}]}})
+            self.assertEqual(
+                installer.WIRING_WIRED, installer.detect_hook_wiring(path, env={}).state)
+
+
+class SourceTreeHookWiringTests(_MultiHookFixture):
+    """#539 gap 1: `hook_command()` pinned an absolute INSTALLED path by
+    construction, so the one repo whose hooks it could not wire was the repo
+    that owns them. `--hooks-from source` points at this checkout's own
+    scripts/hooks/ instead.
+
+    It writes settings.local.json, not settings.json, and that is not a
+    preference: a source command carries this checkout's absolute path AND an
+    interpreter probed on this host, so it is wrong for every other machine by
+    construction."""
+
+    def test_source_wiring_points_at_this_checkouts_own_hook_scripts(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
+            written = self._all_commands(self._settings_json(tmp, "settings.local.json"))
+            self.assertEqual(len(installer.HOOK_SPECS), len(written))
+            for (_event, _matcher, script), (command, _timeout) in written.items():
+                expected = installer.source_hook_path(script)
+                self.assertTrue(
+                    expected.is_file(), f"wired a path with no file behind it: {expected}")
+                self.assertIn(expected.as_posix(), command)
+                self.assertNotIn("${CLAUDE_PROJECT_DIR}", command)
+
+    def test_source_wiring_writes_the_local_file_and_never_the_shared_one(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
+            self.assertTrue((Path(tmp) / "settings.local.json").is_file())
+            self.assertFalse(
+                self._settings(tmp).exists(),
+                "source wiring created the SHARED settings.json, which every "
+                "contributor reads unmodified",
+            )
+
+    def test_source_wiring_leaves_an_existing_shared_settings_json_byte_identical(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            shared = self._write_settings(tmp, {"hooks": {"PostToolUse": [self._entry(
+                '"${CLAUDE_PROJECT_DIR}/scripts/hooks/gauge_writer_hook.py"')]}})
+            before = shared.read_bytes()
+            self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
+            self.assertEqual(before, shared.read_bytes())
+
+    def test_the_source_wired_commands_actually_execute(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
+            commands = [
+                c for c, _ in
+                self._all_commands(self._settings_json(tmp, "settings.local.json")).values()
+            ]
+            self.assertEqual(4, len(commands), "nothing was wired, so nothing was run")
+            for command in commands:
+                result = subprocess.run(
+                    command, shell=True, input="{}", capture_output=True, text=True,
+                    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                )
+                self.assertEqual(
+                    0, result.returncode,
+                    f"the source-wired command did not run: {command!r}\n"
+                    f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
+                )
+
+    def test_source_wiring_does_not_need_the_workbench_skill_installed(self):
+        """The installed-copy precondition is about the install; source wiring
+        points somewhere else entirely, so requiring it would be refusing on a
+        ground that does not apply."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+                 "--skills", "charter", "--wire-hooks", "--hooks-from", "source"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((Path(tmp) / "settings.local.json").is_file())
+
+    def test_source_wiring_refuses_a_git_tracked_local_settings_file(self):
+        """Committing it hands every teammate a path that does not exist on
+        their machine, and an interpreter name that may not either."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=str(repo), capture_output=True)
+            subprocess.run(["git", "config", "user.email", "t@example.com"],
+                           cwd=str(repo), capture_output=True)
+            subprocess.run(["git", "config", "user.name", "T"], cwd=str(repo), capture_output=True)
+            local = repo / "settings.local.json"
+            local.write_text("{}", encoding="utf-8")
+            subprocess.run(["git", "add", "settings.local.json"], cwd=str(repo), capture_output=True)
+            subprocess.run(["git", "commit", "-qm", "x"], cwd=str(repo), capture_output=True)
+            before = local.read_bytes()
+
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+                         "--skills", self.OWNER_SKILL, "--wire-hooks", "--hooks-from", "source"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn("git-tracked", stderr.getvalue())
+            self.assertEqual(before, local.read_bytes(), "the tracked file was written anyway")
+
+    def test_the_same_run_succeeds_when_the_local_file_is_untracked(self):
+        """Anti-vacuity for the refusal above: it must be about TRACKEDNESS,
+        not about source mode refusing everything in a git repo."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=str(repo), capture_output=True)
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+                 "--skills", self.OWNER_SKILL, "--wire-hooks", "--hooks-from", "source"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((repo / "settings.local.json").is_file())
+
+
+class HookWiringLoudFailureTests(_MultiHookFixture):
+    """#539's fourth requirement: whatever ships must fail LOUDLY on a platform
+    it cannot serve. Silent success is the failure mode the whole issue exists
+    to kill -- a hook that exits 0 without running is worse than one that
+    errors, because nothing anywhere can report it."""
+
+    def _fallback(self, installer):
+        """A resolution that was never probed on this host. Since #539's owner
+        ruling `resolve_interpreter()` refuses rather than returning one of
+        these, so the remaining producer is verify_installed_bundles.py reading
+        an `interpreter.json` written by an older installer -- which legitimately
+        still carries "os-default-fallback"."""
+        return installer.InterpreterResolution(
+            "py", installer.INTERPRETER_CANDIDATES, "os-default-fallback")
+
+    def _probed(self, installer):
+        return installer.InterpreterResolution(
+            sys.executable, installer.INTERPRETER_CANDIDATES, "probe")
+
+    def test_wire_hooks_refuses_an_unprobed_interpreter_resolution(self):
+        """Defense in depth on a public function. The CLI can no longer reach
+        this (`resolve_interpreter` refuses one level up), but a resolution
+        rebuilt from an old bundle's sidecar still can."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp)  # install the owner skill, wire nothing
+            with self.assertRaises(installer.InstallError) as raised:
+                installer.wire_hooks(
+                    self._dest(tmp), interpreter=self._fallback(installer),
+                    dry_run=False, scope="user", out=lambda _: None,
+                )
+            message = str(raised.exception)
+            self.assertIn("not probed on this host", message)
+            self.assertIn("os-default-fallback", message)
+            self.assertFalse(
+                self._settings(tmp).exists(),
+                "refused loudly but wrote the unrunnable wiring anyway",
+            )
+
+    def test_the_same_call_succeeds_on_a_probed_interpreter(self):
+        """Anti-vacuity: the refusal above must be about the FALLBACK, not
+        about wire_hooks refusing every direct call."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp)
+            installer.wire_hooks(
+                self._dest(tmp), interpreter=self._probed(installer),
+                dry_run=False, scope="user", out=lambda _: None,
+            )
+            self.assertTrue(self._settings(tmp).is_file())
+
+    def test_the_fallback_refusal_also_fires_under_dry_run(self):
+        """A dry run that printed a command the host cannot run would be
+        telling the user the wiring is fine when it is not."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp)
+            with self.assertRaises(installer.InstallError):
+                installer.wire_hooks(
+                    self._dest(tmp), interpreter=self._fallback(installer),
+                    dry_run=True, scope="user", out=lambda _: None,
+                )
+
+    def test_source_wiring_refuses_a_checkout_with_no_hook_scripts(self):
+        """`--hooks-from source` only means something in a checkout that owns
+        scripts/hooks/. Pointing it at a tree without them must refuse, not
+        wire a path with nothing behind it."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            original = installer.source_hook_path
+            installer.source_hook_path = lambda script, repo_root=None: (
+                Path(tmp) / "no-such-checkout" / "scripts" / "hooks" / script)
+            try:
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    with self.assertRaises(SystemExit) as raised:
+                        installer.main(
+                            ["--agent", "claude", "--scope", "user",
+                             "--dest", str(self._dest(tmp)), "--skills", self.OWNER_SKILL,
+                             "--wire-hooks", "--hooks-from", "source"],
+                            env={}, out=lambda _: None,
+                        )
+                self.assertNotEqual(0, raised.exception.code)
+                self.assertIn("no hook script", stderr.getvalue())
+            finally:
+                installer.source_hook_path = original
+            self.assertFalse((Path(tmp) / "settings.local.json").exists())
+
+    def test_build_hook_command_refuses_to_emit_a_leading_quote(self):
+        """The trap this whole issue is named for, made unrepresentable at the
+        emit site: a command starting with `"` parses under PowerShell as a
+        string-literal expression, so the hook echoes its path and exits 0."""
+        installer = load_installer()
+        with self.assertRaises(installer.InstallError) as raised:
+            installer.build_hook_command(Path("/repo/scripts/hooks/spine_rail.py"), "", ("Stop",))
+        self.assertIn("does not start with a command word", str(raised.exception))
+
+
+# --------------------------------------------------------------------------- #
 # readiness check (#458) -- report-only, refuses when unready, never repairs
 # --------------------------------------------------------------------------- #
 class ReadinessEngineCheckTests(unittest.TestCase):
@@ -2879,6 +3294,353 @@ class ReadinessHooksCheckTests(_HookWiringFixture):
         self.assertTrue(result.ready)
 
 
+class ReadinessTriStateTests(_MultiHookFixture):
+    """#539 requirement 3: `--check-readiness` must distinguish NOT WIRED YET
+    from WIRED WRONG, and must not launder an honest "I cannot tell" into
+    either a pass or a fail.
+
+    The pre-existing CANNOT EVALUATE behaviour is RIGHT and is preserved: the
+    detector refuses to expand `${CLAUDE_PROJECT_DIR}` because it would be
+    expanded in the installer's process, not the future hook's. What was wrong
+    was the ROLL-UP -- a two-state report had nowhere to put that answer, so a
+    correctly wired repo read as defective."""
+
+    def _wire_by_hand(self, tmp, command):
+        return self._write_settings(tmp, {"hooks": {"PostToolUse": [self._entry(command)]}})
+
+    @staticmethod
+    def _report(installer, **overrides):
+        """A ReadinessReport with every item READY except the named overrides.
+
+        Built from `READINESS_ITEMS` rather than a hard-coded key list so a new
+        readiness item cannot silently leave these roll-up tests exercising a
+        report shape the production code no longer builds."""
+        checks = {name: installer.ReadinessCheck(True, "ok") for name in installer.READINESS_ITEMS}
+        for name, check in overrides.items():
+            assert name in checks, f"{name} is not a readiness item"
+            checks[name] = check
+        return installer.ReadinessReport(checks)
+
+    def test_a_correctly_wired_env_token_entry_is_undeterminable_not_not_ready(self):
+        """The exact reported defect: this settings.json is healthy, and the
+        installer cannot prove it from here. Neither confirmed nor condemned."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire_by_hand(tmp, 'py "${CLAUDE_PROJECT_DIR}/' + self.WRITER + '"')
+            check = installer.check_hooks_shippable(self._dest(tmp), scope="user", env={})
+            self.assertFalse(check.ready, "an unconfirmed hook must not read as confirmed")
+            self.assertFalse(check.determinable)
+            self.assertEqual(installer.READINESS_UNDETERMINABLE, check.verdict)
+            self.assertIn("CANNOT EVALUATE", check.reason)
+            self.assertIn("neither confirmed nor condemned", check.reason)
+
+    def test_a_stale_entry_is_not_ready_and_determinable(self):
+        """Anti-vacuity for the case above: WIRED WRONG is a real failure and
+        must stay one. If everything unwirable became CANNOT DETERMINE, the
+        distinction would be worthless."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire_by_hand(tmp, f'py "{Path(tmp).as_posix()}/gone/{self.WRITER}"')
+            check = installer.check_hooks_shippable(self._dest(tmp), scope="user", env={})
+            self.assertFalse(check.ready)
+            self.assertTrue(check.determinable)
+            self.assertEqual(installer.READINESS_NOT_READY, check.verdict)
+            self.assertIn("STALE", check.reason)
+
+    def test_an_unwired_project_says_not_wired_yet_rather_than_broken(self):
+        """A fresh clone must read as UNINSTALLED, not DEFECTIVE."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            check = installer.check_hooks_shippable(self._dest(tmp), scope="user", env={})
+            self.assertFalse(check.ready)
+            self.assertIn("UNWIRED", check.reason)
+            self.assertIn("NOT WIRED YET is not the same as WIRED WRONG", check.reason)
+            self.assertNotIn("STALE", check.reason)
+
+    def test_the_report_rolls_undeterminable_up_to_its_own_verdict(self):
+        installer = load_installer()
+        report = self._report(
+            installer,
+            hooks=installer.ReadinessCheck(False, "cannot tell", determinable=False),
+        )
+        self.assertEqual(installer.READINESS_UNDETERMINABLE, report.verdict)
+        self.assertEqual(installer.READINESS_EXIT_UNDETERMINABLE, report.exit_code)
+        self.assertFalse(report.ready, "CANNOT DETERMINE must never read as READY")
+
+    def test_a_real_failure_outranks_an_undeterminable_one(self):
+        """Anti-vacuity for the roll-up: an undeterminable item must not soften
+        a genuine failure sitting beside it."""
+        installer = load_installer()
+        report = self._report(
+            installer,
+            skills=installer.ReadinessCheck(False, "not installed"),
+            hooks=installer.ReadinessCheck(False, "cannot tell", determinable=False),
+        )
+        self.assertEqual(installer.READINESS_NOT_READY, report.verdict)
+        self.assertEqual(1, report.exit_code)
+        # ...and the undeterminable item still reads as itself, not as failed.
+        block = installer.describe_readiness_report("Claude Code", report)
+        self.assertIn("hooks: CANNOT DETERMINE", block)
+        self.assertIn("skills: NOT READY", block)
+
+    def test_a_fully_ready_report_is_still_ready(self):
+        """Anti-vacuity: the tri-state must not have made READY unreachable."""
+        installer = load_installer()
+        report = installer.ReadinessReport({
+            name: installer.ReadinessCheck(True, "ok") for name in installer.READINESS_ITEMS
+        })
+        self.assertEqual(installer.READINESS_READY, report.verdict)
+        self.assertEqual(0, report.exit_code)
+
+    def test_cli_exits_three_when_only_undeterminable_items_remain(self):
+        """End to end through the real CLI, on a project whose hooks are wired
+        exactly the way this repo's own tracked settings.json wires them."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            (project / ".claude").mkdir(parents=True)
+            subprocess.run(["git", "init", "-q"], cwd=str(project), capture_output=True)
+            (project / ".claude" / "settings.json").write_text(
+                (ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"),
+                encoding="utf-8")
+            subprocess.run(["git", "add", "-A"], cwd=str(project), capture_output=True)
+            subprocess.run(
+                ["git", "-c", "user.email=t@e.com", "-c", "user.name=T",
+                 "commit", "-qm", "init"], cwd=str(project), capture_output=True)
+            install = ["--agent", "claude", "--scope", "project",
+                       "--project", str(project), "--skills", "workbench"]
+            self.assertEqual(0, installer.main(install, env={}, cwd=project, out=lambda _: None))
+
+            lines = []
+            code = installer.main(
+                [*install, "--check-readiness", "--hooks", "all"],
+                env={}, cwd=project, out=lines.append,
+            )
+        output = "\n".join(lines)
+        self.assertEqual(
+            installer.READINESS_EXIT_UNDETERMINABLE, code,
+            f"a correctly wired project did not read as CANNOT DETERMINE:\n{output}",
+        )
+        self.assertIn("hooks: CANNOT DETERMINE", output)
+        self.assertIn("skills: READY", output)
+
+
+class NoInterpreterOnHostTests(unittest.TestCase):
+    """#539 owner ruling: when `probe_host_interpreter()` finds no working
+    candidate, the install HARD-STOPS -- it does not fall back to a guess.
+
+    The reason is stronger than "don't ship something we know fails".
+    `_platform_interpreter()` was reached only after every candidate had been
+    probed and rejected, and its answer was always a member of that same
+    disproved set: `py` on Windows, `python3` on POSIX. It could not be right
+    by construction on any platform. It was not a safety net; it was a
+    guaranteed-wrong value that ran only in worlds where its own answer had
+    been falsified, and it stamped that value into every installed skill body
+    so the failure surfaced later, elsewhere, untraceable to its cause.
+
+    This class audits every caller of the probe, one considered answer each --
+    an install aborts, a dry run aborts identically, `--baseline-only` is
+    untouched because it writes no interpreter at all, and `--check-readiness`
+    REPORTS rather than aborting, because refusing to run the diagnostic when
+    this condition IS the diagnosis would be its own defect."""
+
+    NOTHING_ANSWERS = "no working Python interpreter found on this host"
+
+    def _no_interpreter(self, installer):
+        """Patch so every `<candidate> --version` probe fails, exactly as on the
+        owner's Windows host where `py` is an unexecutable `#!/bin/sh` wrapper
+        and neither `python3` nor `python` is on PATH."""
+        real_run = installer.subprocess.run
+
+        def only_probes_fail(cmd, **kwargs):
+            if cmd and cmd[-1] == "--version" and cmd[0] in installer.INTERPRETER_CANDIDATES:
+                raise FileNotFoundError(f"no such candidate: {cmd[0]}")
+            return real_run(cmd, **kwargs)
+
+        return mock.patch.object(installer.subprocess, "run", side_effect=only_probes_fail)
+
+    def _git_project(self, tmp):
+        project = Path(tmp) / "project"
+        project.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "init", "-q"], cwd=str(project), capture_output=True)
+        return project
+
+    # -- caller 1: a real install --------------------------------------------
+
+    def test_a_real_install_refuses_and_writes_nothing(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            stderr = io.StringIO()
+            with self._no_interpreter(installer):
+                with contextlib.redirect_stderr(stderr):
+                    with self.assertRaises(SystemExit) as raised:
+                        installer.main(
+                            ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                             "--skills", "workbench"],
+                            env={}, out=lambda _: None,
+                        )
+            self.assertNotEqual(0, raised.exception.code)
+            message = stderr.getvalue()
+            self.assertIn(self.NOTHING_ANSWERS, message)
+            for candidate in installer.INTERPRETER_CANDIDATES:
+                self.assertIn(candidate, message)
+            self.assertFalse(dest.exists(), "refused but installed anyway")
+
+    def test_the_same_install_succeeds_when_an_interpreter_answers(self):
+        """Positive control for every refusal in this class: the refusals are
+        about NO INTERPRETER, not about some unrelated condition in these
+        fixtures. Without this, a `main()` that refused unconditionally would
+        pass every other test here."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                 "--skills", "workbench"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((dest / "constellation-workbench").is_dir())
+
+    # -- caller 2: --dry-run --------------------------------------------------
+
+    def test_a_dry_run_refuses_exactly_as_the_real_run_would(self):
+        """A dry run used to skip the probe entirely, so on a host with no
+        interpreter it printed a clean plan and exited 0 for an install that
+        could not succeed. A dry run that says "fine" about a run that would
+        refuse is worse than no dry run at all."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "skills"
+            stderr = io.StringIO()
+            with self._no_interpreter(installer):
+                with contextlib.redirect_stderr(stderr):
+                    with self.assertRaises(SystemExit) as raised:
+                        installer.main(
+                            ["--agent", "claude", "--scope", "user", "--dest", str(dest),
+                             "--skills", "workbench", "--dry-run"],
+                            env={}, out=lambda _: None,
+                        )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn(self.NOTHING_ANSWERS, stderr.getvalue())
+
+    def test_a_dry_run_still_succeeds_when_an_interpreter_answers(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            lines = []
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(Path(tmp) / "skills"),
+                 "--skills", "workbench", "--dry-run"],
+                env={}, out=lines.append,
+            )
+            self.assertEqual(0, code)
+            self.assertIn("DRY RUN", "\n".join(lines))
+
+    # -- caller 3: --baseline-only -------------------------------------------
+
+    def test_baseline_only_is_unaffected_because_it_writes_no_interpreter(self):
+        """A considered answer, not an inherited one. --baseline-only seeds
+        template baselines and working copies, both `shutil.copy2` of a source
+        template verbatim -- it never reaches `rewrite_installed_skill_paths`,
+        so no `python <` token is rewritten and there is no interpreter name to
+        write. Refusing here would block a legitimate operation on a ground
+        that does not apply to it: the mirror of the defect this ruling fixes."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_project(tmp)
+            with self._no_interpreter(installer):
+                code = installer.main(
+                    ["--agent", "claude", "--scope", "project", "--project", str(project),
+                     "--skills", "workbench", "--baseline-only"],
+                    env={}, cwd=project, out=lambda _: None,
+                )
+            self.assertEqual(0, code, "--baseline-only refused despite needing no interpreter")
+            seeded = list(project.rglob("*.template.*"))
+            self.assertTrue(seeded, "--baseline-only exited 0 without seeding anything")
+            # ...and nothing it wrote names an interpreter that was never probed.
+            for path in seeded:
+                self.assertNotIn(
+                    "py <", path.read_text(encoding="utf-8", errors="replace"),
+                    f"{path} carries a rewritten interpreter prefix",
+                )
+
+    # -- caller 4: --check-readiness -----------------------------------------
+
+    def test_check_readiness_reports_the_condition_instead_of_aborting(self):
+        """Readiness exists to NAME what is wrong with a host. Aborting the
+        diagnostic when this condition is the diagnosis would be its own
+        defect, so this item reports a plain NOT READY -- determinable, not
+        CANNOT DETERMINE: a probe that ran and found nothing is a measurement,
+        not an unknown."""
+        installer = load_installer()
+        with self._no_interpreter(installer):
+            check = installer.check_interpreter_resolvable()
+        self.assertFalse(check.ready)
+        self.assertTrue(check.determinable)
+        self.assertEqual(installer.READINESS_NOT_READY, check.verdict)
+        self.assertIn(self.NOTHING_ANSWERS, check.reason)
+
+    def test_the_readiness_item_passes_when_an_interpreter_answers(self):
+        installer = load_installer()
+        check = installer.check_interpreter_resolvable()
+        self.assertTrue(check.ready, check.reason)
+        # A pass names what was actually verified, never just "ok".
+        self.assertIn("--version", check.reason)
+
+    def test_check_readiness_cli_names_the_failing_interpreter_item(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_project(tmp)
+            lines = []
+            with self._no_interpreter(installer):
+                code = installer.main(
+                    ["--agent", "claude", "--scope", "user",
+                     "--dest", str(Path(tmp) / "skills"), "--check-readiness",
+                     "--project", str(project)],
+                    env={}, cwd=project, out=lines.append,
+                )
+            output = "\n".join(lines)
+        self.assertEqual(1, code, f"readiness did not refuse:\n{output}")
+        self.assertIn("interpreter: NOT READY", output)
+        self.assertIn(self.NOTHING_ANSWERS, output)
+
+    def test_the_interpreter_item_is_a_distinct_question_from_the_engine_item(self):
+        """Not a duplicate of `engine`. `check_engine_runnable` asks whether
+        pytest runs under `sys.executable` -- an interpreter that always exists,
+        because it is the one running this process. This asks whether any
+        candidate resolves as a NAME on PATH, which is what installed skill
+        bodies and hook commands are written in terms of. A host passes the
+        first and fails the second exactly when no candidate is on PATH."""
+        installer = load_installer()
+        with self._no_interpreter(installer):
+            engine = installer.check_engine_runnable()
+            interpreter = installer.check_interpreter_resolvable()
+        self.assertTrue(
+            engine.ready,
+            "the engine item moved with the interpreter item, so this test proves nothing",
+        )
+        self.assertFalse(interpreter.ready)
+
+    def test_readiness_reports_every_declared_item(self):
+        """Anti-vacuity for the new item: a fifth check that build_readiness_report
+        never populates would KeyError, and one that describe_ never printed
+        would be invisible. Both are asserted against READINESS_ITEMS rather
+        than a hard-coded list."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_project(tmp)
+            report = installer.build_readiness_report(
+                agent=installer.AGENT_TARGETS["claude"],
+                target_root=Path(tmp) / "skills", scope="user",
+                project_root=project, env={},
+            )
+        self.assertEqual(set(installer.READINESS_ITEMS), set(report.checks))
+        block = installer.describe_readiness_report("Claude Code", report)
+        for name in installer.READINESS_ITEMS:
+            self.assertIn(f"- {name}: ", block)
+
+
 class ReadinessCLITests(unittest.TestCase):
     """run_readiness_check / --check-readiness: the thin report layer over the
     four checks. Exits 0 only when every targeted agent is fully ready; exits
@@ -2953,6 +3715,32 @@ class ReadinessCLITests(unittest.TestCase):
                         env={}, out=lambda _: None,
                     )
             self.assertNotEqual(0, raised.exception.code)
+
+    def test_check_readiness_refuses_combination_with_hooks_from(self):
+        """`--hooks-from` only affects what gets WRITTEN and this mode writes
+        nothing, so accepting it would imply it changed what was checked.
+        `--hooks` is a different matter and IS accepted -- it selects which
+        hooks are reported on, which is the mode's whole job."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_init(Path(tmp) / "project")
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user",
+                         "--dest", str(Path(tmp) / "skills"), "--check-readiness",
+                         "--project", str(project), "--hooks-from", "source"],
+                        env={}, cwd=project, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            # ...and --hooks all is accepted on the same command line.
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user",
+                 "--dest", str(Path(tmp) / "skills"), "--check-readiness",
+                 "--project", str(project), "--hooks", "all"],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertNotEqual(2, code, "--hooks all was rejected as a bad combination")
 
     def test_check_readiness_refuses_combination_with_baseline_only(self):
         installer = load_installer()

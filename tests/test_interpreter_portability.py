@@ -593,5 +593,156 @@ class ShellPinTests(unittest.TestCase):
         )
 
 
+# --------------------------------------------------------------------------- #
+# Part 5 (#539): the tracked settings.json cannot name an interpreter, so the
+# per-machine wiring must -- and the installer can only wire what it has a
+# HookSpec for. Two independent failure modes are guarded here.
+#
+# (a) DRIFT. `install_constellation.HOOK_SPECS` is hand-written from the four
+#     entries this repo ships in .claude/settings.json. If somebody adds a
+#     fifth hook to that file, or retimes one, the installer silently keeps
+#     wiring the old four -- and `--check-readiness` keeps reporting on the
+#     old four, so nothing anywhere says the new one is unwired. Held here by
+#     comparing the table against the real file.
+#
+# (b) THE LEADING QUOTE. Every command the installer can emit must start with
+#     a command word. A command starting with `"` is the silent-no-op shape
+#     from Part 4, and this asserts the EMIT side of what Part 4 asserts on
+#     the tracked-file side.
+# --------------------------------------------------------------------------- #
+
+TRACKED_SETTINGS = ROOT / ".claude" / "settings.json"
+
+
+def _tracked_hook_entries() -> list[tuple[str, str | None, str, tuple[str, ...], int]]:
+    """Every hook in the tracked settings.json as
+    (event, matcher, script_basename, args, timeout) -- the same five facts a
+    HookSpec carries, read straight off the file."""
+    settings = json.loads(TRACKED_SETTINGS.read_text(encoding="utf-8"))
+    found = []
+    for event, entries in (settings.get("hooks") or {}).items():
+        if not isinstance(entries, list):
+            continue
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            matcher = entry.get("matcher")
+            for hook in entry.get("hooks") or []:
+                if not isinstance(hook, dict):
+                    continue
+                command = hook.get("command")
+                if not isinstance(command, str):
+                    continue
+                match = _LEADING_QUOTED_PATH_RE.match(command)
+                if not match:
+                    continue
+                script = Path(match.group(1)).name
+                args = tuple(command[match.end():].split())
+                found.append((event, matcher, script, args, hook.get("timeout")))
+    return sorted(found, key=lambda row: (row[0], str(row[1]), row[2]))
+
+
+class HookSpecTableMatchesTrackedSettingsTests(unittest.TestCase):
+    """The installer's HOOK_SPECS table and this repo's own .claude/settings.json
+    describe the same four hooks. Neither is derived from the other at runtime
+    (the installer must work in projects that have no settings.json yet), so
+    this test is the only thing holding them together."""
+
+    def test_hook_specs_match_the_tracked_settings_json_exactly(self):
+        installer = load_installer()
+        tracked = _tracked_hook_entries()
+        # Guards against vacuous green: with no entries discovered, comparing
+        # two empty-ish structures would pass without ever having checked a
+        # thing. Same inert-detector shape the self-tests below catch one level
+        # down.
+        self.assertTrue(
+            tracked,
+            "no shell-form hook entries discovered in the tracked .claude/settings.json -- "
+            "discovery is broken, which makes this check impossible to fail",
+        )
+        specs = sorted(
+            (spec.event, spec.matcher, spec.script, spec.args, spec.timeout)
+            for spec in installer.HOOK_SPECS
+        )
+        self.assertEqual(
+            specs, tracked,
+            "install_constellation.HOOK_SPECS has drifted from .claude/settings.json. "
+            "The installer can only WIRE and only DETECT the hooks in that table, so a "
+            "hook present in one and absent from the other is a hook nothing can report "
+            "on. Update HOOK_SPECS (or the settings file) so both name the same set.",
+        )
+
+    def test_detector_actually_fires_on_a_constructed_drift(self):
+        """Self-test: a settings file carrying a fifth hook must not compare
+        equal to the four-spec table. Runs against synthetic text -- never
+        touches the real file."""
+        installer = load_installer()
+        specs = sorted(
+            (spec.event, spec.matcher, spec.script, spec.args, spec.timeout)
+            for spec in installer.HOOK_SPECS
+        )
+        drifted = sorted([*specs, ("PreToolUse", "*", "some_new_hook.py", (), 10)])
+        self.assertNotEqual(
+            specs, drifted,
+            "the comparison cannot distinguish a five-hook file from a four-spec table, "
+            "which makes this check impossible to fail",
+        )
+
+
+class EmittedCommandShapeTests(unittest.TestCase):
+    """The installer must never EMIT the silent-no-op shape Part 4 forbids in
+    the tracked file: a command whose first character is a quote. Under
+    PowerShell that parses as a string-literal expression -- the hook echoes
+    its own path and exits 0 without running.
+
+    Naming the interpreter first is safe under every shell Claude Code can
+    spawn (`sh`, Git Bash, PowerShell, `cmd` all parse a leading bare word as a
+    command), so this invariant does not RELY on the PowerShell parse claim
+    being true -- it is the correct form either way."""
+
+    def test_every_hook_spec_builds_a_command_starting_with_the_interpreter(self):
+        installer = load_installer()
+        specs = installer.HOOK_SPECS
+        self.assertTrue(
+            specs,
+            "HOOK_SPECS is empty -- nothing is built, which makes this check "
+            "impossible to fail",
+        )
+        for spec in specs:
+            command = installer.build_hook_command(
+                Path("/some/where/with a space") / spec.script, "python3", spec.args)
+            self.assertTrue(
+                command.startswith("python3 "),
+                f"{spec.name}: command does not start with the interpreter: {command!r}",
+            )
+            self.assertNotIn(
+                command[0], "\"'",
+                f"{spec.name}: command starts with a quote, which PowerShell parses as a "
+                f"string literal and silently no-ops: {command!r}",
+            )
+            # The script path is still quoted -- just not FIRST -- so a path
+            # with a space survives the shell.
+            self.assertIn(f'"/some/where/with a space/{spec.script}"', command)
+
+    def test_the_guard_actually_refuses_a_leading_quote_command(self):
+        """Self-test: the refusal is live, and fires on exactly the shape the
+        tracked settings.json is forced to use (a bare quoted path)."""
+        installer = load_installer()
+        with self.assertRaises(installer.InstallError) as raised:
+            installer.assert_shell_safe_command('"/repo/scripts/hooks/spine_rail.py" Stop')
+        self.assertIn("PowerShell", str(raised.exception))
+        # A single-quoted leading path is the same trap.
+        with self.assertRaises(installer.InstallError):
+            installer.assert_shell_safe_command("'/repo/scripts/hooks/spine_rail.py'")
+        with self.assertRaises(installer.InstallError):
+            installer.assert_shell_safe_command("")
+        # Leading whitespace is the same defect wearing a hat: the shell strips
+        # it and PowerShell is back to parsing a leading quote.
+        with self.assertRaises(installer.InstallError):
+            installer.assert_shell_safe_command(' "/repo/scripts/hooks/spine_rail.py"')
+        # And the shipped form is accepted.
+        installer.assert_shell_safe_command('python3 "/repo/scripts/hooks/spine_rail.py" Stop')
+
+
 if __name__ == "__main__":
     unittest.main()
