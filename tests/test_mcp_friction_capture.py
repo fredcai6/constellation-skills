@@ -202,6 +202,37 @@ class RejectionCaptureRecordsEachClassTests(unittest.TestCase):
             [r["class"] for r in records],
         )
 
+    def test_the_same_rejection_twice_in_one_process_yields_two_records(self):
+        """PER OCCURRENCE, not per (tool, class), and not per run.
+
+        Added at g2-review. The reviewer mutated `_log_rejection` with a
+        per-(tool, rejection_class) dedup memo -- a repeat of an identical
+        rejection silently dropped -- and the whole file stayed green. The
+        shipped code was already correct; what was missing was any test that
+        could tell. Every existing case induced its class exactly once, so
+        "one record per occurrence" and "one record per class" were
+        indistinguishable to the suite.
+
+        That is the same shape as `fail-loud-every-turn`'s own defect: a
+        capture that coalesces repeats reports the first fumble and hides every
+        one after it, which is worst precisely when an agent is stuck retrying
+        the same malformed call."""
+        for _ in range(3):
+            result = self.client.call("spine_evidence", action="attest", task_id="g1")
+            self.assertTrue(result.get("isError"))
+
+        records = self._records()
+        self.assertEqual(
+            3, len(records),
+            "three identical rejections produced "
+            f"{len(records)} record(s) -- the capture is coalescing repeats, so an agent "
+            "stuck retrying one malformed call would leave a single trace",
+        )
+        self.assertEqual(
+            [("spine_evidence", "missing-required-argument")] * 3,
+            [(r["tool"], r["class"]) for r in records],
+        )
+
     def test_engine_refusal_is_not_double_counted_here(self):
         """Negative control: an ENGINE refusal already reaches the episode through
         `refusals`/`mcp_calls.jsonl` (see the handoff's demo script) -- it is NOT a

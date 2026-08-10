@@ -1,0 +1,181 @@
+{
+  "work_id": "epic-418-followon/commander-f2/g2-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, docs/agents/ORCHESTRATOR_CONTEXT.md (Retired Learning Playbook section), docs/EPISODE_STORE.md, the workbench checklist-engine.md reference, the g2-review-handoff.md, the g2-implement-implementer-result.md, the mcp_spine_server.py diff (e2b8f04e..ef4b13c1), tests/test_mcp_friction_capture.py in full, and the written episode episodes/active/epic-418-followon_commander-f2-001.md.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Verified against commit ef4b13c1 (e2b8f04e..ef4b13c1 diff). All 3 door-own classes instrumented: 10 of 10 real _require() call sites carry rejection_class=missing-required-argument, 4 of 4 unknown-action branches (spine_lease/spine_evidence/spine_halt/spine_survey_result) carry rejection_class=unknown-action, 1 unknown-tool site in main(). The sole bare _tool_error call (line 675, main()'s except KeyError fallback) is confirmed genuinely unreachable: TOOL_NAMES == the exact 7 names handled by call_tool's if-branches, and main() already refuses any nm not in TOOL_NAMES before calling call_tool(), so call_tool's own raise KeyError(name) at line 620 can never fire -- the implementer's Assumptions claim is correct, not an evasion. Reproduced the end-to-end seed_rejections.py myself: 3 rejections induced through a real subprocess, 3 records written with the exact classes claimed; restored the regenerated evidence file via git checkout after (timestamps only differed). Reproduced verify_episode_captured.py epic-418-followon/commander-f2 --store-root episodes independently: exit 0, 1 episode found.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff e2b8f04e..ef4b13c1 --stat: 23 files, all within allowed scope (scripts/mcp_spine_server.py, tests/test_mcp_friction_capture.py, episodes/active/..., map/INDEX.md, .agent-work/epic-418-followon/commander-f2/** bookkeeping/evidence). All 5 excluded files (scripts/checklist_engine.py, scripts/apply_episode_delta.py, scripts/episode_capture.py, docs/EPISODE_STORE.md, scripts/hooks/spine_rail.py) show a 0-line diff across the same range -- confirmed by command, not by report. episodes/ was written only via apply_episode_delta.py per the delta file and the created-episode CLI message; no hand-edit evidence (single-file addition, well-formed per the store's own grammar).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "MANDATORY MUTATION (pass): silenced the OSError branch in _log_rejection (removed the stderr write, bare except pass). tests/test_mcp_friction_capture.py::LoudFailureOnCaptureWriteTests::test_three_induced_write_failures_in_one_process_yield_three_messages went RED as required: AssertionError 3 != 0, 1 failed 6 passed. Restored via cp from a pre-mutation backup; md5 identical, git diff 0 lines; 7 passed. SELF-INVENTED MUTATION (found a real coverage gap, not a live defect): added a module-level (tool, rejection_class) dedup set inside _log_rejection so a SECOND identical rejection in the same process is silently dropped. Result: the entire tests/test_mcp_friction_capture.py suite stayed 7 passed, 0 failed -- no test induces the SAME door-own rejection twice in one process, so the literal 'not one per run' half of close criterion 1 is untested. Live-reproduced independently outside pytest: two identical spine_lease action=teleport calls in one process against the MUTATED code wrote only 1 record (expected 2). Re-ran the identical repro against the clean, unmutated code (git diff 0 lines, confirmed before mutating) and it correctly wrote 2 records -- so the SHIPPED implementation is not defective, only the test suite's proof of the 'not one per run' claim is incomplete. Restored via cp; md5 identical; 7 passed again. SEPARATE, INDEPENDENT DEFECT (blocks on its own): tests/test_code_map.py::MapTreeFreshnessTests fails at HEAD (ef4b13c1) -- fresh build shows tests: 66 modules/3741 entities, committed map/INDEX.md shows 65/3721 (missing tests/test_mcp_friction_capture.py's contribution). A/B verified this is a regression introduced BY this gate's own commit, not pre-existing: built scripts.code_map fresh inside a detached worktree at the prior commit e2b8f04e and MapTreeFreshnessTests passed there (2 passed), then reproduced the failure again at ef4b13c1 in isolation (1 failed, 1 passed). Consequently python -m pytest -q at HEAD is NOT 0 failed (1 failed, 2282 passed, 1 skipped, 1079 subtests -- verified myself, contradicting the implementer's own claimed '2283 passed... 0 failed' evidence for this same commit).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Handoff constraints checked one by one: python -m pytest used exclusively throughout this review (never python3). No command piped into head/tail with its exit code read -- every output redirected to a scratchpad file, exit captured via echo EXIT:$?. No backticks or command-looking text placed inside any engine finding/summary string I authored (checked by grepping this survey file; the one backtick hit is pre-existing r6-fowler template imperative text, not mine). episodes/ untouched by me; confirmed via git diff that the implementer's own episode write went only through apply_episode_delta.py (delta file + CLI created-episode message), never a hand-edit. Every file write in the diff (REJECTIONLOG.open in _log_rejection, spine.json writes in the test file and seed_rejections.py) passes encoding='utf-8', newline='\\n' explicitly. Work stayed in this worktree; the one detached worktree I created for A/B testing map staleness across commits (scripts/checklist_engine.py unrelated, read-only comparison) was removed via git worktree remove --force immediately after use, confirmed by git worktree list showing no extra entries.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Close criterion 6 (episode is a record, never a rule): read episodes/active/epic-418-followon_commander-f2-001.md in full -- grepped for should/must/anyone/future agent/expect the same/always/never-do/remember-to/make-sure-to/be-sure-to across every assertion (a1-a5, d1): zero matches. Every assertion is past-tense observation of what this run did, not guidance for a future agent -- satisfies docs/agents/ORCHESTRATOR_CONTEXT.md's Retired Learning Playbook doctrine. Cross-checked mechanically: scripts/verify_episode_observations.py --strict over the whole episodes/ store reports 0 unlisted offenders (551 statements examined, 11 pre-existing exceptions from other issues, none from this episode). Note: the implementer's own IMPLEMENTER_RESULT.md Workflow Feedback contains one prescriptive sentence ('Anyone doing follow-on work at this call site should expect the same pin') -- that is a crew-handoff artifact, not episodes/, so it is out of this doctrine's scope; flagged only as an observation, not a finding. Close criterion 5 (coverage boundary honesty): the implementer's table correctly states the client-side schema rejection is structurally uncapturable server-side and explicitly warns the confidence-flag point (zero counted fumbles is a reading of THIS instrument, not evidence fumbles do not occur) -- does not imply otherwise. Map Impact notes reconciled against the diff: broadly accurate (_log_rejection/_tool_error noted as new/changed entities, scripts entity count +1 matches 1070->1071 in the committed map), but the notes' 'map rebuilt' claim does not hold for the tests package specifically -- carried forward as the r3-evidence blocking finding, not duplicated here as a second fail.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a .agent-work/epic-418-followon/commander-f2/g2-review/fowler-pass.json placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like epic-418-followon/commander-f2/g2-review on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-f2/g2-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass run against commit ef4b13c1, scripts/verify_fowler_pass.py exits 0: 7 of 12 baseline smells absent, 5 overridden (long-method, duplicated-code, primitive-obsession, shotgun-surgery, comments-as-deodorant), each citing a documented standard -- the module's own Grouping-decision docstring, the g1 choke-point pin's forced call shape (with the rejected-wrapper precedent from the episode's a2-a4), the file's existing all-string action vocabulary, and the same file-level documentation-density standard four prior g1 Fowler passes already applied to this exact file. No new blocking quality finding from this pass; the substantive defects this review found (map staleness, the dedup coverage gap) are recorded under r3-evidence, not here.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-f2/g2-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: MANDATORY MUTATION (pass): silenced the OSError branch in _log_rejection (removed the stderr write, bare except pass). tests/test_mcp_friction_capture.py::LoudFailureOnCaptureWriteTests::test_three_induced_write_failures_in_one_process_yield_three_messages went RED as required: AssertionError 3 != 0, 1 failed 6 passed. Restored via cp from a pre-mutation backup; md5 identical, git diff 0 lines; 7 passed. SELF-INVENTED MUTATION (found a real coverage gap, not a live defect): added a module-level (tool, rejection_class) dedup set inside _log_rejection so a SECOND identical rejection in the same process is silently dropped. Result: the entire tests/test_mcp_friction_capture.py suite stayed 7 passed, 0 failed -- no test induces the SAME door-own rejection twice in one process, so the literal 'not one per run' half of close criterion 1 is untested. Live-reproduced independently outside pytest: two identical spine_lease action=teleport calls in one process against the MUTATED code wrote only 1 record (expected 2). Re-ran the identical repro against the clean, unmutated code (git diff 0 lines, confirmed before mutating) and it correctly wrote 2 records -- so the SHIPPED implementation is not defective, only the test suite's proof of the 'not one per run' claim is incomplete. Restored via cp; md5 identical; 7 passed again. SEPARATE, INDEPENDENT DEFECT (blocks on its own): tests/test_code_map.py::MapTreeFreshnessTests fails at HEAD (ef4b13c1) -- fresh build shows tests: 66 modules/3741 entities, committed map/INDEX.md shows 65/3721 (missing tests/test_mcp_friction_capture.py's contribution). A/B verified this is a regression introduced BY this gate's own commit, not pre-existing: built scripts.code_map fresh inside a detached worktree at the prior commit e2b8f04e and MapTreeFreshnessTests passed there (2 passed), then reproduced the failure again at ef4b13c1 in isolation (1 failed, 1 passed). Consequently python -m pytest -q at HEAD is NOT 0 failed (1 failed, 2282 passed, 1 skipped, 1079 subtests -- verified myself, contradicting the implementer's own claimed '2283 passed... 0 failed' evidence for this same commit)."
+    ],
+    "summary": "The door-own rejection capture mechanism itself is real and robust: all 15 in-scope call sites (10 missing-required-argument, 4 unknown-action, 1 unknown-tool) are instrumented; the sole bare _tool_error call is confirmed genuinely unreachable dead code. The loud-failure-on-write-error guarantee genuinely satisfies N greater or equal to 2: the shipped test induces 3 write failures across 3 different classes in one process and asserts 3 SEPARATE messages by exact count (assertEqual, not assertIn), each naming its own rejection detail -- not an enumeration standing in for the property. The mandatory mutation (silencing the OSError branch) drove that exact test RED (3 != 0) and was cleanly restored (md5-identical, 0-line diff, 7 passed). The episode is a genuine past-tense record with zero rule-phrased language, verified both by manual read and by scripts/verify_episode_observations.py --strict (0 unlisted offenders). The coverage-boundary statement correctly states the client-side schema class is structurally uncapturable server-side. However two real findings block: (1) tests/test_code_map.py::MapTreeFreshnessTests fails at HEAD (ef4b13c1) -- A/B verified via a detached worktree at the prior commit e2b8f04e (passes there) that this gate's own commit introduced the regression; map/INDEX.md was not actually kept in sync with the new test file despite the implementer's claim, so python -m pytest -q is NOT 0 failed at the shipped commit (1 failed, 2282 passed, 1 skipped). (2) A self-invented mutation (per-tool-and-class dedup memoization in _log_rejection) passed the ENTIRE test_mcp_friction_capture.py suite green (7/7) while silently dropping every repeated identical rejection after the first -- live-reproduced independently against both the mutated code (1 record instead of 2) and the clean code (correctly 2 records), confirming the SHIPPED implementation is not defective but the suite's proof of close criterion 1's 'not one per run' clause has a real, closeable gap for the same-rejection-repeated-in-one-process case. Recommend: rebuild and recommit map/INDEX.md, and add one test inducing an identical door-own rejection twice in one process asserting 2 separate records, then re-review."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r3-evidence",
+      "statement": "tests/test_mcp_friction_capture.py has no test that induces the SAME door-own rejection (identical tool+rejection_class) twice in one process and asserts 2 separate records. A per-(tool,class) dedup mutation passes the whole file 7/7 green while silently dropping every repeat after the first, live-reproduced (2 identical spine_lease action=teleport calls -> 1 record instead of 2 under the mutation; the clean, unmutated code correctly writes 2). The shipped implementation is currently correct -- this is a test-suite coverage gap only, not a live defect. Add a repeated-identical-rejection test alongside the existing two-different-classes test to close it."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "reviewer-g2-1786349402",
+    "status": "released",
+    "claimed_at": "2026-08-10T08:10:02.841576+00:00",
+    "last_heartbeat": "2026-08-10T08:20:50.450640+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T08:22:53.114879+00:00"
+  }
+}
