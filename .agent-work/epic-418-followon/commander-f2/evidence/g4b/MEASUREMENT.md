@@ -14,41 +14,72 @@ finished.
 "zero CLI invocations" true by construction. Adoption is a claim about what an agent
 *chooses* when both doors are open, so all three arms opened both.
 
-## Three arms, and the two negatives are the control
+## Three arms, and what each one actually measured
 
-| Arm | Role driven | Door offered? | Door calls | CLI engine calls | Verdict |
-|---|---|---|---|---|---|
-| 1 | implementer, **stale** installed skills | connected, 7 tools | **0** | 21 | REFUSED |
-| 2 | implementer, **freshly installed** skills carrying the door | connected, 7 tools | **0** | 20 | REFUSED |
-| 3 | a role that **owns its process's bound spine** (workbench) | connected, 7 tools | **9** | **0** | **ACCEPTED** |
+| Arm | Role driven | Skill corpus the agent loaded | Door offered? | Door calls | CLI engine calls | Verdict |
+|---|---|---|---|---|---|---|
+| 1 | implementer | `~/.claude/skills/constellation-implementer` (pre-g4a) | connected, 7 tools | **0** | 21 | REFUSED |
+| 2 | implementer | `~/.claude/skills/constellation-implementer` (pre-g4a) — **the same corpus arm 1 loaded** | connected, 7 tools | **0** | 20 | REFUSED |
+| 3 | workbench, a role that **owns its process's bound spine** | `~/.claude/skills/constellation-workbench` (pre-g4a) | connected, 7 tools | **9** | **0** | **ACCEPTED** |
 
 Every arm had `{"name": "spine", "status": "connected"}` at session init with all 7
-`mcp__spine__*` tools in the offered tool list. So arms 1 and 2 are **measured negatives,
-not unmeasured conditions** — the door was there and went unused.
+`mcp__spine__*` tools in the offered tool list. That much is measured in all three: the door
+was there.
 
-## Why arms 1 and 2 went to the CLI, measured rather than guessed
+## Correction — arm 2 duplicated arm 1's condition
 
-Arm 1's agent loaded the **installed** `constellation-implementer`, which at that moment
-had **zero** door mentions — the g4a edits were in the repo `skills/` source, and a
-dispatched agent reads the installed corpus. That is the mechanism, and it is why criterion
-3 (the installer) is not cosmetic.
+Arm 2 was launched and reported as "implementer with **freshly installed** skills carrying
+the door". That description is wrong. The arms' own records say so:
 
-Arm 2 removed that explanation by installing first, and **still measured zero door calls**.
-Reading the freshly installed instruction shows why, and it is not a defect:
+* Arms 1 and 2 both loaded `~/.claude/skills/constellation-implementer`. Arm 3 loaded
+  `~/.claude/skills/constellation-workbench`.
+* `~/.claude/skills/CORPUS.json` records `source_commit: a1eab1f1` (2026-08-09), which is
+  **before g4a** (`e569350c`, 2026-08-10).
+* Files under `~/.claude/skills/` naming the door: **0**.
+* A fresh install did run, at 02:11:45 — into the **project-local** `.claude/skills/`,
+  which no arm loaded.
 
-> *"as an in-session dispatched crew member you almost always do NOT own it — you share the
-> parent's MCP scope wholesale, and the door stays bound to the Commander's `spine.json`,
-> never to your own `IMPLEMENTER_PLAN.json` — so drive your own plan through the CLI
-> fallback instead"*
+**Arm 2 is arm 1 rerun.** It is not an independent second negative; it is one condition
+observed twice. Nothing below is allowed to count it as two.
 
-**The agent obeyed correct doctrine.** g1 ruled that a seam below its container's separating
-granularity must not take identity from it, and g4a wrote that ruling into the implementer
-role. The implementer is precisely the role the fleet now tells to use the CLI.
+**The block quote that stood here has been deleted, not reworded.** It introduced a sentence
+— *"…you share the parent's MCP scope wholesale…"* — with "Reading the freshly installed
+instruction shows why", and concluded from it that the agent had obeyed correct doctrine.
+`grep -c "share the parent"` returns **0** across all three arms' records: **no agent saw
+that sentence.** The conclusion was unsupported by the evidence cited for it, so the claim
+is withdrawn. No substitute quotation is offered, because the corpus these agents read
+carried no door instruction at all.
 
-**So arms 1 and 2 measured the wrong role, and that error was mine.** It is recorded rather
-than deleted because the two negatives are what make arm 3 meaningful: they show the door
-being available and declined, so arm 3's exclusive use is a choice and not an artifact of
-the door being the only thing on offer.
+The arm-design error that remains true, and is mine: arms 1 and 2 drove the **implementer**,
+which by g1's ruling is an in-session dispatched crew member and does not own the process's
+bound spine — so it was never the role that could satisfy this criterion. That is a
+statement about how the arms were chosen. It is not a statement about what either agent read
+or why it went to the CLI, which this run did not measure.
+
+## What this run measured, and what it did not
+
+**All three arms loaded the pre-g4a corpus.** Arm 3 used the door anyway: its record shows
+it reaching the tools through `ToolSearch` against the `--allowedTools` list its launcher
+passed, not through a role instruction. **So g4a's role-instruction edits were not in the
+causal path of any arm.**
+
+* **Criterion 2 — MET, on arm 3.** The basis, stated precisely: *an agent that owns its
+  bound spine and is offered the door's tools uses them.* 9 door calls, 0 CLI engine
+  invocations, reached `DONE`, released its lease. That is what was measured, and it holds
+  without reference to any instruction edit.
+* **Criterion 1's causal contribution to adoption — UNMEASURED.** No arm read the g4a
+  instructions, so this run says nothing about whether naming the door as the default in a
+  role instruction *causes* an agent to use it. **UNMEASURED is not a negative.** It is a
+  condition no arm created; there is no reading here to report either way, and writing one
+  down as a negative is the exact error this epic exists to stop. Criterion 1's own claim —
+  that the instructions now name the door as the default with the CLI kept as the fallback —
+  is verified against the repo source by `tests/test_mcp_adoption.py`, and that verification
+  stands on its own, independent of this measurement.
+
+Arms 1 and 2 stay in the record for the one thing they do establish: the door was connected
+and offered in a run that did not use it, so arm 3's exclusive door use is not an artifact
+of the door being the only thing available. Being one condition rather than two does not
+change that.
 
 ## Arm 3 — the accepted run
 

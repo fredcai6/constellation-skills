@@ -265,10 +265,46 @@ class LoudFailureOnCaptureWriteTests(unittest.TestCase):
         self.client.close()
         self.tmp.cleanup()
 
+    def _assert_nothing_was_written(self):
+        """The induced failure really did prevent every write.
+
+        NOT `assertFalse(self.rejectlog.is_file())` -- `setUp` created that path
+        as a DIRECTORY, so `is_file()` is False before a single call is made and
+        stays False no matter what the door does. It could not fail, so it was
+        not evidence. What IS decidable: the path is still the directory setUp
+        made (nothing replaced it), and nothing was written inside it.
+        """
+        self.assertTrue(
+            self.rejectlog.is_dir(),
+            "the log path is no longer the directory setUp created -- this test's "
+            "whole mechanism for making every write fail has stopped working",
+        )
+        self.assertEqual(
+            [], sorted(p.name for p in self.rejectlog.iterdir()),
+            "nothing should have been written: every append to this path raises",
+        )
+
     def test_three_induced_write_failures_in_one_process_yield_three_messages(self):
-        self.client.call("spine_lease", action="teleport")
-        self.client.call("spine_evidence", action="attest", task_id="g1")
-        self.client.call("does_not_exist")
+        """Three DIFFERENT rejection classes. Covers 'each message names its own
+        rejection'; see the test below for 'one per occurrence', which this
+        shape cannot decide."""
+        results = [
+            self.client.call("spine_lease", action="teleport"),
+            self.client.call("spine_evidence", action="attest", task_id="g1"),
+            self.client.call("does_not_exist"),
+        ]
+        # The isError contract, asserted rather than merely described: a capture
+        # failure must not crash the door, must not turn a rejection into a
+        # non-error answer, and must not swallow the door's own message.
+        for result in results:
+            self.assertIs(
+                True, result.get("isError"),
+                "a rejection whose capture failed must STILL come back to the caller "
+                "as a failed tool call -- the caller's contract does not depend on "
+                "whether the door managed to write its own log",
+            )
+            self.assertTrue(result["content"][0]["text"].strip())
+
         self.client.close()
         stderr = self.client.proc.stderr.read()
         occurrences = stderr.count("REJECTION CAPTURE FAILED")
@@ -283,10 +319,49 @@ class LoudFailureOnCaptureWriteTests(unittest.TestCase):
         self.assertIn("teleport", stderr)
         self.assertIn("condition_id", stderr)
         self.assertIn("does_not_exist", stderr)
-        # And the tool call itself still returns a clean isError result to the
-        # caller -- a capture failure must not crash the door or corrupt the
-        # ordinary tool_error contract.
-        self.assertFalse(self.rejectlog.is_file(), "the write never succeeded")
+        self._assert_nothing_was_written()
+
+    def test_the_same_write_failure_three_times_yields_three_messages(self):
+        """PER OCCURRENCE on the FAILURE path, not per (tool, class).
+
+        The test above induces three DIFFERENT rejection classes, so "one loud
+        message per class" and "one per occurrence" are indistinguishable to it:
+        a mutant that memoised the stderr message per `(tool, rejection_class)`
+        still emits three, and the whole friction file stays green.
+
+        This is the same gap the g2 reviewer closed on the SUCCESS path
+        (`RejectionCaptureRecordsEachClassTests.test_the_same_rejection_twice_in_one_process_yields_two_records`)
+        left open on the failure path. It matters for exactly the case the
+        constraint was written for: an agent retrying ONE malformed call against
+        an unwritable log gets one message and then silence -- reporting the
+        first fumble and hiding every one after it, which is worst precisely
+        when the agent is stuck.
+
+        Identical rejection, three times: same tool, same class, same detail. If
+        anything coalesces, this is the only shape that can see it.
+        """
+        for _ in range(3):
+            result = self.client.call("spine_evidence", action="attest", task_id="g1")
+            self.assertIs(
+                True, result.get("isError"),
+                "every repeat must still be a failed tool call to the caller",
+            )
+
+        self.client.close()
+        stderr = self.client.proc.stderr.read()
+        self.assertEqual(
+            3, stderr.count("REJECTION CAPTURE FAILED"),
+            "three IDENTICAL induced write failures produced "
+            f"{stderr.count('REJECTION CAPTURE FAILED')} loud message(s) -- the failure "
+            "path is coalescing repeats, so an agent retrying one malformed call against "
+            "an unwritable log would get one message and then silence",
+        )
+        self.assertEqual(
+            3, stderr.count("condition_id"),
+            "each of the three messages must carry the lost record, naming what was "
+            "missing -- a repeat reported without its payload is not a diagnosable event",
+        )
+        self._assert_nothing_was_written()
 
 
 if __name__ == "__main__":

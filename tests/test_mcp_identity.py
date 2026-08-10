@@ -932,15 +932,44 @@ class IdentityBindingPinTests(unittest.TestCase):
                         continue
 
                     # (a) engine called -> bound identity, and the answer is ITS output.
+                    #
+                    # Over ALL occurrences, never `argv.index(...)`. `index`
+                    # returns the FIRST match, and the bound pair is always
+                    # first by construction (`run_engine` writes
+                    # `["--file", SPINE, verb, *rest]`), so a first-occurrence
+                    # check reads the bound value back to itself and can never
+                    # fail. Both the verb slot and `*rest` are reachable from
+                    # `call_tool`, and `checklist_engine.parse_args` declares
+                    # `--file` as a plain `store`, so a SECOND `--file` landing
+                    # before the subcommand simply wins:
+                    #   parse_args(["--file", bound, "--file", decoy, "current"])
+                    #     -> Namespace(file=decoy, verb='current')
+                    # That replaces the bound spine's content outright and still
+                    # answers `isError: False`, and it hides in argv POSITION --
+                    # a dimension neither the equality check below nor the AST
+                    # choke-point pin models. The property is therefore stated
+                    # as: the bound value is the ONLY value that flag carries.
                     for argv in seen:
                         self.assertEqual(
-                            bound_file, argv[argv.index("--file") + 1],
-                            f"{where} addressed the engine at a DIFFERENT spine",
+                            [bound_file],
+                            [argv[i + 1] for i, a in enumerate(argv) if a == "--file"],
+                            f"{where} addressed the engine at a DIFFERENT spine. The bound "
+                            "--file must be the ONLY --file in argv: argparse's plain `store` "
+                            "lets a later occurrence overwrite an earlier one, so an extra "
+                            "--file anywhere ahead of the subcommand redirects the read while "
+                            "leaving the bound pair sitting harmlessly at position 0.",
                         )
                         if "--session-id" in argv:
                             self.assertEqual(
-                                bound_session, argv[argv.index("--session-id") + 1],
-                                f"{where} addressed the engine under a DIFFERENT identity",
+                                [bound_session],
+                                [argv[i + 1] for i, a in enumerate(argv)
+                                 if a == "--session-id"],
+                                f"{where} addressed the engine under a DIFFERENT identity. "
+                                "Same all-occurrences rule as --file: `run_engine` appends "
+                                "the bound session LAST, so here it is a first-occurrence "
+                                "check that would read an injected value and a last-occurrence "
+                                "check that would be blind. Only 'exactly one, and it is the "
+                                "bound one' is position-independent.",
                             )
                     self.assertEqual(
                         expected_text, text,
@@ -977,6 +1006,69 @@ class IdentityBindingPinTests(unittest.TestCase):
             bound_file, addressed,
             "the control did not reproduce a redirect -- the universal pin above is "
             "incapable of failing and is therefore not evidence",
+        )
+
+    def test_a_repeated_file_flag_really_redirects_and_a_first_match_check_is_blind(self):
+        """Second positive control, for the FIFTH way: redirect by argv POSITION.
+
+        Two claims, both against the real parser rather than a story about it:
+
+        1. A second `--file` landing before the subcommand genuinely wins.
+           `checklist_engine.parse_args` declares it as a plain `store`, so the
+           later occurrence overwrites the earlier one and the engine reads the
+           attacker's file. Nothing about this is theoretical -- it is asserted
+           here by calling `parse_args`.
+        2. The first-occurrence check this pin used to carry (`argv.index`) is
+           BLIND to that, and the all-occurrences check is not. Both predicates
+           are evaluated on the same argv, so the difference is the evidence.
+
+        Reachability: `run_engine` builds `["--file", str(SPINE), verb, *rest]`.
+        The bound pair is always at position 0, so it is always the first match
+        -- which is exactly why a first-match check reads the bound value back
+        to itself and can never fail. The verb slot and `*rest` both come from
+        `call_tool`, so a handler that keeps the mandated
+        `as_result(run_engine(...))` shape can still put a second `--file` ahead
+        of the subcommand.
+
+        Other repeated flags checked, and why they are not a second hole:
+          * `--session-id` -- appended LAST by `run_engine`, so an injected copy
+            lands BEFORE the bound one and argparse's `store` keeps the bound
+            value. The engine is safe by luck of ordering, not by design, so the
+            pin above still asserts it over all occurrences: 'exactly one, and
+            it is the bound one' is the only position-independent statement.
+          * `--dry-run` -- `store_true`. It carries no value and cannot name a
+            spine or an identity; repeating it changes nothing.
+          * `--field` (attach) -- `action="append"`, repeatable BY DESIGN, and
+            it addresses a payload inside the already-bound spine. Same category
+            as `task_id`/`condition_id` in ADDRESSES_WITHIN_BOUND_SPINE.
+        No other flag in `parse_args` takes a path or an identity.
+        """
+        module = self._load_module(self.spine, "argv-position-control#agent")
+        bound = str(module.SPINE)
+        decoy = str(write_marked_spine(self.root / "decoy5", "DECOY5-MARK", "decoy5-work"))
+        argv = ["--file", bound, "--file", decoy, "current"]
+
+        # The engine object the door itself calls, not a re-import of it.
+        parsed = module.checklist_engine.parse_args(argv)
+        self.assertEqual(
+            decoy, parsed.file,
+            "a second --file no longer wins, so this control no longer reproduces the "
+            "hazard the pin above defends against -- re-derive the pin before deleting it",
+        )
+        self.assertEqual("current", parsed.verb)
+
+        first_match = argv[argv.index("--file") + 1]
+        self.assertEqual(
+            bound, first_match,
+            "the first --file is not the bound one, so this argv does not reproduce the "
+            "shape run_engine actually builds",
+        )
+        all_matches = [argv[i + 1] for i, a in enumerate(argv) if a == "--file"]
+        self.assertNotEqual(
+            [bound], all_matches,
+            "the all-occurrences predicate did not flag an argv the engine demonstrably "
+            "reads from the decoy -- the pin above is incapable of failing on the fifth "
+            "way and is therefore not evidence",
         )
 
     def test_call_tool_can_only_produce_content_two_ways(self):

@@ -71,6 +71,81 @@ def _paragraphs(text: str) -> list[str]:
     return [p for p in re.split(r"\n\s*\n", text) if p.strip()]
 
 
+def _sentences(text: str) -> list[str]:
+    return re.split(r"(?<=[.!?])\s+", text)
+
+
+# --------------------------------------------------------------------------- #
+# Every file that carries an INSTRUCTION an agent acts on. `CLI_ONLY_VERBS` is a
+# statement about instructions, not about one reference page, so it is enforced
+# over all of them -- see TestCLIOnlyVerbsAcrossEveryInstructionFile.
+#
+# The markdown list is Tier1's commander-core + all six Tier2 skill bodies +
+# Tier3's engine reference + both Tier4 authoring templates. Tier5 is
+# deliberately absent: those files must name NO door tool at all, which
+# TestTier5DoNotTouch already enforces more strictly than this could.
+# --------------------------------------------------------------------------- #
+INSTRUCTION_MARKDOWN_FILES = [
+    "skills/commander/references/commander-core.md",
+    "skills/workbench/SKILL.md",
+    "skills/charter/SKILL.md",
+    "skills/reviewer/SKILL.md",
+    "skills/interrogator/SKILL.md",
+    "skills/implementer/SKILL.md",
+    "skills/explorer/SKILL.md",
+    "skills/workbench/references/checklist-engine.md",
+    "skills/write-a-skill/templates/gated-engine-SKILL.template.md",
+    "skills/write-a-skill/templates/survey-SKILL.template.md",
+]
+
+INSTRUCTION_JSON_FILES = [
+    "skills/commander/templates/COMMANDER_SPINE.template.json",
+    "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+    "skills/explorer/templates/EXPLORER_SPINE.template.json",
+]
+
+
+def _instruction_texts(path: str) -> list[tuple[str, str]]:
+    """(where, text) pairs of everything in `path` that instructs an agent.
+
+    Markdown: the whole file, one chunk.
+
+    JSON spine templates: the instruction-bearing fields of every task, by field
+    path -- the `imperative` (what the agent is told to do), its `directives`,
+    its `constraints`, and every pre/postcondition `statement` (what the agent
+    is told to make true). Bookkeeping strings (`id`, `title`, `status`) are
+    excluded: they are labels, they cannot contain an instruction, and
+    parametrizing over them would bury the real cases in noise.
+    """
+    if not path.endswith(".json"):
+        return [(path, _text(path))]
+
+    data = _load(path)
+    out: list[tuple[str, str]] = []
+    for task_id, task in (data.get("tasks") or {}).items():
+        if not isinstance(task, dict):
+            continue
+        for key in ("imperative", "directives"):
+            value = task.get(key)
+            if isinstance(value, str) and value.strip():
+                out.append((f"{path}:{task_id}.{key}", value))
+        for idx, value in enumerate(task.get("constraints") or []):
+            if isinstance(value, str) and value.strip():
+                out.append((f"{path}:{task_id}.constraints[{idx}]", value))
+        for which in ("preconditions", "postconditions"):
+            for cond in task.get(which) or []:
+                if isinstance(cond, dict) and isinstance(cond.get("statement"), str):
+                    out.append((f"{path}:{task_id}.{which}.{cond.get('id')}", cond["statement"]))
+    return out
+
+
+def _all_instruction_texts() -> list[tuple[str, str]]:
+    out = []
+    for path in INSTRUCTION_MARKDOWN_FILES + INSTRUCTION_JSON_FILES:
+        out.extend(_instruction_texts(path))
+    return out
+
+
 # --------------------------------------------------------------------------- #
 # Tier 1 -- literal engine command lines an agent executes. JSON field path.
 # --------------------------------------------------------------------------- #
@@ -231,22 +306,93 @@ class TestTier2IdentityTradeCarried:
 
 TIER3_PATH = "skills/workbench/references/checklist-engine.md"
 
+#: The heading of the section this tier exists to pin. Every Tier3 assertion
+#: below is scoped to the text UNDER this heading, never to the whole file.
+#:
+#: Why: before this scoping, deleting the entire `## MCP door` section -- all of
+#: it, including the CLI-only-verb rule, the dispatched-subagent explanation and
+#: "Nothing here removes or discourages the CLI" -- left every Tier3 assertion
+#: green, because the single rewritten leading paragraph at the top of the file
+#: already satisfied each whole-file substring check on its own. A tier that
+#: cannot detect the deletion of the thing it pins is not a tier.
+TIER3_SECTION_HEADING = "## MCP door"
+
+
+def _tier3_door_section() -> str:
+    """The body under `## MCP door`, up to the next `## ` heading.
+
+    Raises if the heading is gone -- which is itself the first way the deletion
+    mutation is caught, before any content assertion runs.
+    """
+    text = _text(TIER3_PATH)
+    start = text.find(TIER3_SECTION_HEADING)
+    assert start != -1, (
+        f"{TIER3_PATH} no longer has a {TIER3_SECTION_HEADING!r} section. Every "
+        f"assertion in Tier3 is about the content of that section; if it was renamed, "
+        f"update TIER3_SECTION_HEADING in the same change, and if it was deleted, the "
+        f"door is no longer documented anywhere an agent reads."
+    )
+    rest = text[start + len(TIER3_SECTION_HEADING):]
+    end = rest.find("\n## ")
+    return rest[:end] if end != -1 else rest
+
 
 class TestTier3ChecklistEngineReference:
+    """All section-scoped. FAILS IF: the `## MCP door` section is deleted,
+    emptied, or loses any of the four things it is the sole authority for --
+    the 7 tool names, the default rule, the identity trade, and the CLI's
+    survival. Prose elsewhere in the file cannot satisfy any of these."""
+
     def test_names_door_tools_as_default(self):
-        text = _text(TIER3_PATH)
+        section = _tier3_door_section()
         for name in DOOR_TOOL_NAMES:
-            assert name in text, f"{TIER3_PATH} never names door tool {name}"
-        assert re.search(r"default", text, re.I)
+            assert name in section, (
+                f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section never names door tool "
+                f"{name} -- an agent reading this section would not know it exists"
+            )
+        assert re.search(r"default", section, re.I), (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer states the door "
+            f"is the default path"
+        )
 
     def test_still_names_cli_invocation(self):
-        text = _text(TIER3_PATH)
-        assert CLI_SCRIPT_MARKER in text
+        # Whole-file: the CLI reference page must document the CLI, obviously.
+        assert CLI_SCRIPT_MARKER in _text(TIER3_PATH)
+
+    def test_door_section_itself_keeps_the_cli(self):
+        """The section that makes the door the default must, in the same breath,
+        keep the CLI. FAILS IF: the section stops naming checklist_engine.py, or
+        stops saying the CLI is not being removed/discouraged."""
+        section = _tier3_door_section()
+        assert CLI_SCRIPT_MARKER in section, (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section makes the door the default "
+            f"without naming the {CLI_SCRIPT_MARKER} CLI at all"
+        )
+        assert re.search(r"remove[sd]?|discourag\w*", section, re.I) and re.search(
+            r"\bCLI\b", section
+        ), (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section lost its statement that "
+            f"nothing here removes or discourages the CLI -- that sentence is the epic's "
+            f"hard constraint ('the CLI door stays; F is additive') written where an agent "
+            f"actually reads it"
+        )
 
     def test_states_identity_trade_rule(self):
-        text = _text(TIER3_PATH)
-        assert re.search(r"in-session", text, re.I)
-        assert re.search(r"own spine|its own process|bound spine", text, re.I)
+        """FAILS IF: the dispatched-subagent explanation is deleted. That
+        explanation is the whole reason a dispatched Implementer/Reviewer must
+        not call a door tool for its own plan, and it exists nowhere else in
+        this file."""
+        section = _tier3_door_section()
+        assert re.search(r"in-session|dispatch\w*", section, re.I), (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer explains what a "
+            f"dispatched subagent must do"
+        )
+        assert re.search(r"MCP scope", section, re.I), (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer explains WHY "
+            f"(a Task subagent inherits its dispatcher's MCP scope, so the tools stay "
+            f"bound to the DISPATCHER's spine)"
+        )
+        assert re.search(r"own spine|its own process|bound spine|own plan", section, re.I)
 
     def test_lease_section_carries_door_equivalent(self):
         text = _text(TIER3_PATH)
@@ -259,22 +405,51 @@ class TestTier3ChecklistEngineReference:
         assert "spine_lease" in section
 
 
-class TestTier3CLIOnlyVerbsStayCLI:
-    """Close criterion 3: the 5 CLI-only verbs have NO door tool. checklist-engine.md must
-    keep documenting them as CLI, and must never attribute a door tool to them (no door
-    tool name in the same sentence as the verb)."""
+#: How a CLI-only verb must be written when it is documented as such: in
+#: backticks, as a literal verb name. A BARE substring check (`"skip" in text`)
+#: is vacuous -- it is satisfied by ordinary English prose ("do not improvise,
+#: skip, or ...") that is not documenting the verb at all, which is exactly how
+#: this assertion used to survive the deletion of the rule it was pinning.
+def _verb_token_re(verb: str) -> re.Pattern:
+    return re.compile(rf"`{re.escape(verb)}`")
 
-    def _sentences(self) -> list[str]:
-        text = _text(TIER3_PATH)
-        return re.split(r"(?<=[.!?])\s+", text)
+
+class TestTier3CLIOnlyVerbsStayCLI:
+    """Close criterion 3: the 5 CLI-only verbs have NO door tool. The `## MCP door`
+    section must keep documenting them as CLI-only, and must never attribute a door
+    tool to them (no door tool name in the same sentence as the verb)."""
+
+    def test_the_cli_only_rule_itself_is_present(self):
+        """The rule sentence, not just the words. FAILS IF: the `## MCP door`
+        section stops saying these verbs have no door tool -- which is the
+        instruction every other file's author is supposed to obey, and the only
+        place it is written down."""
+        section = _tier3_door_section()
+        assert re.search(r"no door tool", section, re.I), (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer states that some "
+            f"verbs have NO door tool. Without that sentence there is no written authority "
+            f"for CLI_ONLY_VERBS, and an author has no way to know that naming a door tool "
+            f"for {', '.join(CLI_ONLY_VERBS)} sends an agent to something that does not exist."
+        )
 
     @pytest.mark.parametrize("verb", CLI_ONLY_VERBS)
     def test_verb_still_documented(self, verb):
-        assert verb in _text(TIER3_PATH), f"{TIER3_PATH} no longer documents {verb!r}"
+        """FAILS IF: the verb stops being named as a literal verb inside the
+        `## MCP door` section. Deliberately NOT `verb in text`: 'skip' and
+        'append' occur as ordinary English elsewhere in this file, so a bare
+        whole-file substring check passes even after the entire section that
+        documents them is deleted."""
+        section = _tier3_door_section()
+        assert _verb_token_re(verb).search(section), (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer documents the "
+            f"CLI-only verb `{verb}`. It must appear there in backticks, as a verb name -- "
+            f"incidental prose using the same word elsewhere in the file is not "
+            f"documentation of the verb."
+        )
 
     @pytest.mark.parametrize("verb", CLI_ONLY_VERBS)
     def test_verb_never_paired_with_a_door_tool_in_the_same_sentence(self, verb):
-        for sentence in self._sentences():
+        for sentence in _sentences(_text(TIER3_PATH)):
             if re.search(rf"[`'\"]?{re.escape(verb)}[`'\"]?", sentence):
                 found = DOOR_TOOL_RE.search(sentence)
                 assert not found, (
@@ -330,4 +505,128 @@ class TestTier5DoNotTouch:
         assert found is None, (
             f"{path} is Tier5 DO-NOT-TOUCH but now mentions door tool "
             f"{found.group(0) if found else ''!r}"
+        )
+
+
+
+class TestCLIOnlyVerbsAcrossEveryInstructionFile:
+    """The same rule, applied where instructions actually live.
+
+    `CLI_ONLY_VERBS` carried the comment "An instruction naming these must keep
+    naming the CLI" and was then enforced against exactly ONE file, the reference
+    page. Every instruction an agent actually acts on lives somewhere else -- the
+    six skill bodies, commander-core, the two authoring templates, the three
+    spine templates -- and none of them were covered. That is how
+    `skills/interrogator/SKILL.md` shipped naming the door as the default in the
+    same sentence that orders `append` and `skip`, two verbs with no door tool,
+    while this file reported 55/55 green.
+
+    FAILS IF: any of those files puts a CLI-only verb in the same sentence as a
+    door tool name. The pairing IS the defect: it is what makes a reader take
+    the door tool as the route for that verb.
+    """
+
+    @pytest.mark.parametrize("path", INSTRUCTION_MARKDOWN_FILES + INSTRUCTION_JSON_FILES)
+    def test_no_instruction_pairs_a_cli_only_verb_with_a_door_tool(self, path):
+        # One case per FILE, but every violation inside it is collected and
+        # reported by field path and verb -- so a JSON template's 43 instruction
+        # fields do not become 215 near-identical test ids, and a failure still
+        # names exactly which field and which verb.
+        violations = []
+        for where, text in _instruction_texts(path):
+            for sentence in _sentences(text):
+                found = DOOR_TOOL_RE.search(sentence)
+                if not found:
+                    continue
+                for verb in CLI_ONLY_VERBS:
+                    if re.search(rf"[`'\"]?{re.escape(verb)}[`'\"]?", sentence):
+                        violations.append(
+                            f"  {where}: verb {verb!r} + door tool {found.group(0)!r}\n"
+                            f"    {sentence.strip()[:300]}"
+                        )
+        assert not violations, (
+            f"{path} names a CLI-only verb in the same sentence as a door tool. There is "
+            f"no door tool for {', '.join(CLI_ONLY_VERBS)} (authority: "
+            f"mcp_spine_server.py's fallback table, restated in {TIER3_PATH}'s "
+            f"{TIER3_SECTION_HEADING} section). Sending an agent to a tool that does not "
+            f"exist is worse than the CLI instruction it would replace, so an instruction "
+            f"naming one of these 5 verbs keeps naming the CLI, never a door tool.\n"
+            + "\n".join(violations)
+        )
+
+
+# --------------------------------------------------------------------------- #
+# The hard constraint itself: "The CLI door stays; F is additive."
+# --------------------------------------------------------------------------- #
+
+#: Words that, said ABOUT the CLI, retire it. Every one of these was checked
+#: against the corpus and occurs zero times today, so a match is a real change
+#: of stance, not a coincidence of vocabulary.
+#:
+#: Deliberately NOT included, because they have legitimate unrelated uses here:
+#: `superseded` (the engine's own evidence state after a `reopen` cascade),
+#: `discourages` (only ever in the affirmative sentence "Nothing here removes or
+#: discourages the CLI"), `no longer` (used throughout to describe fixed bugs),
+#: `removed` (used about gates and evidence). Widening this list means
+#: re-running that check; a marker with a legitimate use is a false alarm, and a
+#: false alarm here trains people to delete the assertion.
+CLI_RETIREMENT_MARKERS = re.compile(
+    r"\bdeprecat\w*|\blegacy\b|\bobsolete\b|\bphased out\b|\bno longer supported\b"
+    r"|\bstop using\b|\b(?:do not|don't|never) use the CLI\b",
+    re.I,
+)
+
+#: Naming the CLI: the script, the spine templates' `<engine>` placeholder, or
+#: the bare phrase.
+CLI_MENTION = re.compile(rf"{re.escape(CLI_SCRIPT_MARKER)}|{re.escape(CLI_PLACEHOLDER)}|\bthe CLI\b", re.I)
+
+#: What "the CLI is still there" reads like when it is genuinely still there.
+CLI_AVAILABILITY = re.compile(r"\bfallback\b|\balways available\b|\bstill available\b|\bremains available\b", re.I)
+
+
+class TestCLIStaysAvailableNotDeprecated:
+    """The Tier2/Tier4 availability check was `CLI_SCRIPT_MARKER in text` -- it
+    only asked whether the CLI was MENTIONED, so it could not tell "the CLI is
+    your fallback" from "the legacy CLI is DEPRECATED". Both mention it. The
+    second is a violation of the epic's hard constraint and passed anyway.
+
+    Two assertions, because mentioning and endorsing are different facts.
+    """
+
+    @pytest.mark.parametrize("path", TIER2_SKILL_FILES + TIER4_TEMPLATE_FILES)
+    def test_default_path_paragraph_states_the_cli_is_still_available(self, path):
+        """FAILS IF: the paragraph that makes the door the default stops
+        describing the CLI as available -- as the fallback, or as always/still
+        available. Naming the script is not enough: an instruction can name it
+        precisely in order to retire it."""
+        para = _default_path_paragraph(path)
+        assert CLI_AVAILABILITY.search(para), (
+            f"{path}'s default-path paragraph names the door as the default and names "
+            f"{CLI_SCRIPT_MARKER}, but no longer says the CLI is still available. "
+            f"'The CLI door stays; F is additive' is the epic's hard constraint -- a "
+            f"paragraph that mentions the CLI without keeping it is how that constraint "
+            f"gets lost while every mention-based check stays green.\n"
+            f"Paragraph: {para.strip()[:400]}"
+        )
+
+    @pytest.mark.parametrize("path", INSTRUCTION_MARKDOWN_FILES + INSTRUCTION_JSON_FILES)
+    def test_no_instruction_declares_the_cli_retired(self, path):
+        """FAILS IF: any instruction sentence names the CLI and calls it
+        deprecated, legacy, obsolete, phased out or no longer supported, or
+        tells the agent to stop using it."""
+        violations = []
+        for where, text in _instruction_texts(path):
+            for sentence in _sentences(text):
+                if not CLI_MENTION.search(sentence):
+                    continue
+                found = CLI_RETIREMENT_MARKERS.search(sentence)
+                if found:
+                    violations.append(
+                        f"  {where}: {found.group(0)!r}\n    {sentence.strip()[:300]}"
+                    )
+        assert not violations, (
+            f"{path} describes the CLI as retired. The CLI door STAYS -- workstream F is "
+            f"additive, and the door is a fast path for the agent that owns the bound "
+            f"spine, never a replacement. A dispatched crew member driving its own plan "
+            f"has no door at all, and the CLI is its only route.\n" + "\n".join(violations)
         )
