@@ -686,16 +686,37 @@ class HookSpecTableMatchesTrackedSettingsTests(unittest.TestCase):
 
     def test_detector_actually_fires_on_a_constructed_drift(self):
         """Self-test: a settings file carrying a fifth hook must not compare
-        equal to the four-spec table. Runs against synthetic text -- never
-        touches the real file."""
+        equal to the four-spec table -- via the REAL `_tracked_hook_entries()`
+        reader, pointed (through `mock.patch`) at a constructed temp file that
+        carries the real settings PLUS one extra hook, never a hand-built list
+        that never touches the reader at all."""
         installer = load_installer()
         specs = sorted(
             (spec.event, spec.matcher, spec.script, spec.args, spec.timeout)
             for spec in installer.HOOK_SPECS
         )
-        drifted = sorted([*specs, ("PreToolUse", "*", "some_new_hook.py", (), 10)])
+        drifted_settings = json.loads(TRACKED_SETTINGS.read_text(encoding="utf-8"))
+        drifted_hooks = dict(drifted_settings.get("hooks") or {})
+        drifted_hooks["PreToolUse"] = [{
+            "matcher": "*",
+            "hooks": [{
+                "type": "command",
+                "command": '"${CLAUDE_PROJECT_DIR}/scripts/hooks/some_new_hook.py"',
+                "timeout": 10,
+                "shell": "bash",
+            }],
+        }]
+        drifted_settings["hooks"] = drifted_hooks
+
+        with tempfile.TemporaryDirectory() as tmp:
+            drifted_path = Path(tmp) / "settings.json"
+            drifted_path.write_text(
+                json.dumps(drifted_settings), encoding="utf-8", newline="\n")
+            with mock.patch(f"{__name__}.TRACKED_SETTINGS", drifted_path):
+                drifted_entries = _tracked_hook_entries()
+
         self.assertNotEqual(
-            specs, drifted,
+            specs, drifted_entries,
             "the comparison cannot distinguish a five-hook file from a four-spec table, "
             "which makes this check impossible to fail",
         )

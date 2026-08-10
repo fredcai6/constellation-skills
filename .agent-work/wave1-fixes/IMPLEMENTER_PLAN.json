@@ -178,7 +178,8 @@
           "id": "p1",
           "statement": "m2-vacuous-empty-discovery complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m2-vacuous-empty-discovery complete: 3 passed"
         }
       ],
       "postconditions": [
@@ -186,7 +187,8 @@
           "id": "c1",
           "statement": "TDD red: confirm the OLD body's vacuity (does not call _tracked_hook_entries) -- manual attest, check MUST be null",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c2",
@@ -195,7 +197,8 @@
             "kind": "command",
             "command": "python -m pytest -q tests/test_interpreter_portability.py -k HookSpecTableMatchesTrackedSettingsTests"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m3-vacuous-drift-2"
         }
       ],
       "constraints": [
@@ -203,11 +206,33 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m3-vacuous-drift-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m3-vacuous-drift",
+            "why_ref": "w-3"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m3-vacuous-drift-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_interpreter_portability.py -k HookSpecTableMatchesTrackedSettingsTests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m4-hook-actually-executes": {
@@ -329,12 +354,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 5,
+  "refusals": 6,
   "engine_session": {
     "session_id": "impl-wave1",
     "status": "active",
     "claimed_at": "2026-08-10T04:40:19.258636+00:00",
-    "last_heartbeat": "2026-08-10T04:45:49.201707+00:00",
+    "last_heartbeat": "2026-08-10T04:47:17.512685+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
@@ -361,6 +386,13 @@
       "why": "Rewrote test_detector_would_not_go_green_on_empty_discovery to genuinely exercise _tracked_claude_settings_files() with subprocess.run patched (mock.patch.object) to return empty stdout, then assert the real assertTrue(files, ...) guard raises against that real (not stdlib-only) empty return. Added 'from unittest import mock' import. TDD red demonstrated: temporarily mutated _tracked_claude_settings_files() to return [ROOT/\"MUTATED-dummy-entry\"] regardless of subprocess output -- the new test FAILED (AssertionError: Lists differ, [] != [PosixPath(.../MUTATED-dummy-entry)]) because it now genuinely checks the function's real behavior; reverted the mutation, class green again (3 passed).",
       "mechanical": false,
       "ts": "2026-08-10T04:45:49.201681+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-vacuous-drift",
+      "why": "Rewrote test_detector_actually_fires_on_a_constructed_drift to genuinely call the real _tracked_hook_entries(), pointed at a constructed temp settings file (real settings + one extra PreToolUse hook) via mock.patch(TRACKED_SETTINGS), and assert the result no longer equals installer.HOOK_SPECS -- instead of the old body's hand-built N vs N+1 list comparison that never touched the reader. TDD red demonstrated: temporarily hardcoded _tracked_hook_entries() to read the real (undrifted) settings.json directly, ignoring the mock-patched TRACKED_SETTINGS -- reproducing the vacuity class the reviewer found (the patch has no effect) -- the rewritten test FAILED (specs == drifted_entries, both the real 4-hook table) because it now genuinely depends on the reader honoring TRACKED_SETTINGS; reverted, class green again (2 passed).",
+      "mechanical": false,
+      "ts": "2026-08-10T04:47:17.512661+00:00"
     }
   ],
   "trip_ledger": [
@@ -429,6 +461,28 @@
       "model": "claude-sonnet-5",
       "why_ref": "w-2",
       "ts": "2026-08-10T04:44:11.492629+00:00"
+    },
+    {
+      "id": "tl-7",
+      "gate": "m3-vacuous-drift",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1937,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-10T04:46:06.005964+00:00"
+    },
+    {
+      "id": "tl-8",
+      "gate": "m3-vacuous-drift",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1937,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-3",
+      "ts": "2026-08-10T04:46:13.140911+00:00"
     }
   ]
 }
