@@ -187,7 +187,8 @@
           "id": "c1",
           "statement": "committed to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written with all required sections",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         }
       ],
       "constraints": [
@@ -195,7 +196,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -211,7 +212,7 @@
     "session_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix4/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-10T02:49:23.604092+00:00",
-    "last_heartbeat": "2026-08-10T02:58:22.163599+00:00",
+    "last_heartbeat": "2026-08-10T03:00:19.854374+00:00",
     "claimed_by": "g3fix4-implementer",
     "worktree": ".",
     "previous_session_id": null,
@@ -245,6 +246,13 @@
       "why": "First run hit test_map_tree_freshness_root_index_matches_a_fresh_build failing (3564 vs 3565 entities) -- adding file_exists_check()/_FILE_EXISTS_SNIPPET as new module-scope symbols in tests/test_mcp_spine_server.py shifted the code map's entity count by 1, same class of map-staleness the winfix round hit. Rebuilt via python -m scripts.code_map build --root . (only map/INDEX.md changed: tests total 3564->3565, tests.test_mcp_spine_server 50->51 entities). Re-ran full suite: 2178 passed, 1 skipped, 1061 subtests passed in 98.40s -- exact baseline match, 0 failed.",
       "mechanical": false,
       "ts": "2026-08-10T02:58:15.879872+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-closeout",
+      "why": "Committed fd754ed9 to epic-418/f-424-mcp-door (fix + map rebuild + engine plan/journal/gauge artifacts + crew-handoffs/crew-runs.json bookkeeping, matching the winfix precedent). IMPLEMENTER_RESULT written at crew-handoffs/g3-implementer-result-posix.md with exact commands/output/exit codes for the target file (22 passed) and full suite (2178 passed, 1 skipped, 1061 subtests, 0 failed after the map rebuild), both directions of the new check demonstrated with real exit codes (absent -> 1, present -> 0) against a space-containing temp path, the full sweep table across all six categories plus the select.select informational check, an explicit local-vs-reasoned-about-Windows split, Map Impact, and a blunt Workflow Feedback section.",
+      "mechanical": false,
+      "ts": "2026-08-10T03:00:19.854365+00:00"
     }
   ]
 }
