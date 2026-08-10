@@ -37,10 +37,18 @@ is the price of this option, and it is why `the-cli-door-stays` is not merely a
 compatibility promise — the CLI is the **only** path for a whole class of agent.
 
 What is bought for it: the door cannot be pointed at another run's spine — no tool
-**declares** an argument that would let it, and at runtime the dispatch **ignores** an
-undeclared one. That is confinement by construction rather than by convention.
+**declares** an argument that would let it, the dispatch **ignores** an undeclared one, and
+before any argv reaches the engine `run_engine` asks `checklist_engine.parse_args` what that
+argv actually resolves to and **refuses** unless it resolves to the bound spine under the
+bound session (`scripts/mcp_spine_server.py::_identity_violation`). That is confinement by
+construction rather than by convention.
 
-**This sentence survived three reviewer falsifications. The sequence is worth more than the
+**That last clause is a runtime guard, not a test, and it was added deliberately.** The
+sentence above is a claim about what this process *does*. A CI pin makes a future violation
+detectable; it does not make the sentence true. Both now exist: the pin
+(`tests/test_mcp_identity.py::IdentityBindingPinTests`) and the guard.
+
+**This sentence survived five reviewer falsifications. The sequence is worth more than the
 sentence, and it is the most useful thing this gate produced.**
 
 As first written it claimed "there is no argument that would let it." The g1 reviewer
@@ -69,11 +77,11 @@ call happened and the result is the door's own refusal. There is no third way to
 content, so a redirect must surface as a wrong `--file`, as invented output, or as a
 non-error answer nobody computed.
 
-Verified red against five mutation classes: `spine_override` (reviewer 1), `target_spine`
-(reviewer 2), a direct-read handler that never calls the engine (reviewer 3), and two I
-added afterwards that no reviewer had tried — calling the engine and then answering with
-something else, and redirecting the **session** rather than the spine. All five red, all
-restoring to an empty diff.
+Verified red against five mutation classes at that point: `spine_override` (reviewer 1),
+`target_spine` (reviewer 2), a direct-read handler that never calls the engine (reviewer 3),
+and two I added afterwards that no reviewer had tried — calling the engine and then
+answering with something else, and redirecting the **session** rather than the spine. All
+five red, all restoring to an empty diff.
 
 A **fourth** reviewer defeated even that: it called the engine honestly — bound spine,
 bound session, genuine output — and then **concatenated** leaked file content onto the
@@ -96,12 +104,32 @@ concatenates onto a result, or builds a dict itself has to write a return this r
 
 The two pins are complementary and neither subsumes the other. The choke-point pin is blind
 to a redirect that keeps the right shape; the runtime sweep catches that. The runtime sweep
-is blind to a leak on an unguessed key; the choke-point pin catches that. Six mutation
-classes verified red across the pair.
+is blind to a leak on an unguessed key; the choke-point pin catches that.
 
-**None of the four corrections was mine.** Each defeat was one layer deeper than the last,
+A **fifth** reviewer, cold, after this run had reported itself complete, defeated the pair
+by argv **POSITION**: `run_engine` builds `["--file", SPINE, verb, *rest]` and the verb slot
+is reachable from `call_tool`, so a second `--file` ahead of the subcommand wins in argparse
+while the bound pair sits harmlessly at position 0. The pin read `argv.index("--file")` —
+the FIRST match, which is the bound one by construction, so it could never fail. *A
+first-occurrence check on a value you yourself put first cannot fail.*
+
+A **sixth**, this round, defeated the fix: the replacement scanned for the literal token
+`--file`, and argparse accepts `--file=X` (one token) and the unambiguous prefix
+abbreviations `--fil X` and `--fi=X`. All three redirect the read; none is that token. The
+identity half was worse — its assertion was CONDITIONAL on the token `--session-id` being
+present, and `mutating=False` is reachable from `call_tool`, so a forged `claim` was
+demonstrated recording a lease under `FORGED-SESSION` with the pin green. *Enumerating
+shapes IS the defect.*
+
+So the pin stopped reading argv. It hands argv to the engine's own `parse_args` and asserts
+`ns.file == str(SPINE)` and `getattr(ns, "session_id", None) in (SESSION, None)` — the same
+predicate the runtime guard applies, in the same call. There is no seventh spelling because
+there is no spelling.
+
+**None of the six corrections was mine.** Each defeat was one layer deeper than the last,
 and the escalation is the record: a pin over declarations, then over an enumeration, then
-over the calls made, and only now over the answers given.
+over the calls made, then over the answers given, then over argv position, and finally over
+how an option may be spelled.
 
 ## 3. The rejected options — what each would and would not have covered
 
@@ -219,11 +247,16 @@ is not evidence.
 ## Residual — stated, not hidden
 
 The final tightening (equality, plus the choke-point pin) was made **after** the fourth
-review and was verified by me against all six mutation classes, **not independently
-reviewed**. The Admiral set a stopping rule at four passes because the marginal value of a
-fifth was below the cost of not reaching the acceptance gate, and I applied the fix rather
-than shipping a pin I had just watched be defeated. A reader should weigh the last increment
-accordingly: four passes of independent adversarial review, then one self-verified fix.
+review and was verified by me against every mutation class recorded above, **not
+independently reviewed**. The Admiral set a stopping rule at four passes because the
+marginal value of a fifth was below the cost of not reaching the acceptance gate, and I
+applied the fix rather than shipping a pin I had just watched be defeated.
+
+Two cold reviews have since defeated that self-verified increment — once by argv position,
+once by option spelling — so the residual is no longer a caution, it is a measured outcome:
+**the self-verified increment was wrong twice.** A reader should weigh it accordingly: five
+passes of independent adversarial review, and each of the two increments verified only by
+their author was subsequently falsified.
 
 ## What this gate did not settle
 

@@ -51,7 +51,7 @@ half that is false is the half that would have been built for nothing.
   in `call_tool()` short-circuits before `run_engine()`, so it reaches neither the
   engine's counter nor the server's own `mcp_calls.jsonl` (`_log()` is called only from
   `run_engine()`). Four classes take this path: unknown tool name; unknown `action` on
-  the four multiplexed tools; missing required argument (`_require`, 8 sites); and — the
+  the four multiplexed tools; missing required argument (`_require`, 10 sites); and — the
   sharpest — a **client-side schema rejection**, which never reaches the server process
   at all.
 

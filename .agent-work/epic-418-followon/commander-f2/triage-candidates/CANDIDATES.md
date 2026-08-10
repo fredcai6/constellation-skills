@@ -82,3 +82,17 @@ real project-scope install during g4b shipped neither `.mcp.json` nor `mcp_spine
 the defect #538/#540 fixed everywhere else, shipped in the one file adoption depends on, and
 unresolvable on the owner's box where `py` is an extensionless `sh` wrapper PowerShell cannot
 execute and `python` is not on PATH. **Adoption must not be reported as achieved on Windows.**
+
+## tc9 — `evidence/g4b/run_arm_2.sh` overwrote arm 1's stderr file
+
+`evidence/g4b/run_arm_2.sh:37` redirects arm 2's stderr to `"${DIR}/arm-mcp/record.err"` —
+**arm 1's** directory — while its stdout correctly goes to `arm-mcp-2/record.jsonl`. The
+file at `arm-mcp/record.err` therefore carries arm 2's stderr under arm 1's name (mtime
+02:12, arm 2's run window; arm 1's own `record.jsonl` is 02:09), and `arm-mcp-2/` has no
+`record.err` at all. Arm 1's stderr is gone and cannot be reconstructed.
+
+**No claim depends on it.** Every count in `MEASUREMENT.md` and `RUN_SUMMARY.md` comes from
+the `.jsonl` records, which are correctly separated per arm. This is recorded so a later
+reader does not treat `arm-mcp/record.err` as arm 1 evidence, and so the copy-paste hazard in
+the arm scripts (three near-identical files differing in one path each) is on the list rather
+than in someone's memory.

@@ -7,8 +7,9 @@ citable anchor id (unfilled template?)"* — a **guess about the file's state, p
 inside a verdict** — and repeated it as an observation without opening the file. The
 Admiral measured it and corrected me (#548).
 
-**The map is present and complete.** `map/INDEX.md` is 23855 bytes over 132 modules and
-4848 entities, with a per-module `INDEX.md` under each, held byte-fresh by
+**The map is present and complete.** `map/INDEX.md` is 24222 bytes over 134 modules and
+4956 entities (rebuilt at the end of this repair round; it grows with the tree, so a
+reader should re-derive rather than trust this line), with a per-module `INDEX.md` under each, held byte-fresh by
 `tests/test_code_map.py::MapTreeFreshnessTests`. It is now hash-pinned in this run's
 orientation receipt and it is read: every structural anchor below carries its entity/hole
 count from it.
@@ -77,9 +78,9 @@ surface under `skills/`: 16 files carry `checklist_engine.py`, `<engine>` or
 `--session-id`. They fall into five tiers, and the tier boundary is what the g4 fence
 lands on — literal command lines an agent executes (3 spine templates, 7 imperative
 fields, plus `commander-core.md`), default-path prose in 6 SKILL bodies, the engine CLI
-reference every one of those points at, 3 authoring templates that would propagate the CLI
-default to future skills, and 4 incidental narrative mentions that are not invocations at
-all and are deliberately left alone.
+reference every one of those points at, 2 authoring templates that would propagate the CLI
+default to future skills, and 3 incidental narrative mentions that are not invocations at
+all and are deliberately left alone. 3 + 1 + 6 + 1 + 2 + 3 = 16, which is the count above.
 
 ## Governing Constraints / Assumptions
 

@@ -152,17 +152,95 @@ def _log(rec: dict) -> None:
         START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
 
 
+def _identity_violation(argv: list[str]) -> str | None:
+    """Does this argv, AS THE REAL PARSER RESOLVES IT, still address the bound
+    spine under the bound session? Returns None when it does, else the refusal
+    message.
+
+    This is the runtime half of the property
+    `tests/test_mcp_identity.py::IdentityBindingPinTests` pins, and it is why
+    the module docstring's "a model cannot point the door at a different spine
+    or identity" is a statement about what this process DOES rather than a
+    statement about what CI would notice later.
+
+    **It asks argparse, it does not read tokens.** Six predecessors of this
+    check each modelled a SHAPE a redirect might take -- declared tool
+    arguments, key names, argv contents, containment, argv position, and
+    finally token spelling -- and each was defeated by a shape it had not
+    enumerated. `--file X`, `--file=X` (one token) and `--fil X` / `--fi=X`
+    (unambiguous prefix abbreviations, which argparse accepts by default) are
+    all the same option to the parser and all different strings to a scanner,
+    and `--file` is a plain `store`, so the LAST occurrence is the one the
+    engine reads. Enumerating spellings is the defect; the only predicate that
+    cannot be out-spelled is the parser's own answer.
+
+    Three deliberate properties of how this is written:
+
+    * `getattr(ns, "session_id", None)`, never `ns.session_id`. Read-only verbs
+      (`current`) declare no `--session-id` at all, so attribute access would
+      raise AttributeError on every status call.
+    * A `SystemExit` from this parse is NOT a violation. `parse_args` exits 2 on
+      malformed argv (e.g. `heartbeat` with no session once SPINE_SESSION is
+      unset), and the caller's own `main()` is about to produce exactly that
+      message; refusing here would replace the engine's error text with ours.
+      The parse's own stderr is swallowed into a scratch buffer for the same
+      reason -- otherwise the usage block would be emitted twice.
+    * Scoped to `ns.file` and `ns.session_id`, never "no repeated flags".
+      `--field` is `action="append"` BY DESIGN and `spine_evidence attach` with
+      two fields is legitimate; a repeated-flag rule would break it.
+    """
+    scratch = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(scratch), contextlib.redirect_stderr(scratch):
+            ns = checklist_engine.parse_args(list(argv))
+    except SystemExit:
+        return None  # malformed argv -- the real main() owns that message
+    except Exception:  # noqa: BLE001 - a parser that cannot answer is not evidence of a redirect
+        return None
+
+    resolved_file = getattr(ns, "file", None)
+    if resolved_file != str(SPINE):
+        return (
+            f"REFUSED: this door is bound to one spine for the life of its process, and "
+            f"this call resolves --file to {resolved_file!r}, not the bound {str(SPINE)!r}. "
+            f"Identity is not a per-call argument here (see IDENTITY_TRADE.md); if you need "
+            f"to drive a different spine, launch a door bound to it, or use the CLI."
+        )
+
+    resolved_session = getattr(ns, "session_id", None)
+    if resolved_session not in (SESSION, None):
+        return (
+            f"REFUSED: this call resolves --session-id to {resolved_session!r}, not the bound "
+            f"session {SESSION!r}. The lease this door can take is the one its own process was "
+            f"launched for; a claim under any other identity would record a lease nobody holds."
+        )
+    return None
+
+
 def run_engine(verb: str, *rest: str, mutating: bool = True) -> dict:
     """Call the real engine main() with a constructed argv. This is the ONLY
     place this module talks to the engine, and it never inspects or rewrites
-    the output beyond capturing it -- see module docstring."""
+    the output beyond capturing it -- see module docstring.
+
+    Before the call, `_identity_violation` asks the engine's own parser what
+    this argv actually resolves to and refuses if it is not the bound spine
+    under the bound session. That check sits INSIDE the redirect block on
+    purpose: `parse_args` writes a usage block to stderr and raises
+    SystemExit(2) on malformed argv, and outside this block that text would
+    escape onto the real transport's stderr and the exit would take the whole
+    server process down with it."""
     argv = ["--file", str(SPINE), verb, *rest]
     if mutating and SESSION:
         argv += ["--session-id", SESSION]
     out, err = io.StringIO(), io.StringIO()
     try:
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            code = checklist_engine.main(argv)
+            violation = _identity_violation(argv)
+            if violation is not None:
+                code = 2
+                err.write(violation + "\n")
+            else:
+                code = checklist_engine.main(argv)
     except SystemExit as exc:  # argparse rejected the argv (e.g. missing required flag)
         code = int(exc.code or 0)
     except Exception as exc:  # noqa: BLE001 - surface everything, never swallow

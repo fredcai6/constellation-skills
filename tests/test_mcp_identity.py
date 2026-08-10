@@ -852,6 +852,41 @@ class IdentityBindingPinTests(unittest.TestCase):
         "spine_survey_result": {"action": "record", "task_id": "r1", "result": "pass"},
     }
 
+    @staticmethod
+    def _resolves_to(module, argv):
+        """What the ENGINE'S OWN PARSER makes of this argv -- the only predicate
+        about "what the door reads" that cannot be out-spelled.
+
+        Returns the Namespace, or None if the parser rejects the argv (which is
+        not a redirect: `main()` calls the same `parse_args` and would refuse
+        identically, so nothing is read at all).
+
+        Its own stdout/stderr are swallowed: argparse writes a usage block
+        before raising, and a test that leaked ~245 bytes of it per malformed
+        case would be unreadable.
+        """
+        import contextlib
+        import io
+
+        scratch = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(scratch), contextlib.redirect_stderr(scratch):
+                return module.checklist_engine.parse_args(list(argv))
+        except SystemExit:
+            return None
+
+    #: The spellings argparse accepts for ONE option. Every one of these is
+    #: `--file` to the parser and a different string to a scanner; `--file` is a
+    #: plain `store`, so whichever lands last is the one the engine reads.
+    #: Written as a *demonstration* of why token-matching cannot work, never as
+    #: the predicate itself -- the predicate is `parse_args`.
+    REDIRECT_SPELLINGS = (
+        ("exact", lambda decoy: ["--file", decoy]),
+        ("equals-form (one token)", lambda decoy: [f"--file={decoy}"]),
+        ("prefix abbreviation", lambda decoy: ["--fil", decoy]),
+        ("prefix abbreviation, equals-form", lambda decoy: [f"--fi={decoy}"]),
+    )
+
     def test_no_argument_can_change_what_the_door_reads_or_where_it_reads_it(self):
         """THE runtime pin. Three reviewers defeated its three predecessors, each
         one layer deeper, so it is now stated as the property the module's own
@@ -876,6 +911,29 @@ class IdentityBindingPinTests(unittest.TestCase):
            Hence `assertEqual` below, and hence the framing that any character
            in the response which did not come from the bound call is itself the
            violation.
+        5. v5 pinned argv POSITION -- "the bound `--file` must be the only
+           `--file`", read by scanning tokens. Green against `--file=DECOY`,
+           which is ONE token and matches nothing. *A predicate over token
+           position is still a predicate over tokens.*
+        6. v6 was v5 with the same scan. Green against `--fil DECOY` and
+           `--fi=DECOY`: argparse accepts unambiguous prefix abbreviations, so
+           the parser and the scanner disagree about what an option is called.
+           The session half had a worse version of the same hole -- its
+           assertion was CONDITIONAL on the literal token `--session-id` being
+           present, so any other spelling skipped the check entirely, and
+           `mutating=False` (reachable from `call_tool`) suppresses the bound
+           session so the forged one is the only one left. A forged `claim` was
+           demonstrated recording a lease under `FORGED-SESSION` with this pin
+           green. *Six pins, six shapes. Enumerating shapes IS the defect.*
+
+        So this pin no longer reads argv. It hands argv to
+        `checklist_engine.parse_args` -- the same function `main()` calls -- and
+        asserts what the ENGINE ACTUALLY RESOLVES:
+
+            ns.file == str(SPINE)  and  getattr(ns, "session_id", None) in (SESSION, None)
+
+        There is no seventh spelling, because there is no spelling: whatever the
+        parser says the option is, that is what is checked.
 
         The invariant that closes all three, and the one
         `mcp_spine_server.py`'s docstring already asserts -- "it never inspects
@@ -933,44 +991,42 @@ class IdentityBindingPinTests(unittest.TestCase):
 
                     # (a) engine called -> bound identity, and the answer is ITS output.
                     #
-                    # Over ALL occurrences, never `argv.index(...)`. `index`
-                    # returns the FIRST match, and the bound pair is always
-                    # first by construction (`run_engine` writes
-                    # `["--file", SPINE, verb, *rest]`), so a first-occurrence
-                    # check reads the bound value back to itself and can never
-                    # fail. Both the verb slot and `*rest` are reachable from
-                    # `call_tool`, and `checklist_engine.parse_args` declares
-                    # `--file` as a plain `store`, so a SECOND `--file` landing
-                    # before the subcommand simply wins:
-                    #   parse_args(["--file", bound, "--file", decoy, "current"])
-                    #     -> Namespace(file=decoy, verb='current')
-                    # That replaces the bound spine's content outright and still
-                    # answers `isError: False`, and it hides in argv POSITION --
-                    # a dimension neither the equality check below nor the AST
-                    # choke-point pin models. The property is therefore stated
-                    # as: the bound value is the ONLY value that flag carries.
+                    # ASK THE PARSER. Not `argv.index("--file")` (first match --
+                    # the bound pair is always first by construction, so it reads
+                    # the bound value back to itself), not "all occurrences of the
+                    # token `--file`" (blind to `--file=X`, `--fil X`, `--fi=X`),
+                    # and NOT conditional on a token being present, which is how
+                    # the session half came to be skippable by spelling. The
+                    # question is what the ENGINE reads, and only the engine's own
+                    # parser answers that question.
                     for argv in seen:
+                        ns = self._resolves_to(module, argv)
+                        if ns is None:
+                            # The parser refuses this argv, so `main()` refuses it
+                            # too and nothing is read. Not a redirect.
+                            continue
                         self.assertEqual(
-                            [bound_file],
-                            [argv[i + 1] for i, a in enumerate(argv) if a == "--file"],
-                            f"{where} addressed the engine at a DIFFERENT spine. The bound "
-                            "--file must be the ONLY --file in argv: argparse's plain `store` "
-                            "lets a later occurrence overwrite an earlier one, so an extra "
-                            "--file anywhere ahead of the subcommand redirects the read while "
-                            "leaving the bound pair sitting harmlessly at position 0.",
+                            bound_file, getattr(ns, "file", None),
+                            f"{where} addressed the engine at a DIFFERENT spine. This is "
+                            "measured by handing argv to checklist_engine.parse_args -- the "
+                            "same function main() calls -- because --file is a plain `store` "
+                            "with several spellings (--file X, --file=X, --fil X, --fi=X) and "
+                            "the LAST one wins. Any predicate that reads tokens is one "
+                            "spelling away from blind.",
                         )
-                        if "--session-id" in argv:
-                            self.assertEqual(
-                                [bound_session],
-                                [argv[i + 1] for i, a in enumerate(argv)
-                                 if a == "--session-id"],
-                                f"{where} addressed the engine under a DIFFERENT identity. "
-                                "Same all-occurrences rule as --file: `run_engine` appends "
-                                "the bound session LAST, so here it is a first-occurrence "
-                                "check that would read an injected value and a last-occurrence "
-                                "check that would be blind. Only 'exactly one, and it is the "
-                                "bound one' is position-independent.",
-                            )
+                        # UNCONDITIONAL, and `getattr`: `current` declares no
+                        # --session-id at all (a bare `ns.session_id` would raise
+                        # AttributeError on every read-only verb), and `None`
+                        # means "this verb carries no identity", which is fine.
+                        # Anything else must be the bound session.
+                        self.assertIn(
+                            getattr(ns, "session_id", None), (bound_session, None),
+                            f"{where} addressed the engine under a DIFFERENT identity. "
+                            "`mutating=False` is reachable from call_tool and suppresses the "
+                            "bound --session-id entirely, so a forged one can be the only one "
+                            "in argv -- and `claim` is where identity is ESTABLISHED, with no "
+                            "lease check ahead of it to fail closed on.",
+                        )
                     self.assertEqual(
                         expected_text, text,
                         f"{where} returned text that is not EXACTLY the engine's own output. "
@@ -1008,67 +1064,189 @@ class IdentityBindingPinTests(unittest.TestCase):
             "incapable of failing and is therefore not evidence",
         )
 
-    def test_a_repeated_file_flag_really_redirects_and_a_first_match_check_is_blind(self):
-        """Second positive control, for the FIFTH way: redirect by argv POSITION.
+    def test_every_spelling_of_the_file_flag_redirects_and_only_the_parser_sees_it(self):
+        """Second positive control, for ways FIVE and SIX: redirect by argv
+        POSITION, and then by option SPELLING.
 
-        Two claims, both against the real parser rather than a story about it:
+        Three claims, all measured against the real parser rather than argued:
 
         1. A second `--file` landing before the subcommand genuinely wins.
            `checklist_engine.parse_args` declares it as a plain `store`, so the
            later occurrence overwrites the earlier one and the engine reads the
-           attacker's file. Nothing about this is theoretical -- it is asserted
-           here by calling `parse_args`.
-        2. The first-occurrence check this pin used to carry (`argv.index`) is
-           BLIND to that, and the all-occurrences check is not. Both predicates
-           are evaluated on the same argv, so the difference is the evidence.
+           attacker's file.
+        2. It wins in FOUR spellings, not one. `--file X` and `--file=X` are the
+           same option (the second is a single token). `--fil` and `--fi` are
+           unambiguous prefixes of `--file`, which argparse resolves by default
+           and no other option in `parse_args` shares.
+        3. A token-reading predicate -- the one this pin used to carry, "the
+           bound value must be the only value the `--file` token carries" -- is
+           GREEN on three of those four, while the parser is red on all four.
+           Both predicates run on the same argv, so the difference is the
+           evidence, not a story about it.
 
         Reachability: `run_engine` builds `["--file", str(SPINE), verb, *rest]`.
-        The bound pair is always at position 0, so it is always the first match
-        -- which is exactly why a first-match check reads the bound value back
-        to itself and can never fail. The verb slot and `*rest` both come from
-        `call_tool`, so a handler that keeps the mandated
-        `as_result(run_engine(...))` shape can still put a second `--file` ahead
-        of the subcommand.
+        The verb slot and `*rest` both come from `call_tool`, so a handler that
+        keeps the mandated `as_result(run_engine(...))` shape can still put a
+        second `--file` ahead of the subcommand.
 
-        Other repeated flags checked, and why they are not a second hole:
-          * `--session-id` -- appended LAST by `run_engine`, so an injected copy
-            lands BEFORE the bound one and argparse's `store` keeps the bound
-            value. The engine is safe by luck of ordering, not by design, so the
-            pin above still asserts it over all occurrences: 'exactly one, and
-            it is the bound one' is the only position-independent statement.
+        Other repeated flags checked, and why they are not a third hole:
           * `--dry-run` -- `store_true`. It carries no value and cannot name a
             spine or an identity; repeating it changes nothing.
           * `--field` (attach) -- `action="append"`, repeatable BY DESIGN, and
             it addresses a payload inside the already-bound spine. Same category
-            as `task_id`/`condition_id` in ADDRESSES_WITHIN_BOUND_SPINE.
+            as `task_id`/`condition_id` in ADDRESSES_WITHIN_BOUND_SPINE. This is
+            why the pin is scoped to `ns.file`/`ns.session_id` and NOT stated as
+            "no repeated flags": that rule would break `spine_evidence attach`.
         No other flag in `parse_args` takes a path or an identity.
         """
-        module = self._load_module(self.spine, "argv-position-control#agent")
+        module = self._load_module(self.spine, "argv-spelling-control#agent")
         bound = str(module.SPINE)
         decoy = str(write_marked_spine(self.root / "decoy5", "DECOY5-MARK", "decoy5-work"))
-        argv = ["--file", bound, "--file", decoy, "current"]
 
-        # The engine object the door itself calls, not a re-import of it.
+        blind_to = []
+        for label, spell in self.REDIRECT_SPELLINGS:
+            argv = ["--file", bound, *spell(decoy), "current"]
+            with self.subTest(spelling=label):
+                parsed = module.checklist_engine.parse_args(argv)
+                self.assertEqual(
+                    decoy, parsed.file,
+                    f"{label}: the engine no longer reads the decoy, so this control no "
+                    "longer reproduces the hazard the pin above defends against -- "
+                    "re-derive the pin before deleting it",
+                )
+                self.assertEqual("current", parsed.verb)
+
+                # The retired predicate, run on the very same argv.
+                token_values = [argv[i + 1] for i, a in enumerate(argv) if a == "--file"]
+                if token_values == [bound]:
+                    blind_to.append(label)
+
+        self.assertEqual(
+            ["equals-form (one token)", "prefix abbreviation, equals-form"],
+            [b for b in blind_to if "equals" in b],
+            "the token-reading predicate's blind spots changed -- this control is the "
+            "record of WHY the pin asks the parser, so if argparse's spelling rules move, "
+            "re-derive the pin rather than editing this list",
+        )
+        self.assertTrue(
+            blind_to,
+            "the token-reading predicate flagged every spelling, so it was never blind "
+            "and this control is not evidence for replacing it",
+        )
+
+    def test_a_forged_session_is_reachable_and_only_the_parser_sees_it(self):
+        """Third positive control: the identity half of the same hole.
+
+        The retired predicate was CONDITIONAL -- `if "--session-id" in argv:` --
+        so any spelling that is not that exact token skipped the assertion
+        outright. And `mutating=` is a parameter of `run_engine` reachable from
+        `call_tool`, so a handler can suppress the bound session and leave a
+        forged one as the ONLY one in argv.
+
+        Why that is worse than the file half: a mid-run hijack fails closed at
+        the engine's lease check, because the bound session already holds the
+        lease. `claim` is where identity is ESTABLISHED. There is no lease to
+        check yet, so nothing fails closed -- the forged id simply becomes the
+        lease holder.
+        """
+        module = self._load_module(self.spine, "session-forge-control#agent")
+        bound = str(module.SPINE)
+        argv = ["--file", bound, "claim", "--claimed-by", "attacker",
+                "--worktree", ".", "--session-id=FORGED-SESSION"]
+
         parsed = module.checklist_engine.parse_args(argv)
         self.assertEqual(
-            decoy, parsed.file,
-            "a second --file no longer wins, so this control no longer reproduces the "
-            "hazard the pin above defends against -- re-derive the pin before deleting it",
+            "FORGED-SESSION", parsed.session_id,
+            "the forged identity no longer reaches the engine, so this control no longer "
+            "reproduces the hazard -- re-derive the pin before deleting it",
         )
-        self.assertEqual("current", parsed.verb)
+        self.assertNotIn(
+            "--session-id", argv,
+            "`--session-id=X` is ONE token; if it ever tokenises separately this control "
+            "stops demonstrating why a conditional token check was skippable",
+        )
 
-        first_match = argv[argv.index("--file") + 1]
-        self.assertEqual(
-            bound, first_match,
-            "the first --file is not the bound one, so this argv does not reproduce the "
-            "shape run_engine actually builds",
+    # --------------------------------------------------------------------- #
+    # The same property, at RUNTIME. A CI pin makes a future violation
+    # detectable; it does not make IDENTITY_TRADE.md §2's sentence -- "the door
+    # can only ever touch the spine its own process was launched for" -- TRUE.
+    # `_identity_violation` is what makes it true, and these are its tests.
+    # --------------------------------------------------------------------- #
+
+    def test_the_runtime_guard_refuses_every_spelling_of_a_redirect(self):
+        """Live: the real engine, no spy. Each spelling is handed to
+        `run_engine` exactly as a mutated handler could build it, and the door
+        must refuse rather than answer out of the decoy."""
+        module = self._load_module(self.spine, "runtime-guard#agent")
+        decoy = str(write_marked_spine(self.root / "gdecoy", "GUARD-DECOY-MARK", "gdecoy-work"))
+
+        for label, spell in self.REDIRECT_SPELLINGS:
+            with self.subTest(spelling=label):
+                rec = module.run_engine(*spell(decoy), "current", mutating=False)
+                result = module.as_result(rec)
+                text = result["content"][0]["text"]
+                self.assertIs(
+                    True, result.get("isError"),
+                    f"{label}: the door answered a redirected call instead of refusing it",
+                )
+                self.assertNotIn(
+                    "GUARD-DECOY-MARK", text,
+                    f"{label}: the decoy spine's own content came back through the door",
+                )
+                self.assertIn("REFUSED", text)
+
+    def test_the_runtime_guard_refuses_a_forged_claim(self):
+        """Live: a forged `claim` must record NO lease. This is the one that
+        cannot fail closed downstream -- there is no lease yet to check against
+        -- so the guard is the only thing standing in front of it."""
+        module = self._load_module(self.spine, "runtime-forge#agent")
+        result = module.as_result(module.run_engine(
+            "claim", "--claimed-by", "attacker", "--worktree", ".",
+            "--session-id=FORGED-SESSION", mutating=False))
+
+        self.assertIs(True, result.get("isError"), "the door accepted a forged claim")
+        self.assertIn("REFUSED", result["content"][0]["text"])
+        state = json.loads(Path(self.spine).read_text(encoding="utf-8"))
+        self.assertNotIn(
+            "engine_session", state,
+            "a forged claim recorded a lease on the bound spine under an identity nobody "
+            "holds -- this is the exploitable half of the hole, not a theoretical one",
         )
-        all_matches = [argv[i + 1] for i, a in enumerate(argv) if a == "--file"]
-        self.assertNotEqual(
-            [bound], all_matches,
-            "the all-occurrences predicate did not flag an argv the engine demonstrably "
-            "reads from the decoy -- the pin above is incapable of failing on the fifth "
-            "way and is therefore not evidence",
+
+    def test_the_runtime_guard_leaves_honest_calls_and_error_text_alone(self):
+        """The guard must be invisible on every legitimate call. Three things
+        it could plausibly have broken, all measured:
+
+        * every tool's real drive-loop call still reaches the engine;
+        * `spine_evidence attach` with TWO `--field`s still works -- `--field`
+          is `action="append"` by design, which is why the guard is scoped to
+          `ns.file`/`ns.session_id` and not to repeated flags;
+        * a malformed argv still produces the ENGINE's own message, not ours.
+          `parse_args` raises SystemExit(2) and writes a usage block; the guard
+          swallows its own copy so the text is unchanged, byte for byte.
+        """
+        module = self._load_module(self.spine, "guard-noop#agent")
+
+        self.assertFalse(module.call_tool(
+            "spine_lease", {"action": "claim", "claimed_by": "impl"})["isError"])
+        self.assertFalse(module.call_tool("spine_status", {})["isError"])
+        self.assertFalse(module.call_tool("spine_evidence", {
+            "action": "attach", "task_id": "g1", "evidence_type": "review-result",
+            "fields": {"verdict": "APPROVE", "cite": "somewhere"},
+        })["isError"], "attach with two --field arguments was refused by the guard")
+
+        # Malformed argv: no bound session, so `heartbeat` is missing a required
+        # argument. The guard must step aside and let main() answer.
+        unbound = write_marked_spine(self.root / "unbound", "UNBOUND", "unbound-work")
+        no_session = self._load_module(unbound, "")
+        rec = no_session.run_engine("heartbeat")
+        self.assertEqual(2, rec["code"])
+        self.assertIn("the following arguments are required: --session-id", rec["stderr"])
+        self.assertNotIn("REFUSED", rec["stderr"])
+        self.assertEqual(
+            1, rec["stderr"].count("usage:"),
+            "the guard's own parse leaked a second usage block -- a malformed call now "
+            "reads as two errors instead of the engine's one",
         )
 
     def test_call_tool_can_only_produce_content_two_ways(self):

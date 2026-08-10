@@ -159,13 +159,13 @@
   {
    "claim": "Editing role spine instructions in skills/ makes a dispatched agent use the door.",
    "expected": "Adoption edits change agent behaviour.",
-   "observed": "FALSE as stated, measured twice. A dispatched agent reads the INSTALLED corpus, not repo source, so arm 1 saw none of the edits. Installing first removed that explanation and arm 2 still measured ZERO door calls - because the installed instruction correctly tells an IMPLEMENTER to use the CLI, exactly as g1 ruled. The agent obeyed correct doctrine; I had measured the one role the fleet excludes.",
-   "source": ".agent-work/epic-418-followon/commander-f2/evidence/g4b/MEASUREMENT.md arms 1 and 2"
+   "observed": "FALSE as stated, measured ONCE. A dispatched agent reads the INSTALLED corpus, not repo source, and arm 1 saw none of the edits. Arm 2 loaded the same pre-g4a corpus (~/.claude/skills, source_commit a1eab1f1, 0 files naming the door), so arm 2 is arm 1 rerun: one condition observed twice, not two negatives. The explanation once recorded here - that arm 2's agent read the newly installed instruction and thereby obeyed correct doctrine - is WITHDRAWN as unsupported: grep -c 'share the parent' returns 0 across all three arms' records, so no agent saw that sentence. What remains true is the arm-design error: arms 1 and 2 drove the IMPLEMENTER, which by g1's ruling is an in-session dispatched crew member and does not own the process's bound spine, so it was never the role that could satisfy this criterion. WHY either agent went to the CLI was not measured, and a replanner must not treat it as known.",
+   "source": ".agent-work/epic-418-followon/commander-f2/evidence/g4b/MEASUREMENT.md, section 'Correction - arm 2 duplicated arm 1's condition'"
   },
   {
    "claim": "A real dispatched agent can drive a real role spine to done through the door alone.",
    "expected": "Measurable from the driving agent's own call record.",
-   "observed": "TRUE for a role that OWNS its process's bound spine: 9 door calls, 0 CLI engine invocations, reached DONE, 0 shape errors. The two refused arms are the control - the spine server was connected with all 7 tools offered in all three, so declining twice and using exclusively once measures choice, not availability.",
+   "observed": "TRUE for a role that OWNS its process's bound spine: 9 door calls, 0 CLI engine invocations, reached DONE, 0 shape errors. The other two arms are ONE refusing condition observed twice (arm 2 is arm 1 rerun), not two independent negatives. What they control for is availability: the spine server was connected with all 7 tools offered in all three arms, so the door was declined where it was demonstrably present. They do not measure why it was declined.",
    "source": "evidence/g4b/arm-mcp-3/record.jsonl scored by F's archived score_arm.py"
   },
   {
@@ -181,7 +181,7 @@
    "signal": "map_orient.py returns DEGRADED-UNPARSEABLE against a map that is present, complete and fresh, and its verdict string carries the guess 'unfilled template?' which a Commander then reported one tier up as an observation.",
    "classification": "evidence_only",
    "affects": "Every Commander in this epic runs map-DEGRADED and may repeat the same misreport.",
-   "evidence": "map/INDEX.md is 23855 bytes over 132 modules / 4848 entities and tests/test_code_map.py::MapTreeFreshnessTests holds it byte-fresh. map_orient's ANCHOR_RE admits only hand-written packet vocabulary; a generated code map contains none by construction. #536 taught the probe where to look and not what it would find.",
+   "evidence": "map/INDEX.md is 24222 bytes over 134 modules / 4956 entities (re-derived at the head of the third repair round) and tests/test_code_map.py::MapTreeFreshnessTests holds it byte-fresh. map_orient's ANCHOR_RE admits only hand-written packet vocabulary; a generated code map contains none by construction. #536 taught the probe where to look and not what it would find.",
    "reason": "Filed by the Admiral as #548. Not repaired inside a wave under measurement, per the launch order's cheap-fixes-are-routed rule."
   },
   {
@@ -255,6 +255,6 @@
    "skills/workbench/references/checklist-engine.md",
    "tests/test_mcp_identity.py"
   ],
-  "map_status": "Code map PRESENT and fresh: map/INDEX.md covers 132 modules / 4848 entities and tests/test_code_map.py::MapTreeFreshnessTests holds it byte-identical to a fresh build (it went red at g1 when the pin class was added and was rebuilt). map_orient.py still reports DEGRADED-UNPARSEABLE because its ANCHOR_RE admits only hand-written packet vocabulary and a generated code map carries none of it - the tool is what is broken, not the map. Filed as #548; discharged for this run with hash-pinned substitutes."
+  "map_status": "Code map PRESENT and fresh: map/INDEX.md covers 134 modules / 4956 entities (re-derived at the head of the third repair round) and tests/test_code_map.py::MapTreeFreshnessTests holds it byte-identical to a fresh build (it went red at g1 when the pin class was added and was rebuilt). map_orient.py still reports DEGRADED-UNPARSEABLE because its ANCHOR_RE admits only hand-written packet vocabulary and a generated code map carries none of it - the tool is what is broken, not the map. Filed as #548; discharged for this run with hash-pinned substitutes."
  }
 }

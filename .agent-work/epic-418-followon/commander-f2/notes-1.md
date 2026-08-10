@@ -57,7 +57,7 @@ The rejection classes that take this path today:
 |---|---|---|---|
 | unknown tool name | `main()` `tools/call` branch | no | **no** |
 | `spine_lease` / `spine_evidence` / `spine_halt` / `spine_survey_result` unknown `action` | `call_tool` | no | **no** |
-| missing required argument (`_require`) | `call_tool`, 8 sites | no | **no** |
+| missing required argument (`_require`) | `call_tool`, 10 sites | no | **no** |
 | client-side schema rejection (`additionalProperties: false`, missing `required`) | the *client*, before the server is spoken to | no | **no** |
 
 That last row is the sharpest one and is the reason
@@ -119,13 +119,14 @@ with two copies of the same door.
 
 # CORRECTION — the map is present. I reported a tool's guess as an observation.
 
-I told the Admiral the map was absent epic-wide. It is not. `map/INDEX.md` is 23855 bytes
-covering **132 modules and 4848 entities**, with a per-module `INDEX.md` under each, and
+I told the Admiral the map was absent epic-wide. It is not. `map/INDEX.md` is 24222 bytes
+covering **134 modules and 4956 entities** (as rebuilt at the end of the third repair
+round; it was 23855 / 132 / 4848 when this note was first written), with a per-module `INDEX.md` under each, and
 `tests/test_code_map.py::MapTreeFreshnessTests` asserts it is byte-identical to a fresh
 build. It names every surface this run owns:
 
 ```
-scripts.mcp_spine_server      8 entities,  5 holes
+scripts.mcp_spine_server     10 entities,  4 holes
 scripts.install_constellation 81 entities, 30 holes
 scripts.apply_episode_delta   54 entities, 25 holes
 scripts.episode_capture       15 entities

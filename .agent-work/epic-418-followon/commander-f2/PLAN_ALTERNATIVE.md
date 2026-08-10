@@ -186,7 +186,7 @@ is determined by whether identity is per-process or per-call.
   (`checklist_engine.py:3319-3321`), and `episode_capture.py:430-432` reads it into the
   Mechanical bin. **Do not rebuild that.** Only the four `_tool_error(...)` classes are
   mute: unknown tool name; unknown `action` on the four multiplexed tools; missing required
-  argument (`_require`, 8 sites); and a client-side schema rejection.
+  argument (`_require`, 10 sites); and a client-side schema rejection.
 - **The sharpest class is one a server-side capture cannot reach at all.** A client-side
   schema rejection never enters the server process. A capture that is claimed to cover "the
   door's rejections" while structurally blind to that class is the same defect as F's DC5
