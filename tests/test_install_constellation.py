@@ -4005,27 +4005,42 @@ class _McpWiringFixture(unittest.TestCase):
         probed value that differs from `sys.executable` -- and it has to be a
         REAL interpreter, because the emitted command is asserted to launch.
 
-        Symlink where the platform allows one (a genuinely distinct location).
-        Windows CI runners do not reliably grant symlink privilege, so the
-        fallback is a different SPELLING of the same real interpreter --
+        Symlink where the platform allows one, since that is a genuinely
+        distinct location. Windows CI runners do not reliably grant symlink
+        privilege, and a symlinked interpreter is not guaranteed to start even
+        where they do, so the candidate is TRIED and the fallback is a
+        different SPELLING of the same real interpreter --
         `<dir>/../<dir name>/<exe>` -- which is still a string no
-        `sys.executable` shortcut can produce, and still launches everywhere."""
+        `sys.executable` shortcut can produce and still launches everywhere.
+        Trying rather than assuming keeps this from being a portability
+        assertion smuggled into a test about something else."""
         exe = Path(sys.executable)
         link = Path(tmp) / "alias-bin" / f"aliased-{exe.name}"
         link.parent.mkdir(parents=True, exist_ok=True)
+        candidates = []
         try:
             link.symlink_to(exe)
         except (OSError, NotImplementedError):
-            alias = str(exe.parent / os.pardir / exe.parent.name / exe.name)
+            pass
         else:
-            alias = str(link)
-        self.assertNotEqual(sys.executable, alias)
-        probe = subprocess.run(
-            [alias, "--version"], capture_output=True, text=True, timeout=60)
-        self.assertEqual(
-            0, probe.returncode,
-            f"the alias interpreter {alias!r} does not launch: {probe.stderr}")
-        return alias
+            candidates.append(str(link))
+        candidates.append(str(exe.parent / os.pardir / exe.parent.name / exe.name))
+
+        failures = []
+        for alias in candidates:
+            self.assertNotEqual(sys.executable, alias)
+            try:
+                probe = subprocess.run(
+                    [alias, "--version"], capture_output=True, text=True, timeout=60)
+            except OSError as exc:
+                failures.append(f"{alias!r}: {exc}")
+                continue
+            if probe.returncode == 0:
+                return alias
+            failures.append(f"{alias!r}: exit {probe.returncode} {probe.stderr!r}")
+        self.fail(
+            "no launchable interpreter at a path other than sys.executable: "
+            + "; ".join(failures))
 
     def _config_path(self, tmp) -> Path:
         return self._project(tmp) / ".mcp.json"
