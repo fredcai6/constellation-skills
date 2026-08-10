@@ -435,7 +435,18 @@ def crew_env(
 def _crew_door_env(*, work_id: str, gate: str, role: str, spine: str | None, root: Path) -> dict[str, str]:
     """The env every dispatched/resumed crew gets: its OWN spine (if any),
     resolved absolute against `root`, and its assignment-keyed lease identity —
-    built in one place so `dispatch` and `resume` cannot drift apart."""
+    built in one place so `dispatch` and `resume` cannot drift apart.
+
+    `spine_file` and `spine_session` are bound as a PAIR, and ONLY when `spine`
+    was given. Deriving `spine_session` unconditionally (even with `spine=None`)
+    used to hand a no-`--spine` child a mismatched pair: whatever SPINE_FILE the
+    DISPATCHING process happened to have ambient (left untouched, correctly) next
+    to a freshly-derived SPINE_SESSION belonging to a different spine entirely —
+    a file/identity pair that never matched each other. No `spine` means the
+    inherited-environment route is genuinely untouched, both variables together,
+    exactly as `crew_env()`'s own contract already promises."""
+    if spine is None:
+        return crew_env()
     return crew_env(
         spine_file=_resolve_optional_path(spine, root),
         spine_session=assignment_session_name(work_id, gate, role),
@@ -787,11 +798,23 @@ class ExternalBackend(CrewBackend):
     subagent in the Constellation harness, where no headless `claude` CLI exists).
     `dispatch` spawns NOTHING — it records the durable entry (running, PID-less,
     keeping the `dispatch: "external"` marker) and returns `(None, entry)`; the
-    caller verifies the result later. `resume` is unrecoverable-by-wrapper."""
+    caller verifies the result later. `resume` is unrecoverable-by-wrapper.
+
+    `--spine` is REFUSED here: binding is impossible by construction when
+    nothing is spawned and no environment is built, so accepting the option
+    would record it in the registry and silently bind nothing. There is no
+    out-of-band way to bind a child this backend never launches."""
 
     name = BACKEND_EXTERNAL
 
     def dispatch(self, spec: CrewSpec, *, root: Path, entries: list[dict], launch=None) -> tuple[None, dict]:
+        if spec.spine is not None:
+            raise CrewLaunchError(
+                f"refusing --spine {spec.spine!r} on the external backend: "
+                f"ExternalBackend spawns no process and builds no environment, so "
+                f"nothing binds the value into a child's SPINE_FILE/SPINE_SESSION. "
+                f"--spine is only meaningful on the cli backend (--backend cli)."
+            )
         # Refuses if the handoff is missing, matching the spawn path's
         # precondition (with the external path's "record" wording).
         _require_handoff(spec.handoff, root, action="record")
@@ -982,9 +1005,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--spine",
         help=(
             "path to the spine/checklist file this crew will drive through its MCP "
-            "door. Bound into the child's SPINE_FILE (and its assignment-keyed "
-            "SPINE_SESSION, derived from --work-id/--gate/--role) so the door "
-            "resolves to this crew's own spine instead of .mcp.json's demo default."
+            "door. On the cli backend, bound into the spawned child's SPINE_FILE "
+            "(and its assignment-keyed SPINE_SESSION, derived from "
+            "--work-id/--gate/--role) so the door resolves to this crew's own spine "
+            "instead of .mcp.json's demo default. REFUSED on the external backend, "
+            "which spawns no process and so binds nothing."
         ),
     )
     p.add_argument("--root", default=".", type=Path, help="repo root (default: cwd)")
