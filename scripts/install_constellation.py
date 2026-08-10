@@ -1524,19 +1524,30 @@ def is_git_tracked(path: Path) -> bool:
     project root, settings.json one level down under .claude/). Any git
     failure (not a repo, git missing) reads as untracked, never raises.
 
-    `path` is resolved to absolute FIRST, and both the subprocess `cwd` and
-    the pathspec are derived from that resolved path -- a relative `path`
-    (e.g. `.claude/settings.local.json` from `--project .`) would otherwise
-    resolve its RELATIVE parent (`.claude`) against the process's real cwd for
-    `cwd`, while git evaluates the still-relative pathspec against THAT same
-    cwd too, doubling the parent segment (`.claude/.claude/...`) and reporting
-    a tracked file as untracked. Resolving first makes the answer independent
-    of whether the caller passed a relative or an absolute path."""
+    `path` is made absolute FIRST, and both the subprocess `cwd` and the
+    pathspec are derived from that absolute path -- a relative `path` (e.g.
+    `.claude/settings.local.json` from `--project .`) would otherwise resolve
+    its RELATIVE parent (`.claude`) against the process's real cwd for `cwd`,
+    while git evaluates the still-relative pathspec against THAT same cwd too,
+    doubling the parent segment (`.claude/.claude/...`) and reporting a tracked
+    file as untracked. Absolutizing first makes the answer independent of
+    whether the caller passed a relative or an absolute path.
+
+    It is `os.path.abspath`, deliberately, and NOT `Path.resolve()`.
+    `resolve()` follows symlinks, so a git-tracked symlink whose target lives
+    outside the repo resolves to a path git knows nothing about and reads as
+    untracked -- reintroducing the exact false negative this function was
+    fixed for, and letting the installer write machine-specific wiring
+    straight through the link into a file some other repo tracks, with no
+    local `git status` signal. `resolve()` also touches the filesystem and
+    raises `RuntimeError` on a symlink loop, which is outside the caught set
+    and breaks the never-raises contract above. `abspath` normalizes `..`
+    without following links and without any filesystem I/O."""
     try:
-        resolved = path.resolve()
+        absolute = Path(os.path.abspath(os.fspath(path)))
         result = subprocess.run(
-            ["git", "ls-files", "--error-unmatch", str(resolved)],
-            cwd=str(resolved.parent), capture_output=True, text=True, timeout=10,
+            ["git", "ls-files", "--error-unmatch", str(absolute)],
+            cwd=str(absolute.parent), capture_output=True, text=True, timeout=10,
         )
     except (OSError, subprocess.TimeoutExpired):
         return False

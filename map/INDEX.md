@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 54 modules, 1070 entities
 skills: 1 modules, 18 entities
-tests: 65 modules, 3704 entities
+tests: 65 modules, 3706 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -98,7 +98,7 @@ tests: 65 modules, 3704 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (65 modules, 3704 entities)
+## tests (65 modules, 3706 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -136,7 +136,7 @@ tests: 65 modules, 3704 entities
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
-- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (243 entities, 141 holes): HOLE: no docstring
+- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (245 entities, 141 holes): HOLE: no docstring
 - [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (34 entities, 10 holes): HOLE: no docstring
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.

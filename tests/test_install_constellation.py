@@ -3341,6 +3341,51 @@ class ReadinessHooksCheckTests(_HookWiringFixture):
             finally:
                 os.chdir(real_cwd)
 
+    def test_is_git_tracked_true_for_a_tracked_symlink_pointing_outside_the_repo(self):
+        """The absolutizing fix must NOT follow symlinks. A git-tracked symlink
+        (mode 120000) whose target lives outside the repo resolves, under
+        `Path.resolve()`, to a path git knows nothing about -- so a tracked file
+        reads as untracked and the installer writes machine-specific wiring
+        straight THROUGH the link into whatever repo owns the target, with no
+        `git status` signal in this one. That is the same false negative the
+        relative-path fix above exists to close, in a narrower shape."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            outside = Path(tmp) / "dotfiles"
+            outside.mkdir()
+            target = outside / "settings.local.json"
+            target.write_text("{}", encoding="utf-8", newline="\n")
+
+            repo_root = Path(tmp) / "project"
+            repo_root.mkdir()
+            self._init_repo(repo_root)
+            sub = repo_root / ".claude"
+            sub.mkdir()
+            link = sub / "settings.local.json"
+            link.symlink_to(target)
+            self._git(repo_root, "add", ".claude/settings.local.json")
+            self._git(repo_root, "commit", "-q", "-m", "init")
+
+            mode = self._git(repo_root, "ls-files", "-s", ".claude/settings.local.json").stdout
+            self.assertTrue(
+                mode.startswith("120000"),
+                f"fixture is not a tracked symlink, so this test proves nothing: {mode!r}",
+            )
+            self.assertTrue(installer.is_git_tracked(link))
+
+    def test_is_git_tracked_never_raises_on_a_symlink_loop(self):
+        """The docstring promises any git failure reads as untracked and never
+        raises. `Path.resolve()` breaks that promise -- it walks the filesystem
+        and raises RuntimeError on a symlink loop, which is outside the caught
+        (OSError, TimeoutExpired) set and escapes as an unhandled traceback."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            a = Path(tmp) / "a"
+            b = Path(tmp) / "b"
+            a.symlink_to(b)
+            b.symlink_to(a)
+            self.assertFalse(installer.is_git_tracked(a / "settings.json"))
+
     # -- check_hooks_shippable --------------------------------------------------
 
     def test_check_hooks_shippable_not_ready_when_unwired(self):

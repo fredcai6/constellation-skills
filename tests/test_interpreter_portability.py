@@ -715,11 +715,23 @@ class HookSpecTableMatchesTrackedSettingsTests(unittest.TestCase):
             with mock.patch(f"{__name__}.TRACKED_SETTINGS", drifted_path):
                 drifted_entries = _tracked_hook_entries()
 
-        self.assertNotEqual(
-            specs, drifted_entries,
-            "the comparison cannot distinguish a five-hook file from a four-spec table, "
-            "which makes this check impossible to fail",
+        # `assertNotEqual(specs, drifted_entries)` alone is trivially true for
+        # ANY reader that returns a wrong-length list -- including one broken
+        # to return []. Four specs != [] proves nothing about whether the
+        # reader read. Assert the reader actually saw the extra hook: the
+        # length must be exactly one more, and the extra entry must be the one
+        # constructed above.
+        self.assertEqual(
+            len(drifted_entries), len(specs) + 1,
+            "the reader did not see the constructed fifth hook, so a comparison "
+            "against it cannot distinguish drift from a reader that read nothing",
         )
+        added = sorted(set(drifted_entries) - set(specs))
+        self.assertEqual(
+            [entry[0] for entry in added], ["PreToolUse"],
+            f"the reader's extra entry is not the constructed one: {added!r}",
+        )
+        self.assertNotEqual(specs, drifted_entries)
 
 
 class EmittedCommandShapeTests(unittest.TestCase):
