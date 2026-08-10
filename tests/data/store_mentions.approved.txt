@@ -203,3 +203,18 @@ scripts/verify_episode_observations.py:still names a live offender in episodes/.
 
 # issue #460 observation guard: --store-root help text, the same store-root seam every other episode script takes
 scripts/verify_episode_observations.py:help="the episode store to scan. Defaults to the writer's store_root().",
+
+# work-id nesting fix: names the writer as the module deliberately NOT imported (the valve) -- a note about module identity, telling no agent to read the store
+scripts/verify_episode_captured.py:# importing apply_episode_delta would pull the record parser — statements included —
+
+# work-id nesting fix: points at the writer's RUN_RE as the grammar this gate duplicates literally, so the two are kept in step; names no record
+scripts/verify_episode_captured.py:# in step: `apply_episode_delta.RUN_RE`.
+
+# work-id nesting fix: explains why an ungrammatical id is REFUSED rather than BLOCKED, quoting the gate's own WRITE-path advice back; prescribes nothing to read
+scripts/verify_episode_captured.py:# "capture one with apply_episode_delta.py", and following that advice against an
+
+# work-id nesting fix: the refusal message names the WRITE path that cannot record the id -- a write-path mention, not a read one
+scripts/verify_episode_captured.py:f"(apply_episode_delta.py) can never record it, because a run must match "
+
+# work-id nesting fix: the same refusal message, naming the WRITE path whose advice cannot be followed for an ungrammatical id
+scripts/verify_episode_captured.py:"BLOCKED: 'capture one with apply_episode_delta.py' is advice that cannot "

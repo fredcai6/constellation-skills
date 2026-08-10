@@ -79,17 +79,118 @@ def _now() -> str:
 
 
 # --------------------------------------------------------------------------- #
+# work-id grammar — a work-id is a PATH, and it may nest
+#
+# The epic/commander convention nests one segment: `epic-418-followon/commander-424`
+# names the work area `.agent-work/epic-418-followon/commander-424/`. So `/` is a
+# legal SEPARATOR in a work-id, not an illegal character, and every helper below
+# composes paths from all of its segments. What a work-id may never be is a way OUT
+# of `.agent-work/`, so each segment is checked and anything unsafe is refused
+# loudly — never trimmed, never normalized into something that happens to resolve.
+#
+# `gate` and `role`, by contrast, are single session-name components and must stay
+# flat: a `/` in either makes `constellation/<work-id>/<gate>/<role>/attempt-<n>`
+# ambiguous to parse back, which is precisely the hole `work_id_from_session` used
+# to fall into. They are refused at the boundary that builds the name.
+# --------------------------------------------------------------------------- #
+WORK_ID_SEGMENT_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
+ATTEMPT_RE = re.compile(r"attempt-[0-9]+")
+#: The session-name components AFTER the work-id: `<gate>/<role>/attempt-<n>`.
+SESSION_TAIL_LEN = 3
+
+
+def validate_work_id(work_id: str) -> str:
+    """The one place a work-id is judged. Returns it unchanged, or REFUSES loudly.
+
+    A work-id is one or more `/`-separated segments, each starting alphanumeric and
+    otherwise `[A-Za-z0-9._-]`. That admits the nesting convention and excludes every
+    escape from the work area: `..`, an empty segment (leading/trailing/doubled `/`),
+    an absolute path, a Windows separator, a drive letter. The refusal NAMES the
+    offending segment — a caller that gets "unsafe" with no subject cannot tell a
+    typo from a convention it is holding wrong."""
+    if not isinstance(work_id, str) or not work_id:
+        raise CrewLaunchError(f"work-id must be a non-empty string, got {work_id!r}")
+    if "\\" in work_id:
+        raise CrewLaunchError(
+            f"work-id {work_id!r} contains a backslash; segments are separated by '/' "
+            "on every platform"
+        )
+    segments = work_id.split("/")
+    for segment in segments:
+        if not WORK_ID_SEGMENT_RE.fullmatch(segment):
+            raise CrewLaunchError(
+                f"work-id {work_id!r} has an unsafe segment {segment!r}: every segment "
+                f"must match {WORK_ID_SEGMENT_RE.pattern} (so a nested id like "
+                "'epic-418-followon/commander-424' is fine, but '..', an empty segment "
+                "and an absolute path are not)"
+            )
+    return work_id
+
+
+def _validate_session_component(value: str, label: str) -> str:
+    """A session-name component that must stay FLAT (gate, role).
+
+    Refused rather than accepted-and-escaped: a `/` here would silently extend the
+    work-id when the name is parsed back, which is the defect this module just fixed.
+    """
+    if not isinstance(value, str) or not value:
+        raise CrewLaunchError(f"{label} must be a non-empty string, got {value!r}")
+    if "/" in value or "\\" in value:
+        raise CrewLaunchError(
+            f"{label} {value!r} must not contain a path separator: it is ONE component "
+            f"of the session name constellation/<work-id>/<gate>/<role>/attempt-<n>, "
+            "and a separator here makes that name ambiguous to parse back"
+        )
+    return value
+
+
+# --------------------------------------------------------------------------- #
 # pure helpers — paths, names, registry I/O
 # --------------------------------------------------------------------------- #
 def session_name(work_id: str, gate: str, role: str, attempt: int) -> str:
     """Deterministic, stable crew session name.
 
     `constellation/<work-id>/<gate>/<role>/attempt-<n>` — the same inputs always
-    produce the same name, so a recovery can address an attempt unambiguously."""
+    produce the same name, so a recovery can address an attempt unambiguously.
+
+    The work-id may nest (`epic-418-followon/commander-424`); `gate` and `role` may
+    not, because the name is parsed back by counting the fixed tail. Both rules are
+    enforced HERE, at the boundary that mints the name, so an unparseable name is
+    never written into a durable registry entry in the first place."""
+    validate_work_id(work_id)
+    _validate_session_component(gate, "gate")
+    _validate_session_component(role, "role")
     return f"constellation/{work_id}/{gate}/{role}/attempt-{attempt}"
 
 
+def work_id_from_session(session: str) -> str:
+    """The work-id a `constellation/...` session name belongs to.
+
+    Parsed from the RIGHT, not the left. The name is
+    `constellation/<work-id>/<gate>/<role>/attempt-<n>` and only the WORK-ID may
+    contain `/` (`session_name` refuses a separator in gate/role), so the work-id is
+    everything between the `constellation` prefix and the fixed three-component tail.
+
+    Reading `split("/")[1]` instead truncated a nested work-id to its first segment
+    and silently addressed a DIFFERENT run's registry — for
+    `epic-418-followon/commander-424` that is the Admiral's own `crew-runs.json`.
+    The commander's completed crew then never got finalized and sat `running` in a
+    live registry with its result artifact present on disk."""
+    parts = session.split("/")
+    if (
+        len(parts) < 2 + SESSION_TAIL_LEN
+        or parts[0] != "constellation"
+        or not ATTEMPT_RE.fullmatch(parts[-1])
+    ):
+        raise CrewLaunchError(
+            f"unrecognized session name {session!r} (expected "
+            "constellation/<work-id>/<gate>/<role>/attempt-<n>)"
+        )
+    return validate_work_id("/".join(parts[1:-SESSION_TAIL_LEN]))
+
+
 def work_dir(work_id: str, root: Path) -> Path:
+    validate_work_id(work_id)
     return root / ".agent-work" / work_id
 
 
@@ -446,7 +547,12 @@ class CrewSpec:
     """The parameters of one crew launch, passed to a backend's `dispatch`.
 
     Shared by both backends; `model`/`launcher` are only meaningful to the cli
-    backend (the external backend spawns nothing)."""
+    backend (the external backend spawns nothing).
+
+    Identity is checked HERE, at construction, rather than deeper in `session_name`:
+    every dispatch path builds a spec before it touches the filesystem, so an
+    unparseable identity is refused before a handoff is read or a registry is
+    written, and the refusal names the id rather than a missing file."""
     work_id: str
     gate: str
     role: str
@@ -456,6 +562,11 @@ class CrewSpec:
     attempt: int
     model: str | None = None
     launcher: str = DEFAULT_LAUNCHER
+
+    def __post_init__(self) -> None:
+        validate_work_id(self.work_id)
+        _validate_session_component(self.gate, "gate")
+        _validate_session_component(self.role, "role")
 
 
 # --------------------------------------------------------------------------- #
@@ -952,13 +1063,11 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def load_registry_for_resume(session: str, root: Path) -> list[dict]:
-    """Resolve the registry that holds `session` by parsing the work-id from a
-    `constellation/<work-id>/...` session name."""
-    parts = session.split("/")
-    if len(parts) < 2 or parts[0] != "constellation":
-        raise CrewLaunchError(f"unrecognized session name {session!r} (expected constellation/<work-id>/...)")
-    work_id = parts[1]
-    return load_registry(registry_path(work_id, root))
+    """Resolve the registry that holds `session` by parsing the work-id out of a
+    `constellation/<work-id>/<gate>/<role>/attempt-<n>` session name.
+
+    See `work_id_from_session` for why the parse is right-anchored."""
+    return load_registry(registry_path(work_id_from_session(session), root))
 
 
 if __name__ == "__main__":

@@ -54,12 +54,17 @@ Grounded: f1brainz epics #372/#378/#453.
 
 ## 4. Portable Python script invocation
 
-**Works:** use the `py` launcher (e.g. `py scripts/some_script.py`) — the
-standard Windows Python installer shim, reliably on `PATH`.
+**Works:** `python <skill-dir>/scripts/some_script.py` — the installer rewrites
+the `python <` prefix to the interpreter it actually resolved on the install
+host (`py` on Windows, `python3` elsewhere; see `resolve_interpreter()`) at
+install time. This is the only form that ships correctly to every platform.
 
-**Fails:** bare `python` may not reliably be on `PATH` on a Windows box, even
-where Python is installed, causing an invocation that works on the author's
-machine to fail elsewhere.
+**Fails:** hand-writing a specific interpreter name — `py`, `python3`, or bare
+`python` — bakes in one platform's choice. `py` is real and reliable *on
+Windows specifically*; writing it into skill text as if that made it portable
+is exactly how this class of defect ships: the command works for its author
+and fails verbatim everywhere else, because no hard-coded name matches the
+installer's `python <` rewrite token.
 
 ## 5. Transient "Blocked by classifier" on `gh`/`git`
 

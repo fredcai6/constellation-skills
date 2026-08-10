@@ -52,7 +52,7 @@ routes to Cartographer.
    map/intent → disconnect).
 2. **Run the loop** until reproduced or the trail runs cold; record the finding
    with `templates/FINDING.template.json`.
-3. **Clear the rail:** `py scripts/verify_diagnosis.py <finding.json>` — fix the
+3. **Clear the rail:** `python <skill-dir>/scripts/verify_diagnosis.py <finding.json>` — fix the
    evidence, never lower the claim to pass.
 4. **Route out (don't fix).** Confirmed fault → `triage`/`reviewer`;
    explained-by-design → `note`. A fresh-context reviewer checks the cut.

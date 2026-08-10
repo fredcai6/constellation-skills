@@ -102,8 +102,9 @@ python scripts/install_constellation.py --agent codex --scope project --project 
 ```
 
 Every install also **reports** whether the Context Governor's `PostToolUse` hooks are wired into
-your `settings.json` — `WIRED`, `STALE`, `UNWIRED`, or `CANNOT EVALUATE`. It only reports: nothing
-is written to `settings.json` without the opt-in flag below, and it will not create that file.
+your `settings.json` — `WIRED`, `STALE`, `PARTIALLY WIRED`, `UNWIRED`, or `CANNOT EVALUATE`. It only
+reports: nothing is written to `settings.json` without the opt-in flag below, and it will not create
+that file.
 
 To also wire the hooks (Claude Code only):
 
@@ -114,6 +115,43 @@ python scripts/install_constellation.py --agent claude --scope user --wire-hooks
 The entry is added alongside any `PostToolUse` matchers you already have. Prefer `--scope user`:
 project scope writes a committable `settings.json`, and the path it carries is absolute and so
 embeds your username. See [docs/GAUGE_WRITER_HOOK.md](docs/GAUGE_WRITER_HOOK.md).
+
+`--wire-hooks` writes the Context Governor's one `PostToolUse` hook by default. `--hooks all` writes
+all four Constellation hooks — that one plus `spine_rail.py` on `Stop`, `SessionStart` and
+`PostToolUse` — and `--hooks rail` writes just the three rail events. `--hooks` also selects which
+hooks every report and `--check-readiness` covers. The default stays `governor` on purpose: the rail
+can block a `Stop`, so it never arrives in your `settings.json` as a side effect of an install you
+already knew how to run.
+
+**Interpreter resolution is per machine, and that is the point.** No single string in a shared
+`settings.json` names a Python interpreter that works everywhere: `py` does not exist on POSIX,
+`python3` is absent from a stock Windows install, bare `python` is absent from Ubuntu, and a bare
+quoted script path is *worse* than any of them — under PowerShell it parses as a string literal and
+the hook exits 0 without running anything. So the wired command names the interpreter this installer
+actually probed on your host, and it names it **first**, which is the one form every shell Claude
+Code can spawn treats as a command to run.
+
+**If no candidate answers on your machine, the install hard-stops.** There is no fallback to an
+os-name guess, because such a guess can only be drawn from the candidate set that was just
+disproved — `py` on Windows, `python3` on POSIX, each already probed and already failed. It could
+never be right, and stamping it into every installed skill body only moved the failure somewhere
+later and harder to trace. `--dry-run` refuses identically, at the same point and for the same
+stated reason. `--baseline-only` is unaffected: it copies templates verbatim and writes no
+interpreter name at all. `--check-readiness` **reports** the condition as a `NOT READY`
+**interpreter** item rather than aborting — refusing to run the diagnostic when this is the
+diagnosis would be its own defect.
+
+**Working on the hooks themselves,** in a checkout of this repo:
+
+```powershell
+python scripts/install_constellation.py --agent claude --scope project --wire-hooks --hooks all --hooks-from source
+```
+
+`--hooks-from source` points the commands at this checkout's own `scripts/hooks/` instead of an
+installed skill copy, and writes `.claude/settings.local.json` rather than `.claude/settings.json`.
+That file is per-machine by construction — it carries your absolute paths and your probed
+interpreter — so it is gitignored, and the installer refuses outright to write it if it is ever
+tracked. Claude Code merges the hooks from both files rather than letting one replace the other.
 
 Install into a Claude Code project:
 
@@ -145,13 +183,24 @@ Check whether a project is set up to run Constellation, without installing anyth
 python scripts/install_constellation.py --agent claude --scope project --project C:\path\to\repo --check-readiness
 ```
 
-Four separately testable items, each reporting `READY`/`NOT READY` with its own named reason, and a
-nonzero exit if any fails: **engine** (pytest actually runs under this interpreter), **skills**
-(a `CORPUS.json` marker and the expected bundles at the target root), **hooks** (Context Governor
-`WIRED`, and at `--scope project` the backing `settings.json` must be git-tracked — a gitignored
+Five separately testable items, each reporting `READY`/`NOT READY`/`CANNOT DETERMINE` with its own
+named reason: **engine** (pytest actually runs under this interpreter), **interpreter** (at least
+one of `py`/`python3`/`python` answers `--version` on this host — a different question from
+**engine**, which uses the always-present interpreter running the installer), **skills**
+(a `CORPUS.json` marker and the expected bundles at the target root), **hooks** (`WIRED`, and at
+`--scope project` the backing `settings.json` must be git-tracked — a gitignored
 `settings.local.json` can be wired and still never ship), and **work area** (a `.git` entry, file or
 directory). Report-only: it never repairs anything and never writes `settings.json`, so it refuses
-to be combined with `--wire-hooks` or `--baseline-only`.
+to be combined with `--wire-hooks`, `--hooks-from` or `--baseline-only`.
+
+Three exit codes, because there are three answers. `0` ready; `1` something is definitely wrong;
+`3` nothing was found wrong but at least one item could not be determined. That third case is real
+and common: a hook entry that names its script through `${CLAUDE_PROJECT_DIR}` can only be resolved
+inside the future hook's process, not this one, so the installer declines to expand it — the entry is
+neither confirmed nor condemned. It is reported as `CANNOT DETERMINE` rather than being laundered
+into a pass or a failure. A fresh clone with nothing wired yet reads as `UNWIRED` and says so in
+those words: **not wired yet is not the same as wired wrong**, and an uninstalled project is not a
+defective one.
 
 Check that what is installed still matches the source it was built from:
 

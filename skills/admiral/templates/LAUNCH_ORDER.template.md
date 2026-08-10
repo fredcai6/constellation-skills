@@ -40,7 +40,7 @@ A measured negative on the stated question is a complete, successful deliverable
 
 ## Workspace
 `<absolute worktree path, provisioned for you via "git worktree add" — branch name, base commit, and the exact add command that created it. Verify main freshness before dispatch. Worktrees lack untracked inputs; see Data Locations.>`
-First step, before any git operation: run `py scripts/verify_worktree_isolation.py --here <absolute worktree path>` — it must exit 0, proving you are in your own worktree and not the shared checkout. Paste its output into your return report.
+First step, before any git operation: run `python <admiral-skill-dir>/scripts/verify_worktree_isolation.py --here <absolute worktree path>` — it must exit 0, proving you are in your own worktree and not the shared checkout. Paste its output into your return report.
 NOTE: PR integration defaults to **server-side merge** (the GitHub merge on the PR itself, not a local merge that would diverge your worktree from main).
 
 **Isolation is git-only — hook code is not fenced by it.** `verify_worktree_isolation.py` proves your git

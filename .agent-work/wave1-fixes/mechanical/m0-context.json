@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "wave1-fixes",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-wave1-fixes-m0-context@02b1e7b45e5ff30874db537841f40757e3c744ff",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "wave1-fixes",
+    "generated_at": "2026-08-10T04:40:25Z"
+  }
+}

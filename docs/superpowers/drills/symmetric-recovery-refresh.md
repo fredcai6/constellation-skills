@@ -72,7 +72,7 @@ Pick either fixture (they read identically past the DIGEST — that symmetry is 
 new** session/subagent with **no other context about this task**. Give it exactly this prompt, nothing more:
 
 > You are continuing checklist work already in progress. Run:
-> `py scripts/checklist_engine.py --file docs/examples/symmetric-recovery-refresh.json current`
+> `python scripts/checklist_engine.py --file docs/examples/symmetric-recovery-refresh.json current`
 > (or the `-crash.json` fixture) and drive the active gate to completion per the engine's instructions. Do
 > not ask what happened before this point — the output of `current` is the only briefing you get.
 

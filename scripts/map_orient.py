@@ -91,8 +91,27 @@ Resolution rule (ordered; first hit wins; EVERY candidate is still recorded)
     2. `docs/architecture/generated/map.json` -- parses, >=1 `nodes[].id`
     3. `docs/architecture/index.md`
     4. `docs/architecture/` carrying >=1 non-empty `packets/*.md`
+    5. `map/INDEX.md`      -- this repo's OWN derived code map (#534)
+    6. `map/ids.jsonl`     -- the derived map's id -> symbol-path lookup
 
-All four are evaluated and recorded in `candidates_tried[]` even after an
+Candidates 5-6 are probed AFTER every `docs/architecture/` candidate, never
+before: this keeps existing precedence for a consuming repo that already ships
+`docs/architecture/` (candidates 2-4 still win there) and is purely additive
+for a repo, like this one, whose map instead lives where
+`scripts/code_map/render.py` puts it. Candidate 5/6 citability is governed by
+the SAME anchor vocabulary as every other candidate (see "RESOLVED requires
+CITABLE CONTENT" below) -- `scripts/code_map`'s own id scheme (dotted
+`module.symbol` paths, `# [slug]` source anchors) does not speak that
+vocabulary, so today this repo reads DEGRADED-UNPARSEABLE, not RESOLVED, at
+`map/`. That is still the CORRECT verdict: an honest "found real content, none
+of it citable in the recognised format" beats the false negative
+DEGRADED-NO-MAP it replaces (#315 failure mode, again -- "looked and found
+nothing" must never be reported when what actually happened is "looked, and
+found something the citation scanner does not recognise"). Teaching this
+module to cite `scripts/code_map`'s id scheme is a separate, larger change,
+deliberately not taken here.
+
+All six are evaluated and recorded in `candidates_tried[]` even after an
 earlier one hits: the receipt is a delivery record of what was looked for, not
 a first-hit lookup log.
 
@@ -232,6 +251,17 @@ ANCHOR_RE = re.compile(
 MAP_DIR = "docs/architecture"
 GENERATED_MAP = "docs/architecture/generated/map.json"
 INDEX_MD = "docs/architecture/index.md"
+
+# This repo's OWN derived code map (#534): scripts/code_map/render.py writes
+# it, tests/test_code_map.py holds it fresh. `CODE_MAP_DIRNAME` mirrors the
+# literal `scripts/code_map/cli.py:MAP_DIRNAME` -- the two cannot import one
+# another (this module ships standalone into consuming repos that have no
+# scripts/code_map at all), so tests/test_map_orient.py's
+# `CodeMapCandidateAlignment` cross-checks the two literals stay equal instead.
+# Probed AFTER every docs/architecture/ candidate -- see the module docstring.
+CODE_MAP_DIRNAME = "map"
+CODE_MAP_INDEX = f"{CODE_MAP_DIRNAME}/INDEX.md"
+CODE_MAP_IDS = f"{CODE_MAP_DIRNAME}/ids.jsonl"
 
 OUTCOME_HIT = "hit"
 OUTCOME_ABSENT = "absent"
@@ -1078,6 +1108,19 @@ def collect_candidates(root: Path, entrypoint: str | None) -> list[Candidate]:
         candidates.append(
             Candidate(order, "packets-dir", MAP_DIR, True, has_content, len(anchors), note)
         )
+
+    # Candidates 5-6 (#534): this repo's own derived code map, probed only
+    # after every docs/architecture/ candidate above -- additive, never a
+    # change of precedence for a repo already on that layout.
+    order += 1
+    candidates.append(
+        _candidate_from_file(order, "code-map-index", root, root / CODE_MAP_INDEX, False)
+    )
+
+    order += 1
+    candidates.append(
+        _candidate_from_file(order, "code-map-ids", root, root / CODE_MAP_IDS, False)
+    )
 
     return candidates
 

@@ -45,6 +45,16 @@ from .extract import STATEMENTS_NAME, WINDOW
 STDLIB = set(sys.stdlib_module_names)
 REPORT_NAME = "render_report.json"
 
+# Filenames written at the map ROOT (see render() below) -- named so
+# scripts/map_orient.py's CODE_MAP_INDEX / CODE_MAP_IDS constants can be
+# cross-checked against these instead of drifting apart on two hardcoded
+# literals (#534). map_orient.py cannot import this module directly: it ships
+# standalone into consuming repos that have no scripts/code_map at all, so the
+# two sides stay in sync via tests/test_map_orient.py::CodeMapCandidateAlignment
+# instead of a live import.
+TOP_INDEX_FILENAME = "INDEX.md"
+IDS_FILENAME = "ids.jsonl"
+
 HOLE = "HOLE: no docstring"
 
 # ---------------------------------------------------------------- store state
@@ -710,13 +720,13 @@ def run(root, artifacts, out):
 
         for _, k in children.get(mod + ":", []):
             emit(k)
-    (out / "INDEX.md").write_text(top_index(repo_name(root)),
-                                  encoding="utf-8", newline="\n")
+    (out / TOP_INDEX_FILENAME).write_text(top_index(repo_name(root)),
+                                           encoding="utf-8", newline="\n")
     # ids.jsonl: the mind map's one lookup. Sorted, so its git diff IS the
     # id-motion report, and `{id, s}` with NO position, so an edit anywhere else
     # in the file leaves it byte-identical. The symbol path is derived and
     # disposable; the authored slug is what the mind map stores.
-    (out / "ids.jsonl").write_text(
+    (out / IDS_FILENAME).write_text(
         "".join(json.dumps({"id": i, "s": ids[i][0]}) + "\n" for i in sorted(ids)),
         encoding="utf-8", newline="\n")
     duplicates = sorted(i for i in ids if len(ids[i]) > 1)

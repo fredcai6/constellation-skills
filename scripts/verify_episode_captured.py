@@ -54,6 +54,25 @@ HEADER_RE = re.compile(r"<!--\s*episode-state:\s*(?P<fields>[^>]*?)\s*-->")
 RUN_LINE_RE = re.compile(r"^-\s*run:\s*(?P<run>\S.*?)\s*$")
 AGENT_SUPPLIED_HEADING = "## Agent-supplied"
 
+# The writer's run grammar, named literally here for the same reason ACTIVE_DIR is:
+# importing apply_episode_delta would pull the record parser — statements included —
+# into this module, which is the read path the valve exists to prevent. Keep the two
+# in step: `apply_episode_delta.RUN_RE`.
+#
+# A run is a work-id, and a work-id may NEST (`epic-418-followon/commander-424`, the
+# epic/commander convention). Each `/`-separated segment is flat kebab, so `..`, an
+# empty segment and an absolute path are excluded.
+#
+# This gate checks the grammar so that a work-id the WRITER could never record is
+# REFUSED rather than BLOCKED. The two answers are not interchangeable: BLOCKED says
+# "capture one with apply_episode_delta.py", and following that advice against an
+# ungrammatical id fails forever with no hint why. That contradiction — the writer
+# forbidding exactly what the gate demanded — is what made this closeout step
+# impossible to complete, so the gate now states the shared grammar out loud instead
+# of discovering the disagreement as a missing record.
+_RUN_SEGMENT = r"[a-z0-9][a-z0-9-]*"
+RUN_RE = re.compile(rf"{_RUN_SEGMENT}(?:/{_RUN_SEGMENT})*")
+
 EXIT_CAPTURED = 0
 EXIT_BLOCKED = 1
 EXIT_REFUSED = 2
@@ -108,6 +127,16 @@ def matched_episodes(root: Path, work_id: str) -> tuple[list[tuple[str, Path]], 
     clean without ever examining an interesting item is the failure this gate is here
     to catch — the count goes into both the pass and the block message.
     """
+    if not RUN_RE.fullmatch(work_id):
+        raise StoreRefusal(
+            f"ungrammatical run id {work_id!r}: the store's write path "
+            f"(apply_episode_delta.py) can never record it, because a run must match "
+            f"{RUN_RE.pattern} — flat kebab segments, optionally nested with '/' as a "
+            "work-id is (e.g. 'epic-418-followon/commander-424'). Refused rather than "
+            "BLOCKED: 'capture one with apply_episode_delta.py' is advice that cannot "
+            "be followed for this id, and a block that can never be cleared reads as a "
+            "missing record instead of a mismatched id."
+        )
     if not root.is_dir():
         raise StoreRefusal(
             f"missing store: {root} is not a directory. Enumerating a store that is not "

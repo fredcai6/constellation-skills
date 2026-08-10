@@ -82,24 +82,25 @@ defect.**
 `constellation-workbench` skill and can wire them for you:
 
 ```
-py scripts/install_constellation.py --agent claude --scope user --wire-hooks
+python scripts/install_constellation.py --agent claude --scope user --wire-hooks
 ```
 
 **The installer never writes your `settings.json` without `--wire-hooks`.** Every
 ordinary run only *reports* the wiring state and writes nothing — it will not
 create the file, and `--wire-hooks --dry-run` together writes nothing either.
-That report is four-state:
+That report is five-state:
 
 | State | Meaning |
 |---|---|
-| `WIRED` | an entry names a `gauge_writer_hook.py` that is on disk |
+| `WIRED` | every hook asked about names a script that is on disk |
 | `STALE` | an entry exists but names a script that is **not** on disk — the hook never fires, and nothing else can tell you that |
-| `UNWIRED` | no entry at all |
+| `PARTIALLY WIRED` | some hooks resolve and others have no entry at all (reachable only with `--hooks rail`/`--hooks all`) |
+| `UNWIRED` | no entry at all — *not wired yet*, which is not the same as wired wrong |
 | `CANNOT EVALUATE` | the entry names the script through an environment variable the installer declines to expand (see below) |
 
-`STALE` and `CANNOT EVALUATE` exist because a hook that never runs **cannot
-report that it never ran** — see "Skip-on-uncertainty" below. This report is the
-only thing in the system that can surface an unwired or dead hook.
+`STALE`, `PARTIALLY WIRED` and `CANNOT EVALUATE` exist because a hook that never
+runs **cannot report that it never ran** — see "Skip-on-uncertainty" below. This
+report is the only thing in the system that can surface an unwired or dead hook.
 
 The entry it writes is added **alongside** whatever `PostToolUse` matchers you
 already have — never nested inside one, never reordering the others:
@@ -109,6 +110,28 @@ already have — never nested inside one, never reordering the others:
   "command": "py \"C:/Users/<you>/.claude/skills/constellation-workbench/scripts/gauge_writer_hook.py\"",
   "timeout": 10}]}
 ```
+
+**Which hooks.** By default `--wire-hooks` writes exactly the one entry above.
+`--hooks all` writes all four Constellation hooks — the gauge writer plus
+`spine_rail.py` on `Stop`, `SessionStart` and `PostToolUse` — and `--hooks rail`
+writes only those three. `--hooks` also selects which hooks are *reported* on,
+including under `--check-readiness`. The default is `governor` because the rail
+can block a `Stop`; that is not something to acquire as a side effect of an
+install command you already knew how to run.
+
+**Why the interpreter is named, and why that is only safe here.** The command
+above starts with `py` because `py` is what the installer's probe actually found
+on the host that wrote it (`resolve_interpreter()`, one probe per run). That name
+is correct for that machine and no other, which is exactly why the git-tracked
+`.claude/settings.json` in this repo names **no** interpreter at all — no single
+name works on both POSIX and Windows (#539). Naming it *first* also matters: a
+command that starts with a quote is parsed by PowerShell as a string literal, so
+the hook echoes its own path and exits 0 without running.
+
+If **no** candidate answers on your host, the whole install hard-stops — there is
+no os-name fallback, because any such guess is drawn from the candidate set the
+probe just disproved and so cannot be right anywhere. `--check-readiness` reports
+that same condition as a `NOT READY` **interpreter** item instead of aborting.
 
 **Which scope is safe to commit.** Note the absolute path above: it embeds your
 home directory and therefore your **username**.
@@ -141,20 +164,38 @@ wrong answer there is worse than an honest "I cannot tell".
 
 ### (a2) In this repo, working on the hooks themselves
 
-The source layout is `scripts/hooks/`, which exists only here. Wiring against the
-source tree (rather than an install) is the `${CLAUDE_PROJECT_DIR}` form, and it
-is what this repo's own `.claude/settings.local.json` uses. Do not replace the
-existing `spine_rail.py` entry; add alongside it. Unlike `spine_rail.py`'s entry
-(matcher `"Bash"` only, because it only cares about `checklist_engine.py`
-commands), the gauge writer needs to see **every** tool call to track fill
-continuously, so its matcher is `"*"`:
+The source layout is `scripts/hooks/`, which exists only here. Let the installer
+do it:
+
+```
+python scripts/install_constellation.py --agent claude --scope project --wire-hooks --hooks all --hooks-from source
+```
+
+`--hooks-from source` points the commands at this checkout's own
+`scripts/hooks/` rather than at an installed skill copy, and writes
+`.claude/settings.local.json` rather than `.claude/settings.json`. That split is
+structural, not a preference: a source command carries this checkout's absolute
+path **and** the interpreter name probed on this host, so it is wrong for every
+other machine by construction. `settings.local.json` is gitignored, and the
+installer refuses outright to write it if it is ever git-tracked. Claude Code
+merges the hooks from both files rather than letting one replace the other, so
+the tracked `settings.json` keeps whatever it already carries.
+
+What this repo's tracked `.claude/settings.json` carries instead is the
+`${CLAUDE_PROJECT_DIR}` form with **no interpreter named** and `"shell": "bash"`
+pinned on every entry — the only form that can be committed at all, since no
+single interpreter name is right on both POSIX and Windows. Note the two
+matchers: unlike `spine_rail.py`'s `PostToolUse` entry (matcher `"Bash"` only,
+because it only cares about `checklist_engine.py` commands), the gauge writer
+needs to see **every** tool call to track fill continuously, so its matcher is
+`"*"`:
 
 ```json
 {
   "hooks": {
     "PostToolUse": [
-      {"matcher": "Bash", "hooks": [{"type": "command", "command": "py \"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\" PostToolUse", "timeout": 10}]},
-      {"matcher": "*", "hooks": [{"type": "command", "command": "py \"${CLAUDE_PROJECT_DIR}/scripts/hooks/gauge_writer_hook.py\"", "timeout": 10}]}
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/scripts/hooks/spine_rail.py\" PostToolUse", "shell": "bash", "timeout": 10}]},
+      {"matcher": "*", "hooks": [{"type": "command", "command": "\"${CLAUDE_PROJECT_DIR}/scripts/hooks/gauge_writer_hook.py\"", "shell": "bash", "timeout": 10}]}
     ]
   }
 }
