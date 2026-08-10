@@ -30,37 +30,53 @@ to it later:
 2. **No assertion may be satisfied by the negation of what it pins.** Word presence
    cannot tell a proposition from its opposite, because the two are written with the
    same words: "Nothing here removes or discourages the CLI" and "The CLI is removed"
-   share every marker a substring check could look for. So propositions here are
-   pinned with POLARITY (`_retires_the_cli`, `_keeps_the_cli`, `_asserts_the_default`,
-   `_named_affirmatively`) and each assertion says, in its own docstring, what would
-   have to be true for it to fail.
+   share every marker a substring check could look for.
 
-Audit of every assertion here against rule 2, including the ones deliberately left as
-presence checks. Presence is enough ONLY where presence IS the fact, or where the
-negation is caught by a polarity assertion elsewhere in the file:
+   The answer to that used to be POLARITY predicates (`_retires_the_cli`,
+   `_keeps_the_cli`) that read a retirement word and cancelled it on a denial standing
+   in front. **They are deleted.** Measured against the shipped functions they were
+   wrong 9 times out of 10 on retirements and 6 out of 7 on affirmatives, and they were
+   unexercised: gutting `_retires_the_cli` to `return None` left the suite fully green.
+   The doctrine sentence is now pinned as a BYTE-FOR-BYTE equality
+   (`CANONICAL_CLI_SENTENCE`) at the one path that is its written authority, which is
+   the one predicate a negation cannot satisfy and no spelling can evade.
 
-  * PINS A PROPOSITION, POLARITY-CHECKED -- `test_field_names_door_tool_as_default`,
+   `_asserts_the_default` and `_named_affirmatively` remain: both look for a
+   prohibition immediately governing a named token, which is a much narrower and much
+   more reliable question than "what is the polarity of this sentence about the CLI".
+
+   **What this suite therefore does NOT enforce, stated:** it catches an adoption pass
+   that DROPS the CLI; it does not catch an author determined to retire the CLI while
+   keeping the words. See `TestCLIStaysAvailableNotDeprecated` for why that is the
+   right trade -- in short, prose has no mechanical oracle, and the realistic failure
+   is drift, which removes things rather than composing sentences that satisfy a
+   checker while meaning the opposite.
+
+Audit of every assertion here against rule 2. Presence is enough ONLY where presence IS
+the fact, or where the thing pinned is an exact string:
+
+  * PINS A PROPOSITION, PROHIBITION-CHECKED -- `test_field_names_door_tool_as_default`,
     `test_field_still_carries_cli_fallback`, `TestTier1CommanderCoreAttachLine`'s two,
     `_default_path_paragraph` (via `_asserts_the_default`),
-    `test_names_door_tools_as_default`, `test_door_section_itself_keeps_the_cli`,
-    `test_states_identity_trade_rule`, `test_the_cli_only_rule_itself_is_present`,
-    `test_dispatched_crew_file_states_cli_for_own_plan`,
-    `test_default_path_paragraph_states_the_cli_is_still_available`,
-    `test_no_instruction_declares_the_cli_retired`.
+    `test_names_door_tools_as_default`.
+  * PINS A PROPOSITION, BYTE EQUALITY -- `test_the_canonical_cli_sentence_is_present_verbatim`,
+    `test_door_section_itself_keeps_the_cli`.
+  * PINS A ROUTING SENTENCE (a shape the negation cannot write, because the negation
+    routes the other way) -- `test_states_identity_trade_rule`,
+    `test_the_cli_only_rule_itself_is_present`,
+    `test_dispatched_crew_file_states_cli_for_own_plan`.
   * PRESENCE IS THE FACT -- `test_spine_template_still_valid_json` (parses or does not),
     `test_verb_still_documented` (the verb name is in the section or it is not),
     `TestTier5DoNotTouch`'s two (a door tool name appears or it does not),
-    `test_the_walk_finds_the_whole_corpus`.
-  * PRESENCE, BACKSTOPPED -- `test_file_still_names_cli_at_all`,
-    `test_still_names_cli_invocation`, `test_lease_section_carries_door_equivalent`.
-    Each would pass text that names the CLI in order to retire it; each such text is
-    red at `test_no_instruction_declares_the_cli_retired`, which runs over the whole
-    walked corpus, these files included.
+    `test_the_walk_finds_the_whole_corpus`,
+    `test_default_path_paragraph_states_the_cli_is_still_available`.
   * A NEGATIVE ALREADY -- `test_no_instruction_pairs_a_cli_only_verb_with_a_door_tool`
     and `test_verb_never_routed_through_a_door_tool` fail ON the violating text, so
-    they have no negation to be satisfied by. Their risk is the opposite one (a false
-    alarm on a correct statement of the rule), which `TestTheViolationPredicateItself`
-    measures in both directions.
+    they have no negation to be satisfied by. They assert a STRUCTURAL fact (this unit
+    names a tool and a verb that has no such tool) and make no polarity judgement at
+    all. Their risk is the opposite one (a false alarm on a correct statement of the
+    rule), which `TestTheViolationPredicateItself` measures in three directions:
+    caught, left alone, and the one false alarm accepted on the record.
 """
 from __future__ import annotations
 
@@ -126,11 +142,9 @@ _ABBREVIATIONS = ("e.g.", "i.e.", "etc.", "vs.", "cf.", "approx.")
 
 
 def _sentences(text: str) -> list[str]:
-    """Sentence-width. Use this ONLY where sentence width is the point --
-    polarity (a denial governs its own sentence, not the next one). For asking
-    whether an instruction PAIRS two things, use `_units`: pairing crosses
-    sentence boundaries and bullet-list items constantly, and a one-period
-    window cannot see it."""
+    """Sentence-width, abbreviation-aware. Callers that want the narrower
+    "sentence OR line" unit (`_cli_only_verb_violations`) split on newlines
+    first and run this over each line."""
     protected = text
     for idx, abbrev in enumerate(_ABBREVIATIONS):
         protected = protected.replace(abbrev, f"\x00{idx}\x00")
@@ -143,20 +157,6 @@ def _sentences(text: str) -> list[str]:
     return out
 
 
-def _units(text: str) -> list[str]:
-    """The width a reader actually takes together: a paragraph, a heading and
-    its body, a bullet list WITH its lead-in.
-
-    A sentence is the wrong unit for "does this instruction send an agent to a
-    door tool for a CLI-only verb". Measured against the corpus, a one-period
-    window missed 5 of 7 violating instructions -- the door tool in a list's
-    lead-in with the verbs in the bullets, the tool in one sentence and the verb
-    in the next, and a split on `e.g.` -- because the pairing is what a reader
-    carries across the full stop, not something that has to fit inside one.
-    """
-    return _paragraphs(text)
-
-
 #: How a CLI-only verb is written when it is being NAMED AS A VERB: in
 #: backticks or quotes. Bare-word matching is what made this whole check
 #: unusable -- "shrink or skip the frame", "visit all, append, never block"
@@ -167,46 +167,65 @@ def _verb_name_re(verb: str) -> re.Pattern:
     return re.compile(rf"[`'\"]{re.escape(verb)}[`'\"]")
 
 
-#: Phrases that say, of the verb standing next to them, that it has no door
-#: tool. A unit carrying one of these near the verb is DOCUMENTING the rule,
-#: not violating it. Without this, the clearest correct statement of the rule --
-#: "`spine_advance` closes a gate, but `skip` has no door tool and stays CLI" --
-#: is RED, and a check that fails on the best statement of what it enforces gets
-#: deleted by the next person to read it.
-NO_DOOR_TOOL_FOR_IT = re.compile(
-    r"no door tool|has no door|not covered by (?:a|any) (?:door )?tool|CLI[- ]only"
-    r"|stays? CLI|stay CLI|remains? CLI|CLI fallback|via the CLI|through the CLI",
-    re.I,
-)
-
-#: How far from the verb that exemption has to sit to be about THIS verb.
-#: Wide enough for "`skip`, `reopen`, `append`, `amend`, `flag-candidate`" to
-#: reach back to the "have no door tool" that introduces them.
-EXEMPTION_WINDOW = 120
-
-
 def _cli_only_verb_violations(where: str, text: str) -> list[str]:
     """Every place `text` routes a CLI-only verb through a door tool.
 
-    A violation is: one unit, a door tool named in it, a CLI-only verb named as
-    a verb in it, and nothing near that verb saying it has no door tool.
+    A violation is a STRUCTURAL FACT about one unit: it names a door tool, and
+    it names a verb for which no such tool exists. **No polarity judgement is
+    made at all** -- there is nothing here that reads intent, so there is
+    nothing here to out-write.
+
+    **Unit = sentence OR line, whichever is narrower.** Both halves are load
+    bearing:
+
+      * SENTENCE, because a paragraph-wide unit pairs a door tool with a verb
+        three sentences away that no reader would connect. Measured at
+        paragraph width: 3 false alarms on a coverage table, 5 on the fallback
+        prose, and one each on "`skip` is not covered, so it stays CLI" and
+        "There is no tool for `append`" -- 5 of 5 false-alarm classes fired.
+        At sentence-or-line width, 1 of 5 does.
+      * LINE, because a markdown TABLE has no sentence punctuation. Sentence
+        splitting alone merges every row into one unit and pairs a header's
+        tool names with a verb three rows down. A table row is structurally its
+        own unit, and a newline is what says so.
+
+    This replaces a paragraph-wide unit plus an exemption regex
+    (`NO_DOOR_TOOL_FOR_IT`) and a +/-120 character window around the verb. The
+    exemption is DELETED because the narrowed unit makes it unnecessary, **not
+    because it was inert**: its phrases match 21 times across 17 places in the
+    walked corpus, and it is what kept this file's own INNOCENT fixtures green.
+    As an exemption inside this loop it fires 0 times today, because no
+    paragraph in the corpus currently pairs a door tool with a backticked
+    CLI-only verb at all. Both numbers are the record; an earlier audit reported
+    only the second and concluded the regex was dead code.
+
+    KNOWN, ACCEPTED COST -- one false-alarm class survives: prose that FORBIDS
+    the violation inside a single sentence ("`spine_advance` closes a gate, but
+    `skip` has no door tool and stays CLI") is flagged. That is accepted because
+    it is VISIBLE and REWORD-ABLE: the author sees a red test and splits the
+    sentence in two, which the corpus's own doctrine paragraph already does. It
+    is a documentation style rule an author can follow deterministically, not a
+    silent hole. Pinned by
+    `TestTheViolationPredicateItself::test_the_one_accepted_false_alarm_still_fires`.
+
+    STATED RESIDUAL -- narrowing gives up cross-sentence pairing. A door tool in
+    one sentence and a CLI-only verb in the next is no longer caught. Pinned, so
+    that a future widening has to be a deliberate edit to
+    `NOT_CAUGHT_AT_THIS_WIDTH` and a re-measurement of the false alarms above.
     """
     found = []
-    for unit in _units(text):
-        door = DOOR_TOOL_RE.search(unit)
-        if not door:
-            continue
-        for verb in CLI_ONLY_VERBS:
-            for match in _verb_name_re(verb).finditer(unit):
-                lo = max(0, match.start() - EXEMPTION_WINDOW)
-                hi = min(len(unit), match.end() + EXEMPTION_WINDOW)
-                if NO_DOOR_TOOL_FOR_IT.search(unit[lo:hi]):
-                    continue
-                found.append(
-                    f"  {where}: verb {verb!r} + door tool {door.group(0)!r}\n"
-                    f"    {unit.strip()[:300]}"
-                )
-                break
+    for line in text.split("\n"):
+        for unit in _sentences(line):
+            door = DOOR_TOOL_RE.search(unit)
+            if not door:
+                continue
+            for verb in CLI_ONLY_VERBS:
+                if _verb_name_re(verb).search(unit):
+                    found.append(
+                        f"  {where}: verb {verb!r} + door tool {door.group(0)!r}\n"
+                        f"    {unit.strip()[:300]}"
+                    )
+                    break
     return found
 
 
@@ -227,9 +246,15 @@ def _cli_only_verb_violations(where: str, text: str) -> list[str]:
 # until somebody remembers. So the corpus is WALKED, and the only exclusion is
 # a rule the walk itself applies:
 #
-#   * suffix not in {.md, .json} -- there is exactly one such file today
-#     (`skills/workbench/scripts/checklist_engine.py`), and it is the engine
-#     itself, not an instruction to an agent. Tests read it as code elsewhere.
+#   * suffix not in {.md, .json} -- MEASURED, not assumed: there is exactly one
+#     such file today, `skills/replan/scripts/verify_replan.py`, and it is a
+#     verifier a human/agent RUNS, not prose an agent reads and acts on.
+#     This rationale previously named `skills/workbench/scripts/checklist_engine.py`
+#     as that one file. **No such file exists** -- the engine lives at
+#     `scripts/checklist_engine.py`, outside `skills/` entirely, so it was never
+#     in the walk's scope to exclude. The COUNT was right by luck; the reason
+#     given for it had never been run. Same shape as the `directives` claim
+#     below: a documented coverage claim about something nobody measured.
 #
 # There is no per-file exclusion, and adding one would be the defect returning.
 # --------------------------------------------------------------------------- #
@@ -296,27 +321,28 @@ def _all_instruction_texts() -> list[tuple[str, str]]:
 
 
 class TestTheViolationPredicateItself:
-    """A check is only worth what it can detect and what it leaves alone. Both
-    measured here, in the assertion path, so a future edit to `_units`,
-    `_verb_name_re` or `NO_DOOR_TOOL_FOR_IT` cannot quietly blind it.
+    """A check is only worth what it can detect, what it leaves alone, and what
+    it openly gives up. All three are measured here, in the assertion path, so a
+    future edit to the unit width or `_verb_name_re` cannot quietly move any of
+    them.
 
-    Against the one-period splitter this replaced: 5 of these 7 violating
-    instructions passed, and 2 of the 3 innocent ones failed -- including the
-    clearest correct statement of the rule, which is the sort of false alarm
-    that gets a check deleted rather than fixed.
+    The unit was PARAGRAPH-wide and carried an exemption regex. Both are gone.
+    Measured, paragraph-vs-sentence-or-line:
+
+        real defect (interrogator:26 pre-repair)   caught -> CAUGHT
+        planted violation (the walk's own target)  caught -> CAUGHT
+        coverage table                              3 FA  -> clean
+        fallback prose (7 tools, then the 5)        5 FA  -> clean
+        "`skip` is not covered, so it stays CLI"    1 FA  -> clean
+        "There is no tool for `append`"             1 FA  -> clean
+        prose FORBIDDING the violation              1 FA  -> 1 FA  (accepted)
+        live corpus (100 files)                     0     -> 0
     """
 
     VIOLATING = {
         "one sentence":
             "Drive your survey through the door: call `spine_survey_result` to `append` "
             "new checks and to `skip` items an earlier answer settled.",
-        "adjacent sentences":
-            "Drive the survey through the door with `spine_survey_result`. Use `append` "
-            "to add a check and `skip` to drop one.",
-        "bullet list, tool in the lead-in":
-            "Drive the survey through the door (`spine_survey_result`):\n"
-            "- `append` a new check when the context warrants one.\n"
-            "- `skip` an item an earlier answer settled.",
         "split on e.g.":
             "Route every survey move through `spine_survey_result`, e.g. `append` for a "
             "new check.",
@@ -326,11 +352,11 @@ class TestTheViolationPredicateItself:
             "Call `spine_survey_result` with action='append' to add a check.",
         "fully-qualified tool name":
             "Call `mcp__spine__spine_survey_result` to `skip` an item.",
+        "table row":
+            "| verb | route |\n| --- | --- |\n| `append` | `spine_survey_result` |",
     }
 
     INNOCENT = {
-        "the clearest statement of the rule":
-            "`spine_advance` closes a gate, but `skip` has no door tool and stays CLI.",
         "the rule across two sentences":
             "Call `spine_advance` to close a gate. `skip` has no door tool, so it stays "
             "CLI-only.",
@@ -338,6 +364,35 @@ class TestTheViolationPredicateItself:
             "**5 verbs have no door tool at all, and stay CLI-only regardless of who is "
             "driving:** `skip`, `reopen`, `append`, `amend`, `flag-candidate`. Use "
             "`spine_advance` for the gates that do have one.",
+        "a coverage table":
+            "| tool | verbs |\n| --- | --- |\n| `spine_advance` | advance |\n"
+            "| (none) | `skip`, `reopen`, `append`, `amend`, `flag-candidate` |",
+    }
+
+    #: THE ACCEPTED COST, written out rather than argued. Correct prose that
+    #: forbids the violation inside ONE sentence is flagged. The remedy is
+    #: deterministic and takes one edit -- split the sentence, exactly as
+    #: `INNOCENT["the rule across two sentences"]` does -- so this is a
+    #: documentation style rule, not a silent hole. It is pinned as FIRING so
+    #: that anyone who finds it annoying has to change this test deliberately.
+    ACCEPTED_FALSE_ALARM = {
+        "the rule stated in a single sentence":
+            "`spine_advance` closes a gate, but `skip` has no door tool and stays CLI.",
+    }
+
+    #: THE STATED RESIDUAL. Narrowing the unit from paragraph to sentence-or-line
+    #: buys 4 of 5 false-alarm classes and costs cross-sentence pairing: these
+    #: two ARE violations and are no longer detected. Pinned as NOT caught, so a
+    #: future widening is a deliberate edit here plus a re-measurement of the
+    #: false alarms in this class's docstring -- never an accident.
+    NOT_CAUGHT_AT_THIS_WIDTH = {
+        "adjacent sentences":
+            "Drive the survey through the door with `spine_survey_result`. Use `append` "
+            "to add a check and `skip` to drop one.",
+        "bullet list, tool in the lead-in":
+            "Drive the survey through the door (`spine_survey_result`):\n"
+            "- `append` a new check when the context warrants one.\n"
+            "- `skip` an item an earlier answer settled.",
     }
 
     @pytest.mark.parametrize("label", sorted(VIOLATING))
@@ -354,6 +409,31 @@ class TestTheViolationPredicateItself:
             f"the predicate flagged {label!r}, which is a CORRECT statement of the rule "
             f"it enforces. A check that fails on the best statement of its own rule gets "
             f"deleted by the next person to read it.\n" + "\n".join(found)
+        )
+
+    @pytest.mark.parametrize("label", sorted(ACCEPTED_FALSE_ALARM))
+    def test_the_one_accepted_false_alarm_still_fires(self, label):
+        """Not a defect being hidden -- a cost being recorded where it can be
+        read. If this ever stops firing the predicate has changed shape, and the
+        false-alarm table in this class's docstring is stale."""
+        assert _cli_only_verb_violations("<case>", self.ACCEPTED_FALSE_ALARM[label]), (
+            f"{label!r} is no longer flagged. That is an improvement, not a failure -- but "
+            f"it means the predicate changed, so re-measure the false-alarm table above "
+            f"and move this case into INNOCENT in the same edit."
+        )
+
+    @pytest.mark.parametrize("label", sorted(NOT_CAUGHT_AT_THIS_WIDTH))
+    def test_the_stated_residual_is_still_the_residual(self, label):
+        """Cross-sentence pairing is given up on purpose. Asserting the gap
+        keeps it visible: a reader of this file learns what the check does NOT
+        do from the check itself, not from a paragraph somebody has to remember
+        to update."""
+        found = _cli_only_verb_violations("<case>", self.NOT_CAUGHT_AT_THIS_WIDTH[label])
+        assert not found, (
+            f"{label!r} is now caught, which means the unit was widened. That is allowed, "
+            f"but the false alarms it buys back are the reason it was narrowed -- "
+            f"re-measure the table in this class's docstring against the live corpus and "
+            f"update it in the same edit.\n" + "\n".join(found)
         )
 
     def test_the_sentence_splitter_does_not_cut_on_an_abbreviation(self):
@@ -400,6 +480,28 @@ class TestTheCorpusIsWalkedNotListed:
             f"if the walk has been narrowed, say by what rule and put the rule IN the "
             f"walk, never by dropping names from a list."
         )
+
+    def test_the_suffix_exclusion_names_a_file_that_exists(self):
+        """The walk's ONE exclusion rule, measured rather than described.
+
+        Its rationale used to name `skills/workbench/scripts/checklist_engine.py`
+        as the single non-`.md`/`.json` file under `skills/`. That path does not
+        exist and never did -- the engine is at `scripts/checklist_engine.py`,
+        outside `skills/`. The exclusion was correct; the reason given for it was
+        fiction. So the reason is now run.
+
+        Not an exact count of excluded files -- that would be a literal by
+        another name, red on any legitimate addition. Two facts only: the file
+        the comment names is real, and the suffix rule is what keeps it out.
+        """
+        excluded = ROOT / "skills" / "replan" / "scripts" / "verify_replan.py"
+        assert excluded.is_file(), (
+            f"{excluded} is named in the walk's exclusion rationale but does not exist. "
+            f"An unrunnable reason is how the last one stayed wrong -- name a real file "
+            f"or drop the example."
+        )
+        assert excluded.suffix not in INSTRUCTION_SUFFIXES
+        assert excluded.relative_to(ROOT).as_posix() not in INSTRUCTION_FILES
 
     @pytest.mark.parametrize("path", [
         # The eight that a planted violation walked straight through when the
@@ -657,51 +759,36 @@ class TestTier3ChecklistEngineReference:
 
     def test_door_section_itself_keeps_the_cli(self):
         """The section that makes the door the default must, in the same breath,
-        keep the CLI.
+        keep the CLI -- and it must do so in the exact sentence this suite pins.
 
-        This assertion used to read `re.search("remove[sd]?|discourag\\w*", section)
+        This assertion once read `re.search("remove[sd]?|discourag\\w*", section)
         and re.search("\\bCLI\\b", section)` -- a retirement word somewhere, and
         the word CLI somewhere, joined by `and`. **A sentence that retires the
-        CLI supplies both words itself.** Measured:
+        CLI supplies both words itself.** Replacing the real doctrine line with
+        "The CLI is removed. Every verb now goes through the door; nothing here
+        discourages that." left the whole file at 91 passed.
 
-            'The CLI door stays; nothing removes it.'                 passed  (true form)
-            'The CLI is removed. Everything goes through the door.'   passed  (NEGATION)
-            'This section discourages the CLI; use the door.'         passed  (NEGATION)
-            the sentence simply DELETED                               caught
+        Its replacement was a pair of polarity predicates, and they were worse:
+        measured against the shipped functions, `_retires_the_cli` was wrong 9
+        times out of 10 and `_keeps_the_cli` 6 out of 7, because a denial
+        anywhere earlier in the sentence cancelled the marker. Both are deleted.
 
-        Replacing the real doctrine line with "The CLI is removed. Every verb
-        now goes through the door; nothing here discourages that." left the
-        whole file at 91 passed -- the section stated the opposite of the epic's
-        hard constraint and the assertion pinning it was GREENER, because the
-        retiring sentence supplied both required words.
-
-        So the proposition is now pinned in both directions, per sentence:
-          (A) no sentence in the section retires the CLI, and
-          (B) at least one sentence in it keeps the CLI.
-        (A) alone would pass on deletion; (B) alone would pass on a section that
-        both keeps and retires it. Neither can be satisfied by the other's
-        negation.
+        What is asserted now: the CLI is named in the section, and the doctrine
+        sentence is present BYTE FOR BYTE
+        (`TestCLIStaysAvailableNotDeprecated::test_the_canonical_cli_sentence_is_present_verbatim`,
+        which is where the reasoning is written down). An equality cannot be
+        satisfied by a negation, cannot be out-spelled, and goes red on deletion
+        -- which is the failure mode an adoption pass actually produces.
         """
         section = _tier3_door_section()
         assert CLI_SCRIPT_MARKER in section, (
             f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section makes the door the default "
             f"without naming the {CLI_SCRIPT_MARKER} CLI at all"
         )
-
-        retirements = [s.strip()[:200] for s in _sentences(section) if _retires_the_cli(s)]
-        assert not retirements, (
-            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section now RETIRES the CLI. 'The CLI "
-            f"door stays; F is additive' is the epic's hard constraint, and this section is "
-            f"where an agent reads it.\n  " + "\n  ".join(retirements)
-        )
-
-        keeps = [s.strip()[:200] for s in _sentences(section) if _keeps_the_cli(s)]
-        assert keeps, (
-            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer STATES that the CLI "
-            f"stays. It must carry a sentence that names the CLI and either calls it "
-            f"available or denies its retirement outright ('Nothing here removes or "
-            f"discourages the CLI'). Mentioning the CLI is not enough -- an instruction can "
-            f"name it precisely in order to retire it."
+        assert CANONICAL_CLI_SENTENCE in section, (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer carries "
+            f"{CANONICAL_CLI_SENTENCE!r} verbatim. 'The CLI door stays; F is additive' is "
+            f"the epic's hard constraint, and this section is where an agent reads it."
         )
 
     def test_states_identity_trade_rule(self):
@@ -903,90 +990,19 @@ class TestCLIOnlyVerbsAcrossEveryInstructionFile:
 # The hard constraint itself: "The CLI door stays; F is additive."
 # --------------------------------------------------------------------------- #
 
-#: Words that, said ABOUT the CLI, retire it.
-#:
-#: This list used to be kept short by EXCLUDING every word that also occurs in
-#: the affirmative sentence -- `removed`, `discourages`, `no longer`,
-#: `superseded` -- on the reasoning that a marker with a legitimate use is a
-#: false alarm. That reasoning is backwards, and it is what let the negation in:
-#: the affirmative and the retirement SHARE vocabulary ("Nothing here removes or
-#: discourages the CLI" vs "The CLI is removed"), so excluding the shared words
-#: excludes the retirement too. Measured, per sentence, over today's corpus:
-#: `superseded` 0 collisions, `no longer` 0, `discourages` 1, `removed` 1 -- and
-#: both collisions are the SAME sentence, the affirmative one.
-#:
-#: So the words are all in, and what keeps the affirmative sentence green is
-#: POLARITY (`_retires_the_cli`), not omission. Measured after the change: 0
-#: false alarms across all 100 walked files, 3 sentences correctly read as
-#: denying a retirement.
-CLI_RETIREMENT_MARKERS = re.compile(
-    r"\bdeprecat\w*|\blegacy\b|\bobsolete\b|\bphased out\b|\bno longer\b"
-    r"|\bstop using\b|\b(?:do not|don't|never) use the CLI\b"
-    r"|\bremov\w*|\bdiscourag\w*|\bsupersed\w*|\bretir\w*|\breplac\w*",
-    re.I,
-)
-
-#: A denial standing in front of a retirement word cancels it: "Nothing here
-#: REMOVES the CLI" is the opposite of "the CLI is REMOVED", and the only thing
-#: separating them in the text is this.
-#:
-#: Two sets, deliberately, because the two directions want opposite errors:
-#:
-#:   * ANY_DENIAL is used to decide "is this a violation?" -- generous, so an
-#:     innocent sentence is not flagged. A false alarm here gets the assertion
-#:     deleted.
-#:   * EMPHATIC_DENIAL is used to decide "does this sentence KEEP the CLI?" --
-#:     narrow, so a sentence that merely happens to contain "not" somewhere
-#:     cannot stand in for the doctrine sentence. Without that narrowing,
-#:     "Sending an agent to a tool that does NOT exist is worse than the CLI
-#:     instruction it would REPLACE" would count as the affirmative, and
-#:     deleting the real one would go unnoticed.
+#: A denial standing in front of a word cancels it: "the door is NOT the
+#: default" contains "default". Used by `_asserts_the_default`, which is a
+#: positive check ("something here is called the default") and so wants a
+#: generous denial set -- a false alarm there would flag correct prose.
 ANY_DENIAL = re.compile(r"\b(?:nothing|never|not|n't|nor|neither|none|without)\b", re.I)
-EMPHATIC_DENIAL = re.compile(r"\b(?:nothing|never|neither|nor|none)\b", re.I)
-
-#: Naming the CLI: the script, the spine templates' `<engine>` placeholder, or
-#: the bare phrase.
-CLI_MENTION = re.compile(rf"{re.escape(CLI_SCRIPT_MARKER)}|{re.escape(CLI_PLACEHOLDER)}|\bthe CLI\b", re.I)
 
 #: What "the CLI is still there" reads like when it is genuinely still there.
 CLI_AVAILABILITY = re.compile(r"\bfallback\b|\balways available\b|\bstill available\b|\bremains available\b", re.I)
 
-
-def _retires_the_cli(sentence: str) -> re.Match | None:
-    """Does this sentence say the CLI is going away?
-
-    It names the CLI, it uses a retirement word, and NO denial stands in front
-    of that word to cancel it. That last clause is the whole point: word
-    presence cannot distinguish a proposition from its negation, because the
-    negation is written with the same words.
-    """
-    if not CLI_MENTION.search(sentence):
-        return None
-    for match in CLI_RETIREMENT_MARKERS.finditer(sentence):
-        if ANY_DENIAL.search(sentence[:match.start()]) is None:
-            return match
-    return None
-
-
-def _keeps_the_cli(sentence: str) -> bool:
-    """Does this sentence say the CLI STAYS?
-
-    Two forms count, and nothing else does:
-      * it names the CLI and calls it available ("the fallback", "always
-        available"); or
-      * it names the CLI and emphatically DENIES a retirement ("Nothing here
-        removes or discourages the CLI").
-
-    Naming the CLI is not enough. An instruction can name it precisely in order
-    to retire it -- that is exactly how "The CLI is removed. Everything goes
-    through the door." satisfied an assertion built to pin the opposite.
-    """
-    if not CLI_MENTION.search(sentence):
-        return False
-    if CLI_AVAILABILITY.search(sentence) and _retires_the_cli(sentence) is None:
-        return True
-    return any(EMPHATIC_DENIAL.search(sentence[:m.start()])
-               for m in CLI_RETIREMENT_MARKERS.finditer(sentence))
+#: The doctrine sentence itself, byte for byte, at the one place that is the
+#: written authority for it: the `## MCP door` section of `checklist-engine.md`.
+#: `TestCLIStaysAvailableNotDeprecated` pins its literal presence.
+CANONICAL_CLI_SENTENCE = "Nothing here removes or discourages the CLI."
 
 
 #: A prohibition standing in front of a name turns "here is the tool to call"
@@ -1030,50 +1046,77 @@ def _asserts_the_default(text: str) -> bool:
 class TestCLIStaysAvailableNotDeprecated:
     """The Tier2/Tier4 availability check was `CLI_SCRIPT_MARKER in text` -- it
     only asked whether the CLI was MENTIONED, so it could not tell "the CLI is
-    your fallback" from "the legacy CLI is DEPRECATED". Both mention it. The
-    second is a violation of the epic's hard constraint and passed anyway.
+    your fallback" from "the legacy CLI is DEPRECATED". Both mention it.
 
-    Two assertions, because mentioning and endorsing are different facts.
+    **What replaced it, and what it does not claim.** A pair of polarity
+    predicates (`_retires_the_cli` / `_keeps_the_cli`) used to sit here, reading
+    retirement words and cancelling them on a denial standing in front. They are
+    deleted. Measured against the shipped functions they were wrong 9 times out
+    of 10 on retirements and 6 out of 7 on affirmatives: a denial ANYWHERE
+    earlier in the sentence cancelled the marker, so "the door is additive and
+    removes nothing" read as a RETIREMENT, and a CLI-retiring sentence counted
+    as affirmative evidence that the CLI stays. They were also unexercised --
+    gutting `_retires_the_cli` to `return None` left the file at 282 passed, so
+    the predicate could be replaced by a constant with the suite fully green.
+
+    What is here instead is an equality on a byte string plus the
+    positive-presence checks that were already in this file.
+
+    **This catches an adoption pass that DROPS the CLI, not an author determined
+    to retire it while keeping the words. The second property is a stated
+    residual this suite does not enforce.**
+
+    The reason that is sufficient is a threat-model distinction this file never
+    stated. Every mutation that defeated the deleted predicates was an
+    ADVERSARIALLY CRAFTED SENTENCE. That is the right bar for the identity pin
+    in `tests/test_mcp_identity.py`, because `parse_args` supplies a mechanical
+    oracle -- ask the parser and there is no spelling left to invent. **For prose
+    there is no oracle, and the realistic failure is DRIFT**: an adoption pass
+    rewrites an instruction to name the door and drops or softens the CLI
+    sentence on the way past. **Drift removes things; it does not compose
+    sentences that satisfy a checker while meaning the opposite.**
+    Positive-presence catches removal. Negation-detection was the only part that
+    needed to model an adversary, and the only part that cannot.
     """
+
+    def test_the_canonical_cli_sentence_is_present_verbatim(self):
+        """The doctrine sentence, byte for byte, in the section that is its only
+        written authority.
+
+        FAILS IF: the sentence is deleted, reworded, or moved out of the
+        `## MCP door` section. Equality, not a regex over its vocabulary --
+        there is nothing left to out-spell, and nothing that a differently
+        worded sentence can satisfy by accident.
+        """
+        section = _tier3_door_section()
+        assert CANONICAL_CLI_SENTENCE in section, (
+            f"{TIER3_PATH}'s {TIER3_SECTION_HEADING} section no longer contains, verbatim, "
+            f"{CANONICAL_CLI_SENTENCE!r}. That sentence is the written authority for the "
+            f"epic's hard constraint ('The CLI door stays; F is additive') and this is the "
+            f"section an agent reads it in. If it was deliberately reworded, change this "
+            f"constant in the same edit -- the point of an equality is that a rewrite has "
+            f"to be noticed, not that the words are sacred.\n"
+            f"Section: {section.strip()[:400]}"
+        )
 
     @pytest.mark.parametrize("path", TIER2_SKILL_FILES + TIER4_TEMPLATE_FILES)
     def test_default_path_paragraph_states_the_cli_is_still_available(self, path):
         """FAILS IF: the paragraph that makes the door the default stops
         describing the CLI as available -- as the fallback, or as always/still
-        available. Naming the script is not enough: an instruction can name it
-        precisely in order to retire it.
+        available.
 
-        Polarity-checked, not word-checked: "the CLI is no longer the fallback"
-        contains `fallback` and would have passed the bare availability regex.
-        `_keeps_the_cli` requires the availability phrase to sit in a sentence
-        that is not itself retiring the CLI."""
+        Positive presence, and that is the whole claim: an adoption pass that
+        rewrites this paragraph around the door and drops the fallback clause
+        goes red here. An author who writes "the CLI is no longer the fallback"
+        does not, and that is the stated residual in this class's docstring, not
+        an oversight.
+        """
         para = _default_path_paragraph(path)
-        assert any(_keeps_the_cli(s) for s in _sentences(para)), (
+        assert CLI_AVAILABILITY.search(para), (
             f"{path}'s default-path paragraph names the door as the default and names "
             f"{CLI_SCRIPT_MARKER}, but no longer says the CLI is still available. "
             f"'The CLI door stays; F is additive' is the epic's hard constraint -- a "
             f"paragraph that mentions the CLI without keeping it is how that constraint "
             f"gets lost while every mention-based check stays green.\n"
             f"Paragraph: {para.strip()[:400]}"
-        )
-
-    @pytest.mark.parametrize("path", INSTRUCTION_FILES)
-    def test_no_instruction_declares_the_cli_retired(self, path):
-        """FAILS IF: any instruction sentence in the WALKED corpus names the CLI
-        and says it is going away -- deprecated, legacy, obsolete, phased out,
-        no longer, removed, discouraged, superseded, retired, replaced -- with
-        no denial in front of the word to cancel it."""
-        violations = []
-        for where, text in _instruction_texts(path):
-            for sentence in _sentences(text):
-                found = _retires_the_cli(sentence)
-                if found:
-                    violations.append(
-                        f"  {where}: {found.group(0)!r}\n    {sentence.strip()[:300]}"
-                    )
-        assert not violations, (
-            f"{path} describes the CLI as retired. The CLI door STAYS -- workstream F is "
-            f"additive, and the door is a fast path for the agent that owns the bound "
-            f"spine, never a replacement. A dispatched crew member driving its own plan "
-            f"has no door at all, and the CLI is its only route.\n" + "\n".join(violations)
         )

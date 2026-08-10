@@ -128,6 +128,17 @@ before and after).
   wave closed without independent review, on grounds since falsified. It was also **absent
   from this list entirely** until now, which is its own defect — a waiver that does not
   appear among the residuals is not a recorded residual.
+
+  **Disposition, ruled by the Admiral: the self-authored g4b review-result is SUPERSEDED.**
+  `execute.json` `g4b-review` carries `e-g4b-review-1` — verdict `APPROVE`, reviewer
+  *"Commander (crew waived, budget)"* — and `g4b-integrate` carries the matching
+  `e-g4b-integrate-3`. Both are **superseded, not removed and not re-litigated.** The gate
+  does **not** reopen: independent review of g4b's substance happened at the **Admiral
+  tier** rather than the crew tier, and that — not the falsified two-negatives argument in
+  `w-12` — is the review this gate actually received. The evidence records themselves stay
+  in engine-owned state untouched, for the same reason the withdrawn causal story below
+  does: correcting them in place would forge the record of what was believed when the gate
+  closed. This paragraph is where a reader of `e-g4b-review-1` should be sent.
 - **The withdrawn causal story survives in engine-owned state, and was deliberately not
   edited.** `execute.json` `w-11`/`w-12`/`w-13` and `spine.json` (the `g4b` satisfied_by,
   and the closing `why` entries) still say "two measured negatives", "two different reasons",

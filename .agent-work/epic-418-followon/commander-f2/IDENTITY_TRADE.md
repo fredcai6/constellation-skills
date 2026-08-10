@@ -43,6 +43,40 @@ argv actually resolves to and **refuses** unless it resolves to the bound spine 
 bound session (`scripts/mcp_spine_server.py::_identity_violation`). That is confinement by
 construction rather than by convention.
 
+**One declared tool property does carry a filesystem path, and it is confined rather than
+banned.** `spine_advance.from_child` names a child checklist. It does not redirect the door
+— the call still addresses the bound spine — but the child's `consolidation` is attached to
+that spine as a `review-result`, and `review-result` is the evidence type an **artifact
+postcondition** consumes. So an unconfined `from_child` is not merely a data read; it is
+**gate closure on fabricated evidence**: any JSON file carrying a `consolidation` key can
+satisfy an artifact postcondition instead of a genuine child checklist. Measured on the
+shipped door, no mutation required, because the property is declared:
+
+```
+spine_advance {task_id: g1, mechanical: true, from_child: <abs path outside the binding>}
+  isError: False   GUARD fired: False   advance: 'complete'
+  evidence: type='review-result' payload={"verdict":"APPROVE","summary":"SECRET-OUTSIDE-THE-BINDING"}
+```
+
+`_identity_violation` was silent because `ns.file` still resolved to the bound spine; both
+halves of the guard were blind. It now requires the resolved child to sit inside the bound
+spine's own directory tree, resolving a non-absolute path exactly as `advance()` does. That
+containment is what every real use in this repo already satisfies — measured before
+restricting it: the engine's own tests (child beside the spine in one tempdir), the worked
+example in `docs/CHECKLIST_SCHEMA.md`, and every live and archived run record
+(`.agent-work/<work-id>/g1-review/review.json` under `.agent-work/<work-id>/spine.json`);
+161 of the 166 consolidation-carrying survey files in this repo sit inside the directory of
+a gated checklist, and the other 5 have no gated parent in the tree at all. Pinned by
+`IdentityBindingPinTests::test_the_runtime_guard_refuses_a_from_child_outside_the_bound_spine`
+and its inside-the-binding companion.
+
+`from_child` predates this branch (workstream F, #424). The overclaim about it did not:
+until this round, §2 said the door "can only ever touch the spine its own process was
+launched for", and the pin's own `ADDRESSES_WITHIN_BOUND_SPINE` comment said `from_child`
+"addresses things INSIDE the spine … cannot redirect it". Both were false for a filesystem
+path. The claim is true now because the guard makes it true, not because the words were
+softened.
+
 **That last clause is a runtime guard, not a test, and it was added deliberately.** The
 sentence above is a claim about what this process *does*. A CI pin makes a future violation
 detectable; it does not make the sentence true. Both now exist: the pin
@@ -126,10 +160,18 @@ So the pin stopped reading argv. It hands argv to the engine's own `parse_args` 
 predicate the runtime guard applies, in the same call. There is no seventh spelling because
 there is no spelling.
 
-**None of the six corrections was mine.** Each defeat was one layer deeper than the last,
+A **seventh**, the round after that, did not need to mutate anything. It read the tool
+schemas and found `from_child` — a **declared** property carrying a path, exempted from the
+pin by a comment asserting it could not redirect anything. The parser answered honestly
+(`ns.file` was the bound spine) and the door still read a caller-named file and closed a
+gate on it. *Asking the parser is the right predicate for the question "which spine"; it is
+not a predicate for "which evidence".* That is the clause added above.
+
+**None of the seven corrections was mine.** Each defeat was one layer deeper than the last,
 and the escalation is the record: a pin over declarations, then over an enumeration, then
-over the calls made, then over the answers given, then over argv position, and finally over
-how an option may be spelled.
+over the calls made, then over the answers given, then over argv position, then over how an
+option may be spelled — and finally over an argument that was never in dispute because a
+comment said it was safe.
 
 ## 3. The rejected options — what each would and would not have covered
 

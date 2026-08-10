@@ -34,6 +34,16 @@ __pycache__/
 *.pyc
 .coverage
 junit*.xml
+# The MCP door's three default output files (scripts/mcp_spine_server.py:
+# SPINE_CALLLOG, SPINE_START_MARKER, SPINE_REJECTION_LOG). Each defaults to a
+# path BESIDE the bound spine, so any demo or acceptance run leaves the tree
+# dirty wherever that spine happens to live. They are per-run instrumentation,
+# not run history -- the durable record is the run's own evidence directory.
+# Named one per line, not `mcp_*`: that glob would also match
+# `scripts/mcp_spine_server.py`, which is source.
+mcp_calls.jsonl
+mcp_server_started
+mcp_rejections.jsonl
 # Defensive: eval run-dirs are fabricated under the system temp dir (never the
 # repo tree); this only fires if a run is ever redirected into evals/ (#106).
 evals/**/_runs/

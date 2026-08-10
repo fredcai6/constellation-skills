@@ -25,6 +25,15 @@ identity mid-conversation):
                    is what sets it on a real dispatch; the server just uses
                    whatever string it is handed)
 
+Exactly ONE declared tool property carries a filesystem path:
+`spine_advance.from_child`. It does not redirect the door -- the call still
+addresses the bound spine -- but the child's `consolidation` is attached to
+that spine as a `review-result`, which is the evidence type an artifact
+postcondition consumes, so an unconfined path would let any JSON file carrying
+a `consolidation` key close a gate. `_identity_violation` therefore CONFINES it
+to the bound spine's own directory tree, the containment every real use in this
+repo already satisfies. See IDENTITY_TRADE.md §2.
+
 --------------------------------------------------------------------------- #
 Tool surface: 7 tools grouping the engine's 18 verbs
 --------------------------------------------------------------------------- #
@@ -185,9 +194,32 @@ def _identity_violation(argv: list[str]) -> str | None:
       message; refusing here would replace the engine's error text with ours.
       The parse's own stderr is swallowed into a scratch buffer for the same
       reason -- otherwise the usage block would be emitted twice.
-    * Scoped to `ns.file` and `ns.session_id`, never "no repeated flags".
-      `--field` is `action="append"` BY DESIGN and `spine_evidence attach` with
-      two fields is legitimate; a repeated-flag rule would break it.
+    * Scoped to `ns.file`, `ns.session_id` and `ns.from_child`, never "no
+      repeated flags". `--field` is `action="append"` BY DESIGN and
+      `spine_evidence attach` with two fields is legitimate; a repeated-flag
+      rule would break it.
+
+    **Why `--from-child` is checked at all, and why it is checked differently.**
+    A SEVENTH review found that `spine_advance.from_child` is a DECLARED tool
+    property carrying a filesystem path. `advance()` does `Path(from_child)`,
+    honours an absolute path, reads that file and attaches its `consolidation`
+    into the BOUND spine as a `review-result` -- with `ns.file` still resolving
+    to the bound spine, so both halves of the check above stayed blind. That is
+    not merely a data read: `review-result` is the evidence type an `artifact`
+    postcondition consumes, so any JSON file anywhere carrying a `consolidation`
+    key could close a gate. Measured live before this clause existed: a
+    `from_child` outside the binding advanced g1 to `complete` on a fabricated
+    APPROVE.
+
+    So this one is a CONTAINMENT question, not an equality one -- `--from-child`
+    legitimately names a DIFFERENT file (the child checklist), it just may not
+    name one outside the bound spine's own directory tree. Measured before
+    restricting it: every real use in this repo -- the engine's own tests, the
+    schema doc's worked example, and every live/archived run record -- resolves
+    inside the parent checklist's own directory (children are written under the
+    work area the spine sits in). Resolution mirrors `advance()` exactly: a
+    non-absolute path resolves against the parent checklist's directory, which
+    IS `SPINE.parent` here because `ns.file` was already proven equal to it.
     """
     scratch = io.StringIO()
     try:
@@ -214,6 +246,27 @@ def _identity_violation(argv: list[str]) -> str | None:
             f"session {SESSION!r}. The lease this door can take is the one its own process was "
             f"launched for; a claim under any other identity would record a lease nobody holds."
         )
+
+    resolved_child = getattr(ns, "from_child", None)
+    if resolved_child:
+        bound_dir = SPINE.parent
+        child = Path(resolved_child)
+        if not child.is_absolute():
+            child = bound_dir / resolved_child  # the rule advance() itself applies
+        try:
+            escapes = not child.resolve().is_relative_to(bound_dir.resolve())
+        except (OSError, ValueError, RuntimeError):
+            escapes = True  # a path that cannot be resolved is not proof it is inside
+        if escapes:
+            return (
+                f"REFUSED: --from-child names a child checklist INSIDE the bound spine's own "
+                f"directory ({str(bound_dir)!r}); this call resolves it to {str(child)!r}, "
+                f"which is outside. The child's `consolidation` is attached to the bound spine "
+                f"as a review-result, and a review-result is what closes an artifact "
+                f"postcondition -- so a path outside the binding would let any JSON file carrying "
+                f"a `consolidation` key close a gate. Put the child under the spine's work area, "
+                f"or use the CLI, which is per-call by construction."
+            )
     return None
 
 
