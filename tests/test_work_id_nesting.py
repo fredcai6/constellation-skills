@@ -225,6 +225,34 @@ class RoleArtifactWorkAreaTests(unittest.TestCase):
 
 
 # --------------------------------------------------------------------------- #
+# 2b. the work-id pair -- run_crew and verify_iterative_role_artifacts must
+# agree on what one SEGMENT of a work-id may look like
+# --------------------------------------------------------------------------- #
+VIRA = load_module("verify_iterative_role_artifacts")
+
+
+class WorkIdGrammarPinTests(unittest.TestCase):
+    """`run_crew.WORK_ID_SEGMENT_RE` and `verify_iterative_role_artifacts.SAFE_ID`
+    express the same per-segment work-id grammar and both apply it with
+    `.fullmatch()` (`validate_work_id` above; the verifier's own segment
+    check). Nothing pinned the two together
+    (`grep -rn "WORK_ID_SEGMENT_RE\\|SAFE_ID" tests/` returned nothing before
+    this test) -- this is `test_the_two_run_grammars_are_the_same_grammar`'s
+    twin for the work-id pair."""
+
+    def test_the_two_work_id_grammars_are_the_same_grammar(self):
+        # SAFE_ID spells its pattern with explicit `^...$` anchors;
+        # WORK_ID_SEGMENT_RE relies on `.fullmatch()` for the same anchoring
+        # (both call sites use fullmatch, never search/match) -- strip the
+        # anchors before comparing so this pins the CHARACTER CLASS the two
+        # agree on, not an anchor-spelling difference.
+        self.assertEqual(
+            RC.WORK_ID_SEGMENT_RE.pattern,
+            VIRA.SAFE_ID.pattern.removeprefix("^").removesuffix("$"),
+        )
+
+
+# --------------------------------------------------------------------------- #
 # 3. the episode pair -- writer and gate must be mutually SATISFIABLE
 # --------------------------------------------------------------------------- #
 WRITER = ROOT / "scripts" / "apply_episode_delta.py"

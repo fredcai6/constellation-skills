@@ -310,7 +310,8 @@
           "id": "p1",
           "statement": "m4-hook-actually-executes complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m4-hook-actually-executes complete: 8 passed / 178 passed full file"
         }
       ],
       "postconditions": [
@@ -318,7 +319,8 @@
           "id": "c1",
           "statement": "TDD red: SAFE_ID (or WORK_ID_SEGMENT_RE) hand-drifted, new pin test observed to FAIL, then reverted -- manual attest, check MUST be null",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c2",
@@ -327,7 +329,8 @@
             "kind": "command",
             "command": "python -m pytest -q tests/test_work_id_nesting.py"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m5-work-id-grammar-pin-2"
         }
       ],
       "constraints": [
@@ -335,11 +338,33 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m5-work-id-grammar-pin-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m5-work-id-grammar-pin",
+            "why_ref": "w-5"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-work-id-grammar-pin-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_work_id_nesting.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m6-verify": {
@@ -379,12 +404,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 7,
+  "refusals": 8,
   "engine_session": {
     "session_id": "impl-wave1",
     "status": "active",
     "claimed_at": "2026-08-10T04:40:19.258636+00:00",
-    "last_heartbeat": "2026-08-10T04:49:07.697830+00:00",
+    "last_heartbeat": "2026-08-10T04:50:29.701826+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
@@ -425,6 +450,13 @@
       "why": "Rewrote test_every_wired_command_actually_executes to assert real stdout/side-effect, not just returncode. Built a real mid-flight project dir (.agent-work/run1/spine.json with an active lease and an in-progress gate m1, plus .spine-rail-binding.json binding session_id resume-sid to it), pointed at via CLAUDE_PROJECT_DIR. Stop against resume-sid must print SPINE MID-FLIGHT; SessionStart against resume-sid must print RESUMING; PostToolUse given a tool_input.command containing a checklist_engine.py claim --file <abs spine_path> must persist a new binding entry for session_id claim-sid (verified by reading .spine-rail-binding.json back). The governor (gauge_writer_hook.py) entry keeps its existing returncode-only check since GAUGE_WRITER_SPEC.args==() -- it takes no event argument, so the docstring's 'wrong event argument' failure mode does not apply to it. TDD red demonstrated with the reviewer's EXACT mutation: SPINE_RAIL_SPECS Stop args -> ('TOTALLY-WRONG-EVENT',), SessionStart args -> () -- ran this test alone, it FAILED (AssertionError: 'SPINE MID-FLIGHT' not found in '' -- command ran with the wrong event arg, spine_rail.py fail-opened silently, stdout empty); reverted the mutation (diffed clean against pre-mutation backup), AllFourHookWiringTests green again (8 passed), full test_install_constellation.py green (178 passed).",
       "mechanical": false,
       "ts": "2026-08-10T04:49:07.697808+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-work-id-grammar-pin",
+      "why": "Added WorkIdGrammarPinTests.test_the_two_work_id_grammars_are_the_same_grammar to tests/test_work_id_nesting.py, in the same style as test_the_two_run_grammars_are_the_same_grammar: compares run_crew.WORK_ID_SEGMENT_RE.pattern against verify_iterative_role_artifacts.SAFE_ID.pattern (loaded via the file's existing load_module helper as VIRA), stripping SAFE_ID's explicit ^...$ anchors first since WORK_ID_SEGMENT_RE relies on .fullmatch() for the same anchoring at both real call sites. No shared module created. Passes at HEAD (26 passed, 18 subtests). TDD red demonstrated: hand-drifted SAFE_ID's character class (dropped '-': '[A-Za-z0-9][A-Za-z0-9._]*') -- the new pin test FAILED (AssertionError, patterns differ by the dropped '-'); reverted (diffed clean against pre-drift backup), full tests/test_work_id_nesting.py green again (26 passed, 18 subtests).",
+      "mechanical": false,
+      "ts": "2026-08-10T04:50:29.701803+00:00"
     }
   ],
   "trip_ledger": [
@@ -537,6 +569,28 @@
       "model": "claude-sonnet-5",
       "why_ref": "w-4",
       "ts": "2026-08-10T04:47:37.470493+00:00"
+    },
+    {
+      "id": "tl-11",
+      "gate": "m5-work-id-grammar-pin",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.2137,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-10T04:49:24.667371+00:00"
+    },
+    {
+      "id": "tl-12",
+      "gate": "m5-work-id-grammar-pin",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.2137,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-5",
+      "ts": "2026-08-10T04:49:32.531051+00:00"
     }
   ]
 }
