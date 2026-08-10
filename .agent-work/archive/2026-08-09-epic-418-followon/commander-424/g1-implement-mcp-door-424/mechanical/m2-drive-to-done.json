@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-drive-to-done",
+  "mechanical": {
+    "run": "g1-implement-mcp-door-424",
+    "project": "constellation-skills",
+    "role": "g1-implementer",
+    "refusals": 1,
+    "spine-step": "m2-drive-to-done",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-mcp-door-424-m2-drive-to-done@e0b684cfcbd4137c99ec77d455ee4ecbda227757",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement-mcp-door-424",
+    "generated_at": "2026-08-09T16:58:35Z"
+  }
+}

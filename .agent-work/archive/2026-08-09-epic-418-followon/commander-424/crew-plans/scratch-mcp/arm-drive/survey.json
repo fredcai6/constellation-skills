@@ -1,0 +1,67 @@
+{
+  "work_id": "scratch-mcp-survey-424",
+  "type": "survey",
+  "config": {
+    "rework_cap": 99
+  },
+  "items": [
+    "r1",
+    "r2"
+  ],
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [
+      "r2: deliberately recorded fail to exercise the override path"
+    ],
+    "summary": "scratch survey exercised for the MCP door proof",
+    "override_reason": "r2's fail is a planted fixture datum, not a real defect"
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "tasks": {
+    "r1": {
+      "id": "r1",
+      "title": "check one",
+      "imperative": "Check one thing.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2": {
+      "id": "r2",
+      "title": "check two",
+      "imperative": "Check another thing.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "deliberately recorded fail to exercise the override path",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "scratch-drive-survey",
+    "status": "released",
+    "claimed_at": "2026-08-09T16:58:50.277256+00:00",
+    "last_heartbeat": "2026-08-09T16:58:50.281508+00:00",
+    "claimed_by": "scratch-driver",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T16:58:50.282802+00:00"
+  }
+}

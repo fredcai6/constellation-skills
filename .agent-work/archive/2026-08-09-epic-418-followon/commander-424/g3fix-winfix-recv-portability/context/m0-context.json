@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "files": [],
+  "repo_rev": {
+    "commit": "c72c708275fab886cb66518585c803b57690e5c5"
+  },
+  "run": {
+    "work_id": "g3fix-winfix-recv-portability",
+    "generated_at": "2026-08-10T01:05:55Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-implementer",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

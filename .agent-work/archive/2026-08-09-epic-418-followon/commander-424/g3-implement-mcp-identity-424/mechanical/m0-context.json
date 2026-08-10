@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m0-context",
+  "mechanical": {
+    "run": "g3-implement-mcp-identity-424",
+    "project": "constellation-skills",
+    "role": "g3-implementer",
+    "refusals": 0,
+    "spine-step": "m0-context",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-implement-mcp-identity-424-m0-context@7cb5c6a4273ed36c37b353f6ca447a999efe501b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-implement-mcp-identity-424",
+    "generated_at": "2026-08-09T21:01:21Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r11-dc4-door-not-bent",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r11-dc4-door-not-bent",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r11-dc4-door-not-bent@39968e1de00c96be27d727383d07b187cd365716",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T23:08:01Z"
+  }
+}

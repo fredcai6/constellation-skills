@@ -1,0 +1,44 @@
+{
+  "contract": 1,
+  "step": "m7-closeout",
+  "mechanical": {
+    "run": "g3fix2-utf8-mcp-door",
+    "project": "constellation-skills",
+    "role": "g3fix2-implementer",
+    "refusals": 1,
+    "spine-step": "m7-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix2-utf8-mcp-door-m7-closeout@fa05495d6f21870a8dd5402a6ab510a30de03118",
+    "artifact-ref": [
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-handoffs/g3-implementer-handoff-utf8.md",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/g3fix2-implementer-plan-utf8.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-plans/g3fix2-implementer-plan-utf8.json.journal",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-runs.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/context/m0-context.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/context/m1-red-conformance-test.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/context/m2-server-fix-green.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/context/m3-identity-harness-fix.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/context/m4-spine-server-harness-fix.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/context/m5-engine-capture-and-scope-note.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/context/m6-full-suite-baseline.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/mechanical/m0-context.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/mechanical/m1-red-conformance-test.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/mechanical/m2-server-fix-green.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/mechanical/m3-identity-harness-fix.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/mechanical/m4-spine-server-harness-fix.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/mechanical/m5-engine-capture-and-scope-note.json",
+      ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/g3fix2-utf8-mcp-door/mechanical/m6-full-suite-baseline.json",
+      "map/INDEX.md",
+      "scripts/mcp_spine_server.py",
+      "tests/test_mcp_identity.py",
+      "tests/test_mcp_spine_server.py"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix2-utf8-mcp-door",
+    "generated_at": "2026-08-10T02:11:57Z"
+  }
+}

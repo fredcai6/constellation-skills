@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-dc3-live-experiment",
+  "mechanical": {
+    "run": "g3-implement-mcp-identity-424",
+    "project": "constellation-skills",
+    "role": "g3-implementer",
+    "refusals": 1,
+    "spine-step": "m5-dc3-live-experiment",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-implement-mcp-identity-424-m5-dc3-live-experiment@6301f39c2f370895236537e9c9590e400c601167",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-implement-mcp-identity-424",
+    "generated_at": "2026-08-09T21:08:48Z"
+  }
+}

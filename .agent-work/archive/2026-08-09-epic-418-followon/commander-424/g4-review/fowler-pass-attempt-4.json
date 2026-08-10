@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "diff_ref": "MEASUREMENT.md prose edits this round: deletion of the leftover duplicate paragraph after secondary observation (c), and the tc1 order-control arithmetic rewrite (2-vs-6 per-order gap) propagated into the headline table and the DC5 PASS section",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "No code in this diff -- prose-only edit to a Markdown measurement write-up.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "Not code duplication, but the analogous prose defect (a duplicated paragraph after observation (c)) is the exact thing this round's Fix 1 removed. Confirmed by grep ('did not fumble the argument shape' now appears exactly once, line 226) and a whole-file repeated-non-blank-line scan (only markdown boilerplate -- table separators, code fences -- repeats). No duplicated code or duplicated prose remains.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The tc1 fix required touching three locations (order-control paragraph, headline table, DC5 section) for one logical change (the midpoint-not-estimate caveat). This is deliberate propagation of one conclusion to every place it is summarized, not scattered incidental change -- verified all three say the same thing without contradiction (r9). Not shotgun surgery: a single-writer document restating one caveat where a reader would look for it is the expected shape for this artifact type, not a design smell.", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No code in this diff.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "No code in this diff; the prose changes are narrowly scoped to the two named defects, no speculative additions.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "absent", "finding": "No code/comments in this diff. The prose itself is the deliverable (a measurement write-up), not a comment masking bad code.", "override": null}
+  ],
+  "rail_exception": null
+}

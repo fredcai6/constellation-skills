@@ -1,0 +1,167 @@
+{
+  "arm_dir": "/home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/rep1-mcp",
+  "invocation_attempts": 19,
+  "tool_calls_carrying_them": 19,
+  "shape_errors": 0,
+  "usage_reads": 0,
+  "far_side_recoveries": 0,
+  "state_refusals_excluded": 0,
+  "other_errors": 0,
+  "absorbable_fumbles": 0,
+  "reached_done": true,
+  "total_tool_calls": 24,
+  "detail": [
+    {
+      "tool": "mcp__spine__spine_lease",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_status",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_start",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_evidence",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_advance",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_status",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_start",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_advance",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_status",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_start",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_advance",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_status",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_start",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_advance",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_status",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_start",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_advance",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_status",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "mcp__spine__spine_lease",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    }
+  ]
+}

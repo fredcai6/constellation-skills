@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-third-run",
+  "mechanical": {
+    "run": "g3fix-winfix-recv-portability",
+    "project": "constellation-skills",
+    "role": "g3fix-implementer",
+    "refusals": 1,
+    "spine-step": "m3-third-run",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix-winfix-recv-portability-m3-third-run@e150bcd92c12d5f4173dffea26f501d0a4b7fb98",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix-winfix-recv-portability",
+    "generated_at": "2026-08-10T01:07:28Z"
+  }
+}

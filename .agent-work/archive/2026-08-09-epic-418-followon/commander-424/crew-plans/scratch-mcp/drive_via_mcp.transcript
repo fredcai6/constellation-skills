@@ -1,0 +1,109 @@
+--- spine_lease({'action': 'claim', 'claimed_by': 'scratch-driver'}) isError=False
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+claimed lease scratch-drive -> active
+
+--- spine_start({'task_id': 'g1'}) isError=False
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+g1 -> in-progress
+
+--- spine_advance({'task_id': 'g1', 'mechanical': True}) isError=True
+RAIL: This check failed; that verdict is scoped to this check, not the approach. Do the missing work and `attest`/`attach` the evidence, or escalate with `block`/`waive` and a reason. Report 'this check failed', never 'this step is impossible'. Quiet abandonment and fabricated evidence are the two forbidden exits.
+
+REFUSED: g1: postconditions unmet ['c1', 'c2'] Recovery: fix the underlying issue so postcondition c1 passes, then retry advance g1 | attest g1 --cond c2 --which postconditions --note "<verification>". Do not edit the JSON — use the engine.
+
+--- spine_status({}) isError=False
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+LEASE active: scratch-drive (by scratch-driver, heartbeat 2026-08-09T16:58:50.109541+00:00)
+ACTIVE g1 [in-progress] — Create /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/notes.txt with one line, then confirm you understand this scratch spine's four gates.
+postconditions:
+  c1 [unmet] command — notes.txt exists
+  c2 [unmet] null — gates understood
+0/2 met
+next: attest g1 --cond c2 --which postconditions
+
+--- spine_evidence({'action': 'attest', 'task_id': 'g1', 'condition_id': 'c2', 'which': 'postconditions', 'note': 'four gates understood: setup, decision, waivable check, closeout'}) isError=False
+RAIL: Work the engine never saw did not happen. Run the step's checks, then `attest` and `advance g1`.
+
+attested g1.c2
+
+--- spine_advance({'task_id': 'g1', 'why': 'workspace set up, notes.txt written, gates understood'}) isError=False
+RAIL: A working solution is the MIDDLE of this run — you are 3 steps from done. Next: Record the principal's decision on whether to proceed, as a user-decision artifact.. Run it.
+
+g1 -> complete
+
+--- spine_start({'task_id': 'g2'}) isError=False
+RAIL: A working solution is the MIDDLE of this run — you are 3 steps from done. Next: Record the principal's decision on whether to proceed, as a user-decision artifact.. Run it.
+
+g2 -> in-progress
+
+--- spine_evidence({'action': 'attach', 'task_id': 'g2', 'evidence_type': 'user-decision', 'fields': {'decision': 'proceed', 'by': 'human'}}) isError=False
+RAIL: A working solution is the MIDDLE of this run — you are 3 steps from done. Next: Record the principal's decision on whether to proceed, as a user-decision artifact.. Run it.
+
+attached e-g2-1 (user-decision) to g2
+
+--- spine_advance({'task_id': 'g2', 'why': 'principal decision attached: proceed'}) isError=False
+RAIL: A working solution is the MIDDLE of this run — you are 2 steps from done. Next: Normally requires /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/optional_report.txt to exist; the principal has decided this check is non-blocking for this run.. Run it.
+
+g2 -> complete
+
+--- spine_start({'task_id': 'g3'}) isError=False
+RAIL: A working solution is the MIDDLE of this run — you are 2 steps from done. Next: Normally requires /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/crew-plans/scratch-mcp/arm-drive/workspace/optional_report.txt to exist; the principal has decided this check is non-blocking for this run.. Run it.
+
+g3 -> in-progress
+
+--- spine_evidence({'action': 'waive', 'task_id': 'g3', 'condition_id': 'c1', 'which': 'postconditions', 'authority': 'human', 'reason': 'principal accepts this check as non-blocking for this scratch run'}) isError=False
+waived g3.c1 by human -> e-g3-1
+
+--- spine_advance({'task_id': 'g3', 'why': 'check waived by the principal; optional_report.txt intentionally absent'}) isError=False
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g3 -> complete (WAIVED postconditions ['c1'])
+
+--- spine_start({'task_id': 'g4'}) isError=False
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+g4 -> in-progress
+
+--- spine_halt({'action': 'block', 'task_id': 'g4', 'blocker': 'waiting on a fabricated dependency to prove spine_halt', 'authority': 'human'}) isError=False
+g4 -> blocked (bubbled to parent)
+
+--- spine_halt({'action': 'resume', 'task_id': 'g4', 'reason': 'fabricated dependency resolved'}) isError=False
+g4 resumed -> in-progress (blocker resolved: fabricated dependency resolved)
+
+--- spine_evidence({'action': 'attest', 'task_id': 'g4', 'condition_id': 'c2', 'which': 'postconditions', 'note': 'summary read back, honestly describes the run'}) isError=False
+RAIL: The finish is a sequence, not an announcement. Final `advance` first, then `release` — the journal, not your prose, is the proof.
+
+attested g4.c2
+
+--- spine_advance({'task_id': 'g4', 'why': 'closeout summary written and verified'}) isError=False
+RAIL: Release is your last journaled action. Run `release`; do not claim it.
+
+g4 -> complete
+
+--- spine_status({}) isError=False
+RAIL: Release is your last journaled action. Run `release`; do not claim it.
+
+LEASE active: scratch-drive (by scratch-driver, heartbeat 2026-08-09T16:58:50.230573+00:00)
+DONE: no open items. WAIVED: ['g3.c1']
+DIGEST: closeout summary written and verified
+
+--- spine_lease({'action': 'release'}) isError=False
+released lease scratch-drive
+
+--- spine_lease({'action': 'claim', 'claimed_by': 'scratch-driver'}) isError=False
+claimed lease scratch-drive-survey -> active
+
+--- spine_survey_result({'action': 'record', 'task_id': 'r1', 'result': 'pass'}) isError=False
+r1 recorded pass
+
+--- spine_survey_result({'action': 'record', 'task_id': 'r2', 'result': 'fail', 'finding': 'deliberately recorded fail to exercise the override path'}) isError=False
+r2 recorded fail: deliberately recorded fail to exercise the override path
+
+--- spine_survey_result({'action': 'consolidate', 'verdict': 'APPROVE', 'summary': 'scratch survey exercised for the MCP door proof', 'override_reason': "r2's fail is a planted fixture datum, not a real defect"}) isError=False
+consolidated: verdict=APPROVE findings=1
+
+--- spine_lease({'action': 'release'}) isError=False
+released lease scratch-drive-survey

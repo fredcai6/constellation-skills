@@ -1,0 +1,459 @@
+{
+  "work_id": "g3fix-winfix-recv-portability",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-implement-and-first-run",
+    "m2-second-run",
+    "m3-third-run",
+    "m4-timeout-demonstration",
+    "m5-dc-guarantees-unweakened",
+    "m6-full-suite-baseline",
+    "m7-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (inherited doctrine), then the g3-implementer-handoff-winfix.md in full, tests/test_mcp_identity.py end to end (DC2/DC3 test classes, ServerInstance.recv()/send()/close(), the DC3 positive control), and tests/test_mcp_spine_server.py's own McpRpcClient.rpc() for contrast (an UNBOUNDED readline(), NOT a house pattern to copy -- it is the exact footgun the handoff warns about, present there only because that file's own scenarios never construct a dead/never-started process). Verify the handoff names task, scope, exclusions, required evidence, test mode, stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + target file + sibling file read; DC2/DC3 guarantees and the sibling-file trap understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-implement-and-first-run": {
+      "id": "m1-implement-and-first-run",
+      "title": "Replace select.select on the stdout pipe with a portable daemon-reader-thread + queue.Queue bound; first identity-file run",
+      "imperative": "In tests/test_mcp_identity.py ONLY: remove `import select`; give ServerInstance a daemon reader thread (started in __init__) that pumps proc.stdout.readline() onto a queue.Queue, putting a sticky EOF sentinel on any read failure or on EOF so a dead/never-started/broken-pipe process returns None promptly on every subsequent recv() call, not just the first. Rewrite recv() to bound via queue.get(timeout=timeout) instead of select.select([self.proc.stdout], ...) -- portable because it never touches select() on a non-socket, on any platform. Preserve the exact call signature and None-on-any-failure contract (dead process, never-started process, broken pipe, no reply in time). No test-mode red state exists on this Linux host for a POSIX-only bug (select() already works on POSIX pipes), so this is a test-after/evidence-only slice: c1 (TDD red) is N/A, collapse to c2. Run tests/test_mcp_identity.py once and confirm 12 passed, 0 failed -- this is run 1 of the required 3.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "context (m0) complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "select.select removed from the file; recv() bounded via a portable thread+queue mechanism; identity-file run 1/3 is 12 passed, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-implement-and-first-run-1"
+        }
+      ],
+      "constraints": [
+        "scope is tests/test_mcp_identity.py only",
+        "do not remove the timeout / do not let recv() block unboundedly",
+        "do not touch scripts/checklist_engine.py, scripts/mcp_spine_server.py, .mcp.json, or any other test file",
+        "do not hand-edit checklist JSON or anything under episodes/"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-implement-and-first-run-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-second-run": {
+      "id": "m2-second-run",
+      "title": "Identity-file run 2/3 -- catch a reader-thread race the first run could miss",
+      "imperative": "Re-run tests/test_mcp_identity.py with no code changes. A threaded reader can pass once and race the next time; this is the second of three required consecutive runs.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run 1/3 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m1 (run 1/3) complete, 12 passed 0 failed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "identity-file run 2/3 is 12 passed, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-second-run-1"
+        }
+      ],
+      "constraints": [
+        "no code changes between runs unless a failure is found, in which case reopen m1"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-second-run-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-third-run": {
+      "id": "m3-third-run",
+      "title": "Identity-file run 3/3",
+      "imperative": "Re-run tests/test_mcp_identity.py once more with no code changes -- the third of three required consecutive runs.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "run 2/3 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m2 (run 2/3) complete, 12 passed 0 failed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "identity-file run 3/3 is 12 passed, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-third-run-1"
+        }
+      ],
+      "constraints": [
+        "no code changes between runs"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-third-run-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-timeout-demonstration": {
+      "id": "m4-timeout-demonstration",
+      "title": "Prove the bound still bounds: recv() returns None with elapsed time, not asserted",
+      "imperative": "Write a small throwaway scratch script (not part of tests/) that imports ServerInstance from tests/test_mcp_identity.py and: (a) constructs an instance pointed at a nonexistent server script (never-started case) and times recv(timeout=2) returning None; (b) constructs a real server instance, sends NO request, and times recv(timeout=2) returning None (non-replying case). Print elapsed seconds for both. Run it and capture real output showing None + elapsed time close to but not exceeding the 2s bound for each case -- this demonstrates the bound, it does not just assert it. Attest c1 with the captured output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "3/3 runs green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "3/3 identity-file runs green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "recv() demonstrated returning None with elapsed time for a never-started process and a non-replying process, both bounded near the configured timeout, not blocking indefinitely",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [
+        "scratch script only, not committed to tests/",
+        "must show elapsed time, not merely assert None"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-dc-guarantees-unweakened": {
+      "id": "m5-dc-guarantees-unweakened",
+      "title": "DC2/DC3 controls explicitly still functioning -- not weakened by the recv() rewrite",
+      "imperative": "Run -k DC2 and -k DC3 subsets explicitly and re-read the diff against the DC3 positive control (assert_door_is_up_and_serving, still in the assertion path), the DC2 collision-control test (test_collision_would_have_been_caught_if_the_two_instances_shared_one_file, still reproduces a real lease leak), and the DC3 ambient-leak counterfactual (test_ambient_leak_counterfactual_would_have_been_caught, still proves the no-leak assertion is not vacuous). Confirm none of the three lost assertion strength (no assertion deleted, no manipulation weakened, no control moved out of the assertion path) as a direct consequence of the recv() change. If any did, stop and say so rather than shipping it.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "timeout bound demonstrated",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "timeout bound demonstrated both directions"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "DC2 subset passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC2 -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-dc-guarantees-unweakened-1"
+        },
+        {
+          "id": "c2",
+          "statement": "DC3 subset passes",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC3 -v"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-dc-guarantees-unweakened-2"
+        },
+        {
+          "id": "c3",
+          "statement": "DC2/DC3 control-strength review done: no control weakened by the diff",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "git diff confirms the change touched ONLY ServerInstance internals (imports, __init__, new _read_loop, recv, close docstring/join) -- zero lines changed in any DC2/DC3 test method body, in assert_door_is_up_and_serving, in the DC2 collision-control test, or in the DC3 ambient-leak counterfactual. No assertion deleted, no manipulation weakened, no control moved out of the assertion path. DC2 5/5 pass, DC3 7/7 pass."
+        }
+      ],
+      "constraints": [
+        "do not weaken any DC2 or DC3 guarantee"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-dc-guarantees-unweakened-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC2 -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m5-dc-guarantees-unweakened-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_identity.py -k DC3 -v",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-full-suite-baseline": {
+      "id": "m6-full-suite-baseline",
+      "title": "Full suite matches the 2177 passed / 1 skipped / 1061 subtests / 0 failed baseline",
+      "imperative": "Run the full suite and confirm it matches the stated baseline exactly (2177 passed, 1 skipped, 1061 subtests, 0 failed) with the same 12 tests in tests/test_mcp_identity.py passing.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "DC2/DC3 subsets confirmed unweakened",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "DC2/DC3 confirmed unweakened, 5+7=12 pass"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite: 2177 passed, 1 skipped, 1061 subtests, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-full-suite-baseline-1"
+        }
+      ],
+      "constraints": [
+        "bar is the stated baseline, not merely 0 failed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-full-suite-baseline-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-closeout": {
+      "id": "m7-closeout",
+      "title": "Commit and write IMPLEMENTER_RESULT",
+      "imperative": "git add tests/test_mcp_identity.py (and this plan file), commit to epic-418/f-424-mcp-door. Write IMPLEMENTER_RESULT to the path the handoff names: exact commands with real output/exit codes, the three identity-file runs, the timeout demonstration with elapsed times, an explicit local-vs-reasoned-about-Windows split, Map Impact (if any), and a blunt Workflow Feedback section. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite matches baseline",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "full suite matches baseline exactly: 2177 passed, 1 skipped, 1061 subtests, 0 failed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "committed to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written with all required sections",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "committed b9b80316 to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written at crew-handoffs/g3-implementer-result-winfix.md with all required sections"
+        }
+      ],
+      "constraints": [
+        "write the result file before ending the turn"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix/implementer/attempt-1",
+    "status": "released",
+    "claimed_at": "2026-08-10T01:05:42.346916+00:00",
+    "last_heartbeat": "2026-08-10T01:18:28.830412+00:00",
+    "claimed_by": "g3fix-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T01:18:34.011460+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "read global-crew.md, global-everyone.md, windows.md, the winfix handoff in full, tests/test_mcp_identity.py end to end, and test_mcp_spine_server.py's McpRpcClient.rpc() (confirmed it is an unbounded readline(), not a house pattern to copy). Handoff is complete: task/scope/exclusions/evidence/stop-conditions all named.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:06:03.050547+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-implement-and-first-run",
+      "why": "replaced select.select on the stdout pipe with a daemon reader thread + queue.Queue bound (portable: never touches select() on a pipe/file object, which is POSIX-only). EOF sentinel is sticky so a dead/never-started process returns None promptly on every recv() call, not just the first. Identity-file run 1/3: 12 passed, 0 failed.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:07:05.638411+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-second-run",
+      "why": "identity-file run 2/3: 12 passed, 0 failed, no race observed",
+      "mechanical": false,
+      "ts": "2026-08-10T01:07:22.350601+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-third-run",
+      "why": "identity-file run 3/3: 12 passed, 0 failed. All three consecutive runs green -- no reader-thread race observed across repetitions.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:07:35.627107+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-timeout-demonstration",
+      "why": "demonstrated (not merely asserted): never-started process -> recv(timeout=2.0) returns None in 0.006s (EOF path, fast, sticky sentinel); non-replying but genuinely alive process -> recv(timeout=2.0) returns None at elapsed=2.000s (queue.get bound), then independently proven alive via a follow-up status_text() call returning the correct NON-REPLYING marker. Bound holds in both directions.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:08:13.141631+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-dc-guarantees-unweakened",
+      "why": "DC2 subset 5 passed, DC3 subset 7 passed. Diff review confirms the recv() rewrite touched only ServerInstance plumbing -- no assertion, manipulation, or control moved/weakened in any DC2 or DC3 test.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:08:43.045548+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-full-suite-baseline",
+      "why": "found and fixed a real, in-scope-adjacent regression: adding _read_loop to ServerInstance shifted the code map's entity count by 1, failing test_map_tree_freshness_root_index_matches_a_fresh_build (confirmed via git stash that this failure is absent on the clean tree). Rebuilt map/INDEX.md via python -m scripts.code_map build --root . Full suite now exactly matches baseline: 2177 passed, 1 skipped, 1061 subtests, 0 failed.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:14:43.778835+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-closeout",
+      "why": "committed b9b80316 (fix) + 8322c270 (result-file commit-hash addendum) to epic-418/f-424-mcp-door. IMPLEMENTER_RESULT written at crew-handoffs/g3-implementer-result-winfix.md with exact commands/output/exit codes for all three identity-file runs, DC2/DC3 subsets, the timeout demonstration with elapsed times, the local-vs-reasoned Windows split, Map Impact, and a blunt Workflow Feedback section.",
+      "mechanical": false,
+      "ts": "2026-08-10T01:18:28.830404+00:00"
+    }
+  ]
+}

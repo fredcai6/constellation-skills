@@ -1,0 +1,95 @@
+{
+  "arm_dir": "/home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/rep1-cli",
+  "invocation_attempts": 21,
+  "tool_calls_carrying_them": 10,
+  "shape_errors": 0,
+  "usage_reads": 5,
+  "far_side_recoveries": 0,
+  "state_refusals_excluded": 1,
+  "other_errors": 0,
+  "absorbable_fumbles": 5,
+  "reached_done": true,
+  "total_tool_calls": 15,
+  "detail": [
+    {
+      "tool": "Bash",
+      "invocations": 1,
+      "kind": "usage_read",
+      "usage": 1,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "Bash",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "Bash",
+      "invocations": 4,
+      "kind": "usage_read",
+      "usage": 4,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "Bash",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "Bash",
+      "invocations": 3,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "Bash",
+      "invocations": 3,
+      "kind": "state_refusal",
+      "usage": 0,
+      "shape": 0,
+      "state": 1
+    },
+    {
+      "tool": "Bash",
+      "invocations": 2,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "Bash",
+      "invocations": 2,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "Bash",
+      "invocations": 3,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    },
+    {
+      "tool": "Bash",
+      "invocations": 1,
+      "kind": "ok",
+      "usage": 0,
+      "shape": 0,
+      "state": 0
+    }
+  ]
+}

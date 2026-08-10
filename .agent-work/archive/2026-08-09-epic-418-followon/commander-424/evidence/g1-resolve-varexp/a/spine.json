@@ -1,0 +1,38 @@
+{
+  "work_id": "varexp-VAREXP-A:",
+  "type": "gated",
+  "config": {
+    "rework_cap": 99
+  },
+  "items": [
+    "g1"
+  ],
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "tasks": {
+    "g1": {
+      "id": "g1",
+      "title": "probe",
+      "imperative": "VAREXP-A::46eaa14f4c1f771b",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "done",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m4-fix-server-docstring",
+  "files": [],
+  "repo_rev": {
+    "commit": "2ffb19055bb05de932c84b09e145007f71188653"
+  },
+  "run": {
+    "work_id": "g1-implement-mcp-door-424-rework-2",
+    "generated_at": "2026-08-09T21:39:13Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

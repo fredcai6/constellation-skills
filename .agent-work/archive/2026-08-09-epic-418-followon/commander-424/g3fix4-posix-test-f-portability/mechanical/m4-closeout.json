@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4-closeout",
+  "mechanical": {
+    "run": "g3fix4-posix-test-f-portability",
+    "project": "constellation-skills",
+    "role": "g3fix4-implementer",
+    "refusals": 2,
+    "spine-step": "m4-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix4-posix-test-f-portability-m4-closeout@82679665d65eeefa484d0ffd14d342a3178bc918",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix4-posix-test-f-portability",
+    "generated_at": "2026-08-10T02:58:22Z"
+  }
+}

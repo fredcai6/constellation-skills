@@ -1,0 +1,27 @@
+{
+  "contract": 1,
+  "step": "m6-full-suite-and-commit",
+  "mechanical": {
+    "run": "g1-implement-mcp-door-424-rework-2",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m6-full-suite-and-commit",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-mcp-door-424-rework-2-m6-full-suite-and-commit@10096349541c6ee4d973296b75b73ae59feac5b9",
+    "artifact-ref": [
+      "map/INDEX.md",
+      "scripts/gen_mcp_config.py",
+      "scripts/mcp_spine_server.py",
+      "tests/test_mcp_identity.py",
+      "tests/test_mcp_spine_server.py"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement-mcp-door-424-rework-2",
+    "generated_at": "2026-08-09T21:40:56Z"
+  }
+}

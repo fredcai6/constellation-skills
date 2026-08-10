@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2",
+  "files": [],
+  "repo_rev": {
+    "commit": "a2ce86698796ce20ec3fc1cd3d9f5eee2cdc04e7"
+  },
+  "run": {
+    "work_id": "scratch-mcp-424",
+    "generated_at": "2026-08-09T16:58:40Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

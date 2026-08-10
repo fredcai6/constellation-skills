@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "diff_ref": "evidence/g4-dc5/{score_arm.py, assert_dc1.py, make_arm.py, run_arm.sh} + MEASUREMENT.md (new, untracked measurement instrument + write-up under gate g4)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, references/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "flagged", "finding": "score_arm.py's score() (lines 149-218) does record-walking, per-call classification (shape/usage/state/other), and far-side detection all inline in one ~65-line function with several co-mutated counters (attempts, shape_errors, usage_reads, far_side, other_errors, state_refusals, carrying_calls). It is readable but each classification concern (shape vs usage vs far-side vs state) would be clearer as its own small function -- and the engine_invocations() undercount this review found (r7/r10, a hand-authored analysis instrument review) would likely have been caught sooner with the per-invocation counting logic isolated and unit-tested on its own.", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "divergent-change", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "message-chains", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "score_arm.py and MEASUREMENT.md both carry long prose comments/docstrings explaining WHY a classification choice was made (e.g. why the server log is corroboration-only, why --help is not an error, why batching is counted as N invocations).", "override": {"repo_standard": "CREW_CONTEXT.md 'Verification Discipline' + global-everyone.md 'Pin a claim to the revision you read it at' -- this repo's convention is to make measurement/decision rationale explicit and durable in the artifact rather than leave it tacit, especially for a one-off instrument a second party must independently re-derive from.", "reason": "These are decision-rationale comments explaining a non-obvious methodological choice for an independent auditor, not comments compensating for unclear code that should have been refactored instead -- removing them would remove information this exact review needed to check the corrections (r10), so they earn their keep rather than deodorize a smell."}}
+  ],
+  "rail_exception": null
+}

@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r9-dc4-real-behavior",
+  "files": [],
+  "repo_rev": {
+    "commit": "6fe601c8aaed915c86c6d5e2af092e21d41242d8"
+  },
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T23:07:32Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-reviewer",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

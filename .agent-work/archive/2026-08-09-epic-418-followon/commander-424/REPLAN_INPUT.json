@@ -1,0 +1,266 @@
+{
+  "schema_version": 1,
+  "current_plan": {
+    "schema_version": 1,
+    "epic": {
+      "title": "Epic 418 follow-on \u2014 workstream F, MCP front door",
+      "spec_path": ".agent-work/epic-418-redux/spec-revision/REVISED_SPEC.md",
+      "intent_and_why": "Cleave problem-solving from spine-management. Agents lose context to operating the engine; the door moves that cost behind a typed interface. The token delta is a constraint that must not go the wrong way, not the thing being bought."
+    },
+    "definition_of_done": [
+      "A second front door on the checklist engine exists, wrapping the engine's own dispatch, with the CLI door intact.",
+      "F's six done-conditions each carry a verdict backed by evidence, a measured negative counting as a complete verdict."
+    ],
+    "good_enough": {
+      "mandatory_quality": "No engine logic duplicated; gate imperatives verbatim through tool results; settings.json untouched at any scope.",
+      "sufficient_evidence": "Behaviour proved by running, with every control demonstrated able to fail.",
+      "appetite": "One bounded issue, wave 1 of a three-wave epic; deliberate first round, no gold-plating."
+    },
+    "hard_constraints": [
+      "settings.json is never written at any scope; project-scope .mcp.json only.",
+      "The CLI door stays; every uncovered verb keeps a documented CLI fallback.",
+      "Engine bugs #439/#446/#427/#443 are held constant across both measurement arms.",
+      "Files fenced to the concurrent posix-green agent are not edited."
+    ],
+    "fixed_decisions": [
+      "MCP is the current vehicle, not the destination; the seven-over-eighteen tool split is a placeholder.",
+      "Each agent gets its own server instance keyed session_id#agentId.",
+      "DC5 is counted from the call record, never the engine's refusals counter.",
+      "DC4 is a property over every gate carrying an imperative, not a sampled gate.",
+      "DC3 requires a positive control before a no-identity result counts as failing closed."
+    ],
+    "current_wave": {
+      "objective": "Build the door and produce a verdict on each of F's six done-conditions.",
+      "exit_criteria": [
+        "The door exists, serves, and duplicates no engine logic.",
+        "Each done-condition is marked done / done-by-different-means / partial / not-met with the evidence that decides it."
+      ],
+      "issues": [
+        {
+          "id": "424",
+          "title": "Workstream F \u2014 MCP front door on the checklist engine",
+          "desired_outcome": "A typed tool surface over the engine's dispatch, with acceptance evidence for DC1-DC6.",
+          "useful_now": "It is the epic's least-proven piece, deliberately moved first so it fails early if it fails.",
+          "appetite": "One bounded issue",
+          "acceptance_or_falsification_evidence": "DC1-DC6 verdicts; a measured negative on DC5 is a complete deliverable under the honest-null clause.",
+          "implementation_latitude": "Tool grouping, argument shapes, delivery mechanism, call-record capture, tracer protocol and n, which prototype code is lifted.",
+          "hard_constraints_no_gos": [
+            "No settings.json write at any scope.",
+            "No engine logic duplicated.",
+            "No engine-bug fixes between arms."
+          ],
+          "local_unknowns": [
+            "Behaviour against a real spine with delegation and rework is untested; exc-9 used a four-gate toy."
+          ],
+          "anchors": [
+            "scripts/checklist_engine.py",
+            "scripts/mcp_spine_server.py",
+            "scripts/gen_mcp_config.py",
+            "map/INDEX.md"
+          ],
+          "type": "AFK",
+          "blocks": []
+        }
+      ]
+    },
+    "wave_forecast": [
+      {
+        "outcome": "Workstream C \u2014 relocate instruction text to the gate that needs it",
+        "why_likely": "F makes C's job smaller: once call mechanics live in typed tool arguments, what remains in an imperative is pure 'what to do at this gate'.",
+        "entry_conditions": [
+          "F's verb surface is settled"
+        ]
+      }
+    ],
+    "uncertainty_register": [
+      {
+        "unknown": "Whether the door reduces spine-management cost attributably, rather than moving the cost to the far side of the interface.",
+        "affects": "F's acceptance measure, DC5",
+        "settle_by": "The two-arm tracer at gate g4",
+        "current_evidence": "Not yet measured on this branch; exc-9's numbers are stale (pre-B channel, pre-A2 verb semantics) and were explicitly ruled non-reusable.",
+        "next_probe": "Run both arms with one counting unit identical across arms, order-controlled, counting far-side recovery events too."
+      },
+      {
+        "unknown": "Whether the seven-tool grouping holds up on a real role spine with delegation and rework.",
+        "affects": "Whether the uncovered five (skip, reopen, append, amend, flag-candidate) were the right five to leave at the CLI.",
+        "settle_by": "DC1's cold-agent run on a real role spine",
+        "current_evidence": "A throwaway spine was driven to DONE through the tools alone, exercising all seven including waive and attach.",
+        "next_probe": "Drive a real role spine, not a toy."
+      }
+    ],
+    "parked_possibilities": [
+      "Replacing MCP with a different kind of tool call, which Tommy expects later.",
+      "Trimming rich tool descriptions, accepted for now without a control arm."
+    ]
+  },
+  "completed_outcomes": [
+    {
+      "issue_id": "424",
+      "outcome": "COMPLETE. All six done-conditions carry a verdict backed by evidence, no gate is left blocked by its own reviewer, and the closing regression is green. DC1 PASS (machine assertion: two cold agents reached DONE through the door with zero malformed calls). DC2 PASS (two concurrent instances, two spines, distinct readings; the collision control reproduces a real leak when the two share one file). DC3 PASS (fail-closed inheritance, behind a positive control demonstrated red for three manipulations and green when correct; the g3 reviewer mutated the real door and got selective reds). DC4 PASS (a property over 61 gates across 12 shipped templates, walked not listed; the g2 reviewer mutated the production door and watched 4 of 5 tests go red). DC5 PASS on the pre-registered metric (CLI 22.0 vs MCP 18.0 invocation attempts, non-overlapping spreads, both orders agreeing in direction) -- but NOT by the expected mechanism: malformed calls were zero in both arms, so the saving is the door removing the need to read a manual, not the door absorbing fumbles; the per-order gap is 2 and 6, so 18% is a midpoint, not an effect-size estimate. DC6 PASS on arrival and action (2 of 33 tool results carried the governor's HARD instruction verbatim; the agent attached a refresh-request and advanced with a handoff) with one non-compliance recorded: it ignored the instruction's 'and stop' half. Two structural findings changed the shipped surface: scripts/gen_mcp_config.py was REMOVED as redundant once the committed .mcp.json's ${VAR} expansion was shown to key identity per dispatch, and DC3's YES was measured to name a case NEITHER mechanism solves, so it did not rescue generation. The .mcp.json delivery branch point was probed, answered, and then FALSIFIED at review \u2014 the corrected finding is that a plain project-scope .mcp.json does serve a cold headless agent when --allowedTools is passed. The door shipped: 7 tools over 13 of 18 engine verbs, wrapping checklist_engine.main(), with an empty diff against the engine itself. Per-dispatch config generation shipped, rejustified on identity/separation grounds rather than delivery necessity. A code-map staleness regression was caught by re-running the suite rather than trusting the crew's report, and fixed. g3 (run FIRST, per the repair's reordering): DC2 separation and DC3 fail-closed inheritance proven in tests/test_mcp_identity.py, with a positive control in the assertion path demonstrated red for three manipulations and green when correct. The g3 reviewer mutated the real door and got selective reds -- 2 of 12 for a hardcoded identity, 5 of 5 DC2 for a shared spine file -- so the controls are not decorative. DC3's open question answered: an in-session Task-tool subagent DOES inherit its dispatching process's MCP scope wholesale and reaches the parent's identity with no configuration of its own. Reproduced twice with independent nonces and server-log corroboration. g1-integrate's BLOCK resolved on that evidence, through the gate's own rework path rather than by override: scripts/gen_mcp_config.py was REMOVED as redundant, and the same reviewer that blocked re-reviewed and returned APPROVE after re-reproducing the measurement itself. g2: DC4 established as a property over 61 gates across 12 shipped templates, discovered by walking the template tree. The g2 reviewer mutated the production door's as_result() and watched 4 of 5 tests go red, then added a scratch template and watched the population move 61->62. g4: DC5 measured over four arms (2 per side, both orders), DC1 asserted mechanically, DC6 measured. MEASUREMENT.md and the raw per-arm records are kept so a second party can re-derive every number without rerunning an arm. Closing regression: all 38 tests F shipped run together green; full suite 2177 passed, 1 skipped, 0 failed.",
+      "evidence": "PR #533 on epic-418/f-424-mcp-door. Closing regression: 38 tests across tests/test_mcp_spine_server.py, tests/test_mcp_imperative_equivalence.py and tests/test_mcp_identity.py pass together; full suite 2177 passed, 1 skipped, 1061 subtests, 0 failed. MEASUREMENT.md plus raw per-arm records, scorer and positive controls under .agent-work/epic-418-followon/commander-424/evidence/g4-dc5/. The ${VAR} identity measurement under evidence/g1-resolve-varexp/. Crew results under crew-handoffs/, including three reviewer BLOCKs that were resolved on evidence and none overridden."
+    }
+  ],
+  "wave_evidence": [
+    {
+      "claim": "The MCP door wraps the engine rather than reimplementing it.",
+      "expected": "No change to the engine, and every tool routing through main(argv).",
+      "observed": "git diff against scripts/checklist_engine.py is empty; every tool routes through run_engine() -> checklist_engine.main().",
+      "source": "git diff and independent reviewer inspection"
+    },
+    {
+      "claim": "Gate imperatives ride tool results verbatim.",
+      "expected": "Byte-identical text CLI vs MCP, with a control that can fail.",
+      "observed": "Byte-identical for the sampled gate; the reviewer mutated as_result() to append a trailing space, watched the check go red, and reverted cleanly.",
+      "source": "tests plus a demonstrated-failing negative control"
+    },
+    {
+      "claim": "The door is up and serving \u2014 DC3's prerequisite positive control.",
+      "expected": "A live tool call returning genuine engine output.",
+      "observed": "A throwaway spine driven to DONE through the seven tools alone; a real headless dispatch round-tripped an unguessable nonce through a generated config.",
+      "source": "server-side artifacts (call-record growth, start marker), not the model transcript"
+    },
+    {
+      "claim": "The suite's pinned red set did not grow.",
+      "expected": "6 failed.",
+      "observed": "7 failed initially \u2014 map/INDEX.md went stale from the new scripts; after rebuilding, 6 failed / 2157 passed / 1061 subtests.",
+      "source": "full pytest run, re-derived by the commander rather than trusted from the crew"
+    },
+    {
+      "claim": "Per-dispatch MCP config generation is necessary for per-agent identity.",
+      "expected": "A single shared project-scope .mcp.json cannot key identity per dispatch, so gen_mcp_config.py earns its place.",
+      "observed": "FALSE. The committed .mcp.json uses ${VAR:-default} expansion, so identity comes from each caller's environment at server launch. Two claude -p dispatches, same directory, one committed config, no generated file, each returned its own unguessable nonce, with each spine's own mcp_calls.jsonl recording only its own call. Reproduced by the Commander and again by the g1 reviewer.",
+      "source": "evidence/g1-resolve-varexp/ and crew-handoffs/g1-reviewer-result-rework.md"
+    },
+    {
+      "claim": "If an in-session subagent shares its parent's server, per-dispatch generation is REQUIRED.",
+      "expected": "A YES on DC3 would justify keeping gen_mcp_config.py.",
+      "observed": "The antecedent is TRUE and the consequent does NOT follow. A generated config binds at server launch per process exactly as ${VAR} does, so it cannot give an in-session subagent its own identity either. The measurement names a case NEITHER mechanism solves, so it does not distinguish them -- which left generation redundant.",
+      "source": "crew-handoffs/g3-implementer-result.md, DC3 verdict section"
+    },
+    {
+      "claim": "DC5: spine-management cost falls, attributably to the door.",
+      "expected": "Fewer invocation attempts through the typed door, driven by absorbed malformed calls.",
+      "observed": "PASS on the pre-registered metric (CLI 22.0 vs MCP 18.0 attempts, spreads non-overlapping, both orders agreeing in direction) -- but NOT by the expected mechanism. Malformed calls were ZERO in both arms, on an instrument whose controls prove it can score them. The saving is the door removing the need to read a manual, not the door absorbing fumbles. The per-order gap is 2 and 6, so the 18% is a midpoint, not an effect-size estimate.",
+      "source": "MEASUREMENT.md and evidence/g4-dc5/"
+    },
+    {
+      "claim": "DC6: the governor's threshold instruction arrives through a tool result and is acted on.",
+      "expected": "Arrival and action.",
+      "observed": "Both, plus a non-compliance worth having: 2 of 33 tool results carried the HARD instruction verbatim, and the agent's next calls attached a refresh-request and advanced with a --why handoff. It then IGNORED the instruction's 'and stop' half and drove the whole spine to done, attaching a refresh-request at every gate.",
+      "source": "evidence/g4-dc5/dc6b-mcp/record.jsonl"
+    }
+  ],
+  "discrepancies": [
+    {
+      "id": "D0",
+      "signal": "The commander's .mcp.json delivery finding was falsified at g1-review: a plain project-scope .mcp.json DOES serve a cold headless agent when --allowedTools is passed. The original probe omitted --allowedTools from that arm, measuring the per-tool permission gate and attributing the result to MCP 'Pending approval' \u2014 two different gates.",
+      "classification": "evidence_only",
+      "affects": "The recorded justification for gen_mcp_config.py, not the build itself.",
+      "evidence": "Reviewer reproduced it twice against server-side artifacts; the commander then reproduced it independently in a fresh project directory with no prior approval state.",
+      "reason": "The deliverable is unchanged \u2014 per-dispatch generation is still required for DC2 (different spines per agent) and DC3 (per-agent identity keying), which one shared config cannot provide. Only the reason recorded for it changed, so this is evidence rather than a wave-exit blocker."
+    },
+    {
+      "id": "D1",
+      "signal": "map_orient.py reports DEGRADED-NO-MAP on this repo although a machine-generated code map exists at map/INDEX.md with an enforcing freshness test. The tool probes only docs/architecture/* and a README/AGENTS/CLAUDE/docs fallback; map/ is in neither list.",
+      "classification": "invalidates_forecast_or_decomposition",
+      "affects": "Any run in this repo that plans map-first \u2014 it plans as if map-blind and hash-pins doctrine files as substitutes for a structural map that exists.",
+      "evidence": "map_orient returned DEGRADED-NO-MAP with anchor_count 0; adding two scripts turned tests/test_code_map.py red against map/INDEX.md (55 modules, 1047 entities). Independently flagged by the g1 reviewer.",
+      "reason": "This misdirects the map-first discipline the spine gates at the context step, so it is a planning-truth defect rather than a local one. Named, not fixed \u2014 filed as a triage candidate."
+    },
+    {
+      "id": "D2",
+      "signal": "The engine refuses to start a gate that is not the active one, so two independent gates cannot be driven in parallel even when neither depends on the other.",
+      "classification": "later_only",
+      "affects": "Wall-clock cost of any multi-gate plan whose gates are genuinely independent.",
+      "evidence": "g2-implement refused with 'is not the active gate; start g1-review first' although g2's only precondition (the door exists and serves) was already satisfied and attested.",
+      "reason": "Strict ordering is a deliberate mechanism and relaxing it is a design question well outside this issue. Recorded as a forecast-level observation for the epic to weigh."
+    },
+    {
+      "id": "D3",
+      "signal": "attest is refused on an engine-checked (command-kind) condition, but the projection renders engine-checked and attestable conditions in the same shape, so the agent cannot tell them apart before calling.",
+      "classification": "evidence_only",
+      "affects": "The DC5 fumble population \u2014 this is exactly the class a typed interface can absorb.",
+      "evidence": "Observed live in this run's own init gate: two attest calls refused, costing a round-trip. The knowledge exists in EXECUTE_PLAN.template.json's gN-integrate imperative but not in the spine template's early gates, where it is first needed.",
+      "reason": "Recorded as measurement input for DC5 rather than filed, since it is precisely what the door is being measured against."
+    },
+    {
+      "id": "D4",
+      "signal": "The prediction inherited from #424's body that A2 would ship two flavours of advance.",
+      "classification": "drop",
+      "affects": "Nothing \u2014 the verb surface was typed from the engine as it actually is.",
+      "evidence": "TRIP_HARD_GUARDED_VERBS = {start, reopen}; docs/agents/GLOSSARY.md already states HARD refuses the verbs that begin work at a gate, never advance.",
+      "reason": "Falsified before any code was written; the governing launch order pre-empted it explicitly."
+    },
+    {
+      "id": "D5",
+      "signal": "run_crew.py cannot resolve a MULTI-SEGMENT work-id: load_registry_for_resume() takes session.split('/')[1] as the whole work id, so 'constellation/epic-418-followon/commander-424/...' resolves to .agent-work/epic-418-followon/ and --verify-result / --resume refuse with 'no crew recorded'. This is why the predecessor's two g1 crews sat 'running' with their results already on disk.",
+      "classification": "later_only",
+      "affects": "scripts/run_crew.py in the skills corpus -- outside this run's file fence.",
+      "evidence": "Refusal reproduced on both g1 entries; worked around with an untracked read-side symlink .agent-work/epic-418-followon/crew-runs.json -> commander-424/crew-runs.json, after which every --verify-result in this run succeeded. Writes still go to the correct path via entry['work_id'].",
+      "reason": "A real defect in shared crew tooling that silently converts a completed crew into an apparently-running one. Routed, not fixed: run_crew.py is outside the fence and this run was under measurement."
+    },
+    {
+      "id": "D6",
+      "signal": "The engine's gated ordering cannot express 'resolve a blocked gate on a LATER gate's evidence'. g1-integrate was blocked pending DC3, whose gate was g3, and a blocked gate holds the active slot, so nothing downstream could start. amend cannot move a non-pending gate either.",
+      "classification": "evidence_only",
+      "affects": "The repair's g3-first ordering had to be executed by running g3's implementer as the named blocker-clearing evidence, then reordering the pending tail by amend once g1-integrate closed.",
+      "evidence": "engine refusal: 'g3-implement is not the active gate; start g1-integrate first'; amend delta reordering g2 after g3 recorded under authority LAUNCH_ORDER-424-continuation section 2.",
+      "reason": "Worth knowing at plan time: a plan that puts a claim at one gate and its evidence at a later one cannot be repaired purely by reordering once the earlier gate blocks."
+    },
+    {
+      "id": "D7",
+      "signal": "scripts/code_map/discovery.py enumerates only git-TRACKED files, so a freshly created, not-yet-staged file is invisible to code_map build. Two separate crews lost a rebuild-and-diff cycle to it.",
+      "classification": "later_only",
+      "affects": "code_map workflow documentation.",
+      "evidence": "Reported independently by the g3 and g1-rework implementers.",
+      "reason": "A first-time user can ship a stale map believing they rebuilt it. One line in the build command's help would close it."
+    },
+    {
+      "id": "D8",
+      "signal": "The measurement's own instrument was wrong three times, and the reviewer -- not the author -- caught the two that mattered. A shell for-loop scored six engine invocations as one; correcting it flipped DC5's pre-registered metric from negative to pass. The author then kept the negative on a decomposition reached for only after the metric flipped.",
+      "classification": "evidence_only",
+      "affects": "How measurement gates should be reviewed, not this result -- the final numbers re-derive cleanly and were independently reproduced.",
+      "evidence": "crew-handoffs/g4-reviewer-result.md and -rework.md; MEASUREMENT.md's revision note.",
+      "reason": "The reusable lesson is that re-running the author's scorer proves only determinism. The defect that changed a published number was found by hand-parsing a raw record, and the framing defect was found by asking whether an analysis predated the result it supports."
+    },
+    {
+      "id": "D9",
+      "signal": "A Task-tool subagent inherits its dispatching process's ENTIRE --strict-mcp-config scope. Per-dispatch identity scoping is therefore per TOP-LEVEL PROCESS, not per agent-turn.",
+      "classification": "later_only",
+      "affects": "Any future design that wants a Commander's own Task-tool-dispatched crews to carry different spine identities from the Commander or from each other.",
+      "evidence": "crew-handoffs/g3-implementer-result.md, reproduced twice with nonces and server-log corroboration.",
+      "reason": "Not automatic, and would need its own design -- each crew dispatch would have to be its own claude -p invocation. Worth confirming that assumption is intact rather than assumed."
+    }
+  ],
+  "open_current_wave_issue_ids": [],
+  "unlaunched_items": [
+    {
+      "id": "C-relocation",
+      "kind": "forecast"
+    },
+    {
+      "id": "dc5-attribution",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "grouping-on-a-real-spine",
+      "kind": "uncertainty"
+    },
+    {
+      "id": "post-mcp-tool-call-shape",
+      "kind": "parked"
+    }
+  ],
+  "repo_state": {
+    "anchors": [
+      "scripts/checklist_engine.py",
+      "scripts/mcp_spine_server.py",
+      ".mcp.json",
+      "tests/test_mcp_spine_server.py",
+      "tests/test_mcp_identity.py",
+      "tests/test_mcp_imperative_equivalence.py",
+      "map/INDEX.md"
+    ],
+    "map_status": "map_orient reports DEGRADED-NO-MAP, but that is a tool defect: a current, enforced code map exists at map/INDEX.md and was rebuilt during this run."
+  }
+}

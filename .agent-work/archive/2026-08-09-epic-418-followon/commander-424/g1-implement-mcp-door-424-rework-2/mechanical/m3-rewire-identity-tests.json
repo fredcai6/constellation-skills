@@ -1,0 +1,23 @@
+{
+  "contract": 1,
+  "step": "m3-rewire-identity-tests",
+  "mechanical": {
+    "run": "g1-implement-mcp-door-424-rework-2",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 1,
+    "spine-step": "m3-rewire-identity-tests",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-mcp-door-424-rework-2-m3-rewire-identity-tests@1625d4718478bc9581bb40ea5f8dfbff154bc882",
+    "artifact-ref": [
+      "scripts/gen_mcp_config.py"
+    ]
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement-mcp-door-424-rework-2",
+    "generated_at": "2026-08-09T21:37:37Z"
+  }
+}

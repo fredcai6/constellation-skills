@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "r3-evidence",
+  "files": [],
+  "repo_rev": {
+    "commit": "343f5945849d36c7af5d40299400c1ab26a21069"
+  },
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T17:42:42Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

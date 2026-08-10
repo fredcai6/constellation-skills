@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m3-identity-harness-fix",
+  "mechanical": {
+    "run": "g3fix2-utf8-mcp-door",
+    "project": "constellation-skills",
+    "role": "g3fix2-implementer",
+    "refusals": 1,
+    "spine-step": "m3-identity-harness-fix",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix2-utf8-mcp-door-m3-identity-harness-fix@78e7cd72b8f75a0c8f83c86d75680c1c014526c7",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix2-utf8-mcp-door",
+    "generated_at": "2026-08-10T02:03:05Z"
+  }
+}

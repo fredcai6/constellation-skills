@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m3-full-suite-baseline",
+  "files": [],
+  "repo_rev": {
+    "commit": "03d47eb45aa8337e05b67f7ea3efacb9b941eb93"
+  },
+  "run": {
+    "work_id": "g3fix3-utf8b-cli-decode",
+    "generated_at": "2026-08-10T02:24:32Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-implementer",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

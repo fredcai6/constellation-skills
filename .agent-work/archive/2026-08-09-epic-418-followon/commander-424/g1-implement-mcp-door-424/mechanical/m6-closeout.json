@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m6-closeout",
+  "mechanical": {
+    "run": "g1-implement-mcp-door-424",
+    "project": "constellation-skills",
+    "role": "g1-implementer",
+    "refusals": 1,
+    "spine-step": "m6-closeout",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g1-implement-mcp-door-424-m6-closeout@257e9e4b6d8cf5d6e371dfc0dcb568c677b95ed6",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g1-implement-mcp-door-424",
+    "generated_at": "2026-08-09T17:24:11Z"
+  }
+}

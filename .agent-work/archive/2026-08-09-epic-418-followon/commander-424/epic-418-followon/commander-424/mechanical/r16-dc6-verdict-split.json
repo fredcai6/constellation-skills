@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r16-dc6-verdict-split",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r16-dc6-verdict-split",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r16-dc6-verdict-split@252a9e2d67e4b1e58220b92926441de5b742d85f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T23:42:31Z"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-fix-and-sweep-green",
+  "mechanical": {
+    "run": "g3fix3-utf8b-cli-decode",
+    "project": "constellation-skills",
+    "role": "g3fix3-implementer",
+    "refusals": 1,
+    "spine-step": "m2-fix-and-sweep-green",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3fix3-utf8b-cli-decode-m2-fix-and-sweep-green@f7012e1a93dcb2e3e57be80202c8084de115e006",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3fix3-utf8b-cli-decode",
+    "generated_at": "2026-08-10T02:23:36Z"
+  }
+}

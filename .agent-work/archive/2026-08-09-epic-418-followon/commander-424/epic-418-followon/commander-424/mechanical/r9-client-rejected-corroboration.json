@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r9-client-rejected-corroboration",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r9-client-rejected-corroboration",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r9-client-rejected-corroboration@dd51c1e257ec20dc8c38f0c153eddc8ba0122b6f",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T23:42:31Z"
+  }
+}

@@ -1,0 +1,289 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "ops": [
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon-commander-424",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/commander-424/execute.json",
+        "refusals": 12,
+        "reopens": 0,
+        "rework-count": 5,
+        "failed-commands": 4,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/commander-424/MEASUREMENT.md",
+          ".agent-work/epic-418-followon/commander-424/evidence/g4-dc5/score_arm.py",
+          ".agent-work/epic-418-followon/commander-424/evidence/g4-dc5/control_scorer.py",
+          ".agent-work/epic-418-followon/commander-424/crew-handoffs/g4-reviewer-result.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Measure DC5 -- whether spine-management cost falls attributably to the MCP door -- by running two arms over a real role spine and counting invocation attempts from the driving agent's own call record."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The scorer counts one invocation attempt per attempt to invoke the engine, identically across both arms, so the two arms are comparable."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The scorer was wrong four separate times, each time in a way that biased the comparison. It counted one Bash tool call as one attempt, when the CLI arm batched three or four engine invocations per command. It scored a --help invocation's usage block as five malformed calls, because help output matches the argparse-error signature. It counted static occurrences of the string checklist_engine.py in the command text, so a shell for-loop that ran the engine six times scored as one -- rep2-cli was published as 18 attempts / 2 fumbles and was truly 23 / 7. It scored one argparse rejection as two shape errors, because such a rejection prints both a usage block and an error line. I found the first two myself before scoring; the third was found by the gate's reviewer, which hand-parsed the raw record rather than re-running the scorer; the fourth was found by positive controls I only wrote because of that block."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The third defect alone flipped DC5's verdict. Under it the per-arm spreads overlapped and the measurement read as a negative; corrected, the spreads separated and the pre-registered metric read as a pass. A published measurement was wrong by 5 invocation attempts and 5 fumbles on one of only four data points, and the error was in the direction that made the door look worse."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Static command text became a floor rather than the count, with the actual count taken as the larger of static occurrences and engine-output marks (RAIL: / usage:) in the result. A control_scorer.py was added exercising every counter that reports zero in the real arms; the reviewer then broke two of those controls in scratch copies and confirmed they fail when the counter is broken."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Every one of the four defects made the instrument harder to lose with, not easier: three inflated the CLI arm's counts and one inflated its error counts. The scorer was written by the party with an interest in the outcome and was checked by reading it, which cannot detect a counter that is simply never exercised. Re-running the scorer proves determinism, not correctness -- the one defect that changed a published number was found by parsing the raw record independently."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon-commander-424",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/commander-424/execute.json",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 3,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/commander-424/MEASUREMENT.md",
+          ".agent-work/epic-418-followon/commander-424/crew-handoffs/g4-reviewer-result-rework.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Report DC5's verdict from the evidence, under an honest-null clause stating that a measured negative is a complete and successful deliverable reported with the same rigor as a win."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The verdict follows the counting unit the gate pre-registered before any arm ran: one invocation attempt by the driving agent, however packaged."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "I wrote the negative first, on overlapping spreads. When a reviewer-found scorer defect was fixed and the spreads separated, the pre-registered metric read as a pass -- and I kept the negative anyway, on a new decomposition that stripped out one-off --help reads and compared only 'productive' invocations. The reviewer blocked and showed the decomposition appears in no attempt-1 artifact and arrived only after the pre-registered metric stopped supporting the conclusion; it also observed that stripping help-reads removes the exact friction a self-documenting typed interface exists to eliminate, which is close to excluding the effect under test."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "Two extra review rounds, and a verdict that would have shipped shaped by its author's prior rather than by the evidence. The honest-null clause had been written to protect against inflating a win, and the failure ran the other way: the null was the comfortable answer and the positive was the one that had to survive scrutiny to be reported."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The verdict was changed to PASS on the pre-registered metric and the decomposition demoted to an explicitly labelled post-hoc secondary observation, narrowed from 'the door is worse' to 'the saving is front-loaded'. MEASUREMENT.md carries a revision note recording all three versions and stating that neither correction came from the author."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The conclusion was written before the instrument was trusted. Once a written conclusion existed, each subsequent correction was evaluated for whether it could be accommodated rather than for whether it changed the answer. The pre-registration was in the plan the whole time and was what eventually settled it, which suggests the safeguard worked and only the author's reading of it drifted."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon-commander-424",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/commander-424/execute.json",
+        "refusals": 1,
+        "reopens": 0,
+        "rework-count": 2,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/commander-424/crew-handoffs/g3-implementer-result.md",
+          ".agent-work/epic-418-followon/commander-424/evidence/g1-resolve-varexp"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Resolve a gate blocked by its own reviewer over whether scripts/gen_mcp_config.py was necessary, by measuring the one fact the blocker named: does an in-session Task-tool subagent share its parent's already-launched MCP server?"
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The blocker recorded the branch explicitly: if the subagent shares the parent's server then ${VAR} expansion cannot reach that case and per-dispatch config generation is required; if it spawns its own process, generation is redundant."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The antecedent measured TRUE -- a Task-tool subagent inherits its dispatching process's MCP scope wholesale and reached the parent's exact spine and identity with no configuration of its own, reproduced twice with independent nonces and corroborated by the server's own call log. The stated consequent did not follow. A generated config binds at server launch per process exactly as ${VAR} does, so it cannot give an in-session subagent its own identity either. The measurement expected to justify the file named a case neither mechanism reaches, and therefore did not distinguish them."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "scripts/gen_mcp_config.py was removed rather than justified, along with four generation-only tests, and two test files were rewired onto the shipped ${VAR} path. Had the blocker's stated implication been taken at face value, the measurement would have read as confirming the file and it would have shipped on a false justification -- the second false justification that file had accumulated."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "Removal went through the gate's own rework path rather than an override: a rework implementer removed the file, and the same reviewer that blocked re-reviewed and returned APPROVE after re-reproducing the ${VAR} identity measurement itself. The tombstone and the non-implication were written into docs/CHECKLIST_ENGINE_DESIGN.md, because the measured YES is exactly the fact a later reader would use to rebuild the file."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The blocker recorded a conditional whose two halves were not symmetric: it checked whether ${VAR} could reach the shared-server case but never asked the same question of generation. Both mechanisms bind identity at server launch, so any case beyond one is beyond the other."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon-commander-424",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/commander-424/crew-runs.json",
+        "refusals": 3,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 3,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/commander-424/triage-candidates/TRIAGE.md",
+          ".agent-work/epic-418-followon/commander-424/evidence/verify_replan_input.py"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Use the standard Commander tooling for a run whose work id is 'epic-418-followon/commander-424' -- resolve completed crews with run_crew.py --verify-result, and satisfy the execute step's command postcondition with verify_iterative_role_artifacts.py."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Both tools accept the work id the epic/commander convention produces, which always contains a slash."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Both refused, for the same reason in different code. run_crew.py's load_registry_for_resume() takes session.split('/')[1] as the whole work id, so it looked for .agent-work/epic-418-followon/crew-runs.json and reported 'no crew recorded'. verify_iterative_role_artifacts.py guards the work id with SAFE_ID = ^[A-Za-z0-9][A-Za-z0-9._-]*$, which forbids a slash, and refused with 'work-id contains unsafe path characters' before reading any file. The predecessor had hit the first one silently: two completed g1 crews sat in the registry marked 'running' with their result artifacts already on disk."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The registry misreported finished work as live across a handoff, which is the state a successor is told to resolve before dispatching. The second refusal was worse than an inconvenience: it fired before verification, and behind it sat a real defect -- the inherited REPLAN_INPUT.json had completed_outcomes as an array of strings where the G2 schema requires objects. That violation had been invisible for as long as the path guard fired first."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "For run_crew.py, an untracked read-side symlink .agent-work/epic-418-followon/crew-runs.json pointing at commander-424/crew-runs.json, after which every --verify-result succeeded; writes were already correct because they use entry['work_id']. For the verifier, the execute step's command postcondition was retexted through the engine's amend verb to run the same verify_replan_input check on an explicit path, and the packet was repaired and verified. Both defects were routed as triage candidates rather than fixed, being outside the run's file fence."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "Two independent tools encode the same assumption that a work id is a single path segment, while the epic/commander convention always nests one. In run_crew.py the read and write paths disagree with each other, which is why the failure presents as a confusing 'no crew recorded' rather than an obvious refusal."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon-commander-424",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/commander-424/MEASUREMENT.md",
+        "refusals": 0,
+        "reopens": 0,
+        "rework-count": 1,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp",
+          ".agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6b-mcp"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Measure DC6: whether the Context Governor's threshold instruction arrives through an MCP tool result and is acted on."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "Seeding a gauge.json past the hard band in the spine's directory, then dispatching a cold agent through the door, would put the threshold instruction into the agent's tool results."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "The first arm produced zero tool results carrying the instruction, and the agent drove the spine straight to done. Read as behaviour alone this looked exactly like a measured negative -- the instruction arrived and was ignored. The server's own call log showed something else: 'CONTEXT GAUGE DECLINED: the reading at this path (90% on claude-opus-4-8) was sampled 17s BEFORE session dc6-mcp-sid claimed this checklist, so it is NOT this session's reading'. The gauge was seeded before the claim, the engine correctly declined it, and no threshold instruction was ever emitted. Nothing about DC6 had been measured."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "One wasted arm, and a near-miss on reporting an UNMEASURED condition as a measured negative -- which would have recorded a defect in the door that the evidence did not support. The re-run, writing the gauge after the claim, produced the instruction in 2 of 33 tool results and an agent that acted on it, so the two runs differ in verdict entirely because of fixture ordering."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "A second arm claimed the lease first, then wrote the gauge, then dispatched. The failed arm was kept in the evidence directory and reported in MEASUREMENT.md as UNMEASURED rather than deleted or quietly re-run."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "strong",
+          "statement": "The staleness guard's failure mode is indistinguishable from the behaviour under test when observed from the agent's side: both produce a run with no threshold instruction and an agent that keeps working. The distinguishing evidence exists and is explicit, but it lives in the server call log rather than in the agent's record, so it is only seen if the null result is investigated rather than accepted."
+        }
+      ]
+    },
+    {
+      "op": "create",
+      "mechanical": {
+        "run": "epic-418-followon-commander-424",
+        "project": "constellation-skills",
+        "role": "commander",
+        "spine-step": "execute",
+        "context-manifest-ref": ".agent-work/epic-418-followon/commander-424/execute.json",
+        "refusals": 2,
+        "reopens": 0,
+        "rework-count": 0,
+        "failed-commands": 0,
+        "artifact-ref": [
+          ".agent-work/epic-418-followon/commander-424/execute.json",
+          ".agent-work/epic-418-followon/commander-424/STATE_NOTE.md"
+        ]
+      },
+      "agent_supplied": {
+        "task-intent": {
+          "strength": "strong",
+          "statement": "Execute a launch order that reordered the gates to g3 first, so that a gate blocked pending DC3's evidence could be resolved on that evidence rather than on argument."
+        },
+        "expected-behavior": {
+          "strength": "strong",
+          "statement": "The engine would allow the later gate to be worked while the blocked gate waited, or allow the pending tail to be reordered ahead of it."
+        },
+        "observed-behavior": {
+          "strength": "strong",
+          "statement": "Neither. A blocked gate holds the active slot: 'REFUSED: g3-implement is not the active gate; start g1-integrate first'. And amend refuses to move a non-pending gate, so the blocked gate could not be reordered either. The engine's only exits from block are resume, which needs the blocker cleared, and skip, which means overtaken by events. There is no legal ordering that reaches evidence sitting at a later gate."
+        },
+        "impact-cost": {
+          "strength": "strong",
+          "statement": "The repair's stated gate order could not be expressed in the engine directly. The plan defect the predecessor had already named -- a claim at one gate with its evidence at a later one -- turned out to be not merely awkward but unrepresentable once the earlier gate blocked."
+        },
+        "workaround": {
+          "strength": "strong",
+          "statement": "The g3 implementer ran as the named blocker-clearing evidence for the blocked gate rather than as its own gate, since the blocker's own text pointed at exactly that measurement. Once the blocked gate closed on that evidence, an amend reordered the pending tail so the engine record matched the executed order, with the launch order cited as authority. The g3 gates were then driven normally against the already-returned artifact."
+        }
+      },
+      "diagnosis": [
+        {
+          "kind": "suspected-cause",
+          "strength": "medium",
+          "statement": "The engine models a block as a state of the active gate rather than as a dependency between gates, so it has no way to express 'still needed, evidence pending elsewhere'. Whether that is a gap or a deliberate refusal to make a mis-cut plan comfortable is genuinely unclear -- a gate that cannot close on its own evidence is arguably the real defect."
+        }
+      ]
+    }
+  ]
+}

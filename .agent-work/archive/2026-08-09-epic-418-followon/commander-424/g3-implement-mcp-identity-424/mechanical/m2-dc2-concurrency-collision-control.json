@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m2-dc2-concurrency-collision-control",
+  "mechanical": {
+    "run": "g3-implement-mcp-identity-424",
+    "project": "constellation-skills",
+    "role": "g3-implementer",
+    "refusals": 1,
+    "spine-step": "m2-dc2-concurrency-collision-control",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g3-implement-mcp-identity-424-m2-dc2-concurrency-collision-control@c74ee30b18f979c09b17f48fa4d0fd3f0b497147",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g3-implement-mcp-identity-424",
+    "generated_at": "2026-08-09T21:04:36Z"
+  }
+}

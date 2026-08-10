@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r15-dc1-machine-assertion",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r15-dc1-machine-assertion",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r15-dc1-machine-assertion@c0cf1bd18343b4da8fe016f969e9dcf4edbb5253",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T23:42:31Z"
+  }
+}

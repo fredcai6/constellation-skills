@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-full-suite-and-map",
+  "mechanical": {
+    "run": "g2-implement-mcp-imperative-equivalence-424",
+    "project": "constellation-skills",
+    "role": "g2-implementer",
+    "refusals": 0,
+    "spine-step": "m5-full-suite-and-map",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-g2-implement-mcp-imperative-equivalence-424-m5-full-suite-and-map@21206139247671442f810fde8226ee687297932a",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "g2-implement-mcp-imperative-equivalence-424",
+    "generated_at": "2026-08-09T22:43:05Z"
+  }
+}
