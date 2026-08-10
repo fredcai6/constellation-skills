@@ -748,13 +748,14 @@
   "refusals": 3,
   "engine_session": {
     "session_id": "epic-418-followon/commander-f2",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-10T05:29:38.210648+00:00",
     "last_heartbeat": "2026-08-10T09:29:37.173206+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-10T09:29:50.937470+00:00"
   },
   "why_trail": [
     {
