@@ -26,3 +26,12 @@ delivery mechanism for a cold or headless agent: a fresh project-scope
 lands in `Pending approval` with no human present to clear it (measured,
 `MISSION_FRAME.md`). For a real dispatch, use `scripts/gen_mcp_config.py` and
 `--mcp-config ... --strict-mcp-config` instead — see that script's docstring.
+
+## Why it lives here and not under `.agent-work/`
+
+It used to sit in issue #424's own work area. That is exactly wrong for a fixture the **committed**
+`.mcp.json` points at: when the run archived, the work area moved and the shipped default resolved to
+a path that no longer existed. `tests/test_mcp_spine_server.py`'s
+`test_mcp_json_referenced_spine_file_exists_and_loads` caught it immediately, which is what that test
+is for. A default the shipped config depends on belongs somewhere stable and tracked, with no
+lifecycle of its own.
