@@ -34,12 +34,14 @@ to it later:
 
    The answer to that used to be POLARITY predicates (`_retires_the_cli`,
    `_keeps_the_cli`) that read a retirement word and cancelled it on a denial standing
-   in front. **They are deleted.** Measured against the shipped functions they were
-   wrong 9 times out of 10 on retirements and 6 out of 7 on affirmatives, and they were
-   unexercised: gutting `_retires_the_cli` to `return None` left the suite fully green.
-   The doctrine sentence is now pinned as a BYTE-FOR-BYTE equality
-   (`CANONICAL_CLI_SENTENCE`) at the one path that is its written authority, which is
-   the one predicate a negation cannot satisfy and no spelling can evade.
+   in front. **They are deleted, and what that cost is written down at
+   `TestCLIStaysAvailableNotDeprecated` rather than glossed.** The short version: at
+   the DRIFT bar this file adopts they were roughly right, and they were deleted anyway
+   because their errors are not symmetric across authors. The doctrine sentence is now
+   pinned as a BYTE-FOR-BYTE equality (`CANONICAL_CLI_SENTENCE`) at the one path that
+   is its written authority — the one predicate a negation cannot satisfy and no
+   spelling can evade, over one sentence in one section of one file, where the deleted
+   predicate ran over all 100.
 
    `_asserts_the_default` and `_named_affirmatively` remain: both look for a
    prohibition immediately governing a named token, which is a much narrower and much
@@ -768,10 +770,12 @@ class TestTier3ChecklistEngineReference:
         "The CLI is removed. Every verb now goes through the door; nothing here
         discourages that." left the whole file at 91 passed.
 
-        Its replacement was a pair of polarity predicates, and they were worse:
-        measured against the shipped functions, `_retires_the_cli` was wrong 9
-        times out of 10 and `_keeps_the_cli` 6 out of 7, because a denial
-        anywhere earlier in the sentence cancelled the marker. Both are deleted.
+        Its replacement was a pair of polarity predicates, and they are also
+        deleted -- but NOT because they were simply worse. At the adversarial bar
+        they were wrong 9/10 and 6/7; at the DRIFT bar this file argues is the
+        real one they caught 3 of 4. They went because 5 of 6 honest
+        CLI-affirming sentences fired them. The full accounting, both bars and
+        what the deletion cost, is at `TestCLIStaysAvailableNotDeprecated`.
 
         What is asserted now: the CLI is named in the section, and the doctrine
         sentence is present BYTE FOR BYTE
@@ -886,8 +890,11 @@ class TestTier3CLIOnlyVerbsStayCLI:
 
     def test_verb_never_routed_through_a_door_tool(self):
         """Same predicate the whole corpus is held to (`_cli_only_verb_violations`):
-        unit-width, verb-name-scoped, and exempting a unit that says the verb has
-        no door tool -- so the reference page may go on DOCUMENTING the rule."""
+        unit-width and verb-name-scoped. There is NO exemption vocabulary -- the
+        old `NO_DOOR_TOOL_FOR_IT` phrase list is deleted. The reference page may
+        go on documenting the rule because the UNIT is narrow (line, then
+        sentence), not because a phrase excuses it; a single sentence that names
+        both is still flagged, which is what `ACCEPTED_FALSE_ALARM` pins."""
         violations = _cli_only_verb_violations(TIER3_PATH, _text(TIER3_PATH))
         assert not violations, (
             f"{TIER3_PATH} routes a CLI-only verb through a door tool -- no door tool "
@@ -960,10 +967,12 @@ class TestCLIOnlyVerbsAcrossEveryInstructionFile:
     at 91/91 green. It is now enforced over the WALK (`INSTRUCTION_FILES`), so a
     new instruction file is covered the day it lands.
 
-    FAILS IF: any walked file routes a CLI-only verb through a door tool -- the
-    two named together in one unit, with nothing beside the verb saying it has
-    no door tool. The pairing IS the defect: it is what makes a reader take the
-    door tool as the route for that verb.
+    FAILS IF: any walked file names a CLI-only verb and a door tool in the SAME
+    unit (line, then sentence). There is no exemption vocabulary -- a unit saying
+    "the verb has no door tool" is flagged like any other, which is the accepted
+    false alarm pinned in `ACCEPTED_FALSE_ALARM` and remedied by splitting the
+    sentence. The pairing IS the defect: it is what makes a reader take the door
+    tool as the route for that verb.
     """
 
     @pytest.mark.parametrize("path", INSTRUCTION_FILES)
@@ -1048,19 +1057,39 @@ class TestCLIStaysAvailableNotDeprecated:
     only asked whether the CLI was MENTIONED, so it could not tell "the CLI is
     your fallback" from "the legacy CLI is DEPRECATED". Both mention it.
 
-    **What replaced it, and what it does not claim.** A pair of polarity
-    predicates (`_retires_the_cli` / `_keeps_the_cli`) used to sit here, reading
-    retirement words and cancelling them on a denial standing in front. They are
-    deleted. Measured against the shipped functions they were wrong 9 times out
-    of 10 on retirements and 6 out of 7 on affirmatives: a denial ANYWHERE
-    earlier in the sentence cancelled the marker, so "the door is additive and
-    removes nothing" read as a RETIREMENT, and a CLI-retiring sentence counted
-    as affirmative evidence that the CLI stays. They were also unexercised --
-    gutting `_retires_the_cli` to `return None` left the file at 282 passed, so
-    the predicate could be replaced by a constant with the suite fully green.
+    **What replaced it, what it does not claim, and WHAT IT COST.** A pair of
+    polarity predicates (`_retires_the_cli` / `_keeps_the_cli`) used to sit here,
+    reading retirement words and cancelling them on a denial standing in front.
+    They are deleted. They were also unexercised -- gutting `_retires_the_cli` to
+    `return None` left the file at 282 passed, so the predicate could be replaced
+    by a constant with the suite fully green.
 
-    What is here instead is an equality on a byte string plus the
-    positive-presence checks that were already in this file.
+    **Measured at TWO bars, because the bar is the whole argument.** The first
+    pass measured only the adversarial one, and reported that tail as the
+    distribution:
+
+      ADVERSARIAL bar (crafted sentences, denial front-loaded)
+        wrong 9/10 on retirements, 6/7 on affirmatives.
+      DRIFT bar (plain deprecation appended to a skill body -- the failure this
+      file argues is the real one, below)
+        3/4 retirements CAUGHT. It was roughly right at its own bar.
+
+    So the honest case for deleting it is NOT "the predicate was wrong". It was
+    a coin-flip in both directions. The case is that **its errors are not
+    symmetric across authors**: 5 of 6 planted honest affirmatives fired it --
+    "the door is additive and removes nothing", "The door supersedes nothing",
+    "Adopting the door replaces no CLI instruction". Every one of those is a
+    sentence whose PURPOSE is that the CLI stays. An author strengthening the
+    CLI-stays language was the author most likely to get a red suite, and a check
+    that punishes the people doing the right thing is deleted by the next person
+    who trips it -- after which there is no check at all.
+
+    **What was given up, stated plainly:** the only corpus-wide guard on the
+    epic's hard constraint, running over all 100 walked files, catching plain
+    deprecation / legacy / supersede retirements. What is here instead is an
+    equality on a byte string covering ONE sentence in ONE section of ONE file,
+    plus the positive-presence checks that were already here. That is a real
+    reduction in coverage and it is a deliberate trade, not an upgrade.
 
     **This catches an adoption pass that DROPS the CLI, not an author determined
     to retire it while keeping the words. The second property is a stated
