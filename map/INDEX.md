@@ -2,7 +2,7 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 53 modules, 1038 entities
+scripts: 53 modules, 1043 entities
 skills: 1 modules, 18 entities
 tests: 60 modules, 3455 entities
 
@@ -29,7 +29,7 @@ tests: 60 modules, 3455 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (53 modules, 1038 entities)
+## scripts (53 modules, 1043 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -48,7 +48,7 @@ tests: 60 modules, 3455 entities
 - [scripts.hooks.spine_rail](scripts.hooks.spine_rail/INDEX.md) (37 entities, 11 holes): spine_rail.py -- Claude Code hook suite for the Constellation spine rail.
 
 - [scripts.agent_work_root](scripts.agent_work_root/INDEX.md) (6 entities, 1 holes): Resolve the DURABLE `.agent-work` root that survives `git worktree remove`.
-- [scripts.apply_episode_delta](scripts.apply_episode_delta/INDEX.md) (53 entities, 25 holes): Deterministically apply structured episode-delta operations to the episode store.
+- [scripts.apply_episode_delta](scripts.apply_episode_delta/INDEX.md) (54 entities, 25 holes): Deterministically apply structured episode-delta operations to the episode store.
 - [scripts.build_architecture_map](scripts.build_architecture_map/INDEX.md) (16 entities, 15 holes): HOLE: no docstring
 - [scripts.check_corpus_freshness](scripts.check_corpus_freshness/INDEX.md) (11 entities, 7 holes): Report whether an installed constellation corpus is current with upstream main.
 - [scripts.check_skill_freshness](scripts.check_skill_freshness/INDEX.md) (10 entities, 5 holes): Report template drift for a project against its installed-skill baseline.
@@ -68,7 +68,7 @@ tests: 60 modules, 3455 entities
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).
 - [scripts.recover_crews](scripts.recover_crews/INDEX.md) (8 entities, 3 holes): Recovery classifier over the durable crew-run registry.
-- [scripts.run_crew](scripts.run_crew/INDEX.md) (46 entities, 10 holes): Safe crew launcher with a durable session-recovery registry.
+- [scripts.run_crew](scripts.run_crew/INDEX.md) (50 entities, 11 holes): Safe crew launcher with a durable session-recovery registry.
 - [scripts.run_skill_eval](scripts.run_skill_eval/INDEX.md) (42 entities, 10 holes): Corpus skill-eval runner — the PURE, agent-free core (#106, gate g2).
 - [scripts.verify_context_declaration](scripts.verify_context_declaration/INDEX.md) (7 entities, 1 holes): Lint: every declared `context_refs` path must appear verbatim in its own task's `imperative` prose.
 - [scripts.verify_coverage_ledger](scripts.verify_coverage_ledger/INDEX.md) (6 entities, 2 holes): Verify the removability coverage ledger against the installed-externals manifest.
@@ -82,7 +82,7 @@ tests: 60 modules, 3455 entities
 - [scripts.verify_interrogation](scripts.verify_interrogation/INDEX.md) (9 entities, 3 holes): Refuse a self-answered or unsigned interrogation — the interrogator RAIL.
 - [scripts.verify_issue_set](scripts.verify_issue_set/INDEX.md) (18 entities, 14 holes): Verify and render the strict v1 initial-cut contract.
 - [scripts.verify_iterative_planning_acceptance](scripts.verify_iterative_planning_acceptance/INDEX.md) (6 entities, 5 holes): Verify all ten frozen iterative-planning acceptance items offline.
-- [scripts.verify_iterative_role_artifacts](scripts.verify_iterative_role_artifacts/INDEX.md) (20 entities, 13 holes): Verify installed iterative-planning role artifacts without tracker/network I/O.
+- [scripts.verify_iterative_role_artifacts](scripts.verify_iterative_role_artifacts/INDEX.md) (20 entities, 12 holes): Verify installed iterative-planning role artifacts without tracker/network I/O.
 - [scripts.verify_retirement](scripts.verify_retirement/INDEX.md) (19 entities, 3 holes): Guard the #403 retirement: scan the tracked tree and NAME what is still wrong.
 - [scripts.verify_skill_registered](scripts.verify_skill_registered/INDEX.md) (6 entities, 2 holes): Refuse a mechanically-broken or unregistered skill — the constellation-write-a-skill RAIL.
 - [scripts.verify_skip_guard](scripts.verify_skip_guard/INDEX.md) (5 entities, 2 holes): Verify no undocumented pytest skip slipped into a run's --junitxml report.

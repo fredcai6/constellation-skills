@@ -133,13 +133,33 @@ The reasoning, independent of the panel split:
   agent-supplied `task-intent` field (§4) is exactly where that description lives instead;
   the id's job is stable, mechanical addressability, not narration.
 
-**Grammar**: `[a-z0-9][a-z0-9-]*-[0-9]{3,}` — a run-id (kebab-case, matching the
-work-id vocabulary already in use across the fleet) followed by a hyphen and a zero-padded
+**Grammar**: `[a-z0-9][a-z0-9_-]*-[0-9]{3,}` — a run-id (matching the work-id
+vocabulary already in use across the fleet, flattened per the paragraph below) followed by
+a hyphen and a zero-padded
 sequence of at least 3 digits. The **basename** is the id: `<id>.md`. Which directory
 holds it is its retirement status (§7) — `episodes/active/<id>.md` while it is in the
 ordinary rhyme-search set, `episodes/retired/<id>.md` once retired. A file at the flat
 `episodes/<id>.md` belongs to neither set and is **malformed**; §7 explains why that is
 refused rather than skipped.
+
+**A run-id may NEST; an episode id may not.** The run-id is the work-id, and a work-id is
+a path under `.agent-work/` that the epic/commander convention nests
+(`epic-418-followon/commander-424`). The run grammar is therefore
+`[a-z0-9][a-z0-9-]*(?:/[a-z0-9][a-z0-9-]*)*` — flat kebab segments joined by `/` — and the
+record's `- run:` line carries the work-id **verbatim**, because that is what
+`verify_episode_captured.py <work-id>` matches on and what the closeout spine passes it. A
+run grammar that refused the separator made that mandated closeout step impossible to
+complete: the writer forbade exactly the id the gate demanded.
+
+The **id** cannot carry the separator. An episode file sits directly inside `active/` or
+`retired/`, and a `/` in the basename would bury it one level deeper, where
+`_layout_episode_ids` (§7) refuses it as misfiled. So the id flattens the run's separators
+to `_`: `epic-418-followon/commander-424` → `epic-418-followon_commander-424-001`. The
+mapping is **injective**, which is the whole reason `_` is the flattening character — no
+run segment may contain one, so no two runs can mint the same id and one epic's record can
+never overwrite another's. This is a filename encoding, not a normalization of identity:
+no segment is dropped, and an ungrammatical run is refused rather than coerced into a
+grammatical one.
 
 ## 3. Record grammar — a real worked episode, as it appears on disk
 
