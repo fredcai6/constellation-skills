@@ -12,6 +12,14 @@ comment/shape already landed in `tests/test_mcp_spine_server.py`'s own
 `_cli_current()`. Swept the whole file for other unpinned `text=True` call
 sites — there was only ever this one.
 
+**Commits on `epic-418/f-424-mcp-door`:**
+- `06b116d6` — the fix itself (`tests/test_mcp_imperative_equivalence.py`),
+  the demonstration script, its captured before/after evidence, and the
+  plan's per-item engine why-capture files.
+- `0a3c22f4` — this result file plus the plan's final completed state
+  (written after `06b116d6` since the result documents the completed plan,
+  which only exists once every item advances).
+
 ## Scope
 **Files changed:**
 - `tests/test_mcp_imperative_equivalence.py` — the one in-scope production
