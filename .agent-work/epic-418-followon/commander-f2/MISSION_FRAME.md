@@ -1,13 +1,25 @@
 # Mission Frame — commander-f2 (#542 adoption, #541 friction capture)
 
-**Read this first: why this frame carries no anchor ids.** The context step's orientation
-came back `DEGRADED-UNPARSEABLE` — this repo has no `docs/architecture` packet map, its
-own derived code map is an unfilled template, and `map/ids.jsonl` is empty. There is no
-map for an anchor id to be a member of, so writing one here would be a citation to
-nothing. The frame is built instead from the four readings the orientation receipt
-hash-pinned as substitutes, named below wherever they carry the point. The launch order's
-pre-rulings are referred to by their bare slug (`the-cli-door-stays`) rather than in
-anchor grammar, for the same reason: they are the Admiral's rulings, not map anchors.
+**Read this first: why this frame carries no anchor ids — CORRECTED.** An earlier version
+of this paragraph said the repo had no map. That was wrong, and it was wrong in an
+instructive way: I read `map_orient.py:447`'s literal parenthetical *"content but no
+citable anchor id (unfilled template?)"* — a **guess about the file's state, printed
+inside a verdict** — and repeated it as an observation without opening the file. The
+Admiral measured it and corrected me (#548).
+
+**The map is present and complete.** `map/INDEX.md` is 23855 bytes over 132 modules and
+4848 entities, with a per-module `INDEX.md` under each, held byte-fresh by
+`tests/test_code_map.py::MapTreeFreshnessTests`. It is now hash-pinned in this run's
+orientation receipt and it is read: every structural anchor below carries its entity/hole
+count from it.
+
+This frame still carries no `struct:`/`capability:`/`decision:` **anchor ids**, because
+`map_orient`'s `ANCHOR_RE` accepts only the vocabulary of a hand-written architecture
+packet and a *generated* code map contains none of those tokens by construction. #536
+taught the probe where to look and not what it would find. So the run is DEGRADED because
+**the orientation tool cannot parse a code map**, not because a map is missing — and the
+launch order's pre-rulings are referred to by bare slug (`the-cli-door-stays`) for the
+same reason: they are the Admiral's rulings, not map anchors.
 
 ## Intent
 
@@ -155,13 +167,18 @@ corrected instrument is cheaper and more honest than a fresh one.
 
 ## Map Confidence / Staleness / Disputes
 
-- **The whole map is absent, not merely stale.** `map/ids.jsonl` empty, `map/INDEX.md` an
-  unfilled template, no `docs/architecture`. Every anchor this run would want does not
-  exist. **How it alters the plan:** blast radius was derived by explicit grep and is
-  written into this frame as a measured file inventory rather than assumed; no gate is
-  authored against an unverified structural claim; and the condition is escalated to the
-  Admiral as an epic-wide standing condition rather than repaired inside a wave under
-  measurement.
+- **The map is sound; the ORIENTATION TOOL is what is broken.** `map/INDEX.md` is complete
+  and fresh; `map_orient` cannot parse a generated code map because its anchor grammar
+  only admits hand-written packet vocabulary, and `map/ids.jsonl` is empty. **How it
+  alters the plan:** the map is read directly and its per-module entity/hole counts are
+  carried into the structural anchors above; blast radius is additionally derived by
+  explicit grep and written in as a measured inventory; no gate is authored against an
+  unverified structural claim; and `map_orient` is escalated to the Admiral (#548) rather
+  than repaired inside a wave under measurement.
+- **The failure mode that produced my earlier wrong claim is itself a confidence flag.**
+  A tool that reports a defective world and a healthy one alike, plus a plausible
+  explanation that makes checking feel unnecessary, is exactly what this run's own g2 is
+  built to make visible. Noted here because it recurred inside the run that is fixing it.
 - **F's DC5 numbers are not carried.** Per `remeasure-never-reuse`, this run's code
   changes invalidate them as a baseline. They are cited as prior art for the instrument
   and for the fumble-rate context, never as this run's measurement.

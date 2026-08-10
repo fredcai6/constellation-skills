@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "execute",
+  "mechanical": {
+    "run": "epic-418-followon/commander-f2",
+    "project": "constellation-skills",
+    "role": "agent",
+    "refusals": 3,
+    "spine-step": "execute",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-f2-execute@671365ec6f33121a127ed14013a74a3bb9fc4a73",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-f2",
+    "generated_at": "2026-08-10T05:59:09Z"
+  }
+}

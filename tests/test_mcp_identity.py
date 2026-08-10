@@ -660,3 +660,180 @@ class DC3InheritanceMechanismTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# =============================================================================
+# g1 (issue #542/#541, workstream F2): the identity-binding PIN
+# =============================================================================
+
+
+class IdentityBindingPinTests(unittest.TestCase):
+    """Pin the identity binding that `IDENTITY_TRADE.md` selects, so a later
+    change cannot move it silently.
+
+    WRITTEN OUTCOME-NEUTRALLY, on purpose. This class does not encode "binding
+    identity to the process is correct" -- that is the trade document's job,
+    and the trade was genuinely open when this was written. It encodes the
+    weaker and more durable claim: *the binding is what the recorded decision
+    says it is*. If a future run re-opens the trade and moves identity to a
+    per-call argument, these tests go red, and going red is the point: the
+    change then has to arrive together with a change to `IDENTITY_TRADE.md`
+    rather than instead of one.
+
+    The property being pinned, in one line: **the door can only ever touch the
+    spine its own process was launched for, because there is no argument that
+    would let it touch another.** That is confinement by construction. It is
+    what an in-session Task subagent -- which shares its parent's process and
+    therefore its parent's server -- makes load-bearing, and it is what the
+    CLI door deliberately does NOT have (`--file`/`--session-id` are per call),
+    which is why the two doors are different tools rather than two copies of
+    one.
+
+    Companion seam, named but NOT tested here: `scripts/hooks/spine_rail.py`
+    has the same defect by a different route (issue #549) -- it is outside this
+    run's file fence and is cited by the trade document, not repaired.
+    """
+
+    #: Argument names that would carry a spine path or a caller-supplied
+    #: identity into a tool call. Substring-matched against every tool
+    #: property name, so `spine_file`, `spineFile`, `target_spine` and
+    #: `session_id` are all caught without enumerating spellings.
+    IDENTITY_ARG_MARKERS = ("spine", "session", "engine", "checklist_file", "identity")
+
+    #: Deliberately NOT matched: `task_id` (a gate id within the bound spine),
+    #: `condition_id`, `evidence_ref`, `from_child`. Those address things
+    #: INSIDE the spine the server is already bound to; they cannot redirect
+    #: it. The distinction is the whole discriminator, so it is stated rather
+    #: than left implicit in a regex.
+    ADDRESSES_WITHIN_BOUND_SPINE = ("task_id", "condition_id", "evidence_ref", "from_child")
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self.tmp.name)
+        self.spine = write_marked_spine(self.root, "PIN-MARK", "pin-work")
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _load_module(self, spine: Path, session: str):
+        """Import a FRESH copy of the server module under a chosen environment.
+
+        A fresh module object per call is what makes 'bound at import' a
+        testable claim at all: a cached import would carry the first test's
+        environment into every later one.
+        """
+        import importlib.util
+
+        env_patch = {
+            "SPINE_FILE": str(spine),
+            "SPINE_ENGINE": str(ENGINE),
+            "SPINE_SESSION": session,
+            "SPINE_CALLLOG": str(spine.parent / "pin_calls.jsonl"),
+            "SPINE_START_MARKER": str(spine.parent / "pin_started"),
+        }
+        saved = {k: os.environ.get(k) for k in env_patch}
+        os.environ.update(env_patch)
+        try:
+            spec = importlib.util.spec_from_file_location(
+                f"_pinned_door_{abs(hash(session)) % 100000}", SERVER)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+        finally:
+            for key, value in saved.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+
+    def test_no_tool_accepts_an_argument_that_could_redirect_the_door(self):
+        """THE pin. Identity is not per-call, so no tool may take an argument
+        naming a spine, a session or an engine. A future change that adds one
+        has moved the binding and must say so in IDENTITY_TRADE.md."""
+        module = self._load_module(self.spine, "pin-session#pin-agent")
+        offenders = []
+        for tool in module.TOOLS:
+            schema = tool.get("inputSchema") or {}
+            for prop in (schema.get("properties") or {}):
+                if prop in self.ADDRESSES_WITHIN_BOUND_SPINE:
+                    continue
+                lowered = prop.lower()
+                if any(marker in lowered for marker in self.IDENTITY_ARG_MARKERS):
+                    offenders.append(f"{tool['name']}.{prop}")
+        self.assertEqual(
+            [], offenders,
+            "a tool now accepts an argument that could point the door at a different "
+            f"spine or identity: {offenders}. If the identity trade was deliberately "
+            "re-opened, update .agent-work/epic-418-followon/commander-f2/IDENTITY_TRADE.md "
+            "in the same change -- this test exists so that cannot happen silently.",
+        )
+
+    def test_the_pin_can_fail(self):
+        """Positive control, in the assertion path. A tool schema carrying a
+        spine argument MUST be detected -- otherwise the test above is green
+        for the wrong reason and proves nothing."""
+        module = self._load_module(self.spine, "pin-control#pin-agent")
+        planted = dict(module.TOOLS[0])
+        planted["inputSchema"] = {
+            "type": "object",
+            "properties": {"spine_file": {"type": "string"}},
+        }
+        offenders = []
+        for tool in [planted]:
+            for prop in (tool["inputSchema"].get("properties") or {}):
+                if any(m in prop.lower() for m in self.IDENTITY_ARG_MARKERS):
+                    offenders.append(f"{tool['name']}.{prop}")
+        self.assertTrue(
+            offenders,
+            "the detector did not flag a planted `spine_file` tool argument -- the "
+            "pin above is incapable of failing and is therefore not evidence",
+        )
+
+    def test_identity_is_bound_at_import_and_is_immune_to_later_environment_change(self):
+        """The confinement property itself: once the module is imported, moving
+        SPINE_FILE in the environment cannot move where the door points. A
+        binding re-read per call would fail this."""
+        module = self._load_module(self.spine, "pin-immune#pin-agent")
+        bound_spine, bound_session = module.SPINE, module.SESSION
+        self.assertEqual(Path(self.spine).resolve(), bound_spine)
+        self.assertEqual("pin-immune#pin-agent", bound_session)
+
+        other = write_marked_spine(self.root / "other", "OTHER-MARK", "other-work")
+        saved = os.environ.get("SPINE_FILE")
+        os.environ["SPINE_FILE"] = str(other)
+        try:
+            self.assertEqual(
+                bound_spine, module.SPINE,
+                "the door followed a later environment change -- identity is no longer "
+                "bound at import, which is the property IDENTITY_TRADE.md selected",
+            )
+        finally:
+            if saved is None:
+                os.environ.pop("SPINE_FILE", None)
+            else:
+                os.environ["SPINE_FILE"] = saved
+
+    def test_two_doors_bound_to_two_spines_do_not_share_a_binding(self):
+        """Two module objects, two environments, two bindings. This is the
+        in-process analogue of DC2 and is what makes 'one process = one spine'
+        a statement about the module rather than about a subprocess."""
+        other = write_marked_spine(self.root / "second", "SECOND-MARK", "second-work")
+        first = self._load_module(self.spine, "first#a")
+        second = self._load_module(other, "second#b")
+        self.assertNotEqual(first.SPINE, second.SPINE)
+        self.assertNotEqual(first.SESSION, second.SESSION)
+
+    def test_the_recorded_trade_exists_and_still_names_the_binding_this_pins(self):
+        """The pin and the record are one artifact in two files; a pin whose
+        record has been deleted is a rule nobody can look up the reason for.
+        `identity-trade-is-recorded` makes silence a gate failure, so absence
+        is red rather than skipped."""
+        trade = ROOT / ".agent-work" / "epic-418-followon" / "commander-f2" / "IDENTITY_TRADE.md"
+        self.assertTrue(trade.is_file(), f"the recorded identity trade is missing: {trade}")
+        text = trade.read_text(encoding="utf-8")
+        for required in ("property given up", "granularity", "spine_rail"):
+            self.assertIn(
+                required, text,
+                f"IDENTITY_TRADE.md no longer discusses {required!r} -- the pin and the "
+                "record have drifted apart",
+            )

@@ -54,6 +54,11 @@
   ],
   "substitutes": [
     {
+      "path": "map/INDEX.md",
+      "content_hash": "416375b9aa35868caae0ef3049f5303f922ce1bedab9a3737521a7e8513aeeb7",
+      "source": "agent-declared"
+    },
+    {
       "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
       "content_hash": "2ecf6ac1d58672e348ce15d7a6619457be9d914c5e4d73ae7999e183e5420a9b",
       "source": "agent-declared"
@@ -102,9 +107,9 @@
     }
   ],
   "unmapped": [
-    "This skill-source repo carries no docs/architecture packet map (map/ids.jsonl empty, map/INDEX.md an unfilled template). No structural anchors exist for scripts/mcp_spine_server.py, scripts/install_constellation.py, scripts/apply_episode_delta.py, .mcp.json, or the role spine templates under skills/ - the exact surfaces this run owns. Blast radius and reference edges were derived from source reads and F's archived MEASUREMENT.md instead of from a map."
+    "CORRECTED, and the correction matters more than the original claim. The map is PRESENT and COMPLETE: map/INDEX.md is 23855 bytes covering 132 modules and 4848 entities across evals/scripts/skills/tests, with a per-module INDEX.md under each, and tests/test_code_map.py::MapTreeFreshnessTests asserts it is byte-identical to a fresh build. It names every surface this run owns (scripts.mcp_spine_server 8 entities/5 holes, scripts.install_constellation 81/30, scripts.apply_episode_delta 54/25, scripts.episode_capture 15, scripts.checklist_engine 106/25) and I have now read it. What is genuinely unmapped is nothing structural; what is BROKEN is map_orient itself. Its ANCHOR_RE accepts only struct:/capability:/event:/constraint:/assumption:/claim:/decision: tokens - the vocabulary of a hand-written architecture packet - and a generated code map contains none by construction. #536 taught the probe where to look and not what it would find, so it reaches the right file and rejects it. This run is DEGRADED because the orientation tool cannot parse a code map, NOT because a map is missing."
   ],
-  "escalation": "Escalated to the Admiral (epic-418-followon) as a standing repo condition, not a defect of this run: the code-map work landed in #527 but map/ids.jsonl is empty on this base, so every Commander in this epic runs map-DEGRADED. Recorded as a triage candidate rather than repaired inside a wave under measurement, per the launch order's cheap-fixes-are-routed-not-implemented rule.",
-  "emitted_at": "2026-08-10T05:32:23.997486+00:00",
+  "escalation": "Escalated to the Admiral, who measured this and corrected me: I read map_orient.py:447's literal parenthetical 'content but no citable anchor id (unfilled template?)' and reported its GUESS about the file's state one tier up as an observation, without opening the file. That is the epic's own named failure mode - a tool that reports a defective world and a healthy one alike, plus a plausible explanation that makes checking feel unnecessary. Filed by the Admiral as #548. Carried as a triage candidate; map_orient is NOT repaired inside this wave.",
+  "emitted_at": "2026-08-10T05:51:25.262133+00:00",
   "root_proof": "positive: .git entry present at root"
 }
