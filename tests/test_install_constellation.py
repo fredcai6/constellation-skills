@@ -2612,6 +2612,367 @@ class HookWiringOptInTests(_HookWiringFixture):
 
 
 # --------------------------------------------------------------------------- #
+# all four hooks, source-tree wiring, and loud refusal (#539)
+# --------------------------------------------------------------------------- #
+class _MultiHookFixture(_HookWiringFixture):
+    """Adds helpers for the four-hook world on top of the governor fixture."""
+
+    def _settings_json(self, tmp, name="settings.json") -> dict:
+        return json.loads((Path(tmp) / name).read_text(encoding="utf-8"))
+
+    def _all_commands(self, settings: dict) -> dict:
+        """{(event, matcher, script): (command, timeout)} for every hook."""
+        found = {}
+        for event, entries in settings.get("hooks", {}).items():
+            for entry in entries:
+                for hook in entry["hooks"]:
+                    command = hook["command"]
+                    script = Path(command.split('"')[1]).name
+                    found[(event, entry.get("matcher"), script)] = (command, hook.get("timeout"))
+        return found
+
+
+class AllFourHookWiringTests(_MultiHookFixture):
+    """#539 gap 2: `--wire-hooks` could only ever write the PostToolUse gauge
+    writer. The three spine_rail.py events -- Stop, SessionStart and a second
+    PostToolUse -- had no representation in the installer at all, so neither
+    wiring nor detection could see them.
+
+    `--hooks governor` remains the default and remains byte-for-byte what the
+    flag did before, because the rail can BLOCK a Stop and must not arrive in
+    somebody's settings.json as a side effect of an install they already knew
+    how to run."""
+
+    def test_default_wire_hooks_still_writes_only_the_governor(self):
+        """The unchanged contract, asserted rather than assumed."""
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks")
+            settings = self._settings_json(tmp)
+            self.assertEqual(["PostToolUse"], list(settings["hooks"]))
+            self.assertEqual(1, len(settings["hooks"]["PostToolUse"]))
+
+    def test_hooks_all_writes_every_spec_with_its_own_event_matcher_and_timeout(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all")
+            written = self._all_commands(self._settings_json(tmp))
+            self.assertEqual(
+                len(installer.HOOK_SPECS), len(written),
+                f"expected one entry per spec, got {sorted(written)}",
+            )
+            for spec in installer.HOOK_SPECS:
+                key = (spec.event, spec.matcher, spec.script)
+                self.assertIn(key, written, f"{spec.name} was not wired")
+                command, timeout = written[key]
+                self.assertEqual(spec.timeout, timeout, spec.name)
+                # The event argument distinguishes the three rail entries from
+                # each other; without it all three would invoke the same
+                # handler and two of the three events would be dead.
+                self.assertTrue(
+                    command.endswith(" ".join(("", *spec.args)).rstrip()) if spec.args
+                    else command.endswith('"'),
+                    f"{spec.name}: args not appended: {command!r}",
+                )
+
+    def test_hooks_rail_writes_the_three_rail_events_and_no_governor(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "rail")
+            written = self._all_commands(self._settings_json(tmp))
+            self.assertEqual(
+                {(s.event, s.matcher, s.script) for s in installer.SPINE_RAIL_SPECS},
+                set(written),
+            )
+
+    def test_every_wired_command_actually_executes(self):
+        """Run each generated command EXACTLY as Claude Code would -- same
+        string, stdin JSON. String-matching a rendered command is not evidence
+        that it runs, and a shipped-but-inert hook is indistinguishable from a
+        working one from the outside. This is the governor test extended to
+        all four, where a wrong event argument or a lost quote would otherwise
+        be invisible."""
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all")
+            commands = [c for c, _ in self._all_commands(self._settings_json(tmp)).values()]
+            self.assertEqual(4, len(commands), "nothing was wired, so nothing was run")
+            for command in commands:
+                result = subprocess.run(
+                    command, shell=True, input="{}", capture_output=True, text=True,
+                    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                )
+                self.assertEqual(
+                    0, result.returncode,
+                    f"the wired command did not run: {command!r}\n"
+                    f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
+                )
+
+    def test_all_four_wired_then_detect_as_wired(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all")
+            wiring = installer.detect_hook_wiring(
+                self._settings(tmp), env={}, specs=installer.HOOK_SPECS)
+            self.assertEqual(installer.WIRING_WIRED, wiring.state)
+            self.assertEqual((), wiring.missing)
+
+    def test_three_of_four_reads_as_partial_and_names_the_missing_hook(self):
+        """THE new reassuring-failure shape, one level up from `stale`: before
+        #539 a single resolvable entry made the whole verdict `wired`, so three
+        missing hooks out of four would have read as fully wired."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all")
+            settings = self._settings_json(tmp)
+            del settings["hooks"]["Stop"]
+            self._write_settings(tmp, settings)
+            wiring = installer.detect_hook_wiring(
+                self._settings(tmp), env={}, specs=installer.HOOK_SPECS)
+            self.assertEqual(installer.WIRING_PARTIAL, wiring.state)
+            self.assertEqual(("spine_rail_stop",), wiring.missing)
+            line = installer.describe_hook_wiring(wiring)
+            self.assertIn("PARTIALLY WIRED", line)
+            self.assertIn("spine_rail_stop", line)
+
+    def test_partial_is_unreachable_for_a_single_spec(self):
+        """Anti-vacuity for the state above: with one spec there is nothing to
+        be partial about, which is why the governor-only default keeps exactly
+        its pre-#539 four-state behaviour."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                self._entry(f'py "{hook.as_posix()}"')]}})
+            wiring = installer.detect_hook_wiring(path, env={})
+            self.assertEqual(installer.WIRING_WIRED, wiring.state)
+
+    def test_detection_of_an_exec_form_entry_is_not_a_false_unwired(self):
+        """We never emit exec form, but a hand-written one is real. Reading it
+        as "no hook here" would be a silent false negative in the one detector
+        that exists to catch silence."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            hook = self._fake_hook_file(tmp)
+            path = self._write_settings(tmp, {"hooks": {"PostToolUse": [
+                {"matcher": "*", "hooks": [{
+                    "type": "command", "command": "python3",
+                    "args": [hook.as_posix()], "timeout": 10}]}]}})
+            self.assertEqual(
+                installer.WIRING_WIRED, installer.detect_hook_wiring(path, env={}).state)
+
+
+class SourceTreeHookWiringTests(_MultiHookFixture):
+    """#539 gap 1: `hook_command()` pinned an absolute INSTALLED path by
+    construction, so the one repo whose hooks it could not wire was the repo
+    that owns them. `--hooks-from source` points at this checkout's own
+    scripts/hooks/ instead.
+
+    It writes settings.local.json, not settings.json, and that is not a
+    preference: a source command carries this checkout's absolute path AND an
+    interpreter probed on this host, so it is wrong for every other machine by
+    construction."""
+
+    def test_source_wiring_points_at_this_checkouts_own_hook_scripts(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
+            written = self._all_commands(self._settings_json(tmp, "settings.local.json"))
+            self.assertEqual(len(installer.HOOK_SPECS), len(written))
+            for (_event, _matcher, script), (command, _timeout) in written.items():
+                expected = installer.source_hook_path(script)
+                self.assertTrue(
+                    expected.is_file(), f"wired a path with no file behind it: {expected}")
+                self.assertIn(expected.as_posix(), command)
+                self.assertNotIn("${CLAUDE_PROJECT_DIR}", command)
+
+    def test_source_wiring_writes_the_local_file_and_never_the_shared_one(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
+            self.assertTrue((Path(tmp) / "settings.local.json").is_file())
+            self.assertFalse(
+                self._settings(tmp).exists(),
+                "source wiring created the SHARED settings.json, which every "
+                "contributor reads unmodified",
+            )
+
+    def test_source_wiring_leaves_an_existing_shared_settings_json_byte_identical(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            shared = self._write_settings(tmp, {"hooks": {"PostToolUse": [self._entry(
+                '"${CLAUDE_PROJECT_DIR}/scripts/hooks/gauge_writer_hook.py"')]}})
+            before = shared.read_bytes()
+            self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
+            self.assertEqual(before, shared.read_bytes())
+
+    def test_the_source_wired_commands_actually_execute(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp, "--wire-hooks", "--hooks", "all", "--hooks-from", "source")
+            commands = [
+                c for c, _ in
+                self._all_commands(self._settings_json(tmp, "settings.local.json")).values()
+            ]
+            self.assertEqual(4, len(commands), "nothing was wired, so nothing was run")
+            for command in commands:
+                result = subprocess.run(
+                    command, shell=True, input="{}", capture_output=True, text=True,
+                    env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                )
+                self.assertEqual(
+                    0, result.returncode,
+                    f"the source-wired command did not run: {command!r}\n"
+                    f"stdout={result.stdout!r}\nstderr={result.stderr!r}",
+                )
+
+    def test_source_wiring_does_not_need_the_workbench_skill_installed(self):
+        """The installed-copy precondition is about the install; source wiring
+        points somewhere else entirely, so requiring it would be refusing on a
+        ground that does not apply."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+                 "--skills", "charter", "--wire-hooks", "--hooks-from", "source"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((Path(tmp) / "settings.local.json").is_file())
+
+    def test_source_wiring_refuses_a_git_tracked_local_settings_file(self):
+        """Committing it hands every teammate a path that does not exist on
+        their machine, and an interpreter name that may not either."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=str(repo), capture_output=True)
+            subprocess.run(["git", "config", "user.email", "t@example.com"],
+                           cwd=str(repo), capture_output=True)
+            subprocess.run(["git", "config", "user.name", "T"], cwd=str(repo), capture_output=True)
+            local = repo / "settings.local.json"
+            local.write_text("{}", encoding="utf-8")
+            subprocess.run(["git", "add", "settings.local.json"], cwd=str(repo), capture_output=True)
+            subprocess.run(["git", "commit", "-qm", "x"], cwd=str(repo), capture_output=True)
+            before = local.read_bytes()
+
+            stderr = io.StringIO()
+            with contextlib.redirect_stderr(stderr):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+                         "--skills", self.OWNER_SKILL, "--wire-hooks", "--hooks-from", "source"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn("git-tracked", stderr.getvalue())
+            self.assertEqual(before, local.read_bytes(), "the tracked file was written anyway")
+
+    def test_the_same_run_succeeds_when_the_local_file_is_untracked(self):
+        """Anti-vacuity for the refusal above: it must be about TRACKEDNESS,
+        not about source mode refusing everything in a git repo."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            subprocess.run(["git", "init", "-q"], cwd=str(repo), capture_output=True)
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user", "--dest", str(self._dest(tmp)),
+                 "--skills", self.OWNER_SKILL, "--wire-hooks", "--hooks-from", "source"],
+                env={}, out=lambda _: None,
+            )
+            self.assertEqual(0, code)
+            self.assertTrue((repo / "settings.local.json").is_file())
+
+
+class HookWiringLoudFailureTests(_MultiHookFixture):
+    """#539's fourth requirement: whatever ships must fail LOUDLY on a platform
+    it cannot serve. Silent success is the failure mode the whole issue exists
+    to kill -- a hook that exits 0 without running is worse than one that
+    errors, because nothing anywhere can report it."""
+
+    def _fallback(self, installer):
+        """The resolution `resolve_interpreter()` returns when NO candidate on
+        the host answered: an os.name guess, not a measurement."""
+        return installer.InterpreterResolution(
+            "py", installer.INTERPRETER_CANDIDATES, "os-default-fallback")
+
+    def _probed(self, installer):
+        return installer.InterpreterResolution(
+            sys.executable, installer.INTERPRETER_CANDIDATES, "probe")
+
+    def test_wire_hooks_refuses_the_os_default_fallback_interpreter(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp)  # install the owner skill, wire nothing
+            with self.assertRaises(installer.InstallError) as raised:
+                installer.wire_hooks(
+                    self._dest(tmp), interpreter=self._fallback(installer),
+                    dry_run=False, scope="user", out=lambda _: None,
+                )
+            message = str(raised.exception)
+            self.assertIn("no Python interpreter answered", message)
+            for candidate in installer.INTERPRETER_CANDIDATES:
+                self.assertIn(candidate, message)
+            self.assertFalse(
+                self._settings(tmp).exists(),
+                "refused loudly but wrote the unrunnable wiring anyway",
+            )
+
+    def test_the_same_call_succeeds_on_a_probed_interpreter(self):
+        """Anti-vacuity: the refusal above must be about the FALLBACK, not
+        about wire_hooks refusing every direct call."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp)
+            installer.wire_hooks(
+                self._dest(tmp), interpreter=self._probed(installer),
+                dry_run=False, scope="user", out=lambda _: None,
+            )
+            self.assertTrue(self._settings(tmp).is_file())
+
+    def test_the_fallback_refusal_also_fires_under_dry_run(self):
+        """A dry run that printed a command the host cannot run would be
+        telling the user the wiring is fine when it is not."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._run(tmp)
+            with self.assertRaises(installer.InstallError):
+                installer.wire_hooks(
+                    self._dest(tmp), interpreter=self._fallback(installer),
+                    dry_run=True, scope="user", out=lambda _: None,
+                )
+
+    def test_source_wiring_refuses_a_checkout_with_no_hook_scripts(self):
+        """`--hooks-from source` only means something in a checkout that owns
+        scripts/hooks/. Pointing it at a tree without them must refuse, not
+        wire a path with nothing behind it."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            original = installer.source_hook_path
+            installer.source_hook_path = lambda script, repo_root=None: (
+                Path(tmp) / "no-such-checkout" / "scripts" / "hooks" / script)
+            try:
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    with self.assertRaises(SystemExit) as raised:
+                        installer.main(
+                            ["--agent", "claude", "--scope", "user",
+                             "--dest", str(self._dest(tmp)), "--skills", self.OWNER_SKILL,
+                             "--wire-hooks", "--hooks-from", "source"],
+                            env={}, out=lambda _: None,
+                        )
+                self.assertNotEqual(0, raised.exception.code)
+                self.assertIn("no hook script", stderr.getvalue())
+            finally:
+                installer.source_hook_path = original
+            self.assertFalse((Path(tmp) / "settings.local.json").exists())
+
+    def test_build_hook_command_refuses_to_emit_a_leading_quote(self):
+        """The trap this whole issue is named for, made unrepresentable at the
+        emit site: a command starting with `"` parses under PowerShell as a
+        string-literal expression, so the hook echoes its path and exits 0."""
+        installer = load_installer()
+        with self.assertRaises(installer.InstallError) as raised:
+            installer.build_hook_command(Path("/repo/scripts/hooks/spine_rail.py"), "", ("Stop",))
+        self.assertIn("does not start with a command word", str(raised.exception))
+
+
+# --------------------------------------------------------------------------- #
 # readiness check (#458) -- report-only, refuses when unready, never repairs
 # --------------------------------------------------------------------------- #
 class ReadinessEngineCheckTests(unittest.TestCase):
@@ -2879,6 +3240,127 @@ class ReadinessHooksCheckTests(_HookWiringFixture):
         self.assertTrue(result.ready)
 
 
+class ReadinessTriStateTests(_MultiHookFixture):
+    """#539 requirement 3: `--check-readiness` must distinguish NOT WIRED YET
+    from WIRED WRONG, and must not launder an honest "I cannot tell" into
+    either a pass or a fail.
+
+    The pre-existing CANNOT EVALUATE behaviour is RIGHT and is preserved: the
+    detector refuses to expand `${CLAUDE_PROJECT_DIR}` because it would be
+    expanded in the installer's process, not the future hook's. What was wrong
+    was the ROLL-UP -- a two-state report had nowhere to put that answer, so a
+    correctly wired repo read as defective."""
+
+    def _wire_by_hand(self, tmp, command):
+        return self._write_settings(tmp, {"hooks": {"PostToolUse": [self._entry(command)]}})
+
+    def test_a_correctly_wired_env_token_entry_is_undeterminable_not_not_ready(self):
+        """The exact reported defect: this settings.json is healthy, and the
+        installer cannot prove it from here. Neither confirmed nor condemned."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire_by_hand(tmp, 'py "${CLAUDE_PROJECT_DIR}/' + self.WRITER + '"')
+            check = installer.check_hooks_shippable(self._dest(tmp), scope="user", env={})
+            self.assertFalse(check.ready, "an unconfirmed hook must not read as confirmed")
+            self.assertFalse(check.determinable)
+            self.assertEqual(installer.READINESS_UNDETERMINABLE, check.verdict)
+            self.assertIn("CANNOT EVALUATE", check.reason)
+            self.assertIn("neither confirmed nor condemned", check.reason)
+
+    def test_a_stale_entry_is_not_ready_and_determinable(self):
+        """Anti-vacuity for the case above: WIRED WRONG is a real failure and
+        must stay one. If everything unwirable became CANNOT DETERMINE, the
+        distinction would be worthless."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            self._wire_by_hand(tmp, f'py "{Path(tmp).as_posix()}/gone/{self.WRITER}"')
+            check = installer.check_hooks_shippable(self._dest(tmp), scope="user", env={})
+            self.assertFalse(check.ready)
+            self.assertTrue(check.determinable)
+            self.assertEqual(installer.READINESS_NOT_READY, check.verdict)
+            self.assertIn("STALE", check.reason)
+
+    def test_an_unwired_project_says_not_wired_yet_rather_than_broken(self):
+        """A fresh clone must read as UNINSTALLED, not DEFECTIVE."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            check = installer.check_hooks_shippable(self._dest(tmp), scope="user", env={})
+            self.assertFalse(check.ready)
+            self.assertIn("UNWIRED", check.reason)
+            self.assertIn("NOT WIRED YET is not the same as WIRED WRONG", check.reason)
+            self.assertNotIn("STALE", check.reason)
+
+    def test_the_report_rolls_undeterminable_up_to_its_own_verdict(self):
+        installer = load_installer()
+        report = installer.ReadinessReport({
+            "engine": installer.ReadinessCheck(True, "ok"),
+            "skills": installer.ReadinessCheck(True, "ok"),
+            "hooks": installer.ReadinessCheck(False, "cannot tell", determinable=False),
+            "work_area": installer.ReadinessCheck(True, "ok"),
+        })
+        self.assertEqual(installer.READINESS_UNDETERMINABLE, report.verdict)
+        self.assertEqual(installer.READINESS_EXIT_UNDETERMINABLE, report.exit_code)
+        self.assertFalse(report.ready, "CANNOT DETERMINE must never read as READY")
+
+    def test_a_real_failure_outranks_an_undeterminable_one(self):
+        """Anti-vacuity for the roll-up: an undeterminable item must not soften
+        a genuine failure sitting beside it."""
+        installer = load_installer()
+        report = installer.ReadinessReport({
+            "engine": installer.ReadinessCheck(True, "ok"),
+            "skills": installer.ReadinessCheck(False, "not installed"),
+            "hooks": installer.ReadinessCheck(False, "cannot tell", determinable=False),
+            "work_area": installer.ReadinessCheck(True, "ok"),
+        })
+        self.assertEqual(installer.READINESS_NOT_READY, report.verdict)
+        self.assertEqual(1, report.exit_code)
+        # ...and the undeterminable item still reads as itself, not as failed.
+        block = installer.describe_readiness_report("Claude Code", report)
+        self.assertIn("hooks: CANNOT DETERMINE", block)
+        self.assertIn("skills: NOT READY", block)
+
+    def test_a_fully_ready_report_is_still_ready(self):
+        """Anti-vacuity: the tri-state must not have made READY unreachable."""
+        installer = load_installer()
+        report = installer.ReadinessReport({
+            name: installer.ReadinessCheck(True, "ok") for name in installer.READINESS_ITEMS
+        })
+        self.assertEqual(installer.READINESS_READY, report.verdict)
+        self.assertEqual(0, report.exit_code)
+
+    def test_cli_exits_three_when_only_undeterminable_items_remain(self):
+        """End to end through the real CLI, on a project whose hooks are wired
+        exactly the way this repo's own tracked settings.json wires them."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "project"
+            (project / ".claude").mkdir(parents=True)
+            subprocess.run(["git", "init", "-q"], cwd=str(project), capture_output=True)
+            (project / ".claude" / "settings.json").write_text(
+                (ROOT / ".claude" / "settings.json").read_text(encoding="utf-8"),
+                encoding="utf-8")
+            subprocess.run(["git", "add", "-A"], cwd=str(project), capture_output=True)
+            subprocess.run(
+                ["git", "-c", "user.email=t@e.com", "-c", "user.name=T",
+                 "commit", "-qm", "init"], cwd=str(project), capture_output=True)
+            install = ["--agent", "claude", "--scope", "project",
+                       "--project", str(project), "--skills", "workbench"]
+            self.assertEqual(0, installer.main(install, env={}, cwd=project, out=lambda _: None))
+
+            lines = []
+            code = installer.main(
+                [*install, "--check-readiness", "--hooks", "all"],
+                env={}, cwd=project, out=lines.append,
+            )
+        output = "\n".join(lines)
+        self.assertEqual(
+            installer.READINESS_EXIT_UNDETERMINABLE, code,
+            f"a correctly wired project did not read as CANNOT DETERMINE:\n{output}",
+        )
+        self.assertIn("hooks: CANNOT DETERMINE", output)
+        self.assertIn("skills: READY", output)
+
+
 class ReadinessCLITests(unittest.TestCase):
     """run_readiness_check / --check-readiness: the thin report layer over the
     four checks. Exits 0 only when every targeted agent is fully ready; exits
@@ -2953,6 +3435,32 @@ class ReadinessCLITests(unittest.TestCase):
                         env={}, out=lambda _: None,
                     )
             self.assertNotEqual(0, raised.exception.code)
+
+    def test_check_readiness_refuses_combination_with_hooks_from(self):
+        """`--hooks-from` only affects what gets WRITTEN and this mode writes
+        nothing, so accepting it would imply it changed what was checked.
+        `--hooks` is a different matter and IS accepted -- it selects which
+        hooks are reported on, which is the mode's whole job."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self._git_init(Path(tmp) / "project")
+            with contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "user",
+                         "--dest", str(Path(tmp) / "skills"), "--check-readiness",
+                         "--project", str(project), "--hooks-from", "source"],
+                        env={}, cwd=project, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            # ...and --hooks all is accepted on the same command line.
+            code = installer.main(
+                ["--agent", "claude", "--scope", "user",
+                 "--dest", str(Path(tmp) / "skills"), "--check-readiness",
+                 "--project", str(project), "--hooks", "all"],
+                env={}, cwd=project, out=lambda _: None,
+            )
+            self.assertNotEqual(2, code, "--hooks all was rejected as a bad combination")
 
     def test_check_readiness_refuses_combination_with_baseline_only(self):
         installer = load_installer()

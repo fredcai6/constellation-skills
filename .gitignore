@@ -23,6 +23,13 @@
 # under .agent-work/dispatch-126-127/, which are already tracked history and sit
 # under the limit. Exclude the copied checkout, never the run that captured it.
 .agent-work/**/.agent-work/
+# Per-machine hook wiring (#539). `install_constellation.py --wire-hooks
+# --hooks-from source` writes this file: it carries THIS checkout's absolute
+# paths and the interpreter name probed on THIS host, so it is wrong for every
+# other machine by construction. .claude/settings.json stays tracked and shared;
+# Claude Code merges the hooks from both rather than letting one replace the
+# other. The installer refuses outright to write this file if it is git-tracked.
+.claude/settings.local.json
 __pycache__/
 *.pyc
 .coverage

@@ -2,9 +2,9 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 53 modules, 1038 entities
+scripts: 53 modules, 1056 entities
 skills: 1 modules, 18 entities
-tests: 61 modules, 3482 entities
+tests: 61 modules, 3522 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -29,7 +29,7 @@ tests: 61 modules, 3482 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (53 modules, 1038 entities)
+## scripts (53 modules, 1056 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -62,7 +62,7 @@ tests: 61 modules, 3482 entities
 - [scripts.gauge_reader](scripts.gauge_reader/INDEX.md) (11 entities): Gauge reader -- fail-safe read of the context-fullness gauge file.
 - [scripts.grade_lint](scripts.grade_lint/INDEX.md) (32 entities, 24 holes): Lint `@grade:` decision tags — a plan decision's fixedness as an inline, greppable property of the decision itself, so no second hand-maintained ledger ever has
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
-- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (62 entities, 25 holes): HOLE: no docstring
+- [scripts.install_constellation](scripts.install_constellation/INDEX.md) (80 entities, 30 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
@@ -97,7 +97,7 @@ tests: 61 modules, 3482 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (61 modules, 3482 entities)
+## tests (61 modules, 3522 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -135,8 +135,8 @@ tests: 61 modules, 3482 entities
 - [tests.test_implementer_vocab](tests.test_implementer_vocab/INDEX.md) (7 entities, 7 holes): Light vocabulary assertion for the constellation-implementer sharpening (DESIGN_SPEC Section D2 — vertical-slice vocabulary).
 - [tests.test_init_work_area](tests.test_init_work_area/INDEX.md) (41 entities, 35 holes): HOLE: no docstring
 - [tests.test_initial_issues](tests.test_initial_issues/INDEX.md) (27 entities, 27 holes): Contract tests for the canonical constellation-to-initial-issues seam.
-- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (184 entities, 124 holes): HOLE: no docstring
-- [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (27 entities, 8 holes): HOLE: no docstring
+- [tests.test_install_constellation](tests.test_install_constellation/INDEX.md) (222 entities, 136 holes): HOLE: no docstring
+- [tests.test_interpreter_portability](tests.test_interpreter_portability/INDEX.md) (29 entities, 9 holes): HOLE: no docstring
 - [tests.test_interrogation](tests.test_interrogation/INDEX.md) (40 entities, 36 holes): Tests for the constellation-interrogator sharpening rail (scripts/verify_interrogation.py).
 - [tests.test_iterative_planning_acceptance](tests.test_iterative_planning_acceptance/INDEX.md) (5 entities, 5 holes): Focused tests for the ten-item iterative-planning acceptance verifier.
 - [tests.test_iterative_planning_doctrine](tests.test_iterative_planning_doctrine/INDEX.md) (90 entities, 58 holes): Parsed role-doctrine invariants for the G1 -> G2 iterative planning chain.
