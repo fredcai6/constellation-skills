@@ -325,7 +325,8 @@
           "id": "c1",
           "statement": "committed to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written with all required sections",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Committed eeec4f5d (fix + plan + tests) and 01298376 (result-file hash addendum) to epic-418/f-424-mcp-door. IMPLEMENTER_RESULT written at crew-handoffs/g3-implementer-result-utf8.md with exact commands/output/exit codes, byte-level red-then-green round-trip evidence, explicit local-vs-reasoned-about-Windows split, Map Impact, triage candidate tc1, and a blunt Workflow Feedback section."
         }
       ],
       "constraints": [
@@ -333,7 +334,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -353,13 +354,14 @@
   "refusals": 1,
   "engine_session": {
     "session_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix2/implementer/attempt-1",
-    "status": "active",
+    "status": "released",
     "claimed_at": "2026-08-10T01:46:47.462895+00:00",
-    "last_heartbeat": "2026-08-10T02:11:57.502439+00:00",
+    "last_heartbeat": "2026-08-10T02:14:14.871060+00:00",
     "claimed_by": "g3fix2-implementer",
     "worktree": ".",
     "previous_session_id": null,
-    "takeover_reason": null
+    "takeover_reason": null,
+    "released_at": "2026-08-10T02:14:19.620617+00:00"
   },
   "why_trail": [
     {
@@ -410,6 +412,13 @@
       "why": "python -m scripts.code_map build --root . rebuilt map/INDEX.md (scripts.mcp_spine_server 7->8 entities for the new _utf8_stdio helper; tests.test_mcp_spine_server 44->50 entities for the new Utf8StdioConformanceTests class); per-symbol sub-pages under map/<module>/ are gitignored (map/*), only map/INDEX.md is tracked. tests/test_code_map.py: 148 passed, 63 subtests passed -- freshness confirmed. Full suite: 2178 passed, 1 skipped, 1061 subtests passed, 0 failed in 98.89s -- exactly the 2177/1/1061/0 baseline plus the one new conformance test, 0 failed.",
       "mechanical": false,
       "ts": "2026-08-10T02:11:49.356977+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-closeout",
+      "why": "Committed eeec4f5d + 01298376 to epic-418/f-424-mcp-door. IMPLEMENTER_RESULT written with all required sections at the exact path the handoff named.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:14:14.871052+00:00"
     }
   ]
 }
