@@ -4,7 +4,7 @@
 evals: 12 modules, 54 entities
 scripts: 53 modules, 1043 entities
 skills: 1 modules, 18 entities
-tests: 60 modules, 3455 entities
+tests: 61 modules, 3494 entities
 
 ## evals (12 modules, 54 entities)
 
@@ -97,7 +97,7 @@ tests: 60 modules, 3455 entities
 
 - [skills.replan.scripts.verify_replan](skills.replan.scripts.verify_replan/INDEX.md) (18 entities, 14 holes): Verify and render strict offline v1 wave-replanning packets.
 
-## tests (60 modules, 3455 entities)
+## tests (61 modules, 3494 entities)
 
 ### tests.fixtures (2 modules, 4 entities)
 
@@ -160,5 +160,6 @@ tests: 60 modules, 3455 entities
 - [tests.test_verify_spec_confirmed](tests.test_verify_spec_confirmed/INDEX.md) (37 entities, 32 holes): HOLE: no docstring
 - [tests.test_verify_spec_confirmed_cli](tests.test_verify_spec_confirmed_cli/INDEX.md) (7 entities, 6 holes): CLI-level regression coverage for verify_spec_confirmed.py's confirm-gate refusal.
 - [tests.test_verify_worktree_isolation](tests.test_verify_worktree_isolation/INDEX.md) (36 entities, 36 holes): HOLE: no docstring
+- [tests.test_work_id_nesting](tests.test_work_id_nesting/INDEX.md) (39 entities, 15 holes): A work-id may NEST, and four tools used to disagree about that.
 - [tests.test_worktree_precondition_wiring](tests.test_worktree_precondition_wiring/INDEX.md) (23 entities, 18 holes): Deliberate-breakage tests for the worktree-isolation precondition (#329/#422).
 - [tests.test_write_a_skill](tests.test_write_a_skill/INDEX.md) (20 entities, 17 holes): Tests for constellation-write-a-skill's mint RAIL (scripts/verify_skill_registered.py) and the shared skill-goodness criteria seam.
