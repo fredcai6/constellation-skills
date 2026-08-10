@@ -2,7 +2,7 @@
 
 ## packages
 evals: 12 modules, 54 entities
-scripts: 54 modules, 1070 entities
+scripts: 54 modules, 1071 entities
 skills: 1 modules, 18 entities
 tests: 65 modules, 3721 entities
 
@@ -29,7 +29,7 @@ tests: 65 modules, 3721 entities
 - [evals.euler-5-smallest-multiple.checks.spine_completed](evals.euler-5-smallest-multiple.checks.spine_completed/INDEX.md) (9 entities, 2 holes): PROCESS check (gating): a constellation ENGINE spine reached a terminal state WITH engine-written provenance -- not merely agent-written JSON (issue #127).
 - [evals.euler-5-smallest-multiple.checks.tests_green](evals.euler-5-smallest-multiple.checks.tests_green/INDEX.md) (3 entities, 3 holes): PROCESS check (gating): tests were WRITTEN and PASS in the workspace.
 
-## scripts (54 modules, 1070 entities)
+## scripts (54 modules, 1071 entities)
 
 ### scripts.code_map (8 modules, 130 entities)
 
@@ -64,7 +64,7 @@ tests: 65 modules, 3721 entities
 - [scripts.init_work_area](scripts.init_work_area/INDEX.md) (7 entities, 2 holes): Scaffold a Constellation work area: .agent-work/<work-id>/ and its subdirs.
 - [scripts.install_constellation](scripts.install_constellation/INDEX.md) (81 entities, 30 holes): HOLE: no docstring
 - [scripts.map_orient](scripts.map_orient/INDEX.md) (61 entities, 17 holes): Orient an agent against a repo's architecture map -- or REPORT that it cannot.
-- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (8 entities, 5 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
+- [scripts.mcp_spine_server](scripts.mcp_spine_server/INDEX.md) (9 entities, 4 holes): MCP front door for the checklist engine (issue #424, workstream F of epic #418).
 - [scripts.measure_overread](scripts.measure_overread/INDEX.md) (10 entities, 2 holes): measure_overread.py -- count STRUCTURAL READS per agent run in a transcript.
 - [scripts.prove_docstring_only](scripts.prove_docstring_only/INDEX.md) (3 entities, 1 holes): Decide — not assert — whether a Python file's change is docstring-only.
 - [scripts.query_episodes](scripts.query_episodes/INDEX.md) (22 entities, 7 holes): Deterministic retrieval over the episode store (docs/EPISODE_STORE.md section 8).

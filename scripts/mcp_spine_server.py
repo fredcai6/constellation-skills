@@ -108,6 +108,7 @@ import io
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ENGINE = Path(os.environ["SPINE_ENGINE"]).resolve()
@@ -132,6 +133,16 @@ CALLLOG = Path(os.environ.get("SPINE_CALLLOG", str(SPINE.parent / "mcp_calls.jso
 # probe (the delivery-path measurement in MISSION_FRAME) can tell "config was
 # valid and the server actually ran" from "config was merely accepted".
 START_MARKER = Path(os.environ.get("SPINE_START_MARKER", str(SPINE.parent / "mcp_server_started")))
+
+# One JSONL line per rejection the DOOR ITSELF issues -- an unknown tool name, an
+# unknown multiplexed `action`, or a missing required argument (issue #541). Every
+# one of those returns `_tool_error(...)` BEFORE `run_engine()` is ever called (see
+# the module docstring's "Zero dependencies" section and `call_tool()` below), so
+# `_log()` and CALLLOG never see it and the engine's own refusal counter never
+# moves -- this file is that path's only durable trace. Beside the spine, like
+# CALLLOG, for the same reason: one location a run's own evidence-gathering has to
+# remember, not two.
+REJECTIONLOG = Path(os.environ.get("SPINE_REJECTION_LOG", str(SPINE.parent / "mcp_rejections.jsonl")))
 
 
 def _log(rec: dict) -> None:
@@ -170,7 +181,51 @@ def as_result(rec: dict) -> dict:
     return {"content": [{"type": "text", "text": text}], "isError": rec["code"] != 0}
 
 
-def _tool_error(message: str) -> dict:
+def _log_rejection(tool: str, rejection_class: str, detail: str) -> None:
+    """Append ONE record for a door-own rejection to REJECTIONLOG -- never raises.
+
+    Carries what a diagnosis needs: `tool` (which tool was called), `class` (which
+    of the three in-scope rejection shapes this is), `detail` (the door's own
+    _tool_error message, naming what was missing/unknown) and `ts` (when).
+
+    **Fail loud, every occurrence.** If the write itself fails, that is reported to
+    stderr immediately -- no batching, no once-per-run flag, no retry, no silent
+    drop. A capture that swallows its own failure would recreate, one level down,
+    exactly the defect it exists to end: a diagnosable event turning invisible.
+    """
+    record = {
+        "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "tool": tool,
+        "class": rejection_class,
+        "detail": detail,
+    }
+    line = json.dumps(record, ensure_ascii=False)
+    try:
+        with REJECTIONLOG.open("a", encoding="utf-8", newline="\n") as fh:
+            fh.write(line + "\n")
+    except OSError as exc:
+        sys.stderr.write(
+            f"REJECTION CAPTURE FAILED: could not write to {REJECTIONLOG} "
+            f"({type(exc).__name__}: {exc}). Lost record: {line}\n"
+        )
+        sys.stderr.flush()
+
+
+def _tool_error(message: str, *, tool: str | None = None, rejection_class: str | None = None) -> dict:
+    """The door's OWN rejection result. When `tool`/`rejection_class` are BOTH
+    given, this also logs one record via `_log_rejection` before returning --
+    folded IN here, rather than a separate wrapper around it, because
+    `call_tool()`'s own choke-point pin
+    (`tests/test_mcp_identity.py::IdentityBindingPinTests.test_call_tool_can_only_produce_content_two_ways`)
+    restricts every `return` in that function to literally
+    `as_result(run_engine(...))` or `_tool_error(...)` and nothing else -- a second
+    named call at the same site would be a third way to answer, which that pin
+    exists to catch. The two optional keywords let this single call satisfy both
+    the pin (unchanged call shape) and the capture (issue #541) at once. Callers
+    with nothing to log (main()'s dead KeyError fallback in `call_tool`, which
+    `TOOL_NAMES` makes unreachable) simply omit them."""
+    if tool is not None and rejection_class is not None:
+        _log_rejection(tool, rejection_class, message)
     return {"content": [{"type": "text", "text": message}], "isError": True}
 
 
@@ -414,18 +469,27 @@ def call_tool(name: str, args: dict) -> dict:
             return as_result(run_engine("release", *rest))
         if action == "heartbeat":
             return as_result(run_engine("heartbeat"))
-        return _tool_error(f"spine_lease: unknown action {action!r}")
+        return _tool_error(
+            f"spine_lease: unknown action {action!r}",
+            tool="spine_lease", rejection_class="unknown-action",
+        )
 
     if name == "spine_start":
         err = _require(args, "task_id")
         if err:
-            return _tool_error(f"spine_start: {err}")
+            return _tool_error(
+                f"spine_start: {err}",
+                tool="spine_start", rejection_class="missing-required-argument",
+            )
         return as_result(run_engine("start", args["task_id"]))
 
     if name == "spine_advance":
         err = _require(args, "task_id")
         if err:
-            return _tool_error(f"spine_advance: {err}")
+            return _tool_error(
+                f"spine_advance: {err}",
+                tool="spine_advance", rejection_class="missing-required-argument",
+            )
         rest = [args["task_id"]]
         if args.get("from_child"):
             rest += ["--from-child", args["from_child"]]
@@ -439,12 +503,18 @@ def call_tool(name: str, args: dict) -> dict:
         action = args.get("action")
         err = _require(args, "task_id")
         if err:
-            return _tool_error(f"spine_evidence: {err}")
+            return _tool_error(
+                f"spine_evidence: {err}",
+                tool="spine_evidence", rejection_class="missing-required-argument",
+            )
         task_id = args["task_id"]
         if action == "attest":
             err = _require(args, "condition_id")
             if err:
-                return _tool_error(f"spine_evidence attest: {err}")
+                return _tool_error(
+                    f"spine_evidence attest: {err}",
+                    tool="spine_evidence", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--cond", args["condition_id"],
                      "--which", args.get("which", "preconditions")]
             if args.get("note"):
@@ -455,7 +525,10 @@ def call_tool(name: str, args: dict) -> dict:
         if action == "waive":
             err = _require(args, "condition_id", "authority")
             if err:
-                return _tool_error(f"spine_evidence waive: {err}")
+                return _tool_error(
+                    f"spine_evidence waive: {err}",
+                    tool="spine_evidence", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--cond", args["condition_id"],
                      "--which", args.get("which", "postconditions"),
                      "--authority", args["authority"]]
@@ -467,23 +540,35 @@ def call_tool(name: str, args: dict) -> dict:
         if action == "attach":
             err = _require(args, "evidence_type")
             if err:
-                return _tool_error(f"spine_evidence attach: {err}")
+                return _tool_error(
+                    f"spine_evidence attach: {err}",
+                    tool="spine_evidence", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--type", args["evidence_type"]]
             for key, value in (args.get("fields") or {}).items():
                 rest += ["--field", f"{key}={value}"]
             return as_result(run_engine("attach", *rest))
-        return _tool_error(f"spine_evidence: unknown action {action!r}")
+        return _tool_error(
+            f"spine_evidence: unknown action {action!r}",
+            tool="spine_evidence", rejection_class="unknown-action",
+        )
 
     if name == "spine_halt":
         action = args.get("action")
         err = _require(args, "task_id")
         if err:
-            return _tool_error(f"spine_halt: {err}")
+            return _tool_error(
+                f"spine_halt: {err}",
+                tool="spine_halt", rejection_class="missing-required-argument",
+            )
         task_id = args["task_id"]
         if action == "block":
             err = _require(args, "blocker")
             if err:
-                return _tool_error(f"spine_halt block: {err}")
+                return _tool_error(
+                    f"spine_halt block: {err}",
+                    tool="spine_halt", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--blocker", args["blocker"],
                      "--authority", args.get("authority", "parent agent")]
             if args.get("next_action"):
@@ -492,19 +577,28 @@ def call_tool(name: str, args: dict) -> dict:
         if action == "resume":
             err = _require(args, "reason")
             if err:
-                return _tool_error(f"spine_halt resume: {err}")
+                return _tool_error(
+                    f"spine_halt resume: {err}",
+                    tool="spine_halt", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--reason", args["reason"]]
             if args.get("note"):
                 rest += ["--note", args["note"]]
             return as_result(run_engine("resume", *rest))
-        return _tool_error(f"spine_halt: unknown action {action!r}")
+        return _tool_error(
+            f"spine_halt: unknown action {action!r}",
+            tool="spine_halt", rejection_class="unknown-action",
+        )
 
     if name == "spine_survey_result":
         action = args.get("action")
         if action == "record":
             err = _require(args, "task_id", "result")
             if err:
-                return _tool_error(f"spine_survey_result record: {err}")
+                return _tool_error(
+                    f"spine_survey_result record: {err}",
+                    tool="spine_survey_result", rejection_class="missing-required-argument",
+                )
             rest = [args["task_id"], "--result", args["result"]]
             if args.get("finding"):
                 rest += ["--finding", args["finding"]]
@@ -518,7 +612,10 @@ def call_tool(name: str, args: dict) -> dict:
             if args.get("override_reason"):
                 rest += ["--override-reason", args["override_reason"]]
             return as_result(run_engine("consolidate", *rest))
-        return _tool_error(f"spine_survey_result: unknown action {action!r}")
+        return _tool_error(
+            f"spine_survey_result: unknown action {action!r}",
+            tool="spine_survey_result", rejection_class="unknown-action",
+        )
 
     raise KeyError(name)
 
@@ -567,7 +664,10 @@ def main() -> None:
             nm = params.get("name", "")
             call_args = params.get("arguments") or {}
             if nm not in TOOL_NAMES:
-                result = _tool_error(f"unknown tool {nm!r}")
+                result = _tool_error(
+                    f"unknown tool {nm!r}",
+                    tool=nm or "(empty)", rejection_class="unknown-tool",
+                )
             else:
                 try:
                     result = call_tool(nm, call_args)
