@@ -34,7 +34,7 @@ from __future__ import annotations
 
 import json
 import os
-import select
+import queue
 import subprocess
 import sys
 import tempfile
@@ -121,6 +121,40 @@ class ServerInstance:
             text=True, bufsize=1, env=env,
         )
         self._id = 0
+        # Portable bounded read (see recv() below): a daemon thread owns the
+        # blocking readline() loop and hands lines to the main thread over a
+        # Queue, whose own timeout= is the cross-platform bound. This exists
+        # ONLY because select.select() on a pipe/file object is POSIX-only --
+        # on Windows select() accepts sockets exclusively, so the previous
+        # select.select([self.proc.stdout], ...) form raised WinError 10038
+        # at the first call in every test in this file under Windows CI. The
+        # thread itself never blocks anything the main thread does: the main
+        # thread's only wait is the bounded queue.get(timeout=...) in recv().
+        self._out_q: "queue.Queue[object]" = queue.Queue()
+        self._EOF = object()  # sentinel identity, can never collide with a real line
+        self._reader = threading.Thread(target=self._read_loop, daemon=True)
+        self._reader.start()
+
+    def _read_loop(self) -> None:
+        """Runs on the daemon reader thread for the life of the process.
+        Pumps whole lines onto self._out_q. On EOF (dead process, process
+        that never started, or the pipe closing) or any read error, it puts
+        the EOF sentinel and returns -- and recv() puts that sentinel BACK
+        after consuming it, so every recv() call after the process is gone
+        returns None promptly instead of waiting out the full timeout again."""
+        stdout = self.proc.stdout
+        if stdout is None:
+            self._out_q.put(self._EOF)
+            return
+        try:
+            while True:
+                line = stdout.readline()
+                if not line:
+                    break
+                self._out_q.put(line)
+        except (OSError, ValueError):
+            pass
+        self._out_q.put(self._EOF)
 
     def send(self, method: str, params: dict | None = None) -> int | None:
         """Write one JSON-RPC request and return its id WITHOUT reading a
@@ -138,21 +172,26 @@ class ServerInstance:
         return self._id
 
     def recv(self, timeout: float = 15.0) -> dict | None:
-        """Bounded read: None on any failure to reply (dead process, no
-        reply, or a read that would block past `timeout`) -- NEVER an
-        unbounded blocking read, which is exactly the footgun g1 hit (a
-        blocking pipe read evaluated unconditionally inside an eager
-        assertion message deadlocked that suite)."""
+        """Bounded read: None on any failure to reply (dead process, a
+        process that never started, a broken pipe, or a read that would
+        block past `timeout`) -- NEVER an unbounded blocking read, which is
+        exactly the footgun g1 hit (a blocking pipe read evaluated
+        unconditionally inside an eager assertion message deadlocked that
+        suite). The bound is queue.get(timeout=...) against the reader
+        thread's queue, not select.select() -- portable, because it never
+        touches select() on a pipe/file object (POSIX-only; Windows'
+        select() accepts sockets only)."""
         if self.proc.stdout is None:
             return None
-        ready, _, _ = select.select([self.proc.stdout], [], [], timeout)
-        if not ready:
+        try:
+            item = self._out_q.get(timeout=timeout)
+        except queue.Empty:
             return None
-        line = self.proc.stdout.readline()
-        if not line:
+        if item is self._EOF:
+            self._out_q.put(self._EOF)  # sticky: next recv() also returns None promptly
             return None
         try:
-            return json.loads(line)
+            return json.loads(item)
         except ValueError:
             return None
 
@@ -183,6 +222,11 @@ class ServerInstance:
         except subprocess.TimeoutExpired:
             self.proc.kill()
             self.proc.wait(timeout=5)
+        # Reader thread is daemon=True (never blocks interpreter exit even if
+        # left running), but join it with a bound here anyway for hygiene --
+        # the process is dead by this point so stdout.readline() should
+        # already have hit EOF and the thread should already be finishing.
+        self._reader.join(timeout=5)
 
 
 # --------------------------------------------------------------------------- #
