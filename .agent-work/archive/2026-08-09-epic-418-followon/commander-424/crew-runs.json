@@ -330,5 +330,27 @@
     "abandoned": false,
     "dispatch": "external",
     "model": "sonnet"
+  },
+  {
+    "crew_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix3/implementer/attempt-1",
+    "work_id": "archive/2026-08-09-epic-418-followon/commander-424",
+    "gate": "g3fix3",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix3/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
+    "handoff": ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-handoffs/g3-implementer-handoff-utf8b.md",
+    "result": ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-handoffs/g3-implementer-result-utf8b.md",
+    "stdout": ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-runs/g3fix3-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-runs/g3fix3-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-10T02:15:41.639128+00:00",
+    "last_heartbeat": "2026-08-10T02:15:41.639128+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "sonnet"
   }
 ]

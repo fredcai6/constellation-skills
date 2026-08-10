@@ -177,9 +177,14 @@ def cli_current_text(spine_path: Path) -> str:
     """The CLI arm: a REAL, separate `checklist_engine.py current` subprocess
     (never an in-process call) -- proof this is comparing two independently
     launched processes, not shared in-process state."""
+    # Explicit UTF-8: the CLI's own stdout is already pinned to UTF-8 by
+    # checklist_engine.py's own _utf8_stdio(); decode it explicitly here too
+    # rather than falling back to the platform default (cp1252 on an
+    # unconfigured Windows box) when reading it back into this test process
+    # -- same pin as tests/test_mcp_spine_server.py's own _cli_current().
     proc = subprocess.run(
         [sys.executable, str(ENGINE), "--file", str(spine_path), "current"],
-        capture_output=True, text=True, timeout=30,
+        capture_output=True, text=True, encoding="utf-8", timeout=30,
     )
     assert proc.returncode == 0, (
         f"CLI `current` failed unexpectedly (rc={proc.returncode}): "

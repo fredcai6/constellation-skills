@@ -1,0 +1,253 @@
+{
+  "work_id": "g3fix3-utf8b-cli-decode",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red-demo",
+    "m2-fix-and-sweep-green",
+    "m3-full-suite-baseline",
+    "m4-closeout"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read references/global-crew.md and references/global-everyone.md (inherited doctrine), then g3-implementer-handoff-utf8b.md in full, tests/test_mcp_imperative_equivalence.py's cli_current_text() (~line 176-188) and its ONE subprocess.run text=True call site, scripts/checklist_engine.py's own _utf8_stdio() (~line 43-55, called unconditionally at module import, line 55) which already pins the CLI child's OWN stdout/stderr to UTF-8 on the encode side, and the sibling fixes already landed in tests/test_mcp_identity.py (~line 118-126) and tests/test_mcp_spine_server.py (~line 230-237, the closest analog: an identical bare `subprocess.run([..., 'current'], capture_output=True, text=True, encoding=\"utf-8\")` with its own comment explaining WHY the explicit pin matters even though the CLI already emits UTF-8). Confirm empirically (do not assume) whether PYTHONIOENCODING set in the CLI child's own env has any effect on how the PARENT's subprocess.run(text=True) decodes that child's stdout, since the fix site is a decode-side (parent) default, not an encode-side (child) default. Verify the handoff names task, scope, exclusions, required evidence, test mode, stop conditions. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "doctrine + handoff + target call site + sibling-file precedent read; decode-side vs encode-side distinction and PYTHONIOENCODING's actual effect (or lack of it) on subprocess.run(text=True) empirically confirmed, not assumed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read global-crew.md, global-everyone.md, g3-implementer-handoff-utf8b.md in full, tests/test_mcp_imperative_equivalence.py's cli_current_text() (line 176-188, one bare subprocess.run(text=True) call, no encoding), checklist_engine.py's _utf8_stdio() (line 43-55, invoked unconditionally at module import line 55 -- CLI child's OWN stdout/stderr always pinned to UTF-8 on the encode side, before PYTHONIOENCODING or any other env var could matter). Read the sibling fixes: test_mcp_identity.py ServerInstance Popen (line 118-126) and test_mcp_spine_server.py's _cli_current() (line 230-237) -- identical bare subprocess.run(..., text=True, encoding=\"utf-8\") with a comment explaining the pin matters even though the CLI already emits UTF-8, because THIS decode is on the parent/reader side, not the child/writer side. Empirically confirmed (python3 -c checks, not assumed): locale.getencoding() -- what subprocess.py's _text_encoding() uses for text=True with no explicit encoding -- returns UTF-8 on this box by default AND is unaffected by PYTHONIOENCODING=cp1252 set in the shell env (tested directly: still reports UTF-8). PYTHONIOENCODING only governs a NEW interpreter's own sys.stdin/stdout/stderr at startup (why it worked for g3fix2's server-side fix), not subprocess.py's pipe-decode default in the calling process. This box has no cp1252 locale installed (locale -a: only C/C.utf8/POSIX/en_*.utf8) so the true bug (decode default = cp1252) cannot be reproduced by env manipulation alone; m1's demonstration decodes real captured bytes with encoding=\"cp1252\" directly instead, which is the honest, directly-controlled way to prove what an unconfigured Windows box's default would do to these exact production bytes. Handoff verified complete: task, scope (tests/test_mcp_imperative_equivalence.py only), exclusions (no imperative/template/engine edits, no normalising/folding/stripping non-ASCII, no settings.json/checklist JSON/episodes/ edits), required evidence (red-then-green demonstration, local-vs-reasoned split), test mode (fix + sweep + baseline), stop conditions, return format (IMPLEMENTER_RESULT at named path) -- nothing missing."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red-demo": {
+      "id": "m1-red-demo",
+      "title": "One-off demonstration: decoding the CLI child's real UTF-8 bytes with a non-UTF-8 default reproduces the exact CI mojibake (RED)",
+      "imperative": "Write a standalone one-off demonstration script (NOT a permanent test, NOT inside tests/test_mcp_imperative_equivalence.py -- that file is untouched in this item) that: (1) reuses the target file's own discover_gates_with_imperative/build_single_gate_spine/write_spine helpers to build a real one-gate spine, (2) spawns the REAL, unmodified checklist_engine.py CLI subprocess exactly as cli_current_text() does but captures RAW bytes (no text=True) so the wire bytes are visible directly, (3) spawns a real mcp_spine_server.py via ServerInstance and gets its already-correct UTF-8 text (the MCP arm was fixed by a prior crew and is not touched here), (4) decodes the CLI's raw bytes with encoding=\"cp1252\" -- standing in for the platform-default decode an unconfigured Windows box's subprocess.run(text=True) would apply, since PYTHONIOENCODING does not reach this decode site (confirmed at m0) and this Linux box has no cp1252 locale to force it via locale.getencoding() directly -- and (5) asserts this BEFORE/unfixed simulation's ACTIVE line does NOT match the MCP arm's ACTIVE line. Run it now, before touching cli_current_text(). Observe and capture the actual mismatch output; confirm it reproduces the handoff's pasted CI symptom (an em-dash decoding as the literal three-character mojibake sequence). Manual attest with the captured RED output pasted into c1 (check MUST stay null -- a command check would need the by-design-failing assertion to pass, which it cannot).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; context loaded"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "one-off demonstration script written and run once against the real, unfixed CLI subprocess's raw bytes; BEFORE (cp1252-decoded) ACTIVE line observed to mismatch the MCP arm's correct ACTIVE line, reproducing the CI trace's mojibake shape -- manual attest with captured output",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Wrote crew-plans/g3fix3-utf8b-demo.py (one-off, not a repo test). Ran it against the real, still-unfixed CLI subprocess (cli_current_text() in tests/test_mcp_imperative_equivalence.py has NOT been edited yet) for gate skills/admiral/templates/ADMIRAL_SPINE.template.json::closeout. Captured real CLI raw bytes (2688 bytes, contains non-ASCII), got the MCP arm's correct reference text via ServerInstance. BEFORE (raw bytes decoded as cp1252, the stand-in for an unconfigured Windows box's subprocess.run(text=True) default): ACTIVE line reads '...ACTIVE closeout [pending] \\xc3\\xa2\\xc2\\x82\\xc2\\xac\\xc2\\x9d The run cannot close...' -- literal mojibake, matching the handoff's pasted CI trace's \u00e2\u20ac\u201d symptom exactly, byte for byte. AFTER (same raw bytes decoded as utf-8): matches the MCP arm's ACTIVE line exactly. before_matches=False, after_matches=True -- RED confirmed for BEFORE, proving the platform-default decode genuinely diverges on real production bytes. Full captured output saved to evidence/g3fix3-utf8b-demo-BEFORE-fix.txt. This demonstrates the hazard directly (decode captured wire bytes with the two candidate encodings) rather than via env-var manipulation, because PYTHONIOENCODING was confirmed at m0 to not reach this decode site, and no cp1252 locale exists on this box to trigger it via locale.getencoding()."
+        }
+      ],
+      "constraints": [
+        "do not edit tests/test_mcp_imperative_equivalence.py in this item",
+        "do not touch any imperative text, template, or engine file",
+        "do not normalise, fold, or strip non-ASCII anywhere"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-fix-and-sweep-green": {
+      "id": "m2-fix-and-sweep-green",
+      "title": "The real fix: pin cli_current_text()'s subprocess.run to explicit UTF-8; sweep the file; demonstration goes GREEN; file green",
+      "imperative": "In tests/test_mcp_imperative_equivalence.py ONLY, add encoding=\"utf-8\" to cli_current_text()'s subprocess.run call (~line 180-182), mirroring the comment + call shape already landed at tests/test_mcp_spine_server.py's _cli_current() (~line 230-237). Then sweep the whole file: grep -n \"text=True\" tests/test_mcp_imperative_equivalence.py must show only lines that also carry encoding=. Re-run the m1 demonstration script's AFTER path (decode the same real CLI raw bytes with encoding=\"utf-8\", i.e. what the fix now does) and confirm it matches the MCP arm byte-for-byte -- GREEN. Then run the real file's pytest suite and confirm all 5 tests pass, DC4's byte-identity assertions unweakened (same assertions, not normalised/ASCII-folded).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED observed at m1",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed at m1"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c2",
+          "statement": "encoding=\"utf-8\" added to the one subprocess.run call site; sweep clean (no text=True line lacking encoding=); demonstration AFTER path matches MCP byte-for-byte; tests/test_mcp_imperative_equivalence.py fully green (5 tests)",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && bash -c 'offending=$(grep -n \"text=True\" tests/test_mcp_imperative_equivalence.py | grep -v \"encoding=\"); if [ -n \"$offending\" ]; then echo \"$offending\"; exit 1; fi' && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_imperative_equivalence.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-fix-and-sweep-green-1"
+        }
+      ],
+      "constraints": [
+        "scope is tests/test_mcp_imperative_equivalence.py only",
+        "do not touch any imperative text, template, or engine file",
+        "do not normalise, fold, or strip non-ASCII anywhere -- DC4 stays byte-for-byte",
+        "do not touch settings.json, any checklist JSON, or anything under episodes/",
+        "do not weaken the population walk or the non-zero gate-count assertion"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-fix-and-sweep-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && bash -c 'offending=$(grep -n \"text=True\" tests/test_mcp_imperative_equivalence.py | grep -v \"encoding=\"); if [ -n \"$offending\" ]; then echo \"$offending\"; exit 1; fi' && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests/test_mcp_imperative_equivalence.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-full-suite-baseline": {
+      "id": "m3-full-suite-baseline",
+      "title": "Full suite matches the 2178 passed / 1 skipped / 1061 subtests / 0 failed baseline",
+      "imperative": "Run the full suite and confirm it matches the stated baseline exactly (same 2178/1/1061/0 as before this fix -- this item adds no new repo test, only a decode-side fix to an existing call site).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "target file green and swept clean",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "target file green (5 passed) and swept clean at m2"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite: 2178 passed, 1 skipped, 1061 subtests, 0 failed",
+          "check": {
+            "kind": "command",
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-full-suite-baseline-1"
+        }
+      ],
+      "constraints": [
+        "bar is the stated baseline, not merely 0 failed"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-full-suite-baseline-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-closeout": {
+      "id": "m4-closeout",
+      "title": "Commit and write IMPLEMENTER_RESULT",
+      "imperative": "git add the changed files (this plan file, its journal, the demonstration script, tests/test_mcp_imperative_equivalence.py), commit to epic-418/f-424-mcp-door. Write IMPLEMENTER_RESULT to the path the handoff names: exact commands with real output/exit codes, the red-then-green demonstration (explicitly stating it was run as a one-off, not added as a permanent test), an explicit local-vs-reasoned-about-Windows split (including the PYTHONIOENCODING finding from m0), Map Impact (if any), and a blunt Workflow Feedback section. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite matches baseline",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "full suite matches baseline: 2178 passed, 1 skipped, 1061 subtests, 0 failed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "committed to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written with all required sections at the exact handoff-named path",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "write the result file before ending the turn"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "in-progress",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix3/implementer/attempt-1",
+    "status": "active",
+    "claimed_at": "2026-08-10T02:21:33.568162+00:00",
+    "last_heartbeat": "2026-08-10T02:28:07.592355+00:00",
+    "claimed_by": "g3fix3-implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Context loaded; key empirical finding is that PYTHONIOENCODING does not reach subprocess.run(text=True)'s decode default (locale.getencoding()), so the m1 demonstration will decode captured bytes directly with encoding=cp1252 rather than relying on an env var to induce the platform default.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:22:01.412377+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red-demo",
+      "why": "RED demonstrated on real captured CLI wire bytes: cp1252 decode reproduces the exact CI mojibake, utf-8 decode matches the MCP reference. Proceeding to apply the actual encoding=utf-8 pin to cli_current_text() and sweep the file.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:23:28.750455+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-fix-and-sweep-green",
+      "why": "Applied encoding=\"utf-8\" to cli_current_text()'s subprocess.run call, mirroring test_mcp_spine_server.py's _cli_current() precedent. Sweep clean: only one text=True in the file, now carrying encoding=. Demo script's AFTER path (decode real CLI bytes as utf-8) matches the MCP reference. Command check ran the sweep + pytest for the file: 5 passed.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:24:25.208216+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-full-suite-baseline",
+      "why": "Full suite: 2178 passed, 1 skipped, 1061 subtests, 0 failed -- exact match to the baseline stated in the handoff, confirming the fix introduces no regression.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:28:00.979826+00:00"
+    }
+  ]
+}
