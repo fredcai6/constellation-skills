@@ -4170,7 +4170,11 @@ class McpReadinessTests(_McpWiringFixture):
             check = installer.check_mcp_launchable(
                 self._target_root(tmp), env={"CONSTELLATION_PYTHON": sys.executable})
             self.assertTrue(check.ready, check.reason)
-            self.assertIn(sys.executable, check.reason)
+            # `repr`, not the bare path: the reason embeds the command as
+            # `{command!r}`, and on Windows that doubles every backslash -- so
+            # asserting the raw path here passed on POSIX and failed on Windows
+            # CI for a formatting reason while the door itself launched fine.
+            self.assertIn(repr(sys.executable), check.reason)
 
     def test_a_bare_variable_with_no_default_is_reported_by_name(self):
         installer = load_installer()
