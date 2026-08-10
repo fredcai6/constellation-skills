@@ -733,6 +733,124 @@ class McpDoorLaunchesFromEmittedConfigTests(unittest.TestCase):
             self.assertTrue(raw.endswith(b"\n"))
 
 
+class SpineEngineIsLoadBearingTests(unittest.TestCase):
+    """`SPINE_ENGINE` decides which engine this door speaks to, and can be
+    WRONG.
+
+    It could not be, before. The server did `sys.path.insert(0,
+    str(ENGINE.parent))` and then a plain `import checklist_engine`, but Python
+    already puts the server script's own directory on `sys.path[0]` and
+    `checklist_engine.py` is that script's sibling in BOTH supported layouts --
+    so the sibling won every time and the whole default was replaceable with
+    `/nonexistent/dir/checklist_engine.py` while the door still launched and
+    still answered tool calls. No value of the field could break it, which is
+    the same defect family as a check that cannot fail: the emitted config was
+    carrying a value nothing could disconfirm.
+
+    The two tests here are a pair on purpose. The first says a wrong value
+    STOPS the door; on its own that would be satisfied by an existence check in
+    front of an unchanged sibling import. The second says the engine the door
+    actually calls is the file the variable NAMES -- a marked copy in a
+    directory that is nobody's sibling, whose mark comes back in real tool
+    output."""
+
+    SENTINEL = "ENGINE-SENTINEL-6b1f2a"
+
+    def _launch(self, root: Path, engine: Path) -> subprocess.Popen:
+        env = {"PATH": os.environ.get("PATH", "")}
+        env["SPINE_FILE"] = str(write_gated_spine(root))
+        env["SPINE_ENGINE"] = str(engine)
+        env["SPINE_SESSION"] = "engine-binding-test"
+        env["SPINE_CALLLOG"] = str(root / "mcp_calls.jsonl")
+        env["SPINE_START_MARKER"] = str(root / "mcp_server_started")
+        return subprocess.Popen(
+            [sys.executable, str(SERVER)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, encoding="utf-8", bufsize=1, env=env,
+        )
+
+    def test_an_engine_path_with_no_file_behind_it_refuses_to_start(self):
+        """The reviewer's mutation, verbatim: the whole default replaced by a
+        path that does not exist."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proc = self._launch(root, root / "nonexistent" / "checklist_engine.py")
+            try:
+                out, err = proc.communicate(
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                "params": {"name": "spine_status", "arguments": {}}}) + "\n",
+                    timeout=60)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                self.fail("the door hung instead of refusing a SPINE_ENGINE that names no file")
+            self.assertNotEqual(
+                0, proc.returncode,
+                f"the door started against an engine path with no file behind it; "
+                f"stdout={out!r}")
+            self.assertEqual("", out.strip(), "it answered a tool call before failing")
+            self.assertIn("SPINE_ENGINE", err)
+
+    def test_the_engine_it_calls_is_the_file_SPINE_ENGINE_names(self):
+        """The anti-vacuity twin, and it has to be this strong.
+
+        A MARKED copy of the real engine, in a directory that is neither this
+        checkout's `scripts/` nor any install layout's sibling of the server
+        script -- so the mark can only reach the tool result if the door loaded
+        the engine from somewhere the variable pointed it.
+
+        The DECOY beside it is what makes the test bite. An implementation that
+        merely checks the path exists and then does `sys.path.insert(0,
+        ENGINE.parent); import checklist_engine` passes every weaker version of
+        this test, because the named directory goes on the path first and the
+        file it wants is right there under the expected name. That
+        implementation is still wrong -- `SPINE_ENGINE` names a FILE, and it
+        would silently run a same-named neighbour instead -- and it is a
+        mutation that survived until the decoy existed."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            elsewhere = root / "engine-elsewhere"
+            elsewhere.mkdir()
+            pristine = ENGINE.read_text(encoding="utf-8")
+            (elsewhere / ENGINE.name).write_text(pristine, encoding="utf-8", newline="\n")
+            marked = elsewhere / "spine_engine_variant.py"
+            marked.write_text(
+                pristine
+                + "\n\n"
+                + "_UNMARKED_MAIN = main\n"
+                + "def main(argv=None):\n"
+                + f"    print({self.SENTINEL!r})\n"
+                + "    return _UNMARKED_MAIN(argv)\n",
+                encoding="utf-8", newline="\n")
+            self.assertNotEqual(ENGINE.parent, marked.parent)
+            self.assertNotEqual(ENGINE.name, marked.name)
+
+            proc = self._launch(root, marked)
+            try:
+                proc.stdin.write(
+                    json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                "params": {"name": "spine_status", "arguments": {}}}) + "\n")
+                proc.stdin.flush()
+                line = proc.stdout.readline()
+                if not line:
+                    # stderr is read ONLY on this arm: `proc.stderr.read()`
+                    # blocks to EOF and the child holds stderr open while stdin
+                    # is open, so building this message eagerly -- as an
+                    # assertion's f-string message would -- deadlocks the
+                    # SUCCESS path. Same trap `_drive` above names.
+                    self.fail(f"the door answered nothing; stderr={proc.stderr.read()}")
+                reply = json.loads(line)
+                self.assertFalse(reply["result"]["isError"], reply)
+                self.assertIn(
+                    self.SENTINEL, reply["result"]["content"][0]["text"],
+                    "the door answered from an engine other than the one SPINE_ENGINE names")
+            finally:
+                proc.stdin.close()
+                try:
+                    proc.wait(timeout=10)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+
+
 class CliFallbackTableTests(unittest.TestCase):
     def test_every_uncovered_verb_is_documented_with_an_invocation(self):
         text = SERVER.read_text(encoding="utf-8")

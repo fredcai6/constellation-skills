@@ -1470,17 +1470,112 @@ def expand_mcp_placeholders(value: str, env: Mapping[str, str]) -> str:
     return _MCP_PLACEHOLDER_RE.sub(substitute, value)
 
 
+MCP_TARGET_ROOT_LEAF = "skills"
+# The config directory names a project-scope install of an MCP-capable agent
+# puts `skills` under. Derived from the agent table rather than spelled here,
+# so adding an MCP-capable agent cannot leave this behind.
+MCP_PROJECT_CONFIG_DIRS = frozenset(
+    agent.project_config_dir
+    for agent in AGENT_TARGETS.values()
+    if agent.name in MCP_CAPABLE_AGENT_NAMES
+)
+
+
+def mcp_project_root_for_target_root(target_root: Path) -> Path | None:
+    """The project root whose `.mcp.json` governs `target_root` --
+    `<project>/.claude/skills` -> `<project>` -- or None when `target_root` is
+    not that shape.
+
+    TWO levels up, and both of them are CHECKED rather than assumed. This is
+    where this helper parts company with `settings_path_for_target_root`, whose
+    "a `--dest` install can never reach past its own tree" assurance is true of
+    ONE level (the parent of the target root is inside the tree the caller
+    named) and false of two: `--dest <anywhere>/skills` puts `<anywhere>/..`
+    two levels up, which is a directory the caller never named at all. The
+    reviewer's `--dest /tmp/wm-probe/proj/skills` wrote `/tmp/wm-probe/.mcp.json`
+    on exactly that arithmetic. Returning None for an unrecognised shape is what
+    lets `resolve_mcp_config_write_path` refuse instead of guessing."""
+    if target_root.name != MCP_TARGET_ROOT_LEAF:
+        return None
+    if target_root.parent.name not in MCP_PROJECT_CONFIG_DIRS:
+        return None
+    return target_root.parent.parent
+
+
 def mcp_config_path_for_target_root(target_root: Path) -> Path:
     """The `.mcp.json` governing the PROJECT this install writes into:
     `<project>/.claude/skills` -> `<project>/.mcp.json`.
 
-    Derived from the resolved target root for the same reason
-    `settings_path_for_target_root` is -- so a `--dest` install (every test in
-    this repo) can never reach past its own tree. Only meaningful at project
-    scope: `~/.claude/skills` would give `~/.mcp.json`, which Claude Code does
-    not read, so `--wire-mcp` refuses at user scope rather than writing a file
-    nothing loads."""
+    READ-ONLY derivation, for `check_mcp_launchable`, which asks "what file
+    would Claude Code load for this tree" and answers report-only. It makes no
+    claim about being safe to WRITE: for that, and only that,
+    `resolve_mcp_config_write_path` is the entry point, because a write needs
+    the shape CHECKED and this needs a best-effort answer. Where the shape is
+    the expected one -- every real install and every test but the shape tests
+    themselves -- the two agree by construction."""
+    project_root = mcp_project_root_for_target_root(target_root)
+    if project_root is not None:
+        return project_root / MCP_CONFIG_FILENAME
     return target_root.parent.parent / MCP_CONFIG_FILENAME
+
+
+def resolve_mcp_config_write_path(
+    target_root: Path, *, scope: str, env: Mapping[str, str]
+) -> Path:
+    """The ONE `.mcp.json` `--wire-mcp` may write, or an `InstallError` naming
+    the path it refused to write.
+
+    The hard constraint this enforces: **this installer never writes outside the
+    target project directory, and never at user scope, regardless of flags.**
+    Every guard below reads the RESOLVED `target_root`, not the `--scope` flag
+    that was supposed to imply it. That distinction is the whole defect --
+    `--scope project --dest ~/.claude/skills` satisfies the flag check and is a
+    user-scope install by every meaning that matters, and it wrote
+    `~/.mcp.json`, the exact file the flag check's own comment says must never
+    be written.
+
+    `scope` is still checked, first and on its own, because a caller that asks
+    for user scope should be told that and not a path story. But it is the
+    cheap guard, not the load-bearing one: the two path guards below hold with
+    `scope == "project"` passed for every one of them."""
+    if scope != "project":
+        raise InstallError(
+            f"--wire-mcp requires --scope project: Claude Code reads a "
+            f"{MCP_CONFIG_FILENAME} from a PROJECT root and nowhere else, so there is "
+            f"no user-scope file to write (scope={scope!r})."
+        )
+
+    project_root = mcp_project_root_for_target_root(target_root)
+    if project_root is None:
+        # Refuse rather than guess. Two levels up from an unrecognised shape is
+        # arithmetic on a path nobody named -- naming it in the refusal is what
+        # turns "this did not work" into "this is what it would have done".
+        raise InstallError(
+            f"--wire-mcp: cannot locate the project root for target root {target_root}. "
+            f"A {MCP_CONFIG_FILENAME} belongs at a PROJECT root, and the only shape this "
+            f"installer can derive one from is "
+            f"<project>/{'|'.join(sorted(MCP_PROJECT_CONFIG_DIRS))}/{MCP_TARGET_ROOT_LEAF}. "
+            f"Guessing two levels up would have written "
+            f"{target_root.parent.parent / MCP_CONFIG_FILENAME}, which is outside the "
+            f"directory you named. Re-run with --project <dir>, or point --dest at a "
+            f"<project>/.claude/{MCP_TARGET_ROOT_LEAF} directory."
+        )
+
+    home = home_from_env(env)
+    if os.path.abspath(project_root) == os.path.abspath(home):
+        # `os.path.abspath`, not `Path.resolve()`, for the reason `is_git_tracked`
+        # states: resolve() follows symlinks, and a home directory reached through
+        # a symlinked path is still the home directory.
+        raise InstallError(
+            f"--wire-mcp: refusing to write {project_root / MCP_CONFIG_FILENAME} -- "
+            f"{target_root} is a USER-scope skills directory (its project root is the "
+            f"home directory {home}), whatever --scope says. Claude Code reads a "
+            f"{MCP_CONFIG_FILENAME} from a project root and nowhere else, so this file "
+            f"would be config nothing ever loads, written into the user's home. Install "
+            f"into a real project (--project <dir>) to wire a door."
+        )
+
+    return project_root / MCP_CONFIG_FILENAME
 
 
 def mcp_script_path(target_root: Path, script: str, *, mcp_from: str) -> Path:
@@ -1530,13 +1625,32 @@ def wire_mcp(
     out: Callable[[str], object],
     mcp_from: str = MCP_FROM_INSTALLED,
     default_spine: Path | None = None,
+    env: Mapping[str, str] | None = None,
 ) -> None:
     """The ONE path on which this installer writes an `.mcp.json`. Reached only
     from the explicit `--wire-mcp` opt-in, and still a no-op under `--dry-run`.
 
     Every refusal below happens BEFORE anything is written, and the in-memory
     merge is done first so `--dry-run` can report exactly what a real run would
-    do without touching disk -- the ordering `wire_hooks` established."""
+    do without touching disk -- the ordering `wire_hooks` established.
+
+    `scope` ENFORCES, it does not annotate. It used to appear only in this
+    signature -- passed by `main` and by nine tests, read by nothing -- which
+    read as the in-function half of a scope guard while being inert, and that
+    inertness is what let a `--scope project --dest ~/.claude/skills` run write
+    `~/.mcp.json`. It is now one of three refusals in
+    `resolve_mcp_config_write_path`, and the only one of the three that reads a
+    flag rather than the resolved path.
+
+    `env` is the environment the HOME lookup reads, passed in rather than taken
+    from `os.environ` so the user-scope refusal can be tested against a home
+    directory other than the developer's real one."""
+    # The hard constraint, checked FIRST and on the RESOLVED path: nothing at
+    # user scope, nothing outside the target project directory, whatever the
+    # flags said. See `resolve_mcp_config_write_path`.
+    config_path = resolve_mcp_config_write_path(
+        target_root, scope=scope, env=os.environ if env is None else env)
+
     # Same loud failure `wire_hooks` takes, for the same reason: an interpreter
     # that was not probed on THIS host is a guess, and stamping a guess into a
     # launch command is what #538/#539 were filed for.
@@ -1548,8 +1662,6 @@ def wire_mcp(
             f"launched verbatim by Claude Code at session start; a guessed name fails "
             f"there, far from its cause."
         )
-
-    config_path = mcp_config_path_for_target_root(target_root)
 
     if is_git_tracked(config_path):
         raise InstallError(
@@ -2664,9 +2776,13 @@ def main(
                     f"no skills, so there would be no {MCP_SERVER_SCRIPT} to point at)"
                 )
             if args.scope != "project":
-                # `mcp_config_path_for_target_root` at user scope would name
-                # `~/.mcp.json`, which Claude Code does not read. Writing it
-                # would be emitting a file nothing loads and calling it wiring.
+                # A flag check, and deliberately NOT the guard. It fails early
+                # and cheaply on the obvious spelling of the mistake; the guard
+                # that actually holds the "nothing at user scope, nothing
+                # outside the target tree" constraint reads the RESOLVED path
+                # inside `wire_mcp` (`resolve_mcp_config_write_path`), because
+                # `--scope project --dest ~/.claude/skills` passes this line and
+                # is a user-scope install by every meaning that matters.
                 raise InstallError(
                     f"--wire-mcp requires --scope project: Claude Code reads a "
                     f"{MCP_CONFIG_FILENAME} from a PROJECT root and nowhere else, so "
@@ -2775,6 +2891,7 @@ def main(
                     scope=args.scope,
                     out=out,
                     mcp_from=args.mcp_from,
+                    env=runtime_env,
                 )
         if args.scope == "project" and not args.dry_run and not args.dest:
             project_root = args.project.expanduser() if args.project else runtime_cwd

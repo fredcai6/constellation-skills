@@ -18,7 +18,9 @@ identity mid-conversation):
   SPINE_FILE    -- the --file every engine call needs
   SPINE_ENGINE  -- path to checklist_engine.py (this repo's own copy; dogfooding
                    convention -- see checklist-engine.md "Dogfooding on the
-                   skill-source repo")
+                   skill-source repo"). LOAD-BEARING: the engine module is
+                   loaded from exactly this file, and a path with no file behind
+                   it refuses to start rather than falling back to a sibling.
   SPINE_SESSION -- the --session-id every mutating verb needs once a lease
                    exists; keyed session_id#agentId by the caller's own
                    environment (the committed .mcp.json's ${VAR} expansion
@@ -113,6 +115,7 @@ the CLI's own rule (see checklist-engine.md "Session lease").
 from __future__ import annotations
 
 import contextlib
+import importlib.util
 import io
 import json
 import os
@@ -124,8 +127,50 @@ ENGINE = Path(os.environ["SPINE_ENGINE"]).resolve()
 SPINE = Path(os.environ["SPINE_FILE"]).resolve()
 SESSION = os.environ.get("SPINE_SESSION", "")
 
-sys.path.insert(0, str(ENGINE.parent))
-import checklist_engine  # noqa: E402
+
+def _load_engine(path: Path):
+    """Load the engine FROM `path`, so `SPINE_ENGINE` decides which engine this
+    door speaks to.
+
+    It used to be `sys.path.insert(0, str(ENGINE.parent)); import
+    checklist_engine`, which made the value DECORATIVE: Python already puts this
+    server script's own directory on `sys.path[0]`, and `checklist_engine.py` is
+    this script's sibling in both supported layouts (this checkout's `scripts/`,
+    and the flat `constellation-workbench/scripts/` an install produces). So the
+    sibling was found first and no value of `SPINE_ENGINE` could change which
+    engine ran or stop the door from launching -- pointing it at
+    `/nonexistent/dir/checklist_engine.py` still launched and still answered
+    tool calls. A field that cannot be wrong is the same defect family as a
+    check that cannot fail, and `install_constellation.py` already documented
+    the opposite ("it reaches checklist_engine.py through the SPINE_ENGINE path
+    this installer writes, not through a sibling load"), so the code is what was
+    wrong here, not the claim.
+
+    Refusing here is the right failure: Claude Code reports a server that would
+    not start, at session start, naming the variable -- instead of a door that
+    silently speaks to an engine nobody asked for."""
+    if not path.is_file():
+        raise SystemExit(
+            f"SPINE_ENGINE={str(path)!r} names no file. This server is a front door ON "
+            f"checklist_engine.py and loads the engine from exactly that path; refusing "
+            f"to start against an engine that is not there rather than silently falling "
+            f"back to whatever copy happens to sit beside this script."
+        )
+    # The engine's own sibling imports still resolve, which is what this line
+    # was always really for -- it is no longer what finds the engine itself.
+    engine_dir = str(path.parent)
+    if engine_dir not in sys.path:
+        sys.path.insert(0, engine_dir)
+    spec = importlib.util.spec_from_file_location("checklist_engine", path)
+    module = importlib.util.module_from_spec(spec)
+    # Registered BEFORE exec, for the reason the test helpers state: a dataclass
+    # body resolves its own module out of sys.modules while it runs.
+    sys.modules["checklist_engine"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+checklist_engine = _load_engine(ENGINE)
 
 PROTOCOL_DEFAULT = "2025-06-18"
 SERVER_NAME = "spine"

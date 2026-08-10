@@ -3981,8 +3981,9 @@ class _McpWiringFixture(unittest.TestCase):
 
     def _wire(self, installer, tmp, **kwargs):
         lines: list[str] = []
+        target_root = kwargs.pop("target_root", None)
         installer.wire_mcp(
-            self._target_root(tmp),
+            self._target_root(tmp) if target_root is None else target_root,
             interpreter=kwargs.pop("interpreter", self._probed(installer)),
             dry_run=kwargs.pop("dry_run", False),
             scope=kwargs.pop("scope", "project"),
@@ -3991,6 +3992,40 @@ class _McpWiringFixture(unittest.TestCase):
             **kwargs,
         )
         return "\n".join(lines)
+
+    def _launchable_alias(self, installer, tmp) -> str:
+        """A path that is NOT `sys.executable` and that really launches a
+        Python.
+
+        This exists because every other test in this file hands `wire_mcp` a
+        resolution whose `.interpreter` IS `sys.executable`, which makes
+        `assertEqual(sys.executable, entry["command"])` pass identically for an
+        implementation that writes the probed value and one that ignores its
+        argument and writes `sys.executable`. Killing that mutant needs a
+        probed value that differs from `sys.executable` -- and it has to be a
+        REAL interpreter, because the emitted command is asserted to launch.
+
+        Symlink where the platform allows one (a genuinely distinct location).
+        Windows CI runners do not reliably grant symlink privilege, so the
+        fallback is a different SPELLING of the same real interpreter --
+        `<dir>/../<dir name>/<exe>` -- which is still a string no
+        `sys.executable` shortcut can produce, and still launches everywhere."""
+        exe = Path(sys.executable)
+        link = Path(tmp) / "alias-bin" / f"aliased-{exe.name}"
+        link.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            link.symlink_to(exe)
+        except (OSError, NotImplementedError):
+            alias = str(exe.parent / os.pardir / exe.parent.name / exe.name)
+        else:
+            alias = str(link)
+        self.assertNotEqual(sys.executable, alias)
+        probe = subprocess.run(
+            [alias, "--version"], capture_output=True, text=True, timeout=60)
+        self.assertEqual(
+            0, probe.returncode,
+            f"the alias interpreter {alias!r} does not launch: {probe.stderr}")
+        return alias
 
     def _config_path(self, tmp) -> Path:
         return self._project(tmp) / ".mcp.json"
@@ -4011,6 +4046,33 @@ class McpWiringTests(_McpWiringFixture):
             self.assertEqual(sys.executable, entry["command"])
             self.assertTrue(Path(entry["args"][0]).is_absolute())
             self.assertTrue(Path(entry["args"][0]).is_file())
+
+    def test_the_emitted_command_is_the_PROBED_interpreter_not_this_process_s(self):
+        """The anti-vacuity twin the test above cannot be: it hands a
+        resolution whose `.interpreter` IS `sys.executable`, so it passes
+        identically for a `wire_mcp` that writes the probed value and for one
+        that ignores the argument and writes `sys.executable`. Replacing
+        `interpreter=interpreter.interpreter` with `interpreter=sys.executable`
+        left the whole suite green, which is what this test exists to stop.
+
+        The distinct value is a REAL interpreter at a REAL other path, and the
+        emitted file is then launched by `check_mcp_launchable` -- so the
+        assertion is not merely that a string was copied, but that the string
+        copied is one this host can start."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            alias = self._launchable_alias(installer, tmp)
+            self._wire(installer, tmp, interpreter=self._probed(installer, alias))
+            entry = json.loads(self._config_path(tmp).read_text(encoding="utf-8"))[
+                "mcpServers"][installer.MCP_SERVER_NAME]
+            self.assertEqual(
+                alias, entry["command"],
+                "the emitted command is not the interpreter this run probed")
+            self.assertNotEqual(
+                sys.executable, entry["command"],
+                "the emitted command fell back to this process's own interpreter")
+            check = installer.check_mcp_launchable(self._target_root(tmp), env={})
+            self.assertTrue(check.ready, check.reason)
 
     def test_wiring_keeps_the_per_dispatch_override_seams(self):
         """Dropping `${SPINE_FILE:-...}` for a bare path would bind ONE spine and
@@ -4128,6 +4190,26 @@ class McpWiringTests(_McpWiringFixture):
             self.assertIn(installer.MCP_SERVER_SCRIPT, str(raised.exception))
             self.assertFalse(self._config_path(tmp).exists())
 
+    def test_wiring_refuses_when_only_the_ENGINE_script_is_missing(self):
+        """The precheck loop covers both scripts, but only the SERVER arm was
+        ever red-tested -- the test above fails on the first missing file and
+        never reaches the engine. That matters more now that `SPINE_ENGINE` is
+        load-bearing in `mcp_spine_server.py`: this precheck is the installer's
+        only chance to catch a door pointed at an engine that is not there,
+        before Claude Code reports a failed server at session start."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            scripts = (self._target_root(tmp)
+                       / installer.HOOK_OWNER_INSTALL_NAME / "scripts")
+            scripts.mkdir(parents=True)
+            (scripts / installer.MCP_SERVER_SCRIPT).write_text("", encoding="utf-8")
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp, mcp_from=installer.MCP_FROM_INSTALLED)
+            message = str(raised.exception)
+            self.assertIn(installer.MCP_ENGINE_SCRIPT, message)
+            self.assertNotIn(installer.MCP_SERVER_SCRIPT, message)
+            self.assertFalse(self._config_path(tmp).exists())
+
     def test_wiring_refuses_a_config_file_it_cannot_read(self):
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
@@ -4138,6 +4220,141 @@ class McpWiringTests(_McpWiringFixture):
             with self.assertRaises(installer.InstallError):
                 self._wire(installer, tmp)
             self.assertEqual(before, path.read_bytes())
+
+
+class McpWriteLocationTests(_McpWiringFixture):
+    """The hard constraint, on the RESOLVED path rather than the flag: this
+    installer never writes outside the target project directory, and never at
+    user scope, whatever the flags say.
+
+    Both refusals below were reproduced from the CLI, with every guard in place
+    and no source modified, before the guard existed:
+
+      --scope project --dest $HOME/.claude/skills --wire-mcp   -> wrote ~/.mcp.json
+      --scope project --dest /tmp/wm-probe/proj/skills --wire-mcp
+                                                    -> wrote /tmp/wm-probe/.mcp.json
+
+    The first is the exact file `main`'s own scope check says must never be
+    written; it passed that check because the check reads `--scope`, and
+    `--dest` is what decides where the install actually lands. The second is
+    outside the tree the caller named at all, because the `.mcp.json` location
+    is TWO levels up from the target root and neither level was checked."""
+
+    def _home_tree(self, tmp) -> tuple[Path, Path]:
+        """A fake HOME with a user-scope skills directory inside it, which is
+        exactly what `--dest $HOME/.claude/skills` produces."""
+        home = Path(tmp) / "home"
+        target_root = home / ".claude" / "skills"
+        target_root.mkdir(parents=True, exist_ok=True)
+        return home, target_root
+
+    def test_wiring_refuses_a_user_scope_target_root_despite_scope_project(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home, target_root = self._home_tree(tmp)
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(
+                    installer, tmp, target_root=target_root,
+                    scope="project", env={"HOME": str(home), "USERPROFILE": str(home)})
+            message = str(raised.exception)
+            self.assertIn(str(home / installer.MCP_CONFIG_FILENAME), message)
+            self.assertFalse((home / installer.MCP_CONFIG_FILENAME).exists())
+
+    def test_a_real_project_inside_that_same_home_still_wires(self):
+        """The anti-vacuity twin: without it, a refusal that fired for anything
+        under the home directory -- or for everything -- would read as the
+        user-scope guard working. Same HOME, same call, one directory deeper."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home, _ = self._home_tree(tmp)
+            target_root = home / "code" / "project" / ".claude" / "skills"
+            target_root.mkdir(parents=True)
+            self._wire(
+                installer, tmp, target_root=target_root,
+                scope="project", env={"HOME": str(home), "USERPROFILE": str(home)})
+            self.assertTrue(
+                (home / "code" / "project" / installer.MCP_CONFIG_FILENAME).is_file())
+            self.assertFalse((home / installer.MCP_CONFIG_FILENAME).exists())
+
+    def test_wiring_refuses_a_target_root_with_no_derivable_project_root(self):
+        """`--dest <anywhere>/skills`: two levels up is a directory the caller
+        never named. The refusal must NAME the path it would have written, or
+        the reader cannot tell a scope refusal from a shape refusal."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            target_root = Path(tmp) / "proj" / "skills"
+            target_root.mkdir(parents=True)
+            would_have_written = Path(tmp) / installer.MCP_CONFIG_FILENAME
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp, target_root=target_root)
+            self.assertIn(str(would_have_written), str(raised.exception))
+            self.assertFalse(would_have_written.exists())
+
+    def test_wire_mcp_reads_its_scope_argument(self):
+        """R3: `scope` was declared and never read -- present in the signature,
+        passed by `main` and by every test, enforced by nothing. A parameter
+        that looks like a guard and is not one is what made the user-scope write
+        above reachable. Handing it 'user' against a target root that would
+        otherwise wire cleanly is the only way to see that it is now read."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp, scope="user")
+            self.assertIn("--scope project", str(raised.exception))
+            self.assertFalse(self._config_path(tmp).exists())
+
+    def test_dry_run_refuses_a_bad_write_location_too(self):
+        """A `--dry-run` that reports a plan the real run would refuse is worse
+        than no dry run -- the ruling `resolve_interpreter`'s unconditional
+        probe already carries."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home, target_root = self._home_tree(tmp)
+            with self.assertRaises(installer.InstallError):
+                self._wire(
+                    installer, tmp, target_root=target_root, dry_run=True,
+                    env={"HOME": str(home), "USERPROFILE": str(home)})
+
+
+class McpWriteLocationCliTests(unittest.TestCase):
+    """The two reproductions as the reviewer ran them: through `main`, with
+    every guard active and nothing stubbed."""
+
+    def test_scope_project_with_a_user_scope_dest_writes_no_mcp_json(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "home"
+            dest = home / ".claude" / "skills"
+            dest.mkdir(parents=True)
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "project",
+                         "--dest", str(dest), "--wire-mcp", "--mcp-from", "source",
+                         "--skills", "workbench"],
+                        env={"HOME": str(home), "USERPROFILE": str(home)},
+                        out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn(str(home / installer.MCP_CONFIG_FILENAME), err.getvalue())
+            self.assertFalse((home / installer.MCP_CONFIG_FILENAME).exists())
+
+    def test_a_dest_outside_the_expected_shape_writes_nothing_above_it(self):
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "proj" / "skills"
+            dest.mkdir(parents=True)
+            outside = Path(tmp) / installer.MCP_CONFIG_FILENAME
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(
+                        ["--agent", "claude", "--scope", "project",
+                         "--dest", str(dest), "--wire-mcp", "--skills", "workbench"],
+                        env={}, out=lambda _: None,
+                    )
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn(str(outside), err.getvalue())
+            self.assertFalse(outside.exists())
 
 
 class McpReadinessTests(_McpWiringFixture):
