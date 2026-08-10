@@ -190,7 +190,8 @@
           "id": "c1",
           "statement": "committed to epic-418/f-424-mcp-door; IMPLEMENTER_RESULT written with all required sections at the exact handoff-named path",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Committed 06b116d6 to epic-418/f-424-mcp-door (fix + plan/journal + demo script + evidence + engine why-capture files). IMPLEMENTER_RESULT written at .agent-work/archive/2026-08-09-epic-418-followon/commander-424/crew-handoffs/g3-implementer-result-utf8b.md with exact commands/output/exit codes, the one-off red-then-green demonstration (explicitly stated as NOT a permanent test), an explicit local-vs-reasoned-about-Windows split including the PYTHONIOENCODING correction, Map Impact (no drift), and a blunt Workflow Feedback section."
         }
       ],
       "constraints": [
@@ -198,7 +199,7 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -214,7 +215,7 @@
     "session_id": "constellation/archive/2026-08-09-epic-418-followon/commander-424/g3fix3/implementer/attempt-1",
     "status": "active",
     "claimed_at": "2026-08-10T02:21:33.568162+00:00",
-    "last_heartbeat": "2026-08-10T02:28:07.592355+00:00",
+    "last_heartbeat": "2026-08-10T02:30:27.440241+00:00",
     "claimed_by": "g3fix3-implementer",
     "worktree": ".",
     "previous_session_id": null,
@@ -248,6 +249,13 @@
       "why": "Full suite: 2178 passed, 1 skipped, 1061 subtests, 0 failed -- exact match to the baseline stated in the handoff, confirming the fix introduces no regression.",
       "mechanical": false,
       "ts": "2026-08-10T02:28:00.979826+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-closeout",
+      "why": "Fix committed (06b116d6) and IMPLEMENTER_RESULT written at the exact handoff-named path with all required sections. Plan is now done.",
+      "mechanical": false,
+      "ts": "2026-08-10T02:30:27.440233+00:00"
     }
   ]
 }
