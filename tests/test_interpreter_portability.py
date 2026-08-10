@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -293,11 +294,22 @@ class TrackedSettingsInterpreterTests(unittest.TestCase):
         )
 
     def test_detector_would_not_go_green_on_empty_discovery(self):
-        """Proves the vacuous-green guard itself fires, without touching real
-        git state: an empty file list must fail assertTrue, not silently pass
-        the surrounding scan."""
+        """Proves the vacuous-green guard itself fires against REAL discovery
+        code, not `unittest.assertTrue` in isolation: `subprocess.run` is
+        patched so `_tracked_claude_settings_files()` genuinely returns an
+        empty list, then the exact guard the real test above runs
+        (`self.assertTrue(files, ...)`) must raise against that real return
+        value."""
+        empty = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+        with mock.patch.object(subprocess, "run", return_value=empty):
+            files = _tracked_claude_settings_files()
+        self.assertEqual([], files)
         with self.assertRaises(AssertionError):
-            self.assertTrue([], "simulated empty discovery")
+            self.assertTrue(
+                files,
+                "no tracked .claude/ files found -- file discovery is broken, which makes "
+                "this check impossible to fail",
+            )
 
 
 # --------------------------------------------------------------------------- #

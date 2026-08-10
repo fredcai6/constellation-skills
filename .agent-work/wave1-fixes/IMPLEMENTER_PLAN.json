@@ -112,7 +112,8 @@
           "id": "p1",
           "statement": "m1-is-git-tracked complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "m1-is-git-tracked complete: 10 passed"
         }
       ],
       "postconditions": [
@@ -120,7 +121,8 @@
           "id": "c1",
           "statement": "TDD red: confirm reverting this test to the old unittest-only body still passes suite-wide (proving the OLD test was vacuous) -- manual attest, check MUST be null",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "attested"
         },
         {
           "id": "c2",
@@ -129,7 +131,8 @@
             "kind": "command",
             "command": "python -m pytest -q tests/test_interpreter_portability.py -k TrackedSettingsInterpreterTests"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-m2-vacuous-empty-discovery-2"
         }
       ],
       "constraints": [
@@ -137,11 +140,33 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-m2-vacuous-empty-discovery-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m2-vacuous-empty-discovery",
+            "why_ref": "w-2"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m2-vacuous-empty-discovery-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_interpreter_portability.py -k TrackedSettingsInterpreterTests",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "m3-vacuous-drift": {
@@ -304,12 +329,12 @@
   "consolidation": null,
   "triage_candidates": [],
   "blockers": [],
-  "refusals": 3,
+  "refusals": 5,
   "engine_session": {
     "session_id": "impl-wave1",
     "status": "active",
     "claimed_at": "2026-08-10T04:40:19.258636+00:00",
-    "last_heartbeat": "2026-08-10T04:43:24.719257+00:00",
+    "last_heartbeat": "2026-08-10T04:45:49.201707+00:00",
     "claimed_by": "implementer",
     "worktree": ".",
     "previous_session_id": null,
@@ -329,6 +354,13 @@
       "why": "Fixed is_git_tracked in scripts/install_constellation.py: resolves path to absolute FIRST (path.resolve()), then derives both subprocess cwd and the pathspec from that resolved path, so a relative --project . path no longer doubles the parent segment against git. TDD: added test_is_git_tracked_true_for_a_relative_path_from_the_repo_root to ReadinessHooksCheckTests (chdir into a temp repo, git-add+commit .claude/settings.local.json, call is_git_tracked with a RELATIVE Path('.claude')/'settings.local.json') -- observed RED (AssertionError: False is not true) against the pre-fix code, then implemented the fix, then green. check_hooks_shippable needed no separate change since it calls is_git_tracked directly -- confirmed by running the whole ReadinessHooksCheckTests class plus both source-wiring refusal tests (test_source_wiring_refuses_a_git_tracked_local_settings_file, test_the_same_run_succeeds_when_the_local_file_is_untracked): 10 passed.",
       "mechanical": false,
       "ts": "2026-08-10T04:43:24.719238+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-vacuous-empty-discovery",
+      "why": "Rewrote test_detector_would_not_go_green_on_empty_discovery to genuinely exercise _tracked_claude_settings_files() with subprocess.run patched (mock.patch.object) to return empty stdout, then assert the real assertTrue(files, ...) guard raises against that real (not stdlib-only) empty return. Added 'from unittest import mock' import. TDD red demonstrated: temporarily mutated _tracked_claude_settings_files() to return [ROOT/\"MUTATED-dummy-entry\"] regardless of subprocess output -- the new test FAILED (AssertionError: Lists differ, [] != [PosixPath(.../MUTATED-dummy-entry)]) because it now genuinely checks the function's real behavior; reverted the mutation, class green again (3 passed).",
+      "mechanical": false,
+      "ts": "2026-08-10T04:45:49.201681+00:00"
     }
   ],
   "trip_ledger": [
@@ -364,6 +396,39 @@
       "model": "claude-sonnet-5",
       "why_ref": "w-1",
       "ts": "2026-08-10T04:42:38.024465+00:00"
+    },
+    {
+      "id": "tl-4",
+      "gate": "m2-vacuous-empty-discovery",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.1831,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-10T04:43:57.747366+00:00"
+    },
+    {
+      "id": "tl-5",
+      "gate": "m2-vacuous-empty-discovery",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1831,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-10T04:44:06.313802+00:00"
+    },
+    {
+      "id": "tl-6",
+      "gate": "m2-vacuous-empty-discovery",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1831,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-2",
+      "ts": "2026-08-10T04:44:11.492629+00:00"
     }
   ]
 }
