@@ -46,8 +46,16 @@ jobs:
       # a command on a stock Windows host -- and nothing in CI could say so,
       # because every test around it asserted on the config STRING rather than
       # launching what the string names.
+      #
+      # The cold-review repairs join this selection for the same legibility
+      # reason, and one of them carries real platform risk worth naming: the R2
+      # test needs a launchable interpreter at a path that is NOT
+      # `sys.executable`, and symlink privilege is exactly what a Windows runner
+      # may not grant. It tries the symlink and falls back to another spelling
+      # of the same real interpreter, so a Windows failure there reads as
+      # "neither candidate launches" in a named step instead of one dot in 2500.
       - name: MCP door launches on Windows and answers a real tool call
-        run: python -m pytest tests/test_mcp_spine_server.py tests/test_install_constellation.py -v -k "McpDoorLaunchesFromEmittedConfig or McpJsonVarExpansionLaunch or McpReadiness"
+        run: python -m pytest tests/test_mcp_spine_server.py tests/test_install_constellation.py -v -k "McpDoorLaunchesFromEmittedConfig or McpJsonVarExpansionLaunch or McpReadiness or McpWiring or McpWriteLocation or SpineEngineIsLoadBearing"
 
       - name: Run full test suite
         run: python -m pytest tests/ -q --junitxml=junit-report.xml
