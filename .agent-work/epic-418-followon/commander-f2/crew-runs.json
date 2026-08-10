@@ -130,5 +130,27 @@
     "abandoned": false,
     "dispatch": "external",
     "model": "sonnet"
+  },
+  {
+    "crew_id": "constellation/epic-418-followon/commander-f2/g4a-implement/implementer/attempt-1",
+    "work_id": "epic-418-followon/commander-f2",
+    "gate": "g4a-implement",
+    "role": "implementer",
+    "attempt": 1,
+    "status": "running",
+    "session_name": "constellation/epic-418-followon/commander-f2/g4a-implement/implementer/attempt-1",
+    "backend": "external",
+    "pid": null,
+    "worktree": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption",
+    "handoff": ".agent-work/epic-418-followon/commander-f2/crew-handoffs/g4a-implement-handoff.md",
+    "result": ".agent-work/epic-418-followon/commander-f2/crew-handoffs/g4a-implement-implementer-result.md",
+    "stdout": ".agent-work/epic-418-followon/commander-f2/crew-runs/g4a-implement-implementer-attempt-1.stdout.txt",
+    "stderr": ".agent-work/epic-418-followon/commander-f2/crew-runs/g4a-implement-implementer-attempt-1.stderr.txt",
+    "started_at": "2026-08-10T08:30:20.259465+00:00",
+    "last_heartbeat": "2026-08-10T08:30:20.259465+00:00",
+    "completed_at": null,
+    "abandoned": false,
+    "dispatch": "external",
+    "model": "sonnet"
   }
 ]

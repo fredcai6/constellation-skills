@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4a-implement",
+  "mechanical": {
+    "run": "epic-418-followon/commander-f2",
+    "project": "constellation-skills",
+    "spine-step": "g4a-implement",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-f2-g4a-implement@7d0f1026f3a607659bb6dbfd63e16066b3ddb62d",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-418-followon/commander-f2",
+    "generated_at": "2026-08-10T08:30:20Z"
+  }
+}

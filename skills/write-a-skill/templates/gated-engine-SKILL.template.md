@@ -12,7 +12,7 @@ Drive every step through the checklist engine and finish its sequence — final 
 
 ## Instantiate the plan
 
-Build a `gated` plan from `templates/<NAME>_PLAN.template.json` and drive it through `scripts/checklist_engine.py`: one item per step, each with a real command or artifact postcondition. Ask the engine `current`, do exactly what the active step says, `advance` only when its checks pass.
+Build a `gated` plan from `templates/<NAME>_PLAN.template.json` and drive it — by default via the MCP door's `spine_status`/`spine_start`/`spine_advance`/`spine_evidence` tools (see workbench `references/checklist-engine.md` — MCP door) when this agent owns the process's bound spine, otherwise (and always for an in-session dispatched crew member driving its own plan) the CLI fallback: through `scripts/checklist_engine.py`. One item per step, each with a real command or artifact postcondition. Ask the engine `current`, do exactly what the active step says, `advance` only when its checks pass.
 
 ## The gates
 

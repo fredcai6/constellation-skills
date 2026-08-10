@@ -8,7 +8,7 @@ invoker: <human | agent | both>
 
 <Leading line: the inquiry this skill runs and the verdict it consolidates, in one sentence.>
 
-Drive a `survey` checklist through `scripts/checklist_engine.py`: **visit every item, append more from context, record each check (a failure is recorded, never blocks), then consolidate into one verdict.** Work the engine never saw did not happen; full doctrine: `_shared/global-everyone.md`.
+Drive a `survey` checklist — by default via the MCP door's `spine_status`/`spine_survey_result`/`spine_evidence` tools (see workbench `references/checklist-engine.md` — MCP door) when this agent owns the process's bound spine, otherwise (and always for an in-session dispatched crew member driving its own survey) the CLI fallback: through `scripts/checklist_engine.py`. **Visit every item, append more from context, record each check (a failure is recorded, never blocks), then consolidate into one verdict.** Work the engine never saw did not happen; full doctrine: `_shared/global-everyone.md`.
 
 ## The checklist
 

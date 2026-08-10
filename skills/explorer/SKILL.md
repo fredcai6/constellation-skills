@@ -28,7 +28,7 @@ Whenever you name the marker in your own writing, keep it inline in a sentence, 
 
 ## The spine
 
-Drive the gated spine (`templates/EXPLORER_SPINE.template.json`) through the engine one step at a time. Instantiate it at `init` via `python <skill-dir>/scripts/init_work_area.py <work-id> --spine <skill-dir>/templates/EXPLORER_SPINE.template.json --skill-dir <skill-dir>` (let the script resolve placeholders — do not hand-substitute), then `claim` the session lease and pass `--session-id <work-id>` on every mutating call.
+Drive the gated spine (`templates/EXPLORER_SPINE.template.json`) through the engine one step at a time — by default via the MCP door's `spine_status`/`spine_lease`/`spine_advance` tools (see workbench `references/checklist-engine.md` — MCP door), since Explorer is orchestrator-tier and runs directly in the human-reachable context that owns the process's bound spine; CLI fallback, always available: the absolute path to this installed skill's bundled `scripts/checklist_engine.py` (workbench `references/checklist-engine.md`). Instantiate it at `init` via `python <skill-dir>/scripts/init_work_area.py <work-id> --spine <skill-dir>/templates/EXPLORER_SPINE.template.json --skill-dir <skill-dir>` (let the script resolve placeholders — do not hand-substitute), then `claim` the session lease and pass `--session-id <work-id>` on every mutating CLI call.
 
 | Step | What happens |
 |---|---|

@@ -23,7 +23,7 @@ You were handed a goal to resolve, not to answer from assumption. The moment thi
 
 Compliance/engine-drive rule: inherited — see `references/global-everyone.md`.
 
-Drive the question list as a `survey` from `templates/INTERROGATION.template.json` through the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and resolve its answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding.
+Drive the question list as a `survey` from `templates/INTERROGATION.template.json` — by default via the MCP door's `spine_status`/`spine_survey_result`/`spine_evidence` tools (see workbench `references/checklist-engine.md` — MCP door) when this agent owns the process's bound spine (the common case: Interrogator runs in the invoking agent's own human-reachable context, never as an in-session dispatched subagent), otherwise the CLI fallback: the absolute path to this installed skill's bundled engine (`scripts/checklist_engine.py`, workbench `references/checklist-engine.md`): ask one question at a time and resolve its answer; `append` follow-ups and new branches as answers open them; `skip` questions an earlier answer settled; then `consolidate` into the resolved understanding.
 
 ## Facts vs. decisions — resolve one, block on the other
 
