@@ -3235,6 +3235,32 @@ class ReadinessHooksCheckTests(_HookWiringFixture):
             path.write_text("{}", encoding="utf-8")
             self.assertFalse(installer.is_git_tracked(path))
 
+    def test_is_git_tracked_true_for_a_relative_path_from_the_repo_root(self):
+        """`--project .` hands `is_git_tracked` a RELATIVE path whose parent is a
+        subdirectory (e.g. `.claude/settings.local.json`, parent `.claude`).
+        `cwd=path.parent` for a RELATIVE path resolves that parent against the
+        process's real cwd, and git then evaluates the RELATIVE pathspec against
+        THAT cwd too -- doubling the parent segment (`.claude/.claude/...`), so a
+        tracked file reads as untracked. The answer must not depend on whether
+        the caller passed a relative or an absolute path."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            self._init_repo(repo_root)
+            sub = repo_root / ".claude"
+            sub.mkdir()
+            path = sub / "settings.local.json"
+            path.write_text("{}", encoding="utf-8")
+            self._git(repo_root, "add", ".claude/settings.local.json")
+            self._git(repo_root, "commit", "-q", "-m", "init")
+            real_cwd = os.getcwd()
+            os.chdir(repo_root)
+            try:
+                relative = Path(".claude") / "settings.local.json"
+                self.assertTrue(installer.is_git_tracked(relative))
+            finally:
+                os.chdir(real_cwd)
+
     # -- check_hooks_shippable --------------------------------------------------
 
     def test_check_hooks_shippable_not_ready_when_unwired(self):

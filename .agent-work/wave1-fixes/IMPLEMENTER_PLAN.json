@@ -1,0 +1,369 @@
+{
+  "work_id": "wave1-fixes",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-is-git-tracked",
+    "m2-vacuous-empty-discovery",
+    "m3-vacuous-drift",
+    "m4-hook-actually-executes",
+    "m5-work-id-grammar-pin",
+    "m6-verify"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read inherited global doctrine (global-crew.md, global-everyone.md), then project deltas docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the cold-review handoff (the BLOCK + four overclaiming/vacuous tests across four merged PRs) and the checklist-engine reference. Verify the handoff is complete (task, intent, scope, exclusions, required evidence, test mode, stop conditions); if incomplete, block and return. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "crew context + glossary + handoff loaded; handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-is-git-tracked": {
+      "id": "m1-is-git-tracked",
+      "title": "Fix the BLOCK: is_git_tracked mis-answers for a relative path",
+      "imperative": "scripts/install_constellation.py is_git_tracked() passes str(path) as the git ls-files pathspec while cwd=str(path.parent); when path is relative (e.g. produced by --project .), that parent is also relative and resolves against the process's REAL cwd, doubling the parent segment so a tracked file reads as untracked. Fix by resolving path to absolute (path.resolve()) before both the subprocess cwd and the pathspec, so the answer no longer depends on relative vs absolute input. Also verify this repairs check_hooks_shippable (readiness item 3), which shares the same predicate -- no separate code change expected there, just confirm by test. TDD: first attest c1 (new relative-path test added to tests/test_install_constellation.py's ReadinessHooksCheckTests, observed FAILING against the pre-fix predicate -- manual attest, check MUST be null), then implement, then satisfy c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded and handoff complete",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete: doctrine + handoff loaded and confirmed complete"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: new test reproducing the relative-path shape (repo root cwd, relative path e.g. Path('.claude')/'settings.local.json') added and observed FAILING against the pre-fix is_git_tracked -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "attested"
+        },
+        {
+          "id": "c2",
+          "statement": "is_git_tracked resolves path to absolute before asking git; the new test plus the full ReadinessHooksCheckTests class and the source-wiring refusal tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_install_constellation.py -k 'ReadinessHooksCheckTests or test_source_wiring_refuses_a_git_tracked_local_settings_file or test_the_same_run_succeeds_when_the_local_file_is_untracked'"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-is-git-tracked-2"
+        }
+      ],
+      "constraints": [
+        "do not refactor is_git_tracked beyond the absolute-path fix",
+        "encoding='utf-8', newline='\\n' on any file write"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-is-git-tracked-1",
+          "type": "refresh-request",
+          "payload": {
+            "seam": "m1-is-git-tracked",
+            "why_ref": "w-1"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-m1-is-git-tracked-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_install_constellation.py -k 'ReadinessHooksCheckTests or test_source_wiring_refuses_a_git_tracked_local_settings_file or test_the_same_run_succeeds_when_the_local_file_is_untracked'",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-vacuous-empty-discovery": {
+      "id": "m2-vacuous-empty-discovery",
+      "title": "Fix the unittest-testing-unittest test in test_interpreter_portability.py",
+      "imperative": "tests/test_interpreter_portability.py::TrackedSettingsInterpreterTests::test_detector_would_not_go_green_on_empty_discovery only asserts unittest.assertTrue([]) raises -- it touches no module code. Rewrite it to genuinely exercise _tracked_claude_settings_files() with subprocess.run patched (mock.patch.object(subprocess, 'run', ...)) to return an empty listing, then assert the SAME vacuous-green guard the real test uses (self.assertTrue(files, ...)) actually raises AssertionError in that state. Add 'from unittest import mock' to the file's imports. TDD: attest c1 (new body written, observed failing against a reverted/old version -- i.e. would fail if reverted to the unittest-only shape), then satisfy c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m1-is-git-tracked complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: confirm reverting this test to the old unittest-only body still passes suite-wide (proving the OLD test was vacuous) -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "rewritten test genuinely calls _tracked_claude_settings_files with subprocess.run patched empty, and the class's tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_interpreter_portability.py -k TrackedSettingsInterpreterTests"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not touch PyLauncherLiteralTests or ShebangInvariantTests or ShellPinTests"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-vacuous-drift": {
+      "id": "m3-vacuous-drift",
+      "title": "Fix the same tautology in HookSpecTableMatchesTrackedSettingsTests",
+      "imperative": "tests/test_interpreter_portability.py::HookSpecTableMatchesTrackedSettingsTests::test_detector_actually_fires_on_a_constructed_drift asserts a list of N differs from a list of N+1 and never calls _tracked_hook_entries(). Rewrite it to genuinely call _tracked_hook_entries() against a constructed drifted settings file (temporarily pointing the module-level TRACKED_SETTINGS at a temp file carrying a 5th hook entry via mock.patch), and assert the result no longer compares equal to installer.HOOK_SPECS. TDD: attest c1 (old tautological body observed to still pass with the guard itself broken -- confirms it was vacuous), then satisfy c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m2-vacuous-empty-discovery complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: confirm the OLD body's vacuity (does not call _tracked_hook_entries) -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "rewritten test genuinely calls _tracked_hook_entries against a constructed drift and the class's tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_interpreter_portability.py -k HookSpecTableMatchesTrackedSettingsTests"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not touch EmittedCommandShapeTests"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m4-hook-actually-executes": {
+      "id": "m4-hook-actually-executes",
+      "title": "Fix test_every_wired_command_actually_executes to assert real output, not just exit 0",
+      "imperative": "tests/test_install_constellation.py::AllFourHookWiringTests::test_every_wired_command_actually_executes claims a wrong event argument would be caught but only asserts returncode == 0; scripts/hooks/spine_rail.py fail-opens (prints nothing, exits 0) for ANY unrecognized event, so a wrong event arg is invisible to this test today. Fix by running the three spine_rail.py-backed wired commands (Stop, SessionStart, PostToolUse) against a REAL mid-flight project state (a constructed .agent-work/<run>/spine.json with an active lease and an in-progress gate, plus a .spine-rail-binding.json entry, via CLAUDE_PROJECT_DIR env) and asserting on their actual stdout/side-effect (Stop must emit a SPINE MID-FLIGHT block; SessionStart must emit a RESUMING resume-context; PostToolUse must persist a new binding entry for a constructed engine-claim command) -- not merely returncode. Keep the governor (gauge_writer_hook.py) entry's existing exit-code assertion (it takes no positional event argument at all, so the docstring's 'wrong event argument' claim does not apply to it). TDD: attest c1 (mutate HOOK_SPECS' Stop args to a wrong event string and SessionStart's to no args, same as the cold reviewer's reproduction, run this test alone, observe it FAIL against the rewritten body -- manual attest, check MUST be null, then revert the mutation), then satisfy c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m3-vacuous-drift complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: HOOK_SPECS Stop-args/SessionStart-args mutated exactly as the reviewer did, rewritten test observed to FAIL, then mutation reverted -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "rewritten test asserts real stdout/side-effect for the three spine_rail entries and the class's tests pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_install_constellation.py -k AllFourHookWiringTests"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "do not modify scripts/hooks/spine_rail.py's fail-open contract"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m5-work-id-grammar-pin": {
+      "id": "m5-work-id-grammar-pin",
+      "title": "Pin scripts/run_crew.py WORK_ID_SEGMENT_RE against scripts/verify_iterative_role_artifacts.py SAFE_ID",
+      "imperative": "Two independent copies of the same per-segment work-id grammar exist (run_crew.WORK_ID_SEGMENT_RE, verify_iterative_role_artifacts.SAFE_ID) and nothing pins them together. Add a test in tests/test_work_id_nesting.py, in the same style as test_the_two_run_grammars_are_the_same_grammar (which pins apply_episode_delta.RUN_SEGMENT against verify_episode_captured._RUN_SEGMENT), comparing the two patterns (normalizing SAFE_ID's explicit ^...$ anchors against WORK_ID_SEGMENT_RE's implicit fullmatch anchoring, since both call sites use .fullmatch()). Do NOT create a shared module. TDD: attest c1 (new test written, observed passing at HEAD -- since there is no drift yet -- then drift one of the two patterns by hand, e.g. change SAFE_ID's character class, rerun the new test alone, observe it FAIL, then revert the drift -- manual attest, check MUST be null), then satisfy c2.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m4-hook-actually-executes complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "TDD red: SAFE_ID (or WORK_ID_SEGMENT_RE) hand-drifted, new pin test observed to FAIL, then reverted -- manual attest, check MUST be null",
+          "check": null,
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "new pin test passes at HEAD (no actual drift)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_work_id_nesting.py"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "no shared module; duplication + pinning test is the sanctioned pattern"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m6-verify": {
+      "id": "m6-verify",
+      "title": "Full suite, count only goes up",
+      "imperative": "Run the full suite with `python -m pytest` (never python3) and confirm 0 failed with a passed count >= the 2263-passed baseline (1 skipped baseline may hold or improve).",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "m5-work-id-grammar-pin complete",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green, 0 failed, passed count >= 2263 baseline",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "impl-wave1",
+    "status": "active",
+    "claimed_at": "2026-08-10T04:40:19.258636+00:00",
+    "last_heartbeat": "2026-08-10T04:43:24.719257+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": "Handoff is a cold-review fix list for 5 items across 4 merged PRs on integrate/wave1-fixes: (1) is_git_tracked in scripts/install_constellation.py doubles the parent segment for a relative path because it passes str(path) as pathspec with cwd=str(path.parent), both relative -- fix by path.resolve() before both; also backs check_hooks_shippable via the same predicate, verify by test, no separate code change expected. (2)+(3) tests/test_interpreter_portability.py has two tautological self-tests (test_detector_would_not_go_green_on_empty_discovery tests unittest itself; test_detector_actually_fires_on_a_constructed_drift never calls _tracked_hook_entries) -- rewrite both to genuinely exercise the real discovery functions with subprocess.run/TRACKED_SETTINGS patched. (4) tests/test_install_constellation.py::test_every_wired_command_actually_executes only checks returncode==0, but spine_rail.py fail-opens (prints nothing, exits 0) on ANY unrecognized event arg -- rewrite to assert real stdout/side-effect against a constructed mid-flight spine state for the 3 spine_rail-backed entries; leave gauge_writer's check as exit-code since it takes no event arg. (5) scripts/run_crew.py WORK_ID_SEGMENT_RE and scripts/verify_iterative_role_artifacts.py SAFE_ID are the same grammar, unpinned -- add a pin test in tests/test_work_id_nesting.py matching test_the_two_run_grammars_are_the_same_grammar's style. Constraints: no shared module (duplication+pin is sanctioned), encoding=utf-8/newline=\\n on writes, python -m pytest never python3, baseline 2263 passed/1 skipped/0 failed, count must only go up, work only in this worktree, do not push/PR, demonstrate red for every fix. Plan built with 7 gates (context + 5 fixes + final full-suite verify), each fix gate TDD-attests a manual red observation before its command-check green. Nothing yet implemented -- next actor starts m1-is-git-tracked.",
+      "mechanical": false,
+      "ts": "2026-08-10T04:40:59.407506+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-is-git-tracked",
+      "why": "Fixed is_git_tracked in scripts/install_constellation.py: resolves path to absolute FIRST (path.resolve()), then derives both subprocess cwd and the pathspec from that resolved path, so a relative --project . path no longer doubles the parent segment against git. TDD: added test_is_git_tracked_true_for_a_relative_path_from_the_repo_root to ReadinessHooksCheckTests (chdir into a temp repo, git-add+commit .claude/settings.local.json, call is_git_tracked with a RELATIVE Path('.claude')/'settings.local.json') -- observed RED (AssertionError: False is not true) against the pre-fix code, then implemented the fix, then green. check_hooks_shippable needed no separate change since it calls is_git_tracked directly -- confirmed by running the whole ReadinessHooksCheckTests class plus both source-wiring refusal tests (test_source_wiring_refuses_a_git_tracked_local_settings_file, test_the_same_run_succeeds_when_the_local_file_is_untracked): 10 passed.",
+      "mechanical": false,
+      "ts": "2026-08-10T04:43:24.719238+00:00"
+    }
+  ],
+  "trip_ledger": [
+    {
+      "id": "tl-1",
+      "gate": "m1-is-git-tracked",
+      "verb": "start",
+      "outcome": "begin-refused",
+      "fill": 0.164,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-10T04:41:05.478864+00:00"
+    },
+    {
+      "id": "tl-2",
+      "gate": "m1-is-git-tracked",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1749,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-10T04:42:32.945588+00:00"
+    },
+    {
+      "id": "tl-3",
+      "gate": "m1-is-git-tracked",
+      "verb": "start",
+      "outcome": "begin-released",
+      "fill": 0.1749,
+      "hard": 0.15,
+      "model": "claude-sonnet-5",
+      "why_ref": "w-1",
+      "ts": "2026-08-10T04:42:38.024465+00:00"
+    }
+  ]
+}

@@ -1522,11 +1522,21 @@ def is_git_tracked(path: Path) -> bool:
     the file's own parent so this resolves correctly even when the file sits
     in a subdirectory of the repo root (the real install layout: .git at the
     project root, settings.json one level down under .claude/). Any git
-    failure (not a repo, git missing) reads as untracked, never raises."""
+    failure (not a repo, git missing) reads as untracked, never raises.
+
+    `path` is resolved to absolute FIRST, and both the subprocess `cwd` and
+    the pathspec are derived from that resolved path -- a relative `path`
+    (e.g. `.claude/settings.local.json` from `--project .`) would otherwise
+    resolve its RELATIVE parent (`.claude`) against the process's real cwd for
+    `cwd`, while git evaluates the still-relative pathspec against THAT same
+    cwd too, doubling the parent segment (`.claude/.claude/...`) and reporting
+    a tracked file as untracked. Resolving first makes the answer independent
+    of whether the caller passed a relative or an absolute path."""
     try:
+        resolved = path.resolve()
         result = subprocess.run(
-            ["git", "ls-files", "--error-unmatch", str(path)],
-            cwd=str(path.parent), capture_output=True, text=True, timeout=10,
+            ["git", "ls-files", "--error-unmatch", str(resolved)],
+            cwd=str(resolved.parent), capture_output=True, text=True, timeout=10,
         )
     except (OSError, subprocess.TimeoutExpired):
         return False
