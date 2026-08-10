@@ -10,15 +10,15 @@
     "g2-implement",
     "g2-review",
     "g2-integrate",
-    "g3-implement",
-    "g3-review",
-    "g3-integrate",
     "g4a-implement",
     "g4a-review",
     "g4a-integrate",
     "g4b-implement",
     "g4b-review",
-    "g4b-integrate"
+    "g4b-integrate",
+    "g3-implement",
+    "g3-review",
+    "g3-integrate"
   ],
   "tasks": {
     "e0-context": {
@@ -660,268 +660,6 @@
       "evidence": [],
       "rework_count": 0
     },
-    "g3-implement": {
-      "id": "g3-implement",
-      "title": "g3 installer ships and wires the door (#542 criterion 3): implement",
-      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md from this gate's plan and anchors block: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints (copy the WHOLE constraints list -- it is what reaches the crew), required evidence, verification commands, authority, and the map entry point (map/INDEX.md plus the per-module INDEX.md for each module in the structural anchors). Fill the Deliverable Path Check: `git check-ignore <path>` for each committed deliverable, exit 1 expected. Dispatch via `python scripts/run_crew.py --backend external` (never hand-launch) as a Sonnet Agent-tool subagent, then `--verify-result`. Run `python scripts/recover_crews.py epic-418-followon/commander-f2` FIRST. Wait ACTIVELY inside the turn. Integrate the returned IMPLEMENTER_RESULT as evidence.",
-      "preconditions": [
-        {
-          "id": "p1",
-          "statement": "g1 closed: the installed .mcp.json's env block IS the identity mechanism, so what it may contain follows from g1's decision.",
-          "check": null,
-          "satisfied": false
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "implementer-result"
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [
-        "Run the suite as `python -m pytest`, NEVER `python3 -m pytest`. On this host /usr/bin/python3 answers and has no pytest, so python3 returns 'No module named pytest' and a non-zero exit that READS AS A RED SUITE AND IS NOT ONE.",
-        "NEVER pipe a command into head/tail and read the exit code -- that is the pager's status, not the command's. Redirect to a file and capture the command's own $?. This trap fired four times across this epic.",
-        "NEVER edit scripts/checklist_engine.py. `git diff` against it was empty for the whole of F and stays empty. The door WRAPS the engine and never re-implements it.",
-        "When a task involves editing global doctrine, the canonical source is skills/_shared/global-*.md -- NEVER skills/<role>/references/global-*.md, which install_constellation.py REGENERATES at install time and silently overwrites.",
-        "When editing a shipped compact-format JSON file (.mcp.json, any skills/*/templates/*.template.json), edit the RAW TEXT surgically. Never round-trip through json.load/json.dump -- it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
-        "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on EVERY write.",
-        "Work ONLY in this worktree. /home/tommy/projects/constellation-skills (the main checkout) is FENCED READ-ONLY.",
-        "THE INTERPRETER IS THE TRAP THAT LANDS HERE. The committed .mcp.json hardcodes \"command\": \"python3\". INTERPRETER_CANDIDATES = ('py','python3','python') exists PRECISELY BECAUSE python3 is not a name you can rely on across machines. The installed .mcp.json's `command` MUST carry the run's resolved interpreter from the SAME single resolve_interpreter() probe the rest of the install uses. installed_path_replacements() rewrites only 'python <', '<skill-dir>' and '<name>-skill-dir', so a bare \"python3\" value matches NOTHING and would ship unchanged.",
-        "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes successfully rather than falling back to a member of the disproved candidate set. State what the installer does about .mcp.json when nothing answers -- and make it a hard stop too, not a python3 default.",
-        "NEVER write settings.json at USER scope.",
-        "--wire-hooks targets the AGENT CONFIG DIR (<target_root>/../settings.json), NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. MEASURE what it actually writes; do not read the flag name as a description of its behaviour.",
-        "Do NOT reintroduce per-dispatch config generation. ONE project-scope config written at INSTALL time is a different thing from a config minted PER DISPATCH to key identity -- say why in the result, citing the tombstone's own scope.",
-        "The installer REGENERATES skills/<role>/references/global-*.md at install time. If you touch bundling or installed_path_replacements(), check what that regeneration now stamps.",
-        "Do NOT add required_scripts entries beyond what shipping the door needs. Anything more floats to the Admiral."
-      ],
-      "anchors": {
-        "structural": [
-          "scripts/install_constellation.py -- SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name> (map: 81 entities/30 holes)",
-          "scripts/install_constellation.py installed_path_replacements() -- the 3-entry rewrite map whose insertion order is load-bearing",
-          "scripts/install_constellation.py INTERPRETER_CANDIDATES / resolve_interpreter() -- the #540 hard stop",
-          "scripts/install_constellation.py -- writes NO project-root dotfile today; this is new ground and has no precedent to copy",
-          ".mcp.json -- the SOURCE config, whose args path is relative to THIS repo and will not resolve in a target"
-        ],
-        "capability": [
-          "Installing the corpus into a fresh project"
-        ],
-        "constraint": [
-          "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
-          "SPINE_ENGINE must name the INSTALLED engine, not this repo's",
-          "A hardcoded interpreter name in an installed artifact is a DEFECT, per the whole point of #539/#540"
-        ],
-        "decision": [
-          "no-gen-mcp-config -- install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
-          "decision pressure: whether writing a project-root dotfile is default or opt-in behind a flag, given the installer has no precedent for writing one. If the honest answer is opt-in, ARGUE it; do not default it silently."
-        ],
-        "evidence": [
-          "An installer test performing a REAL install into a tmpdir and asserting mcp_spine_server.py lands at <target>/scripts/mcp_spine_server.py -- 'bundled' is checkable, so check it",
-          "The same test asserting the written .mcp.json's args path AND its `command` interpreter both resolve in the TARGET, not in this repo",
-          "A test for the no-interpreter-answers case: the installer hard-stops rather than writing a python3 default"
-        ],
-        "confidence_flags": [
-          "`grep -ciE mcp scripts/install_constellation.py` moving off zero is a REPORTED NUMBER, never this gate's evidence -- a single comment line moves it. The gate closes on the install test."
-        ]
-      },
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
-    "g3-review": {
-      "id": "g3-review",
-      "title": "g3 installer ships and wires the door (#542 criterion 3): review",
-      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was built, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, the WHOLE constraints list, this gate's anchors block, and the evidence produced. REQUIRE A MUTATION: the reviewer must break the real thing this gate claims to protect and report whether this gate's own evidence went RED, then restore it and confirm GREEN. An assertion nobody has watched fail is not evidence. Dispatch via `python scripts/run_crew.py --backend external` as a Sonnet Agent-tool subagent, then `--verify-result`. Wait actively. Integrate the returned REVIEW_RESULT.",
-      "preconditions": [
-        {
-          "id": "p1",
-          "statement": "IMPLEMENTER_RESULT received for this gate",
-          "check": null,
-          "satisfied": false
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "REVIEW_RESULT returned, carrying the mutation experiment's outcome",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "review-result"
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [
-        "Run the suite as `python -m pytest`, NEVER `python3 -m pytest`. On this host /usr/bin/python3 answers and has no pytest, so python3 returns 'No module named pytest' and a non-zero exit that READS AS A RED SUITE AND IS NOT ONE.",
-        "NEVER pipe a command into head/tail and read the exit code -- that is the pager's status, not the command's. Redirect to a file and capture the command's own $?. This trap fired four times across this epic.",
-        "NEVER edit scripts/checklist_engine.py. `git diff` against it was empty for the whole of F and stays empty. The door WRAPS the engine and never re-implements it.",
-        "When a task involves editing global doctrine, the canonical source is skills/_shared/global-*.md -- NEVER skills/<role>/references/global-*.md, which install_constellation.py REGENERATES at install time and silently overwrites.",
-        "When editing a shipped compact-format JSON file (.mcp.json, any skills/*/templates/*.template.json), edit the RAW TEXT surgically. Never round-trip through json.load/json.dump -- it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
-        "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on EVERY write.",
-        "Work ONLY in this worktree. /home/tommy/projects/constellation-skills (the main checkout) is FENCED READ-ONLY.",
-        "THE INTERPRETER IS THE TRAP THAT LANDS HERE. The committed .mcp.json hardcodes \"command\": \"python3\". INTERPRETER_CANDIDATES = ('py','python3','python') exists PRECISELY BECAUSE python3 is not a name you can rely on across machines. The installed .mcp.json's `command` MUST carry the run's resolved interpreter from the SAME single resolve_interpreter() probe the rest of the install uses. installed_path_replacements() rewrites only 'python <', '<skill-dir>' and '<name>-skill-dir', so a bare \"python3\" value matches NOTHING and would ship unchanged.",
-        "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes successfully rather than falling back to a member of the disproved candidate set. State what the installer does about .mcp.json when nothing answers -- and make it a hard stop too, not a python3 default.",
-        "NEVER write settings.json at USER scope.",
-        "--wire-hooks targets the AGENT CONFIG DIR (<target_root>/../settings.json), NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. MEASURE what it actually writes; do not read the flag name as a description of its behaviour.",
-        "Do NOT reintroduce per-dispatch config generation. ONE project-scope config written at INSTALL time is a different thing from a config minted PER DISPATCH to key identity -- say why in the result, citing the tombstone's own scope.",
-        "The installer REGENERATES skills/<role>/references/global-*.md at install time. If you touch bundling or installed_path_replacements(), check what that regeneration now stamps.",
-        "Do NOT add required_scripts entries beyond what shipping the door needs. Anything more floats to the Admiral."
-      ],
-      "anchors": {
-        "structural": [
-          "scripts/install_constellation.py -- SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name> (map: 81 entities/30 holes)",
-          "scripts/install_constellation.py installed_path_replacements() -- the 3-entry rewrite map whose insertion order is load-bearing",
-          "scripts/install_constellation.py INTERPRETER_CANDIDATES / resolve_interpreter() -- the #540 hard stop",
-          "scripts/install_constellation.py -- writes NO project-root dotfile today; this is new ground and has no precedent to copy",
-          ".mcp.json -- the SOURCE config, whose args path is relative to THIS repo and will not resolve in a target"
-        ],
-        "capability": [
-          "Installing the corpus into a fresh project"
-        ],
-        "constraint": [
-          "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
-          "SPINE_ENGINE must name the INSTALLED engine, not this repo's",
-          "A hardcoded interpreter name in an installed artifact is a DEFECT, per the whole point of #539/#540"
-        ],
-        "decision": [
-          "no-gen-mcp-config -- install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
-          "decision pressure: whether writing a project-root dotfile is default or opt-in behind a flag, given the installer has no precedent for writing one. If the honest answer is opt-in, ARGUE it; do not default it silently."
-        ],
-        "evidence": [
-          "An installer test performing a REAL install into a tmpdir and asserting mcp_spine_server.py lands at <target>/scripts/mcp_spine_server.py -- 'bundled' is checkable, so check it",
-          "The same test asserting the written .mcp.json's args path AND its `command` interpreter both resolve in the TARGET, not in this repo",
-          "A test for the no-interpreter-answers case: the installer hard-stops rather than writing a python3 default"
-        ],
-        "confidence_flags": [
-          "`grep -ciE mcp scripts/install_constellation.py` moving off zero is a REPORTED NUMBER, never this gate's evidence -- a single comment line moves it. The gate closes on the install test."
-        ]
-      },
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
-    "g3-integrate": {
-      "id": "g3-integrate",
-      "title": "g3 installer ships and wires the door (#542 criterion 3): integrate",
-      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world YOURSELF -- re-run the verification commands in your own hands, confirm the result artifact is FRESH for this attempt (`run_crew.py --verify-result`, not a stale leftover), and confirm the pasted evidence reproduces. c1 is THIS GATE'S OWN test and c2 is the full suite; both are command checks satisfied by `advance` re-running them, never by `attest`. BLOCK: return for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates; harvest Workflow Feedback into the run's lesson pool. Append this gate's outcome to REPLAN_INPUT.json.",
-      "preconditions": [
-        {
-          "id": "p1",
-          "statement": "REVIEW_RESULT received for this gate",
-          "check": null,
-          "satisfied": false
-        }
-      ],
-      "postconditions": [
-        {
-          "id": "c1",
-          "statement": "a real install into a temporary target ships the door script AND writes a .mcp.json whose args path AND interpreter both resolve in THAT target",
-          "check": {
-            "kind": "command",
-            "command": "python -m pytest -q tests/test_mcp_install.py"
-          },
-          "override_policy": {
-            "allowed": true,
-            "authority": "human",
-            "reason_required": true
-          },
-          "satisfied": false
-        },
-        {
-          "id": "c2",
-          "statement": "full suite green (0 failed) -- no gate's work broke another's",
-          "check": {
-            "kind": "command",
-            "command": "python -m pytest -q"
-          },
-          "override_policy": {
-            "allowed": true,
-            "authority": "human",
-            "reason_required": true
-          },
-          "satisfied": false
-        },
-        {
-          "id": "c3",
-          "statement": "reviewer verdict is APPROVE",
-          "check": {
-            "kind": "artifact",
-            "evidence_type": "review-result",
-            "match": {
-              "verdict": "APPROVE"
-            }
-          },
-          "satisfied": false
-        }
-      ],
-      "constraints": [
-        "Run the suite as `python -m pytest`, NEVER `python3 -m pytest`. On this host /usr/bin/python3 answers and has no pytest, so python3 returns 'No module named pytest' and a non-zero exit that READS AS A RED SUITE AND IS NOT ONE.",
-        "NEVER pipe a command into head/tail and read the exit code -- that is the pager's status, not the command's. Redirect to a file and capture the command's own $?. This trap fired four times across this epic.",
-        "NEVER edit scripts/checklist_engine.py. `git diff` against it was empty for the whole of F and stays empty. The door WRAPS the engine and never re-implements it.",
-        "When a task involves editing global doctrine, the canonical source is skills/_shared/global-*.md -- NEVER skills/<role>/references/global-*.md, which install_constellation.py REGENERATES at install time and silently overwrites.",
-        "When editing a shipped compact-format JSON file (.mcp.json, any skills/*/templates/*.template.json), edit the RAW TEXT surgically. Never round-trip through json.load/json.dump -- it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
-        "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on EVERY write.",
-        "Work ONLY in this worktree. /home/tommy/projects/constellation-skills (the main checkout) is FENCED READ-ONLY.",
-        "THE INTERPRETER IS THE TRAP THAT LANDS HERE. The committed .mcp.json hardcodes \"command\": \"python3\". INTERPRETER_CANDIDATES = ('py','python3','python') exists PRECISELY BECAUSE python3 is not a name you can rely on across machines. The installed .mcp.json's `command` MUST carry the run's resolved interpreter from the SAME single resolve_interpreter() probe the rest of the install uses. installed_path_replacements() rewrites only 'python <', '<skill-dir>' and '<name>-skill-dir', so a bare \"python3\" value matches NOTHING and would ship unchanged.",
-        "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes successfully rather than falling back to a member of the disproved candidate set. State what the installer does about .mcp.json when nothing answers -- and make it a hard stop too, not a python3 default.",
-        "NEVER write settings.json at USER scope.",
-        "--wire-hooks targets the AGENT CONFIG DIR (<target_root>/../settings.json), NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. MEASURE what it actually writes; do not read the flag name as a description of its behaviour.",
-        "Do NOT reintroduce per-dispatch config generation. ONE project-scope config written at INSTALL time is a different thing from a config minted PER DISPATCH to key identity -- say why in the result, citing the tombstone's own scope.",
-        "The installer REGENERATES skills/<role>/references/global-*.md at install time. If you touch bundling or installed_path_replacements(), check what that regeneration now stamps.",
-        "Do NOT add required_scripts entries beyond what shipping the door needs. Anything more floats to the Admiral."
-      ],
-      "anchors": {
-        "structural": [
-          "scripts/install_constellation.py -- SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name> (map: 81 entities/30 holes)",
-          "scripts/install_constellation.py installed_path_replacements() -- the 3-entry rewrite map whose insertion order is load-bearing",
-          "scripts/install_constellation.py INTERPRETER_CANDIDATES / resolve_interpreter() -- the #540 hard stop",
-          "scripts/install_constellation.py -- writes NO project-root dotfile today; this is new ground and has no precedent to copy",
-          ".mcp.json -- the SOURCE config, whose args path is relative to THIS repo and will not resolve in a target"
-        ],
-        "capability": [
-          "Installing the corpus into a fresh project"
-        ],
-        "constraint": [
-          "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
-          "SPINE_ENGINE must name the INSTALLED engine, not this repo's",
-          "A hardcoded interpreter name in an installed artifact is a DEFECT, per the whole point of #539/#540"
-        ],
-        "decision": [
-          "no-gen-mcp-config -- install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
-          "decision pressure: whether writing a project-root dotfile is default or opt-in behind a flag, given the installer has no precedent for writing one. If the honest answer is opt-in, ARGUE it; do not default it silently."
-        ],
-        "evidence": [
-          "An installer test performing a REAL install into a tmpdir and asserting mcp_spine_server.py lands at <target>/scripts/mcp_spine_server.py -- 'bundled' is checkable, so check it",
-          "The same test asserting the written .mcp.json's args path AND its `command` interpreter both resolve in the TARGET, not in this repo",
-          "A test for the no-interpreter-answers case: the installer hard-stops rather than writing a python3 default"
-        ],
-        "confidence_flags": [
-          "`grep -ciE mcp scripts/install_constellation.py` moving off zero is a REPORTED NUMBER, never this gate's evidence -- a single comment line moves it. The gate closes on the install test."
-        ]
-      },
-      "directives": null,
-      "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
-      "result": null,
-      "finding": null,
-      "evidence": [],
-      "rework_count": 0
-    },
     "g4a-implement": {
       "id": "g4a-implement",
       "title": "g4a adoption: role spine instructions default to the door (#542 criterion 1): implement",
@@ -1457,6 +1195,184 @@
       "finding": null,
       "evidence": [],
       "rework_count": 0
+    },
+    "g3-implement": {
+      "id": "g3-implement",
+      "title": "g3 installer ships and wires the door (#542 criterion 3): implement",
+      "imperative": "Fill templates/IMPLEMENTER_HANDOFF.template.md from this gate's plan and anchors block: task, protected intent, test mode, close criteria, allowed scope, specific exclusions, constraints (copy the WHOLE constraints list -- it is what reaches the crew), required evidence, verification commands, authority, and the map entry point (map/INDEX.md plus the per-module INDEX.md for each module in the structural anchors). Fill the Deliverable Path Check: `git check-ignore <path>` for each committed deliverable, exit 1 expected. Dispatch via `python scripts/run_crew.py --backend external` (never hand-launch) as a Sonnet Agent-tool subagent, then `--verify-result`. Run `python scripts/recover_crews.py epic-418-followon/commander-f2` FIRST. Wait ACTIVELY inside the turn. Integrate the returned IMPLEMENTER_RESULT as evidence. ANCHORS for this gate are preserved at .agent-work/epic-418-followon/commander-f2/g3-anchors.json -- the engine's amend rebuild does not carry an anchors block, so read them from there and relay them into the handoff exactly as the other gates do.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "g4b closed or explicitly deferred. Moved LAST by Admiral ruling: the acceptance run reaches the door through the COMMITTED project-scope .mcp.json and ${VAR} expansion, exactly as F's DC1 did, so it never needed an INSTALLED copy. The g3->g4b dependency this plan once carried did not exist.",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT returned with no unresolved blockers",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "implementer-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Run the suite as `python -m pytest`, NEVER `python3 -m pytest`. On this host /usr/bin/python3 answers and has no pytest, so python3 returns 'No module named pytest' and a non-zero exit that READS AS A RED SUITE AND IS NOT ONE.",
+        "NEVER pipe a command into head/tail and read the exit code -- that is the pager's status, not the command's. Redirect to a file and capture the command's own $?. This trap fired four times across this epic.",
+        "NEVER edit scripts/checklist_engine.py. `git diff` against it was empty for the whole of F and stays empty. The door WRAPS the engine and never re-implements it.",
+        "When a task involves editing global doctrine, the canonical source is skills/_shared/global-*.md -- NEVER skills/<role>/references/global-*.md, which install_constellation.py REGENERATES at install time and silently overwrites.",
+        "When editing a shipped compact-format JSON file (.mcp.json, any skills/*/templates/*.template.json), edit the RAW TEXT surgically. Never round-trip through json.load/json.dump -- it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
+        "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on EVERY write.",
+        "Work ONLY in this worktree. /home/tommy/projects/constellation-skills (the main checkout) is FENCED READ-ONLY.",
+        "THE INTERPRETER IS THE TRAP THAT LANDS HERE. The committed .mcp.json hardcodes \"command\": \"python3\". INTERPRETER_CANDIDATES = ('py','python3','python') exists PRECISELY BECAUSE python3 is not a name you can rely on across machines. The installed .mcp.json's `command` MUST carry the run's resolved interpreter from the SAME single resolve_interpreter() probe the rest of the install uses. installed_path_replacements() rewrites only 'python <', '<skill-dir>' and '<name>-skill-dir', so a bare \"python3\" value matches NOTHING and would ship unchanged.",
+        "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes successfully rather than falling back to a member of the disproved candidate set. State what the installer does about .mcp.json when nothing answers -- and make it a hard stop too, not a python3 default.",
+        "NEVER write settings.json at USER scope.",
+        "--wire-hooks targets the AGENT CONFIG DIR (<target_root>/../settings.json), NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. MEASURE what it actually writes; do not read the flag name as a description of its behaviour.",
+        "Do NOT reintroduce per-dispatch config generation. ONE project-scope config written at INSTALL time is a different thing from a config minted PER DISPATCH to key identity -- say why in the result, citing the tombstone's own scope.",
+        "The installer REGENERATES skills/<role>/references/global-*.md at install time. If you touch bundling or installed_path_replacements(), check what that regeneration now stamps.",
+        "Do NOT add required_scripts entries beyond what shipping the door needs. Anything more floats to the Admiral.",
+        "#553: the committed .mcp.json hardcodes \"command\": \"python3\" -- the exact defect #538/#540 fixed everywhere else in this repo, shipped in the one file adoption depends on. It escaped both because it is DATA, not generated output. On the owner's Windows box, measured this epic: py is an extensionless sh wrapper PowerShell cannot execute, and python is not on PATH.",
+        "Do NOT 'fix' it by swapping the literal to \"python\" -- that trades one platform for the other, which is the trade #538 rejected on review.",
+        "Candidate 1 (parts exist): resolve at install time via the same resolve_interpreter() probe, which already hard-stops when nothing answers. Candidate 2: ${SPINE_PYTHON:-python3} in `command` -- but whether MCP ${VAR} expansion applies to `command` as well as to `env` values is UNVERIFIED; MEASURE it, do not assume it from the env behaviour. Candidate 3: a launcher script with a shebang -- POSIX-only, needs its own Windows answer."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-review": {
+      "id": "g3-review",
+      "title": "g3 installer ships and wires the door (#542 criterion 3): review",
+      "imperative": "Fill templates/REVIEWER_HANDOFF.template.md: what was built, how to inspect the diff, task statement, close criteria, allowed scope, specific exclusions, the WHOLE constraints list, this gate's anchors block, and the evidence produced. REQUIRE A MUTATION: the reviewer must break the real thing this gate claims to protect and report whether this gate's own evidence went RED, then restore it and confirm GREEN. An assertion nobody has watched fail is not evidence. Dispatch via `python scripts/run_crew.py --backend external` as a Sonnet Agent-tool subagent, then `--verify-result`. Wait actively. Integrate the returned REVIEW_RESULT. ANCHORS for this gate are preserved at .agent-work/epic-418-followon/commander-f2/g3-anchors.json -- the engine's amend rebuild does not carry an anchors block, so read them from there and relay them into the handoff exactly as the other gates do.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "IMPLEMENTER_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "REVIEW_RESULT returned, carrying the mutation experiment's outcome",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result"
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Run the suite as `python -m pytest`, NEVER `python3 -m pytest`. On this host /usr/bin/python3 answers and has no pytest, so python3 returns 'No module named pytest' and a non-zero exit that READS AS A RED SUITE AND IS NOT ONE.",
+        "NEVER pipe a command into head/tail and read the exit code -- that is the pager's status, not the command's. Redirect to a file and capture the command's own $?. This trap fired four times across this epic.",
+        "NEVER edit scripts/checklist_engine.py. `git diff` against it was empty for the whole of F and stays empty. The door WRAPS the engine and never re-implements it.",
+        "When a task involves editing global doctrine, the canonical source is skills/_shared/global-*.md -- NEVER skills/<role>/references/global-*.md, which install_constellation.py REGENERATES at install time and silently overwrites.",
+        "When editing a shipped compact-format JSON file (.mcp.json, any skills/*/templates/*.template.json), edit the RAW TEXT surgically. Never round-trip through json.load/json.dump -- it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
+        "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on EVERY write.",
+        "Work ONLY in this worktree. /home/tommy/projects/constellation-skills (the main checkout) is FENCED READ-ONLY.",
+        "THE INTERPRETER IS THE TRAP THAT LANDS HERE. The committed .mcp.json hardcodes \"command\": \"python3\". INTERPRETER_CANDIDATES = ('py','python3','python') exists PRECISELY BECAUSE python3 is not a name you can rely on across machines. The installed .mcp.json's `command` MUST carry the run's resolved interpreter from the SAME single resolve_interpreter() probe the rest of the install uses. installed_path_replacements() rewrites only 'python <', '<skill-dir>' and '<name>-skill-dir', so a bare \"python3\" value matches NOTHING and would ship unchanged.",
+        "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes successfully rather than falling back to a member of the disproved candidate set. State what the installer does about .mcp.json when nothing answers -- and make it a hard stop too, not a python3 default.",
+        "NEVER write settings.json at USER scope.",
+        "--wire-hooks targets the AGENT CONFIG DIR (<target_root>/../settings.json), NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. MEASURE what it actually writes; do not read the flag name as a description of its behaviour.",
+        "Do NOT reintroduce per-dispatch config generation. ONE project-scope config written at INSTALL time is a different thing from a config minted PER DISPATCH to key identity -- say why in the result, citing the tombstone's own scope.",
+        "The installer REGENERATES skills/<role>/references/global-*.md at install time. If you touch bundling or installed_path_replacements(), check what that regeneration now stamps.",
+        "Do NOT add required_scripts entries beyond what shipping the door needs. Anything more floats to the Admiral."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "g3-integrate": {
+      "id": "g3-integrate",
+      "title": "g3 installer ships and wires the door (#542 criterion 3): integrate",
+      "imperative": "Check the REVIEW_RESULT verdict. APPROVE: verify the crew's claimed side-effects against the world YOURSELF -- re-run the verification commands in your own hands, confirm the result artifact is FRESH for this attempt (`run_crew.py --verify-result`, not a stale leftover), and confirm the pasted evidence reproduces. c1 is THIS GATE'S OWN test and c2 is the full suite; both are command checks satisfied by `advance` re-running them, never by `attest`. BLOCK: return for rework, or raise a blocker if unresolvable. Log out-of-scope finds as triage candidates; harvest Workflow Feedback into the run's lesson pool. Append this gate's outcome to REPLAN_INPUT.json. ANCHORS for this gate are preserved at .agent-work/epic-418-followon/commander-f2/g3-anchors.json -- the engine's amend rebuild does not carry an anchors block, so read them from there and relay them into the handoff exactly as the other gates do.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "REVIEW_RESULT received for this gate",
+          "check": null,
+          "satisfied": false
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "a real install into a temporary target ships the door script AND writes a .mcp.json whose args path AND interpreter both resolve in THAT target",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_mcp_install.py"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c2",
+          "statement": "full suite green (0 failed) -- no gate's work broke another's",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "override_policy": {
+            "allowed": true,
+            "authority": "human",
+            "reason_required": true
+          },
+          "satisfied": false
+        },
+        {
+          "id": "c3",
+          "statement": "reviewer verdict is APPROVE",
+          "check": {
+            "kind": "artifact",
+            "evidence_type": "review-result",
+            "match": {
+              "verdict": "APPROVE"
+            }
+          },
+          "satisfied": false
+        }
+      ],
+      "constraints": [
+        "Run the suite as `python -m pytest`, NEVER `python3 -m pytest`. On this host /usr/bin/python3 answers and has no pytest, so python3 returns 'No module named pytest' and a non-zero exit that READS AS A RED SUITE AND IS NOT ONE.",
+        "NEVER pipe a command into head/tail and read the exit code -- that is the pager's status, not the command's. Redirect to a file and capture the command's own $?. This trap fired four times across this epic.",
+        "NEVER edit scripts/checklist_engine.py. `git diff` against it was empty for the whole of F and stays empty. The door WRAPS the engine and never re-implements it.",
+        "When a task involves editing global doctrine, the canonical source is skills/_shared/global-*.md -- NEVER skills/<role>/references/global-*.md, which install_constellation.py REGENERATES at install time and silently overwrites.",
+        "When editing a shipped compact-format JSON file (.mcp.json, any skills/*/templates/*.template.json), edit the RAW TEXT surgically. Never round-trip through json.load/json.dump -- it reflows the whole file and destroys blame. Re-validate with json.load afterward.",
+        "Windows writes need encoding='utf-8', newline='\\n' passed explicitly on EVERY write.",
+        "Work ONLY in this worktree. /home/tommy/projects/constellation-skills (the main checkout) is FENCED READ-ONLY.",
+        "THE INTERPRETER IS THE TRAP THAT LANDS HERE. The committed .mcp.json hardcodes \"command\": \"python3\". INTERPRETER_CANDIDATES = ('py','python3','python') exists PRECISELY BECAUSE python3 is not a name you can rely on across machines. The installed .mcp.json's `command` MUST carry the run's resolved interpreter from the SAME single resolve_interpreter() probe the rest of the install uses. installed_path_replacements() rewrites only 'python <', '<skill-dir>' and '<name>-skill-dir', so a bare \"python3\" value matches NOTHING and would ship unchanged.",
+        "Do NOT reintroduce a resolved-interpreter FALLBACK. #540 hard-stops when no interpreter probes successfully rather than falling back to a member of the disproved candidate set. State what the installer does about .mcp.json when nothing answers -- and make it a hard stop too, not a python3 default.",
+        "NEVER write settings.json at USER scope.",
+        "--wire-hooks targets the AGENT CONFIG DIR (<target_root>/../settings.json), NOT scripts/hooks/, and writes only PostToolUse for the default 'governor' set. MEASURE what it actually writes; do not read the flag name as a description of its behaviour.",
+        "Do NOT reintroduce per-dispatch config generation. ONE project-scope config written at INSTALL time is a different thing from a config minted PER DISPATCH to key identity -- say why in the result, citing the tombstone's own scope.",
+        "The installer REGENERATES skills/<role>/references/global-*.md at install time. If you touch bundling or installed_path_replacements(), check what that regeneration now stamps.",
+        "Do NOT add required_scripts entries beyond what shipping the door needs. Anything more floats to the Admiral."
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "pending",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
     }
   },
   "why_trail": [
@@ -1473,6 +1389,21 @@
       "why": "The identity question is settled as a FLEET-WIDE position, not an MCP-local trade, and that reframe is the gate's real output. The Admiral found the same defect mid-gate in a second, independent seam (#549, spine_rail.py): its binding file IS keyed per agent, but session_view() merges the bare sid key and every sid#agent key into one flat map and decide_stop takes the first non-foreign entry - the discriminator exists and a merge two functions later discards it, while the _foreign_worktree guard cannot help because every child entry inherited the parent's worktree from CLAUDE_PROJECT_DIR. Same shape as the door, twice, neither aware of the other: the harness shares the container and we put identity in the container. So the recorded rule is about GRANULARITY, not about arguments - identity may be bound to a container only at the granularity that container genuinely separates, and a seam below that granularity fails closed. That form is forced by the hook seam, which has no per-call argument for identity to ride on; 'move identity to the call' would have fixed one seam and left the other with no expressible remedy. Option A is rejected on evidence rather than taste: it covers a subagent naming its own spine but not one naming its parent's, which is the actual failure, and the CLI is ALREADY the per-call-identity door, so A adds no capability the repo lacks while deleting the only property distinguishing the two doors. The pin is deliberately outcome-neutral - it encodes 'the binding is what the record says', not 'option C is right' - and I confirmed it is not vacuous before handing it over: two distinct mutations of the REAL door (a per-call spine_file argument on spine_status; a late-bound SPINE re-read per access) turned it red on two DIFFERENT tests, and the door restored to an empty git diff. The authoritative mutation is still the reviewer's.",
       "mechanical": false,
       "ts": "2026-08-10T06:09:09.133536+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-10T07:18:31.713037+00:00",
+      "reason": "Admiral ruling, epic-418-followon wave 2: run g2 -> g4a -> g4b -> g3. The g4a->g3 dependency this plan carried was FALSE and the cold critic had already flagged it as decorative - the acceptance run reaches the door through the COMMITTED project-scope .mcp.json and ${VAR} expansion from the dispatched process's own environment, exactly as F's DC1 did for both its cold agents, so it never needed an INSTALLED copy. Moving g3 last converts a quality compromise into a scheduling decision, which matters because a NARROWED gate produces a claim nobody downstream can calibrate while an UNREACHED gate produces an honest gap - and this epic exists because an unmeasured thing was nearly reported as a measured negative. g3's implement gate also gains the #553 constraints: the committed .mcp.json hardcodes command python3, the same defect #538/#540 fixed elsewhere, shipped in the one file adoption depends on, and unresolvable on the owner's own Windows box.",
+      "authority": "Admiral (epic-418-followon wave 2)",
+      "ops": [
+        "dropped g3-implement",
+        "dropped g3-review",
+        "dropped g3-integrate",
+        "added g3-implement",
+        "added g3-review",
+        "added g3-integrate"
+      ]
     }
   ]
 }

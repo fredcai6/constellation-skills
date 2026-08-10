@@ -1,0 +1,86 @@
+{
+  "work_id": "epic-418-followon/commander-f2/g1-review-4",
+  "diff_ref": "commit 4a214dd3 -- tests/test_mcp_identity.py (test_no_argument_can_change_the_identity_the_engine_is_addressed_with renamed and rewritten to test_no_argument_can_change_what_the_door_reads_or_where_it_reads_it, adding the spy/sentinel and the engine-called-or-refused branch), .agent-work/epic-418-followon/commander-f2/IDENTITY_TRADE.md (section 2 widened to record the third falsification)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/_shared/global-crew.md",
+  "smells": [
+    {
+      "smell": "long-method",
+      "verdict": "absent",
+      "finding": "test_no_argument_can_change_what_the_door_reads_or_where_it_reads_it is a 3-level nested loop (tool x key x argv) plus an if/else over the engine-called-or-not branch, with a docstring recounting three falsification layers. Comparable in shape to the v3 method this replaces, which prior Fowler passes already treated as absent under this file's documentation-density convention.",
+      "override": null
+    },
+    {
+      "smell": "large-class",
+      "verdict": "absent",
+      "finding": "IdentityBindingPinTests stays at 7 methods (one replaced in place, none added net); still one cohesive concern (pinning the identity binding).",
+      "override": null
+    },
+    {
+      "smell": "duplicated-code",
+      "verdict": "absent",
+      "finding": "No production logic duplicated. TOOL_MINIMAL_ARGS and _adversarial_keys are unchanged by this commit; the new spy/sentinel logic is local to the one rewritten test method.",
+      "override": null
+    },
+    {
+      "smell": "feature-envy",
+      "verdict": "absent",
+      "finding": "The rewritten test still operates entirely on the module object returned by the class's own _load_module helper, plus the local spy closure it defines itself.",
+      "override": null
+    },
+    {
+      "smell": "data-clumps",
+      "verdict": "absent",
+      "finding": "No new data clump introduced; TOOL_MINIMAL_ARGS is untouched by this commit.",
+      "override": null
+    },
+    {
+      "smell": "primitive-obsession",
+      "verdict": "absent",
+      "finding": "The new sentinel is a single distinguishing string constant used to prove genuine engine output, not a primitive standing in for a missing domain type.",
+      "override": null
+    },
+    {
+      "smell": "long-parameter-list",
+      "verdict": "absent",
+      "finding": "No new function/method signatures with multiple parameters; the local spy(argv) closure takes one parameter.",
+      "override": null
+    },
+    {
+      "smell": "shotgun-surgery",
+      "verdict": "absent",
+      "finding": "The rework touches exactly the two files the third reviewer's finding required (test file, trade doc), plus the map rebuild and this run's own bookkeeping; no scattered edits elsewhere in production code.",
+      "override": null
+    },
+    {
+      "smell": "divergent-change",
+      "verdict": "overridden",
+      "finding": "A fourth reason to change is now folded into the same pin class (declared-schema pin, five-key enumeration pin, argv pin, and now the pass-through-invariant pin), all still under the identity-binding claim.",
+      "override": {
+        "repo_standard": "This file's own pre-existing DC2/DC3 documentation-density and one-class-per-claim convention, already logged as the standard in fowler-pass.json, fowler-pass-2.json and fowler-pass-3.json for this exact file.",
+        "reason": "The file groups tests by the architectural CLAIM they pin (identity binding), not by verb or mechanism; the pass-through pin is still the same claim (confinement), stated more rigorously after a third falsification -- consistent with, not a fragmentation of, the organizing principle three prior reviews already ruled acceptable here."
+      }
+    },
+    {
+      "smell": "message-chains",
+      "verdict": "absent",
+      "finding": "No new chained accessor calls; argv[argv.index(...) + 1] is retained unchanged, a single list index rather than a chain across object boundaries.",
+      "override": null
+    },
+    {
+      "smell": "speculative-generality",
+      "verdict": "absent",
+      "finding": "The rewritten sweep still covers exactly the 7 real tools this door exposes and the existing generated adversarial keys; nothing speculative or unused is introduced for a hypothetical future tool.",
+      "override": null
+    },
+    {
+      "smell": "comments-as-deodorant",
+      "verdict": "overridden",
+      "finding": "The rewritten test's docstring now recounts all THREE falsification layers (declarations, enumeration, direct-read) and states the resulting invariant precisely -- provenance the code alone cannot express, and load-bearing for the next reviewer (as this pass itself relied on it).",
+      "override": {
+        "repo_standard": "Same file's documentation-density convention as logged in fowler-pass.json (commit 36a1bdcd), fowler-pass-2.json (commit 80995760) and fowler-pass-3.json (commit c8a9b58c).",
+        "reason": "The docstring is explanatory history (which reviewer found which gap, and why), not a patch masking unclear code; this is the same standard three prior reviews already applied to this file, now extended by one more layer."
+      }
+    }
+  ],
+  "rail_exception": null
+}

@@ -1,0 +1,89 @@
+{
+ "g3-implement": {
+  "structural": [
+   "scripts/install_constellation.py -- SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name> (map: 81 entities/30 holes)",
+   "scripts/install_constellation.py installed_path_replacements() -- the 3-entry rewrite map whose insertion order is load-bearing",
+   "scripts/install_constellation.py INTERPRETER_CANDIDATES / resolve_interpreter() -- the #540 hard stop",
+   "scripts/install_constellation.py -- writes NO project-root dotfile today; this is new ground and has no precedent to copy",
+   ".mcp.json -- the SOURCE config, whose args path is relative to THIS repo and will not resolve in a target"
+  ],
+  "capability": [
+   "Installing the corpus into a fresh project"
+  ],
+  "constraint": [
+   "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
+   "SPINE_ENGINE must name the INSTALLED engine, not this repo's",
+   "A hardcoded interpreter name in an installed artifact is a DEFECT, per the whole point of #539/#540"
+  ],
+  "decision": [
+   "no-gen-mcp-config -- install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
+   "decision pressure: whether writing a project-root dotfile is default or opt-in behind a flag, given the installer has no precedent for writing one. If the honest answer is opt-in, ARGUE it; do not default it silently."
+  ],
+  "evidence": [
+   "An installer test performing a REAL install into a tmpdir and asserting mcp_spine_server.py lands at <target>/scripts/mcp_spine_server.py -- 'bundled' is checkable, so check it",
+   "The same test asserting the written .mcp.json's args path AND its `command` interpreter both resolve in the TARGET, not in this repo",
+   "A test for the no-interpreter-answers case: the installer hard-stops rather than writing a python3 default"
+  ],
+  "confidence_flags": [
+   "`grep -ciE mcp scripts/install_constellation.py` moving off zero is a REPORTED NUMBER, never this gate's evidence -- a single comment line moves it. The gate closes on the install test."
+  ]
+ },
+ "g3-review": {
+  "structural": [
+   "scripts/install_constellation.py -- SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name> (map: 81 entities/30 holes)",
+   "scripts/install_constellation.py installed_path_replacements() -- the 3-entry rewrite map whose insertion order is load-bearing",
+   "scripts/install_constellation.py INTERPRETER_CANDIDATES / resolve_interpreter() -- the #540 hard stop",
+   "scripts/install_constellation.py -- writes NO project-root dotfile today; this is new ground and has no precedent to copy",
+   ".mcp.json -- the SOURCE config, whose args path is relative to THIS repo and will not resolve in a target"
+  ],
+  "capability": [
+   "Installing the corpus into a fresh project"
+  ],
+  "constraint": [
+   "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
+   "SPINE_ENGINE must name the INSTALLED engine, not this repo's",
+   "A hardcoded interpreter name in an installed artifact is a DEFECT, per the whole point of #539/#540"
+  ],
+  "decision": [
+   "no-gen-mcp-config -- install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
+   "decision pressure: whether writing a project-root dotfile is default or opt-in behind a flag, given the installer has no precedent for writing one. If the honest answer is opt-in, ARGUE it; do not default it silently."
+  ],
+  "evidence": [
+   "An installer test performing a REAL install into a tmpdir and asserting mcp_spine_server.py lands at <target>/scripts/mcp_spine_server.py -- 'bundled' is checkable, so check it",
+   "The same test asserting the written .mcp.json's args path AND its `command` interpreter both resolve in the TARGET, not in this repo",
+   "A test for the no-interpreter-answers case: the installer hard-stops rather than writing a python3 default"
+  ],
+  "confidence_flags": [
+   "`grep -ciE mcp scripts/install_constellation.py` moving off zero is a REPORTED NUMBER, never this gate's evidence -- a single comment line moves it. The gate closes on the install test."
+  ]
+ },
+ "g3-integrate": {
+  "structural": [
+   "scripts/install_constellation.py -- SKILL_SCRIPT_BUNDLES / SCRIPT_RUNTIME_COMPANIONS / expand_script_bundle(); required_scripts land FLAT at <target>/scripts/<name> (map: 81 entities/30 holes)",
+   "scripts/install_constellation.py installed_path_replacements() -- the 3-entry rewrite map whose insertion order is load-bearing",
+   "scripts/install_constellation.py INTERPRETER_CANDIDATES / resolve_interpreter() -- the #540 hard stop",
+   "scripts/install_constellation.py -- writes NO project-root dotfile today; this is new ground and has no precedent to copy",
+   ".mcp.json -- the SOURCE config, whose args path is relative to THIS repo and will not resolve in a target"
+  ],
+  "capability": [
+   "Installing the corpus into a fresh project"
+  ],
+  "constraint": [
+   "A relative 'scripts/mcp_spine_server.py' does not resolve in a target project that has no such path",
+   "SPINE_ENGINE must name the INSTALLED engine, not this repo's",
+   "A hardcoded interpreter name in an installed artifact is a DEFECT, per the whole point of #539/#540"
+  ],
+  "decision": [
+   "no-gen-mcp-config -- install-time is not dispatch-time; state the distinction explicitly @grade: settled - leans g3",
+   "decision pressure: whether writing a project-root dotfile is default or opt-in behind a flag, given the installer has no precedent for writing one. If the honest answer is opt-in, ARGUE it; do not default it silently."
+  ],
+  "evidence": [
+   "An installer test performing a REAL install into a tmpdir and asserting mcp_spine_server.py lands at <target>/scripts/mcp_spine_server.py -- 'bundled' is checkable, so check it",
+   "The same test asserting the written .mcp.json's args path AND its `command` interpreter both resolve in the TARGET, not in this repo",
+   "A test for the no-interpreter-answers case: the installer hard-stops rather than writing a python3 default"
+  ],
+  "confidence_flags": [
+   "`grep -ciE mcp scripts/install_constellation.py` moving off zero is a REPORTED NUMBER, never this gate's evidence -- a single comment line moves it. The gate closes on the install test."
+  ]
+ }
+}

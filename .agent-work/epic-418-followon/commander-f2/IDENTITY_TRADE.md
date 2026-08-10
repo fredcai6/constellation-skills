@@ -75,7 +75,31 @@ added afterwards that no reviewer had tried — calling the engine and then answ
 something else, and redirecting the **session** rather than the spine. All five red, all
 restoring to an empty diff.
 
-**None of the three corrections was mine.** Each defeat was one layer deeper than the last,
+A **fourth** reviewer defeated even that: it called the engine honestly — bound spine,
+bound session, genuine output — and then **concatenated** leaked file content onto the
+result. My check asserted the engine's output was *contained* in the answer. *Containment
+is not equality; a leak adds, it does not replace.* Now `assertEqual`, so any character in
+the response that did not come from the bound call is itself the violation.
+
+**And the limit that finally showed itself, stated rather than papered over.** That leak
+fired on an argument key my sweep never generates. My key set is *generated* rather than
+listed, which is better, but a generated set is still a set — **black-box argument fuzzing
+cannot establish a property over all possible argument names.** Adding the reviewer's key
+would have repeated the exact enumeration mistake the second reviewer caught.
+
+So the last pin does not mention argument names at all. It is over the **shape of the
+code**: `call_tool` may produce content in exactly two ways — `as_result(run_engine(...))`
+or `_tool_error(...)` — and every `return` in it must literally be one of those. That is
+reviewer 3's choke-point suggestion made structural. A handler that reads a file, or
+concatenates onto a result, or builds a dict itself has to write a return this rejects,
+**whatever it names its argument**.
+
+The two pins are complementary and neither subsumes the other. The choke-point pin is blind
+to a redirect that keeps the right shape; the runtime sweep catches that. The runtime sweep
+is blind to a leak on an unguessed key; the choke-point pin catches that. Six mutation
+classes verified red across the pair.
+
+**None of the four corrections was mine.** Each defeat was one layer deeper than the last,
 and the escalation is the record: a pin over declarations, then over an enumeration, then
 over the calls made, and only now over the answers given.
 
@@ -191,6 +215,15 @@ the trade says it is, and a change to it must come with a change to this documen
 
 The mutation experiment is the reviewer's, not mine: an assertion nobody has watched fail
 is not evidence.
+
+## Residual — stated, not hidden
+
+The final tightening (equality, plus the choke-point pin) was made **after** the fourth
+review and was verified by me against all six mutation classes, **not independently
+reviewed**. The Admiral set a stopping rule at four passes because the marginal value of a
+fifth was below the cost of not reaching the acceptance gate, and I applied the fix rather
+than shipping a pin I had just watched be defeated. A reader should weigh the last increment
+accordingly: four passes of independent adversarial review, then one self-verified fix.
 
 ## What this gate did not settle
 
