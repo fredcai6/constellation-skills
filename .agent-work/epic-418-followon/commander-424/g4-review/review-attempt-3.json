@@ -1,0 +1,263 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-framing-first-read",
+    "r8-secondary-obs-labelling",
+    "r9-overcorrection-check",
+    "r10-tc1-fix",
+    "r11-carryover-confirm"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read global-crew.md, global-everyone.md (both loaded via Skill tool + Read earlier), project deltas CREW_CONTEXT.md (Python invocation, Windows encoding, record-stores-never-hand-edited, Verification Discipline block, Evidence-You-Owe-Back) and GLOSSARY.md, plus the full rework2 handoff and prior attempt-1/attempt-2 handoffs+results for continuity.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The substance of what the handoff asked for is delivered: DC5's verdict now leads with the pre-registered raw-invocation-attempts metric as PASS, unhedged, in both the headline table and the 'DC5 verdict' section header; the productive-invocation decomposition is correctly demoted to a labelled, post-hoc, secondary/bounding role; observation (b) is correctly marked as pre-existing rather than post-hoc (independently confirmed against attempt-1 artifacts, r8); the n=2 bounding and front-loading caveats survive intact and were, if anything, made MORE visible by being pulled into the headline table (r9); and every re-derivable number reproduces exactly (r11). But two of the handoff's own six 'what to check' items are not fully satisfied on inspection: (1) item 1's first-time-reader test finds one concrete undermining artefact -- a leftover duplicate paragraph right after secondary observation (c) that restates its point in flatter, unmitigated, more negative language (r7); (2) item 5's 'tc1 fixed correctly?' is not fully yes -- the literal 'agree in direction and magnitude' claim is gone, but the arithmetic now cited to support 'they do not agree in magnitude' computes the wrong quantity, is internally inconsistent with its own claim (both cited numbers are equal), and drops the real 2-vs-6 per-order magnitude gap that motivated the original finding (r10). Both defects are narrow and mechanical -- a one-line paragraph deletion and a one-paragraph arithmetic correction -- and neither reopens the substantive PASS-vs-negative question, which this review judges resolved.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Stayed strictly read/verify-only in the f-424 worktree. No measurement arm was rerun (per explicit handoff instruction); only the scorer/assert/control commands named in the handoff's verification-commands block were executed, all of which read existing evidence/g4-dc5/rep*/record.jsonl files and write no new arm data. No file under evidence/g4-dc5/ was edited by this review.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence (re-derivable numbers, positive controls, DC1 assertion) is present and reproduces exactly as published (see r11). The only new evidence this round is prose (MEASUREMENT.md v3); it demonstrates the claimed behavior (an honest PASS framing) for the great majority of the document, with two specific spots (r7, r10) where the prose's own supporting detail does not actually demonstrate what it claims.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Two rigor/editing defects, both detailed in r7 and r10: (1) a leftover duplicate paragraph after secondary observation (c) that repeats its point in flatter, more negative, unmitigated language -- a documentation hygiene defect that happens to land exactly in the section the Commander asked me to scrutinize hardest. (2) the order-control paragraph's 'do not agree in magnitude' claim is now backed by the wrong computed quantity, one that is internally inconsistent with the claim (both cited numbers are equal, which reads as agreement) and which drops the real, sharper 2-vs-6 magnitude instability from the document. Everything else meets 'Verification Discipline' (CREW_CONTEXT.md): the positive controls are load-bearing (re-confirmed, r11), the numbers are asserted against re-run behaviour not just described in prose, and the revision note names the full correction history rather than quietly republishing corrected numbers.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture/structural-baseline divergence -- this gate produces a measurement write-up and disposable fixtures, not shipped code (unchanged conclusion from attempt-1 and attempt-2). Nothing to reconcile against the recorded architecture.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python3 /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g4-review/fowler-pass-attempt-3.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler baseline pass run over this round's actual diff (MEASUREMENT.md prose only; instrument code confirmed byte-unchanged since attempt-2, r11). verify_fowler_pass.py exits 0 on fowler-pass-attempt-3.json (12 smells rendered, 0 skipped). duplicated-code flagged, pointing at the same leftover-paragraph defect already recorded under r7/r4-quality so it is not lost in a docs-only diff. comments-as-deodorant overridden using the same logged repo-standard (CREW_CONTEXT.md Verification Discipline + global-everyone.md pin-a-claim-to-the-revision) attempt-2's Fowler pass already established for this document. All other baseline smells absent -- no code changed this round to exhibit them.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python3 /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g4-review/fowler-pass-attempt-3.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-framing-first-read": {
+      "id": "r7-framing-first-read",
+      "title": "Framing honesty: first-time-reader test",
+      "imperative": "Read MEASUREMENT.md v3 top to bottom as a first-time reader would (not knowing the revision history). State which conclusion you actually come away with on DC5. If a PASS verdict line sits above paragraphs that still read as undermining it (including any leftover/duplicate negative-toned prose), that is a BLOCK-worthy finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "First-time-reader test: the headline table and the 'DC5 verdict: PASS on the pre-registered metric' section (esp. 'Primary result... the door wins') are unambiguous -- a reader comes away with PASS, not a negative, from the document's structure and its two clearest statements. BUT one concrete defect sits inside the 'bounding, not overturning' secondary-observations block: observation (c) (lines 216-220 of MEASUREMENT.md) is immediately followed by an unlabelled, near-verbatim DUPLICATE paragraph (lines 222-225) making the same malformed-calls point but WITHOUT (c)'s mitigating close ('Same direction, different mechanism, and worth knowing which one was actually bought.'). The leftover instead ends: 'So the headline benefit a typed door is supposed to deliver had, on this task, nothing to absorb.' -- unambiguously more negative-sounding, an apparent unedited draft remnant sitting right where the Commander asked me to watch hardest for undermining prose after a PASS line. Verified by grep: 'did not fumble the argument shape' appears at both line 217 and line 223 (near-identical wording), and 'malformed calls' language repeats across the pair; no other verbatim-line duplication exists elsewhere in the file (checked with a whole-file repeated-line scan). One-line fix: delete the leftover paragraph (lines 222-225) and keep (c) as written.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-secondary-obs-labelling": {
+      "id": "r8-secondary-obs-labelling",
+      "title": "Secondary observations honestly labelled",
+      "imperative": "Confirm observation (a) and (c) are labelled post-hoc, observation (b) is labelled as predating the correction (legitimately not post-hoc), and none of the three is silently promoted back to primary-verdict status.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Observations (a) and (c) are both explicitly labelled post-hoc ('These are post-hoc lenses, named as such' preceding (a); (c) opens plainly with the malformed-calls point, framed under the same post-hoc heading). Observation (b) is explicitly marked as predating the correction: '(b) Acts of attention -- the one secondary lens that predates the correction. Counting tool calls the agent had to compose (this comparison was in the pre-fix write-up, so it is not post-hoc)'. Independently verified against attempt-1 artifacts: crew-handoffs/g4-reviewer-handoff.md line 32 already reported '10 tool calls carrying them, MCP 19/17' in the ORIGINAL (pre-fix) handoff -- confirming (b) really did predate the loop-bug correction. By contrast grep for 'productive' and 'help.read' across the attempt-1 handoff and result returns nothing -- confirming (a)/(c)'s productive-invocation framing is genuinely new to this rework, as claimed. None of the three is promoted back to primary-verdict status: the section header states 'bounding the pass, not overturning it' and each observation individually restates why it does not overturn the pass.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-overcorrection-check": {
+      "id": "r9-overcorrection-check",
+      "title": "Overcorrection-toward-the-door check",
+      "imperative": "Check whether the n=2 bounding language and the front-loading caveat survived this rework intact rather than being quietly softened, given the Commander explicitly moved the verdict toward the workstream's own interest under review pressure.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The n=2 bounding language survives intact: 'Scope of the pass, and what n=2 can carry' states plainly 'Two samples cannot support a confidence interval and none is claimed', gives the exact-tie evidence for what direction CAN be supported, and closes with a deliberately narrow claim ('on this task, through this door, invocation attempts fell about 18%, consistently across both orders. Not the door reduces cost by 18% in general'). The front-loading caveat survives and is not softened: observation (a) states 'the saving is front-loaded... paid once and does not scale with gate count, so on a much longer spine the 18% would amortise toward zero', and this exact caveat is promoted into the HEADLINE TABLE itself ('Bounded by two labelled secondary observations: the saving is front-loaded interface learning, and on composed tool calls the door costs ~1.8x') -- i.e. the caveat is MORE visible in this version than it would be if buried only in the body, which is the opposite of quiet softening. Observation (b)'s 1.8x-against-the-door finding is also unsoftened, still stated as a live, current-tense number ('the typed interface costs roughly 1.8x as many acts'), not hedged away. No overclaim in the door's favor found in the headline or DC5 section language itself.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-tc1-fix": {
+      "id": "r10-tc1-fix",
+      "title": "tc1 fix verification",
+      "imperative": "Independently recompute the order-control paragraph's numbers from the Results table and confirm the paragraph's claims and supporting arithmetic are both correct and mutually consistent -- not just that the words 'and magnitude' were removed.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "The LITERAL tc1 defect from attempt-2 (claiming orders 'agree in direction and magnitude') is gone -- the text now says 'agree in direction' only and explicitly says 'They do not agree in magnitude'. But the arithmetic newly cited to support that claim is the WRONG quantity and is internally inconsistent with the claim it is attached to. Recomputed independently from the published Results table (rep1-cli=21, rep2-cli=23, rep1-mcp=19, rep2-mcp=17): the paragraph now cites 'the CLI arm's attempts differ by 2 between orders (21 vs 23) and the MCP arm's by 2 (19 vs 17)' -- this is each ARM's own across-order spread (a within-arm quantity), and both spreads are IDENTICAL (2 and 2), which if anything reads as agreement, not disagreement -- it does not logically support 'they do not agree in magnitude' at all. The quantity that DOES support that claim, and that motivated the original tc1 finding (attempt-2 review: '+2 vs +6, a 3x difference'), is the per-order CLI-vs-MCP GAP: order 'CLI first' shows a gap of 21-19=2, order 'MCP first' shows a gap of 23-17=6 -- a 3x difference. That 2-vs-6 figure is nowhere in the v3 text; it has been replaced by a different, non-supporting pair of numbers. Net effect: the paragraph's own math no longer demonstrates the magnitude-instability it claims to demonstrate, and the real, sharper instability (2 vs 6, bearing directly on how much the n=2 headline gap can be trusted) has quietly disappeared from the document -- which is exactly the kind of caveat-softening-under-review-pressure the Commander asked me to check for in concern 4, even though it wasn't the mechanism I expected going in. One-line fix: restate the paragraph using the per-order CLI-MCP gap (2 vs 6) rather than the within-arm order-to-order spread.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r11-carryover-confirm": {
+      "id": "r11-carryover-confirm",
+      "title": "Carryover confirm: numbers, controls, DC1, DC6, UNMEASURED, instruments",
+      "imperative": "Rerun the six verification commands from the handoff, confirm they match MEASUREMENT.md's published numbers, and confirm evidence/g4-dc5/score_arm.py and control_scorer.py are unmodified since the attempt-2 review (do not rerun the measurement arms).",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Reran all six verification commands from the handoff (foreground, this session): score_arm.py on all four arms reproduces rep1-cli=21/5, rep2-cli=23/7, rep1-mcp=19/0, rep2-mcp=17/0 exactly matching MEASUREMENT.md's Results table (means CLI 22.0, MCP 18.0, 18% reduction confirmed: (22-18)/22=18.2%). assert_dc1.py reproduces DC1 PASS, malformed_calls=0 both MCP reps, matching the DC1 section verbatim including the printed EXIT=0. control_scorer.py reproduces all 7 PASS controls verbatim, matching the block MEASUREMENT.md quotes. Instruments confirmed untouched since attempt-2: both evidence/g4-dc5/score_arm.py and control_scorer.py are untracked (never committed) so a literal git diff is not meaningful, but neither file's mtime is newer than crew-handoffs/g4-reviewer-result-rework.md (the attempt-2 result, written at the end of that review) -- no filesystem write to either instrument has occurred since attempt-2 signed off on them. DC6 arrival/action/non-compliance split and the dc6-mcp UNMEASURED-not-negative call are unchanged text from the version attempt-2 already verified, and the handoff states this rework did not touch DC1/DC6 evidence -- confirmed by the absence of any DC1/DC6-directory changes in this round's diff (only MEASUREMENT.md prose changed; evidence/g4-dc5/* content is identical).",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r1-handoff: The substance of what the handoff asked for is delivered: DC5's verdict now leads with the pre-registered raw-invocation-attempts metric as PASS, unhedged, in both the headline table and the 'DC5 verdict' section header; the productive-invocation decomposition is correctly demoted to a labelled, post-hoc, secondary/bounding role; observation (b) is correctly marked as pre-existing rather than post-hoc (independently confirmed against attempt-1 artifacts, r8); the n=2 bounding and front-loading caveats survive intact and were, if anything, made MORE visible by being pulled into the headline table (r9); and every re-derivable number reproduces exactly (r11). But two of the handoff's own six 'what to check' items are not fully satisfied on inspection: (1) item 1's first-time-reader test finds one concrete undermining artefact -- a leftover duplicate paragraph right after secondary observation (c) that restates its point in flatter, unmitigated, more negative language (r7); (2) item 5's 'tc1 fixed correctly?' is not fully yes -- the literal 'agree in direction and magnitude' claim is gone, but the arithmetic now cited to support 'they do not agree in magnitude' computes the wrong quantity, is internally inconsistent with its own claim (both cited numbers are equal), and drops the real 2-vs-6 per-order magnitude gap that motivated the original finding (r10). Both defects are narrow and mechanical -- a one-line paragraph deletion and a one-paragraph arithmetic correction -- and neither reopens the substantive PASS-vs-negative question, which this review judges resolved.",
+      "r4-quality: Two rigor/editing defects, both detailed in r7 and r10: (1) a leftover duplicate paragraph after secondary observation (c) that repeats its point in flatter, more negative, unmitigated language -- a documentation hygiene defect that happens to land exactly in the section the Commander asked me to scrutinize hardest. (2) the order-control paragraph's 'do not agree in magnitude' claim is now backed by the wrong computed quantity, one that is internally inconsistent with the claim (both cited numbers are equal, which reads as agreement) and which drops the real, sharper 2-vs-6 magnitude instability from the document. Everything else meets 'Verification Discipline' (CREW_CONTEXT.md): the positive controls are load-bearing (re-confirmed, r11), the numbers are asserted against re-run behaviour not just described in prose, and the revision note names the full correction history rather than quietly republishing corrected numbers.",
+      "r7-framing-first-read: First-time-reader test: the headline table and the 'DC5 verdict: PASS on the pre-registered metric' section (esp. 'Primary result... the door wins') are unambiguous -- a reader comes away with PASS, not a negative, from the document's structure and its two clearest statements. BUT one concrete defect sits inside the 'bounding, not overturning' secondary-observations block: observation (c) (lines 216-220 of MEASUREMENT.md) is immediately followed by an unlabelled, near-verbatim DUPLICATE paragraph (lines 222-225) making the same malformed-calls point but WITHOUT (c)'s mitigating close ('Same direction, different mechanism, and worth knowing which one was actually bought.'). The leftover instead ends: 'So the headline benefit a typed door is supposed to deliver had, on this task, nothing to absorb.' -- unambiguously more negative-sounding, an apparent unedited draft remnant sitting right where the Commander asked me to watch hardest for undermining prose after a PASS line. Verified by grep: 'did not fumble the argument shape' appears at both line 217 and line 223 (near-identical wording), and 'malformed calls' language repeats across the pair; no other verbatim-line duplication exists elsewhere in the file (checked with a whole-file repeated-line scan). One-line fix: delete the leftover paragraph (lines 222-225) and keep (c) as written.",
+      "r10-tc1-fix: The LITERAL tc1 defect from attempt-2 (claiming orders 'agree in direction and magnitude') is gone -- the text now says 'agree in direction' only and explicitly says 'They do not agree in magnitude'. But the arithmetic newly cited to support that claim is the WRONG quantity and is internally inconsistent with the claim it is attached to. Recomputed independently from the published Results table (rep1-cli=21, rep2-cli=23, rep1-mcp=19, rep2-mcp=17): the paragraph now cites 'the CLI arm's attempts differ by 2 between orders (21 vs 23) and the MCP arm's by 2 (19 vs 17)' -- this is each ARM's own across-order spread (a within-arm quantity), and both spreads are IDENTICAL (2 and 2), which if anything reads as agreement, not disagreement -- it does not logically support 'they do not agree in magnitude' at all. The quantity that DOES support that claim, and that motivated the original tc1 finding (attempt-2 review: '+2 vs +6, a 3x difference'), is the per-order CLI-vs-MCP GAP: order 'CLI first' shows a gap of 21-19=2, order 'MCP first' shows a gap of 23-17=6 -- a 3x difference. That 2-vs-6 figure is nowhere in the v3 text; it has been replaced by a different, non-supporting pair of numbers. Net effect: the paragraph's own math no longer demonstrates the magnitude-instability it claims to demonstrate, and the real, sharper instability (2 vs 6, bearing directly on how much the n=2 headline gap can be trusted) has quietly disappeared from the document -- which is exactly the kind of caveat-softening-under-review-pressure the Commander asked me to check for in concern 4, even though it wasn't the mechanism I expected going in. One-line fix: restate the paragraph using the per-order CLI-MCP gap (2 vs 6) rather than the within-arm order-to-order spread."
+    ],
+    "summary": "Third BLOCK, narrow and mechanical this time -- the substantive question (is DC5's PASS framing honest, does the write-up lead with the pre-registered metric unhedged, are secondary observations correctly labelled post-hoc vs pre-existing, did the n=2/front-loading caveats survive overcorrection pressure) is resolved cleanly in the door's favor being reported honestly: headline and DC5-verdict-section read unambiguously PASS: (r7 partial, r8, r9 all confirm this). All numbers re-derive exactly, DC1/DC6/instruments are confirmed untouched since attempt-2 (r11), and the Fowler pass finds nothing new in the (docs-only) diff beyond what it's already been told to carry forward (r6). BUT two concrete, narrow, one-edit-each textual defects survive into this version and are exactly the kind of thing this round asked me to hunt for: (1) an unedited duplicate paragraph immediately after secondary observation (c) that restates the malformed-calls point in flatter, unmitigated, more negative language than (c) itself -- sitting precisely where a first-time reader could come away with an undermined impression right after the 'bounding, not overturning' framing (r7). (2) the order-control paragraph's fix for tc1 removes the false 'agree in... magnitude' claim but replaces its supporting arithmetic with the wrong quantity -- one that is internally inconsistent with the claim it's attached to (both cited numbers are equal) and that drops the real 2-vs-6 per-order magnitude gap that motivated the original finding, quietly losing exactly the kind of caveat concern 4 asked me to make sure survived (r10). Recommend: delete MEASUREMENT.md lines 222-225 (the leftover paragraph), and rewrite the order-control paragraph's parenthetical to cite the per-order CLI-vs-MCP gap (2 vs 6) instead of the within-arm cross-order spread (2 and 2). Both are one-paragraph edits; neither reopens the substantive PASS/negative question."
+  },
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "constellation/epic-418-followon/commander-424/g4/reviewer/attempt-3",
+    "status": "released",
+    "claimed_at": "2026-08-10T00:12:26.235558+00:00",
+    "last_heartbeat": "2026-08-10T00:16:42.291837+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T00:17:30.422059+00:00"
+  }
+}

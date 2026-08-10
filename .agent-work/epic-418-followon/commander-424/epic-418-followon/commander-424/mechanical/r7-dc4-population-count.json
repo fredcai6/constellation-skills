@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "r7-dc4-population-count",
+  "mechanical": {
+    "run": "epic-418-followon/commander-424",
+    "project": "constellation-skills",
+    "role": "reviewer",
+    "refusals": 1,
+    "spine-step": "r7-dc4-population-count",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-424-r7-dc4-population-count@353deb21bd8e8712650e53b6327431799fc786f8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "epic-418-followon/commander-424",
+    "generated_at": "2026-08-09T23:07:11Z"
+  }
+}

@@ -1,0 +1,329 @@
+{
+  "work_id": "epic-418-followon/commander-424",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler",
+    "r7-dc4-population-count",
+    "r8-dc4-count-floor",
+    "r9-dc4-real-behavior",
+    "r10-dc4-positive-control",
+    "r11-dc4-door-not-bent",
+    "r12-dc4-boundary",
+    "r13-fenced-scope",
+    "r14-full-suite-clean"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, checklist-engine.md, the g2-reviewer-handoff.md in full, the g2-implementer-result.md in full, the full test_mcp_imperative_equivalence.py deliverable, scripts/mcp_spine_server.py in full, and the relevant ServerInstance code in tests/test_mcp_identity.py. docs/agents/CREW_CONTEXT.md and GLOSSARY.md checked for existence.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "tests/test_mcp_imperative_equivalence.py (new, 463 lines, commit 696caaea) delivers DC4 as a genuine population property. Independently reproduced: 61 gates/12 templates walking skills/*/templates/*.template.json (matches implementer exactly). Independently proved the walk picks up a newly added template (added skills/scout/templates/ZZREVIEW424.template.json as a scratch canary, count moved 61->62 / 12->13 templates via the real discover_gates_with_imperative() AND via the actual pytest -k population run, canary gate found and compared through both real arms, then deleted -- git status clean after). Independently mutated the REAL scripts/mcp_spine_server.py (as_result(), truncated the ACTIVE line's own imperative text -- a genuine MCP-door rendering-side bug, not a synthetic string comparison) and watched 4/5 tests in the file go RED for the right reason (byte-mismatch on the imperative substring); restored via git checkout, confirmed git diff -- scripts/mcp_spine_server.py empty, reran green (5 passed). Full suite reproduced at 2177 passed, 1 skipped, 1061 subtests, 0 failed -- exactly baseline 2172 + 5 new. git diff fda35ec0..HEAD -- scripts/mcp_spine_server.py confirmed empty (0 lines): the door was not bent to fit the test.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git show --stat 696caaea shows exactly 18 changed files: the deliverable test file, map/INDEX.md, and the implementer's own crew-plan/context/mechanical workbench artifacts. git diff fda35ec0..HEAD, scoped to the fenced files (install_constellation.py, test_feedback_tooling.py, test_install_constellation.py, test_run_skill_eval.py, test_spine_rail.py), checklist_engine.py, and test_mcp_identity.py, is 0 lines -- none touched. settings.json untouched at every scope (grepped the diff stat, none found). docs/agents/ has zero diff over the same range. Issue #424 confirmed still OPEN (gh issue view: closedAt null). No fenced file touched, scope respected.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Required evidence (evidence-only test mode with demonstrated red/green positive control) is present and independently reproduced, not merely accepted on report: tests/test_mcp_imperative_equivalence.py 5/5 passed (2.5s), full suite 2177 passed/1 skipped/1061 subtests/0 failed. Beyond re-running the implementer's own commands, I independently manufactured a real divergence in the production door (scripts/mcp_spine_server.py) and watched the property go red, then restored -- detailed in r10/r11 below. Detail split across r7..r14 (one check per close-criterion, appended below per r4-quality).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Per-close-criterion checks appended and driven individually as r7..r14 below, covering every close criterion the handoff names plus the boundary question it asks to be drawn independently. CREW_CONTEXT.md's verification-discipline rules (a check that cannot fail is indistinguishable from one that passed; assert against behaviour not text; a guard that loops must assert what it looped over) are honored in the deliverable and independently re-verified by mutation against the real production door, not accepted on report.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "No architecture divergence requiring Commander reconciliation. One structural fact the implementer surfaced (both arms read one shared spine.json per gate by design) is correctly scoped as a design fact, not a defect -- confirmed by my own mutation testing: it is the shared-source-read path, not the door's own rendering/wrapping path, so it does not weaken DC4's actual target. One out-of-scope triage candidate found independently (a stale count in the file's own header comment, see r6-fowler/comments-as-deodorant) -- flagged as a triage candidate below, non-blocking.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record>, then record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g2-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-2"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to g2-review/fowler-pass.json: 12/12 smells rendered. 2 flagged (long-method: two multi-step test methods, non-blocking, matches DC3PositiveControlTests's own established shape; comments-as-deodorter: a stale 19/7 vs actual-20/8 file count in the module's own header comment -- cosmetic, flagged as triage candidate tc1). 1 overridden (duplicated-code: repeated tempdir+spine+ServerInstance setup across 3 TestCase classes, subordinate to test_mcp_identity.py's own explicitly-cited house pattern of independent per-class setUp). 9 absent. scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=['long-method','comments-as-deodorant'], overridden=['duplicated-code']).",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "fowler-pass",
+          "payload": {
+            "record_path": ".agent-work/epic-418-followon/commander-424/g2-review/fowler-pass.json"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python /home/tommy/.claude/skills/constellation-reviewer/scripts/verify_fowler_pass.py /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/g2-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "r7-dc4-population-count": {
+      "id": "r7-dc4-population-count",
+      "title": "Population, not sample",
+      "imperative": "Reproduce the 61-gate/12-template count and confirm the walk would pick up a newly added template. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced via a standalone script walking skills/*/templates/*.template.json: 20 template files, 61 gates with a non-empty imperative across 12 templates, 8 skipped -- exact match to the implementer's claimed 61/12. Independently proved the walk is not a hand-maintained list: added a real scratch template skills/scout/templates/ZZREVIEW424.template.json with one gated task carrying a distinct canary imperative; the module's own discover_gates_with_imperative() picked it up (61->62), and the actual pytest -k population run picked it up too (13 templates listed, ZZREVIEW424.template.json among them, canary gate compared live through both real arms and passed). Deleted the canary; git status confirmed clean. PASS.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r8-dc4-count-floor": {
+      "id": "r8-dc4-count-floor",
+      "title": "Loop asserts what it looped over",
+      "imperative": "Confirm the count is asserted non-zero and reported, with a floor guarding a silent collapse. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "test_population_is_nonzero_and_reported prints the discovered count and template list (verified live: 'DC4 population: 61 gates...'), asserts n>0 with an explicit message pointing at setUpClass's own defect-not-pass framing, AND asserts n >= SUSPICIOUSLY_SMALL_FLOOR=30 -- a real, non-trivial floor (61 is barely 2x the floor, not 1000x, so it is not a token gesture). setUpClass itself separately asserts len(gates)>0 before any server even starts, with a message naming this a defect in the walk, not a passing result. A collapse to e.g. 1-29 gates (an over-narrow glob, a directory rename) would fail loudly at the floor assertion before any comparison ran. PASS.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r9-dc4-real-behavior": {
+      "id": "r9-dc4-real-behavior",
+      "title": "Compared against behaviour, not text",
+      "imperative": "Confirm both arms render real output through real subprocesses, not docstrings/description fields. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Read cli_current_text (real subprocess.run of checklist_engine.py --file <spine> current) and confirmed via ServerInstance (imported unedited from test_mcp_identity.py) that the MCP arm is a real, separate mcp_spine_server.py subprocess spoken to over real newline-delimited JSON-RPC. Both are launched as genuinely separate OS processes (confirmed by reading mcp_spine_server.py: it imports checklist_engine as a module and calls checklist_engine.main(argv) IN-PROCESS inside its own subprocess, capturing stdout/stderr via contextlib.redirect_stdout -- so the MCP process itself is real and separate from both the test process and the CLI subprocess, even though the CLI-equivalent call happens in-process within that MCP server). extract_imperative parses the real 'ACTIVE <id> [<status>] -- <imperative>' line out of rendered subprocess output (checklist_engine.py:2169's render_human), never a docstring or description= field. PASS -- also see r12 for the precise boundary of what 'real behaviour' comparison here can and cannot catch.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r10-dc4-positive-control": {
+      "id": "r10-dc4-positive-control",
+      "title": "Permanent positive control is not vacuous",
+      "imperative": "Verify PositiveControlTests exercises a real divergence and mutate the real door yourself to confirm the property can go red. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The shipped PositiveControlTests is NOT vacuous, verified two ways. (1) Read it in full: its red test writes two DIFFERENT real spine.json files (one unmutated for the CLI arm, one mutated for the MCP arm), proves the mutation landed via a disk read-back (not the in-memory dict), then drives BOTH arms through their real pipelines (a real subprocess CLI call, a real mcp_spine_server.py subprocess over real JSON-RPC) and asserts the comparison genuinely raises AssertionError on the mismatch -- this is a real end-to-end exercise of the comparator through the door's actual code, not a bare self.assertEqual('a','b') detached from door behaviour. (2) I went further and mutated the ACTUAL PRODUCTION DOOR myself: edited scripts/mcp_spine_server.py's as_result() to truncate the ACTIVE line's own imperative text by 30 chars (a genuine MCP-side rendering bug, applied against the SAME shared spine file both arms read -- the real production shape, not two different files). Confirmed the edit applied via git diff. Ran tests/test_mcp_imperative_equivalence.py: 4/5 tests went RED (SingleGateWiringTests, PopulationPropertyTests's byte-identity test, and both PositiveControlTests tests -- only the count-only test stayed green, correctly, since it does not compare text), each failing with an AssertionError showing the CLI's full imperative vs the MCP's truncated one. Restored via git checkout -- scripts/mcp_spine_server.py; git diff and git status confirmed clean; reran: 5/5 passed again. This directly answers the handoff's central ask: the property IS sensitive to a real rendering-side MCP-door bug, proven by mutating the door itself, not merely by manufacturing different source files. PASS.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r11-dc4-door-not-bent": {
+      "id": "r11-dc4-door-not-bent",
+      "title": "Door not bent to fit the test",
+      "imperative": "Confirm git diff fda35ec0..HEAD -- scripts/mcp_spine_server.py is empty. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git diff fda35ec0..HEAD -- scripts/mcp_spine_server.py: 0 lines, both before my own mutate-and-watch exercise and confirmed again after restoring it. git show --stat 696caaea (the g2 deliverable commit) does not list scripts/mcp_spine_server.py at all. The door was not bent to fit the test -- No divergence found is a genuine negative result, not a laundered one. PASS.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r12-dc4-boundary": {
+      "id": "r12-dc4-boundary",
+      "title": "Draw the boundary: which divergence modes are/aren't caught",
+      "imperative": "State plainly which divergence modes this property catches and which it does not (truncation/re-wrapping/re-encoding/stripping on the MCP side; a divergence in only one arm's rendering path). BLOCK if the property is materially weaker than DC4 claims. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "BOUNDARY, drawn from reading mcp_spine_server.py's real code plus my own mutation (r10): the MCP arm's pipeline after the shared engine call is run_engine() (capture stdout+stderr via redirect) -> as_result() (wrap into {content:[{text}], isError}) -> json.dumps over the JSON-RPC line -> ServerInstance.recv/status_text (json.loads, pull content[0].text). The CLI arm never touches any of that -- its stdout is read directly off its own subprocess. CATCHES (proven, not just argued): truncating (empirically proven -- my as_result() mutation cut 30 chars off the ACTIVE line's imperative and 4/5 tests went red on an AssertionError naming the exact byte mismatch); stripping (same mechanism -- any content removed from the ACTIVE line's imperative substring on the MCP side is caught, since the comparison is byte-exact against extract_imperative's captured group); re-wrapping (any prefix/suffix landing INSIDE the ACTIVE line -- not merely appended after it in trailing rail text, see below -- is caught the same way); re-encoding (any corruption introduced by run_engine's stdout+stderr concatenation, as_result's JSON wrapping, or ServerInstance's json.loads round-trip would show up as a byte difference in the same captured substring). A divergence in 'only one arm's rendering path' -- yes, caught, and in fact this IS what the property is actually testing: the MCP arm is the only one with a wrapping/transport layer at all (the CLI arm is a bare  call with no wrapper of its own), so 'one arm diverges' in practice always means the MCP side. DOES NOT CATCH: a bug inside the SHARED checklist_engine.main()/render_human() function itself, because both arms call that literal same Python function (CLI via its own subprocess's __main__, MCP via an in-process import-and-call) -- a corruption there renders identically wrong on both sides, so cli_imp==mcp_imp would still hold and this test would stay green. This is explicitly and correctly OUT of DC4's own stated scope ('the CLI projection and MCP tool result carry the SAME imperative text' -- same-but-wrong is not a DC4 violation by DC4's own wording; a shared-engine-correctness bug needs a different test, e.g. one that checks against the source template field). NON-BLOCKING OBSERVATION for triage: SingleGateWiringTests additionally asserts cli_imp/mcp_imp against gate.task['imperative'] (ground truth vs source) for its ONE canary gate (g1-implement) -- PopulationPropertyTests does NOT extend that ground-truth-vs-source check across the other 60 gates, only CLI-vs-MCP agreement. Not a DC4 gap (DC4 only requires CLI==MCP), but means a shared-render corruption affecting only some gates (not g1-implement) would slip past every check in this file. Verdict: the property is NOT weaker than DC4 claims -- it is exactly as strong as DC4's own wording requires, empirically proven sensitive to the real MCP-door-side divergence modes named in the handoff (truncate/re-wrap/re-encode/strip), and its one blind spot is a different, out-of-scope claim (shared-engine correctness) that DC4's own wording does not cover. PASS -- not a BLOCK.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r13-fenced-scope": {
+      "id": "r13-fenced-scope",
+      "title": "Fenced files / issue / settings.json / docs untouched",
+      "imperative": "Confirm the full fenced-scope list from the handoff (criterion 6). Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Full criterion-6 checklist independently verified: (a) fenced files (install_constellation.py, test_feedback_tooling.py, test_install_constellation.py, test_run_skill_eval.py, test_spine_rail.py) -- 0-line diff fda35ec0..HEAD. (b) scripts/checklist_engine.py diff empty -- confirmed same command, 0 lines. (c) settings.json untouched at every scope -- grepped git diff --stat over the same range, no hits. (d) no issue closed -- gh issue view 424 shows state OPEN, closedAt null. (e) nothing promoted into docs/agents/* -- 0-line diff over the same range. (f) tests/test_mcp_identity.py not edited -- included in the same 0-line diff and separately confirmed it was only imported from (ServerInstance), never modified. All PASS.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r14-full-suite-clean": {
+      "id": "r14-full-suite-clean",
+      "title": "Full suite 0 failed, arithmetic checks out",
+      "imperative": "Reproduce the full suite and verify the +5/baseline arithmetic, no skip/xfail padding. Record pass/fail.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Independently reproduced: FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests -> 2177 passed, 1 skipped, 1061 subtests passed in 98.60s, exit implied 0 failed. Matches the implementer's report exactly. Arithmetic: baseline 2172 + 5 new tests (SingleGateWiringTests x1, PopulationPropertyTests x2, PositiveControlTests x2) = 2177, confirmed. Skip count (1) and subtest count (1061) both match the stated baseline exactly -- no new skips/xfails introduced, no padding. PASS.",
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "APPROVE",
+    "findings": [],
+    "summary": "tests/test_mcp_imperative_equivalence.py (696caaea, 463 lines) delivers DC4 as a genuine population property, not a sample. Independently reproduced 61 gates/12 templates via my own standalone walk of skills/*/templates/*.template.json (exact match); independently proved the walk is not a hand-list by adding a real scratch template (skills/scout/templates/ZZREVIEW424.template.json) and watching the population move 61->62/12->13 both via the module's own discover function and a live pytest -k population run, then deleted it clean. Independently mutated the ACTUAL PRODUCTION DOOR (scripts/mcp_spine_server.py's as_result(), truncating the ACTIVE line imperative) and watched 4/5 tests go red for the correct byte-mismatch reason, then restored (git diff and git status confirmed clean, reran green) -- this is the load-bearing finding: the permanent PositiveControlTests is not vacuous, and beyond that, I proved the property catches a genuine MCP-door rendering-side bug against the real production shared-spine-file shape, not just a manufactured two-file scenario. Drew the requested boundary explicitly (r12): the property catches truncation/re-wrapping/re-encoding/stripping introduced anywhere in the MCP-side transport layer (run_engine/as_result/JSON-RPC/ServerInstance parsing) because the CLI arm never touches that code at all -- proven, not argued. It does NOT catch a bug inside the SHARED checklist_engine.main()/render_human() function itself, because both arms call that literal same function; this is explicitly out of DC4's own stated scope (same-but-wrong is not a DC4 violation by DC4's wording) and is a genuinely different claim from what this gate was asked to close. Door not bent to fit the test: git diff fda35ec0..HEAD -- scripts/mcp_spine_server.py is empty, both before and after my own restored mutation. All fenced files, settings.json, docs/agents/*, issue-424-open, and test_mcp_identity.py-untouched checks pass. Full suite independently reproduced at 2177 passed, 1 skipped, 1061 subtests, 0 failed -- exact baseline+5 arithmetic. Fowler pass: 12/12 rendered, 2 flagged non-blocking (long-method on two multi-step test methods; a stale 19/7-vs-actual-20/8 file count in the module's own header comment, flagged as tc1), 1 overridden (duplicated per-class test setup, subordinate to test_mcp_identity.py's own cited house pattern), rail exits 0. One non-blocking observation flagged as tc2: PopulationPropertyTests does not extend SingleGateWiringTests' ground-truth-vs-source check across the full population, only CLI-vs-MCP agreement -- not a DC4 gap, worth a look. APPROVE, cleanly -- the property was checked directly by mutating the real door, not accepted on report, and it held exactly to DC4's own scope, no narrower and no wider."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r5-reconciliation",
+      "statement": "tests/test_mcp_imperative_equivalence.py lines 80-89 (module-level comment) states 'of 19 *.template.json files found; the other 7 are result/record templates' and lists exactly 8 skipped-template names right next to that prose -- the tree today (and per the file's own printed pytest evidence: 'Skipped (not a gated/survey checklist shape): [...]' lists 8 items) actually has 20 *.template.json files / 8 skipped, not 19/7. Cosmetic only -- the runtime discovery is dynamic and correct, and the 61-gate/12-template headline claim is unaffected and independently reproduced correct. Worth a one-line comment fix (19->20, 7->8) so the header prose matches the list beside it and the tree's current actual shape; a good moment to also note the doctrine 'pin a claim to the revision you read it at' since this specific miscount looks like it predates a template file being added, not a math error."
+    },
+    {
+      "id": "tc2",
+      "from": "r12-dc4-boundary",
+      "statement": "PopulationPropertyTests (the 61-gate loop) only checks cli_imp==mcp_imp; it does not extend SingleGateWiringTests' ground-truth-vs-source-template check (cli_imp==gate.task['imperative'] and mcp_imp==gate.task['imperative']) across the population. Not a DC4 gap (DC4 only requires CLI==MCP agreement), but a shared checklist_engine.py rendering bug that corrupted output identically on both arms for some gate other than the one SingleGateWiringTests happens to sample (g1-implement) would produce a fully green DC4 suite while both projections were silently wrong relative to the source template. Worth considering: fold the same three-way (source/cli/mcp) assertion into the population loop, or accept this as intentionally out of DC4's scope and covered by other engine-correctness tests instead."
+    }
+  ],
+  "blockers": [],
+  "refusals": 1,
+  "engine_session": {
+    "session_id": "reviewer-g2-1786316321",
+    "status": "released",
+    "claimed_at": "2026-08-09T22:58:46.118566+00:00",
+    "last_heartbeat": "2026-08-09T23:09:45.989038+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T23:09:51.849141+00:00"
+  }
+}

@@ -76,19 +76,28 @@ cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1
 cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
 ```
 
-Current suite state on this branch: **6 failed, 2157 passed, 1061 subtests passed.** Those 6 are a
-pre-existing pinned set owned by a concurrent agent and are **not** yours:
+**BASELINE CORRECTED — the pinned red set is retired.** An earlier draft of this handoff listed six
+pre-existing failures owned by a concurrent agent. That pin is gone: #531 merged to main and this
+branch merged origin/main at `05b35a2e`. Measured by the Commander on this exact tree immediately
+before dispatching you:
 
 ```
-tests/test_feedback_tooling.py::FreshnessPathTokenTests::test_installed_path_rewritten_template_is_up_to_date
-tests/test_feedback_tooling.py::FreshnessPathTokenTests::test_token_working_copy_up_to_date_against_promoted_baseline
-tests/test_install_constellation.py::InterpreterProbeTests::test_sidecar_records_resolved_via_for_probe_success_and_fallback
-tests/test_install_constellation.py::TemplateBaselineTests::test_seeded_working_copy_reads_up_to_date_against_baseline
-tests/test_run_skill_eval.py::test_real_runner_process_death_leaves_resumable_state
-tests/test_spine_rail.py::test_same_path_windows_normcase_sep_equivalence
+$ cd /home/tommy/projects/constellation-skills-wt/f-424 && FORCE_COLOR= NO_COLOR=1 python -m pytest -q tests
+2172 passed, 1 skipped, 1061 subtests passed   # 0 failed
 ```
 
-The set may shrink under you (fine); it must not grow.
+**Your gate is `0 failed`, not "the set has not grown."** Any failure is yours or a real regression —
+do not wave one through as pre-existing.
+
+**Two other things changed under this handoff since it was drafted, so do not be surprised:**
+
+- `scripts/gen_mcp_config.py` **no longer exists.** It was removed at `g1-integrate` as redundant:
+  the committed project-scope `.mcp.json` uses `${VAR:-default}` expansion, so identity comes from
+  each caller's own environment at server launch. If your test needs to launch the door, launch it
+  from that environment seam — do not resurrect a generator.
+- `tests/test_mcp_identity.py` now exists (gate g3, DC2/DC3) and is **not yours to edit**. Read it for
+  the house pattern: its `ServerInstance` helper is this repo's current example of driving a real
+  server subprocess over JSON-RPC, including bounded reads that avoid the deadlock described below.
 
 ## Close criteria
 
@@ -97,14 +106,29 @@ The set may shrink under you (fine); it must not grow.
    list.
 2. The gate count is asserted non-zero and reported.
 3. The property was demonstrated able to fail, with the mutation asserted as applied.
-4. The test passes; the pinned red set has not grown.
+4. The test passes and the full suite ends **`0 failed`**. (Superseded: the old "pinned red set has
+   not grown" bar — see the corrected baseline above.)
 5. Any real divergence found is reported as a finding, not silently accommodated.
 
 ## Required evidence to return
 
 The exact commands and their real output including exit codes; the gate count your property covered;
 the red-state demonstration (the mutation, proof it applied, the failing output, and the restore);
-the full pytest tail for `tests/`; and whether the pinned red set grew.
+the full pytest tail for `tests/` (must read `0 failed`).
+
+**Watch for hangs.** A previous gate on this branch lost real time to a deadlock: `assertTrue(line,
+f"...{proc.stderr.read()}")` evaluates its f-string message **unconditionally**, so a blocking pipe
+read runs even on the success path. Never put a blocking read inside an eager assertion message.
+
+**One more thing, and it is the thing I care about most in this gate.** If the property turns up a
+**real divergence** between the CLI projection and the MCP tool result, that is a **complete,
+successful deliverable** — report it as a finding and stop. Do not change the door to make the
+property green; the door bending to match a test is precisely the drift DC4 exists to catch. And do
+not soften a divergence into a caveat.
+
+Equally: if you cannot put the property in a state where it would have caught a divergence, that is
+**UNMEASURED**, not a pass. Say UNMEASURED and say exactly what stopped you. An unmeasured condition
+reported as a pass is the one outcome I cannot use.
 
 ## Specific exclusions
 

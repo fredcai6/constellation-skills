@@ -1,0 +1,248 @@
+{
+  "work_id": "dc5-dc6-mcp",
+  "type": "gated",
+  "config": {
+    "rework_cap": 3
+  },
+  "items": [
+    "m0-context",
+    "m1",
+    "m2",
+    "m3",
+    "m4"
+  ],
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "m0-context",
+      "imperative": "Read this line and attest c1. There is no file to write for this gate.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "this gate's imperative was read",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Read the gate's imperative."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0,
+      "child_checklist": null
+    },
+    "m1": {
+      "id": "m1",
+      "title": "m1",
+      "imperative": "Create step1.txt in this spine's own directory, containing exactly STEP1",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "step1.txt exists with the right contents",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(cat /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp/step1.txt)\" = \"STEP1\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(cat /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp/step1.txt)\" = \"STEP1\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "child_checklist": null
+    },
+    "m2": {
+      "id": "m2",
+      "title": "m2",
+      "imperative": "Create step2.txt in this spine's own directory, containing exactly STEP2",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "step2.txt exists with the right contents",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(cat /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp/step2.txt)\" = \"STEP2\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(cat /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp/step2.txt)\" = \"STEP2\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "child_checklist": null
+    },
+    "m3": {
+      "id": "m3",
+      "title": "m3",
+      "imperative": "Create step3.txt in this spine's own directory, containing exactly STEP3",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "step3.txt exists with the right contents",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(cat /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp/step3.txt)\" = \"STEP3\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(cat /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp/step3.txt)\" = \"STEP3\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "child_checklist": null
+    },
+    "m4": {
+      "id": "m4",
+      "title": "m4",
+      "imperative": "Create step4.txt in this spine's own directory, containing exactly STEP4",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "step4.txt exists with the right contents",
+          "check": {
+            "kind": "command",
+            "command": "test \"$(cat /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp/step4.txt)\" = \"STEP4\""
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-1"
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "test \"$(cat /home/tommy/projects/constellation-skills-wt/f-424/.agent-work/epic-418-followon/commander-424/evidence/g4-dc5/dc6-mcp/step4.txt)\" = \"STEP4\"",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0,
+      "child_checklist": null
+    }
+  },
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "dc6-mcp-sid",
+    "status": "released",
+    "claimed_at": "2026-08-09T23:22:39.296643+00:00",
+    "last_heartbeat": "2026-08-09T23:23:19.408524+00:00",
+    "claimed_by": "dc6-mcp-sid",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-09T23:23:23.974423+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-09T23:22:51.889766+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-09T23:23:00.062559+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-09T23:23:05.815017+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-09T23:23:13.259424+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-09T23:23:19.408513+00:00"
+    }
+  ]
+}

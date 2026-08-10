@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m4",
+  "mechanical": {
+    "run": "dc5-rep2-cli",
+    "project": "constellation-skills",
+    "role": "dc5-rep2-cli-agent",
+    "refusals": 1,
+    "spine-step": "m4",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-dc5-rep2-cli-m4@f3e027caf3b106c021651e860d76b0b2902c733b",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "dc5-rep2-cli",
+    "generated_at": "2026-08-09T23:21:08Z"
+  }
+}

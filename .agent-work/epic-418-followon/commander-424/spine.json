@@ -334,16 +334,18 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Every gate in execute.json is complete with integrated evidence: e0-context, g1-implement, g1-review, g1-integrate, g3-implement, g3-review, g3-integrate, g2-implement, g2-review, g2-integrate, g4-measure, g4-review, g4-integrate. No gate is blocked, skipped or waived. Every crew gate carries an attached implementer-result and/or review-result artifact and every reviewer verdict integrated is APPROVE. Three gates were BLOCKED by their reviewers during the run (g1-integrate once, g4-review three times); all four blocks were resolved on evidence through the gates' own rework paths and NONE was overridden. Order was amended once, under the launch order's authority, to run g3 before g2 per the repair."
         },
         {
           "id": "c2",
           "statement": "the run's REPLAN_INPUT.json returns observed execution discrepancies/evidence through the exact verified G2 input without automatic issue filing",
           "check": {
             "kind": "command",
-            "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_iterative_role_artifacts.py commander --work-id epic-418-followon/commander-424"
+            "command": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python3 .agent-work/epic-418-followon/commander-424/evidence/verify_replan_input.py .agent-work/epic-418-followon/commander-424/REPLAN_INPUT.json"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-2"
         }
       ],
       "constraints": [],
@@ -370,7 +372,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -380,6 +382,17 @@
           "type": "command-output",
           "payload": {
             "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_state_note.py epic-418-followon/commander-424",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-execute-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "cd /home/tommy/projects/constellation-skills-wt/f-424 && python3 .agent-work/epic-418-followon/commander-424/evidence/verify_replan_input.py .agent-work/epic-418-followon/commander-424/REPLAN_INPUT.json",
             "exit": 0,
             "shell": "posix"
           },
@@ -627,7 +640,7 @@
     "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
     "status": "active",
     "claimed_at": "2026-08-09T20:42:22.211514+00:00",
-    "last_heartbeat": "2026-08-09T20:42:22.211514+00:00",
+    "last_heartbeat": "2026-08-10T00:33:10.854892+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
     "previous_session_id": null,
@@ -661,6 +674,23 @@
       "why": "Plan frozen at 4 gates after a cold critic materially changed it. The critic's decisive finding is one I would not have caught by re-reading my own plan: DC5's numerator, as I first wrote it, could not lose. A malformed call rejected by client-side schema validation never reaches the server, so counting from the server's own log would have credited the typed door with avoiding exactly the fumbles the instrument was blind to -- a win regardless of whether the door helps. The counting unit is now an invocation attempt read from the driving agent's record, identical across arms, with the server log demoted to corroboration. Two further changes follow the same shape: the measurement now gets an independent re-derivation it previously self-graded, and DC3's live positive control is disambiguated from DC3's test, which exercise different mechanisms (engine lease identity vs door instance reachability) and would otherwise have deadlocked the gate against a defect outside F's scope.",
       "mechanical": false,
       "ts": "2026-08-09T16:47:12.524009+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "Four gates, four reviewer BLOCKs, none overridden -- and the blocks are where the run's value is. g1's reviewer refused a justification that was false, and the repair's g3-first ordering let me answer it with a measurement instead of an argument: the answer was YES and it still did not save gen_mcp_config.py, because a generated config binds per process exactly as ${VAR} does. g4's reviewer blocked three times, and the second one is the one I will carry: it caught me keeping a conclusion I had written before the evidence moved, on a decomposition I reached for only after the pre-registered metric flipped. I changed the verdict rather than defend it. What I would flag to the next planner is that this run's checks kept passing for the wrong reasons until something adversarial touched them -- a scorer that could not lose, a help read scored as a crash, a gauge sampled before the claim that made an UNMEASURED look like a negative. Every one of those was caught by a control or a reviewer, none by re-reading.",
+      "mechanical": false,
+      "ts": "2026-08-10T00:33:10.854871+00:00"
+    }
+  ],
+  "amendments": [
+    {
+      "ts": "2026-08-10T00:32:53.000928+00:00",
+      "reason": "AUTHORING FIX to a check that cannot run, not a relaxation of it. The canonical entry point 'verify_iterative_role_artifacts.py commander --work-id epic-418-followon/commander-424' REFUSES before verifying anything: its _work_area() guards the work id with SAFE_ID = ^[A-Za-z0-9][A-Za-z0-9._-]*$, which forbids '/', so a multi-segment work id is rejected as 'unsafe path characters'. Same defect class as run_crew.py's single-segment assumption, recorded as discrepancy D5. The replacement runs the SAME verification -- constellation-replan/scripts/verify_replan.py :: verify_replan_input -- against the same G2 schema, on the packet path passed explicitly. Nothing is weakened. This matters because the guard was MASKING A REAL DEFECT: the inherited packet had completed_outcomes as an array of strings where G2 requires objects with issue_id/outcome/evidence, and the path refusal fired before that was ever checked. The packet is now repaired and verifies. Using waive here would have recorded 'check accepted as non-blocking' when the truth is that the check never ran and, once it did, it failed and was fixed.",
+      "authority": "Commander, under LAUNCH_ORDER-424-continuation.md (delegated; Admiral ratifies at the epic return boundary)",
+      "ops": [
+        "retext-check execute.c2"
+      ]
     }
   ]
 }
