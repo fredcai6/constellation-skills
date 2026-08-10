@@ -1552,8 +1552,10 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "DEFERRED by Admiral ruling, epic-418-followon wave 2, not abandoned. The ruling: a NARROWED gate produces a claim nobody downstream can calibrate, while an UNREACHED gate produces an honest gap - and this epic exists because an unmeasured thing was nearly reported as a measured negative, so prefer the gap. Budget went to g4b, which the Admiral ranked as protected absolutely because it is C (#421)'s entry condition, and to g4a, which is g4b's substantive prerequisite. What is left, stated plainly rather than softened: install_constellation.py has ZERO MCP references (count 2 of the three adoption counts is UNCHANGED at 0 and is reported as an open criterion, never as a pass); a fresh install ships neither .mcp.json nor mcp_spine_server.py - verified, not assumed, by a real project-scope install during g4b; and #553 stands unfixed - the committed .mcp.json hardcodes command python3, the same defect #538/#540 fixed everywhere else in this repo, shipped in the one file adoption depends on, and unresolvable on the repo owner's own Windows box where py is an extensionless sh wrapper PowerShell cannot execute and python is not on PATH. ADOPTION IS THEREFORE UNVERIFIED ON WINDOWS and must not be reported as achieved. Candidate fixes and the one unverified assumption among them are recorded in this gate's own constraints and in g3-anchors.json."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -1600,8 +1602,10 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "DEFERRED by Admiral ruling, epic-418-followon wave 2, not abandoned. The ruling: a NARROWED gate produces a claim nobody downstream can calibrate, while an UNREACHED gate produces an honest gap - and this epic exists because an unmeasured thing was nearly reported as a measured negative, so prefer the gap. Budget went to g4b, which the Admiral ranked as protected absolutely because it is C (#421)'s entry condition, and to g4a, which is g4b's substantive prerequisite. What is left, stated plainly rather than softened: install_constellation.py has ZERO MCP references (count 2 of the three adoption counts is UNCHANGED at 0 and is reported as an open criterion, never as a pass); a fresh install ships neither .mcp.json nor mcp_spine_server.py - verified, not assumed, by a real project-scope install during g4b; and #553 stands unfixed - the committed .mcp.json hardcodes command python3, the same defect #538/#540 fixed everywhere else in this repo, shipped in the one file adoption depends on, and unresolvable on the repo owner's own Windows box where py is an extensionless sh wrapper PowerShell cannot execute and python is not on PATH. ADOPTION IS THEREFORE UNVERIFIED ON WINDOWS and must not be reported as achieved. Candidate fixes and the one unverified assumption among them are recorded in this gate's own constraints and in g3-anchors.json."
+      },
       "result": null,
       "finding": null,
       "evidence": [],
@@ -1679,8 +1683,10 @@
       ],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
-      "status_detail": {},
+      "status": "skipped",
+      "status_detail": {
+        "reason": "DEFERRED by Admiral ruling, epic-418-followon wave 2, not abandoned. The ruling: a NARROWED gate produces a claim nobody downstream can calibrate, while an UNREACHED gate produces an honest gap - and this epic exists because an unmeasured thing was nearly reported as a measured negative, so prefer the gap. Budget went to g4b, which the Admiral ranked as protected absolutely because it is C (#421)'s entry condition, and to g4a, which is g4b's substantive prerequisite. What is left, stated plainly rather than softened: install_constellation.py has ZERO MCP references (count 2 of the three adoption counts is UNCHANGED at 0 and is reported as an open criterion, never as a pass); a fresh install ships neither .mcp.json nor mcp_spine_server.py - verified, not assumed, by a real project-scope install during g4b; and #553 stands unfixed - the committed .mcp.json hardcodes command python3, the same defect #538/#540 fixed everywhere else in this repo, shipped in the one file adoption depends on, and unresolvable on the repo owner's own Windows box where py is an extensionless sh wrapper PowerShell cannot execute and python is not on PATH. ADOPTION IS THEREFORE UNVERIFIED ON WINDOWS and must not be reported as achieved. Candidate fixes and the one unverified assumption among them are recorded in this gate's own constraints and in g3-anchors.json."
+      },
       "result": null,
       "finding": null,
       "evidence": [],

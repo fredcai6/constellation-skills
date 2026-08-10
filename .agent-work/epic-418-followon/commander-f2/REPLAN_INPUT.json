@@ -124,7 +124,13 @@
    "Repairing the spine_rail per-agent identity merge (#549)."
   ]
  },
- "completed_outcomes": [],
+ "completed_outcomes": [
+  {
+   "issue_id": "541",
+   "outcome": "The MCP door records its own rejections one per occurrence across the three classes it can see, they reach the run's episode as an artifact-ref through apply_episode_delta.py under a nested work-id, and a write failure is reported on every occurrence.",
+   "evidence": "tests/test_mcp_friction_capture.py (8 tests incl. a repeat-occurrence test that goes red under the reviewer's dedup mutation); episodes/active/epic-418-followon_commander-f2-001.md with verify_episode_captured.py exit 0; git diff empty against apply_episode_delta.py, episode_capture.py and docs/EPISODE_STORE.md."
+  }
+ ],
  "wave_evidence": [
   {
    "claim": "The launch order's framing of #541 - the door absorbs fumbles that would otherwise be diagnosable - describes the defect.",
@@ -149,6 +155,24 @@
    "expected": "One seam, one fix.",
    "observed": "False. The same shape appears independently in scripts/hooks/spine_rail.py (#549): its binding file IS keyed per agent, and session_view() then merges the per-agent key away. The harness shares the container and identity was put in the container, twice, neither seam aware of the other. g1's rule is therefore stated fleet-wide over container granularity rather than as an argument-passing fix - a form the hook seam forces, because it has no per-call argument for identity to ride on.",
    "source": "Admiral context query, epic-418-followon; docs/CHECKLIST_ENGINE_DESIGN.md:310-312"
+  },
+  {
+   "claim": "Editing role spine instructions in skills/ makes a dispatched agent use the door.",
+   "expected": "Adoption edits change agent behaviour.",
+   "observed": "FALSE as stated, measured twice. A dispatched agent reads the INSTALLED corpus, not repo source, so arm 1 saw none of the edits. Installing first removed that explanation and arm 2 still measured ZERO door calls - because the installed instruction correctly tells an IMPLEMENTER to use the CLI, exactly as g1 ruled. The agent obeyed correct doctrine; I had measured the one role the fleet excludes.",
+   "source": ".agent-work/epic-418-followon/commander-f2/evidence/g4b/MEASUREMENT.md arms 1 and 2"
+  },
+  {
+   "claim": "A real dispatched agent can drive a real role spine to done through the door alone.",
+   "expected": "Measurable from the driving agent's own call record.",
+   "observed": "TRUE for a role that OWNS its process's bound spine: 9 door calls, 0 CLI engine invocations, reached DONE, 0 shape errors. The two refused arms are the control - the spine server was connected with all 7 tools offered in all three, so declining twice and using exclusively once measures choice, not availability.",
+   "source": "evidence/g4b/arm-mcp-3/record.jsonl scored by F's archived score_arm.py"
+  },
+  {
+   "claim": "A repo-wide suite is enough to catch a gate's own regressions.",
+   "expected": "Green suite means nothing broke.",
+   "observed": "It caught three real regressions this run that a gate-scoped check alone would not have: my own notes tripping the retirement guard's store-mention leg, and map/INDEX.md going stale THREE times after test additions (#544). The third time was after the Admiral had already told me to rebuild as part of committing.",
+   "source": "e0-context, g1-integrate, g4a-integrate command postconditions"
   }
  ],
  "discrepancies": [
@@ -175,11 +199,18 @@
    "affects": "Any gate in this epic that adds or removes entities.",
    "evidence": "tests.test_mcp_identity moved 36 -> 45 entities; MapTreeFreshnessTests failed until the map was rebuilt and committed.",
    "reason": "Mechanical and self-correcting once known. Recorded so a later gate recognises the failure instantly rather than diagnosing it again."
+  },
+  {
+   "id": "D3",
+   "signal": "install_constellation.py ships neither .mcp.json nor mcp_spine_server.py, and the committed .mcp.json hardcodes a python3 launch line that does not resolve on the repo owner's platform.",
+   "classification": "blocks_current_wave_exit",
+   "affects": "#542 criterion 3, and with it whether adoption is real on Windows at all.",
+   "evidence": "A real project-scope install during g4b produced no .mcp.json and no bundled door script - verified by ls, not assumed. Count 2 of the three adoption counts is UNCHANGED at 0. #553 records the launch-line defect.",
+   "reason": "g3 was DEFERRED by Admiral ruling in favour of protecting g4b. Reported as an open criterion and an unverified platform, never as a pass."
   }
  ],
  "open_current_wave_issue_ids": [
-  "542",
-  "541"
+  "542"
  ],
  "unlaunched_items": [
   {

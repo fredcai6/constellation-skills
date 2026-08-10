@@ -338,7 +338,8 @@
           "id": "c1",
           "statement": "every gate closed with integrated evidence",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute.json reports DONE: no open items. Four of five gates closed with integrated evidence (g1 identity, g2 capture, g4a adoption, g4b acceptance); g3 installer DEFERRED by Admiral ruling via the engine's skip verb with the full reason recorded in the journal, not silently dropped. Two APPROVE postconditions were force-waived with recorded reasons rather than forged, at g1 and g2, where reviewer findings were TAKEN but a further review pass was not affordable."
         },
         {
           "id": "c2",
@@ -347,7 +348,8 @@
             "kind": "command",
             "command": "python scripts/verify_iterative_role_artifacts.py commander --work-id epic-418-followon/commander-f2"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-execute-3"
         }
       ],
       "constraints": [],
@@ -374,7 +376,7 @@
       "child_checklist": "execute.json",
       "context_headroom_tokens": 30000,
       "context_headroom_note": "#467. Absolute-token context reserve for THIS gate only: the engine subtracts it from both the soft and hard caps before dividing by the model's window, so `execute` may not be BEGUN with less than this much room left below the hard cap. It makes the imperative's existing prose instruction ('ensure context headroom before entering') enforceable, and it can only ever tighten -- no gate can raise a threshold. WHY 30000, and it is a GUESS, revisable in place: `execute` is the run's longest gate and the one that cannot be abandoned halfway, because it drives every crew gate and each crew dispatch costs tens of thousands of tokens. The only observation available was a commander sitting at ~127K fill after a cold resume plus one full three-task gate -- which bounds one gate's marginal cost in the tens of thousands but cannot separate it from the resume baseline. 30K is a round number at the low end of that range: on claude-opus-5 (1M window, 80K soft / 150K hard) it moves execute's begin-work line from 15% to 12% and its advisory from 8% to 5%, while every other gate keeps the shipped default. The named settle experiment (read fill_fraction across completed commander runs at the moment execute was started) is NOT runnable from existing artifacts -- gauge.json keeps only the latest reading and the per-gate context manifests record no fill -- so a later run may revise this number here, in this one place, without re-deriving anything.",
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -400,6 +402,17 @@
           },
           "produced_by": "engine",
           "ts": ""
+        },
+        {
+          "id": "e-execute-3",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_iterative_role_artifacts.py commander --work-id epic-418-followon/commander-f2",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
         }
       ],
       "rework_count": 0
@@ -413,7 +426,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute closed"
         }
       ],
       "postconditions": [
@@ -421,13 +435,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Reconciled directly rather than by dispatching Cartographer: this repo carries no docs/architecture packet map, and commander-core's bookend rule for that case is to fold the change into the structural record it actually touches. The structural record here is the DERIVED code map, and it is rebuilt and byte-fresh - tests/test_code_map.py 148 passed. It now carries scripts.mcp_spine_server's new entities (_log_rejection, the extended _tool_error) and both new test modules, tests.test_mcp_friction_capture and tests.test_mcp_adoption. Two durable design records were produced and are the real architecture output of this run: IDENTITY_TRADE.md, which states a fleet-wide rule about identity under a shared container and names the property given up, and evidence/g4b/MEASUREMENT.md, which records the acceptance measurement including its two refused arms. Neither belongs in a generated map; both are cited from the return. NOT reconciled and deliberately so: docs/CHECKLIST_ENGINE_DESIGN.md would be the right home for the identity rule as durable doctrine, but promoting an observation into docs/ is the human's call under this run's own binding doctrine, so it is routed as a triage candidate instead of written."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -443,7 +458,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile closed"
         }
       ],
       "postconditions": [
@@ -451,7 +467,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Eight candidates routed, all recommend-and-defer, none filed. Four were measured by the Admiral during the run and already carry issue numbers (#548 map_orient's unparseable-code-map verdict and its guessed parenthetical; #550 the notes-<n>.md convention vs the retirement guard; #551 backtick substitution in engine string arguments; #553 the .mcp.json python3 launch line). Four are mine to route: #544's map staling on every test addition, which bit three times in this run; the manifest_root doubled-path boundary recorded against #546; promoting g1's identity rule into docs/, which is the human's call and not mine; and the CLI arm's structural non-instrumentation, recorded as a cost rather than paid. Written to triage-candidates/CANDIDATES.md."
         },
         {
           "id": "c2",
@@ -460,17 +477,35 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Inherited Latitude + Stop Conditions",
+            "decision": "recommend-and-defer for all eight; no issue filing sought or authorised this run",
+            "authority": "Admiral (epic-418-followon); human ratifies at the epic return boundary",
+            "artifact": ".agent-work/epic-418-followon/commander-f2/triage-candidates/CANDIDATES.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -482,7 +517,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage closed"
         }
       ],
       "postconditions": [
@@ -493,17 +529,35 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER:Return Shape + Honest-Null Clause",
+            "decision": "run accepted as COMPLETE-WITH-ONE-DEFERRED-CRITERION",
+            "authority": "Admiral (epic-418-followon); human ratifies at the epic return boundary",
+            "summary": "4 of 5 done-criteria MET with evidence at their own gate; criterion 3 (installer ships and wires .mcp.json) DEFERRED by Admiral ruling and reported as open, leaving adoption UNVERIFIED ON WINDOWS. 9 crew dispatches, 6 reviewer BLOCKs, all taken on evidence, none overridden."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -515,7 +569,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review closed"
         }
       ],
       "postconditions": [
@@ -526,17 +581,30 @@
             "kind": "command",
             "command": "python scripts/verify_episode_captured.py epic-418-followon/commander-f2 --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py epic-418-followon/commander-f2 --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -642,7 +710,7 @@
     "session_id": "epic-418-followon/commander-f2",
     "status": "active",
     "claimed_at": "2026-08-10T05:29:38.210648+00:00",
-    "last_heartbeat": "2026-08-10T05:59:09.568511+00:00",
+    "last_heartbeat": "2026-08-10T09:27:54.132770+00:00",
     "claimed_by": "agent",
     "worktree": ".",
     "previous_session_id": null,
@@ -676,6 +744,41 @@
       "why": "Plan frozen after two independent rigor passes that both changed it. The cold critic's central charge was that not one of my six gate checks could lose: e0 attested without checking, and all five integrate gates carried the same repo-wide 'python -m pytest -q' that was green before the run began and would be green after it regardless of which gate's work landed. That is the launch order's own 'a measure that cannot lose is not a measure', turned on my own plan, and it was correct. Every gate now closes on its OWN named test node first, then the suite, then the verdict. g4b now reads the CLI-invocation field its reused scorer already produces, so 'through the door alone' is measured rather than asserted - reached_done alone would have passed an agent that hit a wall on a door tool and finished through the CLI. Two decorative preconditions removed. Three open decisions the critic showed I had left to a Sonnet implementer are settled here instead: g2's landing site (the Mechanical bin's existing artifact-ref field, because a per-rejection record is unrepresentable among scalars and ints and the writer is outside my ownership), the CLI arm's non-instrumentation (structural, not budgetary - a CLI shape rejection exits in argparse before the spine loads), and the g4b spine (IMPLEMENTER_PLAN, whose happy path stays inside the 13 door-covered verbs). g1's implement dispatch is collapsed on the converging advice of both advisors, and what that loses - an independent cold read of the identity code before I commit - is named in the gate rather than hidden. Separately, the Admiral's condition on my #541 narrowing is DISCHARGED BY MEASUREMENT, not by code read: demo_engine_refusal_reaches_episode.py drives the real server as a subprocess over real JSON-RPC on a NESTED work-id and shows 12/12 - an engine refusal moves refusals 0->1->2 and episode_capture composes that exact value into the Mechanical bin, while the door's own rejection moves the counter not at all and leaves no line in the server's own call log. Both halves of the claim, measured in one run.",
       "mechanical": false,
       "ts": "2026-08-10T05:58:17.000274+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "execute",
+      "why": "All five of the launch order's done criteria are now either MET with evidence produced at their own gate, or DEFERRED and named. Met: the identity trade decided and recorded as a fleet-wide rule with the property given up named (g1); the door's own rejections reaching the run's episode through apply_episode_delta.py with fail-loud-every-occurrence (g2, #541 complete); role spine instructions defaulting to the door with the CLI kept as fallback, verified two-sided per file (g4a); and a real dispatched agent driving a real shipped role template to DONE through the door alone, 9 door calls and 0 CLI engine invocations from its own record, with two refused arms as the control (g4b). Deferred and named: the installer shipping and wiring .mcp.json, which leaves adoption UNVERIFIED ON WINDOWS - reported as an open criterion, never as a pass. Nine crew dispatches; every reviewer BLOCK was taken on evidence and none was overridden.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:24:08.739599+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "Architecture reconciled against the record this repo actually keeps. The map is derived and freshness-tested, so reconciliation means rebuilding it and confirming it carries the run's new entities - which it does, and which went red three times during the run when I failed to rebuild as part of committing (#544). The two documents that carry this run's real structural thinking are design records, not map entries, and are cited rather than folded in. Promoting the identity rule into docs/ is the human's call and is routed to triage.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:24:56.314066+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Every candidate is recommend-and-defer and the citation records the deferral itself, not a filing approval - none was sought and none was authorised. The launch order routes cheap mid-wave finds to the Admiral rather than having them implemented inside a wave under measurement, and every one of these was found while measuring something else.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:25:50.529660+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "Run summary written and accepted by launch-order citation in delegated mode. The summary leads with the deferred criterion rather than burying it, and states adoption is unverified on Windows in the same breath as reporting the acceptance run passed - because reporting criterion 2 as met without that qualifier is exactly the shape this epic exists to prevent.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:26:34.323618+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Two episodes recorded for this run through apply_episode_delta.py, the only write path, with --store-root episodes on every invocation. Both are RECORDS, not rules: every statement is past-tense observation of what happened, and none is phrased as guidance for a future agent - the constraint from docs/agents/ORCHESTRATOR_CONTEXT.md that binds even though nothing in the ask mentioned it. The second episode's observed-behavior is the one worth keeping: two dispatched agents drove the spine entirely through the CLI while the door was connected and all seven tools were offered, and a third, driving a role that owns its bound spine, used the door for all nine invocations. Its diagnosis records both mechanisms - that a dispatched agent reads the installed corpus rather than repo source, and that each version of the identity pin asserted over a surface rather than a property, which is why each reviewer defeated it by acting outside the surface it enumerated.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:27:54.132748+00:00"
     }
   ]
 }
