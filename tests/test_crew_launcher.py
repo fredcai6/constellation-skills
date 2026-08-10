@@ -82,6 +82,24 @@ def fake_launch(RC_mod, exit_code: int, *, write_result_at: Path | None = None):
         RC_mod.launch_process = original
 
 
+@contextlib.contextmanager
+def no_ambient_spine_env():
+    """Strip SPINE_FILE/SPINE_SESSION from THIS process's environment for the
+    duration of the block. `crew_env()`'s `setdefault` deliberately lets an
+    explicit caller-supplied value in the environment win (the ruled design —
+    the Admiral's own bootstrap relies on it), so a test running under a
+    harness that already has its OWN SPINE_FILE bound (as this suite does, when
+    driven by a crew whose own door is bound) would otherwise observe that
+    ambient value instead of the binding a dispatch actually derives."""
+    saved = {k: os.environ.pop(k, None) for k in ("SPINE_FILE", "SPINE_SESSION")}
+    try:
+        yield
+    finally:
+        for k, v in saved.items():
+            if v is not None:
+                os.environ[k] = v
+
+
 class SessionNameTests(unittest.TestCase):
     def test_session_name_is_deterministic(self):
         name = RC.session_name("issue-420", "g2", "reviewer", 1)
@@ -91,6 +109,21 @@ class SessionNameTests(unittest.TestCase):
             "constellation/issue-420/g2/reviewer/attempt-2",
             RC.session_name("issue-420", "g2", "reviewer", 2),
         )
+
+    def test_assignment_session_name_strips_attempt_tail(self):
+        self.assertEqual(
+            "constellation/issue-420/g2/reviewer",
+            RC.assignment_session_name("issue-420", "g2", "reviewer"),
+        )
+
+    def test_assignment_session_name_is_stable_across_attempts(self):
+        # The whole point: a respawn (attempt-2) must derive the SAME lease
+        # identity as the original (attempt-1), so it resumes instead of reading
+        # as a different claimant.
+        first = RC.assignment_session_name("issue-420", "g2", "reviewer")
+        RC.session_name("issue-420", "g2", "reviewer", 2)  # attempt bump, side-effect-free
+        second = RC.assignment_session_name("issue-420", "g2", "reviewer")
+        self.assertEqual(first, second)
 
     def test_build_crew_argv_is_pure_and_carries_role_handoff_session_in_prompt(self):
         argv = RC.build_crew_argv(
@@ -320,6 +353,248 @@ class LaunchTests(unittest.TestCase):
                 code = RC.main(["--root", str(root), "--resume",
                                 "constellation/issue-1/g1/reviewer/attempt-9"])
             self.assertEqual(1, code)
+
+
+class CrewEnvSpineBindingTests(unittest.TestCase):
+    """CONTROL A, made green: `crew_env()` must bind SPINE_FILE/SPINE_SESSION to
+    the crew it is actually building an environment FOR, not silently omit them
+    or leak whatever spine this (dispatching) process happens to carry."""
+
+    def test_no_binding_requested_sets_neither_var(self):
+        env = RC.crew_env({"PATH": "/usr/bin"})
+        self.assertNotIn("SPINE_FILE", env)
+        self.assertNotIn("SPINE_SESSION", env)
+
+    def test_binds_spine_file_and_session_when_given(self):
+        env = RC.crew_env(
+            {"PATH": "/usr/bin"},
+            spine_file="/abs/work/PLAN.json",
+            spine_session="constellation/issue-1/g1/reviewer",
+        )
+        self.assertEqual("/abs/work/PLAN.json", env["SPINE_FILE"])
+        self.assertEqual("constellation/issue-1/g1/reviewer", env["SPINE_SESSION"])
+
+    def test_explicit_caller_value_wins_over_derived_binding(self):
+        # setdefault semantics: a caller-supplied SPINE_FILE/SPINE_SESSION already
+        # in the base environment (e.g. the Admiral's own bootstrap) must survive
+        # untouched, never be overwritten by the value being derived for a child.
+        base = {"SPINE_FILE": "/caller/own.json", "SPINE_SESSION": "constellation/caller/own"}
+        env = RC.crew_env(
+            base, spine_file="/derived/child.json", spine_session="constellation/child/derived",
+        )
+        self.assertEqual("/caller/own.json", env["SPINE_FILE"])
+        self.assertEqual("constellation/caller/own", env["SPINE_SESSION"])
+
+    def test_default_base_env_would_leak_parents_own_spine_without_a_binding(self):
+        # Demonstrates the RAW defect `crew_env()` used to have with no binding
+        # params at all: base_env defaults to dict(os.environ), so a dispatching
+        # process that already has ITS OWN SPINE_FILE/SPINE_SESSION bound (e.g.
+        # this very implementer) hands that SAME spine to every child it
+        # dispatches, regardless of the child's own work_id/gate/role.
+        old = dict(os.environ)
+        try:
+            os.environ["SPINE_FILE"] = "/parent/own.json"
+            os.environ["SPINE_SESSION"] = "constellation/parent/own"
+            env_with_no_binding = RC.crew_env()
+            self.assertEqual("/parent/own.json", env_with_no_binding["SPINE_FILE"])
+            # A caller that DOES supply the child's real binding overrides this —
+            # which is exactly the fix: dispatch must always pass spine_file/
+            # spine_session, never rely on the parent's own environment.
+            env_with_binding = RC.crew_env(
+                spine_file="/child/own.json", spine_session="constellation/child/own",
+            )
+            self.assertEqual("/parent/own.json", env_with_binding["SPINE_FILE"])
+        finally:
+            os.environ.clear()
+            os.environ.update(old)
+
+
+class DispatchDoorBindingTests(unittest.TestCase):
+    """A crew dispatched (or resumed) through `launch_crew`/`resume_crew` gets a
+    door bound to its OWN spine and an assignment-keyed SPINE_SESSION, not the
+    dispatcher's leftover environment."""
+
+    def test_fresh_dispatch_binds_own_spine_and_assignment_session(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=handoff, result=result, spine=spine_rel,
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+            env = calls[0]["env"]
+            self.assertEqual(str(root / spine_rel), env["SPINE_FILE"])
+            self.assertEqual("constellation/issue-1/g1/implementer", env["SPINE_SESSION"])
+            # attempt tail must NOT be in the lease identity
+            self.assertNotIn("attempt", env["SPINE_SESSION"])
+
+    def test_dispatch_without_spine_binds_no_spine_file_but_still_derives_session(self):
+        # A caller with nothing to bind (e.g. a legacy call site not yet updated
+        # to pass --spine) must not crash, and the assignment identity is still
+        # derivable — it costs nothing, unlike the spine path.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.launch_crew(
+                    work_id="issue-1", gate="g1", role="implementer",
+                    handoff=handoff, result=result,
+                    worktree=".", model=None, launcher="claude", attempt=1,
+                    root=root, entries=[],
+                )
+            env = calls[0]["env"]
+            self.assertNotIn("SPINE_FILE", env)
+            self.assertEqual("constellation/issue-1/g1/implementer", env["SPINE_SESSION"])
+
+    def test_dispatch_preserves_explicit_ambient_spine_over_the_derived_one(self):
+        # RULED design (not a bug): setdefault means a SPINE_FILE/SPINE_SESSION
+        # already present in the dispatching process's own environment wins over
+        # whatever this specific dispatch would derive — the Admiral's own
+        # bootstrap relies on exactly this, and it is explicitly NOT foolproof
+        # (a process that inherited an unrelated spine keeps it). Covered at the
+        # crew_env() level by CrewEnvSpineBindingTests; this confirms the SAME
+        # contract survives through the full launch_crew() dispatch path.
+        with tempfile.TemporaryDirectory() as tmp:
+            saved = {k: os.environ.pop(k, None) for k in ("SPINE_FILE", "SPINE_SESSION")}
+            try:
+                os.environ["SPINE_FILE"] = "/explicit/caller-bound.json"
+                os.environ["SPINE_SESSION"] = "constellation/caller-work/g9/implementer"
+                root = Path(tmp)
+                handoff = write_handoff(root, "child-work", "g1", "reviewer")
+                result = result_rel("child-work", "g1", "reviewer")
+                spine_rel = ".agent-work/child-work/REVIEW_SURVEY.json"
+                with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                    RC.launch_crew(
+                        work_id="child-work", gate="g1", role="reviewer",
+                        handoff=handoff, result=result, spine=spine_rel,
+                        worktree=".", model=None, launcher="claude", attempt=1,
+                        root=root, entries=[],
+                    )
+                env = calls[0]["env"]
+                self.assertEqual("/explicit/caller-bound.json", env["SPINE_FILE"])
+                self.assertEqual("constellation/caller-work/g9/implementer", env["SPINE_SESSION"])
+            finally:
+                for k, v in saved.items():
+                    if v is None:
+                        os.environ.pop(k, None)
+                    else:
+                        os.environ[k] = v
+
+    def test_resume_rebinds_door_to_the_stored_spine(self):
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            spine_rel = ".agent-work/issue-1/IMPLEMENTER_PLAN.json"
+            stdout, stderr = RC.run_log_paths("issue-1", "g1", "implementer", 1, root)
+            entries = [{
+                "session_name": session, "crew_id": session,
+                "work_id": "issue-1", "gate": "g1", "role": "implementer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result, "spine": spine_rel,
+                "stdout": RC._relativize(str(stdout), root),
+                "stderr": RC._relativize(str(stderr), root),
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.resume_crew(session=session, root=root, entries=entries)
+            env = calls[0]["env"]
+            self.assertEqual(str(root / spine_rel), env["SPINE_FILE"])
+            self.assertEqual("constellation/issue-1/g1/implementer", env["SPINE_SESSION"])
+
+    def test_resume_of_legacy_entry_without_spine_key_does_not_crash(self):
+        # An entry recorded before this field existed has no "spine" key at all
+        # (not even None) — resume must degrade gracefully, not KeyError.
+        with no_ambient_spine_env(), tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            handoff = write_handoff(root, "issue-1", "g1", "implementer")
+            result = result_rel("issue-1", "g1", "implementer")
+            session = "constellation/issue-1/g1/implementer/attempt-1"
+            stdout, stderr = RC.run_log_paths("issue-1", "g1", "implementer", 1, root)
+            entries = [{
+                "session_name": session, "crew_id": session,
+                "work_id": "issue-1", "gate": "g1", "role": "implementer", "attempt": 1,
+                "worktree": ".", "status": "running", "abandoned": False,
+                "handoff": handoff, "result": result,
+                "stdout": RC._relativize(str(stdout), root),
+                "stderr": RC._relativize(str(stderr), root),
+            }]
+            RC.save_registry(RC.registry_path("issue-1", root), entries)
+            with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                RC.resume_crew(session=session, root=root, entries=entries)
+            env = calls[0]["env"]
+            self.assertNotIn("SPINE_FILE", env)
+            self.assertEqual("constellation/issue-1/g1/implementer", env["SPINE_SESSION"])
+
+
+class AssignmentKeyedLeaseTests(unittest.TestCase):
+    """CONTROL B, made green: an assignment-keyed identity (no `attempt-<n>`
+    tail) lets a respawn resume its lease idempotently instead of being refused
+    as a different claimant. Drives the REAL `checklist_engine.py` CLI against a
+    scratch spine — exactly the command shape the handoff's Control B used."""
+
+    ENGINE = ROOT / "scripts" / "checklist_engine.py"
+
+    def _scratch_spine(self, root: Path) -> Path:
+        path = root / "scratch_spine.json"
+        path.write_text(json.dumps({
+            "work_id": "scratch-work",
+            "type": "gated",
+            "items": ["g1"],
+            "tasks": {
+                "g1": {
+                    "id": "g1", "title": "scratch gate", "imperative": "do the thing",
+                    "preconditions": [],
+                    "postconditions": [{"id": "c1", "statement": "done", "check": None, "satisfied": False}],
+                    "constraints": [], "directives": None, "child_checklist": None,
+                    "status": "pending", "status_detail": {}, "result": None,
+                    "finding": None, "evidence": [], "rework_count": 0,
+                },
+            },
+            "consolidation": None, "triage_candidates": [], "blockers": [],
+        }), encoding="utf-8")
+        return path
+
+    def _claim(self, spine: Path, session_id: str):
+        import subprocess
+        return subprocess.run(
+            [sys.executable, str(self.ENGINE), "--file", str(spine), "claim",
+             "--session-id", session_id, "--claimed-by", "implementer", "--worktree", "."],
+            capture_output=True, text=True,
+        )
+
+    def test_attempt_tagged_identity_is_refused_on_respawn(self):
+        # BEFORE picture (still true today — the engine's claim semantics are
+        # untouched by this change): an attempt-tagged identity makes a respawn
+        # look like a different claimant.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine = self._scratch_spine(root)
+            first = self._claim(spine, RC.session_name("scratch-work", "g1", "implementer", 1))
+            self.assertEqual(0, first.returncode, first.stderr)
+            second = self._claim(spine, RC.session_name("scratch-work", "g1", "implementer", 2))
+            self.assertNotEqual(0, second.returncode)
+            self.assertIn("already owned by active session", second.stderr)
+
+    def test_assignment_keyed_identity_resumes_instead_of_refusing(self):
+        # AFTER picture: dispatch mints assignment_session_name for BOTH the
+        # original attempt and the respawn, so the second claim is idempotent.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            spine = self._scratch_spine(root)
+            identity = RC.assignment_session_name("scratch-work", "g1", "implementer")
+            first = self._claim(spine, identity)
+            self.assertEqual(0, first.returncode, first.stderr)
+            second = self._claim(spine, identity)
+            self.assertEqual(0, second.returncode, second.stderr)
+            self.assertIn("resumed lease", second.stdout)
 
 
 class ExternalDispatchTests(unittest.TestCase):
