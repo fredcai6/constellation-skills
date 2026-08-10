@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "decision": "repair",
+  "applicable": true,
+  "criteria_assessment": {
+    "wave_exit": "Current exit criteria remain measurable.",
+    "epic_done": "The epic is not complete.",
+    "good_enough": "The mandatory quality boundary is preserved."
+  },
+  "discrepancy_dispositions": [
+    {"id": "D0", "action": "repair_current_wave", "reason": "Evidence supports this disposition", "issue_created": true},
+    {"id": "D1", "action": "revise_plan", "reason": "Evidence supports this disposition", "issue_created": true},
+    {"id": "D2", "action": "amend_forecast_or_parked", "reason": "Evidence supports this disposition", "issue_created": true},
+    {"id": "D3", "action": "record_evidence_only", "reason": "Evidence supports this disposition", "issue_created": false},
+    {"id": "D4", "action": "drop", "reason": "Evidence supports this disposition", "issue_created": false}
+  ],
+  "current_wave": {
+    "objective": "Validate the replanning seam",
+    "exit_criteria": ["All four exits verify"],
+    "issues": [
+      {
+        "id": "A",
+        "title": "Issue A",
+        "desired_outcome": "Observable wave evidence exists.",
+        "useful_now": "It settles the current decision.",
+        "appetite": "One gate",
+        "acceptance_or_falsification_evidence": "The verifier passes or refuses.",
+        "implementation_latitude": "Choose internals; preserve fixed boundaries.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": ["skills/replan"],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "revised_forecast": [
+    {"outcome": "Wire role contracts", "why_likely": "The seam is accepted", "entry_conditions": []}
+  ],
+  "revised_uncertainty": [
+    {
+      "unknown": "Which next wave is useful",
+      "affects": "Forecast ordering",
+      "settle_by": "Wave review",
+      "current_evidence": "Only the initial wave has run",
+      "next_probe": "Inspect completed outcomes"
+    }
+  ],
+  "revised_parked": ["Portfolio optimization"],
+  "unlaunched_dispositions": [
+    {"id": "U-issue", "action": "keep", "reason": "Still supported"},
+    {"id": "U-forecast", "action": "keep", "reason": "Still supported"},
+    {"id": "U-uncertainty", "action": "keep", "reason": "Still supported"},
+    {"id": "U-parked", "action": "keep", "reason": "Still supported"}
+  ],
+  "material_changes": [],
+  "wave_review_comment": "## Wave review\n\nEvidence was classified and every item was dispositioned.",
+  "revised_epic_body": "## Current planning truth\n\nThe current wave and nonbinding forecast are explicit.",
+  "escalation": null
+}

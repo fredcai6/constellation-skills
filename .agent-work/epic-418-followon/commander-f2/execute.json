@@ -1004,7 +1004,7 @@
             "reason_required": true
           },
           "satisfied": true,
-          "satisfied_by": "e-g4a-integrate-1"
+          "satisfied_by": "e-g4a-integrate-4"
         },
         {
           "id": "c2",
@@ -1018,7 +1018,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4a-integrate-5"
         },
         {
           "id": "c3",
@@ -1030,7 +1031,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4a-integrate-3"
         }
       ],
       "constraints": [
@@ -1081,7 +1083,7 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "in-progress",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -1116,6 +1118,28 @@
             "reviewer": "Commander (independent crew waived on budget)",
             "artifact": ".agent-work/epic-418-followon/commander-f2/crew-handoffs/g4a-implement-implementer-result.md",
             "residual": "No independent review dispatched; two-sidedness verified by Commander mutation in both directions."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4a-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_mcp_adoption.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4a-integrate-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
           },
           "produced_by": "engine",
           "ts": ""
@@ -1636,6 +1660,13 @@
       "why": "Independent review dispatch waived on budget, recorded rather than hidden. The Admiral ranked g4b as protected absolutely and g4a as its substantive prerequisite - g4a must be DONE for g4b to be measurable at all, and six crew dispatches had already been spent. I verified two-sidedness myself by mutation in both directions and report the absence of an independent read as a residual.",
       "mechanical": false,
       "ts": "2026-08-10T09:01:20.351695+00:00"
+    },
+    {
+      "id": "w-10",
+      "gate": "g4a-integrate",
+      "why": "#542 criterion 1 closes. 13 files under skills/ name the door's tools as the default path, up from zero; the CLI is still named in 16, which is the criterion's other half and the one an ordinary test would have missed. Verified two-sided by mutation in both directions. The suite went red once more on map freshness (#544) - third time this run - and is green after a rebuild.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:07:19.418937+00:00"
     }
   ],
   "amendments": [

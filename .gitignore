@@ -58,3 +58,5 @@ evals/**/_runs/
 map/*
 !map/INDEX.md
 !map/ids.jsonl
+.claude/skills/
+.claude/settings.local.json
