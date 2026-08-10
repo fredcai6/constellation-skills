@@ -40,14 +40,30 @@ What is bought for it: the door cannot be pointed at another run's spine — no 
 **declares** an argument that would let it, and at runtime the dispatch **ignores** an
 undeclared one. That is confinement by construction rather than by convention.
 
-**This sentence was narrower after review than before it, and the change is the point.**
-As first written it claimed "there is no argument that would let it," and the g1 reviewer
-falsified it: it mutated the real door so `call_tool`'s `spine_status` handler honoured an
-undeclared `spine_override` key, **without touching any `inputSchema`**, and all five pin
-tests stayed green. A pin over declarations is a pin over *intentions*. The claim now names
-both halves — declared **and** runtime — because both are now actually pinned
-(`test_an_out_of_schema_identity_argument_cannot_redirect_a_live_call`, with its own
-positive control). The finding was the reviewer's, not mine.
+**This sentence survived two reviewer falsifications and is narrower for both. The
+sequence is worth more than the sentence.**
+
+As first written it claimed "there is no argument that would let it." The g1 reviewer
+mutated the real door so `call_tool`'s `spine_status` handler honoured an undeclared
+`spine_override` key, **without touching any `inputSchema`**, and all five pin tests stayed
+green. **A pin over declarations is a pin over intentions.** I added a runtime test and
+narrowed the claim.
+
+The re-reviewer then defeated *that*. My runtime test checked five literal key names
+against one tool; it honoured a sixth, `target_spine`, and all seven tests stayed green. Its
+finding was exact and is the more useful of the two: **an enumeration is not a property,
+and the prose here was claiming a property.**
+
+So the pin is now stated as the property itself, at the only place it is decidable:
+`test_no_argument_can_change_the_identity_the_engine_is_addressed_with` sweeps **every
+tool** with **generated** adversarial keys and asserts that the engine is always addressed
+with the bound `--file` and the bound `--session-id`. A redirect must reach the engine's
+`--file` to do anything at all, so anything that redirects is caught regardless of what it
+is named or which handler reads it. Verified against four differently-named redirects —
+`spine_override`, `target_spine`, and `redirect`/`cfg`, the last two carrying no identity
+marker at all — all four red, restoring to an empty diff.
+
+Neither correction was mine.
 
 ## 3. The rejected options — what each would and would not have covered
 

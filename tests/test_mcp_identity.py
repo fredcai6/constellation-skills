@@ -823,58 +823,104 @@ class IdentityBindingPinTests(unittest.TestCase):
         self.assertNotEqual(first.SPINE, second.SPINE)
         self.assertNotEqual(first.SESSION, second.SESSION)
 
-    def test_an_out_of_schema_identity_argument_cannot_redirect_a_live_call(self):
-        """RUNTIME pin, added at g1-review's BLOCK.
+    #: Affixes real code actually uses when naming a path/identity argument.
+    #: Crossed with IDENTITY_ARG_MARKERS below to GENERATE adversarial keys
+    #: rather than list them. `target_spine` -- the key the g1 re-reviewer used
+    #: to defeat the first version of this pin -- falls out of `target_{}` x
+    #: `spine` without being written down anywhere.
+    ARG_AFFIXES = ("{}", "target_{}", "{}_file", "{}_path", "{}_override",
+                   "override_{}", "{}s", "_{}", "{}Path", "the_{}")
 
-        The g1 reviewer found the gap this closes, and it is the gap that
-        mattered: the schema check above inspects DECLARED tool arguments, so a
-        change that honours an *undeclared* key directly in `call_tool`'s
-        handler -- never touching any `inputSchema` -- defeated
-        `IDENTITY_TRADE.md`'s confinement claim while all five original tests
-        stayed green. A pin over declarations is a pin over intentions; this one
-        is over behaviour.
+    @classmethod
+    def _adversarial_keys(cls):
+        keys = {a.format(m) for m in cls.IDENTITY_ARG_MARKERS for a in cls.ARG_AFFIXES}
+        # Names carrying no marker at all: the property under test is about
+        # ANY undeclared argument, not about ones that look suspicious.
+        keys.update({"redirect", "f", "path", "x", "cfg", "where", "--file"})
+        return sorted(keys)
 
-        So: drive `call_tool` for real, hand it an out-of-schema key that names
-        another spine, and assert the reading still comes from the BOUND spine.
-        The door must ignore what it did not declare, not merely fail to
-        advertise it.
+    #: Minimal valid arguments per tool, so every tool actually reaches the
+    #: engine and contributes an argv to inspect. Without these, `_require`
+    #: short-circuits and the sweep silently covers only `spine_status`.
+    TOOL_MINIMAL_ARGS = {
+        "spine_status": {},
+        "spine_lease": {"action": "heartbeat"},
+        "spine_start": {"task_id": "g1"},
+        "spine_advance": {"task_id": "g1", "mechanical": True},
+        "spine_evidence": {"action": "attest", "task_id": "g1", "condition_id": "c1"},
+        "spine_halt": {"action": "block", "task_id": "g1", "blocker": "x"},
+        "spine_survey_result": {"action": "record", "task_id": "r1", "result": "pass"},
+    }
+
+    def test_no_argument_can_change_the_identity_the_engine_is_addressed_with(self):
+        """THE runtime pin, in its universal form.
+
+        Written this way because the g1 re-reviewer defeated its first version.
+        That version checked five literal key names against one tool; the
+        reviewer honoured a sixth (`target_spine`) and every test stayed green.
+        Its finding was exact: *an enumeration is not a property*, and prose in
+        IDENTITY_TRADE.md was claiming a property.
+
+        So this asserts the property directly, at the only place it is
+        decidable: **whatever arguments arrive, the engine is always addressed
+        with the BOUND spine and the BOUND session.** It sweeps every tool, not
+        one, and every generated key, not a list. A redirect has to reach the
+        engine's `--file` to do anything at all, so anything that redirects is
+        caught here regardless of what it is named or which handler reads it.
         """
-        decoy = write_marked_spine(self.root / "decoy", "DECOY-MARK", "decoy-work")
-        module = self._load_module(self.spine, "runtime-pin#agent")
-        for key in ("spine_override", "spine_file", "file", "session_id", "engine"):
-            result = module.call_tool("spine_status", {key: str(decoy)})
-            text = result["content"][0]["text"]
-            self.assertIn(
-                "PIN-MARK", text,
-                f"passing an out-of-schema {key!r} changed what the door read -- the door "
-                "is redirectable at runtime, which is the confinement property "
-                "IDENTITY_TRADE.md claims and this test exists to keep honest",
-            )
-            self.assertNotIn(
-                "DECOY-MARK", text,
-                f"an out-of-schema {key!r} reached the decoy spine",
-            )
+        module = self._load_module(self.spine, "argv-pin#agent")
+        decoy = write_marked_spine(self.root / "decoy3", "DECOY3-MARK", "decoy3-work")
+        bound_file, bound_session = str(module.SPINE), module.SESSION
 
-    def test_the_runtime_pin_can_fail(self):
-        """Positive control for the test above, in the assertion path: a door
-        that DOES honour an undeclared key must be detected. Without this, the
-        runtime pin is green because `spine_status` happens to ignore all
-        arguments, and would stay green for a reason unrelated to confinement."""
-        decoy = write_marked_spine(self.root / "decoy2", "DECOY2-MARK", "decoy2-work")
-        module = self._load_module(self.spine, "runtime-control#agent")
+        seen = []
+        real_main = module.checklist_engine.main
+        module.checklist_engine.main = lambda argv: (seen.append(list(argv)), 0)[1]
+        try:
+            for tool in module.TOOLS:
+                base = self.TOOL_MINIMAL_ARGS[tool["name"]]
+                for key in self._adversarial_keys():
+                    seen.clear()
+                    module.call_tool(tool["name"], {**base, key: str(decoy)})
+                    for argv in seen:
+                        self.assertIn("--file", argv)
+                        self.assertEqual(
+                            bound_file, argv[argv.index("--file") + 1],
+                            f"{tool['name']} addressed the engine at a DIFFERENT spine after "
+                            f"receiving an undeclared {key!r} -- the door is redirectable, "
+                            "which is the confinement property IDENTITY_TRADE.md claims",
+                        )
+                        if "--session-id" in argv:
+                            self.assertEqual(
+                                bound_session, argv[argv.index("--session-id") + 1],
+                                f"{tool['name']} addressed the engine under a DIFFERENT "
+                                f"identity after receiving an undeclared {key!r}",
+                            )
+        finally:
+            module.checklist_engine.main = real_main
 
-        real_run_engine = module.run_engine
+    def test_the_universal_runtime_pin_can_fail(self):
+        """Positive control, in the assertion path, using the EXACT key that
+        defeated the previous version. If this ever stops detecting it, the pin
+        above has silently regressed to an enumeration again."""
+        decoy = write_marked_spine(self.root / "decoy4", "DECOY4-MARK", "decoy4-work")
+        module = self._load_module(self.spine, "argv-control#agent")
+        bound_file = str(module.SPINE)
 
-        def redirecting_call_tool(name, args):
-            # A door that reads an undeclared key -- exactly reviewer mutation 3.
-            if name == "spine_status" and args.get("spine_override"):
-                module.SPINE = Path(args["spine_override"]).resolve()
-            return module.as_result(real_run_engine("current", mutating=False))
+        seen = []
+        real_main = module.checklist_engine.main
+        module.checklist_engine.main = lambda argv: (seen.append(list(argv)), 0)[1]
+        try:
+            # A door that honours an undeclared key -- the re-reviewer's mutation 4.
+            module.SPINE = Path(str(decoy)).resolve()
+            module.call_tool("spine_status", {"target_spine": str(decoy)})
+        finally:
+            module.checklist_engine.main = real_main
 
-        text = redirecting_call_tool("spine_status", {"spine_override": str(decoy)})["content"][0]["text"]
-        self.assertIn(
-            "DECOY2-MARK", text,
-            "the control did not reproduce a redirect -- the runtime pin above is "
+        self.assertTrue(seen, "the control never reached the engine")
+        addressed = seen[0][seen[0].index("--file") + 1]
+        self.assertNotEqual(
+            bound_file, addressed,
+            "the control did not reproduce a redirect -- the universal pin above is "
             "incapable of failing and is therefore not evidence",
         )
 
