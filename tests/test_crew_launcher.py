@@ -85,12 +85,12 @@ def fake_launch(RC_mod, exit_code: int, *, write_result_at: Path | None = None):
 @contextlib.contextmanager
 def no_ambient_spine_env():
     """Strip SPINE_FILE/SPINE_SESSION from THIS process's environment for the
-    duration of the block. `crew_env()`'s `setdefault` deliberately lets an
-    explicit caller-supplied value in the environment win (the ruled design —
-    the Admiral's own bootstrap relies on it), so a test running under a
-    harness that already has its OWN SPINE_FILE bound (as this suite does, when
-    driven by a crew whose own door is bound) would otherwise observe that
-    ambient value instead of the binding a dispatch actually derives."""
+    duration of the block. A dispatch with NO explicit `--spine` leaves the
+    inherited-environment route untouched (`crew_env()`'s documented contract
+    for the Admiral's own bootstrap), so a test running under a harness that
+    already has its OWN SPINE_FILE bound (as this suite does, when driven by a
+    crew whose own door is bound) would otherwise observe that ambient value
+    instead of "no SPINE_FILE at all" for a dispatch that passed none."""
     saved = {k: os.environ.pop(k, None) for k in ("SPINE_FILE", "SPINE_SESSION")}
     try:
         yield
@@ -374,23 +374,27 @@ class CrewEnvSpineBindingTests(unittest.TestCase):
         self.assertEqual("/abs/work/PLAN.json", env["SPINE_FILE"])
         self.assertEqual("constellation/issue-1/g1/reviewer", env["SPINE_SESSION"])
 
-    def test_explicit_caller_value_wins_over_derived_binding(self):
-        # setdefault semantics: a caller-supplied SPINE_FILE/SPINE_SESSION already
-        # in the base environment (e.g. the Admiral's own bootstrap) must survive
-        # untouched, never be overwritten by the value being derived for a child.
+    def test_explicit_derived_binding_wins_over_inherited_caller_value(self):
+        # ASSIGN semantics (Admiral ruling, reversing the earlier setdefault
+        # ruling that froze this defect in place): an explicit spine_file/
+        # spine_session argument is MORE SPECIFIC than whatever SPINE_FILE/
+        # SPINE_SESSION already sits in the base environment, so it must win —
+        # a door-bound dispatcher's own binding must never leak to a child it is
+        # launching with its own explicit spine.
         base = {"SPINE_FILE": "/caller/own.json", "SPINE_SESSION": "constellation/caller/own"}
         env = RC.crew_env(
             base, spine_file="/derived/child.json", spine_session="constellation/child/derived",
         )
-        self.assertEqual("/caller/own.json", env["SPINE_FILE"])
-        self.assertEqual("constellation/caller/own", env["SPINE_SESSION"])
+        self.assertEqual("/derived/child.json", env["SPINE_FILE"])
+        self.assertEqual("constellation/child/derived", env["SPINE_SESSION"])
 
     def test_default_base_env_would_leak_parents_own_spine_without_a_binding(self):
         # Demonstrates the RAW defect `crew_env()` used to have with no binding
         # params at all: base_env defaults to dict(os.environ), so a dispatching
         # process that already has ITS OWN SPINE_FILE/SPINE_SESSION bound (e.g.
         # this very implementer) hands that SAME spine to every child it
-        # dispatches, regardless of the child's own work_id/gate/role.
+        # dispatches, regardless of the child's own work_id/gate/role — UNLESS
+        # the caller supplies the child's own binding explicitly.
         old = dict(os.environ)
         try:
             os.environ["SPINE_FILE"] = "/parent/own.json"
@@ -398,12 +402,13 @@ class CrewEnvSpineBindingTests(unittest.TestCase):
             env_with_no_binding = RC.crew_env()
             self.assertEqual("/parent/own.json", env_with_no_binding["SPINE_FILE"])
             # A caller that DOES supply the child's real binding overrides this —
-            # which is exactly the fix: dispatch must always pass spine_file/
-            # spine_session, never rely on the parent's own environment.
+            # this is the actual fix: an explicit binding is assigned over the
+            # parent's own inherited environment, not merely setdefault-ed.
             env_with_binding = RC.crew_env(
                 spine_file="/child/own.json", spine_session="constellation/child/own",
             )
-            self.assertEqual("/parent/own.json", env_with_binding["SPINE_FILE"])
+            self.assertEqual("/child/own.json", env_with_binding["SPINE_FILE"])
+            self.assertEqual("constellation/child/own", env_with_binding["SPINE_SESSION"])
         finally:
             os.environ.clear()
             os.environ.update(old)
@@ -452,12 +457,16 @@ class DispatchDoorBindingTests(unittest.TestCase):
             self.assertNotIn("SPINE_FILE", env)
             self.assertEqual("constellation/issue-1/g1/implementer", env["SPINE_SESSION"])
 
-    def test_dispatch_preserves_explicit_ambient_spine_over_the_derived_one(self):
-        # RULED design (not a bug): setdefault means a SPINE_FILE/SPINE_SESSION
-        # already present in the dispatching process's own environment wins over
-        # whatever this specific dispatch would derive — the Admiral's own
-        # bootstrap relies on exactly this, and it is explicitly NOT foolproof
-        # (a process that inherited an unrelated spine keeps it). Covered at the
+    def test_dispatch_explicit_spine_overrides_ambient_dispatcher_binding(self):
+        # Reverses the earlier "RULED design" here: a cold reviewer showed that
+        # letting a SPINE_FILE/SPINE_SESSION already present in the dispatching
+        # process's own environment win over an explicit --spine is a silent
+        # hijack — a door-bound dispatcher's child claims the DISPATCHER's own
+        # lease instead of the one it was explicitly told to drive, because
+        # `claim` matches on string equality and the refuse-or-force-with-reason
+        # construct never sees a conflicting identity. The Admiral's bootstrap
+        # (exporting env, passing NO --spine) is unaffected: that path never
+        # reaches this branch, since spine_file stays None there. Covered at the
         # crew_env() level by CrewEnvSpineBindingTests; this confirms the SAME
         # contract survives through the full launch_crew() dispatch path.
         with tempfile.TemporaryDirectory() as tmp:
@@ -477,8 +486,11 @@ class DispatchDoorBindingTests(unittest.TestCase):
                         root=root, entries=[],
                     )
                 env = calls[0]["env"]
-                self.assertEqual("/explicit/caller-bound.json", env["SPINE_FILE"])
-                self.assertEqual("constellation/caller-work/g9/implementer", env["SPINE_SESSION"])
+                self.assertEqual(str(root / spine_rel), env["SPINE_FILE"])
+                self.assertEqual("constellation/child-work/g1/reviewer", env["SPINE_SESSION"])
+                # the ambient/dispatcher binding must not leak through at all
+                self.assertNotEqual("/explicit/caller-bound.json", env["SPINE_FILE"])
+                self.assertNotEqual("constellation/caller-work/g9/implementer", env["SPINE_SESSION"])
             finally:
                 for k, v in saved.items():
                     if v is None:
@@ -595,6 +607,131 @@ class AssignmentKeyedLeaseTests(unittest.TestCase):
             second = self._claim(spine, identity)
             self.assertEqual(0, second.returncode, second.stderr)
             self.assertIn("resumed lease", second.stdout)
+
+
+class DoorHijackRealEngineControlTests(unittest.TestCase):
+    """CONTROL C: the cold reviewer's blocking finding, reproduced and closed.
+    A door-bound dispatcher (its OWN SPINE_FILE/SPINE_SESSION already sitting in
+    THIS process's environment, exactly as a live commander crew is bound)
+    dispatches a child with its own `--spine`. BEFORE the fix, the old
+    `setdefault` formula let the dispatcher's own binding win, so the child's
+    door bound to the DISPATCHER's spine/session and the real engine reports
+    `resumed lease ... (heartbeat refreshed)` exit 0 — `claimed_by` flips to the
+    child's role with `previous_session_id`/`takeover_reason` both null, no
+    refusal, no recorded takeover. AFTER the fix, the same setup binds the
+    child to its OWN spine/identity and the dispatcher's lease is provably
+    untouched. Same engine, same commands, before and after — only the
+    env-construction formula differs."""
+
+    ENGINE = ROOT / "scripts" / "checklist_engine.py"
+
+    def _scratch_spine(self, root: Path, name: str) -> Path:
+        path = root / name
+        path.write_text(json.dumps({
+            "work_id": "w", "type": "gated", "items": ["g1"],
+            "tasks": {
+                "g1": {
+                    "id": "g1", "title": "gate", "imperative": "do the thing",
+                    "preconditions": [],
+                    "postconditions": [{"id": "c1", "statement": "done", "check": None, "satisfied": False}],
+                    "constraints": [], "directives": None, "child_checklist": None,
+                    "status": "pending", "status_detail": {}, "result": None,
+                    "finding": None, "evidence": [], "rework_count": 0,
+                },
+            },
+            "consolidation": None, "triage_candidates": [], "blockers": [],
+        }), encoding="utf-8")
+        return path
+
+    def _claim(self, spine: Path, session_id: str, claimed_by: str):
+        import subprocess
+        return subprocess.run(
+            [sys.executable, str(self.ENGINE), "--file", str(spine), "claim",
+             "--session-id", session_id, "--claimed-by", claimed_by, "--worktree", "."],
+            capture_output=True, text=True,
+        )
+
+    def test_before_fix_formula_lets_child_claim_the_dispatchers_own_lease(self):
+        # Reconstructs the OLD `setdefault` formula `crew_env()` used to use,
+        # inline — `crew_env()` itself no longer behaves this way; this
+        # documents, against the real engine, exactly the defect the reviewer
+        # reproduced.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dispatcher_spine = self._scratch_spine(root, "dispatcher_spine.json")
+            child_spine = self._scratch_spine(root, "child_spine.json")
+            dispatcher_session = "constellation/w/commander"
+            first = self._claim(dispatcher_spine, dispatcher_session, "commander")
+            self.assertEqual(0, first.returncode, first.stderr)
+
+            child_spine_arg = str(child_spine)
+            child_session_arg = RC.assignment_session_name("w", "g1", "implementer")
+            # The dispatcher's OWN process environment (already door-bound) is
+            # the base; the OLD formula setdefault-merges the child's derived
+            # values into it instead of assigning them.
+            old_formula_env = {"SPINE_FILE": str(dispatcher_spine), "SPINE_SESSION": dispatcher_session}
+            old_formula_env.setdefault("SPINE_FILE", child_spine_arg)
+            old_formula_env.setdefault("SPINE_SESSION", child_session_arg)
+            # The hijack: the child's env stays bound to the DISPATCHER's
+            # spine/session, not the explicit --spine it was launched with.
+            self.assertEqual(str(dispatcher_spine), old_formula_env["SPINE_FILE"])
+            self.assertEqual(dispatcher_session, old_formula_env["SPINE_SESSION"])
+
+            hijack = self._claim(
+                Path(old_formula_env["SPINE_FILE"]), old_formula_env["SPINE_SESSION"], "implementer",
+            )
+            self.assertEqual(0, hijack.returncode, hijack.stderr)
+            self.assertIn(f"resumed lease {dispatcher_session}", hijack.stdout)
+            state = json.loads(dispatcher_spine.read_text(encoding="utf-8"))
+            lease = state["engine_session"]
+            self.assertEqual("implementer", lease["claimed_by"])
+            self.assertIsNone(lease["previous_session_id"])
+            self.assertIsNone(lease["takeover_reason"])
+
+    def test_after_fix_child_claims_its_own_spine_dispatcher_lease_untouched(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            dispatcher_spine = self._scratch_spine(root, "dispatcher_spine.json")
+            child_spine = self._scratch_spine(root, "child_spine.json")
+            dispatcher_session = "constellation/w/commander"
+            first = self._claim(dispatcher_spine, dispatcher_session, "commander")
+            self.assertEqual(0, first.returncode, first.stderr)
+
+            saved = {k: os.environ.pop(k, None) for k in ("SPINE_FILE", "SPINE_SESSION")}
+            try:
+                os.environ["SPINE_FILE"] = str(dispatcher_spine)
+                os.environ["SPINE_SESSION"] = dispatcher_session
+                handoff = write_handoff(root, "w", "g1", "implementer")
+                result = result_rel("w", "g1", "implementer")
+                with fake_launch(RC, 0, write_result_at=root / result) as calls:
+                    RC.launch_crew(
+                        work_id="w", gate="g1", role="implementer",
+                        handoff=handoff, result=result, spine=str(child_spine),
+                        worktree=".", model=None, launcher="claude", attempt=1,
+                        root=root, entries=[],
+                    )
+                env = calls[0]["env"]
+            finally:
+                for k, v in saved.items():
+                    if v is None:
+                        os.environ.pop(k, None)
+                    else:
+                        os.environ[k] = v
+
+            child_identity = RC.assignment_session_name("w", "g1", "implementer")
+            self.assertEqual(str(child_spine), env["SPINE_FILE"])
+            self.assertEqual(child_identity, env["SPINE_SESSION"])
+
+            claim_child = self._claim(Path(env["SPINE_FILE"]), env["SPINE_SESSION"], "implementer")
+            self.assertEqual(0, claim_child.returncode, claim_child.stderr)
+            self.assertNotIn("resumed lease", claim_child.stdout)  # fresh claim, not a takeover
+
+            # the dispatcher's own lease is untouched by the child's dispatch
+            still_dispatcher = self._claim(dispatcher_spine, dispatcher_session, "commander")
+            self.assertEqual(0, still_dispatcher.returncode, still_dispatcher.stderr)
+            self.assertIn(f"resumed lease {dispatcher_session}", still_dispatcher.stdout)
+            state = json.loads(dispatcher_spine.read_text(encoding="utf-8"))
+            self.assertEqual("commander", state["engine_session"]["claimed_by"])
 
 
 class ExternalDispatchTests(unittest.TestCase):

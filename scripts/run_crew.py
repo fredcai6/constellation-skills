@@ -402,28 +402,44 @@ def crew_env(
     spine_file: str | None = None,
     spine_session: str | None = None,
 ) -> dict[str, str]:
-    """UTF-8-safe environment defaults for the child, PLUS the MCP door binding
-    (without clobbering an explicit caller value — `setdefault` throughout).
+    """UTF-8-safe environment defaults for the child, PLUS the MCP door binding.
 
     `spine_file` is the spine THIS crew will drive and `spine_session` is its
     assignment-keyed lease identity (`assignment_session_name`, no `attempt-<n>`
     tail). Both are optional so a caller with no spine to bind (e.g. a legacy
     registry entry recorded before this field existed) still gets a valid
-    environment. Without a binding, a dispatched crew's MCP door falls through to
-    `.mcp.json`'s demo default, or — because `base_env` defaults to this
-    PROCESS's own `os.environ` — silently inherits whatever spine the
-    DISPATCHING process itself happens to be bound to. `setdefault` means an
-    explicit caller-supplied `SPINE_FILE`/`SPINE_SESSION` already in the
-    environment always wins (the Admiral's own bootstrap relies on exactly
-    this)."""
+    environment — when omitted (`None`), the inherited-environment route is left
+    exactly as it is (this is what lets the Admiral's own bootstrap, which passes
+    `base_env` but no `--spine`, keep working).
+
+    When a binding IS given, it is ASSIGNED, not `setdefault`-ed: an explicit
+    `spine_file`/`spine_session` is more specific than whatever the DISPATCHING
+    process's own environment happens to carry (`base_env` defaults to this
+    process's `os.environ`). `setdefault` here previously let a door-bound
+    dispatcher's own `SPINE_FILE`/`SPINE_SESSION` silently win over the value
+    being derived for a child it is launching with an explicit spine, so the
+    child claimed the DISPATCHER's lease instead of its own — a caller-supplied
+    `--spine` was silently ignored. Assigning closes that hijack; a caller with
+    nothing to bind still leaves the inherited value untouched, exactly as
+    before."""
     env = dict(os.environ if base_env is None else base_env)
     env.setdefault("PYTHONUTF8", "1")
     env.setdefault("PYTHONIOENCODING", "utf-8")
     if spine_file is not None:
-        env.setdefault("SPINE_FILE", spine_file)
+        env["SPINE_FILE"] = spine_file
     if spine_session is not None:
-        env.setdefault("SPINE_SESSION", spine_session)
+        env["SPINE_SESSION"] = spine_session
     return env
+
+
+def _crew_door_env(*, work_id: str, gate: str, role: str, spine: str | None, root: Path) -> dict[str, str]:
+    """The env every dispatched/resumed crew gets: its OWN spine (if any),
+    resolved absolute against `root`, and its assignment-keyed lease identity —
+    built in one place so `dispatch` and `resume` cannot drift apart."""
+    return crew_env(
+        spine_file=_resolve_optional_path(spine, root),
+        spine_session=assignment_session_name(work_id, gate, role),
+    )
 
 
 def process_alive(pid: int | None) -> bool:
@@ -705,10 +721,7 @@ class CliBackend(CrewBackend):
             spec.launcher, role=spec.role, handoff=str(handoff_path),
             model=spec.model, session=entry["session_name"],
         )
-        env = crew_env(
-            spine_file=_resolve_optional_path(spec.spine, root),
-            spine_session=assignment_session_name(spec.work_id, spec.gate, spec.role),
-        )
+        env = _crew_door_env(work_id=spec.work_id, gate=spec.gate, role=spec.role, spine=spec.spine, root=root)
         exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
 
         final = finalize_from_exit_code(entry, exit_code=exit_code, result=spec.result, root=root, since=started)
@@ -756,9 +769,9 @@ class CliBackend(CrewBackend):
             model=entry.get("model"),
             session=entry["session_name"],
         )
-        env = crew_env(
-            spine_file=_resolve_optional_path(entry.get("spine"), root),
-            spine_session=assignment_session_name(entry["work_id"], entry["gate"], entry["role"]),
+        env = _crew_door_env(
+            work_id=entry["work_id"], gate=entry["gate"], role=entry["role"],
+            spine=entry.get("spine"), root=root,
         )
         exit_code = launch(argv, stdin=b"", env=env, stdout_path=stdout_path, stderr_path=stderr_path)
 
