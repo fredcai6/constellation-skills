@@ -3,6 +3,8 @@
 ## Assigned gate
 `g3fix2` (post-archive fix, issue #424, workstream F, epic #418) — Windows CI mojibake in the MCP door's stdio.
 
+Committed `eeec4f5d` to `epic-418/f-424-mcp-door`.
+
 ## Completed slice
 Pinned `scripts/mcp_spine_server.py`'s protocol encoding to UTF-8 explicitly (stdin, stdout, and stderr), instead of
 inheriting the platform default (cp1252 on Windows) — conformance with the MCP stdio transport spec, not a
