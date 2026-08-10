@@ -1,0 +1,191 @@
+{
+  "work_id": "epic-418-followon/commander-f2/g1-review",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, the g1-review-handoff.md, IDENTITY_TRADE.md, test_mcp_identity.py diff, and mcp_spine_server.py:1-320.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Criterion A verified item-by-item against IDENTITY_TRADE.md: (1) option taken stated plainly SS1; (2) property given up named concretely SS2 ('an in-session dispatched crew member cannot drive its own plan through the door'); (3) each rejected option (A: per-call spine argument, B: caller-supplied identity) carries would-cover/would-not-cover in SS3; (4) general shape stated fleet-wide as a table + blockquote rule in SS4, not MCP-local; (5) hook seam addressed explicitly 'Yes, and it is the case that makes the general form necessary' in SS5, with the session_view() merge-defect mechanism named; (6) no-per-call-argument answer given in SS6 ('the door has a fallback; the hook does not... fails closed'). All six frozen items present and load-bearing, not gestured at.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "git show 36a1bdcd --stat confirms no scripts/hooks/spine_rail.py, no scripts/checklist_engine.py touched. git diff HEAD~1 -- scripts/ is 0 lines (criterion E holds). Diff to tests/test_mcp_identity.py is pure addition (177 insertions, 0 deletions, single hunk after line 660) -- DC2/DC3 classes untouched. IDENTITY_TRADE.md cites spine_rail.py (#549) but does not edit it, per specific exclusion.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Criterion B reproduced independently, mutating the REAL scripts/mcp_spine_server.py each time, restoring via git checkout, confirming git diff HEAD~1 -- scripts/ back to 0 lines after each. Baseline: python -m pytest -q tests/test_mcp_identity.py::IdentityBindingPinTests -> 5 passed. Mutation 1 (add spine_file to spine_status inputSchema properties) -> RED on exactly test_no_tool_accepts_an_argument_that_could_redirect_the_door (matches Commander claim); restored -> 5 passed. Mutation 2 (SPINE late-bound via module __getattr__ instead of import-time binding) -> RED on test_identity_is_bound_at_import_and_is_immune_to_later_environment_change (matches Commander claim) PLUS a bonus RED on test_two_doors_bound_to_two_spines_do_not_share_a_binding (KeyError, since env is restored by the time that later assertion re-reads module.SPINE); restored -> 5 passed. Mutation 3 (mine): call_tool's spine_status handler honors an undeclared spine_override argument (never added to any inputSchema) that redirects the engine call to an arbitrary --file path -- a genuine per-call identity-redirect implemented purely in dispatch logic, invisible to the schema the pin inspects. Result: 5 passed, NO test went red. Restored -> 5 passed, diff clean. FINDING: IdentityBindingPinTests only inspects declared TOOLS schema shape and import-time SPINE/SESSION binding; it never exercises call_tool's actual runtime dispatch. IDENTITY_TRADE.md's claim 'the door literally cannot be pointed at another run's spine, because there is no argument that would let it... confinement by construction, not by convention' is therefore stronger than what the pin backs: a future change to call_tool alone, never touching a tool's inputSchema, defeats that claim silently. Per the handoff's own rule ('If a mutation does not go red, that is a BLOCK'), this is a BLOCK finding. Criterion C: the two pinned properties (no identity-marker tool args; import-time immutability) are, by construction, satisfiable only by option C among the three named options -- both A and B add an argument and would trip test_no_tool_accepts_an_argument_that_could_redirect_the_door. This is not a hidden decision-in-the-test: the document's own account is that a deliberate future move to A/B requires editing this test alongside IDENTITY_TRADE.md, and the positive control (test_the_pin_can_fail) proves the detector actually works rather than being vacuously green. Not a defect on its own -- but combined with the mutation-3 gap, the pin's actual guarantee is narrower than the document's prose claims. Criterion D holds: grepped the new diff hunk, IdentityBindingPinTests never spawns a subprocess or a Task-tool subagent and never asserts about harness-internal MCP client reuse; it only imports the module directly and inspects TOOLS/SPINE/SESSION/file existence. DC3InheritanceMechanismTests' pre-existing scope note (untouched by this diff) is the only place that discusses the harness seam, and it is cited, not re-measured, exactly as claimed. SECOND BLOCK FINDING (unrelated to B/C/D but required evidence per the handoff): after full restore, python -m pytest -q -> 1 failed, 2271 passed, 1 skipped (tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build). Root cause verified: commit 36a1bdcd added the new IdentityBindingPinTests class to tests/test_mcp_identity.py (36->45 entities in that module per a fresh pass1: 132 modules indexed\nstatements: 126507 over 132 files (0 failures)\n{\n \"modules\": 132,\n \"entities\": 4857,\n \"pages\": 4990,\n \"entity_pages\": 4857,\n \"holes\": 3034,\n \"ids\": 0,\n \"median_entity_page_lines\": 19,\n \"largest_5\": [\n  [\n   61,\n   \"tests.test_install_constellation:InstallConstellationTests\"\n  ],\n  [\n   61,\n   \"tests.test_checklist_engine:TripHardGuardsBeginNotClose\"\n  ],\n  [\n   60,\n   \"tests.test_episode_store:RestateAssertionTests\"\n  ],\n  [\n   58,\n   \"tests.test_episode_fields:EscalatedReopenIsNotAReopenTests\"\n  ],\n  [\n   57,\n   \"scripts.code_map.checks:refs_line_self_consistent\"\n  ]\n ],\n \"stale_tags\": []\n}) but map/INDEX.md was last regenerated at c66d2ffa and git diff HEAD~1 -- map/INDEX.md is empty -- the map was never regenerated after this gate's test additions. The handoff's own required evidence ('python -m pytest -q, 0 failed') does not reproduce; the repo is not actually green after this commit. This is mechanical and easily fixed (regenerate and commit map/INDEX.md) but is real and outside my allowed scope to fix.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Constraint checks against the handoff: (1) python -m pytest used exclusively throughout this review, never python3 -m pytest or py -m pytest, matching docs/agents/CREW_CONTEXT.md's own Python-Invocation rule; (2) scripts/hooks/spine_rail.py and scripts/checklist_engine.py were not edited by commit 36a1bdcd (confirmed via git show --stat) nor by me; (3) no new file writes appear in the tests/test_mcp_identity.py diff hunk (grep for write_text/open/encoding in the diff shows only one new read_text(encoding='utf-8') call), so the Windows encoding/newline constraint has no new violation surface; (4) the review checklist JSON was never hand-edited -- all state changes went through checklist_engine.py verbs; one accidental shell-backtick expansion in a --finding string live-ran 'python -m scripts.code_map build --root .' and wrote map/INDEX.md in place -- caught immediately via git status and reverted with git checkout -- map/INDEX.md before recording anything further, confirmed back to clean (logged in Workflow Feedback, not hidden).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "IDENTITY_TRADE.md is itself the durable architecture record this gate is required to produce (identity-trade-is-recorded, settled/human) -- it is the reconciliation artifact, not a divergence from one. No docs/architecture baseline exists yet for the MCP door's identity binding that this would contradict; the epic is mid-run (wave 2), so graduation into Cartographer-owned docs is expected at a later integrate/closeout gate, not here. The one real drift found -- map/INDEX.md stale after this gate's test additions -- is a mechanical map-freshness gap, not an architectural reconciliation conflict; flagged separately as triage candidate tc1 and folded into the r3-evidence BLOCK finding.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards -- an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-f2/g1-review/fowler-pass.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass recorded to .agent-work/epic-418-followon/commander-f2/g1-review/fowler-pass.json; scripts/verify_fowler_pass.py exits 0 (smells=12, flagged=[], overridden=['divergent-change','comments-as-deodorant']). 10 smells absent, 2 overridden with logged repo-standard+reason (both citing this file's own pre-existing DC2/DC3 documentation-density convention). No blocking code-quality finding from the Fowler pass; the substantive BLOCK findings live in r3-evidence.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-f2/g1-review/fowler-pass.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-r6-fowler-2",
+          "type": "review-result",
+          "payload": {
+            "verdict": "BLOCK",
+            "path": ".agent-work/epic-418-followon/commander-f2/crew-handoffs/g1-review-reviewer-result.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: Criterion B reproduced independently, mutating the REAL scripts/mcp_spine_server.py each time, restoring via git checkout, confirming git diff HEAD~1 -- scripts/ back to 0 lines after each. Baseline: python -m pytest -q tests/test_mcp_identity.py::IdentityBindingPinTests -> 5 passed. Mutation 1 (add spine_file to spine_status inputSchema properties) -> RED on exactly test_no_tool_accepts_an_argument_that_could_redirect_the_door (matches Commander claim); restored -> 5 passed. Mutation 2 (SPINE late-bound via module __getattr__ instead of import-time binding) -> RED on test_identity_is_bound_at_import_and_is_immune_to_later_environment_change (matches Commander claim) PLUS a bonus RED on test_two_doors_bound_to_two_spines_do_not_share_a_binding (KeyError, since env is restored by the time that later assertion re-reads module.SPINE); restored -> 5 passed. Mutation 3 (mine): call_tool's spine_status handler honors an undeclared spine_override argument (never added to any inputSchema) that redirects the engine call to an arbitrary --file path -- a genuine per-call identity-redirect implemented purely in dispatch logic, invisible to the schema the pin inspects. Result: 5 passed, NO test went red. Restored -> 5 passed, diff clean. FINDING: IdentityBindingPinTests only inspects declared TOOLS schema shape and import-time SPINE/SESSION binding; it never exercises call_tool's actual runtime dispatch. IDENTITY_TRADE.md's claim 'the door literally cannot be pointed at another run's spine, because there is no argument that would let it... confinement by construction, not by convention' is therefore stronger than what the pin backs: a future change to call_tool alone, never touching a tool's inputSchema, defeats that claim silently. Per the handoff's own rule ('If a mutation does not go red, that is a BLOCK'), this is a BLOCK finding. Criterion C: the two pinned properties (no identity-marker tool args; import-time immutability) are, by construction, satisfiable only by option C among the three named options -- both A and B add an argument and would trip test_no_tool_accepts_an_argument_that_could_redirect_the_door. This is not a hidden decision-in-the-test: the document's own account is that a deliberate future move to A/B requires editing this test alongside IDENTITY_TRADE.md, and the positive control (test_the_pin_can_fail) proves the detector actually works rather than being vacuously green. Not a defect on its own -- but combined with the mutation-3 gap, the pin's actual guarantee is narrower than the document's prose claims. Criterion D holds: grepped the new diff hunk, IdentityBindingPinTests never spawns a subprocess or a Task-tool subagent and never asserts about harness-internal MCP client reuse; it only imports the module directly and inspects TOOLS/SPINE/SESSION/file existence. DC3InheritanceMechanismTests' pre-existing scope note (untouched by this diff) is the only place that discusses the harness seam, and it is cited, not re-measured, exactly as claimed. SECOND BLOCK FINDING (unrelated to B/C/D but required evidence per the handoff): after full restore, python -m pytest -q -> 1 failed, 2271 passed, 1 skipped (tests/test_code_map.py::MapTreeFreshnessTests::test_map_tree_freshness_root_index_matches_a_fresh_build). Root cause verified: commit 36a1bdcd added the new IdentityBindingPinTests class to tests/test_mcp_identity.py (36->45 entities in that module per a fresh pass1: 132 modules indexed\nstatements: 126507 over 132 files (0 failures)\n{\n \"modules\": 132,\n \"entities\": 4857,\n \"pages\": 4990,\n \"entity_pages\": 4857,\n \"holes\": 3034,\n \"ids\": 0,\n \"median_entity_page_lines\": 19,\n \"largest_5\": [\n  [\n   61,\n   \"tests.test_install_constellation:InstallConstellationTests\"\n  ],\n  [\n   61,\n   \"tests.test_checklist_engine:TripHardGuardsBeginNotClose\"\n  ],\n  [\n   60,\n   \"tests.test_episode_store:RestateAssertionTests\"\n  ],\n  [\n   58,\n   \"tests.test_episode_fields:EscalatedReopenIsNotAReopenTests\"\n  ],\n  [\n   57,\n   \"scripts.code_map.checks:refs_line_self_consistent\"\n  ]\n ],\n \"stale_tags\": []\n}) but map/INDEX.md was last regenerated at c66d2ffa and git diff HEAD~1 -- map/INDEX.md is empty -- the map was never regenerated after this gate's test additions. The handoff's own required evidence ('python -m pytest -q, 0 failed') does not reproduce; the repo is not actually green after this commit. This is mechanical and easily fixed (regenerate and commit map/INDEX.md) but is real and outside my allowed scope to fix."
+    ],
+    "summary": "APPROVE withheld. Criterion A (six frozen items) holds fully; criterion E (empty scripts/ diff) holds; criterion D (honest harness-seam scope) holds. Criterion B mostly reproduces: both Commander-claimed mutations went RED on the exact test ids claimed (plus one bonus RED). But my own third mutation -- an undeclared spine_override argument read directly by call_tool's spine_status handler, never added to any tool's inputSchema -- did NOT go red under the full IdentityBindingPinTests suite. Per the handoff's own rule this is a BLOCK: the pin verifies declared schema shape and import-time binding immutability, but never exercises call_tool's actual runtime dispatch, so IDENTITY_TRADE.md's claim that the door 'literally cannot be pointed at another run's spine, because there is no argument that would let it' is not fully backed by what the pin checks. Separately, the handoff's own required evidence (python -m pytest -q, 0 failed) does not reproduce: 1 failed (tests/test_code_map.py::MapTreeFreshnessTests) because map/INDEX.md was never regenerated after this gate's test additions to tests/test_mcp_identity.py. Both are real, mechanical, and fixable without reopening the identity decision itself -- neither is a challenge to the decision recorded in IDENTITY_TRADE.md, which I find sound and well-evidenced on its own terms."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r3-evidence",
+      "statement": "map/INDEX.md is stale after commit 36a1bdcd: tests/test_mcp_identity.py grew by 9 entities (new IdentityBindingPinTests class) but map/INDEX.md was last regenerated at c66d2ffa and was never rebuilt for this gate. Fix: run 'python -m scripts.code_map build --root .' and commit the result; this alone should turn tests/test_code_map.py::MapTreeFreshnessTests green again."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "reviewer-g1-1786342373",
+    "status": "released",
+    "claimed_at": "2026-08-10T06:12:53.480705+00:00",
+    "last_heartbeat": "2026-08-10T06:27:21.479314+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T06:27:32.688464+00:00"
+  }
+}

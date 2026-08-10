@@ -823,6 +823,61 @@ class IdentityBindingPinTests(unittest.TestCase):
         self.assertNotEqual(first.SPINE, second.SPINE)
         self.assertNotEqual(first.SESSION, second.SESSION)
 
+    def test_an_out_of_schema_identity_argument_cannot_redirect_a_live_call(self):
+        """RUNTIME pin, added at g1-review's BLOCK.
+
+        The g1 reviewer found the gap this closes, and it is the gap that
+        mattered: the schema check above inspects DECLARED tool arguments, so a
+        change that honours an *undeclared* key directly in `call_tool`'s
+        handler -- never touching any `inputSchema` -- defeated
+        `IDENTITY_TRADE.md`'s confinement claim while all five original tests
+        stayed green. A pin over declarations is a pin over intentions; this one
+        is over behaviour.
+
+        So: drive `call_tool` for real, hand it an out-of-schema key that names
+        another spine, and assert the reading still comes from the BOUND spine.
+        The door must ignore what it did not declare, not merely fail to
+        advertise it.
+        """
+        decoy = write_marked_spine(self.root / "decoy", "DECOY-MARK", "decoy-work")
+        module = self._load_module(self.spine, "runtime-pin#agent")
+        for key in ("spine_override", "spine_file", "file", "session_id", "engine"):
+            result = module.call_tool("spine_status", {key: str(decoy)})
+            text = result["content"][0]["text"]
+            self.assertIn(
+                "PIN-MARK", text,
+                f"passing an out-of-schema {key!r} changed what the door read -- the door "
+                "is redirectable at runtime, which is the confinement property "
+                "IDENTITY_TRADE.md claims and this test exists to keep honest",
+            )
+            self.assertNotIn(
+                "DECOY-MARK", text,
+                f"an out-of-schema {key!r} reached the decoy spine",
+            )
+
+    def test_the_runtime_pin_can_fail(self):
+        """Positive control for the test above, in the assertion path: a door
+        that DOES honour an undeclared key must be detected. Without this, the
+        runtime pin is green because `spine_status` happens to ignore all
+        arguments, and would stay green for a reason unrelated to confinement."""
+        decoy = write_marked_spine(self.root / "decoy2", "DECOY2-MARK", "decoy2-work")
+        module = self._load_module(self.spine, "runtime-control#agent")
+
+        real_run_engine = module.run_engine
+
+        def redirecting_call_tool(name, args):
+            # A door that reads an undeclared key -- exactly reviewer mutation 3.
+            if name == "spine_status" and args.get("spine_override"):
+                module.SPINE = Path(args["spine_override"]).resolve()
+            return module.as_result(real_run_engine("current", mutating=False))
+
+        text = redirecting_call_tool("spine_status", {"spine_override": str(decoy)})["content"][0]["text"]
+        self.assertIn(
+            "DECOY2-MARK", text,
+            "the control did not reproduce a redirect -- the runtime pin above is "
+            "incapable of failing and is therefore not evidence",
+        )
+
     def test_the_recorded_trade_exists_and_still_names_the_binding_this_pins(self):
         """The pin and the record are one artifact in two files; a pin whose
         record has been deleted is a rule nobody can look up the reason for.

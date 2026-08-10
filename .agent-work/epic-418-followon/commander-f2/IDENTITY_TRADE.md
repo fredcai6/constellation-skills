@@ -36,9 +36,18 @@ process that owns the binding and to no one below it. That is a real capability 
 is the price of this option, and it is why `the-cli-door-stays` is not merely a
 compatibility promise — the CLI is the **only** path for a whole class of agent.
 
-What is bought for it: the door literally *cannot* be pointed at another run's spine,
-because there is no argument that would let it. That is confinement by construction, not
-by convention.
+What is bought for it: the door cannot be pointed at another run's spine — no tool
+**declares** an argument that would let it, and at runtime the dispatch **ignores** an
+undeclared one. That is confinement by construction rather than by convention.
+
+**This sentence was narrower after review than before it, and the change is the point.**
+As first written it claimed "there is no argument that would let it," and the g1 reviewer
+falsified it: it mutated the real door so `call_tool`'s `spine_status` handler honoured an
+undeclared `spine_override` key, **without touching any `inputSchema`**, and all five pin
+tests stayed green. A pin over declarations is a pin over *intentions*. The claim now names
+both halves — declared **and** runtime — because both are now actually pinned
+(`test_an_out_of_schema_identity_argument_cannot_redirect_a_live_call`, with its own
+positive control). The finding was the reviewer's, not mine.
 
 ## 3. The rejected options — what each would and would not have covered
 

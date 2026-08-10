@@ -1,0 +1,130 @@
+{
+ "schema_version": 1,
+ "current_plan": {
+  "schema_version": 1,
+  "epic": {
+   "title": "epic-418-followon wave 2 — F2: MCP door adoption (#542) and friction capture (#541)",
+   "spec_path": ".agent-work/epic-418-followon/launch-orders/LAUNCH_ORDER-F2-mcp-adoption.md",
+   "intent_and_why": "The MCP front door from F (#424) is built, merged and unused. Make agents drive through it, and make the door confess its own friction while they do. C (#421) does not launch until this is done: agents running the spine through the door is C's entry condition, set by the repo owner."
+  },
+  "definition_of_done": [
+   "Role spine instructions name the door's tools as the default path, CLI documented as the remaining fallback.",
+   "A real dispatched agent drove a real role spine to done through the door alone, measured from its own call record.",
+   "install_constellation.py ships and wires .mcp.json, so a fresh install gets the door.",
+   "The server's own rejections land in the run's episode through apply_episode_delta.py, and say so loudly when they cannot.",
+   "The identity trade is decided and the property given up is written down."
+  ],
+  "good_enough": {
+   "mandatory_quality": "Every gate closes on evidence produced AT that gate. No gate check that cannot lose.",
+   "sufficient_evidence": "Targeted automated tests plus the full suite at 0 failed; the acceptance claim measured from the driving agent's own call record, never server-side.",
+   "appetite": "One wave, one PR on epic-418/f2-mcp-adoption."
+  },
+  "hard_constraints": [
+   "The CLI door stays. F is additive. An edit that removes the CLI path fails g4a.",
+   "Never edit scripts/checklist_engine.py — the door wraps the engine and never re-implements it.",
+   "episodes/ is written only through apply_episode_delta.py with --store-root episodes.",
+   "An episode is a record, never read back as a rule.",
+   "Never write settings.json at user scope.",
+   "Do not reintroduce per-dispatch MCP config generation on identity grounds.",
+   "The main checkout /home/tommy/projects/constellation-skills is fenced read-only."
+  ],
+  "fixed_decisions": [
+   "Gate order is g1 identity, g2 capture, g3 installer, g4 adoption+acceptance — the order is the point.",
+   "The acceptance numerator is the driving agent's own call record, never the server log.",
+   "A measured negative is a complete deliverable; an UNMEASURED condition is not a negative.",
+   "Identity may be bound to a container only at the granularity that container genuinely separates (g1)."
+  ],
+  "current_wave": {
+   "objective": "Adopt the MCP door as the default path and instrument the door's own rejections.",
+   "exit_criteria": [
+    "All five definition_of_done items evidenced, each at its own gate."
+   ],
+   "issues": [
+    {
+     "id": "542",
+     "title": "Adopt the MCP door",
+     "desired_outcome": "Agents default to the door; a fresh install ships it; a real dispatched agent drives a real role spine to done through it alone.",
+     "useful_now": "It is C (#421)'s entry condition. C is written against whichever door delivers gate imperatives, so doing C against the CLI and porting afterwards is doing it twice.",
+     "appetite": "Four gates (g1, g3, g4a, g4b).",
+     "acceptance_or_falsification_evidence": "The driving agent's own record.jsonl scored by F's archived instrument, requiring reached_done AND zero CLI engine invocations; plus the three adoption counts re-measured.",
+     "implementation_latitude": "Which role spines change and in what order; tool grouping; how the acceptance run is staged.",
+     "hard_constraints_no_gos": [
+      "Removing or deprecating the CLI path.",
+      "Changing INTERPRETER_CANDIDATES order.",
+      "Writing settings.json at user scope."
+     ],
+     "local_unknowns": [
+      "Whether an installed project-root dotfile should be default or opt-in — the installer has no precedent for writing one."
+     ],
+     "anchors": [
+      "scripts/mcp_spine_server.py",
+      "scripts/install_constellation.py",
+      ".mcp.json",
+      "skills/commander/templates/COMMANDER_SPINE.template.json",
+      "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+      "skills/explorer/templates/EXPLORER_SPINE.template.json",
+      "skills/workbench/references/checklist-engine.md"
+     ],
+     "type": "AFK",
+     "blocks": []
+    },
+    {
+     "id": "541",
+     "title": "Capture the door's own friction into the run's episode",
+     "desired_outcome": "The door records its own rejections, they reach the run's episode through apply_episode_delta.py, and it fails loud on every occurrence when they cannot.",
+     "useful_now": "The door absorbs rejections that used to be diagnosable in a transcript; without capture, adoption trades a visible defect for a silent one.",
+     "appetite": "One gate (g2).",
+     "acceptance_or_falsification_evidence": "A seeded rejection scored by the instrument; a real episode written and read back under a nested work-id and verified with verify_episode_captured.py; N>=2 induced write failures producing N separate messages.",
+     "implementation_latitude": "Capture granularity; the record's fields.",
+     "hard_constraints_no_gos": [
+      "Do not extend the Mechanical allowlist or edit apply_episode_delta.py, episode_capture.py or docs/EPISODE_STORE.md — all outside this run's ownership.",
+      "Do not overload the engine's refusals counter or failed-commands.",
+      "Nothing written into episodes/ may be phrased as guidance for a future agent."
+     ],
+     "local_unknowns": [],
+     "anchors": [
+      "scripts/mcp_spine_server.py",
+      "scripts/apply_episode_delta.py",
+      "scripts/episode_capture.py",
+      "scripts/verify_episode_captured.py"
+     ],
+     "type": "AFK",
+     "blocks": []
+    }
+   ]
+  },
+  "wave_forecast": [
+   {
+    "outcome": "C (#421) relocates gate-specific instructions into the spine, written against the door rather than the CLI.",
+    "why_likely": "The repo owner set 'agents running the spine through the door' as C's entry condition, and C's hard constraint is that the gate imperative rides tool results verbatim.",
+    "entry_conditions": [
+     "F2 complete: role spine instructions default to the door and a real dispatched agent has driven a real role spine through it."
+    ]
+   }
+  ],
+  "uncertainty_register": [
+   {
+    "unknown": "Whether Task-tool-dispatched crews should eventually get distinct spine identities.",
+    "affects": "Whether the g1 position is a permanent answer or an interim one.",
+    "settle_by": "Its own design, as docs/CHECKLIST_ENGINE_DESIGN.md already records.",
+    "current_evidence": "Neither ${VAR} expansion nor per-dispatch config generation reaches the case; identity scoping is per top-level process, not per agent-turn.",
+    "next_probe": "Not probed in this wave. g1 states what the fleet does UNTIL such a design exists, not that one is unnecessary."
+   },
+   {
+    "unknown": "Whether the acceptance run will produce any door rejections at all.",
+    "affects": "How much g2's capture can be demonstrated live rather than by seeded control.",
+    "current_evidence": "F measured ZERO malformed calls in both DC5 arms, so zero is the expected reading.",
+    "settle_by": "g4b's measurement.",
+    "next_probe": "Report whatever number it is. Zero is a result and will not be manufactured away."
+   }
+  ],
+  "parked_possibilities": [
+   "Instrumenting the CLI arm so future DC5-style measurements compare two instrumented doors rather than one.",
+   "Teaching map_orient.py to parse a generated code map (#548).",
+   "Repairing the spine_rail per-agent identity merge (#549)."
+  ]
+ },
+ "completed_outcomes": [],
+ "wave_evidence": [],
+ "discrepancies": []
+}
