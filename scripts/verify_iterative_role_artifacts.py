@@ -162,9 +162,36 @@ def _replan_verifier(skills_root: Path):
 
 
 def _work_area(work_id: str) -> Path:
+    """``.agent-work/<work-id>/``, where the work-id may NEST.
+
+    A work-id is a path under ``.agent-work/``, and the epic/commander convention
+    nests one segment (``epic-418-followon/commander-424``). So ``/`` is a separator
+    to honor, not a character to refuse -- a single ``SAFE_ID`` over the whole id
+    turned every commander under an epic away at the door, and this verifier's whole
+    job is to report a G1/G2 violation in the artifact BEHIND that door. A refusal
+    here reports nothing about the artifact at all, which is indistinguishable from
+    having nothing to report.
+
+    Safety is unchanged, because it never depended on the absence of ``/``: it is
+    ``SAFE_ID`` per SEGMENT, which still excludes ``..``, ``.``, an empty segment (a
+    leading, trailing or doubled separator) and an absolute path. A backslash is not
+    in ``SAFE_ID``'s class, so a Windows separator is refused as an unsafe segment
+    rather than quietly forming one more level.
+
+    ``boundary_id``/``launch_id`` stay FLAT, deliberately: each names ONE directory
+    under ``transitions/`` and nothing nests them.
+    """
     _string(work_id, "work-id")
-    _require(bool(SAFE_ID.fullmatch(work_id)), "work-id contains unsafe path characters")
-    return Path.cwd() / ".agent-work" / work_id
+    segments = work_id.split("/")
+    bad = [segment for segment in segments if not SAFE_ID.fullmatch(segment)]
+    _require(
+        not bad,
+        f"work-id {work_id!r} has unsafe path segment(s) {bad}: every '/'-separated "
+        f"segment must match {SAFE_ID.pattern} (a nested id such as "
+        "'epic-418-followon/commander-424' is fine; '..', an empty segment and an "
+        "absolute path are not)",
+    )
+    return Path.cwd().joinpath(".agent-work", *segments)
 
 
 def verify_explorer(work_id: str, skills_root: str | Path | None = None) -> None:
