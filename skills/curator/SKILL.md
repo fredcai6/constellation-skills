@@ -18,7 +18,7 @@ Human-only, periodic ("run the curator") — after a batch of edits, before a re
 
 ## Invariant #1 — measure before mend
 
-Every invocation begins by running `py scripts/curate_corpus.py --root skills`. It measures five mechanical properties per skill: body **size**; **description** lint (length, person tokens, when-to-use + exclusion markers); **invoker-tag** presence; reference **TOCs**; and **duplication-signature** clusters (the drift detector).
+Every invocation begins by running `python <skill-dir>/scripts/curate_corpus.py --root skills`. It measures five mechanical properties per skill: body **size**; **description** lint (length, person tokens, when-to-use + exclusion markers); **invoker-tag** presence; reference **TOCs**; and **duplication-signature** clusters (the drift detector).
 
 Decidability honesty (T7): the script measures mechanical facts and shortlists candidates; it never renders a semantic verdict. Whether a flagged clause is really a procedure is the **human mend pass's** job — not the script's.
 
