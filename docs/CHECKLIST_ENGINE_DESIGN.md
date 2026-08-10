@@ -312,8 +312,11 @@ variable unset is left literal and the client refuses to launch, naming the vari
 exported as the **empty string wins over the default** (`:-` here means "if set", *not* POSIX "if set
 and non-empty"); and an `env` block in `.claude/settings.local.json` does **not** feed the expansion —
 the expansion environment is the `claude` process's own. `install_constellation.py --wire-mcp` writes
-a target project's `.mcp.json` with the interpreter it probed, and refuses outright when that file is
-git-tracked, the same `is_git_tracked` guard `--wire-hooks --hooks-from source` uses.
+a target project's `.mcp.json` with the interpreter it probed. The project root has to be NAMED
+(`--project <dir>`, or the working directory of a bare `--scope project` run); it is never derived by
+walking up from `--dest`, because that arithmetic wrote `.mcp.json` into directories the caller never
+named, including home directories. It refuses outright when the file is git-tracked, the same
+`is_git_tracked` guard `--wire-hooks --hooks-from source` uses.
 
 **A per-dispatch config generator was built and then removed** (`scripts/gen_mcp_config.py`,
 tombstoned). It was justified by the belief that a shared `.mcp.json` binds one identity for all

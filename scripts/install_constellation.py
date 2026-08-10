@@ -548,12 +548,27 @@ def rewrite_installed_skill_paths(
     )
 
 
-def home_from_env(env: Mapping[str, str]) -> Path:
+def home_from_env(env: Mapping[str, str], *, fallback: Path) -> Path:
+    """Where a `--scope user` install lands: the home directory `env` names.
+
+    A TARGET DERIVATION, never a guard. It answers "install this for whom",
+    where one answer is all a target can be, and first-match is the right shape
+    for that. It is deliberately NOT what the `--wire-mcp` refusal reads:
+    a guard that asks for one answer accepts every environment that names a
+    different one, which is exactly how a `--scope project` run with a
+    mismatched `HOME` wrote into a home directory. That refusal uses
+    `home_directory_candidates`, which checks all of them at once.
+
+    `fallback` is REQUIRED and has no default. It used to end
+    `return Path.home()`, so a caller handing this an env with no `HOME` key
+    silently got the running machine's home without asking for it -- fine for a
+    target, indefensible for anything that then compares against it. Naming it
+    at the call site is what keeps that substitution visible."""
     for key in ("HOME", "USERPROFILE"):
         value = env.get(key)
         if value:
             return Path(value).expanduser()
-    return Path.home()
+    return fallback
 
 
 def default_user_target(agent: AgentTarget, env: Mapping[str, str]) -> Path:
@@ -561,7 +576,10 @@ def default_user_target(agent: AgentTarget, env: Mapping[str, str]) -> Path:
         configured_home = env.get(agent.user_env_var)
         if configured_home:
             return Path(configured_home).expanduser() / "skills"
-    return home_from_env(env) / agent.user_config_dir / "skills"
+    # `Path.home()` spelled out, at the one call site where the running user's
+    # own home really is the answer: `--scope user` with no `--dest` means
+    # "install for the user running this".
+    return home_from_env(env, fallback=Path.home()) / agent.user_config_dir / "skills"
 
 
 def resolve_target_root(
@@ -1470,77 +1488,124 @@ def expand_mcp_placeholders(value: str, env: Mapping[str, str]) -> str:
     return _MCP_PLACEHOLDER_RE.sub(substitute, value)
 
 
-MCP_TARGET_ROOT_LEAF = "skills"
-# The config directory names a project-scope install of an MCP-capable agent
-# puts `skills` under. Derived from the agent table rather than spelled here,
-# so adding an MCP-capable agent cannot leave this behind.
-MCP_PROJECT_CONFIG_DIRS = frozenset(
-    agent.project_config_dir
-    for agent in AGENT_TARGETS.values()
-    if agent.name in MCP_CAPABLE_AGENT_NAMES
-)
-
-
-def mcp_project_root_for_target_root(target_root: Path) -> Path | None:
-    """The project root whose `.mcp.json` governs `target_root` --
-    `<project>/.claude/skills` -> `<project>` -- or None when `target_root` is
-    not that shape.
-
-    TWO levels up, and both of them are CHECKED rather than assumed. This is
-    where this helper parts company with `settings_path_for_target_root`, whose
-    "a `--dest` install can never reach past its own tree" assurance is true of
-    ONE level (the parent of the target root is inside the tree the caller
-    named) and false of two: `--dest <anywhere>/skills` puts `<anywhere>/..`
-    two levels up, which is a directory the caller never named at all. The
-    reviewer's `--dest /tmp/wm-probe/proj/skills` wrote `/tmp/wm-probe/.mcp.json`
-    on exactly that arithmetic. Returning None for an unrecognised shape is what
-    lets `resolve_mcp_config_write_path` refuse instead of guessing."""
-    if target_root.name != MCP_TARGET_ROOT_LEAF:
-        return None
-    if target_root.parent.name not in MCP_PROJECT_CONFIG_DIRS:
-        return None
-    return target_root.parent.parent
-
-
 def mcp_config_path_for_target_root(target_root: Path) -> Path:
-    """The `.mcp.json` governing the PROJECT this install writes into:
-    `<project>/.claude/skills` -> `<project>/.mcp.json`.
+    """The `.mcp.json` Claude Code would load for a tree whose skills live at
+    `target_root`: `<project>/.claude/skills` -> `<project>/.mcp.json`.
 
-    READ-ONLY derivation, and this docstring is careful where the old one was
-    not. It used to borrow `settings_path_for_target_root`'s "a `--dest` install
-    can never reach past its own tree" assurance, which is true of that
-    function's ONE level and false of this one's two. What this actually answers
-    is "which file would Claude Code load for this tree", best-effort, for
-    `check_mcp_launchable` -- which is report-only and cannot make a mess with a
-    wrong answer.
+    READ-ONLY derivation, and it is a GUESS -- two levels up from a path nobody
+    promised has that shape. It answers "which file would the client read for
+    this tree", best-effort, for `check_mcp_launchable`, which is report-only
+    and cannot make a mess with a wrong answer.
 
     It is NOT the entry point for a write, and those two unchecked levels are
-    exactly why. `resolve_mcp_config_write_path` is, and it CHECKS the shape
-    instead of assuming it. Where the shape is the expected one -- every real
-    install -- the two agree by construction: the write path derives the same
-    two levels, once it has confirmed they are the right two."""
+    exactly why. `resolve_mcp_config_write_path` is, and it does not derive
+    anything: it writes into the project root the CALLER NAMED, so there is no
+    guess left in it to be wrong."""
     return target_root.parent.parent / MCP_CONFIG_FILENAME
 
 
+def comparable_path(path: Path | str) -> str:
+    """`path` in the form two spellings of the SAME directory share.
+
+    `os.path.abspath`, not `Path.resolve()`, for the reason `is_git_tracked`
+    states: resolve() follows symlinks, and a home directory reached through a
+    symlinked path is still the home directory.
+
+    `os.path.normcase` on top of it, which `abspath` does NOT apply. Without it
+    `C:\\Users\\alice` and `C:\\users\\alice` compare unequal on a filesystem
+    where they are one directory -- so a comparison built on `abspath` alone is
+    inert on Windows, the platform it most needs to hold on. On POSIX
+    `normcase` is the identity, so the two spellings stay two directories,
+    which there is the truth."""
+    return os.path.normcase(os.path.abspath(os.path.expanduser(str(path))))
+
+
+def home_directory_candidates(env: Mapping[str, str]) -> frozenset[str]:
+    """EVERY directory that could be a home directory here, in `comparable_path`
+    form.
+
+    A SET, not a first match, and that is the whole point. The old guard asked
+    `home_from_env` for ONE answer -- `HOME`, else `USERPROFILE`, else
+    `Path.home()` -- and compared against it alone, so any environment whose
+    `HOME` did not happen to name the directory being installed into slipped
+    straight past: `sudo` resets `HOME=/root`, cron and systemd units carry a
+    stale or absent one, and Git-Bash sets `HOME=/c/Users/alice`, a string that
+    can never equal the abspath of `C:\\Users\\alice`. First-match made every
+    one of those a silent pass. Checking all of them at once means an
+    environment can only ADD a refusal, never suppress one.
+
+    `HOMEDRIVE`+`HOMEPATH` is here because that is the pair Windows itself
+    uses when `USERPROFILE` is absent. `Path.home()` is here -- always, not as a
+    fallback -- because it is the one candidate no passed-in environment can
+    misreport: on Windows CPython reads it from `USERPROFILE`/`HOMEDRIVE` and
+    ignores `HOME` entirely, which is exactly the Git-Bash case the string
+    comparison could not see. Including it unconditionally is what keeps a
+    caller that passes an env with no `HOME` from measuring against nothing.
+
+    This is still a HEURISTIC -- it enumerates the places a home directory
+    announces itself, and an environment could always invent another. It is the
+    backstop, not the containment: containment comes from
+    `resolve_mcp_config_write_path` writing only inside the project root the
+    caller named."""
+    values: list[str] = []
+    for key in ("HOME", "USERPROFILE"):
+        value = env.get(key)
+        if value:
+            values.append(value)
+    drive, tail = env.get("HOMEDRIVE"), env.get("HOMEPATH")
+    if drive and tail:
+        values.append(drive + tail)
+    try:
+        values.append(str(Path.home()))
+    except (RuntimeError, OSError):
+        # `Path.home()` raises where the running user has no resolvable home.
+        # One fewer candidate, never a wrong one.
+        pass
+    return frozenset(comparable_path(value) for value in values)
+
+
 def resolve_mcp_config_write_path(
-    target_root: Path, *, scope: str, env: Mapping[str, str]
+    target_root: Path, *, project_root: Path | None, scope: str, env: Mapping[str, str]
 ) -> Path:
     """The ONE `.mcp.json` `--wire-mcp` may write, or an `InstallError` naming
     the path it refused to write.
 
-    The hard constraint this enforces: **this installer never writes outside the
-    target project directory, and never at user scope, regardless of flags.**
-    Every guard below reads the RESOLVED `target_root`, not the `--scope` flag
-    that was supposed to imply it. That distinction is the whole defect --
-    `--scope project --dest ~/.claude/skills` satisfies the flag check and is a
-    user-scope install by every meaning that matters, and it wrote
-    `~/.mcp.json`, the exact file the flag check's own comment says must never
-    be written.
+    What this now enforces, and the wording is exact: **the only file this
+    writes is `<project_root>/.mcp.json`, where `project_root` is the directory
+    the CALLER NAMED** -- `--project <dir>`, or the working directory a bare
+    `--scope project` run means by it. Nothing is derived by walking up from
+    `--dest`, so there is no derived path left for a home-directory heuristic
+    to have to catch.
 
-    `scope` is still checked, first and on its own, because a caller that asks
-    for user scope should be told that and not a path story. But it is the
-    cheap guard, not the load-bearing one: the two path guards below hold with
-    `scope == "project"` passed for every one of them."""
+    That is the R4 repair. The previous version took two levels up from
+    `--dest`, checked the shape of those two levels, and then screened the
+    result against ONE string (`HOME`, else `USERPROFILE`, else `Path.home()`).
+    Reproduced on that code with no source edits:
+
+        HOME=<other> ... --scope project --dest <realhome>/.claude/skills --wire-mcp
+        -> wrote <realhome>/.mcp.json
+
+    Same target directory, same flags; only the `HOME` string differed. The
+    guard was as strong as an environment variable nobody controls, and worst
+    on Windows, where `HOME` is preferred over `USERPROFILE`, Git-Bash spells it
+    `/c/Users/alice`, and `abspath` does not fold case. Hardening that string
+    comparison would have bought the next environment's version of the same
+    bug. Removing the derivation retires the question: a caller who did not name
+    a project root gets a refusal, not a guess.
+
+    The guards, in order:
+
+    * `scope` -- the cheap one, first and on its own, so a caller who asked for
+      user scope is told that and not a path story. Every guard below holds with
+      `scope == "project"` passed to it.
+    * `project_root is None` -- `--dest` names a skills directory, not a
+      project. Refuse and say which flag to use instead.
+    * `target_root` outside `project_root` -- so the containment sentence above
+      is CHECKED here rather than assumed of the caller.
+    * `project_root` is a home directory -- the backstop, and openly a
+      heuristic (see `home_directory_candidates`). It is no longer what stands
+      between `--dest` and a home write; it covers the one route left, an
+      explicit `--project <home>` or a run started from the home directory."""
     if scope != "project":
         raise InstallError(
             f"--wire-mcp requires --scope project: Claude Code reads a "
@@ -1548,31 +1613,32 @@ def resolve_mcp_config_write_path(
             f"no user-scope file to write (scope={scope!r})."
         )
 
-    project_root = mcp_project_root_for_target_root(target_root)
     if project_root is None:
-        # Refuse rather than guess. Two levels up from an unrecognised shape is
-        # arithmetic on a path nobody named -- naming it in the refusal is what
-        # turns "this did not work" into "this is what it would have done".
         raise InstallError(
-            f"--wire-mcp: cannot locate the project root for target root {target_root}. "
-            f"A {MCP_CONFIG_FILENAME} belongs at a PROJECT root, and the only shape this "
-            f"installer can derive one from is "
-            f"<project>/{'|'.join(sorted(MCP_PROJECT_CONFIG_DIRS))}/{MCP_TARGET_ROOT_LEAF}. "
-            f"Guessing two levels up would have written "
-            f"{target_root.parent.parent / MCP_CONFIG_FILENAME}, which is outside the "
-            f"directory you named. Re-run with --project <dir>, or point --dest at a "
-            f"<project>/.claude/{MCP_TARGET_ROOT_LEAF} directory."
+            f"--wire-mcp: no project root was named, so there is no "
+            f"{MCP_CONFIG_FILENAME} to write. `--dest {target_root}` names a skills "
+            f"directory; a {MCP_CONFIG_FILENAME} belongs at a PROJECT root, and this "
+            f"installer will not go looking for one above a path you did not name -- "
+            f"that arithmetic is what wrote {target_root.parent.parent / MCP_CONFIG_FILENAME} "
+            f"in the defect this refusal replaces. Re-run with --project <dir> (or from "
+            f"the project directory) instead of --dest."
         )
 
-    home = home_from_env(env)
-    if os.path.abspath(project_root) == os.path.abspath(home):
-        # `os.path.abspath`, not `Path.resolve()`, for the reason `is_git_tracked`
-        # states: resolve() follows symlinks, and a home directory reached through
-        # a symlinked path is still the home directory.
+    if comparable_path(target_root) != comparable_path(project_root) and not (
+        comparable_path(target_root).startswith(comparable_path(project_root) + os.sep)
+    ):
+        raise InstallError(
+            f"--wire-mcp: refusing to write {project_root / MCP_CONFIG_FILENAME} -- the "
+            f"skills target root {target_root} is not inside the project root "
+            f"{project_root}, so writing a {MCP_CONFIG_FILENAME} there would wire a door "
+            f"for a project this run is not installing into."
+        )
+
+    if comparable_path(project_root) in home_directory_candidates(env):
         raise InstallError(
             f"--wire-mcp: refusing to write {project_root / MCP_CONFIG_FILENAME} -- "
-            f"{target_root} is a USER-scope skills directory (its project root is the "
-            f"home directory {home}), whatever --scope says. Claude Code reads a "
+            f"{project_root} is a home directory, whatever --scope says, so "
+            f"{target_root} is a USER-scope skills directory. Claude Code reads a "
             f"{MCP_CONFIG_FILENAME} from a project root and nowhere else, so this file "
             f"would be config nothing ever loads, written into the user's home. Install "
             f"into a real project (--project <dir>) to wire a door."
@@ -1622,6 +1688,7 @@ def build_mcp_server_entry(
 def wire_mcp(
     target_root: Path,
     *,
+    project_root: Path | None,
     interpreter: InterpreterResolution,
     dry_run: bool,
     scope: str,
@@ -1641,18 +1708,26 @@ def wire_mcp(
     signature -- passed by `main` and by nine tests, read by nothing -- which
     read as the in-function half of a scope guard while being inert, and that
     inertness is what let a `--scope project --dest ~/.claude/skills` run write
-    `~/.mcp.json`. It is now one of three refusals in
-    `resolve_mcp_config_write_path`, and the only one of the three that reads a
-    flag rather than the resolved path.
+    `~/.mcp.json`. It is now one of the refusals in
+    `resolve_mcp_config_write_path`, and the only one of them that reads a flag
+    rather than a path.
 
-    `env` is the environment the HOME lookup reads, passed in rather than taken
-    from `os.environ` so the user-scope refusal can be tested against a home
-    directory other than the developer's real one."""
-    # The hard constraint, checked FIRST and on the RESOLVED path: nothing at
-    # user scope, nothing outside the target project directory, whatever the
-    # flags said. See `resolve_mcp_config_write_path`.
+    `project_root` is the directory the CALLER NAMED as the project --
+    `--project <dir>`, or the working directory a bare `--scope project` run
+    means by it -- and `None` when the caller named none, which is what a
+    `--dest` run does. It is REQUIRED, with no default, because the whole R4
+    repair is that this file's location stops being derived: `None` is a
+    refusal, not a licence to walk up from `target_root` and hope.
+
+    `env` is the environment the home-directory backstop reads, passed in
+    rather than taken from `os.environ` so that refusal can be tested against a
+    home directory other than the developer's real one."""
+    # The hard constraint, checked FIRST: the only file this can write is
+    # `<project_root>/.mcp.json`, inside the directory the caller named.
+    # See `resolve_mcp_config_write_path`.
     config_path = resolve_mcp_config_write_path(
-        target_root, scope=scope, env=os.environ if env is None else env)
+        target_root, project_root=project_root, scope=scope,
+        env=os.environ if env is None else env)
 
     # Same loud failure `wire_hooks` takes, for the same reason: an interpreter
     # that was not probed on THIS host is a guess, and stamping a guess into a
@@ -2781,9 +2856,9 @@ def main(
             if args.scope != "project":
                 # A flag check, and deliberately NOT the guard. It fails early
                 # and cheaply on the obvious spelling of the mistake; the guard
-                # that actually holds the "nothing at user scope, nothing
-                # outside the target tree" constraint reads the RESOLVED path
-                # inside `wire_mcp` (`resolve_mcp_config_write_path`), because
+                # that actually holds "the only file written is
+                # `<named project>/.mcp.json`" lives in `wire_mcp`
+                # (`resolve_mcp_config_write_path`), because
                 # `--scope project --dest ~/.claude/skills` passes this line and
                 # is a user-scope install by every meaning that matters.
                 raise InstallError(
@@ -2889,6 +2964,20 @@ def main(
             if args.wire_mcp and agent.name in MCP_CAPABLE_AGENT_NAMES:
                 wire_mcp(
                     target_root,
+                    # The project root the CALLER NAMED, and None when they
+                    # named none. `--dest` names a skills directory, so it
+                    # yields None and `wire_mcp` refuses -- the installer no
+                    # longer walks up from `--dest` to find a project, which is
+                    # how `--dest <home>/.claude/skills` came to write
+                    # `<home>/.mcp.json` under any environment whose `HOME`
+                    # said something else. `--project`/cwd is already the pair
+                    # `resolve_target_root` builds the project-scope target
+                    # from, so this is the same directory, read from the flag
+                    # instead of reconstructed from the result.
+                    project_root=(
+                        None if args.dest
+                        else (args.project.expanduser() if args.project else runtime_cwd)
+                    ),
                     interpreter=interpreter,
                     dry_run=args.dry_run,
                     scope=args.scope,

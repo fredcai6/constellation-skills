@@ -3980,10 +3980,23 @@ class _McpWiringFixture(unittest.TestCase):
             name or sys.executable, installer.INTERPRETER_CANDIDATES, "probe")
 
     def _wire(self, installer, tmp, **kwargs):
+        """`project_root` is defaulted only alongside the default target root.
+
+        A test that names its own `target_root` must name its own
+        `project_root` too, and deriving one here would defeat the point: the
+        R4 repair is that nothing walks up from a skills directory to find a
+        project, so a fixture that did the walking would let every test pass
+        against an installer that still did it."""
         lines: list[str] = []
         target_root = kwargs.pop("target_root", None)
+        if target_root is None:
+            target_root = self._target_root(tmp)
+            kwargs.setdefault("project_root", self._project(tmp))
+        if "project_root" not in kwargs:
+            self.fail("a test that names its own target_root must name its own project_root")
         installer.wire_mcp(
-            self._target_root(tmp) if target_root is None else target_root,
+            target_root,
+            project_root=kwargs.pop("project_root"),
             interpreter=kwargs.pop("interpreter", self._probed(installer)),
             dry_run=kwargs.pop("dry_run", False),
             scope=kwargs.pop("scope", "project"),
@@ -4238,22 +4251,43 @@ class McpWiringTests(_McpWiringFixture):
 
 
 class McpWriteLocationTests(_McpWiringFixture):
-    """The hard constraint, on the RESOLVED path rather than the flag: this
-    installer never writes outside the target project directory, and never at
-    user scope, whatever the flags say.
+    """The hard constraint, and it is now a property rather than a screen: the
+    only file `--wire-mcp` writes is `<project_root>/.mcp.json`, where
+    `project_root` is the directory the CALLER NAMED. Nothing is derived by
+    walking up from `--dest`, so there is no derived path for a heuristic to
+    have to catch.
 
-    Both refusals below were reproduced from the CLI, with every guard in place
-    and no source modified, before the guard existed:
+    Three reproductions from the CLI, each with every guard in place and no
+    source modified, sit behind these tests:
 
       --scope project --dest $HOME/.claude/skills --wire-mcp   -> wrote ~/.mcp.json
       --scope project --dest /tmp/wm-probe/proj/skills --wire-mcp
                                                     -> wrote /tmp/wm-probe/.mcp.json
+      HOME=<other> --scope project --dest <realhome>/.claude/skills --wire-mcp
+                                                    -> wrote <realhome>/.mcp.json
 
     The first is the exact file `main`'s own scope check says must never be
     written; it passed that check because the check reads `--scope`, and
     `--dest` is what decides where the install actually lands. The second is
     outside the tree the caller named at all, because the `.mcp.json` location
-    is TWO levels up from the target root and neither level was checked."""
+    was TWO levels up from the target root. The third is the repair of the
+    first two failing on its own terms: a shape check plus a comparison against
+    ONE home string, which any environment naming a different `HOME` walked
+    straight past. `sudo` resets `HOME=/root`; cron and systemd units carry a
+    stale or absent one; Git-Bash spells it `/c/Users/alice`, which can never
+    equal the abspath of `C:\\Users\\alice`.
+
+    So the tests below do not all pin `HOME`. Pinning it is what let the third
+    reproduction live under a full green suite -- every test named the home the
+    guard was about to read, which is the one condition under which a
+    first-match string comparison is right."""
+
+    # The refusals here are asserted BY REASON, not by "something was raised".
+    # Four guards can refuse this call, and a test that cannot tell them apart
+    # passes while the one it is about is dead -- measured: with `normcase`
+    # removed, the case-fold test below still saw an `InstallError`, raised by
+    # the containment guard instead.
+    HOME_REFUSAL = "is a home directory"
 
     def _home_tree(self, tmp) -> tuple[Path, Path]:
         """A fake HOME with a user-scope skills directory inside it, which is
@@ -4263,15 +4297,18 @@ class McpWriteLocationTests(_McpWiringFixture):
         target_root.mkdir(parents=True, exist_ok=True)
         return home, target_root
 
-    def test_wiring_refuses_a_user_scope_target_root_despite_scope_project(self):
+    def test_wiring_refuses_a_user_scope_project_root_despite_scope_project(self):
+        """The backstop, on the one route left to it: a caller who explicitly
+        NAMES their home directory as the project."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             home, target_root = self._home_tree(tmp)
             with self.assertRaises(installer.InstallError) as raised:
                 self._wire(
-                    installer, tmp, target_root=target_root,
+                    installer, tmp, target_root=target_root, project_root=home,
                     scope="project", env={"HOME": str(home), "USERPROFILE": str(home)})
             message = str(raised.exception)
+            self.assertIn(self.HOME_REFUSAL, message)
             self.assertIn(str(home / installer.MCP_CONFIG_FILENAME), message)
             self.assertFalse((home / installer.MCP_CONFIG_FILENAME).exists())
 
@@ -4282,28 +4319,212 @@ class McpWriteLocationTests(_McpWiringFixture):
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             home, _ = self._home_tree(tmp)
-            target_root = home / "code" / "project" / ".claude" / "skills"
+            project_root = home / "code" / "project"
+            target_root = project_root / ".claude" / "skills"
             target_root.mkdir(parents=True)
             self._wire(
-                installer, tmp, target_root=target_root,
+                installer, tmp, target_root=target_root, project_root=project_root,
                 scope="project", env={"HOME": str(home), "USERPROFILE": str(home)})
-            self.assertTrue(
-                (home / "code" / "project" / installer.MCP_CONFIG_FILENAME).is_file())
+            self.assertTrue((project_root / installer.MCP_CONFIG_FILENAME).is_file())
             self.assertFalse((home / installer.MCP_CONFIG_FILENAME).exists())
 
-    def test_wiring_refuses_a_target_root_with_no_derivable_project_root(self):
-        """`--dest <anywhere>/skills`: two levels up is a directory the caller
-        never named. The refusal must NAME the path it would have written, or
-        the reader cannot tell a scope refusal from a shape refusal."""
+    def test_the_home_refusal_reads_every_candidate_and_not_just_the_first(self):
+        """R4, at the unit: `HOME` names somewhere else entirely and
+        `USERPROFILE` names the directory being written into. A first-match
+        lookup -- `HOME`, else `USERPROFILE`, else `Path.home()` -- returns the
+        decoy and lets the write through. Checking the candidates as a SET is
+        the only construction that refuses here.
+
+        This is the Windows shape stated plainly: `home_from_env` preferred
+        `HOME` over `USERPROFILE`, and on Windows `HOME` is the one of the two
+        the platform does not set."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home, target_root = self._home_tree(tmp)
+            decoy = Path(tmp) / "somewhere-else"
+            decoy.mkdir()
+            with self.assertRaises(installer.InstallError) as raised:
+                installer.resolve_mcp_config_write_path(
+                    target_root, project_root=home, scope="project",
+                    env={"HOME": str(decoy), "USERPROFILE": str(home)})
+            self.assertIn(self.HOME_REFUSAL, str(raised.exception))
+            self.assertIn(str(home / installer.MCP_CONFIG_FILENAME), str(raised.exception))
+            self.assertFalse((home / installer.MCP_CONFIG_FILENAME).exists())
+
+    def test_a_posix_mangled_home_still_refuses_the_home_it_actually_names(self):
+        """The Git-Bash shape: `HOME=/c/Users/alice` while the directory being
+        installed into is `C:\\Users\\alice`. The two strings can never be
+        equal, so the string comparison was inert on the platform the Windows
+        CI step exists to cover.
+
+        Simulated portably, because what matters is the shape and not the
+        drive letter: `HOME` carries a spelling of the home directory that no
+        `abspath` can turn into the real one, and `USERPROFILE` -- the variable
+        Windows itself sets, and the one `Path.home()` reads there -- carries
+        the real one."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home, target_root = self._home_tree(tmp)
+            # The MSYS translation rule itself: `C:\x` -> `/c/x`. On POSIX
+            # there is no drive to move, so a `/c` prefix stands in for it --
+            # the property under test is a HOME string that no path arithmetic
+            # can turn into the directory it names, not a drive letter.
+            drive, rest = os.path.splitdrive(str(home))
+            mangled = "/" + (drive.rstrip(":").lower() or "c") + rest.replace("\\", "/")
+            self.assertNotEqual(installer.comparable_path(mangled),
+                                installer.comparable_path(home))
+            with self.assertRaises(installer.InstallError) as raised:
+                installer.resolve_mcp_config_write_path(
+                    target_root, project_root=home, scope="project",
+                    env={"HOME": mangled, "USERPROFILE": str(home)})
+            self.assertIn(self.HOME_REFUSAL, str(raised.exception))
+            self.assertIn(str(home / installer.MCP_CONFIG_FILENAME), str(raised.exception))
+
+    def test_a_case_differing_spelling_of_home_is_the_same_home_where_case_is_folded(self):
+        """The other Windows shape: `os.path.abspath` does not `normcase`, so
+        `C:\\Users\\alice` and `C:\\users\\alice` compared unequal on a
+        filesystem where they are one directory.
+
+        The expected outcome is READ from the platform rather than assumed --
+        on a case-sensitive filesystem the two spellings really are two
+        directories and refusing would be wrong -- so this test asserts the
+        true thing on both, and its Windows arm is the one that kills a
+        `comparable_path` with the `normcase` taken out.
+
+        The target root is put UNDER the differently-spelled project root in
+        both arms, so the containment guard cannot answer for either and what
+        is measured is the home comparison alone."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "Home"
+            (home / ".claude" / "skills").mkdir(parents=True)
+            other_spelling = Path(tmp) / "hOME"
+            target_root = other_spelling / ".claude" / "skills"
+            folded = installer.comparable_path(other_spelling) == installer.comparable_path(home)
+            env = {"HOME": str(home), "USERPROFILE": str(home)}
+            if folded:
+                with self.assertRaises(installer.InstallError) as raised:
+                    installer.resolve_mcp_config_write_path(
+                        target_root, project_root=other_spelling, scope="project", env=env)
+                self.assertIn(self.HOME_REFUSAL, str(raised.exception))
+            else:
+                # Genuinely a different directory here, so it is not the home
+                # directory and writing inside it is the right answer.
+                self.assertEqual(
+                    other_spelling / installer.MCP_CONFIG_FILENAME,
+                    installer.resolve_mcp_config_write_path(
+                        target_root, project_root=other_spelling, scope="project", env=env))
+
+    def test_the_case_fold_holds_when_the_platform_folds_case(self):
+        """The same property with the platform's answer forced, so a POSIX run
+        can kill the mutation that only a Windows run would otherwise catch.
+        `os.path.normcase` IS the platform's case rule; making it fold here is
+        exactly what running on Windows does.
+
+        The refusal is asserted BY REASON. Asserting only that something was
+        raised passed with `normcase` removed, because the containment guard
+        raised instead -- a test that cannot tell which guard answered cannot
+        tell whether the one it is about still works."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp) / "Home"
+            (home / ".claude" / "skills").mkdir(parents=True)
+            lowered = Path(str(home).lower())
+            with mock.patch("os.path.normcase", str.lower):
+                with self.assertRaises(installer.InstallError) as raised:
+                    installer.resolve_mcp_config_write_path(
+                        lowered / ".claude" / "skills",
+                        project_root=lowered,
+                        scope="project",
+                        env={"HOME": str(home), "USERPROFILE": str(home)})
+            self.assertIn(self.HOME_REFUSAL, str(raised.exception))
+
+    def test_the_running_process_own_home_is_always_a_candidate(self):
+        """The Git-Bash case with nothing to rescue it: `HOME` carries the
+        POSIX-mangled spelling and the caller's environment names no
+        `USERPROFILE` at all, so every value IN the environment misses. The
+        refusal has to come from `Path.home()` -- which on Windows CPython
+        reads `USERPROFILE`/`HOMEDRIVE` and ignores `HOME` entirely, and is
+        therefore the one candidate a passed-in environment cannot misreport.
+
+        It is a member of the candidate set, not a fallback reached when the
+        others are absent. A fallback would have been shadowed here by the
+        `HOME` that is present and wrong, which is exactly what the first-match
+        lookup did."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home, target_root = self._home_tree(tmp)
+            drive, rest = os.path.splitdrive(str(home))
+            mangled = "/" + (drive.rstrip(":").lower() or "c") + rest.replace("\\", "/")
+            with mock.patch.object(Path, "home", classmethod(lambda cls: home)):
+                with self.assertRaises(installer.InstallError) as raised:
+                    installer.resolve_mcp_config_write_path(
+                        target_root, project_root=home, scope="project",
+                        env={"HOME": mangled})
+            self.assertIn(self.HOME_REFUSAL, str(raised.exception))
+
+    def test_wiring_refuses_a_project_root_the_target_root_is_not_inside(self):
+        """The containment sentence, checked rather than promised: a caller who
+        names one project and installs the skills into another gets a refusal,
+        not a door wired for a project this run never touched."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            named = Path(tmp) / "named-project"
+            named.mkdir()
+            elsewhere = Path(tmp) / "elsewhere" / ".claude" / "skills"
+            elsewhere.mkdir(parents=True)
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp, target_root=elsewhere, project_root=named,
+                           env={"HOME": str(Path(tmp) / "home")})
+            self.assertIn(str(named), str(raised.exception))
+            self.assertFalse((named / installer.MCP_CONFIG_FILENAME).exists())
+
+    def test_wiring_refuses_when_no_project_root_was_named(self):
+        """`--dest` names a skills directory, not a project. The old code took
+        two levels up and screened the result; this refuses instead, and still
+        NAMES the path that arithmetic would have written -- otherwise the
+        reader cannot tell this refusal from a scope one."""
         installer = load_installer()
         with tempfile.TemporaryDirectory() as tmp:
             target_root = Path(tmp) / "proj" / "skills"
             target_root.mkdir(parents=True)
             would_have_written = Path(tmp) / installer.MCP_CONFIG_FILENAME
             with self.assertRaises(installer.InstallError) as raised:
-                self._wire(installer, tmp, target_root=target_root)
-            self.assertIn(str(would_have_written), str(raised.exception))
+                self._wire(installer, tmp, target_root=target_root, project_root=None)
+            message = str(raised.exception)
+            self.assertIn(str(would_have_written), message)
+            self.assertIn("--project", message)
             self.assertFalse(would_have_written.exists())
+
+    def test_a_perfectly_shaped_dest_is_refused_too_because_it_names_no_project(self):
+        """The anti-vacuity twin of the refusal above, and the behaviour change
+        worth stating out loud: `--dest <proj>/.claude/skills` has exactly the
+        shape the old derivation accepted, and it is refused now anyway. That
+        is the point -- accepting the well-shaped case is what forced a
+        heuristic to sort the well-shaped home install from the well-shaped
+        project one."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            target_root = project / ".claude" / "skills"
+            target_root.mkdir(parents=True)
+            with self.assertRaises(installer.InstallError) as raised:
+                self._wire(installer, tmp, target_root=target_root, project_root=None)
+            self.assertIn("--project", str(raised.exception))
+            self.assertFalse((project / installer.MCP_CONFIG_FILENAME).exists())
+
+    def test_home_from_env_takes_its_fallback_from_the_caller(self):
+        """The secondary R4 finding: `home_from_env({})` used to end
+        `return Path.home()`, so a caller handing it an environment with no
+        `HOME` key silently got the running machine's home. The fallback is now
+        an argument with no default, so the substitution is visible at the call
+        site."""
+        installer = load_installer()
+        stated = Path("/constellation-stated-fallback")
+        self.assertEqual(stated, installer.home_from_env({}, fallback=stated))
+        self.assertNotEqual(Path.home(), installer.home_from_env({}, fallback=stated))
+        with self.assertRaises(TypeError):
+            installer.home_from_env({})
 
     def test_wire_mcp_reads_its_scope_argument(self):
         """R3: `scope` was declared and never read -- present in the signature,
@@ -4327,8 +4548,8 @@ class McpWriteLocationTests(_McpWiringFixture):
             home, target_root = self._home_tree(tmp)
             with self.assertRaises(installer.InstallError):
                 self._wire(
-                    installer, tmp, target_root=target_root, dry_run=True,
-                    env={"HOME": str(home), "USERPROFILE": str(home)})
+                    installer, tmp, target_root=target_root, project_root=home,
+                    dry_run=True, env={"HOME": str(home), "USERPROFILE": str(home)})
 
 
 class McpWriteLocationCliTests(unittest.TestCase):
@@ -4370,6 +4591,92 @@ class McpWriteLocationCliTests(unittest.TestCase):
             self.assertNotEqual(0, raised.exception.code)
             self.assertIn(str(outside), err.getvalue())
             self.assertFalse(outside.exists())
+
+    def _fake_home_dest(self, tmp) -> tuple[Path, Path]:
+        home = Path(tmp) / "home" / "alice"
+        dest = home / ".claude" / "skills"
+        dest.mkdir(parents=True)
+        return home, dest
+
+    def _dest_argv(self, dest) -> list[str]:
+        return ["--agent", "claude", "--scope", "project", "--dest", str(dest),
+                "--wire-mcp", "--mcp-from", "source", "--skills", "workbench"]
+
+    def test_no_environment_can_talk_a_dest_install_into_writing_a_mcp_json(self):
+        """R4, as reproduced on the previous repair with no source edits:
+
+            HOME=<other> ... --scope project --dest <realhome>/.claude/skills
+                             --wire-mcp --mcp-from source --skills workbench
+            -> "wired the spine MCP server into <realhome>/.mcp.json"
+
+        Same directory, same flags, and the only difference from the arm that
+        refused was the `HOME` string -- so the guard was worth exactly what
+        the environment said, which under `sudo` is `/root` and under cron or a
+        systemd unit is stale or absent. Every environment below is an arm of
+        that reproduction, and none of them may write anything."""
+        installer = load_installer()
+        environments = {
+            "HOME names somewhere else entirely":
+                lambda tmp: {"HOME": str(Path(tmp) / "elsewhere")},
+            "HOME is /root, as sudo leaves it": lambda _tmp: {"HOME": "/root"},
+            "no HOME at all, as a systemd unit has": lambda _tmp: {},
+            "HOME empty, as a blanked export leaves it": lambda _tmp: {"HOME": ""},
+            "Git-Bash spelling of the very home being written into":
+                lambda tmp: {"HOME": "/c" + str(Path(tmp) / "home" / "alice").replace("\\", "/")},
+        }
+        for label, build in environments.items():
+            with self.subTest(environment=label):
+                with tempfile.TemporaryDirectory() as tmp:
+                    home, dest = self._fake_home_dest(tmp)
+                    with contextlib.redirect_stderr(io.StringIO()) as err:
+                        with self.assertRaises(SystemExit) as raised:
+                            installer.main(self._dest_argv(dest), env=build(tmp),
+                                           out=lambda _: None)
+                    self.assertNotEqual(0, raised.exception.code)
+                    self.assertIn(str(home / installer.MCP_CONFIG_FILENAME), err.getvalue())
+                    self.assertFalse((home / installer.MCP_CONFIG_FILENAME).exists())
+
+    def test_the_dest_refusal_holds_under_this_process_own_environment(self):
+        """The blind spot named: every other test here hands `main` an `env` it
+        composed, which is the one condition under which a guard reading `HOME`
+        is guaranteed to see the home the test is about. This arm passes the
+        REAL environment through untouched, so whatever `HOME` this machine or
+        CI runner has -- Git-Bash's `/c/Users/runneradmin`, a container's
+        `/root`, none at all -- is what the installer gets.
+
+        It installs into a temp directory either way, so nothing here can reach
+        a real home whatever the answer."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            home, dest = self._fake_home_dest(tmp)
+            with contextlib.redirect_stderr(io.StringIO()) as err:
+                with self.assertRaises(SystemExit) as raised:
+                    installer.main(self._dest_argv(dest), env=dict(os.environ),
+                                   out=lambda _: None)
+            self.assertNotEqual(0, raised.exception.code)
+            self.assertIn(str(home / installer.MCP_CONFIG_FILENAME), err.getvalue())
+            self.assertFalse((home / installer.MCP_CONFIG_FILENAME).exists())
+
+    def test_a_named_project_root_wires_and_writes_only_inside_itself(self):
+        """The anti-vacuity twin of every refusal above: without it an
+        installer that refused `--wire-mcp` outright would pass them all. Run
+        with NO `HOME` in the environment, because the write location no longer
+        depends on one."""
+        installer = load_installer()
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "proj"
+            project.mkdir()
+            lines: list[str] = []
+            installer.main(
+                ["--agent", "claude", "--scope", "project", "--project", str(project),
+                 "--wire-mcp", "--mcp-from", "source", "--skills", "workbench"],
+                env={}, out=lines.append,
+            )
+            written = project / installer.MCP_CONFIG_FILENAME
+            self.assertTrue(written.is_file(), "\n".join(lines))
+            self.assertIn(
+                "spine", json.loads(written.read_text(encoding="utf-8"))["mcpServers"])
+            self.assertFalse((Path(tmp) / installer.MCP_CONFIG_FILENAME).exists())
 
 
 class McpReadinessTests(_McpWiringFixture):

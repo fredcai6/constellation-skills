@@ -51,8 +51,10 @@ Two things worth knowing, both measured against the real client rather than assu
 
 `python scripts/install_constellation.py --agent claude --scope project --dest <project>/.claude/skills
 --check-readiness` reports this as its `mcp` item, by expanding the committed `command` and actually
-launching it. `--wire-mcp` writes a project's `.mcp.json` with the interpreter probed on that host,
-and refuses when the file is git-tracked — a probed interpreter name is right on one machine and
+launching it. `--wire-mcp` writes a project's `.mcp.json` with the interpreter probed on that host. It needs the
+project root named — `--project <project>`, or a bare `--scope project` run started from it — and
+refuses under `--dest`, which names a skills directory rather than a project. It also refuses when
+the file is git-tracked — a probed interpreter name is right on one machine and
 wrong on every other, so it must never reach a shared file. This repo's own `.mcp.json` is tracked
 and stays tracked; here the environment variable is the fix.
 

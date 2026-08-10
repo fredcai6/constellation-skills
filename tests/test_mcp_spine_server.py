@@ -617,6 +617,7 @@ class McpDoorLaunchesFromEmittedConfigTests(unittest.TestCase):
         target_root.mkdir(parents=True, exist_ok=True)
         INSTALLER.wire_mcp(
             target_root,
+            project_root=project,
             interpreter=interpreter,
             dry_run=False,
             scope="project",
@@ -795,23 +796,31 @@ class SpineEngineIsLoadBearingTests(unittest.TestCase):
 
         A MARKED copy of the real engine, in a directory that is neither this
         checkout's `scripts/` nor any install layout's sibling of the server
-        script -- so the mark can only reach the tool result if the door loaded
-        the engine from somewhere the variable pointed it.
+        script, and under a name that is NOT `checklist_engine.py` -- so the
+        mark can only reach the tool result if the door loaded the engine from
+        the exact FILE the variable named.
 
-        The DECOY beside it is what makes the test bite. An implementation that
-        merely checks the path exists and then does `sys.path.insert(0,
-        ENGINE.parent); import checklist_engine` passes every weaker version of
-        this test, because the named directory goes on the path first and the
-        file it wants is right there under the expected name. That
-        implementation is still wrong -- `SPINE_ENGINE` names a FILE, and it
-        would silently run a same-named neighbour instead -- and it is a
-        mutation that survived until the decoy existed."""
+        The different NAME is what makes this bite, and this docstring used to
+        credit a decoy instead. It claimed an unmarked `checklist_engine.py`
+        written beside the marked copy was what killed the surviving
+        `sys.path.insert(0, ENGINE.parent); import checklist_engine` mutation.
+        Measured, three constructions against that mutation:
+
+            as shipped                                     RED
+            decoy deleted, marked copy still renamed       RED
+            decoy deleted and marked copy renamed back     GREEN
+
+        The decoy changed no outcome; the rename is the whole kill. A
+        path-insert-and-import implementation cannot reach a file called
+        `spine_engine_variant.py` at all, with or without a neighbour for it to
+        find instead. The decoy is deleted rather than re-explained, because an
+        unmeasured basis stated as a measured one is the defect family this
+        change exists to close."""
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             elsewhere = root / "engine-elsewhere"
             elsewhere.mkdir()
             pristine = ENGINE.read_text(encoding="utf-8")
-            (elsewhere / ENGINE.name).write_text(pristine, encoding="utf-8", newline="\n")
             marked = elsewhere / "spine_engine_variant.py"
             marked.write_text(
                 pristine
