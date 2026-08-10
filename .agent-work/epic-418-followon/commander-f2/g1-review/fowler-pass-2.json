@@ -1,0 +1,20 @@
+{
+  "work_id": "epic-418-followon/commander-f2/g1-review-2",
+  "diff_ref": "commit 80995760 -- tests/test_mcp_identity.py (2 new methods on IdentityBindingPinTests), .agent-work/epic-418-followon/commander-f2/IDENTITY_TRADE.md (SS2 narrowing), map/INDEX.md (regenerated)",
+  "repo_standards_ref": "docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, skills/_shared/global-crew.md",
+  "smells": [
+    {"smell": "long-method", "verdict": "absent", "finding": "The two new methods run 15-30 lines including docstrings, matching the established length of sibling pin tests in this same class (already overridden in the prior review's Fowler pass under the file's documentation-density convention).", "override": null},
+    {"smell": "large-class", "verdict": "absent", "finding": "IdentityBindingPinTests grows from 5 to 7 methods; still a cohesive single-concern test class.", "override": null},
+    {"smell": "duplicated-code", "verdict": "absent", "finding": "test_the_runtime_pin_can_fail's local redirecting_call_tool intentionally re-enacts the mutation as a positive control, not accidental duplication of production logic; no other duplication introduced.", "override": null},
+    {"smell": "feature-envy", "verdict": "absent", "finding": "Both tests operate entirely on the module they load via the class's own _load_module helper.", "override": null},
+    {"smell": "data-clumps", "verdict": "absent", "finding": "No new parameter groupings introduced.", "override": null},
+    {"smell": "primitive-obsession", "verdict": "absent", "finding": "The five literal key-name strings are pin-test fixture data, not a primitive standing in for a missing type.", "override": null},
+    {"smell": "long-parameter-list", "verdict": "absent", "finding": "No new function signatures added; both tests use the existing zero/one-arg helpers.", "override": null},
+    {"smell": "shotgun-surgery", "verdict": "absent", "finding": "The rework is localized to the two files the finding required (test file, trade doc) plus the map rebuild; no scattered edits.", "override": null},
+    {"smell": "divergent-change", "verdict": "overridden", "finding": "Adding runtime-pin tests to the same class that already holds schema/import-time pins broadens the class's reasons to change.", "override": {"repo_standard": "This file's own pre-existing DC2/DC3 documentation-density convention, already logged as the standard in the prior review's Fowler pass (fowler-pass.json) for this exact file.", "reason": "The file is organized as one acceptance-test module per architectural claim (identity binding), not one class per verb; adding a new HALF of the same claim (runtime vs declared) to the existing pin class matches the file's own established organizing principle rather than fragmenting it, and the prior reviewer already ruled this pattern acceptable in this file."}},
+    {"smell": "message-chains", "verdict": "absent", "finding": "No new chained accessor calls.", "override": null},
+    {"smell": "speculative-generality", "verdict": "absent", "finding": "The two new tests are narrowly targeted at the exact gap the prior reviewer demonstrated; no speculative hooks or unused generality added.", "override": null},
+    {"smell": "comments-as-deodorant", "verdict": "overridden", "finding": "Both new test methods carry long docstrings explaining WHY the test exists and what gap it closes, not merely restating the code.", "override": {"repo_standard": "Same file's documentation-density convention as logged in fowler-pass.json for commit 36a1bdcd.", "reason": "The docstrings carry irreplaceable provenance (which reviewer found the gap, what the positive control proves) that the code alone cannot express -- explanatory rationale, not a patch over unclear code."}}
+  ],
+  "rail_exception": null
+}

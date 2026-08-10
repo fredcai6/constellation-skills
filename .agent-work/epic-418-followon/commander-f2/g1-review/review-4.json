@@ -1,0 +1,181 @@
+{
+  "work_id": "epic-418-followon/commander-f2",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md, docs/agents/CREW_CONTEXT.md, IDENTITY_TRADE.md, g1-review-handoff.md, reviewer-result-3.md, and the 4a214dd3 diff (test_mcp_identity.py, IDENTITY_TRADE.md). No docs/agents/engine-config.json in this worktree -- known pre-existing gap, engine tolerates it (same as reviewers 2/3 noted).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fourth pass, verifying commit 4a214dd3 against reviewer 3's BLOCK. Reproduced reviewer 3's exact direct-read mutation myself (spine_path key on spine_status bypassing run_engine entirely): went RED, exactly and only on test_no_argument_can_change_what_the_door_reads_or_where_it_reads_it, 1 failed 6 passed. Restored via cp from a pre-mutation backup; diff 0 lines; 7 passed. Reviewer 3 exact finding is genuinely resolved for that exact defeat.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Criterion E: git diff HEAD~4 -- scripts/ is 0 lines (verified in scratchpad e_scripts_diff.txt). git log HEAD~4..HEAD for scripts/checklist_engine.py and scripts/hooks/spine_rail.py both empty -- neither touched across the four-commit window. My own two temporary mutations to scripts/mcp_spine_server.py (reproducing reviewer 3's direct-read, and my own leak-alongside-sentinel mutation) were each restored from a pre-mutation backup; diff -q confirms byte-identical both times.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Sixth mutation defeats the pass-through pin while it stays fully green. The pin's final check on the engine-called branch is assertIn(sentinel, text), a substring test, not equality, even though the docstring and IDENTITY_TRADE.md both claim the result text IS the engine call's own output. I mutated spine_status in call_tool so it still calls run_engine normally (bound file, bound session, sentinel present), then appends the content of whatever file an undeclared key happens to name onto the returned text. Ran IdentityBindingPinTests: 7 passed, including the universal pin, because the sentinel is still present in the concatenated text and argv still shows the bound file and session. Independently confirmed live outside the mocked spy: called call_tool directly against a real bound spine marked PIN-MARK-LIVE and a real decoy marked DECOY-MARK-LIVE via an undeclared key named debug_hint; the returned isError was False and the text contained both the bound spine's genuine engine output and the full JSON body of the decoy spine, proving this is a real data leak, not an artifact of the mock. Restored via cp from the pre-mutation backup; diff empty; suite back to 7 passed. This is a new mutation, distinct from the two the Commander already tried (full replacement of the answer, and redirecting SESSION) -- it keeps the genuine sentinel intact and only concatenates extra content, which assertIn cannot distinguish from a clean pass-through.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Criterion A re-verified item by item against IDENTITY_TRADE.md as it stands after 4a214dd3: (1) option taken, stated plainly -- section 1, bind identity to the container, per-seam granularity rule. (2) property given up, named -- section 2, an in-session dispatched crew member cannot drive its own plan through the door. (3) each rejected option with what it would and would not cover -- section 3, Option A and Option B both present with the would/would-not split. (4) fleet-wide general shape -- section 4, the two-seam table plus the granularity rule stated fleet-wide. (5) applies to the hook seam, and why -- section 5, explicit yes with the session_view merge mechanism named. (6) what a seam with no per-call argument does -- section 6. All six present. Section 2 now records all THREE falsifications (spine_override, target_spine, the direct-read handler) plus the two the Commander found afterward, an addition over the two-falsification wording reviewer 3 verified, nothing lost. Handoff constraints checked: python -m pytest used exclusively, never python3; no command piped into head or tail with its exit code read, every output redirected to a scratch file with the command's own dollar-question-mark captured; no backticks or command-looking text placed inside any engine finding or summary or statement string; review-4.json created by targeted string substitution on the raw template text, never round-tripped through json.load and json.dump; the checklist JSON driven only through checklist_engine.py verbs.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "IDENTITY_TRADE.md remains the durable architecture record this gate must produce. docs/CHECKLIST_ENGINE_DESIGN.md untouched across HEAD~4..HEAD (0-line diff), no conflict. The residual gap found this pass (assertIn vs equality on the engine-called branch) is the same overclaim shape the document's own section 2 already names as having happened three times before -- a claim narrower in the code than in the prose, slipping past because the check's actual reach was narrower than its own docstring. Routed as triage candidate tc1, not treated as an independent architecture conflict; Commander reconciles by widening the pin or narrowing the claim, same remedy pattern as the prior three rounds.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-f2/g1-review/fowler-pass-4.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler pass run against commit 4a214dd3 (fowler-pass-4.json), scripts/verify_fowler_pass.py exits 0: 10 of 12 baseline smells absent, 2 overridden (divergent-change, comments-as-deodorant), each citing the same file-level documentation-density and one-class-per-claim standard the three prior reviews already applied to this exact file. No blocking quality finding; the substantive defect this pass found is a correctness gap in the pin's own assertion strength (assertIn vs equality), recorded under r3-evidence, not a code smell.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-f2/g1-review/fowler-pass-4.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: Sixth mutation defeats the pass-through pin while it stays fully green. The pin's final check on the engine-called branch is assertIn(sentinel, text), a substring test, not equality, even though the docstring and IDENTITY_TRADE.md both claim the result text IS the engine call's own output. I mutated spine_status in call_tool so it still calls run_engine normally (bound file, bound session, sentinel present), then appends the content of whatever file an undeclared key happens to name onto the returned text. Ran IdentityBindingPinTests: 7 passed, including the universal pin, because the sentinel is still present in the concatenated text and argv still shows the bound file and session. Independently confirmed live outside the mocked spy: called call_tool directly against a real bound spine marked PIN-MARK-LIVE and a real decoy marked DECOY-MARK-LIVE via an undeclared key named debug_hint; the returned isError was False and the text contained both the bound spine's genuine engine output and the full JSON body of the decoy spine, proving this is a real data leak, not an artifact of the mock. Restored via cp from the pre-mutation backup; diff empty; suite back to 7 passed. This is a new mutation, distinct from the two the Commander already tried (full replacement of the answer, and redirecting SESSION) -- it keeps the genuine sentinel intact and only concatenates extra content, which assertIn cannot distinguish from a clean pass-through."
+    ],
+    "summary": "Fourth pass on commit 4a214dd3. Reviewer 3's exact finding (a handler that reads a decoy spine directly and returns its content without ever calling the engine) is genuinely resolved -- reproduced RED on test_no_argument_can_change_what_the_door_reads_or_where_it_reads_it. But the rewritten pin's engine-called branch checks assertIn(sentinel, text), a substring test, not equality against the engine call's own output, even though both the docstring and IDENTITY_TRADE.md claim the result text IS that output. A handler that calls run_engine genuinely (bound file, bound session, sentinel intact) and then concatenates content read from an attacker-named path onto the result stays fully green across all 7 IdentityBindingPinTests. Confirmed live outside the mocked spy: real bound spine, real decoy spine, undeclared key, isError False, response contains both the genuine engine output and the full leaked decoy JSON. This is the same overclaim shape the document's own section 2 already names as having happened three times before, one layer further in. Criteria A, D, E all hold. Full suite: 2274 passed, 1 skipped, 0 failed."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r3-evidence",
+      "statement": "The pass-through pin (test_no_argument_can_change_what_the_door_reads_or_where_it_reads_it) checks the engine-called branch with a substring test (assertIn sentinel in text), not equality against the engine call's own output. A handler that calls run_engine genuinely and then concatenates content read from an attacker-named path onto the result stays fully green, because the sentinel survives the concatenation. Demonstrated live on spine_status via an undeclared key whose value names a decoy spine file; the leaked JSON appears in the response alongside the real engine output, isError False. Fix: assert the text equals the engine call's own captured stdout plus stderr exactly (or at least does not exceed it), not merely that it contains the sentinel."
+    }
+  ],
+  "blockers": [],
+  "refusals": 0,
+  "engine_session": {
+    "session_id": "reviewer-attempt-4-1786345759",
+    "status": "released",
+    "claimed_at": "2026-08-10T07:09:19.090566+00:00",
+    "last_heartbeat": "2026-08-10T07:18:07.340410+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T07:20:45.960519+00:00"
+  }
+}

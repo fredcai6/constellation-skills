@@ -1,0 +1,3 @@
+{"ts": "2026-08-10T07:50:29+00:00", "tool": "spine_lease", "class": "unknown-action", "detail": "spine_lease: unknown action 'teleport'"}
+{"ts": "2026-08-10T07:50:29+00:00", "tool": "spine_evidence", "class": "missing-required-argument", "detail": "spine_evidence attest: missing required argument(s): condition_id"}
+{"ts": "2026-08-10T07:50:29+00:00", "tool": "does_not_exist", "class": "unknown-tool", "detail": "unknown tool 'does_not_exist'"}

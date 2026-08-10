@@ -1,0 +1,487 @@
+{
+  "work_id": "epic-418-followon/commander-f2/g4a-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-red",
+    "m2-tier1",
+    "m3-tier2",
+    "m4-tier3",
+    "m5-tier4",
+    "m6-two-sided-proof",
+    "m7-verify",
+    "m8-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read this skill's references/global-crew.md and references/global-everyone.md, the g4a-implement handoff in full, and .agent-work/epic-418-followon/commander-f2/IDENTITY_TRADE.md section 2 (the in-session dispatched crew member cannot drive its own plan through the door). Confirm the handoff carries task, protected intent, the pre-authored Tier 1-5 invariant chain, close criteria, allowed scope, exclusions, constraints and a result path. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + IDENTITY_TRADE.md section 2 + global doctrine read; Tier 1-5 invariant chain, scope, exclusions and close criteria understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff read in full (task, protected intent, Tier1-5 invariant chain by file/JSON-field, close criteria, allowed scope, exclusions, constraints, result path). IDENTITY_TRADE.md section 2 read: an in-session dispatched crew member cannot drive its own plan through the door; a Commander may drive its own spine through it. global-crew.md + global-everyone.md doctrine read."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-red": {
+      "id": "m1-red",
+      "title": "TDD red: author tests/test_mcp_adoption.py against the unedited corpus",
+      "imperative": "Write tests/test_mcp_adoption.py asserting the full pre-authored invariant chain from the handoff, two-sided per file: Tier1 asserts by JSON field path (json.load each of the 3 spine templates, navigate to the exact .tasks.<id>.imperative field, assert it names the correct door tool AND still contains the existing CLI marker '<engine>') plus commander-core.md:127's attach line (text-based, both halves in the same paragraph); Tier2 asserts each SKILL.md has one paragraph containing both a 'default' cue and a door tool name AND the checklist_engine.py CLI marker in that SAME paragraph; Tier3 asserts checklist-engine.md names door tools as default, still names checklist_engine.py, and documents all 5 CLI-only verbs (skip/reopen/append/amend/flag-candidate) as CLI-only with no door tool name in the same sentence; Tier4 asserts the 2 authoring templates the same way as Tier2; Tier5 asserts global-everyone.md and fleet-doctrine.md still name checklist_engine.py AND contain NO door tool name anywhere (do-not-touch, both halves). Run python -m pytest -q tests/test_mcp_adoption.py and observe it fail against the current, unedited corpus (Tier1-4 door-tool assertions RED; Tier5 do-not-touch assertions already pass since nothing has been touched). Attest c1 with the pasted RED output.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "context loaded",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "m0-context complete; ready to author the test file."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: tests/test_mcp_adoption.py written and observed failing against the unedited corpus (manual attest; do not command-check a by-design-failing test)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests/test_mcp_adoption.py written (8 test classes across Tier1-5). Ran python -m pytest -q tests/test_mcp_adoption.py against the unedited corpus: 21 failed, 34 passed. All 21 failures are door-tool-not-named assertions across Tier1 (7 imperative fields), Tier1 commander-core.md attach line, Tier2 (6 SKILL.md files x default-path-paragraph + 2 identity-trade), Tier3 (checklist-engine.md x3), Tier4 (2 authoring templates) -- exactly the corpus this gate must edit. The 34 passing tests are the CLI-still-present half (already true pre-edit) plus JSON-validity and Tier5 do-not-touch (both halves already pass since nothing has been touched). This is genuine RED, not vacuous: it fails specifically on the door-tool half."
+        }
+      ],
+      "constraints": [
+        "assert on the imperative FIELD by JSON field path for Tier1, never a file-level text grep",
+        "every assertion is two-sided: door tool named AND CLI marker retained"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m2-tier1": {
+      "id": "m2-tier1",
+      "title": "Tier1: name a door tool as default in the 7 imperative fields + commander-core.md:127, CLI stays",
+      "imperative": "Edit COMMANDER_SPINE.template.json (.tasks.init.imperative, .tasks.plan.imperative, .tasks.archive.imperative), ADMIRAL_SPINE.template.json (.tasks.init.imperative, .tasks.closeout.imperative), EXPLORER_SPINE.template.json (.tasks.init.imperative, .tasks.route.imperative) and commander-core.md:127 as RAW TEXT (never round-trip through json.load/json.dump) so each names the relevant door tool (spine_lease for claim/release, spine_evidence for attach) as the default path while the existing literal CLI command ('<engine> claim/release/attach ...') stays verbatim as the documented fallback. Re-validate all 3 JSON files with json.load afterward. Run python -m pytest -q tests/test_mcp_adoption.py -k Tier1 and make it pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED confirmed in m1-red."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Tier1 field-path assertions pass; the 3 JSON templates remain valid JSON",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_mcp_adoption.py -k Tier1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m2-tier1-1"
+        }
+      ],
+      "constraints": [
+        "never delete or discourage an existing CLI line",
+        "never touch scripts/checklist_engine.py, scripts/mcp_spine_server.py, scripts/install_constellation.py, scripts/hooks/spine_rail.py"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m2-tier1-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_mcp_adoption.py -k Tier1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m3-tier2": {
+      "id": "m3-tier2",
+      "title": "Tier2: default-path prose in the 6 SKILL.md bodies, CLI stays, identity-trade caveat carried",
+      "imperative": "Edit skills/workbench/SKILL.md, skills/charter/SKILL.md, skills/reviewer/SKILL.md, skills/interrogator/SKILL.md, skills/implementer/SKILL.md, skills/explorer/SKILL.md: in the paragraph that already names scripts/checklist_engine.py as the drive mechanism, add that the MCP door's spine_* tools are the default path when this agent owns the process's bound spine (pointing to workbench references/checklist-engine.md), keep the checklist_engine.py CLI line as the documented fallback in that SAME paragraph, and state the identity-trade fact: an in-session dispatched crew member (an Implementer or Reviewer a Commander dispatches) shares the parent's MCP scope and must drive its OWN plan/survey via the CLI, never the door. Run python -m pytest -q tests/test_mcp_adoption.py -k Tier2 and make it pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Tier1 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Tier1 green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Tier2 two-sided per-file assertions pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_mcp_adoption.py -k Tier2"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-tier2-1"
+        }
+      ],
+      "constraints": [
+        "never delete or discourage the checklist_engine.py CLI mention",
+        "carry the g1 identity-trade fact in the instructions, not just cite it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-tier2-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_mcp_adoption.py -k Tier2",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-tier3": {
+      "id": "m4-tier3",
+      "title": "Tier3: checklist-engine.md becomes the authoritative door-vs-CLI reference",
+      "imperative": "Edit skills/workbench/references/checklist-engine.md: augment the canonical invocation (~line 5) to name the door tools as default and the CLI as fallback; add a new section (linked from the Contents TOC) that lists the 7 door tools, states the full identity-trade rule (a Commander may drive its own spine.json through the door; an in-session dispatched Implementer/Reviewer must drive its own plan/survey via the CLI because it shares the parent's MCP scope and the door stays bound to the parent's spine), and documents all 5 CLI-only verbs (skip, reopen, append, amend, flag-candidate) as CLI-only with the reason each has no door tool, citing mcp_spine_server.py's fallback table as authority; augment the Session lease verb table (~69-78) with the spine_lease door equivalent alongside the CLI block. Run python -m pytest -q tests/test_mcp_adoption.py -k Tier3 and make it pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Tier2 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Tier2 green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Tier3 assertions pass: door named as default, CLI retained, 5 CLI-only verbs correctly attributed with no door tool in the same sentence",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_mcp_adoption.py -k Tier3"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-tier3-1"
+        }
+      ],
+      "constraints": [
+        "do not claim a door tool exists for skip/reopen/append/amend/flag-candidate"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-tier3-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_mcp_adoption.py -k Tier3",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-tier4": {
+      "id": "m5-tier4",
+      "title": "Tier4: authoring templates default to the door too, so future skills inherit it",
+      "imperative": "Edit skills/write-a-skill/templates/gated-engine-SKILL.template.md and skills/write-a-skill/templates/survey-SKILL.template.md the same way as Tier2: the paragraph that names scripts/checklist_engine.py gets a door-default sentence pointing at workbench references/checklist-engine.md, with checklist_engine.py kept in the same paragraph as the CLI fallback. Run python -m pytest -q tests/test_mcp_adoption.py -k Tier4 and make it pass.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Tier3 green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Tier3 green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "Tier4 two-sided assertions pass",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_mcp_adoption.py -k Tier4"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-tier4-1"
+        }
+      ],
+      "constraints": [
+        "never delete or discourage the checklist_engine.py CLI mention"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-tier4-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_mcp_adoption.py -k Tier4",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-two-sided-proof": {
+      "id": "m6-two-sided-proof",
+      "title": "Prove the test is two-sided: delete a CLI mention, watch it go RED, restore",
+      "imperative": "Pick one already-edited Tier1 field (COMMANDER_SPINE.template.json .tasks.archive.imperative). Temporarily delete its CLI marker ('<engine> release --session-id <commander-session-id>') as raw text, leaving the door-tool mention intact. Run python -m pytest -q tests/test_mcp_adoption.py -k Tier1, redirect output to a file, and confirm a nonzero exit / failing assertion for that specific field (RED \u2014 proves the test does not merely check 'a door tool is named'). Restore the exact original text (git diff against the pre-deletion version must be empty for that field once restored), re-validate with json.load, and re-run to confirm GREEN. Attach both captured outputs as evidence.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "Tier1-4 all green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Tier1-4 all green (55 passed on full test_mcp_adoption.py)."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "two-sided proof captured: CLI deletion made Tier1 go RED; restored text is byte-identical to the post-m2 edit; suite is GREEN again",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_mcp_adoption.py -k Tier1"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m6-two-sided-proof-1"
+        }
+      ],
+      "constraints": [
+        "the restore must be exact -- diff the field before and after"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m6-two-sided-proof-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_mcp_adoption.py -k Tier1",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m7-verify": {
+      "id": "m7-verify",
+      "title": "Full suite, code map rebuild, deliverable path check, re-measured adoption count",
+      "imperative": "Run the full suite with python -m pytest -q (never python3). Validate all 3 spine templates with json.load. Rebuild the code map: python -m scripts.code_map build --root . (a test file was added). Run git check-ignore on every committed deliverable, expecting exit 1 for each. Re-run the adoption grep: grep -rlE 'mcp__spine__|spine_status|spine_lease|spine_start|spine_advance|spine_evidence|spine_halt|spine_survey_result' skills/ and record the count as a number. Attest c1 with all outputs.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "two-sided proof captured and restored",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "two-sided proof captured and restored."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green (including tests/test_code_map.py freshness)",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m7-verify-1"
+        }
+      ],
+      "constraints": [
+        "rebuild the code map before the final suite run, not after"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m7-verify-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m8-result": {
+      "id": "m8-result",
+      "title": "Write IMPLEMENTER_RESULT",
+      "imperative": "Write the IMPLEMENTER_RESULT to .agent-work/epic-418-followon/commander-f2/crew-handoffs/g4a-implement-implementer-result.md: what changed per file, the two-sided test evidence including the deliberate CLI-deletion RED proof, the re-measured adoption count, anything not done, and Workflow Feedback. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "full suite green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "full suite green."
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT.md written with all required sections",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT written to .agent-work/epic-418-followon/commander-f2/crew-handoffs/g4a-implement-implementer-result.md with all required sections: scope, behavior changed, Map Impact, test mode, evidence (all 3 verification commands from the handoff), TDD evidence including the full two-sided deletion proof (both the weak-pin attempt and the tightened re-proof), Docs/contracts touched, Assumptions, Stop conditions hit, Out-of-scope observations, Workflow Feedback, Return status."
+        }
+      ],
+      "constraints": [
+        "that write is the delivery -- do it before ending the turn"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [],
+  "blockers": [],
+  "refusals": 2,
+  "engine_session": {
+    "session_id": "g4a-implement-session",
+    "status": "released",
+    "claimed_at": "2026-08-10T08:37:33.486768+00:00",
+    "last_heartbeat": "2026-08-10T08:57:21.665231+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T08:57:27.841939+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-10T08:38:20.341909+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-red",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-10T08:40:21.791292+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-tier1",
+      "why": "Edited all 7 Tier1 JSON imperative fields (COMMANDER_SPINE init/plan/archive, ADMIRAL_SPINE init/closeout, EXPLORER_SPINE init/route) and commander-core.md:127's attach line: each now names the relevant door tool (spine_lease for claim/release, spine_evidence for attach) as the default path, with the pre-existing literal CLI command kept verbatim as the documented fallback in the same sentence. Re-validated all 3 spine templates with json.load. python -m pytest -q tests/test_mcp_adoption.py -k Tier1 -> 19 passed, 36 deselected.",
+      "mechanical": false,
+      "ts": "2026-08-10T08:42:18.836808+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-tier2",
+      "why": "Edited the 6 Tier2 SKILL.md bodies (workbench, charter, reviewer, interrogator, implementer, explorer): each drive-mechanism paragraph now names the relevant door tools as the default when the agent owns the process's bound spine, keeps checklist_engine.py as the CLI fallback in the SAME paragraph, and for implementer/reviewer states the g1 identity-trade fact inline (an in-session dispatched crew member shares the parent's MCP scope and the door stays bound to the Commander's spine.json, never the dispatched agent's own plan/survey file). python -m pytest -q tests/test_mcp_adoption.py -k Tier2 -> 14 passed, 41 deselected.",
+      "mechanical": false,
+      "ts": "2026-08-10T08:44:25.334678+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-tier3",
+      "why": "Edited skills/workbench/references/checklist-engine.md: augmented the canonical invocation line to name the 7 door tools as default and the CLI as fallback, added Contents TOC entry, added a new 'MCP door: default path, and who it is NOT for' section covering all 7 tools, the full identity-trade rule (Commander drives its own spine.json through the door; an in-session dispatched Implementer/Reviewer must use the CLI for its own plan/survey because it shares the parent's MCP scope and the door stays bound to the parent's file), and the 5 CLI-only verbs with mcp_spine_server.py's fallback table cited as authority; augmented the Session lease verb table with the spine_lease door equivalent alongside the CLI block. python -m pytest -q tests/test_mcp_adoption.py -k Tier3 -> 14 passed, 41 deselected.",
+      "mechanical": false,
+      "ts": "2026-08-10T08:45:19.953352+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-tier4",
+      "why": "Edited the 2 write-a-skill authoring templates (gated-engine-SKILL.template.md, survey-SKILL.template.md) the same way as Tier2: door tools named as default in the paragraph that names scripts/checklist_engine.py, CLI kept as fallback in the same paragraph. python -m pytest -q tests/test_mcp_adoption.py -k Tier4 -> 4 passed, 51 deselected. Full file: python -m pytest -q tests/test_mcp_adoption.py -> 55 passed (all tiers green together).",
+      "mechanical": false,
+      "ts": "2026-08-10T08:45:58.398943+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-two-sided-proof",
+      "why": "First attempt with the ORIGINAL generic '<engine> in field' pin: deleted 'CLI fallback: <engine> release --session-id <commander-session-id>' from COMMANDER_SPINE.template.json .tasks.archive.imperative -> ran pytest -k Tier1 -> 19 passed (FALSE PASS -- the generic <engine> substring check was satisfied vacuously by an UNRELATED waive line elsewhere in the same field: 'a human waives c4 via <engine> waive archive ...'). This is exactly the enumeration/weak-pin failure the handoff warned about, so I tightened TIER1_JSON_FIELDS to carry the EXACT per-action CLI command line (e.g. '<engine> release --session-id <commander-session-id>', not just '<engine>') instead of a generic placeholder, re-confirmed the suite still GREEN against the unedited-since-m2 corpus (19 passed), then repeated the deletion of the SAME line against the TIGHTENED test: python -m pytest -q tests/test_mcp_adoption.py -k Tier1 -> 1 failed, 18 passed -- genuine RED, specifically test_field_still_carries_cli_fallback for the archive field, while test_field_names_door_tool_as_default for that SAME field still passed (proving the two assertions are independent, not coupled). Restored the exact original text; diff against a pre-deletion backup is empty (byte-identical); json.load succeeds. Re-ran: python -m pytest -q tests/test_mcp_adoption.py -k Tier1 -> 19 passed; full file python -m pytest -q tests/test_mcp_adoption.py -> 55 passed.",
+      "mechanical": false,
+      "ts": "2026-08-10T08:48:16.504096+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "m7-verify",
+      "why": "python -m pytest -q -> 2339 passed, 1 skipped, 1078 subtests passed. json.load OK on all 3 spine templates. Code map rebuilt (python -m scripts.code_map build --root .) BEFORE this final suite run. git check-ignore exit 1 for all 17 committed deliverables. Fixed a real regression along the way: tests/test_retirement_guard.py's store-mention census pinned two spine-template imperative lines verbatim (ADMIRAL_SPINE closeout, COMMANDER_SPINE archive) that my Tier1 edits changed the text of; updated both census entries in tests/data/store_mentions.approved.txt to the new exact line text (same reason/scope, no widening). Re-measured adoption grep -> 13 files (was 0 at the wave boundary): the 3 Tier1 spine templates + commander-core.md + 6 Tier2 SKILL.md + Tier3 checklist-engine.md + 2 Tier4 authoring templates.",
+      "mechanical": false,
+      "ts": "2026-08-10T08:55:58.796349+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "m8-result",
+      "why": "Wrote g4a-implement-implementer-result.md with the required sections, including the deliberate CLI-deletion two-sided proof (both the weak generic-pin attempt that falsely passed and the tightened per-action-CLI-substring pin that genuinely went RED then restored GREEN), the re-measured adoption count (13, from 0), and the incidental retirement-guard census fix. All plan items complete.",
+      "mechanical": false,
+      "ts": "2026-08-10T08:57:21.665223+00:00"
+    }
+  ]
+}

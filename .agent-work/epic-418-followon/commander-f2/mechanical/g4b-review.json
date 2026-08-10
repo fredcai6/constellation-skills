@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g4b-review",
+  "mechanical": {
+    "run": "epic-418-followon/commander-f2",
+    "project": "constellation-skills",
+    "spine-step": "g4b-review",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-epic-418-followon/commander-f2-g4b-review@087b1c41ac569e65d423b6e2a9e247c0df5f292b",
+    "artifact-ref": []
+  },
+  "refused": [
+    "role",
+    "refusals"
+  ],
+  "run": {
+    "work_id": "epic-418-followon/commander-f2",
+    "generated_at": "2026-08-10T09:18:40Z"
+  }
+}

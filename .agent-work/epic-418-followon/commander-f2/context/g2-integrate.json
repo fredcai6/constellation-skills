@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "g2-integrate",
+  "files": [],
+  "repo_rev": {
+    "commit": "72b2bbe7997f57f9071d44b60e07ce397e8217c8"
+  },
+  "run": {
+    "work_id": "epic-418-followon/commander-f2",
+    "generated_at": "2026-08-10T08:28:18Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption"
+    }
+  }
+}

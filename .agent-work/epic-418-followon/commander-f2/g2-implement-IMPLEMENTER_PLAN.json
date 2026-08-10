@@ -1,0 +1,380 @@
+{
+  "work_id": "epic-418-followon/commander-f2/g2-implement",
+  "type": "gated",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "m0-context",
+    "m1-reproduce",
+    "m2-red",
+    "m3-green",
+    "m4-e2e-episode",
+    "m5-suite-and-guards",
+    "m6-result"
+  ],
+  "tasks": {
+    "m0-context": {
+      "id": "m0-context",
+      "title": "Load baseline context",
+      "imperative": "Read the g2-implement handoff in full, this skill's global doctrine, and the map anchors named in the handoff (scripts.mcp_spine_server, scripts.apply_episode_delta read-only, scripts.episode_capture read-only). Confirm the handoff carries task, protected intent, decided landing site, close criteria, allowed scope, exclusions, constraints and a result path. Attest c1.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "handoff + anchors read; scope, exclusions and close criteria understood",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "Handoff read in full: task, protected intent, decided landing site (artifact-ref via apply_episode_delta.py), close criteria, allowed scope, exclusions, constraints, anchors. Read scripts/mcp_spine_server.py in full (call_tool/_tool_error/_require/_log/run_engine/main). Read scripts/apply_episode_delta.py (MECHANICAL_ALL_FIELDS, _apply_create, main CLI) and scripts/episode_capture.py (mechanical_fields/_artifact_refs) read-only. Read scripts/verify_episode_captured.py read-only. Read tests/test_work_id_nesting.py confirming #543 sanctioned nested run ids with '/' end-to-end."
+        }
+      ],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m1-reproduce": {
+      "id": "m1-reproduce",
+      "title": "Reproduce the measurement before planning the fix",
+      "imperative": "Run the handoff's demo script and confirm all 12 assertions pass, establishing that an ENGINE refusal through the door already reaches the episode (do not rebuild) and that the door's OWN rejection moves nothing and logs nothing (the actual target). Attest c1 with the pasted result.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "handoff read",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "handoff read; ready to run the demo"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "demo_engine_refusal_reaches_episode.py exits 0 with 12/12 assertions OK",
+          "check": {
+            "kind": "command",
+            "command": "python .agent-work/epic-418-followon/commander-f2/demo_engine_refusal_reaches_episode.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m1-reproduce-1"
+        }
+      ],
+      "constraints": [
+        "do not rebuild the engine-refusal path; it already works"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m1-reproduce-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/epic-418-followon/commander-f2/demo_engine_refusal_reaches_episode.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m2-red": {
+      "id": "m2-red",
+      "title": "TDD red: write tests/test_mcp_friction_capture.py against the unbuilt capture",
+      "imperative": "Write tests/test_mcp_friction_capture.py covering: (1) each of the 3 server-side rejection classes (unknown tool, unknown action, missing required argument) writes exactly one record to a door-side JSONL beside the spine, carrying tool/class/what/when; (2) a run inducing N>=2 door-own rejections in ONE process yields N separate records (proves the instrument can score, not just latch); (3) a loud-failure test that makes the JSONL write itself fail N>=2 times in one process and asserts N separate diagnostic messages, not one coalesced message. Run the file and observe it fail (the capture does not exist yet). Attest c1 with the failing output pasted.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "demo reproduced; target narrowed to the door's own rejection path",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "demo reproduced; target narrowed"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "RED: tests/test_mcp_friction_capture.py written and observed failing (manual attest; do not command-check a by-design-failing test)",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "tests/test_mcp_friction_capture.py written (7 tests across 2 classes: rejection-recording, loud-write-failure). Ran: python -m pytest -q tests/test_mcp_friction_capture.py -> 5 failed, 2 passed. The 2 passing tests are deliberate negative controls (a read-only call writes no file; an engine refusal is not this instrument's concern) that must pass with or without the capture -- the 5 failures are genuinely RED because no capture exists yet: AssertionError: 1 != 0 for each rejection class, and 3 != 0 for the loud-failure count."
+        }
+      ],
+      "constraints": [
+        "never edit scripts/apply_episode_delta.py, scripts/episode_capture.py, docs/EPISODE_STORE.md, scripts/checklist_engine.py, scripts/hooks/spine_rail.py",
+        "N>=2 induced failures must assert N separate messages, not one"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    },
+    "m3-green": {
+      "id": "m3-green",
+      "title": "TDD green: instrument the door's own rejection path in scripts/mcp_spine_server.py",
+      "imperative": "Add a door-side JSONL writer and route every call_tool()/main() _tool_error(...) return for the 3 in-scope classes through it, one record per rejection, never touching checklist_engine.py. On a write failure, report loudly on every occurrence (stderr), never coalesced or once-per-run. Make tests/test_mcp_friction_capture.py pass. Advance requires the command check green.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "RED observed",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "RED observed and pasted"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "tests/test_mcp_friction_capture.py passes",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q tests/test_mcp_friction_capture.py"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m3-green-1"
+        }
+      ],
+      "constraints": [
+        "git diff against scripts/checklist_engine.py stays empty",
+        "the door wraps the engine, never re-implements it"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m3-green-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q tests/test_mcp_friction_capture.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m4-e2e-episode": {
+      "id": "m4-e2e-episode",
+      "title": "End-to-end: a real episode lands via apply_episode_delta.py under this run's nested work-id",
+      "imperative": "Launch the real server as a subprocess, seed >=2 real door-own rejections across classes, land the resulting JSONL as evidence under .agent-work/epic-418-followon/commander-f2/evidence/g2-friction-capture/, build an episode delta whose mechanical.artifact-ref cites that JSONL and whose mechanical.run equals 'epic-418-followon/commander-f2', apply it with apply_episode_delta.py --store-root episodes (every invocation), read the written file back, and confirm scripts/verify_episode_captured.py reports captured for that work-id against the real store.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "capture green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "capture green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_episode_captured.py exits 0 for epic-418-followon/commander-f2 against --store-root episodes",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_episode_captured.py epic-418-followon/commander-f2 --store-root episodes"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m4-e2e-episode-1"
+        }
+      ],
+      "constraints": [
+        "episodes/ touched ONLY via apply_episode_delta.py",
+        "an episode is a record, past tense, never a rule"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m4-e2e-episode-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_episode_captured.py epic-418-followon/commander-f2 --store-root episodes",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m5-suite-and-guards": {
+      "id": "m5-suite-and-guards",
+      "title": "Full suite, retirement guard, code map rebuild, deliverable path check",
+      "imperative": "Run the full suite with `python -m pytest` (never python3), tests/test_retirement_guard.py specifically, rebuild the code map (python -m scripts.code_map build --root .) since a test file was added, re-run the demo script, and run `git check-ignore` on every committed deliverable expecting exit 1. Attest c1 with all outputs.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "e2e episode captured",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "e2e episode captured and verified"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "full suite green; retirement guard green; map rebuilt; demo still passes; no deliverable is git-ignored",
+          "check": {
+            "kind": "command",
+            "command": "python -m pytest -q"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-m5-suite-and-guards-1"
+        }
+      ],
+      "constraints": [
+        "do not create any file at the repo root that names the episode store",
+        "canonical shared doctrine only under skills/_shared/global-*.md"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [
+        {
+          "id": "e-m5-suite-and-guards-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    },
+    "m6-result": {
+      "id": "m6-result",
+      "title": "Write IMPLEMENTER_RESULT with the coverage-boundary statement",
+      "imperative": "Write the IMPLEMENTER_RESULT to the path the handoff names: what was built, pasted evidence, the coverage-boundary statement (which of the 4 rejection classes this instrument can and cannot see, and why the client-side class is structurally unreachable), anything not done, and Workflow Feedback. Attest c1.",
+      "preconditions": [
+        {
+          "id": "p1",
+          "statement": "suite and guards green",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "suite and guards green"
+        }
+      ],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "IMPLEMENTER_RESULT.md written to crew-handoffs/g2-implement-implementer-result.md with the required sections",
+          "check": null,
+          "satisfied": true,
+          "satisfied_by": "IMPLEMENTER_RESULT.md written to .agent-work/epic-418-followon/commander-f2/crew-handoffs/g2-implement-implementer-result.md with all required sections including the coverage-boundary statement and Workflow Feedback."
+        }
+      ],
+      "constraints": [
+        "report the coverage boundary honestly; do not imply coverage of the client-side class"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": null,
+      "finding": null,
+      "evidence": [],
+      "rework_count": 0
+    }
+  },
+  "consolidation": null,
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "m5-suite-and-guards",
+      "statement": "episode_capture.manifest_root()/context_manifest.manifest_path() double the path for a 3-segment work-id: my own implementer plan's work_id 'epic-418-followon/commander-f2/g2-implement' (one segment deeper than the epic/commander convention #543 fixed for 2 segments) wrote its own start/reopen mechanical-snapshot seam to .agent-work/epic-418-followon/epic-418-followon/commander-f2/g2-implement/... instead of under .agent-work/epic-418-followon/commander-f2/g2-implement/... -- the same doubling shape test_work_id_nesting.py documents for 2-segment ids, reappearing one level deeper. Untracked, harmless, deleted as cleanup rather than fixed (episode_capture.py is outside this run's file ownership)."
+    }
+  ],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "g2-implement-session",
+    "status": "released",
+    "claimed_at": "2026-08-10T07:36:49.568255+00:00",
+    "last_heartbeat": "2026-08-10T08:01:09.396746+00:00",
+    "claimed_by": "implementer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T08:01:15.028899+00:00"
+  },
+  "why_trail": [
+    {
+      "id": "w-1",
+      "gate": "m0-context",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-10T07:37:04.975214+00:00"
+    },
+    {
+      "id": "w-2",
+      "gate": "m1-reproduce",
+      "why": "Reproduced the handoff's narrowing myself: demo script gave 12/12 assertions OK. An engine refusal through the door moves refusals and reaches episode_capture.mechanical_fields(); the door's own rejection (missing condition_id on spine_evidence attest) moved refusals 0 and left mcp_calls.jsonl unchanged. Confirms target is exactly the door's own _tool_error(...) short-circuit path.",
+      "mechanical": false,
+      "ts": "2026-08-10T07:37:25.963880+00:00"
+    },
+    {
+      "id": "w-3",
+      "gate": "m2-red",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-10T07:40:42.883157+00:00"
+    },
+    {
+      "id": "w-4",
+      "gate": "m3-green",
+      "why": "Implemented door-own rejection capture inside scripts/mcp_spine_server.py. Because call_tool()'s existing choke-point pin (tests/test_mcp_identity.py::IdentityBindingPinTests) restricts every return in that function to literally as_result(run_engine(...)) or _tool_error(...), I first tried a separate _reject() wrapper and it broke that pin (14 offenders) -- so I folded the logging into _tool_error itself via optional tool=/rejection_class= kwargs instead of adding a new call shape, which keeps the pin's AST check satisfied while giving every in-scope rejection its own JSONL record. REJECTIONLOG defaults beside the spine (SPINE_REJECTION_LOG env override), one record per call to _log_rejection with a write-failure path that writes a fresh stderr line on every occurrence, never batched. python -m pytest -q tests/test_mcp_friction_capture.py tests/test_mcp_spine_server.py tests/test_mcp_identity.py tests/test_mcp_imperative_equivalence.py -> 55 passed. Full suite: 2282 passed, 1 skipped, 1 failed (map/INDEX.md staleness, expected and deferred to the guards step). git diff against scripts/checklist_engine.py is empty. Demo script still 12/12.",
+      "mechanical": false,
+      "ts": "2026-08-10T07:47:44.776884+00:00"
+    },
+    {
+      "id": "w-5",
+      "gate": "m4-e2e-episode",
+      "why": "Launched the real server as a subprocess against a throwaway spine and induced 3 real door-own rejections (unknown-action, missing-required-argument, unknown-tool) via .agent-work/epic-418-followon/commander-f2/evidence/g2-friction-capture/seed_rejections.py, landing mcp_rejections.jsonl beside it. Built an episode delta whose mechanical.run='epic-418-followon/commander-f2' (matching this run's own nested work-id) and whose artifact-ref cites the JSONL, the seeding script and the two source deliverables. Applied with 'python scripts/apply_episode_delta.py --delta .../episode-delta.json --store-root episodes' -> created episode:epic-418-followon_commander-f2-001. Read the written file back at episodes/active/epic-418-followon_commander-f2-001.md. Verified with 'python scripts/verify_episode_captured.py epic-418-followon/commander-f2 --store-root episodes' -> exit 0, '1 episode(s) recorded'.",
+      "mechanical": false,
+      "ts": "2026-08-10T07:51:24.559878+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "m5-suite-and-guards",
+      "why": "python -m pytest -q -> 2283 passed, 1 skipped (full suite, green). tests/test_retirement_guard.py -> 16 passed. Rebuilt the code map (python -m scripts.code_map build --root .); map/INDEX.md diffed 3 lines (entity count); tests/test_code_map.py::MapTreeFreshnessTests -> 2 passed. Re-ran the demo script -> 12/12 OK, unchanged. git check-ignore on every committed deliverable (mcp_spine_server.py, test_mcp_friction_capture.py, the new episode, the evidence scripts/JSONL/delta, map/INDEX.md, my own plan file) -> exit 1 for all (not ignored). Found and flagged tc1: episode_capture.manifest_root()'s doubled-path defect (documented for 2-segment work-ids in tests/test_work_id_nesting.py) reappears one level deeper for my own 3-segment implementer-plan work-id, writing a stray untracked .agent-work/epic-418-followon/epic-418-followon/... tree; deleted (untracked, harmless) rather than fixed since episode_capture.py is outside this run's ownership.",
+      "mechanical": false,
+      "ts": "2026-08-10T07:59:40.438849+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "m6-result",
+      "why": null,
+      "mechanical": true,
+      "ts": "2026-08-10T08:01:09.396739+00:00"
+    }
+  ]
+}

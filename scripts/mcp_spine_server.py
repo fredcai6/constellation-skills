@@ -25,6 +25,15 @@ identity mid-conversation):
                    is what sets it on a real dispatch; the server just uses
                    whatever string it is handed)
 
+Exactly ONE declared tool property carries a filesystem path:
+`spine_advance.from_child`. It does not redirect the door -- the call still
+addresses the bound spine -- but the child's `consolidation` is attached to
+that spine as a `review-result`, which is the evidence type an artifact
+postcondition consumes, so an unconfined path would let any JSON file carrying
+a `consolidation` key close a gate. `_identity_violation` therefore CONFINES it
+to the bound spine's own directory tree, the containment every real use in this
+repo already satisfies. See IDENTITY_TRADE.md §2.
+
 --------------------------------------------------------------------------- #
 Tool surface: 7 tools grouping the engine's 18 verbs
 --------------------------------------------------------------------------- #
@@ -108,6 +117,7 @@ import io
 import json
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ENGINE = Path(os.environ["SPINE_ENGINE"]).resolve()
@@ -133,6 +143,16 @@ CALLLOG = Path(os.environ.get("SPINE_CALLLOG", str(SPINE.parent / "mcp_calls.jso
 # valid and the server actually ran" from "config was merely accepted".
 START_MARKER = Path(os.environ.get("SPINE_START_MARKER", str(SPINE.parent / "mcp_server_started")))
 
+# One JSONL line per rejection the DOOR ITSELF issues -- an unknown tool name, an
+# unknown multiplexed `action`, or a missing required argument (issue #541). Every
+# one of those returns `_tool_error(...)` BEFORE `run_engine()` is ever called (see
+# the module docstring's "Zero dependencies" section and `call_tool()` below), so
+# `_log()` and CALLLOG never see it and the engine's own refusal counter never
+# moves -- this file is that path's only durable trace. Beside the spine, like
+# CALLLOG, for the same reason: one location a run's own evidence-gathering has to
+# remember, not two.
+REJECTIONLOG = Path(os.environ.get("SPINE_REJECTION_LOG", str(SPINE.parent / "mcp_rejections.jsonl")))
+
 
 def _log(rec: dict) -> None:
     with CALLLOG.open("a", encoding="utf-8") as fh:
@@ -141,17 +161,139 @@ def _log(rec: dict) -> None:
         START_MARKER.write_text(f"started for {SPINE}\n", encoding="utf-8")
 
 
+def _identity_violation(argv: list[str]) -> str | None:
+    """Does this argv, AS THE REAL PARSER RESOLVES IT, still address the bound
+    spine under the bound session? Returns None when it does, else the refusal
+    message.
+
+    This is the runtime half of the property
+    `tests/test_mcp_identity.py::IdentityBindingPinTests` pins, and it is why
+    the module docstring's "a model cannot point the door at a different spine
+    or identity" is a statement about what this process DOES rather than a
+    statement about what CI would notice later.
+
+    **It asks argparse, it does not read tokens.** Six predecessors of this
+    check each modelled a SHAPE a redirect might take -- declared tool
+    arguments, key names, argv contents, containment, argv position, and
+    finally token spelling -- and each was defeated by a shape it had not
+    enumerated. `--file X`, `--file=X` (one token) and `--fil X` / `--fi=X`
+    (unambiguous prefix abbreviations, which argparse accepts by default) are
+    all the same option to the parser and all different strings to a scanner,
+    and `--file` is a plain `store`, so the LAST occurrence is the one the
+    engine reads. Enumerating spellings is the defect; the only predicate that
+    cannot be out-spelled is the parser's own answer.
+
+    Three deliberate properties of how this is written:
+
+    * `getattr(ns, "session_id", None)`, never `ns.session_id`. Read-only verbs
+      (`current`) declare no `--session-id` at all, so attribute access would
+      raise AttributeError on every status call.
+    * A `SystemExit` from this parse is NOT a violation. `parse_args` exits 2 on
+      malformed argv (e.g. `heartbeat` with no session once SPINE_SESSION is
+      unset), and the caller's own `main()` is about to produce exactly that
+      message; refusing here would replace the engine's error text with ours.
+      The parse's own stderr is swallowed into a scratch buffer for the same
+      reason -- otherwise the usage block would be emitted twice.
+    * Scoped to `ns.file`, `ns.session_id` and `ns.from_child`, never "no
+      repeated flags". `--field` is `action="append"` BY DESIGN and
+      `spine_evidence attach` with two fields is legitimate; a repeated-flag
+      rule would break it.
+
+    **Why `--from-child` is checked at all, and why it is checked differently.**
+    A SEVENTH review found that `spine_advance.from_child` is a DECLARED tool
+    property carrying a filesystem path. `advance()` does `Path(from_child)`,
+    honours an absolute path, reads that file and attaches its `consolidation`
+    into the BOUND spine as a `review-result` -- with `ns.file` still resolving
+    to the bound spine, so both halves of the check above stayed blind. That is
+    not merely a data read: `review-result` is the evidence type an `artifact`
+    postcondition consumes, so any JSON file anywhere carrying a `consolidation`
+    key could close a gate. Measured live before this clause existed: a
+    `from_child` outside the binding advanced g1 to `complete` on a fabricated
+    APPROVE.
+
+    So this one is a CONTAINMENT question, not an equality one -- `--from-child`
+    legitimately names a DIFFERENT file (the child checklist), it just may not
+    name one outside the bound spine's own directory tree. Measured before
+    restricting it: every real use in this repo -- the engine's own tests, the
+    schema doc's worked example, and every live/archived run record -- resolves
+    inside the parent checklist's own directory (children are written under the
+    work area the spine sits in). Resolution mirrors `advance()` exactly: a
+    non-absolute path resolves against the parent checklist's directory, which
+    IS `SPINE.parent` here because `ns.file` was already proven equal to it.
+    """
+    scratch = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(scratch), contextlib.redirect_stderr(scratch):
+            ns = checklist_engine.parse_args(list(argv))
+    except SystemExit:
+        return None  # malformed argv -- the real main() owns that message
+    except Exception:  # noqa: BLE001 - a parser that cannot answer is not evidence of a redirect
+        return None
+
+    resolved_file = getattr(ns, "file", None)
+    if resolved_file != str(SPINE):
+        return (
+            f"REFUSED: this door is bound to one spine for the life of its process, and "
+            f"this call resolves --file to {resolved_file!r}, not the bound {str(SPINE)!r}. "
+            f"Identity is not a per-call argument here (see IDENTITY_TRADE.md); if you need "
+            f"to drive a different spine, launch a door bound to it, or use the CLI."
+        )
+
+    resolved_session = getattr(ns, "session_id", None)
+    if resolved_session not in (SESSION, None):
+        return (
+            f"REFUSED: this call resolves --session-id to {resolved_session!r}, not the bound "
+            f"session {SESSION!r}. The lease this door can take is the one its own process was "
+            f"launched for; a claim under any other identity would record a lease nobody holds."
+        )
+
+    resolved_child = getattr(ns, "from_child", None)
+    if resolved_child:
+        bound_dir = SPINE.parent
+        child = Path(resolved_child)
+        if not child.is_absolute():
+            child = bound_dir / resolved_child  # the rule advance() itself applies
+        try:
+            escapes = not child.resolve().is_relative_to(bound_dir.resolve())
+        except (OSError, ValueError, RuntimeError):
+            escapes = True  # a path that cannot be resolved is not proof it is inside
+        if escapes:
+            return (
+                f"REFUSED: --from-child names a child checklist INSIDE the bound spine's own "
+                f"directory ({str(bound_dir)!r}); this call resolves it to {str(child)!r}, "
+                f"which is outside. The child's `consolidation` is attached to the bound spine "
+                f"as a review-result, and a review-result is what closes an artifact "
+                f"postcondition -- so a path outside the binding would let any JSON file carrying "
+                f"a `consolidation` key close a gate. Put the child under the spine's work area, "
+                f"or use the CLI, which is per-call by construction."
+            )
+    return None
+
+
 def run_engine(verb: str, *rest: str, mutating: bool = True) -> dict:
     """Call the real engine main() with a constructed argv. This is the ONLY
     place this module talks to the engine, and it never inspects or rewrites
-    the output beyond capturing it -- see module docstring."""
+    the output beyond capturing it -- see module docstring.
+
+    Before the call, `_identity_violation` asks the engine's own parser what
+    this argv actually resolves to and refuses if it is not the bound spine
+    under the bound session. That check sits INSIDE the redirect block on
+    purpose: `parse_args` writes a usage block to stderr and raises
+    SystemExit(2) on malformed argv, and outside this block that text would
+    escape onto the real transport's stderr and the exit would take the whole
+    server process down with it."""
     argv = ["--file", str(SPINE), verb, *rest]
     if mutating and SESSION:
         argv += ["--session-id", SESSION]
     out, err = io.StringIO(), io.StringIO()
     try:
         with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
-            code = checklist_engine.main(argv)
+            violation = _identity_violation(argv)
+            if violation is not None:
+                code = 2
+                err.write(violation + "\n")
+            else:
+                code = checklist_engine.main(argv)
     except SystemExit as exc:  # argparse rejected the argv (e.g. missing required flag)
         code = int(exc.code or 0)
     except Exception as exc:  # noqa: BLE001 - surface everything, never swallow
@@ -170,7 +312,51 @@ def as_result(rec: dict) -> dict:
     return {"content": [{"type": "text", "text": text}], "isError": rec["code"] != 0}
 
 
-def _tool_error(message: str) -> dict:
+def _log_rejection(tool: str, rejection_class: str, detail: str) -> None:
+    """Append ONE record for a door-own rejection to REJECTIONLOG -- never raises.
+
+    Carries what a diagnosis needs: `tool` (which tool was called), `class` (which
+    of the three in-scope rejection shapes this is), `detail` (the door's own
+    _tool_error message, naming what was missing/unknown) and `ts` (when).
+
+    **Fail loud, every occurrence.** If the write itself fails, that is reported to
+    stderr immediately -- no batching, no once-per-run flag, no retry, no silent
+    drop. A capture that swallows its own failure would recreate, one level down,
+    exactly the defect it exists to end: a diagnosable event turning invisible.
+    """
+    record = {
+        "ts": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "tool": tool,
+        "class": rejection_class,
+        "detail": detail,
+    }
+    line = json.dumps(record, ensure_ascii=False)
+    try:
+        with REJECTIONLOG.open("a", encoding="utf-8", newline="\n") as fh:
+            fh.write(line + "\n")
+    except OSError as exc:
+        sys.stderr.write(
+            f"REJECTION CAPTURE FAILED: could not write to {REJECTIONLOG} "
+            f"({type(exc).__name__}: {exc}). Lost record: {line}\n"
+        )
+        sys.stderr.flush()
+
+
+def _tool_error(message: str, *, tool: str | None = None, rejection_class: str | None = None) -> dict:
+    """The door's OWN rejection result. When `tool`/`rejection_class` are BOTH
+    given, this also logs one record via `_log_rejection` before returning --
+    folded IN here, rather than a separate wrapper around it, because
+    `call_tool()`'s own choke-point pin
+    (`tests/test_mcp_identity.py::IdentityBindingPinTests.test_call_tool_can_only_produce_content_two_ways`)
+    restricts every `return` in that function to literally
+    `as_result(run_engine(...))` or `_tool_error(...)` and nothing else -- a second
+    named call at the same site would be a third way to answer, which that pin
+    exists to catch. The two optional keywords let this single call satisfy both
+    the pin (unchanged call shape) and the capture (issue #541) at once. Callers
+    with nothing to log (main()'s dead KeyError fallback in `call_tool`, which
+    `TOOL_NAMES` makes unreachable) simply omit them."""
+    if tool is not None and rejection_class is not None:
+        _log_rejection(tool, rejection_class, message)
     return {"content": [{"type": "text", "text": message}], "isError": True}
 
 
@@ -414,18 +600,27 @@ def call_tool(name: str, args: dict) -> dict:
             return as_result(run_engine("release", *rest))
         if action == "heartbeat":
             return as_result(run_engine("heartbeat"))
-        return _tool_error(f"spine_lease: unknown action {action!r}")
+        return _tool_error(
+            f"spine_lease: unknown action {action!r}",
+            tool="spine_lease", rejection_class="unknown-action",
+        )
 
     if name == "spine_start":
         err = _require(args, "task_id")
         if err:
-            return _tool_error(f"spine_start: {err}")
+            return _tool_error(
+                f"spine_start: {err}",
+                tool="spine_start", rejection_class="missing-required-argument",
+            )
         return as_result(run_engine("start", args["task_id"]))
 
     if name == "spine_advance":
         err = _require(args, "task_id")
         if err:
-            return _tool_error(f"spine_advance: {err}")
+            return _tool_error(
+                f"spine_advance: {err}",
+                tool="spine_advance", rejection_class="missing-required-argument",
+            )
         rest = [args["task_id"]]
         if args.get("from_child"):
             rest += ["--from-child", args["from_child"]]
@@ -439,12 +634,18 @@ def call_tool(name: str, args: dict) -> dict:
         action = args.get("action")
         err = _require(args, "task_id")
         if err:
-            return _tool_error(f"spine_evidence: {err}")
+            return _tool_error(
+                f"spine_evidence: {err}",
+                tool="spine_evidence", rejection_class="missing-required-argument",
+            )
         task_id = args["task_id"]
         if action == "attest":
             err = _require(args, "condition_id")
             if err:
-                return _tool_error(f"spine_evidence attest: {err}")
+                return _tool_error(
+                    f"spine_evidence attest: {err}",
+                    tool="spine_evidence", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--cond", args["condition_id"],
                      "--which", args.get("which", "preconditions")]
             if args.get("note"):
@@ -455,7 +656,10 @@ def call_tool(name: str, args: dict) -> dict:
         if action == "waive":
             err = _require(args, "condition_id", "authority")
             if err:
-                return _tool_error(f"spine_evidence waive: {err}")
+                return _tool_error(
+                    f"spine_evidence waive: {err}",
+                    tool="spine_evidence", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--cond", args["condition_id"],
                      "--which", args.get("which", "postconditions"),
                      "--authority", args["authority"]]
@@ -467,23 +671,35 @@ def call_tool(name: str, args: dict) -> dict:
         if action == "attach":
             err = _require(args, "evidence_type")
             if err:
-                return _tool_error(f"spine_evidence attach: {err}")
+                return _tool_error(
+                    f"spine_evidence attach: {err}",
+                    tool="spine_evidence", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--type", args["evidence_type"]]
             for key, value in (args.get("fields") or {}).items():
                 rest += ["--field", f"{key}={value}"]
             return as_result(run_engine("attach", *rest))
-        return _tool_error(f"spine_evidence: unknown action {action!r}")
+        return _tool_error(
+            f"spine_evidence: unknown action {action!r}",
+            tool="spine_evidence", rejection_class="unknown-action",
+        )
 
     if name == "spine_halt":
         action = args.get("action")
         err = _require(args, "task_id")
         if err:
-            return _tool_error(f"spine_halt: {err}")
+            return _tool_error(
+                f"spine_halt: {err}",
+                tool="spine_halt", rejection_class="missing-required-argument",
+            )
         task_id = args["task_id"]
         if action == "block":
             err = _require(args, "blocker")
             if err:
-                return _tool_error(f"spine_halt block: {err}")
+                return _tool_error(
+                    f"spine_halt block: {err}",
+                    tool="spine_halt", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--blocker", args["blocker"],
                      "--authority", args.get("authority", "parent agent")]
             if args.get("next_action"):
@@ -492,19 +708,28 @@ def call_tool(name: str, args: dict) -> dict:
         if action == "resume":
             err = _require(args, "reason")
             if err:
-                return _tool_error(f"spine_halt resume: {err}")
+                return _tool_error(
+                    f"spine_halt resume: {err}",
+                    tool="spine_halt", rejection_class="missing-required-argument",
+                )
             rest = [task_id, "--reason", args["reason"]]
             if args.get("note"):
                 rest += ["--note", args["note"]]
             return as_result(run_engine("resume", *rest))
-        return _tool_error(f"spine_halt: unknown action {action!r}")
+        return _tool_error(
+            f"spine_halt: unknown action {action!r}",
+            tool="spine_halt", rejection_class="unknown-action",
+        )
 
     if name == "spine_survey_result":
         action = args.get("action")
         if action == "record":
             err = _require(args, "task_id", "result")
             if err:
-                return _tool_error(f"spine_survey_result record: {err}")
+                return _tool_error(
+                    f"spine_survey_result record: {err}",
+                    tool="spine_survey_result", rejection_class="missing-required-argument",
+                )
             rest = [args["task_id"], "--result", args["result"]]
             if args.get("finding"):
                 rest += ["--finding", args["finding"]]
@@ -518,7 +743,10 @@ def call_tool(name: str, args: dict) -> dict:
             if args.get("override_reason"):
                 rest += ["--override-reason", args["override_reason"]]
             return as_result(run_engine("consolidate", *rest))
-        return _tool_error(f"spine_survey_result: unknown action {action!r}")
+        return _tool_error(
+            f"spine_survey_result: unknown action {action!r}",
+            tool="spine_survey_result", rejection_class="unknown-action",
+        )
 
     raise KeyError(name)
 
@@ -567,7 +795,10 @@ def main() -> None:
             nm = params.get("name", "")
             call_args = params.get("arguments") or {}
             if nm not in TOOL_NAMES:
-                result = _tool_error(f"unknown tool {nm!r}")
+                result = _tool_error(
+                    f"unknown tool {nm!r}",
+                    tool=nm or "(empty)", rejection_class="unknown-tool",
+                )
             else:
                 try:
                     result = call_tool(nm, call_args)

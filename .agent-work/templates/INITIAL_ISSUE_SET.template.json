@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "epic": {
+    "title": "Initial-cut capability",
+    "spec_path": "DESIGN_SPEC.md",
+    "intent_and_why": "Deliver one evidence-supported current wave without making future outcomes binding."
+  },
+  "definition_of_done": [
+    "The current wave has completed its named exit criteria."
+  ],
+  "good_enough": {
+    "mandatory_quality": "Strict inputs",
+    "sufficient_evidence": "Focused public-interface tests",
+    "appetite": "One bounded wave"
+  },
+  "hard_constraints": [],
+  "fixed_decisions": [],
+  "current_wave": {
+    "objective": "Complete one coherent execution-and-validation loop.",
+    "exit_criteria": [
+      "Required behavior is demonstrated through the public interface."
+    ],
+    "issues": [
+      {
+        "id": "A",
+        "title": "Deliver the first vertical slice",
+        "desired_outcome": "The named current-wave behavior is observable.",
+        "useful_now": "It tests the riskiest current assumption.",
+        "appetite": "One bounded implementation gate",
+        "acceptance_or_falsification_evidence": "The public-interface check passes or falsifies the approach.",
+        "implementation_latitude": "Choose internal mechanics while preserving fixed decisions.",
+        "hard_constraints_no_gos": [],
+        "local_unknowns": [],
+        "anchors": ["public interface"],
+        "type": "AFK",
+        "blocks": []
+      }
+    ]
+  },
+  "wave_forecast": [],
+  "uncertainty_register": [],
+  "parked_possibilities": []
+}

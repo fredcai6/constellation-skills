@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "work_id": "epic-418-followon/commander-f2",
+  "root": "/home/tommy/projects/constellation-skills-wt/f2-mcp-adoption",
+  "mode": "DEGRADED-UNPARSEABLE",
+  "entrypoint": null,
+  "anchor_count": 0,
+  "candidates_tried": [
+    {
+      "order": 1,
+      "kind": "generated-map",
+      "path": "docs/architecture/generated/map.json",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 2,
+      "kind": "index",
+      "path": "docs/architecture/index.md",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 3,
+      "kind": "packets-dir",
+      "path": "docs/architecture",
+      "exists": false,
+      "outcome": "absent",
+      "anchor_count": 0,
+      "note": "absent"
+    },
+    {
+      "order": 4,
+      "kind": "code-map-index",
+      "path": "map/INDEX.md",
+      "exists": true,
+      "outcome": "unparseable",
+      "anchor_count": 0,
+      "note": "content but no citable anchor id (unfilled template?)"
+    },
+    {
+      "order": 5,
+      "kind": "code-map-ids",
+      "path": "map/ids.jsonl",
+      "exists": true,
+      "outcome": "empty",
+      "anchor_count": 0,
+      "note": "empty file"
+    }
+  ],
+  "substitutes": [
+    {
+      "path": "map/INDEX.md",
+      "content_hash": "416375b9aa35868caae0ef3049f5303f922ce1bedab9a3737521a7e8513aeeb7",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/CHECKLIST_ENGINE_DESIGN.md",
+      "content_hash": "2ecf6ac1d58672e348ce15d7a6619457be9d914c5e4d73ae7999e183e5420a9b",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/agents/ORCHESTRATOR_CONTEXT.md",
+      "content_hash": "70fc98d8194a28f9f8fc2be73e8455ba556e15b81e9b28fdd82eeb11883b6b10",
+      "source": "agent-declared"
+    },
+    {
+      "path": "docs/EPISODE_STORE.md",
+      "content_hash": "144327a1a3fb5fb4bf2e05ca090351b9e159a622dc75ffd30f7e885f1a010e72",
+      "source": "agent-declared"
+    },
+    {
+      "path": "README.md",
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb",
+      "source": "known-fallback"
+    }
+  ],
+  "fallbacks_probed": [
+    {
+      "path": "README.md",
+      "exists": true,
+      "content_hash": "5a2c3d446453f0efd9d0b9794bae25581ff61ccf1faf53ba61f33a405c36d1cb"
+    },
+    {
+      "path": "AGENTS.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "CLAUDE.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/index.md",
+      "exists": false,
+      "content_hash": null
+    },
+    {
+      "path": "docs/README.md",
+      "exists": false,
+      "content_hash": null
+    }
+  ],
+  "unmapped": [
+    "CORRECTED, and the correction matters more than the original claim. The map is PRESENT and COMPLETE: map/INDEX.md is 24222 bytes covering 134 modules and 4956 entities (re-derived at the head of the third repair round) across evals/scripts/skills/tests, with a per-module INDEX.md under each, and tests/test_code_map.py::MapTreeFreshnessTests asserts it is byte-identical to a fresh build. It names every surface this run owns (scripts.mcp_spine_server 8 entities/5 holes, scripts.install_constellation 81/30, scripts.apply_episode_delta 54/25, scripts.episode_capture 15, scripts.checklist_engine 106/25) and I have now read it. What is genuinely unmapped is nothing structural; what is BROKEN is map_orient itself. Its ANCHOR_RE accepts only struct:/capability:/event:/constraint:/assumption:/claim:/decision: tokens - the vocabulary of a hand-written architecture packet - and a generated code map contains none by construction. #536 taught the probe where to look and not what it would find, so it reaches the right file and rejects it. This run is DEGRADED because the orientation tool cannot parse a code map, NOT because a map is missing."
+  ],
+  "escalation": "Escalated to the Admiral, who measured this and corrected me: I read map_orient.py:447's literal parenthetical 'content but no citable anchor id (unfilled template?)' and reported its GUESS about the file's state one tier up as an observation, without opening the file. That is the epic's own named failure mode - a tool that reports a defective world and a healthy one alike, plus a plausible explanation that makes checking feel unnecessary. Filed by the Admiral as #548. Carried as a triage candidate; map_orient is NOT repaired inside this wave.",
+  "emitted_at": "2026-08-10T05:51:25.262133+00:00",
+  "root_proof": "positive: .git entry present at root"
+}

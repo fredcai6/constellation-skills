@@ -2,10 +2,11 @@
 
 The engine is the deterministic state machine an agent transacts with **one step at a time**. It holds canonical state and enforces *mechanism* — ordering, evidence shape, the rework cap, the consolidation guard — and never judges quality. An agent does not re-read and self-manage a checklist; it asks the engine what to do, does it, and reports back.
 
-Tool: `python <skill-dir>/scripts/checklist_engine.py --file <checklist.json> <verb>`. Installed copies rewrite that command to an absolute path; run that absolute path and do not resolve `scripts/` from the target repo unless that repo vendors the script. In this source repo, the same script lives at `scripts/checklist_engine.py`. Schema: `docs/CHECKLIST_SCHEMA.md`. Model: `docs/CHECKLIST_ENGINE_DESIGN.md`.
+Tool, by default when this agent owns the process's bound spine: the MCP door's `spine_status`/`spine_lease`/`spine_start`/`spine_advance`/`spine_evidence`/`spine_halt`/`spine_survey_result` tools (see "MCP door" below). CLI fallback, always available, and the only path for an in-session dispatched crew member driving its own plan or survey: `python <skill-dir>/scripts/checklist_engine.py --file <checklist.json> <verb>`. Installed copies rewrite that command to an absolute path; run that absolute path and do not resolve `scripts/` from the target repo unless that repo vendors the script. In this source repo, the same script lives at `scripts/checklist_engine.py`. Schema: `docs/CHECKLIST_SCHEMA.md`. Model: `docs/CHECKLIST_ENGINE_DESIGN.md`.
 
 ## Contents
 - [This is mandatory, not advisory](#this-is-mandatory-not-advisory)
+- [MCP door: default path, and who it is NOT for](#mcp-door-default-path-and-who-it-is-not-for)
 - [Instantiate from the project template](#instantiate-from-the-project-template)
 - [Dispatch: subagent vs your own context](#dispatch-subagent-vs-your-own-context)
 - [One agent, one plan](#one-agent-one-plan)
@@ -23,6 +24,18 @@ Tool: `python <skill-dir>/scripts/checklist_engine.py --file <checklist.json> <v
 ## This is mandatory, not advisory
 
 When you have loaded a role skill, you **must** drive its checklist through the engine to completion. The checklist *is* the workflow. Run every step in order, close each gate through the engine, and do not improvise, skip, or do the work outside the checklist. If a step needs another role, dispatch it (below) — do not just describe it.
+
+## MCP door: default path, and who it is NOT for
+
+An MCP door (`scripts/mcp_spine_server.py`, tool prefix `mcp__spine__`) wraps this engine as 7 tools covering 13 of its 18 verbs: `spine_status` (`current`), `spine_lease` (`claim`/`release`/`heartbeat`), `spine_start` (`start`), `spine_advance` (`advance`), `spine_evidence` (`attest`/`attach`/`waive`), `spine_halt` (`block`/`resume`), `spine_survey_result` (`record`/`consolidate`). It never reimplements the engine — every tool builds an argv and calls `checklist_engine.main(argv)`, so refusals, evidence, and the rework cap ride through unchanged.
+
+**Default:** when it is configured for your session and it is YOUR OWN spine — the one this process's door was launched for, bound via `SPINE_FILE`/`SPINE_SESSION` read from the environment at server start, never a per-call argument — call these tools instead of shelling out to the CLI. They wrap the identical engine call and surface the identical refusal/evidence contract, so nothing about drive discipline changes; only the invocation does.
+
+**The door does not follow you into a dispatched subagent's OWN work.** A Task-tool subagent inherits its dispatching process's MCP scope wholesale, so the tools are technically callable from inside it — but they stay bound to whatever spine the DISPATCHER's process was launched for, never the subagent's own plan or survey file. Concretely: a Commander may drive `spine.json` through the door, because that is the Commander's own process's bound spine. An Implementer or Reviewer it dispatches in-session must drive its own `IMPLEMENTER_PLAN.json` or `REVIEW_SURVEY.json` through the CLI (`scripts/checklist_engine.py`) instead — calling a door tool from inside that subagent would operate on the Commander's `spine.json`, not on the file the subagent actually owns. This is not a style preference: the door is a pass-through to whichever file its own environment named, and that file is the parent's.
+
+**5 verbs have no door tool at all, and stay CLI-only regardless of who is driving:** `skip`, `reopen`, `append`, `amend`, `flag-candidate`. The authority for this list, and the reason each was left out, is the fallback table in `mcp_spine_server.py`'s own module docstring — read it before assuming coverage. Sending an agent to a tool that does not exist is worse than the CLI instruction it would replace, so an instruction naming one of these 5 verbs keeps naming the CLI, never a door tool.
+
+The CLI is always available and always correct; the door is an additive fast path for the agent that owns the bound spine. Nothing here removes or discourages the CLI.
 
 ## Instantiate from the project template
 
@@ -70,6 +83,8 @@ claim     --session-id <id> --claimed-by <role> [--worktree .] [--force --reason
 heartbeat --session-id <id>
 release   --session-id <id>
 ```
+
+Door equivalent, when this is your own bound spine: the `spine_lease` tool, with `action=claim|heartbeat|release`, `claimed_by`, `worktree`, `force`, `reason` — no session id argument at all; the door reads the bound session from `SPINE_SESSION` in its own environment, so it cannot be pointed at another session's lease by argument.
 
 - `claim` takes the lease. The **same** `session_id` re-claiming is idempotent (it just refreshes the heartbeat) — safe to call on resume. A **different** active session is refused; take over only with `--force --reason "..."`, which records the prior session for audit.
 - `heartbeat` proactively refreshes your lease — only needed for an idle wait where no mutating verb will fire (mutating verbs refresh it for you); `release` closes it when you are done.

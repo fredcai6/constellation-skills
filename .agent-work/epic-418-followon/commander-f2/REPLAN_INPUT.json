@@ -1,0 +1,260 @@
+{
+ "schema_version": 1,
+ "current_plan": {
+  "schema_version": 1,
+  "epic": {
+   "title": "epic-418-followon wave 2 — F2: MCP door adoption (#542) and friction capture (#541)",
+   "spec_path": ".agent-work/epic-418-followon/launch-orders/LAUNCH_ORDER-F2-mcp-adoption.md",
+   "intent_and_why": "The MCP front door from F (#424) is built, merged and unused. Make agents drive through it, and make the door confess its own friction while they do. C (#421) does not launch until this is done: agents running the spine through the door is C's entry condition, set by the repo owner."
+  },
+  "definition_of_done": [
+   "Role spine instructions name the door's tools as the default path, CLI documented as the remaining fallback.",
+   "A real dispatched agent drove a real role spine to done through the door alone, measured from its own call record.",
+   "install_constellation.py ships and wires .mcp.json, so a fresh install gets the door.",
+   "The server's own rejections land in the run's episode through apply_episode_delta.py, and say so loudly when they cannot.",
+   "The identity trade is decided and the property given up is written down."
+  ],
+  "good_enough": {
+   "mandatory_quality": "Every gate closes on evidence produced AT that gate. No gate check that cannot lose.",
+   "sufficient_evidence": "Targeted automated tests plus the full suite at 0 failed; the acceptance claim measured from the driving agent's own call record, never server-side.",
+   "appetite": "One wave, one PR on epic-418/f2-mcp-adoption."
+  },
+  "hard_constraints": [
+   "The CLI door stays. F is additive. An edit that removes the CLI path fails g4a.",
+   "Never edit scripts/checklist_engine.py — the door wraps the engine and never re-implements it.",
+   "episodes/ is written only through apply_episode_delta.py with --store-root episodes.",
+   "An episode is a record, never read back as a rule.",
+   "Never write settings.json at user scope.",
+   "Do not reintroduce per-dispatch MCP config generation on identity grounds.",
+   "The main checkout /home/tommy/projects/constellation-skills is fenced read-only."
+  ],
+  "fixed_decisions": [
+   "Gate order is g1 identity, g2 capture, g3 installer, g4 adoption+acceptance — the order is the point.",
+   "The acceptance numerator is the driving agent's own call record, never the server log.",
+   "A measured negative is a complete deliverable; an UNMEASURED condition is not a negative.",
+   "Identity may be bound to a container only at the granularity that container genuinely separates (g1)."
+  ],
+  "current_wave": {
+   "objective": "Adopt the MCP door as the default path and instrument the door's own rejections.",
+   "exit_criteria": [
+    "All five definition_of_done items evidenced, each at its own gate."
+   ],
+   "issues": [
+    {
+     "id": "542",
+     "title": "Adopt the MCP door",
+     "desired_outcome": "Agents default to the door; a fresh install ships it; a real dispatched agent drives a real role spine to done through it alone.",
+     "useful_now": "It is C (#421)'s entry condition. C is written against whichever door delivers gate imperatives, so doing C against the CLI and porting afterwards is doing it twice.",
+     "appetite": "Four gates (g1, g3, g4a, g4b).",
+     "acceptance_or_falsification_evidence": "The driving agent's own record.jsonl scored by F's archived instrument, requiring reached_done AND zero CLI engine invocations; plus the three adoption counts re-measured.",
+     "implementation_latitude": "Which role spines change and in what order; tool grouping; how the acceptance run is staged.",
+     "hard_constraints_no_gos": [
+      "Removing or deprecating the CLI path.",
+      "Changing INTERPRETER_CANDIDATES order.",
+      "Writing settings.json at user scope."
+     ],
+     "local_unknowns": [
+      "Whether an installed project-root dotfile should be default or opt-in — the installer has no precedent for writing one."
+     ],
+     "anchors": [
+      "scripts/mcp_spine_server.py",
+      "scripts/install_constellation.py",
+      ".mcp.json",
+      "skills/commander/templates/COMMANDER_SPINE.template.json",
+      "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+      "skills/explorer/templates/EXPLORER_SPINE.template.json",
+      "skills/workbench/references/checklist-engine.md"
+     ],
+     "type": "AFK",
+     "blocks": []
+    },
+    {
+     "id": "541",
+     "title": "Capture the door's own friction into the run's episode",
+     "desired_outcome": "The door records its own rejections, they reach the run's episode through apply_episode_delta.py, and it fails loud on every occurrence when they cannot.",
+     "useful_now": "The door absorbs rejections that used to be diagnosable in a transcript; without capture, adoption trades a visible defect for a silent one.",
+     "appetite": "One gate (g2).",
+     "acceptance_or_falsification_evidence": "A seeded rejection scored by the instrument; a real episode written and read back under a nested work-id and verified with verify_episode_captured.py; N>=2 induced write failures producing N separate messages.",
+     "implementation_latitude": "Capture granularity; the record's fields.",
+     "hard_constraints_no_gos": [
+      "Do not extend the Mechanical allowlist or edit apply_episode_delta.py, episode_capture.py or docs/EPISODE_STORE.md — all outside this run's ownership.",
+      "Do not overload the engine's refusals counter or failed-commands.",
+      "Nothing written into episodes/ may be phrased as guidance for a future agent."
+     ],
+     "local_unknowns": [],
+     "anchors": [
+      "scripts/mcp_spine_server.py",
+      "scripts/apply_episode_delta.py",
+      "scripts/episode_capture.py",
+      "scripts/verify_episode_captured.py"
+     ],
+     "type": "AFK",
+     "blocks": []
+    }
+   ]
+  },
+  "wave_forecast": [
+   {
+    "outcome": "C (#421) relocates gate-specific instructions into the spine, written against the door rather than the CLI.",
+    "why_likely": "The repo owner set 'agents running the spine through the door' as C's entry condition, and C's hard constraint is that the gate imperative rides tool results verbatim.",
+    "entry_conditions": [
+     "F2 complete: role spine instructions default to the door and a real dispatched agent has driven a real role spine through it."
+    ]
+   }
+  ],
+  "uncertainty_register": [
+   {
+    "unknown": "Whether Task-tool-dispatched crews should eventually get distinct spine identities.",
+    "affects": "Whether the g1 position is a permanent answer or an interim one.",
+    "settle_by": "Its own design, as docs/CHECKLIST_ENGINE_DESIGN.md already records.",
+    "current_evidence": "Neither ${VAR} expansion nor per-dispatch config generation reaches the case; identity scoping is per top-level process, not per agent-turn.",
+    "next_probe": "Not probed in this wave. g1 states what the fleet does UNTIL such a design exists, not that one is unnecessary."
+   },
+   {
+    "unknown": "Whether the acceptance run will produce any door rejections at all.",
+    "affects": "How much g2's capture can be demonstrated live rather than by seeded control.",
+    "current_evidence": "F measured ZERO malformed calls in both DC5 arms, so zero is the expected reading.",
+    "settle_by": "g4b's measurement.",
+    "next_probe": "Report whatever number it is. Zero is a result and will not be manufactured away."
+   }
+  ],
+  "parked_possibilities": [
+   "Instrumenting the CLI arm so future DC5-style measurements compare two instrumented doors rather than one.",
+   "Teaching map_orient.py to parse a generated code map (#548).",
+   "Repairing the spine_rail per-agent identity merge (#549)."
+  ]
+ },
+ "completed_outcomes": [
+  {
+   "issue_id": "541",
+   "outcome": "The MCP door records its own rejections one per occurrence across the three classes it can see, they reach the run's episode as an artifact-ref through apply_episode_delta.py under a nested work-id, and a write failure is reported on every occurrence.",
+   "evidence": "tests/test_mcp_friction_capture.py (8 tests incl. a repeat-occurrence test that goes red under the reviewer's dedup mutation); episodes/active/epic-418-followon_commander-f2-001.md with verify_episode_captured.py exit 0; git diff empty against apply_episode_delta.py, episode_capture.py and docs/EPISODE_STORE.md."
+  }
+ ],
+ "wave_evidence": [
+  {
+   "claim": "The launch order's framing of #541 - the door absorbs fumbles that would otherwise be diagnosable - describes the defect.",
+   "expected": "The door swallows rejections that reach no store.",
+   "observed": "Half true, and the false half would have wasted the gate. An ENGINE refusal through the door already moves the spine's refusals counter (0->1->2) and episode_capture composes that exact value into the Mechanical bin. Only the door's OWN _tool_error returns reach nothing: they short-circuit before run_engine, so they touch neither the counter nor the server's own call log. Measured on a nested work-id, 12/12 assertions.",
+   "source": ".agent-work/epic-418-followon/commander-f2/demo_engine_refusal_reaches_episode.py"
+  },
+  {
+   "claim": "A repo-wide suite postcondition is sufficient evidence that a gate's own work landed.",
+   "expected": "Suite green means the gate did its job.",
+   "observed": "False, and it was my own plan's defect. The suite was green before the run began, so all five integrate gates were satisfiable by a no-op diff plus an APPROVE. Every gate now closes on its own named test node first. A cold plan critic found this; the plan was revised before it froze.",
+   "source": ".agent-work/epic-418-followon/commander-f2/PLAN_CRITIC.md finding 6"
+  },
+  {
+   "claim": "A pin over a tool's declared inputSchema protects the door's confinement property.",
+   "expected": "No declared identity argument means the door cannot be redirected.",
+   "observed": "False. The g1 reviewer mutated the real door to honour an UNDECLARED spine_override key directly in call_tool's handler, touching no inputSchema, and all five pin tests stayed green. A pin over declarations is a pin over intentions. Two runtime tests were added and the reviewer's mutation now goes red; the recorded claim was narrowed to name both halves.",
+   "source": ".agent-work/epic-418-followon/commander-f2/crew-handoffs/g1-review-reviewer-result.md"
+  },
+  {
+   "claim": "The identity defect is specific to the MCP door's env-binding.",
+   "expected": "One seam, one fix.",
+   "observed": "False. The same shape appears independently in scripts/hooks/spine_rail.py (#549): its binding file IS keyed per agent, and session_view() then merges the per-agent key away. The harness shares the container and identity was put in the container, twice, neither seam aware of the other. g1's rule is therefore stated fleet-wide over container granularity rather than as an argument-passing fix - a form the hook seam forces, because it has no per-call argument for identity to ride on.",
+   "source": "Admiral context query, epic-418-followon; docs/CHECKLIST_ENGINE_DESIGN.md:310-312"
+  },
+  {
+   "claim": "Editing role spine instructions in skills/ makes a dispatched agent use the door.",
+   "expected": "Adoption edits change agent behaviour.",
+   "observed": "FALSE as stated, measured ONCE. A dispatched agent reads the INSTALLED corpus, not repo source, and arm 1 saw none of the edits. Arm 2 loaded the same pre-g4a corpus (~/.claude/skills, source_commit a1eab1f1, 0 files naming the door), so arm 2 is arm 1 rerun: one condition observed twice, not two negatives. The explanation once recorded here - that arm 2's agent read the newly installed instruction and thereby obeyed correct doctrine - is WITHDRAWN as unsupported: grep -c 'share the parent' returns 0 across all three arms' records, so no agent saw that sentence. What remains true is the arm-design error: arms 1 and 2 drove the IMPLEMENTER, which by g1's ruling is an in-session dispatched crew member and does not own the process's bound spine, so it was never the role that could satisfy this criterion. WHY either agent went to the CLI was not measured, and a replanner must not treat it as known.",
+   "source": ".agent-work/epic-418-followon/commander-f2/evidence/g4b/MEASUREMENT.md, section 'Correction - arm 2 duplicated arm 1's condition'"
+  },
+  {
+   "claim": "A real dispatched agent can drive a real role spine to done through the door alone.",
+   "expected": "Measurable from the driving agent's own call record.",
+   "observed": "TRUE for a role that OWNS its process's bound spine: 9 door calls, 0 CLI engine invocations, reached DONE, 0 shape errors. The other two arms are ONE refusing condition observed twice (arm 2 is arm 1 rerun), not two independent negatives. What they control for is availability: the spine server was connected with all 7 tools offered in all three arms, so the door was declined where it was demonstrably present. They do not measure why it was declined.",
+   "source": "evidence/g4b/arm-mcp-3/record.jsonl scored by F's archived score_arm.py"
+  },
+  {
+   "claim": "A repo-wide suite is enough to catch a gate's own regressions.",
+   "expected": "Green suite means nothing broke.",
+   "observed": "It caught three real regressions this run that a gate-scoped check alone would not have: my own notes tripping the retirement guard's store-mention leg, and map/INDEX.md going stale THREE times after test additions (#544). The third time was after the Admiral had already told me to rebuild as part of committing.",
+   "source": "e0-context, g1-integrate, g4a-integrate command postconditions"
+  }
+ ],
+ "discrepancies": [
+  {
+   "id": "D0",
+   "signal": "map_orient.py returns DEGRADED-UNPARSEABLE against a map that is present, complete and fresh, and its verdict string carries the guess 'unfilled template?' which a Commander then reported one tier up as an observation.",
+   "classification": "evidence_only",
+   "affects": "Every Commander in this epic runs map-DEGRADED and may repeat the same misreport.",
+   "evidence": "map/INDEX.md is 24222 bytes over 134 modules / 4956 entities (re-derived at the head of the third repair round) and tests/test_code_map.py::MapTreeFreshnessTests holds it byte-fresh. map_orient's ANCHOR_RE admits only hand-written packet vocabulary; a generated code map contains none by construction. #536 taught the probe where to look and not what it would find.",
+   "reason": "Filed by the Admiral as #548. Not repaired inside a wave under measurement, per the launch order's cheap-fixes-are-routed rule."
+  },
+  {
+   "id": "D1",
+   "signal": "A Commander's own working notes at the repo root tripped tests/test_retirement_guard.py::test_canon_is_clean with six unapproved-store-mention violations.",
+   "classification": "evidence_only",
+   "affects": "The launch order names notes-1.md as the working-notes convention, and prior runs put such files at the repo root.",
+   "evidence": "The guard fires on any new SHIPPED site naming the episode store; a root-level run note discussing apply_episode_delta.py is exactly that shape. Resolved by moving the artifact into the run's own work area rather than by adding transient lines to a frozen approval census.",
+   "reason": "The guard is correct and the note was the regression. Worth the Admiral knowing because the convention and the guard are in tension for any run that touches the episode store."
+  },
+  {
+   "id": "D2",
+   "signal": "Adding a test class silently staled map/INDEX.md, so the full suite was red for a reason unrelated to the gate's own work.",
+   "classification": "evidence_only",
+   "affects": "Any gate in this epic that adds or removes entities.",
+   "evidence": "tests.test_mcp_identity moved 36 -> 45 entities; MapTreeFreshnessTests failed until the map was rebuilt and committed.",
+   "reason": "Mechanical and self-correcting once known. Recorded so a later gate recognises the failure instantly rather than diagnosing it again."
+  },
+  {
+   "id": "D3",
+   "signal": "install_constellation.py ships neither .mcp.json nor mcp_spine_server.py, and the committed .mcp.json hardcodes a python3 launch line that does not resolve on the repo owner's platform.",
+   "classification": "blocks_current_wave_exit",
+   "affects": "#542 criterion 3, and with it whether adoption is real on Windows at all.",
+   "evidence": "A real project-scope install during g4b produced no .mcp.json and no bundled door script - verified by ls, not assumed. Count 2 of the three adoption counts is UNCHANGED at 0. #553 records the launch-line defect.",
+   "reason": "g3 was DEFERRED by Admiral ruling in favour of protecting g4b. Reported as an open criterion and an unverified platform, never as a pass."
+  }
+ ],
+ "open_current_wave_issue_ids": [
+  "542"
+ ],
+ "unlaunched_items": [
+  {
+   "id": "421",
+   "kind": "issue"
+  },
+  {
+   "id": "C-relocates-gate-instructions-into-the-spine",
+   "kind": "forecast"
+  },
+  {
+   "id": "task-tool-crews-need-distinct-spine-identities",
+   "kind": "uncertainty"
+  },
+  {
+   "id": "acceptance-run-friction-count-unknown",
+   "kind": "uncertainty"
+  },
+  {
+   "id": "instrument-the-cli-arm-for-comparability",
+   "kind": "parked"
+  },
+  {
+   "id": "548-map-orient-cannot-parse-a-code-map",
+   "kind": "parked"
+  },
+  {
+   "id": "549-spine-rail-merges-the-per-agent-key-away",
+   "kind": "parked"
+  }
+ ],
+ "repo_state": {
+  "anchors": [
+   "scripts/mcp_spine_server.py",
+   "scripts/install_constellation.py",
+   "scripts/apply_episode_delta.py",
+   "scripts/episode_capture.py",
+   ".mcp.json",
+   "skills/commander/templates/COMMANDER_SPINE.template.json",
+   "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+   "skills/explorer/templates/EXPLORER_SPINE.template.json",
+   "skills/workbench/references/checklist-engine.md",
+   "tests/test_mcp_identity.py"
+  ],
+  "map_status": "Code map PRESENT and fresh: map/INDEX.md covers 134 modules / 4956 entities (re-derived at the head of the third repair round) and tests/test_code_map.py::MapTreeFreshnessTests holds it byte-identical to a fresh build (it went red at g1 when the pin class was added and was rebuilt). map_orient.py still reports DEGRADED-UNPARSEABLE because its ANCHOR_RE admits only hand-written packet vocabulary and a generated code map carries none of it - the tool is what is broken, not the map. Filed as #548; discharged for this run with hash-pinned substitutes."
+ }
+}
