@@ -411,7 +411,8 @@
           "id": "p1",
           "statement": "execute complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "execute is complete: all 13 gates in execute.json closed with integrated evidence, no gate blocked, skipped or waived."
         }
       ],
       "postconditions": [
@@ -419,13 +420,14 @@
           "id": "c1",
           "statement": "map reflects the implemented changes",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "Reconciled DIRECTLY rather than via Cartographer, per the doctrine's no-packet-map path: this repo has no docs/architecture/ map (verified: the directory does not exist), so there is no packet map for a Cartographer dispatch to fold into. Two structural records were reconciled instead. (1) The machine-enforced code map: map/INDEX.md is current and its freshness test is green (148 passed, 63 subtests); scripts.gen_mcp_config is GONE from it after the g1 rework, and scripts.mcp_spine_server, tests.test_mcp_identity, tests.test_mcp_imperative_equivalence and tests.test_mcp_spine_server are all present with real entity/hole counts. (2) The design record the change actually touches: docs/CHECKLIST_ENGINE_DESIGN.md gains a section 'A second front door: the MCP server', placed beside the existing 'Context manifest: a second, delivery-shaped projection' section it is the sibling of. It records the wrap-not-reimplement constraint and its empty engine diff, the byte-identity property over 61 gates, that identity rides the environment via the committed .mcp.json's ${VAR} expansion, the TOMBSTONE for gen_mcp_config.py with an explicit do-not-reintroduce-on-identity-grounds warning and the measurement that killed it, DC3's fail-closed inheritance and why its positive control exists, and what the door measurably bought (about 18% fewer engine invocations, but from the schema arriving with the tools rather than from absorbed fumbles, against roughly 1.8x the composed tool calls). Full suite re-run after the edit: 2177 passed, 1 skipped, 0 failed."
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
@@ -441,7 +443,8 @@
           "id": "p1",
           "statement": "reconcile complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "reconcile complete: the code map is current and green, and the design record was folded into docs/CHECKLIST_ENGINE_DESIGN.md."
         }
       ],
       "postconditions": [
@@ -449,7 +452,8 @@
           "id": "c1",
           "statement": "every triage candidate routed or recorded",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "All nine candidates routed, each to exactly one disposition, all recommend-and-defer, written issue-ready in triage-candidates/TRIAGE.md with observations carrying type (measured/inferred plus how) and rev. T1 run_crew.py multi-segment work-id; T2 verify_iterative_role_artifacts.py same defect class, which was masking a real G2 schema violation in the packet; T3 code_map cannot see unstaged files; T4 Task-tool subagents inherit the dispatching process's whole MCP scope; T5 the engine cannot express resolving a blocked gate on a later gate's evidence; T6 two spines sharing one session id, confirmed real and explicitly NOT DC3; T7 stale file-count comment; T8 unused import; T9 the gauge staleness guard silently nulls a naive governor test. Sources: the g2, g3, g1-rework and g4 crew results plus this run's own dispatch loop and closeout."
         },
         {
           "id": "c2",
@@ -458,17 +462,35 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-triage-1",
+          "attested": {
+            "evidence": "e-triage-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-triage-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER-424-continuation.md:Constraints",
+            "decision": "defer-all-nine-no-filing",
+            "detail": "This records a DEFERRAL, not a filing approval -- none was sought and none was authorized. The launch order grants no issue-filing authority: it scopes the run to six done-conditions, fences the files, and excludes closing any issue, but never authorizes opening one. All nine candidates are therefore recommend-and-defer, issue-ready only. T7 and T8 clear all four fix-now rungs and are STILL deferred, because the same order says cheap fixes found mid-wave are routed, not implemented inside a wave under measurement, and F stays open until archive.",
+            "artifact": ".agent-work/epic-418-followon/commander-424/triage-candidates/TRIAGE.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "review": {
@@ -480,7 +502,8 @@
           "id": "p1",
           "statement": "triage complete",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "triage complete: nine candidates routed, all recommend-and-defer, written issue-ready in triage-candidates/TRIAGE.md."
         }
       ],
       "postconditions": [
@@ -491,17 +514,35 @@
             "kind": "artifact",
             "evidence_type": "user-decision"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-review-1",
+          "attested": {
+            "evidence": "e-review-1",
+            "note": null
+          }
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-review-1",
+          "type": "user-decision",
+          "payload": {
+            "cite": "LAUNCH_ORDER-424-continuation.md:What done means for you",
+            "decision": "run-summary-accepted-pending-admiral-ratification",
+            "artifact": ".agent-work/epic-418-followon/commander-424/RUN_SUMMARY.md",
+            "detail": "Delegated mode: no reachable human. The order's done definition is all six done-conditions carrying a verdict backed by evidence, PR green and independently reviewed, and no gate left blocked by its own reviewer. All three hold: six verdicts, none UNMEASURED; suite 2177 passed / 1 skipped / 0 failed with a 38-test closing regression across everything F shipped; four reviewer BLOCKs all resolved on evidence with none overridden and none waived. Deviations are stated in the summary rather than buried: the amend-based gate reordering, the retext of execute.c2 whose canonical check cannot run on a multi-segment work-id, and two stale handoff baselines corrected before dispatch. The Admiral ratifies at the epic return boundary."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "feedback": {
@@ -513,7 +554,8 @@
           "id": "p1",
           "statement": "run summary accepted",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "review complete: RUN_SUMMARY.md written and accepted via the delegated user-decision citing the launch order's done definition."
         }
       ],
       "postconditions": [
@@ -522,19 +564,32 @@
           "statement": "this run captured at least one episode: an episode in the store records this work id",
           "check": {
             "kind": "command",
-            "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-418-followon/commander-424 --store-root episodes --phase feedback"
+            "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-418-followon-commander-424 --store-root episodes --phase feedback"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-feedback-1"
         }
       ],
       "constraints": [],
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-feedback-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-418-followon-commander-424 --store-root episodes --phase feedback",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "archive": {
@@ -555,7 +610,7 @@
           "statement": "work area archived and this run's episode captured AND tracked by git, so the record survives this worktree",
           "check": {
             "kind": "command",
-            "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-418-followon/commander-424 --store-root episodes --phase archive"
+            "command": "py /home/tommy/.claude/skills/constellation-commander/scripts/verify_episode_captured.py epic-418-followon-commander-424 --store-root episodes --phase archive"
           },
           "satisfied": false
         },
@@ -640,7 +695,7 @@
     "session_id": "86708414-f5d3-40d3-8c9a-2f96d1ccdc14",
     "status": "active",
     "claimed_at": "2026-08-09T20:42:22.211514+00:00",
-    "last_heartbeat": "2026-08-10T00:33:10.854892+00:00",
+    "last_heartbeat": "2026-08-10T00:44:45.194891+00:00",
     "claimed_by": "commander",
     "worktree": "/home/tommy/projects/constellation-skills-wt/f-424",
     "previous_session_id": null,
@@ -681,6 +736,34 @@
       "why": "Four gates, four reviewer BLOCKs, none overridden -- and the blocks are where the run's value is. g1's reviewer refused a justification that was false, and the repair's g3-first ordering let me answer it with a measurement instead of an argument: the answer was YES and it still did not save gen_mcp_config.py, because a generated config binds per process exactly as ${VAR} does. g4's reviewer blocked three times, and the second one is the one I will carry: it caught me keeping a conclusion I had written before the evidence moved, on a decomposition I reached for only after the pre-registered metric flipped. I changed the verdict rather than defend it. What I would flag to the next planner is that this run's checks kept passing for the wrong reasons until something adversarial touched them -- a scorer that could not lose, a help read scored as a crash, a gauge sampled before the claim that made an UNMEASURED look like a negative. Every one of those was caught by a control or a reviewer, none by re-reading.",
       "mechanical": false,
       "ts": "2026-08-10T00:33:10.854871+00:00"
+    },
+    {
+      "id": "w-6",
+      "gate": "reconcile",
+      "why": "The tombstone is the load-bearing part of this reconciliation. gen_mcp_config.py was built for a reason that sounded right, removed for a reason that took two measurements to establish, and the second measurement -- DC3's YES -- is exactly the kind of fact a later agent would read as justification to bring it back. So the design doc now records the inference that does NOT follow, not just the outcome: a generated config binds per process exactly as ${VAR} does, so the in-session-subagent case is beyond both. Without that sentence written down, the next person to find the YES rebuilds the file.",
+      "mechanical": false,
+      "ts": "2026-08-10T00:36:37.211334+00:00"
+    },
+    {
+      "id": "w-7",
+      "gate": "triage",
+      "why": "Two of the nine cleared the fix-now ladder outright and I deferred them anyway, because the launch order forbids implementing cheap fixes inside a wave under measurement and F is open until archive. That is the call I would most expect to be second-guessed, so it is stated rather than buried. The pattern worth carrying up is T1 and T2: two separate tools both assume a work-id has no slash, and the epic/commander convention always gives it one. T2 is the sharper of the pair -- its guard refused before verifying, and behind that refusal sat a real schema violation in the run's own replan packet that nobody could have seen until the check was made to run.",
+      "mechanical": false,
+      "ts": "2026-08-10T00:39:17.860032+00:00"
+    },
+    {
+      "id": "w-8",
+      "gate": "review",
+      "why": "The summary I would want read first is not the verdict table, it is the block table. DC5 reads PASS, and the honest version of that sentence is that it read NEGATIVE until a reviewer found a loop in my own scorer, and then read NEGATIVE again until the same reviewer pointed out I had kept the conclusion and changed the argument. Presenting the final verdict without that route would be the most misleading true thing I could hand up. The other thing I want visible rather than tidy: DC5 passed by a mechanism the workstream did not predict. Nobody fumbled a call in either arm, so the door did not absorb fumbles -- it removed the need to look things up. A follow-on that assumes typed arguments are buying fumble-absorption would be building on the wrong half of this result.",
+      "mechanical": false,
+      "ts": "2026-08-10T00:40:26.542505+00:00"
+    },
+    {
+      "id": "w-9",
+      "gate": "feedback",
+      "why": "Honest reflection, not 'none'. I followed the skills and the order closely and improvised in three places, each recorded: the gate reordering (the engine cannot express resolving a blocked gate on a later gate's evidence), and two retext-checks of shipped command postconditions that CANNOT run or CANNOT be satisfied on a multi-segment work-id. That last point is the run's most reusable finding and I did not expect it: THREE separate tools -- run_crew.py, verify_iterative_role_artifacts.py, and the apply_episode_delta/verify_episode_captured pair -- each assume a work-id is one path segment, while the epic convention always nests one. The third is the worst: the writer forbids a slash and the gate demands one, so the feedback postcondition is unsatisfiable as generated, and it reported BLOCKED while six episodes for this run sat in the store. Ambiguity worth naming: the g3 handoff and the STATE_NOTE framed the same question at two different granularities of 'subagent', which the g3 crew resolved by measuring both and saying so -- good crew judgement covering for an imprecise handoff, mine. Crew Workflow Feedback harvested at each integrate: code_map discovery reads git ls-files so unstaged files are invisible (hit twice, T3); the g2 crew's temporary edit to a fenced file was refused by the harness permission classifier, so the fence held mechanically and not merely by instruction; the g4 reviewer noted a Bash backtick inside a --finding string triggered command substitution and emptied part of its text. Six episodes recorded, one per distinct thing that happened, including the two I come out of worst on.",
+      "mechanical": false,
+      "ts": "2026-08-10T00:44:14.381245+00:00"
     }
   ],
   "amendments": [
@@ -690,6 +773,22 @@
       "authority": "Commander, under LAUNCH_ORDER-424-continuation.md (delegated; Admiral ratifies at the epic return boundary)",
       "ops": [
         "retext-check execute.c2"
+      ]
+    },
+    {
+      "ts": "2026-08-10T00:43:55.391572+00:00",
+      "reason": "AUTHORING FIX to a check that CANNOT be satisfied, not a relaxation of it. The episode writer and the capture gate demand contradictory values for one field: apply_episode_delta.py validates mechanical.run against RUN_RE = [a-z0-9][a-z0-9-]* and refuses any '/', while verify_episode_captured.py passes only when an episode's '- run:' line equals the work-id VERBATIM. For the work-id epic-418-followon/commander-424 the writer cannot emit the string the gate requires, so this postcondition is unsatisfiable as generated -- the gate reported BLOCKED while six episodes for this exact run sat in the store. The retext points the gate at the run value the writer can actually produce, epic-418-followon-commander-424, which is the same work-id with the separator normalised to the only form the writer accepts. The check still runs, still scans the real store, and still fails if this run captured nothing. Recorded as triage candidate T10 -- the THIRD instance this run of three separate tools assuming a work-id has no slash, after run_crew.py (T1) and verify_iterative_role_artifacts.py (T2).",
+      "authority": "Commander, under LAUNCH_ORDER-424-continuation.md (delegated; Admiral ratifies at the epic return boundary)",
+      "ops": [
+        "retext-check feedback.c1"
+      ]
+    },
+    {
+      "ts": "2026-08-10T00:44:45.194873+00:00",
+      "reason": "Same authoring fix as feedback.c1, same reason, same triage candidate T10: apply_episode_delta.py forbids a slash in mechanical.run (RUN_RE = [a-z0-9][a-z0-9-]*) while verify_episode_captured.py requires the run line to equal the work-id verbatim, so for epic-418-followon/commander-424 no episode can satisfy this check. The retext points it at the run value the writer can produce. The archive phase's extra requirement -- that git TRACK the episode, which is what proves the record outlived this worktree -- is untouched and still enforced.",
+      "authority": "Commander, under LAUNCH_ORDER-424-continuation.md (delegated; Admiral ratifies at the epic return boundary)",
+      "ops": [
+        "retext-check archive.c1"
       ]
     }
   ]
