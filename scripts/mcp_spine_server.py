@@ -526,7 +526,25 @@ def call_tool(name: str, args: dict) -> dict:
 # --------------------------------------------------------------------------- #
 # JSON-RPC 2.0 over newline-delimited stdio (the MCP stdio transport)
 # --------------------------------------------------------------------------- #
+def _utf8_stdio() -> None:
+    """Pin the protocol encoding to UTF-8 explicitly rather than inheriting
+    the platform default. On Windows, Python's stdio falls back to the ANSI
+    code page (cp1252), not UTF-8, unless a stream is reconfigured -- the
+    same trap scripts/checklist_engine.py's own `_utf8_stdio()` already
+    names for the CLI's stdout/stderr (that CLI never reads stdin, so it
+    never had to cover this door's own extra surface: `sys.stdin`, read
+    every request off, here). The MCP stdio transport IS UTF-8 by spec, so
+    this is conformance, not a workaround -- do not "simplify" it back to
+    the platform default."""
+    for stream in (sys.stdin, sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8")
+        except (AttributeError, OSError):
+            pass
+
+
 def main() -> None:
+    _utf8_stdio()
     for line in sys.stdin:
         line = line.strip()
         if not line:

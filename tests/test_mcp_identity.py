@@ -118,7 +118,12 @@ class ServerInstance:
         self.proc = subprocess.Popen(
             [sys.executable, str(server)],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, bufsize=1, env=env,
+            # Explicit UTF-8: the door's own protocol encoding is pinned in
+            # scripts/mcp_spine_server.py (Windows/cp1252 hazard); decode the
+            # child's pipes explicitly here too, so a future regression in
+            # the door surfaces as a decode mismatch instead of being masked
+            # by a matching platform default on Linux/CI.
+            text=True, encoding="utf-8", bufsize=1, env=env,
         )
         self._id = 0
         # Portable bounded read (see recv() below): a daemon thread owns the

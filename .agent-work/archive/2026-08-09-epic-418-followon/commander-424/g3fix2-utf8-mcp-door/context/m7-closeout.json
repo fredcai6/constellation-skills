@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m7-closeout",
+  "files": [],
+  "repo_rev": {
+    "commit": "3d4d89dafe58ec0e644088241fe29d79c70db88e"
+  },
+  "run": {
+    "work_id": "g3fix2-utf8-mcp-door",
+    "generated_at": "2026-08-10T02:11:57Z",
+    "roots": {
+      "skill": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "repo": "/home/tommy/projects/constellation-skills-wt/f-424",
+      "durable": "/home/tommy/projects/constellation-skills-wt/f-424"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/f-424"
+    }
+  }
+}

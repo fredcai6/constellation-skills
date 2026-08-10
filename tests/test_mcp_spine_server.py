@@ -21,11 +21,13 @@ from __future__ import annotations
 
 import json
 import os
+import queue
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 
@@ -141,7 +143,11 @@ class McpRpcClient:
         self.proc = subprocess.Popen(
             [sys.executable, str(SERVER)],
             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            text=True, bufsize=1, env=env,
+            # Explicit UTF-8: decode the door's pipes as UTF-8 rather than
+            # the platform default, matching the protocol encoding pinned in
+            # scripts/mcp_spine_server.py -- a future regression there then
+            # surfaces as a decode mismatch, not a matching-default accident.
+            text=True, encoding="utf-8", bufsize=1, env=env,
         )
         self._id = 0
 
@@ -222,8 +228,12 @@ class ToolsWrapEngineTests(unittest.TestCase):
         self.tmp.cleanup()
 
     def _cli_current(self) -> str:
+        # Explicit UTF-8: the CLI's own stdout is already pinned to UTF-8 by
+        # checklist_engine.py's own _utf8_stdio(); decode it explicitly here
+        # too rather than falling back to the platform default when reading
+        # it back into this test process.
         r = subprocess.run([sys.executable, str(ENGINE), "--file", str(self.spine), "current"],
-                            capture_output=True, text=True)
+                            capture_output=True, text=True, encoding="utf-8")
         return r.stdout.rstrip("\n")
 
     def test_spine_status_matches_real_engine_current_output(self):
@@ -376,7 +386,7 @@ class RefusalSurfacesAsIsErrorTests(unittest.TestCase):
         cli = subprocess.run(
             [sys.executable, str(ENGINE), "--file", str(self.spine), "advance", "g1",
              "--mechanical", "--session-id", "refusal-test"],
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8",
         )
         self.assertNotEqual(0, cli.returncode)
         self.assertIn("postconditions unmet", cli.stderr)
@@ -466,7 +476,7 @@ class McpJsonVarExpansionLaunchTests(unittest.TestCase):
             proc = subprocess.Popen(
                 [entry["command"], *entry["args"]],
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                text=True, bufsize=1, env=env, cwd=str(ROOT),
+                text=True, encoding="utf-8", bufsize=1, env=env, cwd=str(ROOT),
             )
             try:
                 proc.stdin.write(json.dumps({
@@ -527,6 +537,162 @@ class CliFallbackTableTests(unittest.TestCase):
         self.assertEqual(set(), covered & set(UNCOVERED_VERBS))
         self.assertEqual(18, len(covered) + len(UNCOVERED_VERBS),
                           "covered + uncovered must account for all 18 engine verbs")
+
+
+class Utf8StdioConformanceTests(unittest.TestCase):
+    """Byte-level, platform-independent regression coverage for the door's
+    OWN stdio encoding (issue #424 post-archive fix, workstream F gate
+    g3fix2). On Windows, Python's stdio defaults to the ANSI code page
+    (cp1252), not UTF-8, unless a stream explicitly reconfigures itself --
+    exactly the trap scripts/checklist_engine.py's own `_utf8_stdio()`
+    already names for the CLI's stdout/stderr. `mcp_spine_server.py`
+    additionally owns `sys.stdin` (the CLI never reads stdin; this door
+    does), so it must pin its own encoding rather than inherit the platform
+    default.
+
+    Cannot run Windows here, so this simulates the hazard portably: it
+    forces `PYTHONIOENCODING=cp1252` in the SERVER's own environment before
+    spawning it -- the standard, documented, cross-platform way to force
+    CPython's stdio streams to a non-UTF-8 default, reproducing exactly what
+    an unconfigured stdin defaults to on a Windows box, without needing
+    Windows itself.
+
+    It talks to the server over RAW binary pipes and builds the request
+    line itself with `json.dumps(..., ensure_ascii=False)` -- genuine
+    multi-byte UTF-8 bytes on the wire, the shape a real (non-Python) MCP
+    client actually sends (e.g. a JS/TS host, whose `JSON.stringify` does
+    NOT ASCII-escape). This repo's own `McpRpcClient`/`ServerInstance`
+    always call the bare `json.dumps()` default (`ensure_ascii=True`), which
+    ASCII-escapes every non-ASCII character into a `\\uXXXX` sequence before
+    it ever reaches a pipe -- immune to a codec mismatch by construction, so
+    those two convenience clients could never exercise this path, which is
+    exactly the kind of Linux-only accidental green the whole gate exists to
+    catch. This test bypasses that convenience deliberately.
+
+    The load-bearing assertion compares `.encode('utf-8')` byte strings, not
+    plain string equality -- showing the actual bytes that crossed the wire,
+    per the handoff's evidence bar, not merely that a comparison passed."""
+
+    def _spawn(self, env_overrides: dict) -> subprocess.Popen:
+        tmp = tempfile.TemporaryDirectory()
+        self._tmp = tmp  # kept alive until the caller's finally cleans it up
+        root = Path(tmp.name)
+        spine = write_gated_spine(root)
+        env = {"PATH": os.environ.get("PATH", "")}
+        env["SPINE_FILE"] = str(spine)
+        env["SPINE_ENGINE"] = str(ENGINE)
+        env["SPINE_SESSION"] = "utf8-conformance-session"
+        env["SPINE_CALLLOG"] = str(root / "mcp_calls.jsonl")
+        env["SPINE_START_MARKER"] = str(root / "mcp_server_started")
+        env.update(env_overrides)
+        # Binary pipes, deliberately -- this test controls the encoding on
+        # BOTH ends by hand instead of delegating to Popen's text-mode
+        # convenience (the very convenience that hides this bug on Linux).
+        proc = subprocess.Popen(
+            [sys.executable, str(SERVER)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            env=env,
+        )
+        # Bounded read via a daemon reader thread + Queue, NEVER a naked
+        # blocking proc.stdout.readline() -- that anti-pattern is exactly
+        # what deadlocked tests/test_mcp_identity.py's own suite once
+        # already (see that file's ServerInstance docstring); a raw
+        # readline() against this exact server, under a forced non-UTF-8
+        # PYTHONIOENCODING, was observed to hang indefinitely while writing
+        # this test, which is what led to this bounded form.
+        self._out_q: "queue.Queue[object]" = queue.Queue()
+        self._EOF = object()
+
+        def _read_loop() -> None:
+            try:
+                while True:
+                    line = proc.stdout.readline()
+                    if not line:
+                        break
+                    self._out_q.put(line)
+            except (OSError, ValueError):
+                pass
+            self._out_q.put(self._EOF)
+
+        threading.Thread(target=_read_loop, daemon=True).start()
+        return proc
+
+    def _recv(self, timeout: float = 15.0) -> bytes | None:
+        try:
+            item = self._out_q.get(timeout=timeout)
+        except queue.Empty:
+            return None
+        if item is self._EOF:
+            self._out_q.put(self._EOF)  # sticky, mirroring ServerInstance.recv()
+            return None
+        return item
+
+    def _round_trip_claimed_by(self, proc: subprocess.Popen, non_ascii: str) -> bytes:
+        """Claim the lease with a non-ASCII `claimed_by` sent as RAW UTF-8
+        bytes (ensure_ascii=False), then read it back through a REAL
+        `spine_status` ("current") call and pull the substring out of the
+        rendered `LEASE active: <id> (by <claimed_by>, heartbeat ...)` line
+        -- asserted against rendered behaviour, never against the raw
+        argument merely echoed. Returns the round-tripped substring's own
+        UTF-8 encoding, for a byte-for-byte comparison by the caller."""
+        claim_req = {
+            "jsonrpc": "2.0", "id": 1, "method": "tools/call",
+            "params": {"name": "spine_lease",
+                       "arguments": {"action": "claim", "claimed_by": non_ascii}},
+        }
+        raw_request = (json.dumps(claim_req, ensure_ascii=False) + "\n").encode("utf-8")
+        proc.stdin.write(raw_request)
+        proc.stdin.flush()
+        claim_reply_line = self._recv()
+        if claim_reply_line is None:
+            # NOTE: read stderr only on the failure path -- proc.stderr.read()
+            # blocks until EOF, and the child (still alive, stdin open) never
+            # closes it on the success path. An eager f-string message on an
+            # eager assertion would evaluate unconditionally and deadlock here
+            # (see McpJsonVarExpansionLaunchTests above for the same note).
+            self.fail(f"no reply to claim; stderr={proc.stderr.read()!r}")
+        claim_reply = json.loads(claim_reply_line.decode("utf-8"))
+        self.assertFalse(claim_reply["result"]["isError"], claim_reply)
+
+        status_req = {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+                      "params": {"name": "spine_status", "arguments": {}}}
+        proc.stdin.write((json.dumps(status_req) + "\n").encode("utf-8"))
+        proc.stdin.flush()
+        status_reply_line = self._recv()
+        if status_reply_line is None:
+            self.fail(f"no reply to status; stderr={proc.stderr.read()!r}")
+        status_reply = json.loads(status_reply_line.decode("utf-8"))
+        text = status_reply["result"]["content"][0]["text"]
+
+        match = re.search(r"\(by (.*?), heartbeat", text)
+        self.assertIsNotNone(match, f"no 'LEASE active: ... (by <claimed_by>, heartbeat ...)' line found in: {text!r}")
+        return match.group(1).encode("utf-8")
+
+    def test_claimed_by_round_trips_byte_for_byte_even_with_a_non_utf8_ambient_default(self):
+        """GREEN with the fix: the explicit reconfigure() in
+        scripts/mcp_spine_server.py overrides PYTHONIOENCODING=cp1252 (the
+        portable stand-in for an unconfigured Windows default), so a real
+        non-ASCII claimed_by round-trips correctly regardless of the
+        ambient default."""
+        non_ascii = "tester—café"  # em dash (U+2014) + e-acute (U+00E9)
+        expected_bytes = non_ascii.encode("utf-8")
+
+        proc = self._spawn({"PYTHONIOENCODING": "cp1252"})
+        try:
+            round_tripped_bytes = self._round_trip_claimed_by(proc, non_ascii)
+            self.assertEqual(
+                expected_bytes, round_tripped_bytes,
+                f"non-ASCII claimed_by did not round-trip byte-for-byte through the "
+                f"server's own stdin decode: sent {expected_bytes!r}, got back "
+                f"{round_tripped_bytes!r} (decoded: {round_tripped_bytes.decode('utf-8', 'replace')!r})"
+            )
+        finally:
+            proc.stdin.close()
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+            self._tmp.cleanup()
 
 
 if __name__ == "__main__":
