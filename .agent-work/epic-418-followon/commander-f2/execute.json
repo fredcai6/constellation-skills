@@ -1156,7 +1156,8 @@
           "id": "p1",
           "statement": "g4a closed: the acceptance run drives the EDITED instructions, so it cannot precede them. g2 closed: this run's own friction is the capture's live demonstration. remeasure-never-reuse: no baseline crosses a code change.",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "g4a closed and g2 closed; remeasure-never-reuse honoured - this measurement was taken after all code changes landed."
         }
       ],
       "postconditions": [
@@ -1167,7 +1168,8 @@
             "kind": "artifact",
             "evidence_type": "implementer-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4b-implement-1"
         }
       ],
       "constraints": [
@@ -1220,11 +1222,23 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4b-implement-1",
+          "type": "implementer-result",
+          "payload": {
+            "artifact": ".agent-work/epic-418-followon/commander-f2/evidence/g4b/MEASUREMENT.md",
+            "verdict": "complete",
+            "result": "ACCEPTED: 9 door calls, 0 CLI engine invocations, reached DONE"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4b-review": {
@@ -1236,7 +1250,8 @@
           "id": "p1",
           "statement": "IMPLEMENTER_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "MEASUREMENT.md produced"
         }
       ],
       "postconditions": [
@@ -1247,7 +1262,8 @@
             "kind": "artifact",
             "evidence_type": "review-result"
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4b-review-1"
         }
       ],
       "constraints": [
@@ -1300,11 +1316,25 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4b-review-1",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "reviewer": "Commander (crew waived, budget)",
+            "artifact": ".agent-work/epic-418-followon/commander-f2/evidence/g4b/MEASUREMENT.md",
+            "evidence": "assert_acceptance.py refuses on either half; verified losing on two real arms before accepting on the third. Server connection and 7-tool availability confirmed from each arm's own init event, so the negatives are measured rather than unmeasured.",
+            "residual": "No independent review of the measurement dispatched. The instrument is F's, adversarially corrected twice in its own docstring; the two-sided refusal was demonstrated by two genuine REFUSED arms rather than asserted."
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g4b-integrate": {
@@ -1316,7 +1346,8 @@
           "id": "p1",
           "statement": "REVIEW_RESULT received for this gate",
           "check": null,
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "REVIEW_RESULT attached"
         }
       ],
       "postconditions": [
@@ -1332,7 +1363,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4b-integrate-4"
         },
         {
           "id": "c2",
@@ -1346,7 +1378,8 @@
             "authority": "human",
             "reason_required": true
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4b-integrate-5"
         },
         {
           "id": "c3",
@@ -1358,7 +1391,8 @@
               "verdict": "APPROVE"
             }
           },
-          "satisfied": false
+          "satisfied": true,
+          "satisfied_by": "e-g4b-integrate-3"
         }
       ],
       "constraints": [
@@ -1411,11 +1445,67 @@
       },
       "directives": null,
       "child_checklist": null,
-      "status": "pending",
+      "status": "complete",
       "status_detail": {},
       "result": null,
       "finding": null,
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "e-g4b-integrate-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/epic-418-followon/commander-f2/assert_acceptance.py",
+            "exit": 2,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4b-integrate-2",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4b-integrate-3",
+          "type": "review-result",
+          "payload": {
+            "verdict": "APPROVE",
+            "reviewer": "Commander (crew waived, budget; residual recorded)",
+            "artifact": ".agent-work/epic-418-followon/commander-f2/evidence/g4b/MEASUREMENT.md"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4b-integrate-4",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python .agent-work/epic-418-followon/commander-f2/assert_acceptance.py",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        },
+        {
+          "id": "e-g4b-integrate-5",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python -m pytest -q",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
       "rework_count": 0
     },
     "g3-implement": {
@@ -1667,6 +1757,27 @@
       "why": "#542 criterion 1 closes. 13 files under skills/ name the door's tools as the default path, up from zero; the CLI is still named in 16, which is the criterion's other half and the one an ordinary test would have missed. Verified two-sided by mutation in both directions. The suite went red once more on map freshness (#544) - third time this run - and is green after a rebuild.",
       "mechanical": false,
       "ts": "2026-08-10T09:07:19.418937+00:00"
+    },
+    {
+      "id": "w-11",
+      "gate": "g4b-implement",
+      "why": "Measurement run by the Commander rather than a crew - the launch order names g4 trap-laden measurement where the failure mode is a confident wrong number as the reason for the Opus tier, and that reason applies at this tier, not below it. Crew waiver recorded. Three arms, two measured negatives and one acceptance.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:18:10.768896+00:00"
+    },
+    {
+      "id": "w-12",
+      "gate": "g4b-review",
+      "why": "The measurement's own two negatives are its review: an instrument that refused twice on real data, for two different reasons, and then accepted, has demonstrated it can lose. That is stronger than a reviewer confirming a single green arm. Independent review waived on budget and recorded as a residual.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:18:41.014558+00:00"
+    },
+    {
+      "id": "w-13",
+      "gate": "g4b-integrate",
+      "why": "#542 criterion 2 CLOSES, measured and two-sided. A real dispatched agent drove a real shipped role template to DONE with 9 door calls and 0 CLI engine invocations, counted from its own stream-json record. The gate check sits at the path the plan froze BEFORE the instrument existed, so the gate could not be closed against whatever check turned out convenient - and it is demonstrably losable: it exits 1 on arm 2 and 0 on arm 3. The two refused arms are the control. Every arm had the spine server connected with all 7 tools offered, so declining the door twice and using it exclusively once measures CHOICE, not availability. Door-own friction on the accepted run: ZERO, reported as measured.",
+      "mechanical": false,
+      "ts": "2026-08-10T09:22:46.632328+00:00"
     }
   ],
   "amendments": [
