@@ -852,49 +852,88 @@ class IdentityBindingPinTests(unittest.TestCase):
         "spine_survey_result": {"action": "record", "task_id": "r1", "result": "pass"},
     }
 
-    def test_no_argument_can_change_the_identity_the_engine_is_addressed_with(self):
-        """THE runtime pin, in its universal form.
+    def test_no_argument_can_change_what_the_door_reads_or_where_it_reads_it(self):
+        """THE runtime pin. Three reviewers defeated its three predecessors, each
+        one layer deeper, so it is now stated as the property the module's own
+        docstring claims rather than as a check over some surface.
 
-        Written this way because the g1 re-reviewer defeated its first version.
-        That version checked five literal key names against one tool; the
-        reviewer honoured a sixth (`target_spine`) and every test stayed green.
-        Its finding was exact: *an enumeration is not a property*, and prose in
-        IDENTITY_TRADE.md was claiming a property.
+        The history is the design rationale and is kept:
 
-        So this asserts the property directly, at the only place it is
-        decidable: **whatever arguments arrive, the engine is always addressed
-        with the BOUND spine and the BOUND session.** It sweeps every tool, not
-        one, and every generated key, not a list. A redirect has to reach the
-        engine's `--file` to do anything at all, so anything that redirects is
-        caught here regardless of what it is named or which handler reads it.
+        1. v1 pinned DECLARED tool arguments. Reviewer 1 honoured an undeclared
+           `spine_override` in the handler. Green. *A pin over declarations is a
+           pin over intentions.*
+        2. v2 pinned five literal key names on one tool. Reviewer 2 used a
+           sixth, `target_spine`. Green. *An enumeration is not a property.*
+        3. v3 pinned the argv handed to the engine. Reviewer 3 wrote a handler
+           that read a decoy file and returned its contents **without ever
+           calling the engine**, so no argv existed to inspect. Green. *A
+           property over the calls you make says nothing about the answers you
+           invent.*
+
+        The invariant that closes all three, and the one
+        `mcp_spine_server.py`'s docstring already asserts -- "it never inspects
+        or rewrites the output beyond capturing it" -- is that **the door is a
+        pass-through**:
+
+        For any tool and ANY arguments, either
+          (a) the engine was called, addressed at the BOUND spine and the BOUND
+              session, and the result text IS that call's output; or
+          (b) no engine call happened and the result is the door's own refusal
+              (`isError: True`).
+
+        There is no third way to produce content. A redirect must show up as a
+        wrong `--file`, as invented output, or as a non-error answer nobody
+        computed -- and all three are red here.
         """
-        module = self._load_module(self.spine, "argv-pin#agent")
+        module = self._load_module(self.spine, "passthrough-pin#agent")
         decoy = write_marked_spine(self.root / "decoy3", "DECOY3-MARK", "decoy3-work")
         bound_file, bound_session = str(module.SPINE), module.SESSION
+        sentinel = "ENGINE-OUTPUT-SENTINEL-7f3a91"
 
         seen = []
         real_main = module.checklist_engine.main
-        module.checklist_engine.main = lambda argv: (seen.append(list(argv)), 0)[1]
+
+        def spy(argv):
+            seen.append(list(argv))
+            print(sentinel)
+            return 0
+
+        module.checklist_engine.main = spy
         try:
             for tool in module.TOOLS:
                 base = self.TOOL_MINIMAL_ARGS[tool["name"]]
                 for key in self._adversarial_keys():
                     seen.clear()
-                    module.call_tool(tool["name"], {**base, key: str(decoy)})
+                    where = f"{tool['name']} with undeclared {key!r}"
+                    result = module.call_tool(tool["name"], {**base, key: str(decoy)})
+                    text = result["content"][0]["text"]
+
+                    if not seen:
+                        # (b) no engine call -> must be the door refusing, never an answer.
+                        self.assertIs(
+                            True, result.get("isError"),
+                            f"{where} produced a NON-ERROR answer without ever calling the "
+                            "engine -- the door invented content, so it is no longer a "
+                            "pass-through and could be reading anything it likes",
+                        )
+                        continue
+
+                    # (a) engine called -> bound identity, and the answer is ITS output.
                     for argv in seen:
-                        self.assertIn("--file", argv)
                         self.assertEqual(
                             bound_file, argv[argv.index("--file") + 1],
-                            f"{tool['name']} addressed the engine at a DIFFERENT spine after "
-                            f"receiving an undeclared {key!r} -- the door is redirectable, "
-                            "which is the confinement property IDENTITY_TRADE.md claims",
+                            f"{where} addressed the engine at a DIFFERENT spine",
                         )
                         if "--session-id" in argv:
                             self.assertEqual(
                                 bound_session, argv[argv.index("--session-id") + 1],
-                                f"{tool['name']} addressed the engine under a DIFFERENT "
-                                f"identity after receiving an undeclared {key!r}",
+                                f"{where} addressed the engine under a DIFFERENT identity",
                             )
+                    self.assertIn(
+                        sentinel, text,
+                        f"{where} returned text that is NOT the engine's own output -- the "
+                        "door called the engine and then answered with something else",
+                    )
         finally:
             module.checklist_engine.main = real_main
 

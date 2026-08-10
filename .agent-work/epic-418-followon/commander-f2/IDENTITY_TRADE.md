@@ -40,8 +40,8 @@ What is bought for it: the door cannot be pointed at another run's spine — no 
 **declares** an argument that would let it, and at runtime the dispatch **ignores** an
 undeclared one. That is confinement by construction rather than by convention.
 
-**This sentence survived two reviewer falsifications and is narrower for both. The
-sequence is worth more than the sentence.**
+**This sentence survived three reviewer falsifications. The sequence is worth more than the
+sentence, and it is the most useful thing this gate produced.**
 
 As first written it claimed "there is no argument that would let it." The g1 reviewer
 mutated the real door so `call_tool`'s `spine_status` handler honoured an undeclared
@@ -54,16 +54,30 @@ against one tool; it honoured a sixth, `target_spine`, and all seven tests staye
 finding was exact and is the more useful of the two: **an enumeration is not a property,
 and the prose here was claiming a property.**
 
-So the pin is now stated as the property itself, at the only place it is decidable:
-`test_no_argument_can_change_the_identity_the_engine_is_addressed_with` sweeps **every
-tool** with **generated** adversarial keys and asserts that the engine is always addressed
-with the bound `--file` and the bound `--session-id`. A redirect must reach the engine's
-`--file` to do anything at all, so anything that redirects is caught regardless of what it
-is named or which handler reads it. Verified against four differently-named redirects —
-`spine_override`, `target_spine`, and `redirect`/`cfg`, the last two carrying no identity
-marker at all — all four red, restoring to an empty diff.
+I widened the pin to the argv the engine is addressed with. **A third reviewer defeated
+that too**, and its mutation is the one that shows what was actually wrong all along: a
+handler that reads a decoy spine directly and **returns its contents without ever calling
+the engine**. No argv is ever built, so a pin over argv inspects nothing — the loop runs
+zero times and passes. *A property over the calls you make says nothing about the answers
+you invent.*
 
-Neither correction was mine.
+So the pin is now the invariant `mcp_spine_server.py`'s own docstring already asserts —
+that it "never inspects or rewrites the output beyond capturing it". **The door is a
+pass-through.** For any tool and any arguments, either the engine was called, addressed at
+the bound spine and bound session, and the result **is that call's output**; or no engine
+call happened and the result is the door's own refusal. There is no third way to produce
+content, so a redirect must surface as a wrong `--file`, as invented output, or as a
+non-error answer nobody computed.
+
+Verified red against five mutation classes: `spine_override` (reviewer 1), `target_spine`
+(reviewer 2), a direct-read handler that never calls the engine (reviewer 3), and two I
+added afterwards that no reviewer had tried — calling the engine and then answering with
+something else, and redirecting the **session** rather than the spine. All five red, all
+restoring to an empty diff.
+
+**None of the three corrections was mine.** Each defeat was one layer deeper than the last,
+and the escalation is the record: a pin over declarations, then over an enumeration, then
+over the calls made, and only now over the answers given.
 
 ## 3. The rejected options — what each would and would not have covered
 

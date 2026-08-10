@@ -1,0 +1,181 @@
+{
+  "work_id": "epic-418-followon/commander-f2",
+  "type": "survey",
+  "config_ref": "docs/agents/engine-config.json",
+  "items": [
+    "r0-context",
+    "r1-handoff",
+    "r2-scope",
+    "r3-evidence",
+    "r4-quality",
+    "r5-reconciliation",
+    "r6-fowler"
+  ],
+  "tasks": {
+    "r0-context": {
+      "id": "r0-context",
+      "title": "Load baseline context",
+      "imperative": "Read your inherited global doctrine (this skill's references/global-crew.md and references/global-everyone.md), then the project deltas if present: docs/agents/CREW_CONTEXT.md, docs/agents/GLOSSARY.md, plus the handoff, the diff, and the relevant packet. Record pass when loaded.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Loaded global-crew.md, global-everyone.md (bundled), plus project deltas docs/agents/CREW_CONTEXT.md and GLOSSARY.md. Also read the g1-review-handoff.md (incl ADDENDUM), g1-review-reviewer-result-2.md, and rework commit c8a9b58c.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r1-handoff": {
+      "id": "r1-handoff",
+      "title": "Handoff compliance",
+      "imperative": "Did the change do what the handoff asked, within its allowed scope? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "The rework (commit c8a9b58c) resolved the exact BLOCK the second reviewer filed: the runtime pin no longer checks 5 literal keys against 1 tool. Reproduced the second reviewer's mutation-4 key (target_spine on spine_status) against the real door: RED, exactly and only on test_no_argument_can_change_the_identity_the_engine_is_addressed_with (1 failed, 6 passed). Restored: git diff --stat scripts/ empty, suite back to 7 passed.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r2-scope": {
+      "id": "r2-scope",
+      "title": "Scope drift",
+      "imperative": "Did the change stay inside allowed scope and respect specific exclusions? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Criterion E: git diff HEAD~3 -- scripts/ is 0 lines; git log HEAD~3..HEAD for scripts/checklist_engine.py and scripts/hooks/spine_rail.py both empty (untouched). My own two temporary mutations to scripts/mcp_spine_server.py (target_spine reproduction, spine_path bypass) were each restored via git checkout; final git diff --stat -- scripts/ is empty and the file is byte-identical to a pre-mutation backup.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r3-evidence": {
+      "id": "r3-evidence",
+      "title": "Required evidence",
+      "imperative": "Is the required evidence present and does it actually demonstrate the behavior? Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "fail",
+      "finding": "Fifth mutation defeats the universal runtime pin while it stays fully green. Mutated spine_status in call_tool so an undeclared key named spine_path (one of the generator's own adversarial keys, marker spine crossed with affix _path) makes the handler read a decoy spine file directly and return its content, never calling run_engine or checklist_engine.main at all. Ran IdentityBindingPinTests: 7 passed, including the universal pin test. Mechanism: that test patches checklist_engine.main and asserts only inside a loop over the captured argv list; when a handler answers without reaching run_engine, the capture list stays empty and the loop body never executes, so nothing is checked for that tool/key pair -- a redirect that never touches the engine is invisible to a pin that only inspects what reached the engine. Independently confirmed the redirect is live outside the suite: drove call_tool directly against a bound spine marked PIN-MARK and a decoy marked DECOY-MARK; response text was PEEK: MARKER::DECOY-MARK, never the bound content. Restored the door via git checkout; diff empty, file byte-identical to a pre-mutation backup, suite back to 7 passed. This is the exact shape the task named in advance: a redirect that never touches --file but reaches another spine some other way.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r4-quality": {
+      "id": "r4-quality",
+      "title": "Quality vs inherited rules",
+      "imperative": "Does the change meet the inherited project/section rules (the handoff's constraints)? Append a check per rule. Record pass/fail with a finding.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Criterion A re-verified item by item against the current IDENTITY_TRADE.md: (1) option taken stated plainly in section 1; (2) property given up named in section 2 (an in-session dispatched crew member cannot drive its own plan through the door); (3) both rejected options A and B in section 3 each state what they would and would not have covered; (4) fleet-wide general shape in section 4 with the two-seam table; (5) section 5 explicitly says Yes it applies to the hook seam, and why; (6) section 6 states what a seam with no per-call argument does. All six present, none lost. Both falsifications are now recorded in section 2 (spine_override from the first reviewer, target_spine from the second), an addition over the prior single-falsification version, not a removal. Criterion D: grepped the whole test file for harness references; the only hit is the DC3InheritanceMechanismTests docstring which explicitly marks the harness-internal MCP client reuse mechanism out of scope and cited, not measured. Neither new test (test_no_argument_can_change_the_identity_the_engine_is_addressed_with, test_the_universal_runtime_pin_can_fail) references it. Constraints: ran the suite exclusively as python -m pytest, never python3; never piped a command into head or tail and read its exit code, all outputs redirected to files with the command's own exit code captured separately; avoided backticks and command-looking text inside every engine finding string in this survey. Full suite: 2274 passed, 1 skipped, 0 failed, 1079 subtests passed -- reproduced myself, matches the commit's claim. Fowler pass recorded to fowler-pass-3.json and verify_fowler_pass.py exits 0 (12 smells, 0 flagged, 2 overridden with logged repo-standard reasons matching the prior two reviews for this file).",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r5-reconciliation": {
+      "id": "r5-reconciliation",
+      "title": "Reconciliation check",
+      "imperative": "Does the change diverge from the recorded architecture in a way Commander must reconcile? Record pass/fail; flag a triage candidate if it is out of scope.",
+      "preconditions": [],
+      "postconditions": [],
+      "constraints": [],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "IDENTITY_TRADE.md remains the durable architecture record this gate must produce; no conflict with docs/CHECKLIST_ENGINE_DESIGN.md section on Task-tool identity scoping, untouched by this rework. The rework's narrowing (both falsifications now recorded, section 2) is a reconciliation improvement over the prior version, not a divergence. The residual gap found under r3-evidence is real but does not itself contradict recorded architecture; it is the same shape of overclaim the document's own section 2 already names as having happened twice, so it is routed as a triage candidate (tc1) rather than a reconciliation conflict; also carried as the BLOCK finding itself since the pin is claimed complete and is not.",
+      "evidence": [],
+      "rework_count": 0
+    },
+    "r6-fowler": {
+      "id": "r6-fowler",
+      "title": "Refactoring pass (Fowler code smells)",
+      "imperative": "Run the refactoring / code-smell pass (SKILL.md 'Refactoring pass'). Render a verdict on each Fowler baseline smell (long method, large class, duplicated code, feature envy, data clumps, primitive obsession, long parameter list, shotgun surgery, divergent change, message chains, speculative generality, comments-as-deodorant): flagged / overridden / absent. Smells are judgment calls, ALWAYS subordinate to the repo's documented standards \u2014 an override needs a logged standard + reason. Record the pass to templates/FOWLER_PASS.template.json, run scripts/verify_fowler_pass.py <record> (it refuses a skipped smell or an unlogged override), then record pass/fail with a finding. This item's postcondition command ships with a <fowler-pass-record-path> placeholder; record() runs that command and refuses `pass` while it fails. NORMAL PATH -- resolve the placeholder to the real record path when you INSTANTIATE this survey from the template, before you claim: it is an instantiation-time substitution exactly like <work-id> on line 2. That is the documented route and the one you should be on. REPAIR PATH -- only if the record later moves or the path you substituted was wrong, correct it through the engine with `amend --delta <file>` whose single op is `retext-check` on this item's c1, never by hand-editing this survey. There, --authority is the dispatching Commander named in your reviewer handoff (never a string you invent), and --reason is why the path changed. Do NOT silently skip this item.",
+      "preconditions": [],
+      "postconditions": [
+        {
+          "id": "c1",
+          "statement": "verify_fowler_pass.py exits 0 on the Fowler-pass record -- refuses a skipped smell or an unlogged override",
+          "check": {
+            "kind": "command",
+            "command": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-f2/g1-review/fowler-pass-3.json"
+          },
+          "satisfied": true,
+          "satisfied_by": "e-r6-fowler-1"
+        }
+      ],
+      "constraints": [
+        "Fowler smells are subordinate to documented repo standards; never hard violations",
+        "an override (smell not flagged because a standard wins) needs a logged reason"
+      ],
+      "directives": null,
+      "child_checklist": null,
+      "status": "complete",
+      "status_detail": {},
+      "result": "pass",
+      "finding": "Fowler code-smell pass run against commit c8a9b58c (IdentityBindingPinTests rewrite plus IDENTITY_TRADE.md section 2 re-narrowing), recorded to fowler-pass-3.json, verify_fowler_pass.py exits 0: 10 of 12 baseline smells absent, 2 overridden (divergent-change, comments-as-deodorant) each with a logged repo-standard and reason matching the same standard the prior two Fowler passes for this file already applied. No blocking quality finding from this pass; the substantive defect found this run (r3-evidence) is a correctness gap in the pin's coverage, not a code-smell.",
+      "evidence": [
+        {
+          "id": "e-r6-fowler-1",
+          "type": "command-output",
+          "payload": {
+            "cmd": "python scripts/verify_fowler_pass.py .agent-work/epic-418-followon/commander-f2/g1-review/fowler-pass-3.json",
+            "exit": 0,
+            "shell": "posix"
+          },
+          "produced_by": "engine",
+          "ts": ""
+        }
+      ],
+      "rework_count": 0
+    }
+  },
+  "consolidation": {
+    "verdict": "BLOCK",
+    "findings": [
+      "r3-evidence: Fifth mutation defeats the universal runtime pin while it stays fully green. Mutated spine_status in call_tool so an undeclared key named spine_path (one of the generator's own adversarial keys, marker spine crossed with affix _path) makes the handler read a decoy spine file directly and return its content, never calling run_engine or checklist_engine.main at all. Ran IdentityBindingPinTests: 7 passed, including the universal pin test. Mechanism: that test patches checklist_engine.main and asserts only inside a loop over the captured argv list; when a handler answers without reaching run_engine, the capture list stays empty and the loop body never executes, so nothing is checked for that tool/key pair -- a redirect that never touches the engine is invisible to a pin that only inspects what reached the engine. Independently confirmed the redirect is live outside the suite: drove call_tool directly against a bound spine marked PIN-MARK and a decoy marked DECOY-MARK; response text was PEEK: MARKER::DECOY-MARK, never the bound content. Restored the door via git checkout; diff empty, file byte-identical to a pre-mutation backup, suite back to 7 passed. This is the exact shape the task named in advance: a redirect that never touches --file but reaches another spine some other way."
+    ],
+    "summary": "The second reviewer's exact finding (target_spine enumeration gap) is genuinely resolved: reproduced RED on test_no_argument_can_change_the_identity_the_engine_is_addressed_with. But the universal runtime pin has a structural gap of its own -- it only inspects argv actually captured from checklist_engine.main, so a handler that answers a call without ever reaching run_engine escapes it entirely. Demonstrated live: an undeclared spine_path key on spine_status made the handler read a decoy spine directly and return its content (confirmed via PEEK: MARKER::DECOY-MARK outside the suite), with all 7 pin tests staying green. Restored and reproducible. Triage candidate tc1 filed for widening the pin or routing every call_tool path through run_engine provably."
+  },
+  "triage_candidates": [
+    {
+      "id": "tc1",
+      "from": "r3-evidence",
+      "statement": "The MCP door confinement pin (tests/test_mcp_identity.py::IdentityBindingPinTests::test_no_argument_can_change_the_identity_the_engine_is_addressed_with) only inspects argv actually captured from checklist_engine.main; a call_tool handler that answers a call without ever reaching run_engine escapes the pin entirely regardless of key name, demonstrated live via an undeclared spine_path key on spine_status that reads and returns a decoy spine's content directly. Widen the pin so a handler that never calls checklist_engine.main is itself treated as a violation (or wrap call_tool so every code path is provably routed through run_engine before it can return content), and narrow IDENTITY_TRADE.md section 2's claim to name what is actually decidable in the meantime."
+    }
+  ],
+  "blockers": [],
+  "refusals": 3,
+  "engine_session": {
+    "session_id": "reviewer-attempt-3-1786344701",
+    "status": "released",
+    "claimed_at": "2026-08-10T06:51:41.869542+00:00",
+    "last_heartbeat": "2026-08-10T07:00:49.226635+00:00",
+    "claimed_by": "reviewer",
+    "worktree": ".",
+    "previous_session_id": null,
+    "takeover_reason": null,
+    "released_at": "2026-08-10T07:01:57.260513+00:00"
+  }
+}

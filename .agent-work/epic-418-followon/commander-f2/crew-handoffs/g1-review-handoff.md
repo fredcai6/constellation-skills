@@ -156,3 +156,23 @@ Write `APPROVE` or `BLOCK` with reasoning to
 `.agent-work/epic-418-followon/commander-f2/crew-handoffs/g1-review-reviewer-result.md`
 **before ending your turn — that write is the delivery.** Include a `Workflow Feedback`
 section; it feeds the run's retrospective and is not dropped.
+
+---
+
+## ADDENDUM — standing requirement for every reviewer on this run
+
+**Return `git status --porcelain` for your worktree in your result.** A read-only role that
+ends with a dirty tree should have to say so. This is an Admiral instruction added after a
+reviewer on this gate disclosed an accidental out-of-scope write; it exists to catch the
+whole family, not that one instance.
+
+**To the reviewer who disclosed it:** that was the right call and it cost you nothing. A
+role that reports its own out-of-scope write is worth more than one that never makes one,
+because the second kind mostly exists by luck. It has been written up as a repo problem
+(#551), not as your slip — the engine's evidence verbs invite prose, prose about commands
+invites backticks, every documented example uses double quotes, and double quotes do not
+protect backticks in any shell we run. The journal even records the text *after*
+substitution, so the record does not show what was typed. A `--finding-file` is proposed,
+the same move `gh pr create -F` already forced on this repo for the same reason.
+
+**Avoid backticks and command-looking text inside engine string arguments.**
