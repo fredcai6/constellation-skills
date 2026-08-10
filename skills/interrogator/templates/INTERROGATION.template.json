@@ -25,7 +25,7 @@
       "id": "zc-consolidate",
       "title": "Consolidate behind the finish gate",
       "imperative": "Do NOT record this until joint understanding is reached. Write the interrogation record from templates/INTERROGATION_RECORD.template.json (each question typed fact|decision; each resolved decision carrying its human_answer; each resolved fact its code_evidence) and capture the counterpart's explicit sign-off. Run `python <skill-dir>/scripts/verify_interrogation.py <record>` — it MUST exit 0 (it refuses consolidation without the joint-understanding sign-off, and refuses any self-answered decision). Before consolidating, fill this item's postcondition command with the real record path you wrote it to -- record() now runs it and refuses `pass` if it fails. Record pass only after exit 0, then `consolidate`.",
-      "preconditions": [], "postconditions": [{"id": "c1", "statement": "verify_interrogation.py exits 0 on the interrogation record -- refuses a self-answered decision or a consolidation with no joint-understanding sign-off", "check": {"kind": "command", "command": "python scripts/verify_interrogation.py <interrogation-record-path>"}, "satisfied": false}],
+      "preconditions": [], "postconditions": [{"id": "c1", "statement": "verify_interrogation.py exits 0 on the interrogation record -- refuses a self-answered decision or a consolidation with no joint-understanding sign-off", "check": {"kind": "command", "command": "python <skill-dir>/scripts/verify_interrogation.py <interrogation-record-path>"}, "satisfied": false}],
       "constraints": [], "directives": null, "child_checklist": null,
       "status": "pending", "status_detail": {}, "result": null, "finding": null, "evidence": [], "rework_count": 0
     }
