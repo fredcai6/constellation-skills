@@ -1,0 +1,21 @@
+{
+  "contract": 1,
+  "step": "m5-pr",
+  "mechanical": {
+    "run": "issue-534-map-orient",
+    "project": "constellation-skills",
+    "role": "implementer",
+    "refusals": 5,
+    "spine-step": "m5-pr",
+    "rework-count": 0,
+    "failed-commands": 0,
+    "reopens": 0,
+    "context-manifest-ref": "ctx-issue-534-map-orient-m5-pr@370069c0874f6b3096814cff6018747fec5a5ea8",
+    "artifact-ref": []
+  },
+  "refused": [],
+  "run": {
+    "work_id": "issue-534-map-orient",
+    "generated_at": "2026-08-09T22:23:14Z"
+  }
+}

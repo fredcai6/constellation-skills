@@ -1,0 +1,22 @@
+{
+  "contract": 1,
+  "step": "m2-fix-red-green",
+  "files": [],
+  "repo_rev": {
+    "commit": "cdbefa7cfc3bf6421fbf315c09834e0af9d52926"
+  },
+  "run": {
+    "work_id": "issue-534-map-orient",
+    "generated_at": "2026-08-09T22:20:39Z",
+    "roots": {
+      "skill": "/home/tommy/.claude/skills/constellation-implementer",
+      "repo": "/home/tommy/projects/constellation-skills-wt/map-orient-534",
+      "durable": "/home/tommy/projects/constellation-skills-wt/map-orient-534"
+    },
+    "host": {
+      "platform": "linux",
+      "python": "3.12.3",
+      "cwd": "/home/tommy/projects/constellation-skills-wt/map-orient-534"
+    }
+  }
+}
