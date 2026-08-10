@@ -125,6 +125,105 @@
   ]
  },
  "completed_outcomes": [],
- "wave_evidence": [],
- "discrepancies": []
+ "wave_evidence": [
+  {
+   "claim": "The launch order's framing of #541 - the door absorbs fumbles that would otherwise be diagnosable - describes the defect.",
+   "expected": "The door swallows rejections that reach no store.",
+   "observed": "Half true, and the false half would have wasted the gate. An ENGINE refusal through the door already moves the spine's refusals counter (0->1->2) and episode_capture composes that exact value into the Mechanical bin. Only the door's OWN _tool_error returns reach nothing: they short-circuit before run_engine, so they touch neither the counter nor the server's own call log. Measured on a nested work-id, 12/12 assertions.",
+   "source": ".agent-work/epic-418-followon/commander-f2/demo_engine_refusal_reaches_episode.py"
+  },
+  {
+   "claim": "A repo-wide suite postcondition is sufficient evidence that a gate's own work landed.",
+   "expected": "Suite green means the gate did its job.",
+   "observed": "False, and it was my own plan's defect. The suite was green before the run began, so all five integrate gates were satisfiable by a no-op diff plus an APPROVE. Every gate now closes on its own named test node first. A cold plan critic found this; the plan was revised before it froze.",
+   "source": ".agent-work/epic-418-followon/commander-f2/PLAN_CRITIC.md finding 6"
+  },
+  {
+   "claim": "A pin over a tool's declared inputSchema protects the door's confinement property.",
+   "expected": "No declared identity argument means the door cannot be redirected.",
+   "observed": "False. The g1 reviewer mutated the real door to honour an UNDECLARED spine_override key directly in call_tool's handler, touching no inputSchema, and all five pin tests stayed green. A pin over declarations is a pin over intentions. Two runtime tests were added and the reviewer's mutation now goes red; the recorded claim was narrowed to name both halves.",
+   "source": ".agent-work/epic-418-followon/commander-f2/crew-handoffs/g1-review-reviewer-result.md"
+  },
+  {
+   "claim": "The identity defect is specific to the MCP door's env-binding.",
+   "expected": "One seam, one fix.",
+   "observed": "False. The same shape appears independently in scripts/hooks/spine_rail.py (#549): its binding file IS keyed per agent, and session_view() then merges the per-agent key away. The harness shares the container and identity was put in the container, twice, neither seam aware of the other. g1's rule is therefore stated fleet-wide over container granularity rather than as an argument-passing fix - a form the hook seam forces, because it has no per-call argument for identity to ride on.",
+   "source": "Admiral context query, epic-418-followon; docs/CHECKLIST_ENGINE_DESIGN.md:310-312"
+  }
+ ],
+ "discrepancies": [
+  {
+   "id": "D0",
+   "signal": "map_orient.py returns DEGRADED-UNPARSEABLE against a map that is present, complete and fresh, and its verdict string carries the guess 'unfilled template?' which a Commander then reported one tier up as an observation.",
+   "classification": "evidence_only",
+   "affects": "Every Commander in this epic runs map-DEGRADED and may repeat the same misreport.",
+   "evidence": "map/INDEX.md is 23855 bytes over 132 modules / 4848 entities and tests/test_code_map.py::MapTreeFreshnessTests holds it byte-fresh. map_orient's ANCHOR_RE admits only hand-written packet vocabulary; a generated code map contains none by construction. #536 taught the probe where to look and not what it would find.",
+   "reason": "Filed by the Admiral as #548. Not repaired inside a wave under measurement, per the launch order's cheap-fixes-are-routed rule."
+  },
+  {
+   "id": "D1",
+   "signal": "A Commander's own working notes at the repo root tripped tests/test_retirement_guard.py::test_canon_is_clean with six unapproved-store-mention violations.",
+   "classification": "evidence_only",
+   "affects": "The launch order names notes-1.md as the working-notes convention, and prior runs put such files at the repo root.",
+   "evidence": "The guard fires on any new SHIPPED site naming the episode store; a root-level run note discussing apply_episode_delta.py is exactly that shape. Resolved by moving the artifact into the run's own work area rather than by adding transient lines to a frozen approval census.",
+   "reason": "The guard is correct and the note was the regression. Worth the Admiral knowing because the convention and the guard are in tension for any run that touches the episode store."
+  },
+  {
+   "id": "D2",
+   "signal": "Adding a test class silently staled map/INDEX.md, so the full suite was red for a reason unrelated to the gate's own work.",
+   "classification": "evidence_only",
+   "affects": "Any gate in this epic that adds or removes entities.",
+   "evidence": "tests.test_mcp_identity moved 36 -> 45 entities; MapTreeFreshnessTests failed until the map was rebuilt and committed.",
+   "reason": "Mechanical and self-correcting once known. Recorded so a later gate recognises the failure instantly rather than diagnosing it again."
+  }
+ ],
+ "open_current_wave_issue_ids": [
+  "542",
+  "541"
+ ],
+ "unlaunched_items": [
+  {
+   "id": "421",
+   "kind": "issue"
+  },
+  {
+   "id": "C-relocates-gate-instructions-into-the-spine",
+   "kind": "forecast"
+  },
+  {
+   "id": "task-tool-crews-need-distinct-spine-identities",
+   "kind": "uncertainty"
+  },
+  {
+   "id": "acceptance-run-friction-count-unknown",
+   "kind": "uncertainty"
+  },
+  {
+   "id": "instrument-the-cli-arm-for-comparability",
+   "kind": "parked"
+  },
+  {
+   "id": "548-map-orient-cannot-parse-a-code-map",
+   "kind": "parked"
+  },
+  {
+   "id": "549-spine-rail-merges-the-per-agent-key-away",
+   "kind": "parked"
+  }
+ ],
+ "repo_state": {
+  "anchors": [
+   "scripts/mcp_spine_server.py",
+   "scripts/install_constellation.py",
+   "scripts/apply_episode_delta.py",
+   "scripts/episode_capture.py",
+   ".mcp.json",
+   "skills/commander/templates/COMMANDER_SPINE.template.json",
+   "skills/admiral/templates/ADMIRAL_SPINE.template.json",
+   "skills/explorer/templates/EXPLORER_SPINE.template.json",
+   "skills/workbench/references/checklist-engine.md",
+   "tests/test_mcp_identity.py"
+  ],
+  "map_status": "Code map PRESENT and fresh: map/INDEX.md covers 132 modules / 4848 entities and tests/test_code_map.py::MapTreeFreshnessTests holds it byte-identical to a fresh build (it went red at g1 when the pin class was added and was rebuilt). map_orient.py still reports DEGRADED-UNPARSEABLE because its ANCHOR_RE admits only hand-written packet vocabulary and a generated code map carries none of it - the tool is what is broken, not the map. Filed as #548; discharged for this run with hash-pinned substitutes."
+ }
 }
