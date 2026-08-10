@@ -355,17 +355,23 @@ def validate_required_references(
         raise InstallError(f"required reference(s) missing: {'; '.join(missing)}")
 
 
-def _platform_interpreter() -> str:
-    """Interpreter for installed command strings: the `py` launcher on Windows,
-    `python3` elsewhere. Installed spine imperatives ship the literal `python <…>`
-    prefix; rewriting it here spares Windows users the recurring `python`->`py`
-    hand-patch (the source templates keep `python <…>` to preserve the authoring
-    contract). This is the os.name-based FALLBACK used only when
-    `probe_host_interpreter` cannot find any working candidate on the host --
-    see `resolve_interpreter`."""
-    return "py" if os.name == "nt" else "python3"
-
-
+# THERE IS NO os.name FALLBACK, by owner ruling. There used to be a
+# `_platform_interpreter()` returning `py` on Windows and `python3` elsewhere,
+# reached only when every candidate below had been probed and rejected. Read
+# those two facts together and the fallback cannot be right by construction:
+# its answer is always drawn from the set that was just disproved. On Windows
+# it returned `py`, already probed, already failed; on POSIX `python3`, the
+# same. It was never a safety net -- it was a guaranteed-wrong value that only
+# ran in worlds where its own answer had been falsified, and it stamped that
+# value into every installed skill body so the failure surfaced later,
+# somewhere else, with no trace back to the cause.
+#
+# Measured on the owner's Windows host: `py` resolves to an extensionless
+# `#!/bin/sh` wrapper PowerShell cannot execute, and neither `python3` nor
+# `python` is on PATH. All three candidates fail, and the old fallback stamped
+# `py` -- the exact thing just proven unlaunchable.
+#
+# `resolve_interpreter` therefore RAISES when nothing answers. See #539.
 INTERPRETER_CANDIDATES: tuple[str, ...] = ("py", "python3", "python")
 DEFAULT_INTERPRETER_PROBE_TIMEOUT = 5.0  # seconds; bounds a hung/misregistered `py` launcher
 
@@ -378,7 +384,15 @@ class InterpreterResolution:
 
     interpreter: str
     candidates: tuple[str, ...]
-    resolved_via: str  # "probe" | "os-default-fallback"
+    # Always "probe" for anything `resolve_interpreter` produces -- the
+    # os.name fallback that used to write "os-default-fallback" is gone (see
+    # INTERPRETER_CANDIDATES above). The field STAYS because
+    # scripts/verify_installed_bundles.py reconstructs this dataclass from an
+    # installed `interpreter.json` sidecar, and a bundle installed by an older
+    # version legitimately still carries "os-default-fallback" on disk. Reading
+    # that back is exactly how a consumer learns a bundle was built from the
+    # disproved guess and should be reinstalled.
+    resolved_via: str  # "probe" | (historical, from an old sidecar) "os-default-fallback"
 
     def as_sidecar(self) -> dict:
         return {
@@ -428,23 +442,47 @@ def probe_host_interpreter(
     return None
 
 
+def no_interpreter_message(candidates: Sequence[str]) -> str:
+    """The refusal text, as one definition, so the CLI error and the readiness
+    report cannot describe the same host condition differently."""
+    return (
+        f"no working Python interpreter found on this host. Tried "
+        f"{', '.join(candidates)} -- each was launched as a real "
+        f"`<name> --version` subprocess and none exited 0 (a missing command, a "
+        f"non-zero exit and a timeout all count as failing). Constellation stamps "
+        f"one of these names into installed skill bodies and hook commands, so "
+        f"there is no correct value to write. Put a working Python on PATH under "
+        f"one of those names -- on Windows the python.org installer provides `py` "
+        f"and `python`; on POSIX `python3` is the PEP 394 guarantee -- then re-run."
+    )
+
+
 def resolve_interpreter(
     *,
     candidates: Sequence[str] = INTERPRETER_CANDIDATES,
     timeout: float = DEFAULT_INTERPRETER_PROBE_TIMEOUT,
 ) -> InterpreterResolution:
     """Resolve the interpreter to stamp into installed skill bodies for ONE
-    install run: probe the host once, falling back to `_platform_interpreter`'s
-    os.name guess only if every candidate fails (never raises). Call this ONCE
-    per run and thread the result through -- never re-probe per skill. Caching
-    prevents INTRA-run drift only; cross-run determinism (#197's
-    `stable_corpus_id`, which compares two separate install invocations) rests on
-    the probe being naturally stable given a static host PATH, the same basis
-    today's pure os.name read relies on."""
+    install run: probe the host once. Call this ONCE per run and thread the
+    result through -- never re-probe per skill. Caching prevents INTRA-run
+    drift only; cross-run determinism (#197's `stable_corpus_id`, which
+    compares two separate install invocations) rests on the probe being
+    naturally stable given a static host PATH.
+
+    RAISES `InstallError` when no candidate answers. This function used to
+    promise "never raises" and fall back to an os.name guess; that contract is
+    gone by owner ruling (#539), because the guess is drawn from the set the
+    probe just disproved and so cannot be right on any platform. Refusing here
+    keeps the failure at its cause instead of stamping an unlaunchable name
+    into every installed bundle and surfacing it later, somewhere else.
+
+    Callers that must REPORT this condition rather than abort on it -- the
+    `--check-readiness` mode -- call `probe_host_interpreter` directly and get
+    `None`, which is the same measurement without the control flow."""
     probed = probe_host_interpreter(candidates=candidates, timeout=timeout)
-    if probed is not None:
-        return InterpreterResolution(probed, tuple(candidates), "probe")
-    return InterpreterResolution(_platform_interpreter(), tuple(candidates), "os-default-fallback")
+    if probed is None:
+        raise InstallError(no_interpreter_message(candidates))
+    return InterpreterResolution(probed, tuple(candidates), "probe")
 
 
 def installed_path_replacements(
@@ -1219,20 +1257,23 @@ def wire_hooks(
     human ruling), and still a no-op under `--dry-run`."""
     specs = tuple(specs)
 
-    # FAIL LOUDLY ON A PLATFORM WE CANNOT SERVE (#539). `resolve_interpreter`
-    # never raises: when every candidate fails to run it falls back to an
-    # os.name GUESS so the rest of the install can proceed. Stamping that guess
-    # into a hook command would write wiring we already know cannot run, and a
-    # hook that cannot start is exactly as silent as one that was never wired.
-    # Refuse instead, and name what was tried.
+    # FAIL LOUDLY ON A PLATFORM WE CANNOT SERVE (#539). Since the owner ruling,
+    # `resolve_interpreter` RAISES rather than returning an os.name guess, so a
+    # CLI run can no longer reach here with an unprobed resolution -- the
+    # refusal now happens one level up, at its cause. This guard stays as
+    # defense in depth on a PUBLIC function, and it is not dead code: the other
+    # producer of an `InterpreterResolution` is
+    # scripts/verify_installed_bundles.py, which reconstructs one from an
+    # installed `interpreter.json` sidecar, and a bundle installed by an older
+    # version still carries "os-default-fallback" on disk. What is refused is
+    # wiring from a resolution never measured on THIS host, whatever made it.
     if interpreter.resolved_via != "probe":
         raise InstallError(
-            f"--wire-hooks: no Python interpreter answered on this host. Tried "
-            f"{', '.join(interpreter.candidates)} -- none of them exited 0 for "
-            f"`--version`. Refusing to write a hook command built from the os.name "
-            f"fallback guess ({interpreter.interpreter!r}), because that wiring could "
-            f"not run and a hook that never starts reports nothing at all. Put a working "
-            f"Python on PATH under one of those names and re-run."
+            f"--wire-hooks: refusing to wire from an interpreter resolution that was not "
+            f"probed on this host (resolved_via={interpreter.resolved_via!r}, "
+            f"interpreter={interpreter.interpreter!r}). A hook command built from an "
+            f"unmeasured name may not start at all, and a hook that never starts reports "
+            f"nothing. Re-run the installer so this host is probed afresh."
         )
 
     settings_path = settings_path_for_wiring(target_root, hooks_from)
@@ -1322,10 +1363,15 @@ def wire_hooks(
 # --------------------------------------------------------------------------- #
 # readiness check (#458) -- report-only: never repairs, never writes settings.json
 # --------------------------------------------------------------------------- #
-# "Is this project set up to run Constellation" answered as four separately
+# "Is this project set up to run Constellation" answered as five separately
 # testable checks, never a single opaque verdict. Each returns a ReadinessCheck
 # so a failing item always carries a NAMED reason -- a check that can only ever
 # report ready is the exact defect this exists to catch.
+#
+# The fifth item, `interpreter`, arrived with #539's ruling that the installer
+# hard-stops when no interpreter answers. An abort is right for an install and
+# wrong for a diagnostic: readiness exists to NAME what is wrong with a host,
+# so it reports this condition as a plain NOT READY instead of refusing to run.
 
 
 READINESS_READY = "READY"
@@ -1359,6 +1405,36 @@ class ReadinessCheck:
         if self.ready:
             return READINESS_READY
         return READINESS_NOT_READY if self.determinable else READINESS_UNDETERMINABLE
+
+
+def check_interpreter_resolvable(
+    *,
+    candidates: Sequence[str] = INTERPRETER_CANDIDATES,
+    timeout: float = DEFAULT_INTERPRETER_PROBE_TIMEOUT,
+) -> ReadinessCheck:
+    """Readiness item 5: an interpreter this installer can NAME (environment-scoped).
+
+    A distinct question from item 1, not a duplicate of it. `check_engine_runnable`
+    asks whether pytest runs under `sys.executable` -- an interpreter that
+    always exists, because it is the one running this process. This asks
+    whether any of `INTERPRETER_CANDIDATES` resolves as a NAME on PATH, which
+    is what installed skill bodies and hook commands are written in terms of.
+    A host can pass item 1 and fail this one: a venv Python running the
+    installer says nothing about whether `py`/`python3`/`python` are launchable
+    for a hook subprocess later.
+
+    Reported, never raised. `resolve_interpreter` refusing is right for an
+    install; refusing to run the DIAGNOSTIC when this condition is the
+    diagnosis would be its own defect, so this calls `probe_host_interpreter`
+    directly -- the same measurement without the control flow."""
+    probed = probe_host_interpreter(candidates=candidates, timeout=timeout)
+    if probed is None:
+        return ReadinessCheck(False, no_interpreter_message(candidates))
+    return ReadinessCheck(
+        True,
+        f"`{probed}` answered `{probed} --version` on this host "
+        f"(tried {', '.join(candidates)} in order)",
+    )
 
 
 def check_engine_runnable(*, python: str = sys.executable, timeout: float = 10.0) -> ReadinessCheck:
@@ -1501,7 +1577,8 @@ def check_hooks_shippable(
     return ReadinessCheck(True, f"{_wiring_label(wiring)} WIRED via {settings_path}")
 
 
-READINESS_ITEMS: tuple[str, ...] = ("engine", "skills", "hooks", "work_area")
+READINESS_ITEMS: tuple[str, ...] = (
+    "engine", "interpreter", "skills", "hooks", "work_area")
 
 
 # Exit code for the roll-up "some item could not be determined, and nothing
@@ -1514,7 +1591,7 @@ READINESS_EXIT_UNDETERMINABLE = 3
 @dataclass(frozen=True)
 class ReadinessReport:
     """One agent target's full readiness verdict: the four ReadinessChecks,
-    keyed by `READINESS_ITEMS` name. `ready` is true only when all four are."""
+    keyed by `READINESS_ITEMS` name. `ready` is true only when all of them are."""
 
     checks: Mapping[str, ReadinessCheck]
 
@@ -1553,7 +1630,7 @@ def build_readiness_report(
     python: str = sys.executable,
     specs: Sequence[HookSpec] = (GAUGE_WRITER_SPEC,),
 ) -> ReadinessReport:
-    """Combine all four readiness checks for one agent target.
+    """Combine all five readiness checks for one agent target.
 
     Hooks are a Claude Code mechanism (`HOOK_CAPABLE_AGENT_NAMES`); for any
     other agent, item 3 is reported READY with an explicit 'not applicable'
@@ -1566,6 +1643,7 @@ def build_readiness_report(
             True, f"not applicable: {agent.name} has no hook mechanism to check")
     return ReadinessReport({
         "engine": check_engine_runnable(python=python),
+        "interpreter": check_interpreter_resolvable(),
         "skills": check_skills_installed(target_root, expected_skills=expected_skills),
         "hooks": hooks,
         "work_area": check_work_area_present(project_root),
@@ -2158,6 +2236,13 @@ def main(
                     )
 
         if args.baseline_only:
+            # NO interpreter probe on this path, deliberately. --baseline-only
+            # seeds template baselines and working copies, both of which are
+            # `shutil.copy2` of a source template verbatim -- it never calls
+            # `rewrite_installed_skill_paths`, so no `python <` token is ever
+            # rewritten and there is no interpreter name to write. Refusing here
+            # would block a legitimate operation on a ground that does not apply
+            # to it, which is the mirror of the defect this ruling fixes.
             if args.scope != "project":
                 raise InstallError("--baseline-only requires --scope project")
             if args.dest:
@@ -2179,9 +2264,15 @@ def main(
             )
         # Resolve ONCE for the whole process here (not per target root / agent) so
         # a `--agent all` run still probes the host exactly once, not once per
-        # agent target. A --wire-hooks dry run still probes, so it can PRINT the
-        # exact command string it would have written.
-        interpreter = None if (args.dry_run and not args.wire_hooks) else resolve_interpreter()
+        # agent target.
+        #
+        # UNCONDITIONAL, including under --dry-run. A dry run used to skip the
+        # probe entirely, which meant that on a host with no working interpreter
+        # it printed a clean plan and exited 0 for an install that could not
+        # succeed -- a dry run that says "fine" about a run that would refuse is
+        # worse than no dry run. It now refuses at exactly the point the real run
+        # would, and for the same stated reason.
+        interpreter = resolve_interpreter()
         for agent, target_root in target_roots:
             out(f"{agent.name}:")
             install_skills(

@@ -129,8 +129,17 @@ already knew how to run.
 quoted script path is *worse* than any of them — under PowerShell it parses as a string literal and
 the hook exits 0 without running anything. So the wired command names the interpreter this installer
 actually probed on your host, and it names it **first**, which is the one form every shell Claude
-Code can spawn treats as a command to run. If no candidate answers on your machine, `--wire-hooks`
-**refuses** and says so, rather than writing wiring that cannot run.
+Code can spawn treats as a command to run.
+
+**If no candidate answers on your machine, the install hard-stops.** There is no fallback to an
+os-name guess, because such a guess can only be drawn from the candidate set that was just
+disproved — `py` on Windows, `python3` on POSIX, each already probed and already failed. It could
+never be right, and stamping it into every installed skill body only moved the failure somewhere
+later and harder to trace. `--dry-run` refuses identically, at the same point and for the same
+stated reason. `--baseline-only` is unaffected: it copies templates verbatim and writes no
+interpreter name at all. `--check-readiness` **reports** the condition as a `NOT READY`
+**interpreter** item rather than aborting — refusing to run the diagnostic when this is the
+diagnosis would be its own defect.
 
 **Working on the hooks themselves,** in a checkout of this repo:
 
@@ -174,8 +183,10 @@ Check whether a project is set up to run Constellation, without installing anyth
 python scripts/install_constellation.py --agent claude --scope project --project C:\path\to\repo --check-readiness
 ```
 
-Four separately testable items, each reporting `READY`/`NOT READY`/`CANNOT DETERMINE` with its own
-named reason: **engine** (pytest actually runs under this interpreter), **skills**
+Five separately testable items, each reporting `READY`/`NOT READY`/`CANNOT DETERMINE` with its own
+named reason: **engine** (pytest actually runs under this interpreter), **interpreter** (at least
+one of `py`/`python3`/`python` answers `--version` on this host — a different question from
+**engine**, which uses the always-present interpreter running the installer), **skills**
 (a `CORPUS.json` marker and the expected bundles at the target root), **hooks** (`WIRED`, and at
 `--scope project` the backing `settings.json` must be git-tracked — a gitignored
 `settings.local.json` can be wired and still never ship), and **work area** (a `.git` entry, file or

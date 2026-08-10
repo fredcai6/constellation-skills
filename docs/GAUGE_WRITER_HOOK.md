@@ -126,9 +126,12 @@ is correct for that machine and no other, which is exactly why the git-tracked
 `.claude/settings.json` in this repo names **no** interpreter at all — no single
 name works on both POSIX and Windows (#539). Naming it *first* also matters: a
 command that starts with a quote is parsed by PowerShell as a string literal, so
-the hook echoes its own path and exits 0 without running. If no interpreter
-answers on your host, `--wire-hooks` refuses rather than writing a command that
-cannot run.
+the hook echoes its own path and exits 0 without running.
+
+If **no** candidate answers on your host, the whole install hard-stops — there is
+no os-name fallback, because any such guess is drawn from the candidate set the
+probe just disproved and so cannot be right anywhere. `--check-readiness` reports
+that same condition as a `NOT READY` **interpreter** item instead of aborting.
 
 **Which scope is safe to commit.** Note the absolute path above: it embeds your
 home directory and therefore your **username**.
